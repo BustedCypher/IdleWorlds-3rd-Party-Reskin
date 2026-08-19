@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "IdleWorlds Fantasy Skin",
+  "version": "1.6.0",
+  "description": "A forged dark-fantasy RPG UI overhaul for IdleWorlds — v1.6.0 hardening pass: bundled assets, extension-private storage, non-destructive text annotation.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://idleworlds.com/*",
+    "https://www.idleworlds.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://idleworlds.com/*",
+        "https://www.idleworlds.com/*"
+      ],
+      "css": [
+        "dist/base.css"
+      ],
+      "js": [
+        "dist/content.bundle.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/*"
+      ],
+      "matches": [
+        "https://idleworlds.com/*",
+        "https://www.idleworlds.com/*"
+      ]
+    }
+  ]
+}

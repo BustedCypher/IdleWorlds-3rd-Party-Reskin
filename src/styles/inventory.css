@@ -1,0 +1,410 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Inventory / ItemRow — v1.5.10
+
+   Inventory is the reference implementation for reusable RPG item rows.
+   React-owned commands remain live DOM nodes; the Fantasy Skin owns the
+   item presentation and semantic action treatment only.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Inventory chrome ─────────────────────────────────────────────── */
+[data-iw-inventory-root="1"] {
+  --fs-inv-command-w: 54px;
+}
+
+[data-iw-inventory-title="1"] {
+  /* --iw-font-display was never defined in base.css (only --iw-font-head,
+     --iw-font-ui and --iw-font-flav), so this declaration was invalid at
+     computed-value time and the Inventory title silently inherited whatever
+     the game was using. (Audit S3.1) */
+  font-family: var(--iw-font-head) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  letter-spacing: .045em !important;
+  text-transform: uppercase !important;
+  color: var(--iw-text) !important;
+}
+
+[data-iw-inventory-root="1"] [data-iw-inventory-control="filter"],
+[data-iw-inventory-root="1"] [data-iw-inventory-control="page"] {
+  min-height: 28px !important;
+  height: 28px !important;
+  border-radius: 2px !important;
+  padding: 0 10px !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 26px !important;
+  letter-spacing: .015em !important;
+}
+
+[data-iw-inventory-root="1"] [data-iw-inventory-control="icon"] {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  border-radius: 2px !important;
+}
+
+[data-iw-inventory-root="1"] [data-iw-inventory-control="page-count"] {
+  color: var(--iw-faint) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 10px !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .08em;
+}
+
+/* ── Row shell ────────────────────────────────────────────────────── */
+.compact-row:has(> .fs-inv-row),
+[class*="item-row"]:has(> .fs-inv-row) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  min-height: 62px !important;
+  padding: 0 !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid var(--iw-line) !important;
+  border-radius: 3px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.014), transparent 38%),
+    #12110E !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.014),
+    inset 0 -1px 0 rgba(0,0,0,.35) !important;
+  transition: border-color .12s, background-color .12s !important;
+}
+
+.compact-row:has(> .fs-inv-row):hover,
+[class*="item-row"]:has(> .fs-inv-row):hover {
+  border-color: #4B402B !important;
+  background:
+    linear-gradient(90deg, rgba(232,183,106,.025), transparent 32%),
+    #14120F !important;
+}
+
+.fs-inv-row {
+  --fs-tier: var(--iw-t-common);
+  order: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 60px;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 38px;
+  grid-template-areas: "icon body qty";
+  align-items: center;
+  column-gap: 11px;
+  padding: 6px 8px 6px 13px;
+  position: relative;
+  cursor: default;
+}
+.fs-inv-row.has-details,
+.fs-inv-row.has-requirements { min-height: 68px; }
+.fs-inv-row.has-details.has-requirements { min-height: 76px; }
+
+.fs-inv-row.tier-uncommon  { --fs-tier: var(--iw-t-uncommon); }
+.fs-inv-row.tier-rare      { --fs-tier: var(--iw-t-rare); }
+.fs-inv-row.tier-epic      { --fs-tier: var(--iw-t-epic); }
+.fs-inv-row.tier-legendary { --fs-tier: var(--iw-t-legendary); }
+.fs-inv-row.tier-mythic    { --fs-tier: var(--iw-t-mythic); }
+
+.fs-inv-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--fs-tier);
+  opacity: .82;
+  pointer-events: none;
+}
+
+/* ── Icon slot ────────────────────────────────────────────────────── */
+.fs-inv-icon {
+  grid-area: icon;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  position: relative;
+  background-repeat: no-repeat;
+  background-color: #080806;
+  border: 1px solid #3A3020;
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.62),
+    inset 0 0 14px rgba(0,0,0,.5);
+  image-rendering: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--iw-faint);
+  overflow: hidden;
+  cursor: help;
+  outline: none;
+}
+.fs-inv-icon:hover,
+.fs-inv-icon:focus-visible {
+  border-color: var(--fs-tier);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.62),
+    inset 0 0 14px rgba(0,0,0,.5),
+    0 0 0 1px color-mix(in srgb, var(--fs-tier) 22%, transparent);
+}
+.fs-inv-row.is-equipped .fs-inv-icon {
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.62),
+    inset 0 0 14px rgba(0,0,0,.5),
+    0 0 0 1px rgba(80,150,94,.18);
+}
+
+/* ── Identity / information rails ────────────────────────────────── */
+.fs-inv-body {
+  grid-area: body;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  align-self: center;
+  padding-block: 1px;
+}
+
+.fs-inv-name {
+  font-family: var(--iw-font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: .005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 0 #000;
+}
+.fs-inv-name .fs-inv-sub {
+  color: var(--iw-faint);
+  font-size: 11px;
+  font-weight: 600;
+}
+.fs-inv-name-plain { color: var(--iw-text); }
+.fs-inv-name .iw-item-ref { color: inherit; }
+.fs-inv-name .iw-item-ref:hover,
+.fs-inv-name .iw-item-ref:focus-visible { border-bottom-color: currentColor; }
+
+/* Stable database information: one compact rail, no boxed stat chips. */
+.fs-inv-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  margin-top: 3px;
+  min-height: 13px;
+}
+.fs-stat {
+  position: relative;
+  font-family: var(--iw-font-ui);
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--iw-dim);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0 7px 0 0;
+  margin-right: 7px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fs-stat:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 2px;
+  bottom: 1px;
+  width: 1px;
+  background: #332C1E;
+}
+.fs-stat--pos  { color: var(--iw-good); }
+.fs-stat--tier { color: var(--iw-gold-dim); }
+
+/* Dynamic owned-item state. These lines deliberately look like equipment
+   inscriptions, not application badges. */
+.fs-inv-details,
+.fs-inv-requirements {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 12px;
+  margin-top: 3px;
+  font-family: var(--iw-font-ui);
+  font-size: 9.5px;
+  line-height: 1.25;
+}
+
+.fs-inv-detail,
+.fs-inv-requirement {
+  position: relative;
+  min-width: 0;
+  color: var(--iw-dim);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fs-inv-detail::before,
+.fs-inv-requirement::before {
+  content: "◆";
+  margin-right: 4px;
+  font-size: 6px;
+  vertical-align: 1px;
+  color: var(--iw-gold-dim);
+}
+.fs-inv-detail--loadout { color: #74AFCB; }
+.fs-inv-detail--loadout::before { color: #5D97B3; }
+.fs-inv-detail--socket { color: #C7B56A; }
+.fs-inv-detail--socket::before { color: #73B7D4; }
+.fs-inv-detail--effect { color: #B8C6A2; }
+.fs-inv-detail--effect::before { color: #879A73; }
+.fs-inv-detail--status { color: var(--iw-faint); }
+.fs-inv-detail--status::before { color: var(--iw-faint); }
+.fs-inv-detail--set { color: #C8B562; }
+.fs-inv-requirement { color: #D8C76A; }
+.fs-inv-requirement::before { color: #BCA744; }
+.fs-inv-detail-count {
+  margin-left: 4px;
+  color: var(--iw-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.fs-inv-qty {
+  grid-area: qty;
+  justify-self: end;
+  align-self: center;
+  min-width: 34px;
+  padding-right: 2px;
+  text-align: right;
+  font-family: var(--iw-font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--iw-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── React-owned action rail ─────────────────────────────────────── */
+[data-fs-action-host="1"] {
+  display: contents !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+}
+[data-fs-suppressed="1"] { display: none !important; }
+
+[data-fs-preserved-action="control"] {
+  order: 2;
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  position: relative;
+  z-index: 2;
+  margin: 0 5px 0 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+button[data-fs-preserved-action="control"],
+a[data-fs-preserved-action="control"],
+[role="button"][data-fs-preserved-action="control"] {
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 8px !important;
+  border-radius: 2px !important;
+  border: 1px solid var(--iw-line-hi) !important;
+  background: linear-gradient(180deg, #201D17, #15130F) !important;
+  color: var(--iw-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 1px 0 #000 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 10px !important;
+  line-height: 26px !important;
+  font-weight: 700 !important;
+  letter-spacing: .025em !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+}
+button[data-fs-preserved-action="control"]:hover:not(:disabled),
+a[data-fs-preserved-action="control"]:hover,
+[role="button"][data-fs-preserved-action="control"]:hover {
+  border-color: var(--iw-gold-dim) !important;
+  color: var(--iw-gold) !important;
+  background: linear-gradient(180deg, #29241A, #19160F) !important;
+}
+
+[data-fs-action-kind="equipped"] {
+  width: 70px !important;
+  border-color: #315E3A !important;
+  background: linear-gradient(180deg, #193520, #102518) !important;
+  color: #A9D7AF !important;
+}
+[data-fs-action-kind="equip"] {
+  width: 48px !important;
+  border-color: #5A4728 !important;
+  color: #E1C48A !important;
+}
+[data-fs-action-kind="set"] {
+  width: 72px !important;
+  color: #D1C06C !important;
+  border-color: #514621 !important;
+}
+[data-fs-action-kind="secondary"] { width: 44px !important; }
+[data-fs-action-kind="icon"] {
+  width: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+button[data-fs-preserved-action="control"]:disabled,
+[role="button"][data-fs-preserved-action="control"][aria-disabled="true"] {
+  opacity: .42 !important;
+  color: var(--iw-faint) !important;
+  border-color: var(--iw-line) !important;
+  background: #12110E !important;
+}
+
+/* ── Responsive collapse ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .fs-inv-row {
+    grid-template-columns: 46px minmax(0, 1fr) 34px;
+    min-height: 56px;
+    padding-left: 10px;
+    column-gap: 9px;
+  }
+  .fs-inv-icon { width: 46px; height: 46px; min-width: 46px; min-height: 46px; }
+  .fs-inv-stats .fs-stat:nth-child(n+6) { display: none; }
+  .fs-inv-details { max-height: 26px; overflow: hidden; }
+}
+
+@media (max-width: 700px) {
+  .fs-inv-row {
+    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-areas:
+      "icon body"
+      "icon qty";
+  }
+  .fs-inv-icon { width: 42px; height: 42px; min-width: 42px; min-height: 42px; }
+  .fs-inv-qty { justify-self: start; padding: 2px 0 0; text-align: left; }
+  .fs-inv-stats .fs-stat:nth-child(n+4) { display: none; }
+  .fs-inv-details,
+  .fs-inv-requirements { display: none; }
+  [data-fs-action-kind="set"] { display: none !important; }
+  button[data-fs-preserved-action="control"],
+  a[data-fs-preserved-action="control"],
+  [role="button"][data-fs-preserved-action="control"] {
+    padding-inline: 6px !important;
+  }
+}

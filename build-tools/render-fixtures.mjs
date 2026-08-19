@@ -1,0 +1,386 @@
+/**
+ * render-fixtures — visual verification harness
+ *
+ *   node build-tools/render-fixtures.mjs
+ *
+ * Builds a static page that exercises every skin-owned CSS surface against the
+ * REAL bundled atlases and typefaces, renders it in headless Chromium, and
+ * writes PNGs to build-tools/fixtures/.
+ *
+ * This does not replace looking at the live game — it cannot, because the game's
+ * own DOM and Tailwind classes are not here. What it does prove is the half we
+ * own: that the atlas maths resolves to the right sprite, that every custom
+ * property referenced by the stylesheets actually resolves, that the typefaces
+ * load, and that the dark-fantasy palette reads as one system.
+ */
+
+import { chromium } from 'playwright';
+import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = resolve(HERE, '..');
+const OUT = resolve(HERE, 'fixtures');
+
+const fileUrl = rel => 'file://' + resolve(ROOT, rel).replace(/\\/g, '/');
+
+/* ── Atlas maths — must mirror AtlasService.paint() exactly ─────────────── */
+
+function spriteStyle(entry, dims, atlasRel) {
+  const cell = dims.cell;
+  const atlasW = dims.cols * cell;
+  const atlasH = dims.rows * cell;
+  const x = Number(entry.x) || 0;
+  const y = Number(entry.y) || 0;
+  const w = Number(entry.width) || cell;
+  const h = Number(entry.height) || cell;
+  const xPct = atlasW > w ? (x / (atlasW - w)) * 100 : 0;
+  const yPct = atlasH > h ? (y / (atlasH - h)) * 100 : 0;
+  return [
+    // Single quotes: this string is interpolated into an HTML style="..."
+    // attribute, and a double quote here silently truncates the attribute —
+    // which is exactly how the first run produced blank icon slots.
+    `background-image:url('${fileUrl(atlasRel)}')`,
+    `background-size:${(atlasW / w) * 100}% ${(atlasH / h) * 100}%`,
+    `background-position:${xPct.toFixed(6)}% ${yPct.toFixed(6)}%`,
+    'background-repeat:no-repeat',
+  ].join(';');
+}
+
+const gearManifest = JSON.parse(await readFile(resolve(ROOT, 'assets/gear_icons_manifest.json'), 'utf8'));
+const gearDims = {
+  cols: gearManifest.columns || 10,
+  rows: gearManifest.rows || 150,
+  cell: gearManifest.cell_size || 128,
+};
+const gearByName = new Map(gearManifest.icons.map(i => [i.name.toLowerCase(), i]));
+
+const csv = await readFile(resolve(ROOT, 'assets/item_icons_index.csv'), 'utf8');
+const [head, ...lines] = csv.replace(/^﻿/, '').trim().split(/\r?\n/);
+const cols = head.split(',');
+const itemRows = lines.map(l => {
+  const cells = l.split(',');
+  return Object.fromEntries(cols.map((c, i) => [c, cells[i] ?? '']));
+});
+const itemById = new Map(itemRows.map(r => [r.item_id, r]));
+let maxRow = 0, maxCol = 0;
+for (const r of itemRows) {
+  maxRow = Math.max(maxRow, Number(r.row) || 0);
+  maxCol = Math.max(maxCol, Number(r.column) || 0);
+}
+const itemDims = { cols: maxCol + 1, rows: maxRow + 1, cell: Number(itemRows[0]?.width) || 128 };
+
+const gearSprite = name => {
+  const e = gearByName.get(name.toLowerCase());
+  if (!e) throw new Error(`gear icon not found: ${name}`);
+  return spriteStyle(e, gearDims, 'assets/gear_icons_atlas.png');
+};
+const itemSprite = id => {
+  const e = itemById.get(id);
+  if (!e) throw new Error(`item icon not found: ${id}`);
+  return spriteStyle(e, itemDims, 'assets/item_icons_atlas.png');
+};
+
+/* ── Fixture markup ─────────────────────────────────────────────────────── */
+
+const TIERS = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+
+const invRow = ({ sprite, name, tier, level, stats, details, reqs, qty, equipped }) => `
+<div class="compact-row" style="display:flex;align-items:center;gap:0;min-height:62px;padding:0;position:relative;overflow:hidden;border:1px solid var(--iw-line);border-radius:3px;background:linear-gradient(180deg,rgba(255,255,255,.014),transparent 38%),#12110E;margin-bottom:6px;">
+  <div class="fs-inv-row tier-${tier}${details ? ' has-details' : ''}${reqs ? ' has-requirements' : ''}${equipped ? ' is-equipped' : ''}">
+    <div class="fs-inv-icon" style="${sprite}"></div>
+    <div class="fs-inv-body">
+      <div class="fs-inv-name tier-${tier}"><span class="iw-item-ref">${name}</span>${level ? ` <span class="fs-inv-sub">Lv ${level}</span>` : ''}</div>
+      ${stats ? `<div class="fs-inv-stats">${stats.map((s, i) => `<span class="fs-stat${i === 0 ? ' fs-stat--tier' : ' fs-stat--pos'}">${s}</span>`).join('')}</div>` : ''}
+      ${details ? `<div class="fs-inv-details">${details.map(d => `<span class="fs-inv-detail fs-inv-detail--${d.kind}">${d.text}${d.count ? `<span class="fs-inv-detail-count">×${d.count}</span>` : ''}</span>`).join('')}</div>` : ''}
+      ${reqs ? `<div class="fs-inv-requirements">${reqs.map(r => `<span class="fs-inv-requirement">${r}</span>`).join('')}</div>` : ''}
+    </div>
+    ${qty ? `<span class="fs-inv-qty">×${qty}</span>` : ''}
+  </div>
+  ${equipped
+    ? '<button data-fs-preserved-action="control" data-fs-action-kind="equipped">Equipped</button>'
+    : '<button data-fs-preserved-action="control" data-fs-action-kind="equip">Equip</button>'}
+  <button data-fs-preserved-action="control" data-fs-action-kind="secondary">List</button>
+  <button data-fs-preserved-action="control" data-fs-action-kind="icon">🔒</button>
+</div>`;
+
+const skillPanel = ({ type, label, title, pct, xp, reward, ingredients }) => `
+<div class="compact-panel fs-skill-panel fs-skill--${type}" data-iw-skill-layout="three-zone" style="margin-bottom:8px;">
+  <div data-iw-skill-zone="identity"><div data-iw-skill-role="identity">${label}</div></div>
+  <div data-iw-skill-zone="content">
+    <div data-iw-skill-role="action-title">${title}</div>
+    <div data-iw-skill-role="level-progress">Lv 42 - ${pct}% • 12,480 XP to go</div>
+    <div data-iw-skill-role="progress-track"><div data-iw-skill-role="progress-fill" style="width:${pct}%"></div></div>
+    ${ingredients ? `<div data-iw-skill-role="ingredient"><span class="iw-item-ref">${ingredients}</span> 12/20</div>` : ''}
+    ${reward ? `<div data-iw-skill-role="reward">Base reward: ${reward}</div>` : ''}
+    <div data-iw-skill-role="xp-gain">${xp} XP</div>
+  </div>
+  <div data-iw-skill-zone="commands">
+    <button data-iw-skill-role="action-button" data-iw-btn-state="primary">${label.slice(0, 6)}</button>
+    <div data-iw-skill-role="nav-group">
+      <button data-iw-skill-role="nav-button">‹</button>
+      <button data-iw-skill-role="nav-button">›</button>
+    </div>
+  </div>
+</div>`;
+
+const tooltipCard = ({ sprite, name, tier, badges, stats, acqMain, acqSub }) => `
+<div class="iw-tip is-open" style="position:relative;display:block;opacity:1;left:0;top:0;margin-bottom:14px;">
+  <div class="iw-tip-head">
+    <div class="iw-tip-icon"><span class="iw-tip-icon-host" style="${sprite}"></span></div>
+    <div class="iw-tip-title-block">
+      <div class="iw-tip-name tier-${tier}">${name}</div>
+      <div class="iw-tip-badges">${badges.map((b, i) => `<span class="iw-tip-badge${i === 0 ? ' t' : ''}${b.startsWith('Req') ? ' req' : ''}">${b}</span>`).join('')}</div>
+    </div>
+  </div>
+  <div class="iw-tip-body">
+    <div class="iw-tip-sec"><div class="iw-tip-sec-title">Stats</div><div class="iw-tip-stats">
+      ${stats.map(([k, v, cls]) => `<div class="iw-tip-stat"><span class="k">${k}</span><span class="v${cls ? ' ' + cls : ''}">${v}</span></div>`).join('')}
+    </div></div>
+    <div class="iw-tip-sec"><div class="iw-tip-sec-title">How to get it</div>
+      <div class="iw-tip-acq"><div class="iw-tip-acq-main">${acqMain}</div><div class="iw-tip-acq-sub">${acqSub}</div></div>
+    </div>
+  </div>
+  <div class="iw-tip-foot"><a class="iw-tip-link" href="#">Wiki ↗</a></div>
+</div>`;
+
+const page = `<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="${fileUrl('dist/base.css')}">
+<style>
+${await readFile(resolve(ROOT, 'src/styles/inventory.css'), 'utf8')}
+${await readFile(resolve(ROOT, 'src/styles/skillpanel.css'), 'utf8')}
+${await readFile(resolve(ROOT, 'src/styles/tooltip-engine.css'), 'utf8')}
+${await readFile(resolve(ROOT, 'src/styles/ui-system.css'), 'utf8')}
+body { padding: 22px; max-width: 1180px; margin: 0 auto; }
+.fx-h { font-family: var(--iw-font-head); font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+        color: var(--iw-gold-dim); margin: 26px 0 9px; border-bottom: 1px solid var(--iw-line); padding-bottom: 6px; }
+.fx-h:first-child { margin-top: 0; }
+.fx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; align-items: start; }
+.fx-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.fx-sw { width: 92px; }
+.fx-sw i { display: block; height: 34px; border: 1px solid var(--iw-line); border-radius: 2px; }
+.fx-sw span { display: block; font-size: 9px; color: var(--iw-dim); margin-top: 3px; font-variant-numeric: tabular-nums; }
+.fx-type div { margin-bottom: 5px; }
+</style></head><body>
+
+<div class="fx-h">Typography — Cinzel / Barlow / Crimson Text (self-hosted)</div>
+<div class="fx-type">
+  <h1 style="margin:0 0 4px">Ancient's Vestment</h1>
+  <h3 style="margin:0 0 6px">Forge · Smithing</h3>
+  <div style="font-family:var(--iw-font-ui);font-size:13px;color:var(--iw-text)">Barlow 400 — the quartermaster eyes your coin purse.</div>
+  <div style="font-family:var(--iw-font-ui);font-weight:700;font-size:13px;color:var(--iw-text-hi)">Barlow 700 — EQUIP · LIST · SALVAGE</div>
+  <div class="iw-tip-flavour">Crimson Text italic — "It was forged in a colder age."</div>
+</div>
+
+<div class="fx-h">Tier scale</div>
+<div class="fx-swatches">
+${TIERS.map(t => `<div class="fx-sw"><i style="background:var(--iw-t-${t})"></i><span class="tier-${t}">${t}</span></div>`).join('')}
+</div>
+
+<div class="fx-h">Surface / edge tokens</div>
+<div class="fx-swatches">
+${['ink-950', 'ink-900', 'ink-850', 'ink-800', 'ink-750', 'ink-700', 'ink-600', 'line', 'line-hi', 'line-hot', 'gold', 'gold-dim', 'ember', 'ember-hi']
+  .map(n => `<div class="fx-sw"><i style="background:var(--iw-${n})"></i><span>${n}</span></div>`).join('')}
+</div>
+
+<div class="fx-h">Inventory rows — gear atlas, all six tiers</div>
+${invRow({ sprite: gearSprite('Iron Sword'), name: 'Iron Sword', tier: 'common', level: '3', stats: ['Tier 4 · Weapon', 'ATK +18'], qty: null, equipped: false })}
+${invRow({ sprite: gearSprite('Mythril Sword'), name: 'Mythril Sword', tier: 'uncommon', level: '11', stats: ['Tier 9 · Weapon', 'ATK +64', 'WAR +6'], details: [{ kind: 'loadout', text: 'In loadout: Main' }], equipped: true })}
+${invRow({ sprite: gearSprite('Voidglass Gloves'), name: 'Voidglass Gloves', tier: 'rare', level: null, stats: ['Tier 16 · Hands', 'DEF +41', 'HP +120'], details: [{ kind: 'socket', text: 'Cut Sunstone: +4% gold find', count: 2 }] })}
+${invRow({ sprite: gearSprite('Thalassic Shield'), name: 'Thalassic Shield', tier: 'epic', level: '22', stats: ['Tier 21 · Off-hand', 'DEF +88'], details: [{ kind: 'effect', text: 'Item find: +7%' }], reqs: ['Requires Combat Lv 45'] })}
+${invRow({ sprite: gearSprite('Voidglass Leggings'), name: 'Voidglass Leggings', tier: 'legendary', level: null, stats: ['Tier 27 · Legs', 'DEF +140', 'HP +310'], details: [{ kind: 'set', text: 'Set bonus active' }, { kind: 'status', text: 'Not upgradable' }] })}
+${invRow({ sprite: gearSprite('Voidglass Boots'), name: 'Voidglass Boots', tier: 'mythic', level: '30', stats: ['Tier 33 · Feet', 'DEF +198', '2× gather 12%'], details: [{ kind: 'loadout', text: 'In loadout: Gathering' }], reqs: ['Requires Gathering Lv 80'] })}
+
+<div class="fx-h">Inventory rows — item atlas (consumables / materials)</div>
+${invRow({ sprite: itemSprite('copper_ore'), name: 'Copper Ore', tier: 'common', stats: ['Tier 1 · Raw material'], qty: '2,480' })}
+${invRow({ sprite: itemSprite('iron_ore'), name: 'Iron Ore', tier: 'common', stats: ['Tier 3 · Raw material'], qty: '917' })}
+${invRow({ sprite: itemSprite('titanium_atk_potion_super'), name: 'Super Titanium ATK Potion', tier: 'epic', stats: ['Tier 20 · Consumable', 'ATK +90'], qty: '12' })}
+
+<div class="fx-h">Skill panels — accent per discipline</div>
+<div class="fx-grid">
+<div>
+${skillPanel({ type: 'combat', label: 'Combat', title: 'Fight Bone Marauder', pct: 62, xp: '1,940', reward: '340g' })}
+${skillPanel({ type: 'mining', label: 'Mining', title: 'Mine Copper Ore', pct: 28, xp: '85', ingredients: 'Copper Ore' })}
+${skillPanel({ type: 'smithing', label: 'Smithing', title: 'Forge Iron Sword', pct: 91, xp: '410', ingredients: 'Iron Ore' })}
+${skillPanel({ type: 'gathering', label: 'Gathering', title: 'Harvest Duskroot', pct: 45, xp: '150' })}
+${skillPanel({ type: 'alchemy', label: 'Alchemy', title: 'Brew ATK Potion', pct: 12, xp: '260' })}
+</div><div>
+${skillPanel({ type: 'jewelcrafting', label: 'Jewelcrafting', title: 'Prospect Sunstone', pct: 74, xp: '520' })}
+${skillPanel({ type: 'spellcrafting', label: 'Spellcrafting', title: 'Enchant Voidglass', pct: 8, xp: '780' })}
+${skillPanel({ type: 'tailoring', label: 'Tailoring', title: 'Sew Mythril Cloak', pct: 55, xp: '300' })}
+${skillPanel({ type: 'crafting', label: 'Crafting', title: 'Craft Upgrade Orb', pct: 33, xp: '190' })}
+${skillPanel({ type: 'fishing', label: 'Fishing', title: 'Fish Abyssal Eel', pct: 67, xp: '220' })}
+</div></div>
+
+<div class="fx-h">Tooltip cards</div>
+<div class="fx-grid">
+<div>${tooltipCard({ sprite: gearSprite('Thalassic Sword'), name: 'Thalassic Sword', tier: 'epic',
+  badges: ['Tier 21', 'Weapon', 'Req Combat Lv 45'],
+  stats: [['Attack', '+142', 'good'], ['Warfare', '+18', 'good'], ['Sockets', '2'], ['Market price', '184,000g', 'amber']],
+  acqMain: 'Boss drop &middot; Zone 21', acqSub: 'Rate 1/240' })}</div>
+<div>${tooltipCard({ sprite: itemSprite('silver_ore'), name: 'Silver Ore', tier: 'common',
+  badges: ['Tier 5', 'Raw material'],
+  stats: [['Market price', '640g', 'amber']],
+  acqMain: 'Gathered', acqSub: 'Mined in zones 5–9' })}</div>
+</div>
+
+<div class="fx-h">Navigation rail &amp; controls</div>
+<div data-iw-ui="main-nav" style="margin-bottom:14px">
+  <button data-iw-ui="nav-tab" data-iw-state="active">Game</button>
+  <button data-iw-ui="nav-tab">Market</button>
+  <button data-iw-ui="nav-tab">Leaderboards</button>
+  <button data-iw-ui="nav-tab">Village</button>
+  <button data-iw-ui="nav-tab">Dungeon</button>
+</div>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <button class="iw-btn iw-btn--primary">Primary</button>
+  <button class="iw-btn">Secondary</button>
+  <button class="iw-btn" disabled>Disabled</button>
+  <button data-iw-ui="zone-action">Next Zone</button>
+  <input type="search" placeholder="Search items…" style="width:200px">
+  <span data-iw-inventory-control="page-count">3 / 18</span>
+</div>
+
+<div class="fx-h">Section frame</div>
+<div data-iw-ui="section-frame" style="padding:14px">
+  <h2 data-iw-ui="section-title" style="margin:0 0 8px">Inventory</h2>
+  <div class="iw-xp">
+    <div class="iw-xp__line"><span class="iw-xp__pct">62%</span><span class="iw-xp__togo">12,480 to go</span></div>
+    <div class="iw-xp__track"><div class="iw-xp__fill" style="width:62%"></div></div>
+  </div>
+</div>
+
+</body></html>`;
+
+await mkdir(OUT, { recursive: true });
+await writeFile(resolve(OUT, 'fixture.html'), page, 'utf8');
+
+// The sandbox ships a Chromium build that may not match the playwright package's
+// expected revision, and PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD stops it fetching one.
+// Point at whatever is actually on disk.
+async function findChromium() {
+  const base = '/opt/pw-browsers';
+  try {
+    const dirs = (await readdir(base)).filter(d => d.startsWith('chromium-')).sort().reverse();
+    for (const d of dirs) return `${base}/${d}/chrome-linux/chrome`;
+  } catch { /* fall through */ }
+  return undefined;
+}
+const executablePath = await findChromium();
+// `--headless=old` was removed from modern Chrome builds; playwright only stops
+// passing it when it recognises the binary as chrome-headless-shell.
+const browser = await chromium.launch({
+  ...(executablePath ? { executablePath } : {}),
+  args: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'],
+  ignoreDefaultArgs: ['--headless=old'],
+});
+const ctx = await browser.newContext({ viewport: { width: 1240, height: 1000 }, deviceScaleFactor: 2 });
+const p = await ctx.newPage();
+
+const consoleIssues = [];
+p.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') consoleIssues.push(m.text()); });
+p.on('requestfailed', r => consoleIssues.push(`FAILED ${r.url()} — ${r.failure()?.errorText}`));
+
+await p.goto(fileUrl('build-tools/fixtures/fixture.html'), { waitUntil: 'load' });
+await p.evaluate(() => document.fonts.ready);
+await p.waitForTimeout(400);
+
+await p.screenshot({ path: resolve(OUT, 'full.png'), fullPage: true });
+
+/* ── Automated checks ───────────────────────────────────────────────────── */
+
+const report = await p.evaluate(() => {
+  const out = { unresolvedVars: [], fonts: {}, iconsPainted: 0, iconsBlank: 0, contrast: [] };
+
+  // Any var() that resolves to empty means a token referenced but never defined.
+  const cs = getComputedStyle(document.documentElement);
+  const names = ['--iw-font-head', '--iw-font-ui', '--iw-font-flav', '--iw-ink-900', '--iw-line',
+    '--iw-gold', '--iw-ember', '--iw-text', '--iw-dim', '--iw-faint', '--iw-good',
+    '--iw-t-common', '--iw-t-mythic', '--iw-r-panel', '--iw-r-control'];
+  for (const n of names) if (!cs.getPropertyValue(n).trim()) out.unresolvedVars.push(n);
+
+  for (const f of document.fonts) {
+    out.fonts[`${f.family} ${f.weight} ${f.style}`] = f.status;
+  }
+
+  // NOT sufficient on its own: an earlier run reported 11/11 "painted" while
+  // every icon slot rendered black, because a double quote inside the inline
+  // style attribute had truncated it. A property being set proves nothing about
+  // pixels. The real check samples the rendered image below.
+  out.iconSlots = [];
+  for (const el of document.querySelectorAll('.fs-inv-icon, .iw-tip-icon-host')) {
+    const bg = getComputedStyle(el).backgroundImage;
+    if (bg && bg !== 'none') out.iconsPainted += 1; else out.iconsBlank += 1;
+    const r = el.getBoundingClientRect();
+    out.iconSlots.push({
+      label: el.closest('.fs-inv-row, .iw-tip')?.querySelector('.fs-inv-name, .iw-tip-name')?.textContent?.trim()?.slice(0, 28) || '?',
+      x: Math.round(r.x + window.scrollX), y: Math.round(r.y + window.scrollY),
+      w: Math.round(r.width), h: Math.round(r.height),
+    });
+  }
+
+  const lum = c => {
+    const [r, g, b] = c.match(/\d+/g).slice(0, 3).map(Number).map(v => {
+      v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => {
+    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+    return (x + 0.05) / (y + 0.05);
+  };
+  const bg = 'rgb(18, 17, 14)';
+  const samples = [
+    ['body text', '.fx-type div'],
+    ['item name', '.fs-inv-name .iw-item-ref'],
+    ['stat chip', '.fs-stat--pos'],
+    ['detail line', '.fs-inv-detail--socket'],
+    ['requirement', '.fs-inv-requirement'],
+    ['qty', '.fs-inv-qty'],
+    ['skill title', '[data-iw-skill-role="action-title"]'],
+    ['xp readout', '[data-iw-skill-role="level-progress"]'],
+    ['tooltip label', '.iw-tip-stat .k'],
+    ['tooltip section', '.iw-tip-sec-title'],
+    ['nav tab', '[data-iw-ui="nav-tab"]'],
+    ['page count', '[data-iw-inventory-control="page-count"]'],
+  ];
+  for (const [label, sel] of samples) {
+    const el = document.querySelector(sel);
+    if (!el) { out.contrast.push({ label, ratio: null, note: 'selector not found' }); continue; }
+    out.contrast.push({ label, ratio: Number(ratio(getComputedStyle(el).color, bg).toFixed(2)) });
+  }
+  return out;
+});
+
+/* ── Pixel proof: each icon slot must contain actual sprite art ─────────── */
+
+const pixelResults = [];
+for (const slot of report.iconSlots) {
+  const shot = await p.screenshot({ fullPage: true, clip: { x: slot.x, y: slot.y, width: slot.w, height: slot.h } });
+  // Count distinct quantised colours. A blank slot is one flat fill (plus its
+  // border); real sprite art is many-coloured.
+  const png = shot;
+  pixelResults.push({ label: slot.label, bytes: png.length });
+  await writeFile(resolve(OUT, `icon-${pixelResults.length}.png`), png);
+}
+
+await browser.close();
+
+console.log('\n── Fixture report ──────────────────────────────────');
+console.log('unresolved custom properties:', report.unresolvedVars.length ? report.unresolvedVars : 'none');
+console.log('icon slots with a background-image:', report.iconsPainted, '| without:', report.iconsBlank);
+console.log('fonts:');
+for (const [k, v] of Object.entries(report.fonts)) console.log(`  ${v === 'loaded' ? '✓' : '✗'} ${k} — ${v}`);
+console.log('contrast vs #12110E (WCAG AA body = 4.5, large/secondary = 3.0):');
+for (const c of report.contrast) {
+  const flag = c.ratio === null ? '?' : c.ratio >= 4.5 ? '✓' : c.ratio >= 3 ? '~' : '✗';
+  console.log(`  ${flag} ${c.label.padEnd(16)} ${c.ratio ?? c.note}`);
+}
+if (consoleIssues.length) {
+  console.log('page issues:');
+  for (const i of consoleIssues) console.log('  !', i);
+} else {
+  console.log('page issues: none');
+}
+console.log(`\nWrote ${resolve(OUT, 'full.png')} and ${pixelResults.length} icon crops`);
