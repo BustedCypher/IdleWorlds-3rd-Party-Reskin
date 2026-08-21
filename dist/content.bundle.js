@@ -1331,6 +1331,45 @@
     }
     
     /**
+     * Resolve an item identity from native row text without losing a separately
+     * rendered +1..+4 enhancement badge. Prefer an exact enhanced record over the
+     * base item whenever the combined name exists in ItemDatabase.
+     */
+    function resolveInventoryItemName(texts, getByName) {
+      const lookup = typeof getByName === 'function' ? getByName : () => null;
+      const source = (texts || []).map(t => String(t == null ? '' : t).trim()).filter(Boolean);
+      const candidates = source.filter(t =>
+        t.length > 2 && !/^\d[\d,]*$/.test(t) && !/^[x×]\s*\d/i.test(t) &&
+        !/^lv\.?\s*\d+$/i.test(t) && !/^\+\s*[1-4]$/.test(t) &&
+        !/^(equip|equipped|unequip|use|drop|sell|list|lock|unlock|set bonus)$/i.test(t)
+      );
+      const upgradeToken = source.find(t => /^\+\s*[1-4]$/.test(t));
+      if (upgradeToken) {
+        const suffix = '+' + upgradeToken.replace(/\D/g, '');
+        for (const base of candidates) {
+          for (const combined of [base + suffix, base + ' ' + suffix]) {
+            if (lookup(combined)) return combined;
+          }
+        }
+      }
+      for (const c of candidates) if (lookup(c)) return c;
+      const lvPat = /^lv\.?\s*(\d+)$/i;
+      for (let i = 0; i < source.length; i++) {
+        const base = source[i];
+        if (!base || base.length < 3) continue;
+        const prev = source[i - 1] || '';
+        const next = source[i + 1] || '';
+        for (const lv of [prev, next]) {
+          const m = lvPat.exec(lv);
+          if (!m) continue;
+          for (const combined of [base + ' Lv. ' + m[1], base + ' Lv ' + m[1]]) {
+            if (lookup(combined)) return combined;
+          }
+        }
+      }
+      return candidates[0] || '';
+    }
+    /**
      * Convert native row text into dynamic detail lines.
      *
      * @param {string[]} rawTexts text fragments/compact element text from the live row
@@ -1414,6 +1453,7 @@
     
     
     exports.normaliseInventoryText = normaliseInventoryText;
+    exports.resolveInventoryItemName = resolveInventoryItemName;
     exports.buildInventoryDetails = buildInventoryDetails;
     exports.inventoryDetailSignature = inventoryDetailSignature;
   };
@@ -1433,7 +1473,7 @@
     const { itemRef } = require("modules/TooltipEngine.js");
     const { inject } = require("modules/StyleInjector.js");
     const { tierClass, statChips } = require("modules/itemDisplay.js");
-    const { buildInventoryDetails, inventoryDetailSignature } = require("modules/InventoryModel.js");
+    const { buildInventoryDetails, inventoryDetailSignature, resolveInventoryItemName } = require("modules/InventoryModel.js");
     const { guard, guardEach, raf } = require("modules/Runtime.js");
     const css = require("styles/inventory.css").default;
     const RENDERED_ATTR = 'data-fs-inv';
@@ -1541,39 +1581,6 @@
       return kept.map(rec => rec.text);
     }
     
-    function guessName(texts) {
-      const candidates = texts.filter(t =>
-        t.length > 2 &&
-        !/^\d[\d,]*$/.test(t) &&
-        !/^[x×]\s*\d/i.test(t) &&
-        !/^lv\.?\s*\d+$/i.test(t) &&
-        !/^(equip|equipped|unequip|use|drop|sell|list|lock|unlock|set bonus)$/i.test(t)
-      );
-      if (!candidates.length) return '';
-    
-      for (const c of candidates) {
-        if (ItemDatabase.getByName(c)) return c;
-      }
-    
-      const lvPat = /^lv\.?\s*(\d+)$/i;
-      for (let i = 0; i < texts.length; i++) {
-        const base = texts[i];
-        if (!base || base.length < 3) continue;
-        const prev = texts[i - 1] || '';
-        const next = texts[i + 1] || '';
-        for (const lv of [prev, next]) {
-          const m = lvPat.exec(lv.trim());
-          if (!m) continue;
-          const combined = `${base} Lv. ${m[1]}`;
-          if (ItemDatabase.getByName(combined)) return combined;
-          const combined2 = `${base} Lv ${m[1]}`;
-          if (ItemDatabase.getByName(combined2)) return combined2;
-        }
-      }
-    
-      return candidates[0];
-    }
-    
     function guessQuantity(texts) {
       for (const t of texts) {
         const m = t.match(/^[x×]\s*(\d[\d,]*)$/i);
@@ -1585,7 +1592,7 @@
     
     function extractRowData(row) {
       const texts = leafTexts(row);
-      const name = guessName(texts);
+      const name = resolveInventoryItemName(texts, name => ItemDatabase.getByName(name));
       return { name, qty: guessQuantity(texts), detailTexts: detailTexts(row, name) };
     }
     
@@ -4502,17 +4509,48 @@
     exports.CLOAK_MATERIAL_ALIASES = CLOAK_MATERIAL_ALIASES;
   };
   __modules["modules/itemDisplay.js"] = (module, exports, require) => {
+    function finite(value) {
+      if (value === undefined || value === null || value === '') return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+    function effectNumber(text, pattern) {
+      const match = pattern.exec(String(text || ''));
+      if (!match) return null;
+      const n = Number(match[1]);
+      return Number.isFinite(n) ? n : null;
+    }
+    function fieldOrEffect(item, field, pattern) {
+      const structured = finite(item?.[field]);
+      if (structured !== null) return structured;
+      return effectNumber(item?.effects_raw, pattern);
+    }
+    function deriveDisplayStats(item) {
+      const text = item?.effects_raw || '';
+      return {
+        atk: fieldOrEffect(item, 'atk', /\bATK\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+        def: fieldOrEffect(item, 'def', /\bDEF\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+        hp: fieldOrEffect(item, 'hp', /\bHP\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+        warfare: fieldOrEffect(item, 'warfare', /\bWarfare\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+        xpPerTask: fieldOrEffect(item, 'xp_per_task', /\bXP\s*\+?\s*(-?\d+(?:\.\d+)?)\s*\/\s*task\b/i),
+        doubleGatherPct: fieldOrEffect(item, 'double_gather_pct', /([+-]?\d+(?:\.\d+)?)%\s*(?:2x|2×)\s*gather(?:\s+chance)?\b/i),
+        goldFindPct: fieldOrEffect(item, 'gold_find_pct', /([+-]?\d+(?:\.\d+)?)%\s*gold\s+find\b/i),
+        itemFindPct: fieldOrEffect(item, 'item_find_pct', /([+-]?\d+(?:\.\d+)?)%\s*item\s+find\b/i),
+        sockets: fieldOrEffect(item, 'sockets', /\b(\d+)\s+Sockets?\b/i),
+        allResists: effectNumber(text, /\bAll\s+Resists?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+        fireResist: effectNumber(text, /\bFire\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+        frostResist: effectNumber(text, /\bFrost\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+        lightningResist: effectNumber(text, /\bLightning\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+      };
+    }
     /**
      * itemDisplay
      *
-     * Shared presentation helpers. Inventory rows and tooltip cards both
-     * derive their display data here so a stat is labelled and coloured
-     * identically wherever it appears.
+     * Shared presentation helpers. Inventory rows and tooltip cards both derive
+     * their display data here so a stat is labelled and coloured identically
+     * wherever it appears.
      */
     
-    /* The game ships ~34 tiers. Bucketing them into six named bands lets the
-       tier colour scale carry meaning without inventing 34 colours nobody
-       could distinguish on a dark background. */
     const TIER_BANDS = [
       { max: 5,        cls: 'tier-common'    },
       { max: 11,       cls: 'tier-uncommon'  },
@@ -4528,7 +4566,6 @@
       return (TIER_BANDS.find(b => t <= b.max) || TIER_BANDS[0]).cls;
     }
     
-    /** "Weapon slot" → "Weapon", "Raw material" → "Raw material" */
     function slotLabel(item) {
       const sub = String((item && item.subcategory) || '').trim();
       return sub.replace(/\s+slot$/i, '');
@@ -4538,71 +4575,66 @@
       return v !== undefined && v !== null && v !== '' && v !== 0;
     }
     
-    /**
-     * Build the stat chip list for an item.
-     * @returns {{ text: string, kind: 'plain'|'pos'|'tier' }[]}
-     */
+    /** Build the compact stat rail used by Inventory. */
     function statChips(item, opts = {}) {
       if (!item) return [];
       const max = opts.max || 5;
       const chips = [];
+      const stats = deriveDisplayStats(item);
     
-      // Leading context chip: tier + slot
       const slot = slotLabel(item);
       const tier = has(item.tier) ? `Tier ${item.tier}` : '';
       const context = [tier, slot].filter(Boolean).join(' · ');
       if (context) chips.push({ text: context, kind: 'tier' });
     
-      // Combat stats
-      if (has(item.atk))     chips.push({ text: `ATK +${item.atk}`, kind: 'pos' });
-      if (has(item.def))     chips.push({ text: `DEF +${item.def}`, kind: 'pos' });
-      if (has(item.hp))      chips.push({ text: `HP +${item.hp}`,   kind: 'pos' });
-      if (has(item.warfare)) chips.push({ text: `WAR +${item.warfare}`, kind: 'pos' });
+      if (has(stats.atk))     chips.push({ text: `ATK +${stats.atk}`, kind: 'pos' });
+      if (has(stats.def))     chips.push({ text: `DEF +${stats.def}`, kind: 'pos' });
+      if (has(stats.hp))      chips.push({ text: `HP +${stats.hp}`, kind: 'pos' });
+      if (has(stats.warfare)) chips.push({ text: `WAR +${stats.warfare}`, kind: 'pos' });
     
-      // Percentage bonuses
-      if (has(item.xp_per_task))       chips.push({ text: `XP +${item.xp_per_task}`, kind: 'pos' });
-      if (has(item.double_gather_pct)) chips.push({ text: `2× gather ${item.double_gather_pct}%`, kind: 'pos' });
-      if (has(item.gold_find_pct))     chips.push({ text: `Gold +${item.gold_find_pct}%`, kind: 'pos' });
-      if (has(item.item_find_pct))     chips.push({ text: `Find +${item.item_find_pct}%`, kind: 'pos' });
+      if (has(stats.xpPerTask))      chips.push({ text: `XP +${stats.xpPerTask}`, kind: 'pos' });
+      if (has(stats.doubleGatherPct)) chips.push({ text: `2× gather ${stats.doubleGatherPct}%`, kind: 'pos' });
+      if (has(stats.goldFindPct))    chips.push({ text: `Gold +${stats.goldFindPct}%`, kind: 'pos' });
+      if (has(stats.itemFindPct))    chips.push({ text: `Find +${stats.itemFindPct}%`, kind: 'pos' });
+      if (has(stats.allResists))     chips.push({ text: `All Resists +${stats.allResists}`, kind: 'pos' });
     
-      // Skill bonus
       if (has(item.skill_bonus_skill) && has(item.skill_bonus_value)) {
         chips.push({ text: `${item.skill_bonus_skill} +${item.skill_bonus_value}`, kind: 'pos' });
       }
     
-      // Sockets
-      if (has(item.sockets)) {
-        const n = Number(item.sockets);
+      if (has(stats.sockets)) {
+        const n = Number(stats.sockets);
         chips.push({ text: n === 1 ? '1 socket' : `${n} sockets`, kind: 'plain' });
       }
     
       return chips.slice(0, max);
     }
     
-    /**
-     * Stat rows for the tooltip card — fuller than the chip list, and
-     * key/value rather than a single string.
-     */
+    /** Full stat list used by the rich tooltip card. */
     function statRows(item) {
       if (!item) return [];
       const rows = [];
+      const stats = deriveDisplayStats(item);
       const gold = value => `${Number(value).toLocaleString()}g`;
-    
-      if (has(item.atk))     rows.push({ label: '⚔️ ATK',       value: String(item.atk) });
-      if (has(item.def))     rows.push({ label: '🛡️ DEF',       value: String(item.def) });
-      if (has(item.hp))      rows.push({ label: '❤️ HP',         value: String(item.hp) });
-      if (has(item.warfare)) rows.push({ label: '⚔️ Warfare',   value: String(item.warfare) });
-    
-      if (has(item.xp_per_task))       rows.push({ label: '✨ XP/task',     value: String(item.xp_per_task) });
-      if (has(item.double_gather_pct)) rows.push({ label: '🌿 2× Gather',   value: `${item.double_gather_pct}%` });
-      if (has(item.gold_find_pct))     rows.push({ label: '💰 Gold Find',   value: `${item.gold_find_pct}%` });
-      if (has(item.item_find_pct))     rows.push({ label: '🔎 Item Find',   value: `${item.item_find_pct}%` });
-    
+      if (has(stats.atk))     rows.push({ label: '⚔️ ATK', value: String(stats.atk) });
+      if (has(stats.def))     rows.push({ label: '🛡️ DEF', value: String(stats.def) });
+      if (has(stats.hp))      rows.push({ label: '❤️ HP', value: String(stats.hp) });
+      if (has(stats.warfare)) rows.push({ label: '⚔️ Warfare', value: String(stats.warfare) });
+      if (has(stats.xpPerTask))      rows.push({ label: '✨ XP/task', value: String(stats.xpPerTask) });
+      if (has(stats.doubleGatherPct)) rows.push({ label: '🌿 2× Gather', value: `${stats.doubleGatherPct}%` });
+      if (has(stats.goldFindPct))    rows.push({ label: '💰 Gold Find', value: `${stats.goldFindPct}%` });
+      if (has(stats.itemFindPct))    rows.push({ label: '🔎 Item Find', value: `${stats.itemFindPct}%` });
+      if (has(stats.allResists)) {
+        rows.push({ label: '🜁 All Resists', value: `+${stats.allResists}` });
+      } else {
+        if (has(stats.fireResist)) rows.push({ label: '🔥 Fire Resist', value: `+${stats.fireResist}` });
+        if (has(stats.frostResist)) rows.push({ label: '❄️ Frost Resist', value: `+${stats.frostResist}` });
+        if (has(stats.lightningResist)) rows.push({ label: '⚡ Lightning Resist', value: `+${stats.lightningResist}` });
+      }
       if (has(item.skill_bonus_skill) && has(item.skill_bonus_value)) {
         rows.push({ label: `✨ ${item.skill_bonus_skill}`, value: `+${item.skill_bonus_value}` });
       }
-      if (has(item.sockets)) rows.push({ label: '🔷 Sockets', value: String(item.sockets) });
-    
+      if (has(stats.sockets)) rows.push({ label: '🔷 Sockets', value: String(stats.sockets) });
       if (has(item.base_value)) rows.push({ label: '💰 Base value', value: gold(item.base_value), cls: 'amber' });
       if (has(item.trader_token_value)) {
         const n = Number(item.trader_token_value);
@@ -4612,6 +4644,7 @@
     }
     
     
+    exports.deriveDisplayStats = deriveDisplayStats;
     exports.tierClass = tierClass;
     exports.slotLabel = slotLabel;
     exports.statChips = statChips;

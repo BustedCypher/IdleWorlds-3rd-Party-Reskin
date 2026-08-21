@@ -59,6 +59,13 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
           <div><span id="native-qty">x1</span></div>
           <button>Equip</button><button>List</button>
         </div>
+        <div class="compact-row" id="enhanced-row">
+          <div><span>Wool Boots</span><span>+4</span></div>
+          <div><span>Tier 1 · Boots</span><span>DEF +2</span><span>+3% 2x gather chance</span></div>
+          <div><span>In loadout: Item Find</span><span>Cut Sunstone: +6% Item Find</span></div>
+          <div><span>x1</span></div>
+          <button>Equip</button><button>List</button>
+        </div>
       </section>
       <div class="compact-panel">
         <div><span>Mining</span></div>
@@ -113,6 +120,11 @@ storage.set('iw-item-db-cache', {
     double_gather_pct: 8, gold_find_pct: 3, base_value: 125, trader_token_value: 1,
     effects_raw: 'ATK +18 \u0007 DEF +7, Requires Combat Lv 3, XP +4/task, +8% 2x gather chance',
     acquisition_type: 'ZoneDrop', drop_rate: '1/20000', drop_boosted_by: 'Item Find %',
+  }, {
+    item_id: 'wool_boots_plus_4', name: 'Wool Boots+4', wiki_slug: 'wool_boots_plus_4', tier: 1,
+    category: 'Equipment', subcategory: 'Boots', def: 2, sockets: 2,
+    effects_raw: 'DEF +2, +3% 2x gather chance, 2 Sockets',
+    acquisition_type: 'Upgrade', acquisition_summary: 'Apply an Upgrade Orb to Wool Boots+3',
   }],
   generatedAt: 'smoke-tooltip-data', cachedAt: Date.now(),
 });
@@ -225,6 +237,11 @@ check('native Equip button still present',
   [...row.querySelectorAll('button')].some(b => b.textContent.trim() === 'Equip'));
 check('initial quantity rendered', row.querySelector('.fs-inv-qty')?.textContent === '×1',
   row.querySelector('.fs-inv-qty')?.textContent || 'missing');
+const enhancedRow = window.document.getElementById('enhanced-row');
+const enhancedOverlay = enhancedRow.querySelector(':scope > .fs-inv-row');
+check('separate +4 badge resolves enhanced item identity', enhancedOverlay?.querySelector('.iw-item-ref')?.getAttribute('data-iw-item') === 'wool_boots_plus_4');
+check('enhanced Tailoring bonus survives Inventory replacement', [...enhancedOverlay.querySelectorAll('.fs-stat')].some(el => el.textContent.trim() === '2× gather 3%'));
+check('enhanced row preserves per-copy loadout and socket details', enhancedOverlay.textContent.includes('In loadout: Item Find') && enhancedOverlay.textContent.includes('Cut Sunstone: +6% Item Find'));
 
 const panel = window.document.querySelector('.compact-panel');
 check('mining panel classified as a skill panel', panel.classList.contains('fs-skill--mining'),
@@ -396,7 +413,7 @@ await waitFor(() => [...window.document.querySelectorAll('.compact-row')]
   .every(r => r.querySelector(':scope > .fs-inv-row')), { timeout: 8000 });
 const rendered = [...window.document.querySelectorAll('.compact-row')]
   .filter(r => r.querySelector(':scope > .fs-inv-row')).length;
-check('all 121 rows eventually rendered across frames', rendered === 121, `rendered ${rendered}`);
+check('all 122 rows eventually rendered across frames', rendered === 122, `rendered ${rendered}`);
 
 /* ── First disable ───────────────────────────────────────────────────── */
 

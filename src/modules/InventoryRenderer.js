@@ -14,7 +14,7 @@ import { ItemDatabase } from './ItemDatabase.js';
 import { itemRef } from './TooltipEngine.js';
 import { inject } from './StyleInjector.js';
 import { tierClass, statChips } from './itemDisplay.js';
-import { buildInventoryDetails, inventoryDetailSignature } from './InventoryModel.js';
+import { buildInventoryDetails, inventoryDetailSignature, resolveInventoryItemName } from './InventoryModel.js';
 import { guard, guardEach, raf } from './Runtime.js';
 import css from '../styles/inventory.css';
 
@@ -123,39 +123,6 @@ function detailTexts(row, displayName = '') {
   return kept.map(rec => rec.text);
 }
 
-function guessName(texts) {
-  const candidates = texts.filter(t =>
-    t.length > 2 &&
-    !/^\d[\d,]*$/.test(t) &&
-    !/^[x×]\s*\d/i.test(t) &&
-    !/^lv\.?\s*\d+$/i.test(t) &&
-    !/^(equip|equipped|unequip|use|drop|sell|list|lock|unlock|set bonus)$/i.test(t)
-  );
-  if (!candidates.length) return '';
-
-  for (const c of candidates) {
-    if (ItemDatabase.getByName(c)) return c;
-  }
-
-  const lvPat = /^lv\.?\s*(\d+)$/i;
-  for (let i = 0; i < texts.length; i++) {
-    const base = texts[i];
-    if (!base || base.length < 3) continue;
-    const prev = texts[i - 1] || '';
-    const next = texts[i + 1] || '';
-    for (const lv of [prev, next]) {
-      const m = lvPat.exec(lv.trim());
-      if (!m) continue;
-      const combined = `${base} Lv. ${m[1]}`;
-      if (ItemDatabase.getByName(combined)) return combined;
-      const combined2 = `${base} Lv ${m[1]}`;
-      if (ItemDatabase.getByName(combined2)) return combined2;
-    }
-  }
-
-  return candidates[0];
-}
-
 function guessQuantity(texts) {
   for (const t of texts) {
     const m = t.match(/^[x×]\s*(\d[\d,]*)$/i);
@@ -167,7 +134,7 @@ function guessQuantity(texts) {
 
 function extractRowData(row) {
   const texts = leafTexts(row);
-  const name = guessName(texts);
+  const name = resolveInventoryItemName(texts, name => ItemDatabase.getByName(name));
   return { name, qty: guessQuantity(texts), detailTexts: detailTexts(row, name) };
 }
 
