@@ -108,6 +108,8 @@ window.chrome = {
 
 const skillAction = window.document.getElementById('skill-action');
 const nativeQty = window.document.getElementById('native-qty');
+const skillActionText = skillAction.firstChild;
+const nativeQtyText = nativeQty.firstChild;
 const inventorySection = window.document.getElementById('inventory-section');
 const nativeSkillStyle = skillAction.style.cssText;
 const nativeSectionStyle = inventorySection.style.cssText;
@@ -195,22 +197,24 @@ console.log('\nsmoke: equal-length reconciliation');
 // cheap Inventory signature is definitely in its steady state before mutation.
 await settle(120);
 
-nativeQty.textContent = 'x2'; // same length as x1
+// Mutate nodeValue rather than assigning textContent: this mirrors React's text
+// update path and keeps the original game Text node connected throughout.
+nativeQtyText.nodeValue = 'x2'; // same length as x1
 await waitFor(() => row.querySelector('.fs-inv-qty')?.textContent === '×2');
 check('equal-length inventory quantity change reconciles',
   row.querySelector('.fs-inv-qty')?.textContent === '×2',
   row.querySelector('.fs-inv-qty')?.textContent || 'missing');
 
-nativeQty.textContent = 'x1';
+nativeQtyText.nodeValue = 'x1';
 await waitFor(() => row.querySelector('.fs-inv-qty')?.textContent === '×1');
 check('inventory quantity reconciles back', row.querySelector('.fs-inv-qty')?.textContent === '×1');
 
-skillAction.textContent = 'Fish'; // same length as Mine
+skillActionText.nodeValue = 'Fish'; // same length as Mine
 await waitFor(() => panel.classList.contains('fs-skill--fishing'));
 check('equal-length skill action change invalidates skill cache',
   panel.classList.contains('fs-skill--fishing'), panel.className);
 
-skillAction.textContent = 'Mine';
+skillActionText.nodeValue = 'Mine';
 await waitFor(() => panel.classList.contains('fs-skill--mining'));
 check('skill classification reconciles back to mining',
   panel.classList.contains('fs-skill--mining'), panel.className);
