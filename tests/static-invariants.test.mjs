@@ -13,16 +13,21 @@ const code = text => text
   .replace(/^\s*\/\/.*$/gm, '');
 
 const content = await read('src/content.js');
-// Match the identifier at its call site rather than a literal `name()`, so the
-// invariant survives the guard(...) wrapping introduced for error isolation.
-const callSite = (text, name) => text.indexOf(name, text.indexOf('function boot()'));
-const watcherAt = callSite(content, 'startWatcher');
-assert.ok(callSite(content, 'initTooltipEngine') < watcherAt, 'tooltip engine must register before watcher');
-assert.ok(callSite(content, 'initInventoryRenderer') < watcherAt, 'inventory listener must register before watcher');
-assert.ok(callSite(content, 'initSkillPanelRenderer') < watcherAt, 'skill listener must register before watcher');
-assert.ok(callSite(content, 'initUIFoundation') < watcherAt, 'UI foundation must register before watcher');
+const bootStart = content.indexOf('function boot()');
+const bootEnd = content.indexOf('\n}', bootStart);
+const bootBody = content.slice(bootStart, bootEnd > bootStart ? bootEnd : undefined);
+assert.ok(bootBody.indexOf('bindConsumersOnce') < bootBody.indexOf('startWatcher'),
+  'all consumers must be bound before DOMWatcher initial discovery');
+assert.match(content, /function bindConsumersOnce\(\)/, 'consumer bindings should be page-lifetime and centralized');
+assert.match(content, /if \(consumersBound\) return/, 're-enable must not register duplicate document listeners');
+assert.match(content, /initTooltipEngine/);
+assert.match(content, /initInventoryRenderer/);
+assert.match(content, /initSkillPanelRenderer/);
+assert.match(content, /initUIFoundation/);
+assert.match(content, /inject\('base', baseCss\)/, 'base theme must be runtime-owned so teardown can remove it');
 assert.match(content, /iw-skin-enabled/, 'the skin must be disableable at runtime without uninstalling');
 assert.match(content, /function teardown\(\)/, 'a disable path must actually restore the native page');
+assert.match(content, /setRuntimeActive\(false\)/, 'teardown/initial-disabled state must suppress late reconciliation work');
 
 const modulesDir = new URL('src/modules/', root);
 let observerCount = 0;
@@ -32,7 +37,6 @@ for (const name of await readdir(modulesDir)) {
   observerCount += (text.match(/new\s+MutationObserver\s*\(/g) || []).length;
 }
 assert.equal(observerCount, 1, 'there must be exactly one MutationObserver in runtime modules');
-
 
 const ui = await read('src/modules/UIFoundation.js');
 assert.doesNotMatch(ui, /new\s+MutationObserver/, 'UI foundation must use the central DOMWatcher');
@@ -77,10 +81,6 @@ assert.match(inventoryCSS, /\.fs-inv-detail[^}]*text-overflow:\s*ellipsis/s, 'in
 const scanner = await read('src/modules/NameScanner.js');
 assert.doesNotMatch(scanner, /iwScanned|data-iw-scanned/);
 assert.match(scanner, /ItemDatabase\.revision\(\)/);
-// The single most important invariant in the project. React holds direct
-// references to the text nodes it created; replacing one throws NotFoundError on
-// unmount, or silently strands a detached node so the visible text goes stale.
-// Either is a functionality change. (Audit S1.4)
 assert.doesNotMatch(code(scanner), /replaceChild|appendChild|insertBefore|removeChild/,
   'name annotation must never mutate the game DOM');
 assert.doesNotMatch(code(scanner), /\.innerHTML/, 'name annotation must not write markup into game nodes');
@@ -89,6 +89,16 @@ assert.match(scanner, /CSS\.highlights/, 'annotation must be painted, not inject
 const runtime = await read('src/modules/Runtime.js');
 assert.match(runtime, /chrome\.storage\.local/, 'persistent state belongs in extension-private storage');
 assert.match(runtime, /export function guard\b/, 'consumers must be individually isolated');
+assert.match(runtime, /runtimeActive/, 'runtime must explicitly gate reconciliation while disabled');
+assert.match(runtime, /if \(!runtimeActive\) return false/, 'guarded callbacks must be inert while disabled');
+
+const injector = await read('src/modules/StyleInjector.js');
+assert.match(injector, /assetUrl/, 'runtime-injected base CSS must rewrite extension asset URLs');
+assert.match(injector, /\.\.\/assets\//, 'relative bundled asset references must be recognized for rewriting');
+
+const styleOwner = await read('src/modules/InlineStyleOwner.js');
+assert.match(styleOwner, /nativeValue/, 'inline style ownership must preserve the underlying native value');
+assert.match(styleOwner, /restoreAll/, 'owned inline properties must be globally restorable');
 
 const db = await read('src/modules/ItemDatabase.js');
 assert.doesNotMatch(code(db), /localStorage\.setItem/, 'the skin must never write into the page origin storage quota');
@@ -98,10 +108,14 @@ const painter = await read('src/modules/BackgroundPainter.js');
 assert.doesNotMatch(painter, /iwPainted\)\s*return|dataset\.iwPainted\s*\)\s*return/);
 assert.match(painter, /SURFACE_SELECTOR/, 'background painting should be limited to structural surfaces');
 assert.match(painter, /isSurfaceCandidate/, 'background painting should not treat every descendant as a surface');
+assert.match(painter, /createInlineStyleOwner/, 'background repaint must restore only properties it owns');
+assert.doesNotMatch(painter, /style\.removeProperty/, 'background teardown must not blindly erase native inline declarations');
 
 const skill = await read('src/modules/SkillPanelRenderer.js');
 assert.doesNotMatch(skill, /new\s+MutationObserver/);
 assert.match(skill, /buttonStyleSnapshots/);
+assert.match(skill, /createInlineStyleOwner/, 'skill renderer must track reversible inline-style ownership');
+assert.doesNotMatch(skill, /removeAttribute\(['"]style['"]\)/, 'skill teardown must never erase the game entire inline style attribute');
 assert.doesNotMatch(skill, /wrapper\.appendChild\(panel\)/, 'renderer must not wrap React-owned skill panels');
 assert.match(skill, /if \(!SKILL_META\[skillType\]\)/, 'unknown compact panels must not receive skill chrome');
 assert.match(skill, /data-iw-skill-role|ROLE_ATTR/, 'skill renderer must attach semantic role markers');
@@ -126,7 +140,6 @@ assert.doesNotMatch(skillCSS, /data-fs-skill-flavour/, 'skill flavour pseudo-hea
 assert.match(skillCSS, /\.compact-panel\.fs-skill-panel::before/);
 assert.match(skillCSS, /data-iw-skill-layout=\"three-zone\"/, 'skill CSS should provide an aligned three-zone layout when verified');
 assert.match(skillCSS, /data-iw-skill-role=\"progress-track\"/, 'skill progress bars must use the shared action-frame role');
-
 assert.match(skillCSS, /\.compact-panel\.fs-skill-panel::after\s*\{\s*content:\s*none/, 'large watermark glyph must remain removed');
 assert.match(skillCSS, /data-iw-skill-role=\"level-progress\"/, 'XP readout must be treated as flat data');
 assert.match(skillCSS, /\[data-iw-readout\]/, 'all nested XP readout shells must be flattened');
@@ -153,19 +166,17 @@ assert.match(baseCSS, /chat-name-/, 'native cosmetic player-name buttons must be
 assert.match(baseCSS, /level-progress/, 'XP data buttons must be excluded from generic button chrome');
 
 const atlas = await read('src/modules/AtlasService.js');
-// v1.6.0 supersedes the "pin the GitHub revision" invariant with a stronger one:
-// there is no remote origin at runtime at all. Atlas images used to be applied as
-// `background-image: url(https://raw.githubusercontent.com/...)`, a request made
-// by the PAGE and therefore governed by the game's img-src CSP rather than by our
-// host_permissions. (Audit S1.1)
 assert.doesNotMatch(atlas, /https:\/\/raw\.githubusercontent\.com/, 'runtime must not fetch atlas assets from a remote origin');
 assert.match(atlas, /assetUrl\('assets\/gear_icons_atlas\.png'\)/, 'gear atlas must resolve from the extension bundle');
 assert.match(atlas, /assetUrl\('assets\/item_icons_atlas\.png'\)/, 'item atlas must resolve from the extension bundle');
 assert.match(atlas, /REQUIRED_ITEM_COLUMNS/, 'item index schema drift must fail loudly, not paint every icon as cell 0,0');
 
-// The revision pin still exists — it now governs what `npm run vendor` downloads.
 const vendor = await read('build-tools/vendor-assets.mjs');
 assert.match(vendor, /c4695b7f5519789558b0d72fa85e60338070e4b5/, 'vendored asset revision must be immutable');
+
+const build = await read('build-tools/build_recovered.py');
+assert.match(build, /STANDALONE_CSS\s*=\s*set\(\)/,
+  'base.css must be bundled as runtime-owned text, not copied as manifest CSS');
 
 const manifest = JSON.parse(await read('manifest.json'));
 assert.ok(manifest.permissions?.includes('storage'), 'extension-private storage requires the storage permission');
@@ -173,16 +184,15 @@ assert.ok(!JSON.stringify(manifest.host_permissions).includes('githubusercontent
   'the GitHub host permission is obsolete once assets are bundled');
 assert.ok(manifest.web_accessible_resources?.some(r => r.resources?.includes('assets/*')),
   'bundled atlases and fonts must be reachable from the page');
-assert.ok(manifest.content_scripts?.[0]?.css?.includes('dist/base.css'),
-  'base theme must ship declaratively so it applies before first paint');
+assert.ok(!(manifest.content_scripts?.[0]?.css || []).includes('dist/base.css'),
+  'base.css must not be manifest-declared because the runtime kill switch cannot remove manifest CSS');
 
 const bundle = await read('dist/content.bundle.js');
 assert.doesNotMatch(bundle, /sourceMappingURL=data:/);
 const bundleStat = await stat(new URL('dist/content.bundle.js', root));
-// Raised from 205k for v1.6.0: adds Runtime.js, the rewritten non-destructive
-// NameScanner, teardown paths, and their rationale comments. The point of this
-// ceiling is to catch an accidental inline source map or a bundled binary, not
-// to discourage documentation.
-assert.ok(bundleStat.size < 240_000, `production bundle unexpectedly large: ${bundleStat.size}`);
+// base.css is now embedded as a removable text module, so the ceiling includes
+// the global theme in addition to Runtime/NameScanner/teardown logic. It remains
+// a guard against accidental source maps or bundled binary assets.
+assert.ok(bundleStat.size < 275_000, `production bundle unexpectedly large: ${bundleStat.size}`);
 
 console.log('PASS static lifecycle + visual invariants');
