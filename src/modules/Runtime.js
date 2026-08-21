@@ -10,12 +10,32 @@
  *     GAME's localStorage, which we share with the page and must not fill.
  *     (Audit S1.3)
  *   • A thrown consumer can never take down the rest of a flush. (Audit S3.7)
+ *   • Work queued by an old skin activation cannot wake up after teardown or
+ *     a later re-enable. The activation generation invalidates stale RAF work.
  *
  * The module degrades gracefully when `chrome` is unavailable (unit tests,
  * a plain <script> harness) so the presentation layer stays testable.
  */
 
 const hasChrome = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
+
+/* ── Activation lifecycle ───────────────────────────────────────────── */
+
+// Default to active for isolated module/unit tests. content.js explicitly sets
+// the real page state before boot/after teardown.
+let runtimeActive = true;
+let runtimeGeneration = 0;
+
+export function setRuntimeActive(active) {
+  const next = active !== false;
+  if (runtimeActive === next) return;
+  runtimeActive = next;
+  runtimeGeneration += 1;
+}
+
+export function isRuntimeActive() {
+  return runtimeActive;
+}
 
 /* ── Assets ──────────────────────────────────────────────────────────── */
 
@@ -93,6 +113,9 @@ export function onStorageChanged(key, handler) {
   if (!hasChrome || !chrome.storage?.onChanged) return () => {};
   const listener = (changes, area) => {
     if (area !== 'local' || !(key in changes)) return;
+    // Storage changes must remain observable while the skin is disabled — this
+    // is the path that turns it back on — so guard() is intentionally not tied
+    // to runtimeActive.
     guard('storage-change', () => handler(changes[key].newValue));
   };
   chrome.storage.onChanged.addListener(listener);
@@ -135,9 +158,15 @@ export function guard(label, fn) {
 
 /**
  * Map `fn` across `items` with per-item isolation.
+ *
+ * Synchronous reconciliation kicked by a late ItemDatabase/Atlas event is
+ * ignored after teardown. Teardown itself runs before content.js marks the
+ * runtime inactive, so its cleanup guardEach() calls still execute normally.
+ *
  * @returns {number} count of items processed without throwing
  */
 export function guardEach(label, items, fn) {
+  if (!runtimeActive) return 0;
   let ok = 0;
   for (const item of items || []) {
     if (guard(label, () => fn(item))) ok += 1;
@@ -147,6 +176,19 @@ export function guardEach(label, items, fn) {
 
 /* ── Scheduling ──────────────────────────────────────────────────────── */
 
-export const raf = typeof window !== 'undefined' && window.requestAnimationFrame
+const scheduleFrame = typeof window !== 'undefined' && window.requestAnimationFrame
   ? window.requestAnimationFrame.bind(window)
   : (fn => setTimeout(fn, 16));
+
+/**
+ * Schedule work for the current activation only. A callback queued before a
+ * disable/re-enable cycle is stale even if the skin is active again by the time
+ * the browser reaches that frame, so capture and compare the generation too.
+ */
+export function raf(fn) {
+  const generation = runtimeGeneration;
+  return scheduleFrame(() => {
+    if (!runtimeActive || generation !== runtimeGeneration) return;
+    fn();
+  });
+}
