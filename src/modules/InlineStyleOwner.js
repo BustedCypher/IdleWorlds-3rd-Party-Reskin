@@ -13,6 +13,12 @@
  *   • If React rewrites one of OUR owned properties, the next set() call sees
  *     the external value before re-applying the skin and promotes that value to
  *     the new native-underlay snapshot.
+ *
+ * CSSStyleDeclaration normalises values when they are written. For example,
+ * `#DAD3C3` is commonly serialised back as `rgb(218, 211, 195)`. Ownership must
+ * therefore remember the browser's POST-WRITE value, never the raw requested
+ * string, or a later reconcile mistakes our own normalised value for a React
+ * write and permanently promotes it to the "native" snapshot.
  */
 
 export function createInlineStyleOwner() {
@@ -55,15 +61,20 @@ export function createInlineStyleOwner() {
   function set(el, prop, value, priority = 'important') {
     if (!el?.style) return false;
     const state = stateFor(el, prop);
-    const currentValue = el.style.getPropertyValue(prop);
-    const currentPriority = el.style.getPropertyPriority(prop);
+    const beforeValue = el.style.getPropertyValue(prop);
+    const beforePriority = el.style.getPropertyPriority(prop);
 
-    state.appliedValue = value;
-    state.appliedPriority = priority;
-
-    if (currentValue === value && currentPriority === priority) return false;
+    // Always let CSSStyleDeclaration parse/normalise the requested value first.
+    // Comparing `beforeValue` directly with the caller's raw value is unsafe:
+    // equivalent colours, shorthands and numeric forms can serialise differently.
     el.style.setProperty(prop, value, priority);
-    return true;
+
+    const afterValue = el.style.getPropertyValue(prop);
+    const afterPriority = el.style.getPropertyPriority(prop);
+    state.appliedValue = afterValue;
+    state.appliedPriority = afterPriority;
+
+    return beforeValue !== afterValue || beforePriority !== afterPriority;
   }
 
   function restoreElement(el) {
