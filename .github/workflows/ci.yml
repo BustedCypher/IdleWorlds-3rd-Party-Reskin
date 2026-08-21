@@ -9,7 +9,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-and-test:
@@ -28,11 +28,20 @@ jobs:
       - name: Install test dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Rebuild production bundle
-        run: python3 build-tools/build_recovered.py --allow-missing-assets
-
-      - name: Check generated JavaScript syntax
-        run: node --check dist/content.bundle.js
-
-      - name: Run regression suites
+      - name: Rebuild, syntax-check and run regression suites
         run: npm test
+
+      - name: Sync generated production bundle on same-repository fix branches
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/fix/')
+        shell: bash
+        run: |
+          git add -- dist/content.bundle.js
+          if git diff --cached --quiet; then
+            echo "dist/content.bundle.js is already current"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Rebuild production bundle"
+          git push origin "HEAD:${GITHUB_REF#refs/heads/}"
