@@ -18,14 +18,20 @@ const ZONE_ATTR = 'data-iw-skill-zone';
 const buttonStyleSnapshots = new WeakMap();
 const readoutStyleSnapshots = new WeakMap();
 const ingredientStyleSnapshots = new WeakMap();
-const styleOwner = createInlineStyleOwner();
+
+// Keep independent ownership domains. A live XP datum can itself be a button;
+// restoring stale ACTION chrome on that node must not also restore/remove the
+// flat readout treatment it still legitimately owns.
+const buttonStyleOwner = createInlineStyleOwner();
+const readoutStyleOwner = createInlineStyleOwner();
+const ingredientStyleOwner = createInlineStyleOwner();
 let listenerBound = false;
 
 const SKILL_META = {
   combat:    { label: 'Combat',    glyph: '⚔︎', actions: ['fight'] },
   mining:    { label: 'Mining',    glyph: '⛏︎', actions: ['mine'] },
   smithing:  { label: 'Smithing',  glyph: '⚒︎', actions: ['smelt', 'forge'] },
-  gathering: { label: 'Gathering', glyph: '❧', actions: ['gather', 'harvest'] },
+  gathering: { label: 'Gathering', glyph: '❧',  actions: ['gather', 'harvest'] },
   alchemy:   { label: 'Alchemy',   glyph: '⚗︎', actions: ['brew'] },
   jewelcrafting: { label: 'Jewelcrafting', glyph: '◆', actions: ['prospect'] },
   spellcrafting: { label: 'Spellcrafting', glyph: '✧', actions: ['enchant'] },
@@ -34,8 +40,8 @@ const SKILL_META = {
   fishing:   { label: 'Fishing',   glyph: '⌁', actions: ['fish'] },
 };
 
-function setStyle(el, prop, value, priority = 'important') {
-  return styleOwner.set(el, prop, value, priority);
+function setOwnedStyle(owner, el, prop, value, priority = 'important') {
+  return owner.set(el, prop, value, priority);
 }
 
 function normText(value) {
@@ -108,9 +114,9 @@ function styleButton(btn) {
   const role = btn.getAttribute(ROLE_ATTR) || '';
   // Live IdleWorlds renders the level/XP datum as a real <button>. It is data,
   // not a command. If React repurposed a button we styled in an earlier flush,
-  // restore our owned action properties before treating it as readout data.
+  // restore only our old ACTION properties; readout ownership is independent.
   if (role === 'level-progress') {
-    styleOwner.restoreElement(btn);
+    buttonStyleOwner.restoreElement(btn);
     delete btn.dataset.iwBtnState;
     buttonStyleSnapshots.delete(btn);
     return;
@@ -120,23 +126,27 @@ function styleButton(btn) {
   const previous = buttonStyleSnapshots.get(btn);
   if (previous && previous.state === state && previous.role === role && previous.style === currentStyle) return;
 
-  for (const [prop, value] of Object.entries(BUTTON_STYLES.base)) setStyle(btn, prop, value);
-  for (const [prop, value] of Object.entries(BUTTON_STYLES[state])) setStyle(btn, prop, value);
+  for (const [prop, value] of Object.entries(BUTTON_STYLES.base)) {
+    setOwnedStyle(buttonStyleOwner, btn, prop, value);
+  }
+  for (const [prop, value] of Object.entries(BUTTON_STYLES[state])) {
+    setOwnedStyle(buttonStyleOwner, btn, prop, value);
+  }
 
   // Role geometry is applied inline because IdleWorlds frequently writes its
   // own inline button dimensions during React updates.
   if (role === 'nav-button') {
-    setStyle(btn, 'width', '30px');
-    setStyle(btn, 'min-width', '30px');
-    setStyle(btn, 'height', '30px');
-    setStyle(btn, 'min-height', '30px');
-    setStyle(btn, 'padding', '0');
+    setOwnedStyle(buttonStyleOwner, btn, 'width', '30px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '30px');
+    setOwnedStyle(buttonStyleOwner, btn, 'height', '30px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '30px');
+    setOwnedStyle(buttonStyleOwner, btn, 'padding', '0');
   } else if (role === 'action-button') {
-    setStyle(btn, 'width', '96px');
-    setStyle(btn, 'min-width', '96px');
-    setStyle(btn, 'height', '34px');
-    setStyle(btn, 'min-height', '34px');
-    setStyle(btn, 'padding', '0 14px');
+    setOwnedStyle(buttonStyleOwner, btn, 'width', '96px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '96px');
+    setOwnedStyle(buttonStyleOwner, btn, 'height', '34px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '34px');
+    setOwnedStyle(buttonStyleOwner, btn, 'padding', '0 14px');
   }
 
   if (btn.dataset.iwBtnState !== state) btn.dataset.iwBtnState = state;
@@ -220,13 +230,7 @@ function readoutBranch(el, panel) {
 }
 
 function neutraliseReadouts(panel) {
-  // Restore stale readout branches before discovering the new live branch.
-  // React may replace only the inner readout while preserving a wrapper.
-  panel.querySelectorAll('[data-iw-readout]').forEach(el => {
-    styleOwner.restoreElement(el);
-    delete el.dataset.iwReadout;
-    readoutStyleSnapshots.delete(el);
-  });
+  const previouslyMarked = [...panel.querySelectorAll('[data-iw-readout]')];
 
   let readout = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
   if (!readout) {
@@ -235,18 +239,38 @@ function neutraliseReadouts(panel) {
       return LEVEL_PROGRESS_PATTERN.test(normText(el.textContent));
     }) || null;
   }
-  if (!readout) return;
+
+  if (!readout) {
+    // The readout disappeared or React repurposed this branch. Restore only the
+    // nodes that previously belonged to the readout treatment.
+    for (const old of previouslyMarked) {
+      readoutStyleOwner.restoreElement(old);
+      delete old.dataset.iwReadout;
+      readoutStyleSnapshots.delete(old);
+    }
+    return;
+  }
 
   const branch = readoutBranch(readout, panel);
+  const current = new Set(branch);
+
+  // Restore ONLY nodes that left the readout branch. Restoring every marked
+  // node on every reconcile would itself generate style mutations forever.
+  for (const old of previouslyMarked) {
+    if (current.has(old)) continue;
+    readoutStyleOwner.restoreElement(old);
+    delete old.dataset.iwReadout;
+    readoutStyleSnapshots.delete(old);
+  }
+
   for (const target of branch) {
     target.dataset.iwReadout = '1';
-    for (const [prop, value] of Object.entries(READOUT_STYLES)) setStyle(target, prop, value);
-    // Native metric widgets may set flex/grid alignment or transforms on an
-    // otherwise borderless shell. Reset only the branch that contains no other
-    // semantic skill content.
-    setStyle(target, 'transform', 'none');
-    setStyle(target, 'filter', 'none');
-    setStyle(target, 'align-self', 'auto');
+    for (const [prop, value] of Object.entries(READOUT_STYLES)) {
+      setOwnedStyle(readoutStyleOwner, target, prop, value);
+    }
+    setOwnedStyle(readoutStyleOwner, target, 'transform', 'none');
+    setOwnedStyle(readoutStyleOwner, target, 'filter', 'none');
+    setOwnedStyle(readoutStyleOwner, target, 'align-self', 'auto');
     readoutStyleSnapshots.set(target, target.getAttribute('style') || '');
   }
 }
@@ -269,7 +293,7 @@ function neutraliseIngredients(panel) {
     const matches = INGR_PATTERN.test(text);
     if (!matches) {
       if (el.dataset.iwIngr) {
-        styleOwner.restoreElement(el);
+        ingredientStyleOwner.restoreElement(el);
         delete el.dataset.iwIngr;
       }
       ingredientStyleSnapshots.delete(el);
@@ -281,7 +305,9 @@ function neutraliseIngredients(panel) {
       const currentStyle = target.getAttribute('style') || '';
       if (ingredientStyleSnapshots.get(target) === currentStyle && target.dataset.iwIngr === '1') continue;
       if (target.dataset.iwIngr !== '1') target.dataset.iwIngr = '1';
-      for (const [prop, value] of Object.entries(INGR_STYLES)) setStyle(target, prop, value);
+      for (const [prop, value] of Object.entries(INGR_STYLES)) {
+        setOwnedStyle(ingredientStyleOwner, target, prop, value);
+      }
       ingredientStyleSnapshots.set(target, target.getAttribute('style') || '');
     }
   }
@@ -465,7 +491,9 @@ function migrateLegacyWrapper(panel) {
 }
 
 function clearPanelInlineTreatment(panel) {
-  styleOwner.restoreWithin(panel);
+  buttonStyleOwner.restoreWithin(panel);
+  readoutStyleOwner.restoreWithin(panel);
+  ingredientStyleOwner.restoreWithin(panel);
   panel.querySelectorAll('[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]').forEach(el => {
     delete el.dataset.iwReadout;
     delete el.dataset.iwIngr;
@@ -522,9 +550,11 @@ function renderPanel(panel, skillType) {
 /** Strip skill chrome and restore only the inline properties this module owns. */
 export function clearSkillPanels() {
   guardEach('skill:teardown', document.querySelectorAll('.compact-panel'), clearPanelChrome);
-  // Defensive cleanup for a previously styled node that React moved outside a
+  // Defensive cleanup for previously styled nodes that React moved outside a
   // .compact-panel before teardown.
-  styleOwner.restoreAll();
+  buttonStyleOwner.restoreAll();
+  readoutStyleOwner.restoreAll();
+  ingredientStyleOwner.restoreAll();
   document.querySelectorAll('[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]').forEach(el => {
     delete el.dataset.iwReadout;
     delete el.dataset.iwIngr;
