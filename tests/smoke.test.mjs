@@ -65,6 +65,21 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
         <div><span>Mine Copper Ore</span><span>Requires Mining Lv 2</span></div>
         <div><button id="skill-action" style="width:77px;color:rgb(1, 2, 3)">Mine</button></div>
       </div>
+      <div class="compact-panel" id="jewel-panel">
+        <div><span>💎</span><span>Jewel</span><span>LV 68</span></div>
+        <div><span>Prospect Silver Ore</span><button>Lv 68 - 49.3% • 27,902,163 to go</button><span>Silver Ore 6277/2</span><span>Requires Jewelcrafting Lv 9</span><span>Base reward: +43 jewelcrafting XP/task</span></div>
+        <div><div><button>‹</button><button>›</button></div><button id="jewel-action">Prospect</button></div>
+      </div>
+      <div class="compact-panel" id="spell-panel">
+        <div><span>✨</span><span>Spellcraft</span><span>LV 57</span></div>
+        <div><span>Harvest Silver Mana</span><span>Gather Silver Mana from the ether</span><button>Lv 57 - 94.6% • 334,517 to go</button><span>Requires Spellcraft Lv 9</span><span>Base reward: +22 spellcrafting XP/task</span></div>
+        <div><div><button>‹</button><button>›</button></div><button id="spell-action">Gather</button></div>
+      </div>
+      <div class="compact-panel" id="tailor-panel">
+        <div><span>🧵</span><span>Tailor</span><span>LV 26</span></div>
+        <div><span>Weave Wool Cloth</span><button>Lv 26 - 21.0% • 13,450 to go</button><span>Wool 4/6</span><span>Requires Tailoring Lv 9 and Gathering Lv 5</span><span>Base reward: +130 tailoring XP/task</span><span>Missing materials — will queue (gather first)</span></div>
+        <div><div><button>‹</button><button>›</button></div><button id="tailor-action">Weave</button></div>
+      </div>
       <div class="quest-description"><p>Bring the smith an Iron Sword to continue.</p></div>
     </div>
   </div>
@@ -189,6 +204,22 @@ check('background painter actively overrides native navy while enabled',
   inventorySection.style.getPropertyValue('background-color') !== 'rgb(15, 23, 42)',
   inventorySection.style.cssText);
 check('main nav classified', !!window.document.querySelector('[data-iw-ui="main-nav"]'));
+
+const jewelPanel = window.document.getElementById('jewel-panel');
+const spellPanel = window.document.getElementById('spell-panel');
+const tailorPanel = window.document.getElementById('tailor-panel');
+check('live Jewel label gets jewelcrafting three-zone layout',
+  jewelPanel.classList.contains('fs-skill--jewelcrafting') && jewelPanel.dataset.iwSkillLayout === 'three-zone');
+check('Spellcraft identity wins over ambiguous Gather action',
+  spellPanel.classList.contains('fs-skill--spellcrafting') && !spellPanel.classList.contains('fs-skill--gathering') && spellPanel.dataset.iwSkillLayout === 'three-zone');
+check('Spellcraft secondary description is normalised',
+  !!spellPanel.querySelector('[data-iw-skill-role="action-detail"]'));
+check('live Tailor + Weave gets tailoring three-zone layout',
+  tailorPanel.classList.contains('fs-skill--tailoring') && tailorPanel.dataset.iwSkillLayout === 'three-zone',
+  tailorPanel.className + ' layout=' + (tailorPanel.dataset.iwSkillLayout || 'none') + ' roles=' +
+    [...tailorPanel.querySelectorAll('[data-iw-skill-role]')].map(el => el.getAttribute('data-iw-skill-role') + ':' + el.textContent.trim()).join(' | '));
+check('live skill action buttons use deterministic width',
+  ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '96px'));
 
 /* ── Equal-length reconciliation ─────────────────────────────────────── */
 

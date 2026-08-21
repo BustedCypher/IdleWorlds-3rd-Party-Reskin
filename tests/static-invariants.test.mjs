@@ -113,7 +113,7 @@ assert.match(inventoryCSS, /\.fs-inv-detail[^}]*text-overflow:\s*ellipsis/s);
 const watcher = await read('src/modules/DOMWatcher.js');
 assert.doesNotMatch(watcher, /panel\.textContent\.slice/,
   'skill detection must not search arbitrary panel body text');
-assert.match(watcher, /JSON\.stringify\(\[buttons, headings\]\)/,
+assert.match(watcher, /JSON\.stringify\(\[buttons, identities\]\)/,
   'skill cache must represent exact normalized detection signals');
 const skillSigStart = watcher.indexOf('function skillSignature(panel)');
 const skillSigEnd = watcher.indexOf('\n}', skillSigStart);
@@ -121,8 +121,10 @@ assert.doesNotMatch(watcher.slice(skillSigStart, skillSigEnd), /textContent[^\n]
   'equal-length skill action changes must invalidate the cache');
 assert.match(watcher, /hasAction\('fight'\)/);
 assert.match(watcher, /hasAction\('prospect'\).*jewelcrafting/s);
-assert.match(watcher, /hasAction\('enchant'\).*spellcrafting/s);
-assert.match(watcher, /hasAction\('tailor', 'sew'\).*tailoring/s);
+assert.match(watcher, /skillTypeFromIdentity/);
+assert.match(watcher, /'jewel', 'jewelcrafting'/);
+assert.match(watcher, /'spellcraft', 'spellcrafting'/);
+assert.match(watcher, /hasAction\('tailor', 'sew', 'weave'\).*tailoring/s);
 
 const skill = await read('src/modules/SkillPanelRenderer.js');
 assert.doesNotMatch(skill, /new\s+MutationObserver/);
@@ -140,6 +142,10 @@ assert.match(skill, /LEVEL_PROGRESS_PATTERN/);
 assert.match(skill, /levelProgressButton/);
 assert.match(skill, /role === 'level-progress'/);
 assert.match(skill, /unexpectedFlowChild/);
+assert.match(skill, /labels: \['Jewel', 'Jewelcrafting'\]/);
+assert.match(skill, /labels: \['Spellcraft', 'Spellcrafting'\]/);
+assert.match(skill, /actions: \['tailor', 'sew', 'weave'\]/);
+assert.match(skill, /action-detail/);
 assert.doesNotMatch(skill, /directChildren\.length === 3/);
 
 const skillCSS = await read('src/styles/skillpanel.css');

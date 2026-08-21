@@ -71,16 +71,47 @@ function normaliseSkillSignal(value) {
   return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
+const SKILL_IDENTITY_ALIASES = {
+  combat: ['combat'],
+  mining: ['mining'],
+  smithing: ['smithing'],
+  gathering: ['gathering'],
+  alchemy: ['alchemy'],
+  jewelcrafting: ['jewel', 'jewelcrafting'],
+  spellcrafting: ['spellcraft', 'spellcrafting'],
+  tailoring: ['tailor', 'tailoring'],
+  crafting: ['crafting'],
+  fishing: ['fishing'],
+};
+
+function skillIdentitySignals(panel) {
+  const signals = new Set();
+  for (const el of panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span')) {
+    if (el.closest('button,a')) continue;
+    const explicitHeading = /^H[1-4]$/.test(el.tagName) || /skill-name/i.test(String(el.className || ''));
+    if (!explicitHeading && el.childElementCount) continue;
+    const text = normaliseSkillSignal(el.textContent);
+    if (text && text.length <= 32) signals.add(text);
+  }
+  return [...signals];
+}
+
+function skillTypeFromIdentity(signals) {
+  for (const [type, aliases] of Object.entries(SKILL_IDENTITY_ALIASES)) {
+    if (aliases.some(alias => signals.includes(alias))) return type;
+  }
+  return null;
+}
+
 function skillSignature(panel) {
   const buttons = [...panel.querySelectorAll('button')]
     .map(btn => normaliseSkillSignal(btn.textContent));
-  const headings = [...panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"]')]
-    .map(el => normaliseSkillSignal(el.textContent));
+  const identities = skillIdentitySignals(panel);
 
   // JSON preserves array boundaries and exact signal content without a
   // collision-prone delimiter/hash scheme. These strings are tiny compared
   // with the panel subtree scans detection would otherwise repeat.
-  return JSON.stringify([buttons, headings]);
+  return JSON.stringify([buttons, identities]);
 }
 
 function detectSkillTypeCached(panel) {
@@ -101,28 +132,33 @@ function detectSkillType(panel) {
     .filter(Boolean);
 
   const hasAction = (...names) => actionTexts.some(text => names.includes(text));
+
+  // Specific verbs are authoritative. GATHER/HARVEST are deferred because
+  // Spellcraft currently reuses those verbs for mana harvesting.
   if (hasAction('fight'))                    return 'combat';
-  if (hasAction('mine'))                    return 'mining';
-  if (hasAction('prospect'))                return 'jewelcrafting';
+  if (hasAction('mine'))                     return 'mining';
+  if (hasAction('prospect'))                 return 'jewelcrafting';
   if (hasAction('smelt', 'forge'))           return 'smithing';
-  if (hasAction('gather', 'harvest'))        return 'gathering';
   if (hasAction('brew'))                     return 'alchemy';
   if (hasAction('enchant'))                  return 'spellcrafting';
-  if (hasAction('tailor', 'sew'))            return 'tailoring';
+  if (hasAction('tailor', 'sew', 'weave'))   return 'tailoring';
   if (hasAction('craft'))                    return 'crafting';
   if (hasAction('fish'))                     return 'fishing';
 
-  // Fallback only to explicit skill labels/headings, never the whole body.
-  const headings = [...panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"]')];
-  const labels = headings.map(h => normaliseSkillSignal(h.textContent));
+  const labels = skillIdentitySignals(panel);
+  const identityType = skillTypeFromIdentity(labels);
+  if (identityType) return identityType;
+  if (hasAction('gather', 'harvest'))        return 'gathering';
+
+  // Fallback remains exact/anchored and never searches arbitrary body prose.
   if (labels.some(t => /^combat(?:\s|$)/.test(t))) return 'combat';
   if (labels.some(t => /^mining(?:\s|$)|^mine(?:\s|$)/.test(t))) return 'mining';
-  if (labels.some(t => /^jewelcrafting(?:\s|$)|^prospect(?:\s|$)/.test(t))) return 'jewelcrafting';
+  if (labels.some(t => /^(?:jewel|jewelcrafting)(?:\s|$)|^prospect(?:\s|$)/.test(t))) return 'jewelcrafting';
   if (labels.some(t => /^smithing(?:\s|$)|^smelt(?:\s|$)/.test(t))) return 'smithing';
   if (labels.some(t => /^gathering(?:\s|$)|^gather(?:\s|$)/.test(t))) return 'gathering';
   if (labels.some(t => /^alchemy(?:\s|$)|^brew(?:\s|$)/.test(t))) return 'alchemy';
-  if (labels.some(t => /^spellcrafting(?:\s|$)|^enchant(?:\s|$)/.test(t))) return 'spellcrafting';
-  if (labels.some(t => /^tailoring(?:\s|$)|^tailor(?:\s|$)/.test(t))) return 'tailoring';
+  if (labels.some(t => /^(?:spellcraft|spellcrafting)(?:\s|$)|^enchant(?:\s|$)/.test(t))) return 'spellcrafting';
+  if (labels.some(t => /^(?:tailor|tailoring)(?:\s|$)|^(?:tailor|sew|weave)(?:\s|$)/.test(t))) return 'tailoring';
   if (labels.some(t => /^crafting(?:\s|$)/.test(t))) return 'crafting';
   if (labels.some(t => /^fishing(?:\s|$)|^fish(?:\s|$)/.test(t))) return 'fishing';
   return 'unknown';

@@ -33,9 +33,9 @@ const SKILL_META = {
   smithing:  { label: 'Smithing',  glyph: '⚒︎', actions: ['smelt', 'forge'] },
   gathering: { label: 'Gathering', glyph: '❧',  actions: ['gather', 'harvest'] },
   alchemy:   { label: 'Alchemy',   glyph: '⚗︎', actions: ['brew'] },
-  jewelcrafting: { label: 'Jewelcrafting', glyph: '◆', actions: ['prospect'] },
-  spellcrafting: { label: 'Spellcrafting', glyph: '✧', actions: ['enchant'] },
-  tailoring: { label: 'Tailoring', glyph: '⋈', actions: ['tailor', 'sew'] },
+  jewelcrafting: { label: 'Jewelcrafting', labels: ['Jewel', 'Jewelcrafting'], glyph: '◆', actions: ['prospect'] },
+  spellcrafting: { label: 'Spellcrafting', labels: ['Spellcraft', 'Spellcrafting'], glyph: '✧', actions: ['enchant', 'gather', 'harvest'], titleActions: ['enchant', 'harvest'], details: [/from the ether$/i] },
+  tailoring: { label: 'Tailoring', labels: ['Tailor', 'Tailoring'], glyph: '⋈', actions: ['tailor', 'sew', 'weave'], details: [/^missing materials\b/i] },
   crafting:  { label: 'Crafting',  glyph: '✦', actions: ['craft'] },
   fishing:   { label: 'Fishing',   glyph: '⌁', actions: ['fish'] },
 };
@@ -370,17 +370,19 @@ function findProgress(panel) {
 function annotateStructure(panel, type, meta) {
   clearStructureRoles(panel);
 
-  const identity = findBestText(panel, text => text.toLowerCase() === meta.label.toLowerCase());
+  const identityLabels = (meta.labels || [meta.label]).map(label => label.toLowerCase());
+  const identity = findBestText(panel, text => identityLabels.includes(text.toLowerCase()));
   if (identity) {
     const shell = outerSameTextShell(identity, panel);
     setRole(shell, 'identity');
   }
 
-  const actionWord = meta.actions.join('|');
+  const actionWord = (meta.titleActions || meta.actions).join('|');
   const actionTitleRe = new RegExp(`^(?:${actionWord})\\b`, 'i');
   const actionTitle = findBestText(panel, (text, el) => {
     if (!text || text.length > 90 || !actionTitleRe.test(text)) return false;
     if (el.closest('.iw-item-ref')) return false;
+    if (el.matches?.(`[${ROLE_ATTR}="identity"]`) || el.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
     return true;
   });
   if (actionTitle) setRole(outerSameTextShell(actionTitle, panel), 'action-title');
@@ -393,7 +395,8 @@ function annotateStructure(panel, type, meta) {
   if (levelProgressButton) setRole(levelProgressButton, 'level-progress');
 
   let actionButton = null;
-  const actionExact = new RegExp(`^(?:${actionWord})$`, 'i');
+  const commandWord = meta.actions.join('|');
+  const actionExact = new RegExp(`^(?:${commandWord})$`, 'i');
   for (const btn of buttons) {
     const text = normText(btn.textContent);
     const aria = normText(btn.getAttribute('aria-label'));
@@ -425,6 +428,11 @@ function annotateStructure(panel, type, meta) {
 
   const reward = findBestText(panel, text => /^base reward\s*:/i.test(text));
   if (reward) setRole(outerSameTextShell(reward, panel), 'reward');
+
+  const detail = meta.details?.length
+    ? findBestText(panel, text => meta.details.some(pattern => pattern.test(text)))
+    : null;
+  if (detail) setRole(outerSameTextShell(detail, panel), 'action-detail');
 
   const { track, fill } = findProgress(panel);
   if (track) setRole(track, 'progress-track');
