@@ -275,6 +275,8 @@ await waitFor(() => !!row.querySelector('.iw-item-ref[data-iw-item]'));
 await settle(80); // item-db update also schedules the page-wide name scan
 const tooltip = window.document.querySelector('.iw-tip');
 const explicitItemRef = row.querySelector('.iw-item-ref[data-iw-item]');
+let nativeRowClicks = 0;
+row.addEventListener('click', () => { nativeRowClicks += 1; });
 const nativeExplicitMatches = explicitItemRef.matches.bind(explicitItemRef);
 explicitItemRef.matches = selector => selector === ':hover' ? true : nativeExplicitMatches(selector);
 pointerTarget = explicitItemRef;
@@ -299,6 +301,16 @@ check('rich tooltip renders wiki link and cache provenance',
   tooltip.querySelector('.iw-tip-source')?.textContent === 'cached data');
 explicitItemRef.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, clientX: 300, clientY: 300, relatedTarget: window.document.body }));
 await waitFor(() => !tooltip.classList.contains('is-open'));
+
+coarsePointer = true;
+explicitItemRef.dispatchEvent(new window.MouseEvent('click', { bubbles: true, clientX: 50, clientY: 20 }));
+await waitFor(() => tooltip.classList.contains('is-open'));
+check('explicit tooltip trigger does not consume native row click',
+  tooltip.classList.contains('is-open') && nativeRowClicks === 1,
+  `open=${tooltip.classList.contains('is-open')} rowClicks=${nativeRowClicks}`);
+window.document.body.dispatchEvent(new window.MouseEvent('click', { bubbles: true, clientX: 300, clientY: 300 }));
+await waitFor(() => !tooltip.classList.contains('is-open'));
+coarsePointer = false;
 
 const plainItem = window.document.getElementById('plain-item-text');
 const plainText = plainItem.firstChild;

@@ -450,8 +450,9 @@ export function initTooltipEngine() {
   document.addEventListener('click', e => {
     const t = findTrigger(e.target);
     if (t) {
-      e.preventDefault();
-      e.stopPropagation();
+      // Tooltip discovery must never consume a game click. Explicit references
+      // live inside extension-owned presentation, but their ancestors may still
+      // be React-owned clickable rows. Let the native event continue normally.
       clearShowTimer();
 
       if (isMobile()) {

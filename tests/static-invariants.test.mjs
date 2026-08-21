@@ -89,6 +89,11 @@ assert.match(tooltipEngine, /cleanEffectText/);
 assert.match(tooltipEngine, /drop_boosted_by/);
 assert.match(tooltipEngine, /ItemDatabase\.source\(\)/,
   'tooltip footer must expose actual item-data provenance');
+const tooltipClickStart = tooltipEngine.indexOf("document.addEventListener('click'");
+const tooltipClickEnd = tooltipEngine.indexOf("document.addEventListener('keydown'", tooltipClickStart);
+const tooltipClickBlock = tooltipEngine.slice(tooltipClickStart, tooltipClickEnd);
+assert.doesNotMatch(tooltipClickBlock, /stopPropagation\(|stopImmediatePropagation\(/,
+  'tooltip discovery must not consume native React click propagation');
 assert.match(tooltipCss, /\.iw-tip-art/);
 assert.match(tooltipCss, /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
   'rich tooltip stats should use a deterministic two-column layout');
