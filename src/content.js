@@ -7,8 +7,8 @@
  *   3. Each activation re-injects presentation CSS, starts services/painting,
  *      then starts DOMWatcher LAST.
  *   4. Teardown reverses the active work and removes every skin stylesheet.
- *   5. Runtime activation generations invalidate stale queued RAF work so a
- *      callback from an old activation cannot wake up after re-enable.
+ *   5. Runtime guards make late reconciliation callbacks inert while disabled;
+ *      queued callbacks still run their bookkeeping so no queue flag is stranded.
  */
 
 import { inject, removeAll as removeAllStyles } from './modules/StyleInjector.js';
@@ -128,7 +128,7 @@ function boot() {
  * Keep Runtime active until module cleanup has completed: teardown functions use
  * guardEach(), and they must be allowed to restore/remove the active decoration.
  * Runtime is marked inactive only after the page has been cleaned, which also
- * suppresses late data-service events until the next boot.
+ * suppresses late data-service/reconciliation events until the next boot.
  */
 function teardown() {
   if (!booted) {
@@ -146,8 +146,7 @@ function teardown() {
   guard('teardown:background', clearBackgroundPaint);
   guard('teardown:styles', removeAllStyles);
 
-  // Increment the activation generation after cleanup so queued work from this
-  // activation cannot run during a future one.
+  // From here until the next boot, any late async/data callbacks are inert.
   setRuntimeActive(false);
 
   console.log('[IW Fantasy Skin] disabled — active presentation removed');
