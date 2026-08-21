@@ -2764,16 +2764,16 @@
     let listenerBound = false;
     
     const SKILL_META = {
-      combat:    { label: 'Combat',    glyph: '⚔︎', actions: ['fight'] },
-      mining:    { label: 'Mining',    glyph: '⛏︎', actions: ['mine'] },
-      smithing:  { label: 'Smithing',  glyph: '⚒︎', actions: ['smelt', 'forge'] },
-      gathering: { label: 'Gathering', glyph: '❧',  actions: ['gather', 'harvest'] },
-      alchemy:   { label: 'Alchemy',   glyph: '⚗︎', actions: ['brew'] },
-      jewelcrafting: { label: 'Jewelcrafting', labels: ['Jewel', 'Jewelcrafting'], glyph: '◆', actions: ['prospect'] },
-      spellcrafting: { label: 'Spellcrafting', labels: ['Spellcraft', 'Spellcrafting'], glyph: '✧', actions: ['enchant', 'gather', 'harvest'], titleActions: ['enchant', 'harvest'], details: [/from the ether$/i] },
-      tailoring: { label: 'Tailoring', labels: ['Tailor', 'Tailoring'], glyph: '⋈', actions: ['tailor', 'sew', 'weave'], details: [/^missing materials\b/i] },
-      crafting:  { label: 'Crafting',  glyph: '✦', actions: ['craft'] },
-      fishing:   { label: 'Fishing',   glyph: '⌁', actions: ['fish'] },
+      combat:    { label: 'Combat',    glyph: 'âš”ï¸Ž', actions: ['fight'] },
+      mining:    { label: 'Mining',    glyph: 'â›ï¸Ž', actions: ['mine'] },
+      smithing:  { label: 'Smithing',  glyph: 'âš’ï¸Ž', actions: ['smelt', 'forge'] },
+      gathering: { label: 'Gathering', glyph: 'â§',  actions: ['gather', 'harvest'] },
+      alchemy:   { label: 'Alchemy',   glyph: 'âš—ï¸Ž', actions: ['brew'] },
+      jewelcrafting: { label: 'Jewelcrafting', labels: ['Jewel', 'Jewelcrafting'], glyph: 'â—†', actions: ['prospect'] },
+      spellcrafting: { label: 'Spellcrafting', labels: ['Spellcraft', 'Spellcrafting'], glyph: 'âœ§', actions: ['enchant', 'gather', 'harvest'], titleActions: ['enchant', 'harvest'], details: [/from the ether$/i] },
+      tailoring: { label: 'Tailoring', labels: ['Tailor', 'Tailoring'], glyph: 'â‹ˆ', actions: ['tailor', 'sew', 'weave'], details: [/^missing materials\b/i] },
+      crafting:  { label: 'Crafting',  glyph: 'âœ¦', actions: ['craft'] },
+      fishing:   { label: 'Fishing',   glyph: 'âŒ', actions: ['fish'] },
     };
     
     function setOwnedStyle(owner, el, prop, value, priority = 'important') {
@@ -2889,7 +2889,7 @@
       buttonStyleSnapshots.set(btn, { state, role, style: btn.getAttribute('style') || '' });
     }
     
-    const LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?\s*[-–]\s*\d+(?:\.\d+)?%\s*[•·]\s*[\d,]+\s+(?:xp\s+)?to\s+go$/i;
+    const LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?\s*[-â€“]\s*\d+(?:\.\d+)?%\s*[â€¢Â·]\s*[\d,]+\s+(?:xp\s+)?to\s+go$/i;
     const READOUT_STYLES = {
       'background': 'none',
       'background-color': 'transparent',
@@ -3125,7 +3125,7 @@
     
       const buttons = [...panel.querySelectorAll('button')];
     
-      // Audit 1.5.5 proved the visible "Lv N - X% • ... to go" widget is itself
+      // Audit 1.5.5 proved the visible "Lv N - X% â€¢ ... to go" widget is itself
       // a button. Mark that exact live control before any button receives chrome.
       const levelProgressButton = buttons.find(btn => LEVEL_PROGRESS_PATTERN.test(normText(btn.textContent))) || null;
       if (levelProgressButton) setRole(levelProgressButton, 'level-progress');
@@ -3225,15 +3225,6 @@
     
     const SKILL_CLASSES = Object.keys(SKILL_META).map(type => `fs-skill--${type}`);
     
-    function migrateLegacyWrapper(panel) {
-      const wrapper = panel.parentElement;
-      if (!wrapper?.classList?.contains('fs-skill-wrapper')) return;
-      const parent = wrapper.parentNode;
-      if (!parent) return;
-      parent.insertBefore(panel, wrapper);
-      wrapper.remove();
-    }
-    
     function clearPanelInlineTreatment(panel) {
       buttonStyleOwner.restoreWithin(panel);
       readoutStyleOwner.restoreWithin(panel);
@@ -3249,7 +3240,6 @@
     }
     
     function clearPanelChrome(panel) {
-      migrateLegacyWrapper(panel);
       clearPanelInlineTreatment(panel);
       clearStructureRoles(panel);
       panel.classList.remove('fs-skill-panel', ...SKILL_CLASSES);
@@ -3263,7 +3253,6 @@
     }
     
     function applyPanelChrome(panel, type, meta) {
-      migrateLegacyWrapper(panel);
     
       if (!panel.classList.contains('fs-skill-panel')) panel.classList.add('fs-skill-panel');
       for (const cls of SKILL_CLASSES) {

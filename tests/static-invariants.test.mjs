@@ -8,7 +8,7 @@ const code = text => text
   .replace(/\/\*[\s\S]*?\*\//g, '')
   .replace(/^\s*\/\/.*$/gm, '');
 
-/* ── Entry lifecycle ─────────────────────────────────────────────────── */
+/* â”€â”€ Entry lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const content = await read('src/content.js');
 const bootStart = content.indexOf('function boot()');
@@ -25,7 +25,7 @@ assert.match(content, /setRuntimeActive\(false\)/);
 assert.match(content, /function teardown\(\)/);
 assert.match(content, /removeAllStyles/);
 
-/* ── Exactly one MutationObserver ────────────────────────────────────── */
+/* â”€â”€ Exactly one MutationObserver â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const modulesDir = new URL('src/modules/', root);
 let observerCount = 0;
@@ -36,7 +36,7 @@ for (const name of await readdir(modulesDir)) {
 }
 assert.equal(observerCount, 1, 'there must be exactly one runtime MutationObserver');
 
-/* ── Runtime / storage ───────────────────────────────────────────────── */
+/* â”€â”€ Runtime / storage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const runtime = await read('src/modules/Runtime.js');
 assert.match(runtime, /chrome\.storage\.local/, 'persistent extension state belongs in chrome.storage.local');
@@ -48,7 +48,7 @@ const db = await read('src/modules/ItemDatabase.js');
 assert.doesNotMatch(code(db), /localStorage\.setItem/, 'skin data must never consume the game localStorage quota');
 assert.match(db, /evictLegacyCache/, 'legacy page-origin cache should be reclaimed');
 
-/* ── Stylesheet lifecycle / reversible inline ownership ─────────────── */
+/* â”€â”€ Stylesheet lifecycle / reversible inline ownership â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const injector = await read('src/modules/StyleInjector.js');
 assert.match(injector, /assetUrl/, 'runtime-injected base CSS must rewrite bundled asset URLs');
@@ -72,7 +72,7 @@ assert.doesNotMatch(painter, /style\.removeProperty/,
 assert.match(painter, /SURFACE_SELECTOR/);
 assert.match(painter, /isSurfaceCandidate/);
 
-/* ── React-safe name annotation ──────────────────────────────────────── */
+/* â”€â”€ React-safe name annotation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const scanner = await read('src/modules/NameScanner.js');
 assert.doesNotMatch(code(scanner), /replaceChild|appendChild|insertBefore|removeChild/,
@@ -115,7 +115,7 @@ assert.match(watcherNames, /addNameRoot\(root\)/,
 assert.match(watcherNames, /root\?\.body \|\| root/,
   'item database refresh should trigger one page-wide scan');
 
-/* ── Inventory ItemRow ───────────────────────────────────────────────── */
+/* â”€â”€ Inventory ItemRow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const inventory = await read('src/modules/InventoryRenderer.js');
 assert.match(inventory, /isInventoryContext\(row\)/,
@@ -153,7 +153,7 @@ assert.doesNotMatch(inventoryCSS, /data-fs-action-kind=\\?"set\\?"[^}]*display:\
 assert.doesNotMatch(inventoryCSS, /\.fs-inv-details,\s*\.fs-inv-requirements\s*\{[^}]*display:\s*none/s,
   'mobile Inventory must preserve dynamic owned-item state and requirements');
 
-/* ── Skill detection / treatment ────────────────────────────────────── */
+/* â”€â”€ Skill detection / treatment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const watcher = await read('src/modules/DOMWatcher.js');
 assert.doesNotMatch(watcher, /panel\.textContent\.slice/,
@@ -172,6 +172,8 @@ assert.match(watcher, /'spellcraft', 'spellcrafting'/);
 assert.match(watcher, /hasAction\('tailor', 'sew', 'weave'\).*tailoring/s);
 
 const skill = await read('src/modules/SkillPanelRenderer.js');
+assert.doesNotMatch(skill, /migrateLegacyWrapper|insertBefore\\(panel, wrapper\\)/,
+  'Skill renderer must never reparent React-owned skill panels during migration or teardown');
 assert.doesNotMatch(skill, /new\s+MutationObserver/);
 assert.doesNotMatch(skill, /wrapper\.appendChild\(panel\)/,
   'skill renderer must not reparent gameplay panels');
@@ -199,7 +201,7 @@ assert.match(skillCSS, /data-iw-skill-layout=\"three-zone\"/);
 assert.match(skillCSS, /data-iw-skill-role=\"level-progress\"/);
 assert.match(skillCSS, /data-iw-readout\]::before/);
 
-/* ── Shared UI / tooltip ─────────────────────────────────────────────── */
+/* â”€â”€ Shared UI / tooltip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const ui = await read('src/modules/UIFoundation.js');
 assert.doesNotMatch(ui, /new\s+MutationObserver/);
@@ -231,7 +233,7 @@ assert.match(tooltip, /style\.display\s*=\s*'flex'/,
 assert.match(tooltipCss, /100dvh/,
   'mobile tooltip height must account for dynamic browser viewport chrome');
 
-/* ── Base theme safety ───────────────────────────────────────────────── */
+/* â”€â”€ Base theme safety â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const baseCSS = await read('src/styles/base.css');
 assert.doesNotMatch(baseCSS, /\[class\*="card"\],\s*\[class\*="panel"\]/,
@@ -240,7 +242,7 @@ assert.match(baseCSS, /--iw-r-panel:\s+3px/);
 assert.match(baseCSS, /chat-name-/);
 assert.match(baseCSS, /level-progress/);
 
-/* ── Atlas correctness / dependency pin ─────────────────────────────── */
+/* â”€â”€ Atlas correctness / dependency pin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const atlas = await read('src/modules/AtlasService.js');
 assert.doesNotMatch(atlas, /https:\/\/raw\.githubusercontent\.com/,
@@ -256,7 +258,7 @@ const vendor = await read('build-tools/vendor-assets.mjs');
 assert.match(vendor, /39bc876307c3183d160a5e2c5868d37b50c1660b/,
   'sprite dependency must stay pinned to the immutable shared +4 atlas revision');
 
-/* ── Build / manifest / test contract ───────────────────────────────── */
+/* â”€â”€ Build / manifest / test contract â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const build = await read('build-tools/build_recovered.py');
 assert.match(build, /STANDALONE_CSS\s*=\s*set\(\)/,
