@@ -17,7 +17,11 @@
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-const ASSET_REVISION = 'c4695b7f5519789558b0d72fa85e60338070e4b5';
+// 2026-08-18: this immutable sprite revision restores the shared +4 gear
+// overlay in gear_icons_atlas.png / gear_icons_manifest.json. Keep the reskin
+// pinned rather than following mutable main, but do not remain pinned to the
+// older v4 manifest that only contained +1/+2/+3 overlays.
+const ASSET_REVISION = '39bc876307c3183d160a5e2c5868d37b50c1660b';
 const REPO_BASE =
   `https://raw.githubusercontent.com/BustedCypher/idleWorlds-game-sprites-BC/${ASSET_REVISION}/`;
 
