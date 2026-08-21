@@ -405,3 +405,25 @@
   -webkit-backdrop-filter: none !important;
   clip-path: none !important;
 }
+
+/* Phone layout: keep commands immediately reachable while giving action content
+   the full second row. This replaces the cramped three-column phone layout. */
+@media (max-width: 520px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    grid-template-columns: minmax(0, 1fr) 112px !important;
+    grid-template-areas:
+      "identity commands"
+      "content content" !important;
+    gap: 8px 10px !important;
+    align-items: start !important;
+    padding: 8px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="identity"] {
+    align-self: center !important;
+    min-width: 0 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="commands"] {
+    align-self: center !important;
+    justify-self: end !important;
+  }
+}

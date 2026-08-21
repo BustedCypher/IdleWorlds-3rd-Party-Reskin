@@ -172,6 +172,7 @@ body { padding: 22px; max-width: 1180px; margin: 0 auto; }
         color: var(--iw-gold-dim); margin: 26px 0 9px; border-bottom: 1px solid var(--iw-line); padding-bottom: 6px; }
 .fx-h:first-child { margin-top: 0; }
 .fx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; align-items: start; }
+@media (max-width: 600px) { .fx-skill-grid { grid-template-columns: 1fr; } }
 .fx-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .fx-sw { width: 92px; }
 .fx-sw i { display: block; height: 34px; border: 1px solid var(--iw-line); border-radius: 2px; }
@@ -214,7 +215,7 @@ ${invRow({ sprite: itemSprite('iron_ore'), name: 'Iron Ore', tier: 'common', sta
 ${invRow({ sprite: itemSprite('titanium_atk_potion_super'), name: 'Super Titanium ATK Potion', tier: 'epic', stats: ['Tier 20 · Consumable', 'ATK +90'], qty: '12' })}
 
 <div class="fx-h">Skill panels — accent per discipline</div>
-<div class="fx-grid">
+<div class="fx-grid fx-skill-grid">
 <div>
 ${skillPanel({ type: 'combat', label: 'Combat', title: 'Fight Bone Marauder', pct: 62, xp: '1,940', reward: '340g' })}
 ${skillPanel({ type: 'mining', label: 'Mining', title: 'Mine Copper Ore', pct: 28, xp: '85', ingredients: 'Copper Ore' })}
@@ -354,6 +355,29 @@ if (!mobileInventory.requirementsVisible) throw new Error('mobile Inventory hide
 if (mobileInventory.longNameLines < 1.5 || mobileInventory.longNameLines > 2.2) {
   throw new Error(`long Inventory name must wrap to two lines, got ${mobileInventory.longNameLines.toFixed(2)}`);
 }
+const auditMobileSkills = async width => {
+  await p.setViewportSize({ width, height: 844 });
+  await p.waitForTimeout(60);
+  const audit = await p.evaluate(() => {
+    const panels = [...document.querySelectorAll('.fx-skill-grid .compact-panel.fs-skill-panel')];
+    return {
+      count: panels.length,
+      overflow: panels.some(el => el.scrollWidth > el.clientWidth + 1),
+      twoRow: panels.every(el => getComputedStyle(el).gridTemplateAreas.includes('content content')),
+      commandsVisible: panels.every(el => {
+        const cmd = el.querySelector('[data-iw-skill-zone="commands"]');
+        return cmd && getComputedStyle(cmd).display !== 'none' && cmd.getBoundingClientRect().width > 0;
+      }),
+    };
+  });
+  if (!audit.count || audit.overflow) throw new Error(`mobile skill panels overflow at ${width}px`);
+  if (!audit.twoRow) throw new Error(`mobile skill panels did not switch to two-row layout at ${width}px`);
+  if (!audit.commandsVisible) throw new Error(`mobile skill commands hidden at ${width}px`);
+};
+await auditMobileSkills(390);
+await p.screenshot({ path: resolve(OUT, 'mobile-skills.png'), fullPage: true });
+await auditMobileSkills(320);
+
 await p.setViewportSize({ width: 1240, height: 1000 });
 
 /* ── Automated checks ───────────────────────────────────────────────────── */

@@ -198,6 +198,8 @@ assert.doesNotMatch(skill, /directChildren\.length === 3/);
 const skillCSS = await read('src/styles/skillpanel.css');
 assert.doesNotMatch(skillCSS, /border-top:\s*54px/);
 assert.match(skillCSS, /data-iw-skill-layout=\"three-zone\"/);
+assert.match(skillCSS, /@media \(max-width: 520px\)[\s\S]*grid-template-areas:[\s\S]*identity commands[\s\S]*content content/,
+  'phone skill cards must switch to a two-row mobile topology');
 assert.match(skillCSS, /data-iw-skill-role=\"level-progress\"/);
 assert.match(skillCSS, /data-iw-readout\]::before/);
 
