@@ -48,4 +48,19 @@ const structuredZero = { double_gather_pct: 0, effects_raw: '+3% 2x gather chanc
 assert.equal(deriveDisplayStats(structuredZero).doubleGatherPct, 0,
   'an explicit structured zero is data, not a missing field');
 
+
+const modernBonus = { effects_raw: 'ATK +112, Requires Alchemy Lv 57, XP +12/task, 14% Bonus Brew' };
+assert.equal(deriveDisplayStats(modernBonus).bonusBrewPct, 14);
+assert.ok(statChips(modernBonus, { max: 8 }).some(c => c.text === 'Bonus Brew 14%'));
+assert.ok(statRows(modernBonus).some(r => r.label === 'Bonus Brew' && r.value === '14%'));
+assert.equal(deriveDisplayStats({ effects_raw: '7% Bonus Enchant' }).bonusEnchantPct, 7);
+assert.equal(deriveDisplayStats({ effects_raw: '14% Bonus Enhance' }).bonusEnhancePct, 14);
+
+const copperOre = { work_order_turn_in_gold: 2.4, work_order_turn_in_note: 'mining work order turn-in value (100x)' };
+assert.ok(statRows(copperOre).some(r => r.label.includes('Work order') && r.value === '2.4g' && r.note.includes('100x')),
+  'work-order value must use the exact exported full-order value without multiplying it');
+const rubyRing = { work_order_turn_in_gold: 20, work_order_turn_in_note: 'Jewelcrafting gem cost to craft (ring)' };
+assert.ok(!statRows(rubyRing).some(r => r.label.includes('Work order')),
+  'Jewelcrafting gem costs must not be mislabeled as work-order value');
+
 console.log('PASS enhanced item display model');

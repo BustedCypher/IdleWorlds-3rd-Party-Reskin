@@ -113,9 +113,15 @@ function renderAcquisition(item) {
   } else if (t === 'Shop') {
     main = 'Shop purchase'; sub = esc(item.acquisition_summary || '');
   } else if (t === 'Unknown') {
-    unknown = true;
-    main = 'Source not documented';
-    sub  = 'Not covered by the wiki\u2019s source index \u2014 may be a quest turn-in, idle gift or dungeon chest.';
+    const sourceText = String(item.acquisition_summary || item.acquisition_detail || '').trim();
+    if (sourceText) {
+      main = 'Source details';
+      sub = esc(sourceText);
+    } else {
+      unknown = true;
+      main = 'Source not documented';
+      sub = 'Not covered by the wiki\u2019s source index \u2014 may be a quest turn-in, idle gift or dungeon chest.';
+    }
   } else {
     main = esc(t);
     sub  = esc(item.acquisition_summary || '');
@@ -138,8 +144,10 @@ function renderStats(item) {
 
   return '<div class="iw-tip-sec"><div class="iw-tip-sec-title">Stats</div><div class="iw-tip-stats">' +
     rows.map(r =>
-      `<div class="iw-tip-stat"><span class="k">${esc(r.label)}</span>` +
-      `<span class="v${r.cls ? ' ' + r.cls : ''}">${esc(String(r.value))}</span></div>`
+      `<div class="iw-tip-stat-block"><div class="iw-tip-stat"><span class="k">${esc(r.label)}</span>` +
+      `<span class="v${r.cls ? ' ' + r.cls : ''}">${esc(String(r.value))}</span></div>` +
+      (r.note ? `<div class="iw-tip-stat-note">${esc(r.note)}</div>` : '') +
+      `</div>`
     ).join('') +
     '</div></div>';
 }

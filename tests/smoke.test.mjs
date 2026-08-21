@@ -118,6 +118,7 @@ storage.set('iw-item-db-cache', {
     category: 'Equipment', subcategory: 'Weapon slot', req_skill: 'combat', req_level: 3,
     req_text: 'Requires Combat Lv 3', atk: 18, def: 7, xp_per_task: 4,
     double_gather_pct: 8, gold_find_pct: 3, base_value: 125, trader_token_value: 1,
+    work_order_turn_in_gold: 720, work_order_turn_in_note: 'smithing work order turn-in value (1x weapon, +50% profession bonus)',
     effects_raw: 'ATK +18 \u0007 DEF +7, Requires Combat Lv 3, XP +4/task, +8% 2x gather chance',
     acquisition_type: 'ZoneDrop', drop_rate: '1/20000', drop_boosted_by: 'Item Find %',
   }, {
@@ -125,6 +126,11 @@ storage.set('iw-item-db-cache', {
     category: 'Equipment', subcategory: 'Boots', def: 2, sockets: 2,
     effects_raw: 'DEF +2, +3% 2x gather chance, 2 Sockets',
     acquisition_type: 'Upgrade', acquisition_summary: 'Apply an Upgrade Orb to Wool Boots+3',
+  }, {
+    item_id: 'merchant_coffer', name: "Merchant's Coffer", wiki_slug: 'merchant_coffer', tier: 21,
+    category: 'Container', subcategory: 'Coffer', effects_raw: '', base_value: 0,
+    acquisition_type: 'Unknown',
+    acquisition_summary: 'Ultra-rare zone drop: Fighting the Emberclad Juggernaut (Zone 21) - 1 in 240,000 per win',
   }],
   generatedAt: 'smoke-tooltip-data', cachedAt: Date.now(),
 });
@@ -292,14 +298,34 @@ check('rich tooltip renders requirement badge',
 check('rich tooltip renders authoritative effect text',
   (() => { const text = tooltip.querySelector('.iw-tip-effect')?.textContent || ''; return text.includes('ATK +18') && text.includes('DEF +7') && !/[\u0000-\u001f\u007f]/.test(text); })(), tooltip.querySelector('.iw-tip-effect')?.textContent || 'missing');
 const richStatText = [...tooltip.querySelectorAll('.iw-tip-stat')].map(el => el.textContent.replace(/\s+/g, ' ').trim()).join(' | ');
-check('rich tooltip renders base value and trader turn-in',
-  richStatText.includes('Base value125g') && richStatText.includes('Turn-in1 token'), richStatText);
+check('rich tooltip renders base value, work-order value and trader turn-in',
+  richStatText.includes('Base value125g') && richStatText.includes('Work order720g') && richStatText.includes('Turn-in1 token'), richStatText);
+check('rich tooltip preserves work-order context note',
+  tooltip.querySelector('.iw-tip-stat-note')?.textContent.includes('+50% profession bonus') === true);
 check('rich tooltip renders drop rate and boost source',
   (() => { const text = tooltip.querySelector('.iw-tip-acq-sub')?.textContent || ''; return text.includes('Rate 1/20000') && text.includes('boosted by Item Find %'); })(), tooltip.querySelector('.iw-tip-acq-sub')?.textContent || 'missing');
 check('rich tooltip renders wiki link and cache provenance',
   tooltip.querySelector('.iw-tip-link')?.getAttribute('href')?.endsWith('/wiki/items/iron_sword') === true &&
   tooltip.querySelector('.iw-tip-source')?.textContent === 'cached data');
 explicitItemRef.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, clientX: 300, clientY: 300, relatedTarget: window.document.body }));
+await waitFor(() => !tooltip.classList.contains('is-open'));
+
+const sourcedUnknownRef = window.document.createElement('span');
+sourcedUnknownRef.className = 'iw-item-ref';
+sourcedUnknownRef.setAttribute('data-iw-item', 'merchant_coffer');
+sourcedUnknownRef.textContent = "Merchant's Coffer";
+window.document.body.appendChild(sourcedUnknownRef);
+const nativeUnknownMatches = sourcedUnknownRef.matches.bind(sourcedUnknownRef);
+sourcedUnknownRef.matches = selector => selector === ':hover' ? true : nativeUnknownMatches(selector);
+pointerTarget = sourcedUnknownRef;
+sourcedUnknownRef.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true, clientX: 50, clientY: 20 }));
+await waitFor(() => tooltip.classList.contains('is-open'));
+check('Unknown acquisition with authoritative text preserves source details',
+  tooltip.querySelector('.iw-tip-acq-main')?.textContent === 'Source details' &&
+  tooltip.querySelector('.iw-tip-acq-sub')?.textContent.includes('Emberclad Juggernaut') &&
+  !tooltip.textContent.includes('Source not documented'),
+  `main=${tooltip.querySelector('.iw-tip-acq-main')?.textContent || 'none'} sub=${tooltip.querySelector('.iw-tip-acq-sub')?.textContent || 'none'} name=${tooltip.querySelector('.iw-tip-name')?.textContent || 'none'}`);
+sourcedUnknownRef.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, clientX: 300, clientY: 300, relatedTarget: window.document.body }));
 await waitFor(() => !tooltip.classList.contains('is-open'));
 
 explicitItemRef.focus();

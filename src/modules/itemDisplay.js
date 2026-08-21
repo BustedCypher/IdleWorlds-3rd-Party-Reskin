@@ -30,6 +30,9 @@ export function deriveDisplayStats(item) {
     fireResist: effectNumber(text, /\bFire\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
     frostResist: effectNumber(text, /\bFrost\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
     lightningResist: effectNumber(text, /\bLightning\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+    bonusBrewPct: effectNumber(text, /([+-]?\d+(?:\.\d+)?)%\s*Bonus\s+Brew\b/i),
+    bonusEnhancePct: effectNumber(text, /([+-]?\d+(?:\.\d+)?)%\s*Bonus\s+Enhance\b/i),
+    bonusEnchantPct: effectNumber(text, /([+-]?\d+(?:\.\d+)?)%\s*Bonus\s+Enchant\b/i),
   };
 }
 /**
@@ -85,7 +88,16 @@ export function statChips(item, opts = {}) {
   if (has(stats.doubleGatherPct)) chips.push({ text: `2× gather ${stats.doubleGatherPct}%`, kind: 'pos' });
   if (has(stats.goldFindPct))    chips.push({ text: `Gold +${stats.goldFindPct}%`, kind: 'pos' });
   if (has(stats.itemFindPct))    chips.push({ text: `Find +${stats.itemFindPct}%`, kind: 'pos' });
-  if (has(stats.allResists))     chips.push({ text: `All Resists +${stats.allResists}`, kind: 'pos' });
+  if (has(stats.allResists)) {
+    chips.push({ text: `All Resists +${stats.allResists}`, kind: 'pos' });
+  } else {
+    if (has(stats.fireResist)) chips.push({ text: `Fire Resist +${stats.fireResist}`, kind: 'pos' });
+    if (has(stats.frostResist)) chips.push({ text: `Frost Resist +${stats.frostResist}`, kind: 'pos' });
+    if (has(stats.lightningResist)) chips.push({ text: `Lightning Resist +${stats.lightningResist}`, kind: 'pos' });
+  }
+  if (has(stats.bonusBrewPct))    chips.push({ text: `Bonus Brew ${stats.bonusBrewPct}%`, kind: 'pos' });
+  if (has(stats.bonusEnhancePct)) chips.push({ text: `Bonus Enhance ${stats.bonusEnhancePct}%`, kind: 'pos' });
+  if (has(stats.bonusEnchantPct)) chips.push({ text: `Bonus Enchant ${stats.bonusEnchantPct}%`, kind: 'pos' });
 
   if (has(item.skill_bonus_skill) && has(item.skill_bonus_value)) {
     chips.push({ text: `${item.skill_bonus_skill} +${item.skill_bonus_value}`, kind: 'pos' });
@@ -120,10 +132,16 @@ export function statRows(item) {
     if (has(stats.frostResist)) rows.push({ label: '❄️ Frost Resist', value: `+${stats.frostResist}` });
     if (has(stats.lightningResist)) rows.push({ label: '⚡ Lightning Resist', value: `+${stats.lightningResist}` });
   }
+  if (has(stats.bonusBrewPct)) rows.push({ label: 'Bonus Brew', value: `${stats.bonusBrewPct}%` });
+  if (has(stats.bonusEnhancePct)) rows.push({ label: 'Bonus Enhance', value: `${stats.bonusEnhancePct}%` });
+  if (has(stats.bonusEnchantPct)) rows.push({ label: 'Bonus Enchant', value: `${stats.bonusEnchantPct}%` });
   if (has(item.skill_bonus_skill) && has(item.skill_bonus_value)) {
     rows.push({ label: `✨ ${item.skill_bonus_skill}`, value: `+${item.skill_bonus_value}` });
   }
   if (has(stats.sockets)) rows.push({ label: '🔷 Sockets', value: String(stats.sockets) });
+  if (has(item.work_order_turn_in_gold) && /work order/i.test(String(item.work_order_turn_in_note || ''))) {
+    rows.push({ label: '📦 Work order', value: gold(item.work_order_turn_in_gold), cls: 'amber', note: String(item.work_order_turn_in_note || '').trim() });
+  }
   if (has(item.base_value)) rows.push({ label: '💰 Base value', value: gold(item.base_value), cls: 'amber' });
   if (has(item.trader_token_value)) {
     const n = Number(item.trader_token_value);
