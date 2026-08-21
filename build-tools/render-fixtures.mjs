@@ -136,7 +136,7 @@ const skillPanel = ({ type, label, title, pct, xp, reward, ingredients }) => `
 </div>`;
 
 const tooltipCard = ({ sprite, name, tier, badges, effect, stats, acqMain, acqSub, glyph = '&#x1F6E1;&#xFE0F;', source = 'cached data' }) => `
-<div class="iw-tip is-open" style="position:relative;display:block;opacity:1;left:0;top:0;margin-bottom:14px;">
+<div class="iw-tip is-open" style="position:relative;display:flex;opacity:1;left:0;top:0;margin-bottom:14px;">
   <div class="iw-tip-head has-art has-gear-art">
     <div class="iw-tip-icon" aria-hidden="true">${glyph}</div>
     <div class="iw-tip-title-block">
@@ -154,7 +154,7 @@ const tooltipCard = ({ sprite, name, tier, badges, effect, stats, acqMain, acqSu
       <div class="iw-tip-acq"><div class="iw-tip-acq-main">${acqMain}</div><div class="iw-tip-acq-sub">${acqSub}</div></div>
     </div>
   </div>
-  <div class="iw-tip-foot"><a class="iw-tip-link" href="#">&#x1F4D6; Wiki &#x2197;</a><span class="iw-tip-source">${source}</span></div>
+  <div class="iw-tip-foot"><a class="iw-tip-link" href="#">&#x1F4D6; Wiki &#x2197;</a><span class="iw-tip-source">${source}</span><button type="button" class="iw-tip-close" aria-label="Close item details">&times;</button></div>
 </div>`;
 
 const baseCss = (await readFile(resolve(ROOT, 'src/styles/base.css'), 'utf8'))
@@ -316,6 +316,20 @@ await p.waitForTimeout(400);
 
 await p.screenshot({ path: resolve(OUT, 'full.png'), fullPage: true });
 await p.locator('.fx-tooltip-grid').screenshot({ path: resolve(OUT, 'tooltips.png') });
+
+await p.setViewportSize({ width: 390, height: 360 });
+await p.waitForTimeout(50);
+const shortTooltip = p.locator('.fx-tooltip-grid .iw-tip').first();
+await shortTooltip.screenshot({ path: resolve(OUT, 'mobile-tooltip.png') });
+const shortTooltipAudit = await shortTooltip.evaluate(el => ({
+  height: el.getBoundingClientRect().height,
+  maxHeight: parseFloat(getComputedStyle(el).maxHeight),
+  scrollable: (() => { const body = el.querySelector('.iw-tip-body'); return body && body.scrollHeight > body.clientHeight; })(),
+  closeVisible: !!el.querySelector('.iw-tip-close') && getComputedStyle(el.querySelector('.iw-tip-close')).display !== 'none',
+}));
+if (shortTooltipAudit.height > 341) throw new Error(`mobile tooltip exceeds short viewport: ${shortTooltipAudit.height}px`);
+if (!shortTooltipAudit.scrollable) throw new Error('mobile tooltip body must scroll when content exceeds the viewport');
+if (!shortTooltipAudit.closeVisible) throw new Error('mobile tooltip close control is not visible');
 
 await p.setViewportSize({ width: 390, height: 844 });
 await p.waitForTimeout(100);

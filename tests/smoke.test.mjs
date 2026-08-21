@@ -302,6 +302,32 @@ check('rich tooltip renders wiki link and cache provenance',
 explicitItemRef.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, clientX: 300, clientY: 300, relatedTarget: window.document.body }));
 await waitFor(() => !tooltip.classList.contains('is-open'));
 
+explicitItemRef.focus();
+explicitItemRef.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+await waitFor(() => tooltip.classList.contains('is-open'));
+check('keyboard activation opens an interactive dialog card',
+  tooltip.getAttribute('role') === 'dialog' && tooltip.getAttribute('aria-modal') === 'false' && tooltip.contains(window.document.activeElement),
+  `role=${tooltip.getAttribute('role')} active=${window.document.activeElement?.className || window.document.activeElement?.tagName}`);
+check('keyboard trigger exposes dialog relationship',
+  explicitItemRef.getAttribute('aria-haspopup') === 'dialog' && explicitItemRef.getAttribute('aria-controls') === 'iw-tip' && explicitItemRef.getAttribute('aria-expanded') === 'true');
+pointerTarget = window.document.body;
+window.document.body.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 300, clientY: 300 }));
+await settle(80);
+check('keyboard-owned tooltip survives unrelated pointer movement', tooltip.classList.contains('is-open'));
+tooltip.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+await waitFor(() => !tooltip.classList.contains('is-open'));
+check('Escape closes keyboard tooltip and restores trigger focus',
+  window.document.activeElement === explicitItemRef && explicitItemRef.getAttribute('aria-expanded') === 'false');
+
+explicitItemRef.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+await waitFor(() => tooltip.classList.contains('is-open'));
+const closeButton = tooltip.querySelector('.iw-tip-close');
+closeButton?.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+await waitFor(() => !tooltip.classList.contains('is-open'));
+check('close control dismisses keyboard tooltip and restores focus',
+  !!closeButton && window.document.activeElement === explicitItemRef && explicitItemRef.getAttribute('aria-expanded') === 'false',
+  `open=${tooltip.classList.contains('is-open')} active=${window.document.activeElement?.className || window.document.activeElement?.tagName}`);
+
 coarsePointer = true;
 explicitItemRef.dispatchEvent(new window.MouseEvent('click', { bubbles: true, clientX: 50, clientY: 20 }));
 await waitFor(() => tooltip.classList.contains('is-open'));

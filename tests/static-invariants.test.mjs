@@ -212,6 +212,20 @@ assert.doesNotMatch(tooltip, /HIDE_GRACE|hideTimer|overPanel/);
 assert.match(tooltip, /const EDGE_GAP\s*=\s*0/);
 assert.match(tooltip, /STATE\.el\.style\.display\s*=\s*'none'/);
 assert.doesNotMatch(tooltip, /el\.style\.opacity\s*=\s*['"]1['"]/);
+assert.match(tooltip, /setAttribute\('role', 'dialog'\)/,
+  'interactive item cards must use dialog semantics rather than ARIA tooltip semantics');
+assert.match(tooltip, /show\(trigger, \{ keyboard: true \}\)/,
+  'keyboard activation must establish focus-owned tooltip state');
+assert.match(tooltip, /iw-tip-close/,
+  'interactive item cards need an explicit close control for touch and keyboard users');
+assert.match(tooltipCss, /max-height:\s*calc\(100vh - 20px\)/,
+  'item cards must remain vertically contained on short/mobile viewports');
+assert.match(tooltipCss, /\.iw-tip-body\s*\{[^}]*overflow-y:\s*auto/s,
+  'tooltip body must scroll without moving the header/footer');
+assert.match(tooltip, /style\.display\s*=\s*'flex'/,
+  'tooltip measurement/open state must preserve the flex card layout');
+assert.match(tooltipCss, /100dvh/,
+  'mobile tooltip height must account for dynamic browser viewport chrome');
 
 /* ── Base theme safety ───────────────────────────────────────────────── */
 

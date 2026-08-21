@@ -42,6 +42,7 @@ const STATE = {
   showTimer: null,
   pointerX: null,
   pointerY: null,
+  keyboardOwned: false,
   bound: false,
 };
 
@@ -207,7 +208,7 @@ function renderCard(item) {
         ${stats}
         ${acq}
       </div>
-      <div class="iw-tip-foot">${wikiLink}<span class="iw-tip-source${sourceClass}">${esc(sourceLabel)}</span></div>
+      <div class="iw-tip-foot">${wikiLink}<span class="iw-tip-source${sourceClass}">${esc(sourceLabel)}</span><button type="button" class="iw-tip-close" aria-label="Close item details">&times;</button></div>
     `,
     artHost,
     painted,
@@ -227,7 +228,7 @@ function position(anchor) {
   // inline opacity:1 here, which overrode .iw-tip { opacity:0 } after hide and
   // was the direct cause of visually lingering tooltips.
   el.style.visibility = 'hidden';
-  el.style.display = 'block';
+  el.style.display = 'flex';
   const tw = el.offsetWidth;
   const th = el.offsetHeight;
 
@@ -314,11 +315,11 @@ function pointerIsOnActiveSurface() {
 
 function cleanupAnchor(anchor) {
   if (!anchor || isVirtual(anchor)) return;
-  anchor.removeAttribute('aria-describedby');
+  anchor.removeAttribute('aria-describedby'); // cleanup residue from pre-hovercard builds
   anchor.setAttribute('aria-expanded', 'false');
 }
 
-function show(anchor) {
+function show(anchor, { keyboard = false } = {}) {
   if (!anchor?.isConnected) return;
   const item = isVirtual(anchor)
     ? anchor.item
@@ -343,14 +344,20 @@ function show(anchor) {
   }
 
   STATE.anchor = anchor;
-  if (!STATE.el.id) STATE.el.id = 'iw-tip';
+  STATE.keyboardOwned = keyboard;
+  STATE.el.setAttribute('aria-label', `${item.name} item details`);
   if (!isVirtual(anchor)) {
-    anchor.setAttribute('aria-describedby', 'iw-tip');
+    anchor.setAttribute('aria-controls', 'iw-tip');
+    anchor.setAttribute('aria-haspopup', 'dialog');
     anchor.setAttribute('aria-expanded', 'true');
   }
 
   position(anchor);
   STATE.el.classList.add('is-open');
+  if (keyboard) {
+    try { STATE.el.focus({ preventScroll: true }); }
+    catch { STATE.el.focus(); }
+  }
 }
 
 function hide() {
@@ -364,6 +371,7 @@ function hide() {
   }
   if (STATE.anchor) cleanupAnchor(STATE.anchor);
   STATE.anchor = null;
+  STATE.keyboardOwned = false;
 }
 
 function scheduleShow(anchor) {
@@ -388,8 +396,12 @@ export function initTooltipEngine() {
   inject('tooltip-engine', css);
 
   STATE.el = document.createElement('div');
+  STATE.el.id = 'iw-tip';
   STATE.el.className = 'iw-tip';
-  STATE.el.setAttribute('role', 'tooltip');
+  STATE.el.setAttribute('role', 'dialog');
+  STATE.el.setAttribute('aria-modal', 'false');
+  STATE.el.setAttribute('aria-label', 'Item details');
+  STATE.el.setAttribute('tabindex', '-1');
   STATE.el.style.display = 'none';
   document.body.appendChild(STATE.el);
 
@@ -400,12 +412,26 @@ export function initTooltipEngine() {
     clearShowTimer();
   });
   STATE.el.addEventListener('mouseleave', e => {
+    if (STATE.keyboardOwned) return;
     if (!isMobile() && STATE.anchor && nodeInside(STATE.anchor, e.relatedTarget)) return;
     hide();
   });
+  STATE.el.addEventListener('focusout', e => {
+    if (!STATE.keyboardOwned) return;
+    if (STATE.el.contains(e.relatedTarget)) return;
+    if (!isVirtual(STATE.anchor) && nodeInside(STATE.anchor, e.relatedTarget)) return;
+    hide();
+  });
+  STATE.el.addEventListener('click', e => {
+    if (!e.target.closest?.('.iw-tip-close')) return;
+    const anchor = STATE.anchor;
+    const restoreFocus = STATE.keyboardOwned;
+    hide();
+    if (restoreFocus && anchor?.focus) anchor.focus();
+  });
 
   document.addEventListener('mouseover', e => {
-    if (isMobile()) return;
+    if (isMobile() || STATE.keyboardOwned) return;
     const t = findTrigger(e.target);
     if (!t) return;
 
@@ -419,7 +445,7 @@ export function initTooltipEngine() {
   }, true);
 
   document.addEventListener('mouseout', e => {
-    if (isMobile()) return;
+    if (isMobile() || STATE.keyboardOwned) return;
     const t = findTrigger(e.target);
     if (!t) return;
 
@@ -442,9 +468,12 @@ export function initTooltipEngine() {
     if (isMobile()) return;
     STATE.pointerX = e.clientX;
     STATE.pointerY = e.clientY;
+    if (STATE.keyboardOwned) return;
 
     if (STATE.showTimer && !findTrigger(e.target)) clearShowTimer();
-    if (isOpen() && !activeSurfaceForNode(e.target)) hide();
+    // Keyboard-opened cards are focus-owned. A stationary mouse elsewhere in
+    // the page must not immediately cancel them when the user presses a key.
+    if (isOpen() && !STATE.keyboardOwned && !activeSurfaceForNode(e.target)) hide();
   }, true);
 
   document.addEventListener('click', e => {
@@ -488,15 +517,20 @@ export function initTooltipEngine() {
     const trigger = findTrigger(e.target);
     if (!trigger) return;
     e.preventDefault();
-    if (STATE.anchor === trigger && isOpen()) hide();
-    else show(trigger);
+    if (STATE.anchor === trigger && isOpen()) {
+      hide();
+    } else {
+      show(trigger, { keyboard: true });
+      const firstInteractive = STATE.el.querySelector('a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])');
+      if (firstInteractive?.focus) firstInteractive.focus();
+    }
   });
 
   const reflow = () => {
     if (!STATE.anchor) return;
     if (!STATE.anchor.isConnected) { hide(); return; }
 
-    if (!isMobile()) {
+    if (!isMobile() && !STATE.keyboardOwned) {
       const surface = activeSurfaceForNode(pointerNode());
       if (!surface) { hide(); return; }
 
@@ -513,10 +547,11 @@ export function initTooltipEngine() {
   // React can replace the trigger without a conventional mouseleave. Validate
   // the pointer after every central DOM flush and close any orphan immediately.
   document.addEventListener('iw:dom-flush', () => {
-    if (isMobile() || !isOpen()) return;
+    if (!isOpen()) return;
     const raf = window.requestAnimationFrame || (fn => setTimeout(fn, 16));
     raf(() => {
-      if (!STATE.anchor?.isConnected || !pointerIsOnActiveSurface()) hide();
+      if (!STATE.anchor?.isConnected) { hide(); return; }
+      if (!isMobile() && !STATE.keyboardOwned && !pointerIsOnActiveSurface()) hide();
     });
   });
 
@@ -527,6 +562,10 @@ export function initTooltipEngine() {
   const refreshOpen = () => {
     if (!STATE.anchor || !isOpen()) return;
     if (!STATE.anchor.isConnected) { hide(); return; }
+    // Replacing innerHTML while keyboard focus is inside the hovercard would
+    // detach the focused Wiki link. Preserve the stable keyboard surface until
+    // the user closes it; the next open will render fresh data.
+    if (STATE.keyboardOwned) return;
     if (!isMobile() && !pointerIsOnActiveSurface()) { hide(); return; }
     show(STATE.anchor);
   };
@@ -603,7 +642,7 @@ export function itemRef(nameOrItem, label, opts = {}) {
   // quests/skills/village text into large boxed controls. A focusable span
   // keeps the delegated tooltip behaviour and keyboard accessibility without
   // inheriting the game's button presentation.
-  return `<span class="iw-item-ref" role="button" tabindex="0" ${attr} aria-expanded="false" aria-label="${esc(name)}, item details">${inner}</span>`;
+  return `<span class="iw-item-ref" role="button" tabindex="0" ${attr} aria-haspopup="dialog" aria-controls="iw-tip" aria-expanded="false" aria-label="${esc(name)}, item details">${inner}</span>`;
 }
 
 /** itemRefIfKnown(name) — wrap only if the name resolves to a real item. */
