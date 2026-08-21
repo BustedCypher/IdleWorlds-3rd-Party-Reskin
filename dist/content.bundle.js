@@ -5,23 +5,16 @@
     /**
      * IdleWorlds Fantasy Skin — content script entry point
      *
-     * v1.6.0 boot order (retains the v1.4.1 stability guarantees):
-     *   1. Inject module CSS. (base.css now ships declaratively via the manifest,
-     *      so the theme lands at parse time instead of after document_idle — the
-     *      flash of stock UI on every load is gone.)
-     *   2. Register every consumer/listener (tooltip + renderers + repaint/scanner).
-     *   3. Start async data services.
-     *   4. Paint the existing page once.
-     *   5. Start DOMWatcher LAST, so its initial discovery cannot emit events
-     *      before consumers are listening.
-     *
-     * New in v1.6.0: the whole skin can be switched off at runtime without
-     * uninstalling. Toggling `iw-skin-enabled` in extension storage tears every
-     * module's decoration back off the live page and disconnects the observer,
-     * which is the only practical way to A/B a suspected skin/game interaction
-     * without losing the page state you are investigating.
+     * Lifecycle rules:
+     *   1. Every stylesheet is runtime-owned and removable, including base.css.
+     *   2. Consumer/listener registration happens ONCE for the page lifetime.
+     *   3. Each activation re-injects presentation CSS, starts services/painting,
+     *      then starts DOMWatcher LAST.
+     *   4. Teardown reverses the active work and removes every skin stylesheet.
+     *   5. Runtime guards make late reconciliation callbacks inert while disabled;
+     *      queued callbacks still run their bookkeeping so no queue flag is stranded.
      */
-    const { removeAll: removeAllStyles } = require("modules/StyleInjector.js");
+    const { inject, removeAll: removeAllStyles } = require("modules/StyleInjector.js");
     const { startWatcher, stopWatcher, on, getScanRoots } = require("modules/DOMWatcher.js");
     const { AtlasService } = require("modules/AtlasService.js");
     const { ItemDatabase } = require("modules/ItemDatabase.js");
@@ -31,11 +24,28 @@
     const { initSkillPanelRenderer, clearSkillPanels } = require("modules/SkillPanelRenderer.js");
     const { initUIFoundation, clearUIFoundation } = require("modules/UIFoundation.js");
     const { paintBackground, clearBackgroundPaint } = require("modules/BackgroundPainter.js");
-    const { guard, guardEach, storageGet, onStorageChanged } = require("modules/Runtime.js");
+    const { guard, guardEach, storageGet, onStorageChanged, setRuntimeActive } = require("modules/Runtime.js");
+    const baseCss = require("styles/base.css").default;
+    const tooltipCss = require("styles/tooltip-engine.css").default;
+    const inventoryCss = require("styles/inventory.css").default;
+    const skillPanelCss = require("styles/skillpanel.css").default;
+    const uiSystemCss = require("styles/ui-system.css").default;
     const ENABLED_KEY = 'iw-skin-enabled';
     const VERSION = '1.6.0';
     
     let booted = false;
+    let consumersBound = false;
+    
+    function injectPresentationStyles() {
+      // base.css used to be declared in manifest.json. That made the kill switch
+      // incapable of restoring the native page because manifest CSS cannot be
+      // removed by StyleInjector. Keep ALL presentation lifecycle-owned instead.
+      inject('base', baseCss);
+      inject('tooltip-engine', tooltipCss);
+      inject('inventory', inventoryCss);
+      inject('skillpanel', skillPanelCss);
+      inject('ui-system', uiSystemCss);
+    }
     
     function scanRoots(roots) {
       if (!ItemDatabase.isReady()) return;
@@ -46,25 +56,13 @@
       guardEach('scan-roots', unique, root => scanForItemNames(root));
     }
     
-    function boot() {
-      if (booted) return;
-      booted = true;
+    function bindConsumersOnce() {
+      if (consumersBound) return;
+      consumersBound = true;
     
-      // 1. Theme CSS.
-      //
-      // base.css is NOT injected from here any more. It is declared in
-      // manifest.content_scripts[].css, for two reasons:
-      //
-      //   • it applies before first paint rather than at document_idle, so the
-      //     flash of stock UI on every load is gone;
-      //   • relative url() inside a JS-injected <style> resolves against the PAGE,
-      //     while Chrome resolves it against the EXTENSION for declarative content
-      //     script CSS — which is what makes the self-hosted @font-face work.
-      //
-      // The per-module sheets have no url() references, so they still go through
-      // the injector and stay colocated with the code that depends on them.
-    
-      // 2. Register ALL consumers before the watcher is allowed to discover DOM.
+      // Module initializers register their delegated/document listeners. They are
+      // intentionally page-lifetime bindings; activation state is controlled by
+      // DOMWatcher + Runtime rather than adding another copy on every re-enable.
       guard('init:tooltip', initTooltipEngine);
       guard('init:inventory', initInventoryRenderer);
       guard('init:skill-panel', initSkillPanelRenderer);
@@ -87,6 +85,18 @@
       document.addEventListener('iw:item-db-updated', () => {
         scanRoots([...getScanRoots()]);
       });
+    }
+    
+    function boot() {
+      if (booted) return;
+      booted = true;
+      setRuntimeActive(true);
+    
+      // 1. Presentation CSS belongs to THIS activation.
+      injectPresentationStyles();
+    
+      // 2. Event consumers belong to the PAGE lifetime and are bound once.
+      bindConsumersOnce();
     
       // 3. Start async services. Neither is allowed to poison itself forever
       // after a transient failure; renderers reconcile again on update events.
@@ -108,14 +118,18 @@
     }
     
     /**
-     * Remove every trace of the skin from the live page.
+     * Remove the active skin from the live page.
      *
-     * Teardown order is the reverse of boot: stop producing work, drop the
-     * decorations that depend on the DOM, then remove the stylesheets that were
-     * making them visible.
+     * Keep Runtime active until module cleanup has completed: teardown functions use
+     * guardEach(), and they must be allowed to restore/remove the active decoration.
+     * Runtime is marked inactive only after the page has been cleaned, which also
+     * suppresses late data-service/reconciliation events until the next boot.
      */
     function teardown() {
-      if (!booted) return;
+      if (!booted) {
+        setRuntimeActive(false);
+        return;
+      }
       booted = false;
     
       guard('teardown:watcher', stopWatcher);
@@ -127,7 +141,10 @@
       guard('teardown:background', clearBackgroundPaint);
       guard('teardown:styles', removeAllStyles);
     
-      console.log('[IW Fantasy Skin] disabled — page restored to native presentation');
+      // From here until the next boot, any late async/data callbacks are inert.
+      setRuntimeActive(false);
+    
+      console.log('[IW Fantasy Skin] disabled — active presentation removed');
     }
     
     function applyEnabled(enabled) {
@@ -136,10 +153,16 @@
     }
     
     (async function start() {
+      // Nothing should reconcile before the persisted enable state is known.
+      setRuntimeActive(false);
+    
       // Default to enabled: a storage read failure must never leave the user with
       // a silently inert extension.
       const stored = await storageGet(ENABLED_KEY);
       applyEnabled(stored === null ? true : stored !== false);
+    
+      // This listener intentionally remains active while the skin is disabled: it
+      // is the mechanism that can turn the skin back on.
       onStorageChanged(ENABLED_KEY, value => applyEnabled(value !== false));
     })();
   };
@@ -191,10 +214,10 @@
     const ITEM_INDEX_URL    = assetUrl('assets/item_icons_index.csv');
     const ITEM_ATLAS_URL    = assetUrl('assets/item_icons_atlas.png');
     
-    // Columns parseCSV() must find in item_icons_index.csv before any icon is
-    // painted. Without this check a renamed column or a stray BOM silently made
-    // every `Number(entry.x) || 0` collapse to 0, painting the whole game with
-    // atlas cell 0,0 and no warning anywhere. (Audit S3.3)
+    // These are the columns runtime rendering ACTUALLY depends on. `row` and
+    // `column` may exist as convenient metadata, but atlas dimensions are derived
+    // from x/y/width/height so removing optional grid labels cannot silently turn
+    // the atlas into a calculated 1x1 image.
     const REQUIRED_ITEM_COLUMNS = ['item_id', 'name', 'x', 'y', 'width', 'height'];
     
     const UPGRADE_SUFFIX = /\s*\+\s*\d+\s*$/i;
@@ -203,7 +226,6 @@
     const PREFIX_AFFIX    = /^(gilded|fortunate|enchanted|nimble|sturdy|keen|blessed|arcane|savage|swift|mighty|precise|reinforced|masterwork|superior|pristine)\s+/i;
     
     const normalise = normaliseItemName;
-    
     
     function parseCSV(text) {
       // A UTF-8 BOM would otherwise become part of the first header name, so the
@@ -401,20 +423,33 @@
         this._itemById = new Map();
         this._itemByName = new Map();
     
-        let maxRow = 0, maxCol = 0;
+        const cell = Number(rows[0]?.width) || 128;
+        let maxX = 0, maxY = 0;
         for (const row of rows) {
           if (row.item_id !== undefined && row.item_id !== null && row.item_id !== '') {
             this._itemById.set(String(row.item_id), row);
           }
           const key = normalise(row.name);
           if (key && !this._itemByName.has(key)) this._itemByName.set(key, row);
-          maxRow = Math.max(maxRow, Number(row.row) || 0);
-          maxCol = Math.max(maxCol, Number(row.column) || 0);
+    
+          const x = Number(row.x);
+          const y = Number(row.y);
+          const w = Number(row.width);
+          const h = Number(row.height);
+          if (![x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0) {
+            throw new Error(`Item index contains invalid sprite bounds for ${row.item_id || row.name || 'unknown item'}`);
+          }
+          maxX = Math.max(maxX, x + w);
+          maxY = Math.max(maxY, y + h);
         }
+    
+        // Runtime paint() needs the atlas pixel extent, not human-friendly grid
+        // labels. Derive it from required coordinates so optional row/column fields
+        // cannot affect correctness.
         this._itemDims = {
-          cols: maxCol + 1,
-          rows: maxRow + 1,
-          cell: Number(rows[0]?.width) || 128,
+          cols: Math.max(1, Math.ceil(maxX / cell)),
+          rows: Math.max(1, Math.ceil(maxY / cell)),
+          cell,
         };
       }
     
@@ -544,6 +579,9 @@
      * Phase 2 work; this pass only fixes the border parsing and adds teardown.
      */
     const { warnOnce } = require("modules/Runtime.js");
+    const { createInlineStyleOwner } = require("modules/InlineStyleOwner.js");
+    const styleOwner = createInlineStyleOwner();
+    
     const GAME_NAVIES = new Set([
       '#0f172a', '#111827', '#131d28', '#131e28', '#131d27',
       '#141e28', '#121d27', '#121c27', '#121d28', '#1a2030',
@@ -612,9 +650,7 @@
     }
     
     function setImportant(el, prop, value) {
-      if (el.style.getPropertyValue(prop) === value && el.style.getPropertyPriority(prop) === 'important') return false;
-      el.style.setProperty(prop, value, 'important');
-      return true;
+      return styleOwner.set(el, prop, value, 'important');
     }
     
     function paintElement(el) {
@@ -663,15 +699,10 @@
       return changed;
     }
     
-    /** Undo every repaint this module performed. Kill switch. */
+    /** Undo every inline property this module owns. Kill switch. */
     function clearBackgroundPaint() {
-      const props = [
-        'background-color',
-        'border-color',
-        'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color',
-      ];
+      styleOwner.restoreAll();
       document.querySelectorAll('[data-iw-painted="1"]').forEach(el => {
-        for (const prop of props) el.style.removeProperty(prop);
         delete el.dataset.iwPainted;
       });
     }
@@ -740,19 +771,28 @@
     }
     
     /**
-     * Skill detection is pure with respect to a panel's button/heading text, and
-     * that text is stable for the life of the panel. Recomputing it on every flush
-     * meant reading `textContent` of every button in every `.compact-panel` on the
-     * page ~60×/s for a result that essentially never changes. Cache it against a
-     * cheap signature and recompute only when the signature moves. (Audit S4.3)
+     * Skill detection is pure with respect to a panel's button/heading text.
+     * Recomputing detection on every flush is unnecessary, but the cache key must
+     * represent the CONTENT that detection actually reads. The old key stored only
+     * button count + text lengths, so an equal-length change such as Mine -> Fish
+     * returned the previous skill type indefinitely on a reused React panel.
      */
     const skillTypeCache = new WeakMap();
     
+    function normaliseSkillSignal(value) {
+      return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    }
+    
     function skillSignature(panel) {
-      const buttons = panel.querySelectorAll('button');
-      let sig = `${buttons.length}|`;
-      for (const btn of buttons) sig += `${(btn.textContent || '').length},`;
-      return sig;
+      const buttons = [...panel.querySelectorAll('button')]
+        .map(btn => normaliseSkillSignal(btn.textContent));
+      const headings = [...panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"]')]
+        .map(el => normaliseSkillSignal(el.textContent));
+    
+      // JSON preserves array boundaries and exact signal content without a
+      // collision-prone delimiter/hash scheme. These strings are tiny compared
+      // with the panel subtree scans detection would otherwise repeat.
+      return JSON.stringify([buttons, headings]);
     }
     
     function detectSkillTypeCached(panel) {
@@ -769,7 +809,7 @@
       // bosses, village and other systems, so searching arbitrary panel body text
       // for words such as "craft" caused unrelated cards to inherit skill chrome.
       const actionTexts = [...panel.querySelectorAll('button')]
-        .map(btn => String(btn.textContent || '').trim().toLowerCase())
+        .map(btn => normaliseSkillSignal(btn.textContent))
         .filter(Boolean);
     
       const hasAction = (...names) => actionTexts.some(text => names.includes(text));
@@ -786,7 +826,7 @@
     
       // Fallback only to explicit skill labels/headings, never the whole body.
       const headings = [...panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"]')];
-      const labels = headings.map(h => String(h.textContent || '').trim().toLowerCase());
+      const labels = headings.map(h => normaliseSkillSignal(h.textContent));
       if (labels.some(t => /^combat(?:\s|$)/.test(t))) return 'combat';
       if (labels.some(t => /^mining(?:\s|$)|^mine(?:\s|$)/.test(t))) return 'mining';
       if (labels.some(t => /^jewelcrafting(?:\s|$)|^prospect(?:\s|$)/.test(t))) return 'jewelcrafting';
@@ -1049,6 +1089,129 @@
     exports.on = on;
     exports.off = off;
   };
+  __modules["modules/InlineStyleOwner.js"] = (module, exports, require) => {
+    /**
+     * InlineStyleOwner
+     *
+     * Tracks only the inline CSS properties a skin module mutates. This lets a
+     * renderer repair properties that React writes back while it is active AND
+     * restore the game's most recent underlying value during teardown without
+     * deleting unrelated inline styles.
+     *
+     * Why property-level ownership instead of snapshotting the whole `style`
+     * attribute:
+     *   • React may update another inline property while the skin is active.
+     *   • Removing/replacing the whole style attribute would erase that update.
+     *   • If React rewrites one of OUR owned properties, the next set() call sees
+     *     the external value before re-applying the skin and promotes that value to
+     *     the new native-underlay snapshot.
+     *
+     * CSSStyleDeclaration normalises values when they are written. For example,
+     * `#DAD3C3` is commonly serialised back as `rgb(218, 211, 195)`. Ownership must
+     * therefore remember the browser's POST-WRITE value, never the raw requested
+     * string, or a later reconcile mistakes our own normalised value for a React
+     * write and permanently promotes it to the "native" snapshot.
+     */
+    
+    function createInlineStyleOwner() {
+      const states = new WeakMap();
+      const touched = new Set();
+    
+      function stateFor(el, prop) {
+        let props = states.get(el);
+        if (!props) {
+          props = new Map();
+          states.set(el, props);
+          touched.add(el);
+        }
+    
+        let state = props.get(prop);
+        const currentValue = el.style.getPropertyValue(prop);
+        const currentPriority = el.style.getPropertyPriority(prop);
+    
+        if (!state) {
+          state = {
+            nativeValue: currentValue,
+            nativePriority: currentPriority,
+            appliedValue: null,
+            appliedPriority: null,
+          };
+          props.set(prop, state);
+        } else if (
+          state.appliedValue !== null &&
+          (currentValue !== state.appliedValue || currentPriority !== state.appliedPriority)
+        ) {
+          // Something outside this owner changed the property after our last write.
+          // Treat that as the game's newest underlying state before re-applying.
+          state.nativeValue = currentValue;
+          state.nativePriority = currentPriority;
+        }
+    
+        return state;
+      }
+    
+      function set(el, prop, value, priority = 'important') {
+        if (!el?.style) return false;
+        const state = stateFor(el, prop);
+        const beforeValue = el.style.getPropertyValue(prop);
+        const beforePriority = el.style.getPropertyPriority(prop);
+    
+        // Always let CSSStyleDeclaration parse/normalise the requested value first.
+        // Comparing `beforeValue` directly with the caller's raw value is unsafe:
+        // equivalent colours, shorthands and numeric forms can serialise differently.
+        el.style.setProperty(prop, value, priority);
+    
+        const afterValue = el.style.getPropertyValue(prop);
+        const afterPriority = el.style.getPropertyPriority(prop);
+        state.appliedValue = afterValue;
+        state.appliedPriority = afterPriority;
+    
+        return beforeValue !== afterValue || beforePriority !== afterPriority;
+      }
+    
+      function restoreElement(el) {
+        const props = states.get(el);
+        if (!props) return;
+    
+        for (const [prop, state] of props) {
+          const currentValue = el.style.getPropertyValue(prop);
+          const currentPriority = el.style.getPropertyPriority(prop);
+    
+          // If React changed the property after our last write and teardown arrived
+          // before reconciliation, that current value is already the best native
+          // state. Do not overwrite it with an older snapshot.
+          const stillOurs = currentValue === state.appliedValue &&
+            currentPriority === state.appliedPriority;
+          if (!stillOurs) continue;
+    
+          if (state.nativeValue) {
+            el.style.setProperty(prop, state.nativeValue, state.nativePriority || '');
+          } else {
+            el.style.removeProperty(prop);
+          }
+        }
+    
+        states.delete(el);
+        touched.delete(el);
+      }
+    
+      function restoreWithin(root) {
+        if (!root) return;
+        for (const el of [...touched]) {
+          if (el === root || root.contains?.(el)) restoreElement(el);
+        }
+      }
+    
+      function restoreAll() {
+        for (const el of [...touched]) restoreElement(el);
+      }
+    
+      return { set, restoreElement, restoreWithin, restoreAll };
+    }
+    
+    
+    exports.createInlineStyleOwner = createInlineStyleOwner;
+  };
   __modules["modules/InventoryModel.js"] = (module, exports, require) => {
     /**
      * InventoryModel
@@ -1250,8 +1413,29 @@
     const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [role="button"], [tabindex]';
     const pendingEmptyRetries = new WeakSet();
     
-    /** row -> cheap change signature, see renderRow(). */
+    /** row -> exact cheap change signature, see renderRow(). */
     const cheapSignatures = new WeakMap();
+    let listenerBound = false;
+    
+    function cheapSignature(row) {
+      // Reading textContent is cheap compared with the two selector sweeps in
+      // extractRowData(). Store the ACTUAL text rather than only its length: equal-
+      // length changes such as x1 -> x2 are semantically real and must reconcile.
+      return {
+        childCount: row.childElementCount,
+        text: row.textContent || '',
+        dbRevision: ItemDatabase.revision(),
+        atlasRevision: AtlasService.revision(),
+      };
+    }
+    
+    function sameCheapSignature(a, b) {
+      return !!a && !!b &&
+        a.childCount === b.childCount &&
+        a.text === b.text &&
+        a.dbRevision === b.dbRevision &&
+        a.atlasRevision === b.atlasRevision;
+    }
     
     function esc(s) {
       return String(s == null ? '' : s)
@@ -1605,15 +1789,12 @@
     
       // Cheap pre-check before the expensive path.
       //
-      // extractRowData() runs two full querySelectorAll('span, div, p[, li]')
-      // sweeps over the row, and was doing so on every flush — before the signature
-      // comparison that would have said "nothing changed". A row's own text length
-      // and child count are enough to prove nothing changed, and cost one property
-      // read each. When they hold, we still re-assert our display suppression
-      // (React may have written display back) and skip the rest. (Audit S4.4)
-      const cheapSig = `${row.childElementCount}|${(row.textContent || '').length}|`
-                     + `${ItemDatabase.revision()}|${AtlasService.revision()}`;
-      if (existingOverlay && cheapSignatures.get(row) === cheapSig) {
+      // extractRowData() runs two querySelectorAll sweeps over the row. One exact
+      // textContent read plus child/revision fields is still much cheaper, but unlike
+      // the old text-LENGTH signature it cannot miss an equal-length semantic
+      // change such as x1 -> x2 or one item name being replaced by another.
+      const cheapSig = cheapSignature(row);
+      if (existingOverlay && sameCheapSignature(cheapSignatures.get(row), cheapSig)) {
         hideOriginalChildren(row, existingOverlay);
         syncRowState(row, existingOverlay);
         return;
@@ -1703,6 +1884,8 @@
     
     function initInventoryRenderer() {
       inject('inventory', css);
+      if (listenerBound) return;
+      listenerBound = true;
       on('iw:inventory-row', e => guard('inventory:row', () => renderRow(e.detail.row)));
       document.addEventListener('iw:item-db-updated', reconcileAll);
       document.addEventListener('iw:atlas-updated', reconcileAll);
@@ -2270,12 +2453,28 @@
      *     GAME's localStorage, which we share with the page and must not fill.
      *     (Audit S1.3)
      *   • A thrown consumer can never take down the rest of a flush. (Audit S3.7)
+     *   • Reconciliation work is ignored while the skin is disabled, without
+     *     preventing queued callbacks from running their own bookkeeping cleanup.
      *
      * The module degrades gracefully when `chrome` is unavailable (unit tests,
      * a plain <script> harness) so the presentation layer stays testable.
      */
     
     const hasChrome = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
+    
+    /* ── Activation lifecycle ───────────────────────────────────────────── */
+    
+    // Default to active for isolated module/unit tests. content.js explicitly sets
+    // the real page state before boot/after teardown.
+    let runtimeActive = true;
+    
+    function setRuntimeActive(active) {
+      runtimeActive = active !== false;
+    }
+    
+    function isRuntimeActive() {
+      return runtimeActive;
+    }
     
     /* ── Assets ──────────────────────────────────────────────────────────── */
     
@@ -2353,7 +2552,13 @@
       if (!hasChrome || !chrome.storage?.onChanged) return () => {};
       const listener = (changes, area) => {
         if (area !== 'local' || !(key in changes)) return;
-        guard('storage-change', () => handler(changes[key].newValue));
+        // This path MUST work while runtimeActive is false: it is how the disabled
+        // skin receives the command to turn itself back on.
+        try {
+          handler(changes[key].newValue);
+        } catch (err) {
+          warnOnce('storage-change', err);
+        }
       };
       chrome.storage.onChanged.addListener(listener);
       return () => chrome.storage.onChanged.removeListener(listener);
@@ -2375,15 +2580,13 @@
     }
     
     /**
-     * Run `fn`, swallowing and reporting any exception.
-     *
-     * The skin reconciles the DOM of an app it does not control. A single
-     * malformed row must degrade to "that row stays native", never to "the rest
-     * of this frame's work silently never ran".
+     * Run `fn`, swallowing and reporting any exception. Reconciliation callbacks
+     * that arrive after teardown are deliberately ignored.
      *
      * @returns {boolean} true when fn completed without throwing
      */
     function guard(label, fn) {
+      if (!runtimeActive) return false;
       try {
         fn();
         return true;
@@ -2398,6 +2601,7 @@
      * @returns {number} count of items processed without throwing
      */
     function guardEach(label, items, fn) {
+      if (!runtimeActive) return 0;
       let ok = 0;
       for (const item of items || []) {
         if (guard(label, () => fn(item))) ok += 1;
@@ -2407,11 +2611,17 @@
     
     /* ── Scheduling ──────────────────────────────────────────────────────── */
     
+    // Do NOT discard callbacks at the scheduler level. Modules use their RAF body
+    // to clear flags such as `queued`, `flushQueued` and `pointerQueued`; skipping
+    // the callback can strand those flags permanently. Runtime guards inside the
+    // callback suppress the actual reconciliation while disabled.
     const raf = typeof window !== 'undefined' && window.requestAnimationFrame
       ? window.requestAnimationFrame.bind(window)
       : (fn => setTimeout(fn, 16));
     
     
+    exports.setRuntimeActive = setRuntimeActive;
+    exports.isRuntimeActive = isRuntimeActive;
     exports.assetUrl = assetUrl;
     exports.onStorageChanged = onStorageChanged;
     exports.warnOnce = warnOnce;
@@ -2433,6 +2643,7 @@
     const { on } = require("modules/DOMWatcher.js");
     const { inject } = require("modules/StyleInjector.js");
     const { guard, guardEach } = require("modules/Runtime.js");
+    const { createInlineStyleOwner } = require("modules/InlineStyleOwner.js");
     const css = require("styles/skillpanel.css").default;
     const RENDERED_ATTR = 'data-fs-skill';
     const ROLE_ATTR = 'data-iw-skill-role';
@@ -2440,6 +2651,14 @@
     const buttonStyleSnapshots = new WeakMap();
     const readoutStyleSnapshots = new WeakMap();
     const ingredientStyleSnapshots = new WeakMap();
+    
+    // Keep independent ownership domains. A live XP datum can itself be a button;
+    // restoring stale ACTION chrome on that node must not also restore/remove the
+    // flat readout treatment it still legitimately owns.
+    const buttonStyleOwner = createInlineStyleOwner();
+    const readoutStyleOwner = createInlineStyleOwner();
+    const ingredientStyleOwner = createInlineStyleOwner();
+    let listenerBound = false;
     
     const SKILL_META = {
       combat:    { label: 'Combat',    glyph: '⚔︎', actions: ['fight'] },
@@ -2450,13 +2669,12 @@
       jewelcrafting: { label: 'Jewelcrafting', glyph: '◆', actions: ['prospect'] },
       spellcrafting: { label: 'Spellcrafting', glyph: '✧', actions: ['enchant'] },
       tailoring: { label: 'Tailoring', glyph: '⋈', actions: ['tailor', 'sew'] },
-      crafting:  { label: 'Crafting',  glyph: '✦',  actions: ['craft'] },
-      fishing:   { label: 'Fishing',   glyph: '⌁',  actions: ['fish'] },
+      crafting:  { label: 'Crafting',  glyph: '✦', actions: ['craft'] },
+      fishing:   { label: 'Fishing',   glyph: '⌁', actions: ['fish'] },
     };
     
-    function setStyle(el, prop, value, priority = 'important') {
-      if (el.style.getPropertyValue(prop) === value && el.style.getPropertyPriority(prop) === priority) return;
-      el.style.setProperty(prop, value, priority);
+    function setOwnedStyle(owner, el, prop, value, priority = 'important') {
+      return owner.set(el, prop, value, priority);
     }
     
     function normText(value) {
@@ -2528,8 +2746,10 @@
     function styleButton(btn) {
       const role = btn.getAttribute(ROLE_ATTR) || '';
       // Live IdleWorlds renders the level/XP datum as a real <button>. It is data,
-      // not a command. Never pass it through the generic action-button painter.
+      // not a command. If React repurposed a button we styled in an earlier flush,
+      // restore only our old ACTION properties; readout ownership is independent.
       if (role === 'level-progress') {
+        buttonStyleOwner.restoreElement(btn);
         delete btn.dataset.iwBtnState;
         buttonStyleSnapshots.delete(btn);
         return;
@@ -2539,23 +2759,27 @@
       const previous = buttonStyleSnapshots.get(btn);
       if (previous && previous.state === state && previous.role === role && previous.style === currentStyle) return;
     
-      for (const [prop, value] of Object.entries(BUTTON_STYLES.base)) setStyle(btn, prop, value);
-      for (const [prop, value] of Object.entries(BUTTON_STYLES[state])) setStyle(btn, prop, value);
+      for (const [prop, value] of Object.entries(BUTTON_STYLES.base)) {
+        setOwnedStyle(buttonStyleOwner, btn, prop, value);
+      }
+      for (const [prop, value] of Object.entries(BUTTON_STYLES[state])) {
+        setOwnedStyle(buttonStyleOwner, btn, prop, value);
+      }
     
       // Role geometry is applied inline because IdleWorlds frequently writes its
       // own inline button dimensions during React updates.
       if (role === 'nav-button') {
-        setStyle(btn, 'width', '30px');
-        setStyle(btn, 'min-width', '30px');
-        setStyle(btn, 'height', '30px');
-        setStyle(btn, 'min-height', '30px');
-        setStyle(btn, 'padding', '0');
+        setOwnedStyle(buttonStyleOwner, btn, 'width', '30px');
+        setOwnedStyle(buttonStyleOwner, btn, 'min-width', '30px');
+        setOwnedStyle(buttonStyleOwner, btn, 'height', '30px');
+        setOwnedStyle(buttonStyleOwner, btn, 'min-height', '30px');
+        setOwnedStyle(buttonStyleOwner, btn, 'padding', '0');
       } else if (role === 'action-button') {
-        setStyle(btn, 'width', '96px');
-        setStyle(btn, 'min-width', '96px');
-        setStyle(btn, 'height', '34px');
-        setStyle(btn, 'min-height', '34px');
-        setStyle(btn, 'padding', '0 14px');
+        setOwnedStyle(buttonStyleOwner, btn, 'width', '96px');
+        setOwnedStyle(buttonStyleOwner, btn, 'min-width', '96px');
+        setOwnedStyle(buttonStyleOwner, btn, 'height', '34px');
+        setOwnedStyle(buttonStyleOwner, btn, 'min-height', '34px');
+        setOwnedStyle(buttonStyleOwner, btn, 'padding', '0 14px');
       }
     
       if (btn.dataset.iwBtnState !== state) btn.dataset.iwBtnState = state;
@@ -2639,12 +2863,7 @@
     }
     
     function neutraliseReadouts(panel) {
-      // Clear stale marks first. React may replace only the inner readout while
-      // preserving a previously classified wrapper.
-      panel.querySelectorAll('[data-iw-readout]').forEach(el => {
-        delete el.dataset.iwReadout;
-        readoutStyleSnapshots.delete(el);
-      });
+      const previouslyMarked = [...panel.querySelectorAll('[data-iw-readout]')];
     
       let readout = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
       if (!readout) {
@@ -2653,18 +2872,38 @@
           return LEVEL_PROGRESS_PATTERN.test(normText(el.textContent));
         }) || null;
       }
-      if (!readout) return;
+    
+      if (!readout) {
+        // The readout disappeared or React repurposed this branch. Restore only the
+        // nodes that previously belonged to the readout treatment.
+        for (const old of previouslyMarked) {
+          readoutStyleOwner.restoreElement(old);
+          delete old.dataset.iwReadout;
+          readoutStyleSnapshots.delete(old);
+        }
+        return;
+      }
     
       const branch = readoutBranch(readout, panel);
+      const current = new Set(branch);
+    
+      // Restore ONLY nodes that left the readout branch. Restoring every marked
+      // node on every reconcile would itself generate style mutations forever.
+      for (const old of previouslyMarked) {
+        if (current.has(old)) continue;
+        readoutStyleOwner.restoreElement(old);
+        delete old.dataset.iwReadout;
+        readoutStyleSnapshots.delete(old);
+      }
+    
       for (const target of branch) {
         target.dataset.iwReadout = '1';
-        for (const [prop, value] of Object.entries(READOUT_STYLES)) setStyle(target, prop, value);
-        // Native metric widgets may set flex/grid alignment or transforms on an
-        // otherwise borderless shell. Reset only the branch that contains no other
-        // semantic skill content.
-        setStyle(target, 'transform', 'none');
-        setStyle(target, 'filter', 'none');
-        setStyle(target, 'align-self', 'auto');
+        for (const [prop, value] of Object.entries(READOUT_STYLES)) {
+          setOwnedStyle(readoutStyleOwner, target, prop, value);
+        }
+        setOwnedStyle(readoutStyleOwner, target, 'transform', 'none');
+        setOwnedStyle(readoutStyleOwner, target, 'filter', 'none');
+        setOwnedStyle(readoutStyleOwner, target, 'align-self', 'auto');
         readoutStyleSnapshots.set(target, target.getAttribute('style') || '');
       }
     }
@@ -2686,7 +2925,10 @@
         const text = normText(el.textContent);
         const matches = INGR_PATTERN.test(text);
         if (!matches) {
-          if (el.dataset.iwIngr) delete el.dataset.iwIngr;
+          if (el.dataset.iwIngr) {
+            ingredientStyleOwner.restoreElement(el);
+            delete el.dataset.iwIngr;
+          }
           ingredientStyleSnapshots.delete(el);
           continue;
         }
@@ -2696,7 +2938,9 @@
           const currentStyle = target.getAttribute('style') || '';
           if (ingredientStyleSnapshots.get(target) === currentStyle && target.dataset.iwIngr === '1') continue;
           if (target.dataset.iwIngr !== '1') target.dataset.iwIngr = '1';
-          for (const [prop, value] of Object.entries(INGR_STYLES)) setStyle(target, prop, value);
+          for (const [prop, value] of Object.entries(INGR_STYLES)) {
+            setOwnedStyle(ingredientStyleOwner, target, prop, value);
+          }
           ingredientStyleSnapshots.set(target, target.getAttribute('style') || '');
         }
       }
@@ -2825,8 +3069,8 @@
       }
     
       // Opt into the rigid three-column layout only when the live React panel
-      // already exposes exactly three distinct top-level zones. This gives us
-      // deterministic alignment without forcing unknown DOM shapes into a grid.
+      // already exposes three distinct top-level zones. Unknown visible branches
+      // disable the grid so native layout remains the safe fallback.
       const identityRole = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
       const titleRole = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
       const actionRole = panel.querySelector(`[${ROLE_ATTR}="action-button"]`);
@@ -2844,10 +3088,8 @@
         commandZone.setAttribute(ZONE_ATTR, 'commands');
     
         // Some skills include an extra absolutely-positioned/decorative React child
-        // while others expose only the three functional branches. The previous
-        // exact child-count gate meant the shared layout applied to only a subset
-        // of skills. Ignore non-flow decoration, but refuse the rigid layout when
-        // there is an additional visible functional branch we do not understand.
+        // while others expose only the three functional branches. Ignore non-flow
+        // decoration, but refuse rigid layout for an unknown visible branch.
         const functionalZones = new Set([identityZone, contentZone, commandZone]);
         const unexpectedFlowChild = directChildren.some(el => {
           if (functionalZones.has(el)) return false;
@@ -2881,14 +3123,30 @@
       wrapper.remove();
     }
     
+    function clearPanelInlineTreatment(panel) {
+      buttonStyleOwner.restoreWithin(panel);
+      readoutStyleOwner.restoreWithin(panel);
+      ingredientStyleOwner.restoreWithin(panel);
+      panel.querySelectorAll('[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]').forEach(el => {
+        delete el.dataset.iwReadout;
+        delete el.dataset.iwIngr;
+        delete el.dataset.iwBtnState;
+        buttonStyleSnapshots.delete(el);
+        readoutStyleSnapshots.delete(el);
+        ingredientStyleSnapshots.delete(el);
+      });
+    }
+    
     function clearPanelChrome(panel) {
       migrateLegacyWrapper(panel);
+      clearPanelInlineTreatment(panel);
       clearStructureRoles(panel);
       panel.classList.remove('fs-skill-panel', ...SKILL_CLASSES);
       delete panel.dataset.fsSkillLabel;
       delete panel.dataset.fsSkillRune;
       delete panel.dataset.fsSkillFlavour;
       delete panel.dataset.iwSkillGlyph;
+      delete panel.dataset.iwSkill;
       delete panel.dataset.iwUi;
       panel.removeAttribute(RENDERED_ATTR);
     }
@@ -2922,19 +3180,25 @@
       applyPanelTreatment(panel, skillType, meta);
     }
     
-    /** Strip skill chrome from every panel. Kill switch. */
+    /** Strip skill chrome and restore only the inline properties this module owns. */
     function clearSkillPanels() {
       guardEach('skill:teardown', document.querySelectorAll('.compact-panel'), clearPanelChrome);
+      // Defensive cleanup for previously styled nodes that React moved outside a
+      // .compact-panel before teardown.
+      buttonStyleOwner.restoreAll();
+      readoutStyleOwner.restoreAll();
+      ingredientStyleOwner.restoreAll();
       document.querySelectorAll('[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]').forEach(el => {
         delete el.dataset.iwReadout;
         delete el.dataset.iwIngr;
         delete el.dataset.iwBtnState;
-        el.removeAttribute('style');
       });
     }
     
     function initSkillPanelRenderer() {
       inject('skillpanel', css);
+      if (listenerBound) return;
+      listenerBound = true;
       on('iw:skill-panel', e => guard('skill:panel', () => renderPanel(e.detail.panel, e.detail.skill)));
     }
     
@@ -2946,17 +3210,23 @@
     /**
      * StyleInjector
      *
-     * Injects CSS strings into the page as <style> tags.
-     * Because MV3 bundles CSS as text via the `loader: {'.css': 'text'}` esbuild
-     * config, each module can import its own .css file and call inject() once.
+     * Injects CSS strings into the page as <style> tags. Every skin stylesheet is
+     * lifecycle-owned so the runtime kill switch can remove the COMPLETE theme,
+     * including base.css, without uninstalling or reloading the extension.
      *
-     * Usage:
-     *   import css from '../styles/inventory.css';
-     *   import { inject } from './StyleInjector.js';
-     *   inject('inventory', css);
+     * CSS imported as text resolves relative url() references against the PAGE,
+     * not the extension. Rewrite ../assets/... references to chrome-extension://
+     * URLs before injection so self-hosted fonts/sprites remain CSP-proof.
      */
-    
+    const { assetUrl } = require("modules/Runtime.js");
     const _injected = new Set();
+    
+    function rewriteAssetUrls(css) {
+      return String(css || '').replace(
+        /url\(\s*(['"]?)\.\.\/assets\/([^)'"\s]+)\1\s*\)/g,
+        (_match, _quote, path) => `url("${assetUrl(`assets/${path}`)}")`
+      );
+    }
     
     /**
      * @param {string} id   Unique identifier — prevents double injection.
@@ -2968,7 +3238,7 @@
     
       const style = document.createElement('style');
       style.setAttribute('data-iw-style', id);
-      style.textContent = css;
+      style.textContent = rewriteAssetUrls(css);
       (document.head || document.documentElement).appendChild(style);
     }
     
@@ -4224,6 +4494,9 @@
     
     
     exports.normaliseItemName = normaliseItemName;
+  };
+  __modules["styles/base.css"] = (module, exports, require) => {
+    exports.default = "/* ══════════════════════════════════════════════════════════════════════\n   IdleWorlds Fantasy Skin — v1.5.1 \"Ashen Iron\" refinement\n\n   Visual goal: dense ARPG utility rather than rounded dashboard cards.\n   The palette borrows the material language of forged iron, soot, tarnished\n   brass and ember without copying any game's assets. Layout remains owned by\n   IdleWorlds/React; this layer standardises geometry, typography and surfaces.\n   ══════════════════════════════════════════════════════════════════════ */\n\n/* ── Typefaces ────────────────────────────────────────────────────────────\n   Self-hosted from the extension bundle. These used to come from a Google\n   Fonts @import, which had two problems:\n\n     1. An @import inside a content-script stylesheet is fetched by the PAGE\n        and is therefore subject to idleworlds.com's style-src / font-src CSP,\n        not to our host_permissions. A CSP tightening on the game's side would\n        silently drop every custom face.\n     2. It resolves asynchronously AFTER the rest of the sheet applies, so the\n        failure mode was intermittent and cache-dependent — the single most\n        likely reason the theme looked right on some loads and not others.\n\n   font-display: swap keeps text visible during load; the src paths resolve\n   against the extension root and are listed in web_accessible_resources.\n   Run `npm run vendor` to populate src/assets/fonts/. (Audit S1.2) */\n\n@font-face {\n  font-family: 'Cinzel';\n  font-style: normal;\n  font-weight: 600 700;\n  font-display: swap;\n  src: url('../assets/fonts/cinzel-variable.woff2') format('woff2');\n}\n\n@font-face {\n  font-family: 'Barlow';\n  font-style: normal;\n  font-weight: 400;\n  font-display: swap;\n  src: url('../assets/fonts/barlow-400.woff2') format('woff2');\n}\n\n@font-face {\n  font-family: 'Barlow';\n  font-style: normal;\n  font-weight: 500;\n  font-display: swap;\n  src: url('../assets/fonts/barlow-500.woff2') format('woff2');\n}\n\n@font-face {\n  font-family: 'Barlow';\n  font-style: normal;\n  font-weight: 600;\n  font-display: swap;\n  src: url('../assets/fonts/barlow-600.woff2') format('woff2');\n}\n\n@font-face {\n  font-family: 'Barlow';\n  font-style: normal;\n  font-weight: 700;\n  font-display: swap;\n  src: url('../assets/fonts/barlow-700.woff2') format('woff2');\n}\n\n@font-face {\n  font-family: 'Crimson Text';\n  font-style: italic;\n  font-weight: 400;\n  font-display: swap;\n  src: url('../assets/fonts/crimson-text-italic.woff2') format('woff2');\n}\n\n:root {\n  /* Forged surfaces */\n  --iw-ink-950: #070806;\n  --iw-ink-900: #0B0C0A;\n  --iw-ink-850: #10100D;\n  --iw-ink-800: #14130F;\n  --iw-ink-750: #191711;\n  --iw-ink-700: #1E1B15;\n  --iw-ink-600: #29251C;\n\n  /* Brass / iron edges */\n  --iw-line:    #342D20;\n  --iw-line-hi: #58482B;\n  --iw-line-hot:#806337;\n\n  /* Accents */\n  --iw-gold:     #D4AD63;\n  --iw-gold-dim: #9D8458;\n  --iw-ember:    #B64619;\n  --iw-ember-hi: #D15A22;\n\n  /* Text */\n  --iw-text:   #DDD6C6;\n  --iw-text-hi:#F0E8D6;\n  --iw-dim:    #938A79;\n  --iw-faint:  #666052;\n\n  /* Semantic */\n  --iw-good: #82B88A;\n  --iw-bad:  #D27171;\n  --iw-info: #75A8C8;\n\n  /* Tier colours */\n  --iw-t-common:    #B9B4A8;\n  --iw-t-uncommon:  #6FBF73;\n  --iw-t-rare:      #5B9BD5;\n  --iw-t-epic:      #B98FE0;\n  --iw-t-legendary: #D98A3A;\n  --iw-t-mythic:    #E06666;\n\n  /* Typography */\n  --iw-font-head: 'Cinzel', Georgia, serif;\n  --iw-font-ui:   'Barlow', system-ui, -apple-system, sans-serif;\n  --iw-font-flav: 'Crimson Text', Georgia, serif;\n\n  /* Geometry — intentionally restrained. Round pills are not the house style. */\n  --iw-r-panel:   3px;\n  --iw-r-control: 2px;\n  --iw-r-slot:    2px;\n  --iw-r:         var(--iw-r-control);\n  --iw-r-sm:      var(--iw-r-slot);\n\n  /* Game theme tokens */\n  --background:          var(--iw-ink-900) !important;\n  --foreground:          var(--iw-text)    !important;\n  --card:                var(--iw-ink-800) !important;\n  --card-foreground:     var(--iw-text)    !important;\n  --popover:             var(--iw-ink-800) !important;\n  --popover-foreground:  var(--iw-text)    !important;\n  --panel-bg:            var(--iw-ink-800) !important;\n  --panel-border:        var(--iw-line)    !important;\n  --surface-bg:          var(--iw-ink-700) !important;\n  --surface-border:      var(--iw-line)    !important;\n  --primary:             var(--iw-ember)   !important;\n  --primary-foreground:  #FFEAD1           !important;\n  --accent:              var(--iw-ember)   !important;\n  --accent-foreground:   var(--iw-text-hi) !important;\n  --ring:                var(--iw-gold-dim)!important;\n  --border:              var(--iw-line)    !important;\n  --input:               var(--iw-ink-850) !important;\n  --muted:               var(--iw-ink-700) !important;\n  --muted-foreground:    var(--iw-dim)     !important;\n  --sidebar:             var(--iw-ink-800) !important;\n  --sidebar-foreground:  var(--iw-text)    !important;\n  --sidebar-border:      var(--iw-line)    !important;\n  --sidebar-accent:      var(--iw-ink-700) !important;\n}\n\nhtml,\nbody {\n  background-color: var(--iw-ink-900) !important;\n  color: var(--iw-text) !important;\n  font-family: var(--iw-font-ui) !important;\n}\n\nbody {\n  background-image:\n    radial-gradient(1200px 520px at 50% -140px, rgba(124, 91, 42, .10), transparent 68%),\n    linear-gradient(180deg, rgba(255,255,255,.012), transparent 220px) !important;\n  background-attachment: fixed !important;\n}\n\n/* Major semantic text. Item names remain Barlow via their own selectors. */\nh1, h2, h3 {\n  font-family: var(--iw-font-head) !important;\n  letter-spacing: .025em;\n  color: var(--iw-text-hi) !important;\n}\n\n/* ── Core surfaces ──────────────────────────────────────────────────── */\n\n.compact-panel,\n[class~=\"compact-panel\"] {\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.018), transparent 48px),\n    var(--iw-ink-800) !important;\n  border-color: var(--iw-line) !important;\n  color: var(--iw-text) !important;\n  border-radius: var(--iw-r-panel) !important;\n  box-shadow:\n    inset 0 1px 0 rgba(255,255,255,.018),\n    inset 0 -1px 0 rgba(0,0,0,.42) !important;\n}\n\n.compact-row,\n[class*=\"item-row\"] {\n  background-color: var(--iw-ink-800) !important;\n  border-color: var(--iw-line) !important;\n  color: var(--iw-text) !important;\n}\n\n/* Tailwind's generous radii are a major source of the dashboard aesthetic.\n   Flatten the large/medium utility radii, while leaving rounded-full alone\n   for true status dots/avatars. Buttons receive their own stricter rule. */\n[class*=\"rounded-3xl\"],\n[class*=\"rounded-2xl\"],\n[class*=\"rounded-xl\"],\n[class*=\"rounded-lg\"],\n[class*=\"rounded-md\"] {\n  border-radius: var(--iw-r-panel) !important;\n}\n\nbutton:not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]),\n[role=\"button\"]:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]) {\n  border-radius: var(--iw-r-control) !important;\n}\n\n/* ── Controls ───────────────────────────────────────────────────────── */\n\n/* Forged base colour for controls.\n   Deliberately ONE element-selector of specificity (0,0,1) and NOT !important:\n   any colour the game sets itself — a Tailwind bg-* utility, an inline style,\n   a cosmetic chat-name gradient — outranks this and still wins. It exists only\n   to catch buttons the game leaves unpainted, which previously fell through to\n   the user agent's light `buttonface` and rendered as a pale box with our dark\n   gradient laid over it. Found by build-tools/render-fixtures.mjs. */\nbutton,\n[role=\"button\"] {\n  background-color: var(--iw-ink-750);\n  color: var(--iw-text);\n}\n\nbutton:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]),\n[role=\"button\"]:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]),\ninput,\nselect,\ntextarea {\n  font-family: var(--iw-font-ui) !important;\n}\n\nbutton:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]),\n[role=\"button\"]:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]) {\n  box-shadow:\n    inset 0 1px 0 rgba(255,255,255,.028),\n    0 1px 0 rgba(0,0,0,.65) !important;\n  transition: color .12s ease, border-color .12s ease, background-color .12s ease, filter .12s ease !important;\n}\n\nbutton:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]):hover:not(:disabled),\n[role=\"button\"]:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]):hover {\n  filter: brightness(1.08);\n}\n\nbutton:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]):focus-visible,\n[role=\"button\"]:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]):focus-visible,\ninput:focus-visible,\nselect:focus-visible,\ntextarea:focus-visible {\n  outline: 1px solid var(--iw-gold) !important;\n  outline-offset: 2px !important;\n}\n\ninput:not([type=\"checkbox\"]):not([type=\"radio\"]),\nselect,\ntextarea {\n  border-radius: var(--iw-r-control) !important;\n  border-color: var(--iw-line) !important;\n  background: linear-gradient(180deg, #090C0D, #0C0E0D) !important;\n  color: var(--iw-text) !important;\n  box-shadow:\n    inset 0 1px 4px rgba(0,0,0,.7),\n    0 1px 0 rgba(255,255,255,.018) !important;\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  color: var(--iw-faint) !important;\n}\n\n/* Main nav/tabs often arrive as heavily rounded buttons. Keep their native\n   selected colour, but make the rail read like game tabs instead of pills. */\nnav button,\nnav [role=\"button\"],\nheader button:not([class*=\"chat-name-\"]),\n[class*=\"tab\"] button {\n  border-radius: var(--iw-r-control) !important;\n  font-weight: 700 !important;\n}\n\nhr {\n  border-color: var(--iw-line) !important;\n}\n\n/* ── Shared icon slot ───────────────────────────────────────────────── */\n\n.iw-ico {\n  flex: none;\n  display: block;\n  position: relative;\n  background-repeat: no-repeat;\n  background-color: #090806;\n  border: 1px solid var(--iw-line-hi);\n  border-radius: var(--iw-r-slot);\n  box-shadow: inset 0 0 0 1px rgba(0,0,0,.45);\n}\n\n.iw-icon-badge {\n  position: absolute;\n  right: -3px;\n  bottom: -3px;\n  font-family: var(--iw-font-ui);\n  font-size: 9px;\n  font-weight: 700;\n  line-height: 1;\n  padding: 2px 3px;\n  border-radius: 1px;\n  background: var(--iw-ink-950);\n  border: 1px solid var(--iw-ember);\n  color: var(--iw-gold);\n  font-variant-numeric: tabular-nums;\n  pointer-events: none;\n}\n\n/* ── Tier colours ───────────────────────────────────────────────────── */\n\n.tier-common    { color: var(--iw-t-common); }\n.tier-uncommon  { color: var(--iw-t-uncommon); }\n.tier-rare      { color: var(--iw-t-rare); }\n.tier-epic      { color: var(--iw-t-epic); }\n.tier-legendary { color: var(--iw-t-legendary); }\n.tier-mythic    { color: var(--iw-t-mythic); }\n\n/* ── Extension-owned button primitive ───────────────────────────────── */\n\n.iw-btn {\n  font-family: var(--iw-font-ui);\n  font-size: 12px;\n  font-weight: 700;\n  letter-spacing: .055em;\n  text-transform: uppercase;\n  padding: 7px 14px;\n  min-width: 76px;\n  border-radius: var(--iw-r-control);\n  cursor: pointer;\n  border: 1px solid var(--iw-line-hi);\n  background: linear-gradient(180deg, #242018, #17140F);\n  color: var(--iw-text);\n  transition: background .13s, border-color .13s, color .13s;\n  align-self: center;\n  height: auto;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 1px 0 #000;\n}\n.iw-btn:hover {\n  background: linear-gradient(180deg, #2B261C, #1A1711);\n  border-color: var(--iw-gold-dim);\n  color: var(--iw-gold);\n}\n.iw-btn--primary {\n  background: linear-gradient(180deg, #A94318, #742A0D);\n  border-color: #C05A28;\n  color: #FFEAD1;\n}\n.iw-btn--primary:hover {\n  background: linear-gradient(180deg, #C04D1C, #87310E);\n  border-color: var(--iw-ember-hi);\n  color: #fff;\n}\n.iw-btn--disabled,\n.iw-btn:disabled {\n  background: #100F0C;\n  border-color: #282218;\n  color: var(--iw-faint);\n  cursor: not-allowed;\n  box-shadow: none;\n}\n\n/* ── Progress / XP primitive ────────────────────────────────────────── */\n\n.iw-xp { display:flex; flex-direction:column; gap:4px; }\n.iw-xp__line {\n  display:flex;\n  align-items:baseline;\n  gap:8px;\n  font-size:12px;\n  font-family:var(--iw-font-ui);\n}\n.iw-xp__pct  { color:var(--iw-gold); font-weight:700; font-variant-numeric:tabular-nums; }\n.iw-xp__togo { margin-left:auto; color:var(--iw-faint); font-variant-numeric:tabular-nums; }\n.iw-xp__track {\n  height:4px;\n  background:#080806;\n  border:1px solid #272117;\n  border-radius:0;\n  overflow:hidden;\n  box-shadow: inset 0 1px 2px rgba(0,0,0,.75);\n}\n.iw-xp__fill  { height:100%; background:linear-gradient(90deg,#7B3515,var(--iw-ember)); transition:width .3s ease; }\n.iw-xp__fill--ready { background:linear-gradient(90deg,#2E6438,#4D9859); }\n\n/* ── Scrollbars ─────────────────────────────────────────────────────── */\n\n::-webkit-scrollbar { width: 7px; height: 7px; }\n::-webkit-scrollbar-track { background: var(--iw-ink-950); }\n::-webkit-scrollbar-thumb { background: #403625; border-radius: 1px; }\n::-webkit-scrollbar-thumb:hover { background: var(--iw-line-hi); }\n\n@media (prefers-reduced-motion: reduce) {\n  * { transition:none !important; animation:none !important; }\n}\n\n/* Padded rounded-full elements are almost always pills/tabs/status readouts,\n   not true circular glyphs. Flatten them while preserving tiny round dots. */\n[class*=\"rounded-full\"][class*=\"px-\"],\nbutton[class*=\"rounded-full\"]:not([class*=\"chat-name-\"]),\n[role=\"button\"][class*=\"rounded-full\"]:not([class*=\"chat-name-\"]) {\n  border-radius: var(--iw-r-control) !important;\n}\n\n/* Bordered large-radius frames get the same forged edge treatment even when\n   they are not .compact-panel (top HUD, inventory shell, market, leaderboard). */\n[class*=\"border\"][class*=\"rounded-3xl\"],\n[class*=\"border\"][class*=\"rounded-2xl\"],\n[class*=\"border\"][class*=\"rounded-xl\"] {\n  border-color: var(--iw-line) !important;\n  box-shadow:\n    inset 0 1px 0 rgba(255,255,255,.018),\n    inset 0 -1px 0 rgba(0,0,0,.38) !important;\n}\n";
   };
   __modules["styles/inventory.css"] = (module, exports, require) => {
     exports.default = "/* ══════════════════════════════════════════════════════════════════════\n   Inventory / ItemRow — v1.5.10\n\n   Inventory is the reference implementation for reusable RPG item rows.\n   React-owned commands remain live DOM nodes; the Fantasy Skin owns the\n   item presentation and semantic action treatment only.\n   ══════════════════════════════════════════════════════════════════════ */\n\n/* ── Inventory chrome ─────────────────────────────────────────────── */\n[data-iw-inventory-root=\"1\"] {\n  --fs-inv-command-w: 54px;\n}\n\n[data-iw-inventory-title=\"1\"] {\n  /* --iw-font-display was never defined in base.css (only --iw-font-head,\n     --iw-font-ui and --iw-font-flav), so this declaration was invalid at\n     computed-value time and the Inventory title silently inherited whatever\n     the game was using. (Audit S3.1) */\n  font-family: var(--iw-font-head) !important;\n  font-size: 16px !important;\n  font-weight: 700 !important;\n  letter-spacing: .045em !important;\n  text-transform: uppercase !important;\n  color: var(--iw-text) !important;\n}\n\n[data-iw-inventory-root=\"1\"] [data-iw-inventory-control=\"filter\"],\n[data-iw-inventory-root=\"1\"] [data-iw-inventory-control=\"page\"] {\n  min-height: 28px !important;\n  height: 28px !important;\n  border-radius: 2px !important;\n  padding: 0 10px !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 11px !important;\n  font-weight: 700 !important;\n  line-height: 26px !important;\n  letter-spacing: .015em !important;\n}\n\n[data-iw-inventory-root=\"1\"] [data-iw-inventory-control=\"icon\"] {\n  width: 28px !important;\n  height: 28px !important;\n  min-width: 28px !important;\n  min-height: 28px !important;\n  padding: 0 !important;\n  border-radius: 2px !important;\n}\n\n[data-iw-inventory-root=\"1\"] [data-iw-inventory-control=\"page-count\"] {\n  color: var(--iw-faint) !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 10px !important;\n  font-variant-numeric: tabular-nums;\n  letter-spacing: .08em;\n}\n\n/* ── Row shell ────────────────────────────────────────────────────── */\n.compact-row:has(> .fs-inv-row),\n[class*=\"item-row\"]:has(> .fs-inv-row) {\n  display: flex !important;\n  align-items: center !important;\n  gap: 0 !important;\n  min-height: 62px !important;\n  padding: 0 !important;\n  position: relative !important;\n  overflow: hidden !important;\n  border: 1px solid var(--iw-line) !important;\n  border-radius: 3px !important;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.014), transparent 38%),\n    #12110E !important;\n  box-shadow:\n    inset 0 1px 0 rgba(255,255,255,.014),\n    inset 0 -1px 0 rgba(0,0,0,.35) !important;\n  transition: border-color .12s, background-color .12s !important;\n}\n\n.compact-row:has(> .fs-inv-row):hover,\n[class*=\"item-row\"]:has(> .fs-inv-row):hover {\n  border-color: #4B402B !important;\n  background:\n    linear-gradient(90deg, rgba(232,183,106,.025), transparent 32%),\n    #14120F !important;\n}\n\n.fs-inv-row {\n  --fs-tier: var(--iw-t-common);\n  order: 1;\n  flex: 1 1 auto;\n  min-width: 0;\n  min-height: 60px;\n  display: grid;\n  grid-template-columns: 52px minmax(0, 1fr) 38px;\n  grid-template-areas: \"icon body qty\";\n  align-items: center;\n  column-gap: 11px;\n  padding: 6px 8px 6px 13px;\n  position: relative;\n  cursor: default;\n}\n.fs-inv-row.has-details,\n.fs-inv-row.has-requirements { min-height: 68px; }\n.fs-inv-row.has-details.has-requirements { min-height: 76px; }\n\n.fs-inv-row.tier-uncommon  { --fs-tier: var(--iw-t-uncommon); }\n.fs-inv-row.tier-rare      { --fs-tier: var(--iw-t-rare); }\n.fs-inv-row.tier-epic      { --fs-tier: var(--iw-t-epic); }\n.fs-inv-row.tier-legendary { --fs-tier: var(--iw-t-legendary); }\n.fs-inv-row.tier-mythic    { --fs-tier: var(--iw-t-mythic); }\n\n.fs-inv-row::before {\n  content: \"\";\n  position: absolute;\n  left: 0;\n  top: 8px;\n  bottom: 8px;\n  width: 2px;\n  background: var(--fs-tier);\n  opacity: .82;\n  pointer-events: none;\n}\n\n/* ── Icon slot ────────────────────────────────────────────────────── */\n.fs-inv-icon {\n  grid-area: icon;\n  width: 52px;\n  height: 52px;\n  min-width: 52px;\n  min-height: 52px;\n  position: relative;\n  background-repeat: no-repeat;\n  background-color: #080806;\n  border: 1px solid #3A3020;\n  border-radius: 2px;\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.62),\n    inset 0 0 14px rgba(0,0,0,.5);\n  image-rendering: auto;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 18px;\n  color: var(--iw-faint);\n  overflow: hidden;\n  cursor: help;\n  outline: none;\n}\n.fs-inv-icon:hover,\n.fs-inv-icon:focus-visible {\n  border-color: var(--fs-tier);\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.62),\n    inset 0 0 14px rgba(0,0,0,.5),\n    0 0 0 1px color-mix(in srgb, var(--fs-tier) 22%, transparent);\n}\n.fs-inv-row.is-equipped .fs-inv-icon {\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.62),\n    inset 0 0 14px rgba(0,0,0,.5),\n    0 0 0 1px rgba(80,150,94,.18);\n}\n\n/* ── Identity / information rails ────────────────────────────────── */\n.fs-inv-body {\n  grid-area: body;\n  min-width: 0;\n  max-width: 100%;\n  overflow: hidden;\n  align-self: center;\n  padding-block: 1px;\n}\n\n.fs-inv-name {\n  font-family: var(--iw-font-ui);\n  font-size: 13px;\n  font-weight: 700;\n  line-height: 1.18;\n  letter-spacing: .005em;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  text-shadow: 0 1px 0 #000;\n}\n.fs-inv-name .fs-inv-sub {\n  color: var(--iw-faint);\n  font-size: 11px;\n  font-weight: 600;\n}\n.fs-inv-name-plain { color: var(--iw-text); }\n.fs-inv-name .iw-item-ref { color: inherit; }\n.fs-inv-name .iw-item-ref:hover,\n.fs-inv-name .iw-item-ref:focus-visible { border-bottom-color: currentColor; }\n\n/* Stable database information: one compact rail, no boxed stat chips. */\n.fs-inv-stats {\n  display: flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 0;\n  margin-top: 3px;\n  min-height: 13px;\n}\n.fs-stat {\n  position: relative;\n  font-family: var(--iw-font-ui);\n  font-size: 10px;\n  line-height: 1.25;\n  font-weight: 600;\n  color: var(--iw-dim);\n  background: none;\n  border: 0;\n  border-radius: 0;\n  padding: 0 7px 0 0;\n  margin-right: 7px;\n  font-variant-numeric: tabular-nums;\n  white-space: nowrap;\n}\n.fs-stat:not(:last-child)::after {\n  content: \"\";\n  position: absolute;\n  right: 0;\n  top: 2px;\n  bottom: 1px;\n  width: 1px;\n  background: #332C1E;\n}\n.fs-stat--pos  { color: var(--iw-good); }\n.fs-stat--tier { color: var(--iw-gold-dim); }\n\n/* Dynamic owned-item state. These lines deliberately look like equipment\n   inscriptions, not application badges. */\n.fs-inv-details,\n.fs-inv-requirements {\n  display: flex;\n  min-width: 0;\n  max-width: 100%;\n  overflow: hidden;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 3px 12px;\n  margin-top: 3px;\n  font-family: var(--iw-font-ui);\n  font-size: 9.5px;\n  line-height: 1.25;\n}\n\n.fs-inv-detail,\n.fs-inv-requirement {\n  position: relative;\n  min-width: 0;\n  color: var(--iw-dim);\n  max-width: 100%;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.fs-inv-detail::before,\n.fs-inv-requirement::before {\n  content: \"◆\";\n  margin-right: 4px;\n  font-size: 6px;\n  vertical-align: 1px;\n  color: var(--iw-gold-dim);\n}\n.fs-inv-detail--loadout { color: #74AFCB; }\n.fs-inv-detail--loadout::before { color: #5D97B3; }\n.fs-inv-detail--socket { color: #C7B56A; }\n.fs-inv-detail--socket::before { color: #73B7D4; }\n.fs-inv-detail--effect { color: #B8C6A2; }\n.fs-inv-detail--effect::before { color: #879A73; }\n.fs-inv-detail--status { color: var(--iw-faint); }\n.fs-inv-detail--status::before { color: var(--iw-faint); }\n.fs-inv-detail--set { color: #C8B562; }\n.fs-inv-requirement { color: #D8C76A; }\n.fs-inv-requirement::before { color: #BCA744; }\n.fs-inv-detail-count {\n  margin-left: 4px;\n  color: var(--iw-faint);\n  font-variant-numeric: tabular-nums;\n}\n\n.fs-inv-qty {\n  grid-area: qty;\n  justify-self: end;\n  align-self: center;\n  min-width: 34px;\n  padding-right: 2px;\n  text-align: right;\n  font-family: var(--iw-font-ui);\n  font-size: 11px;\n  font-weight: 700;\n  color: var(--iw-dim);\n  font-variant-numeric: tabular-nums;\n  white-space: nowrap;\n}\n\n/* ── React-owned action rail ─────────────────────────────────────── */\n[data-fs-action-host=\"1\"] {\n  display: contents !important;\n  font-size: 0 !important;\n  line-height: 0 !important;\n  color: transparent !important;\n}\n[data-fs-suppressed=\"1\"] { display: none !important; }\n\n[data-fs-preserved-action=\"control\"] {\n  order: 2;\n  flex: 0 0 auto !important;\n  align-self: center !important;\n  position: relative;\n  z-index: 2;\n  margin: 0 5px 0 0 !important;\n  min-width: 0 !important;\n  max-width: none !important;\n}\n\nbutton[data-fs-preserved-action=\"control\"],\na[data-fs-preserved-action=\"control\"],\n[role=\"button\"][data-fs-preserved-action=\"control\"] {\n  height: 28px !important;\n  min-height: 28px !important;\n  padding: 0 8px !important;\n  border-radius: 2px !important;\n  border: 1px solid var(--iw-line-hi) !important;\n  background: linear-gradient(180deg, #201D17, #15130F) !important;\n  color: var(--iw-text) !important;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 1px 0 #000 !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 10px !important;\n  line-height: 26px !important;\n  font-weight: 700 !important;\n  letter-spacing: .025em !important;\n  text-transform: none !important;\n  white-space: nowrap !important;\n}\nbutton[data-fs-preserved-action=\"control\"]:hover:not(:disabled),\na[data-fs-preserved-action=\"control\"]:hover,\n[role=\"button\"][data-fs-preserved-action=\"control\"]:hover {\n  border-color: var(--iw-gold-dim) !important;\n  color: var(--iw-gold) !important;\n  background: linear-gradient(180deg, #29241A, #19160F) !important;\n}\n\n[data-fs-action-kind=\"equipped\"] {\n  width: 70px !important;\n  border-color: #315E3A !important;\n  background: linear-gradient(180deg, #193520, #102518) !important;\n  color: #A9D7AF !important;\n}\n[data-fs-action-kind=\"equip\"] {\n  width: 48px !important;\n  border-color: #5A4728 !important;\n  color: #E1C48A !important;\n}\n[data-fs-action-kind=\"set\"] {\n  width: 72px !important;\n  color: #D1C06C !important;\n  border-color: #514621 !important;\n}\n[data-fs-action-kind=\"secondary\"] { width: 44px !important; }\n[data-fs-action-kind=\"icon\"] {\n  width: 28px !important;\n  min-width: 28px !important;\n  padding: 0 !important;\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  line-height: 1 !important;\n}\n\nbutton[data-fs-preserved-action=\"control\"]:disabled,\n[role=\"button\"][data-fs-preserved-action=\"control\"][aria-disabled=\"true\"] {\n  opacity: .42 !important;\n  color: var(--iw-faint) !important;\n  border-color: var(--iw-line) !important;\n  background: #12110E !important;\n}\n\n/* ── Responsive collapse ─────────────────────────────────────────── */\n@media (max-width: 900px) {\n  .fs-inv-row {\n    grid-template-columns: 46px minmax(0, 1fr) 34px;\n    min-height: 56px;\n    padding-left: 10px;\n    column-gap: 9px;\n  }\n  .fs-inv-icon { width: 46px; height: 46px; min-width: 46px; min-height: 46px; }\n  .fs-inv-stats .fs-stat:nth-child(n+6) { display: none; }\n  .fs-inv-details { max-height: 26px; overflow: hidden; }\n}\n\n@media (max-width: 700px) {\n  .fs-inv-row {\n    grid-template-columns: 42px minmax(0, 1fr);\n    grid-template-areas:\n      \"icon body\"\n      \"icon qty\";\n  }\n  .fs-inv-icon { width: 42px; height: 42px; min-width: 42px; min-height: 42px; }\n  .fs-inv-qty { justify-self: start; padding: 2px 0 0; text-align: left; }\n  .fs-inv-stats .fs-stat:nth-child(n+4) { display: none; }\n  .fs-inv-details,\n  .fs-inv-requirements { display: none; }\n  [data-fs-action-kind=\"set\"] { display: none !important; }\n  button[data-fs-preserved-action=\"control\"],\n  a[data-fs-preserved-action=\"control\"],\n  [role=\"button\"][data-fs-preserved-action=\"control\"] {\n    padding-inline: 6px !important;\n  }\n}\n";
