@@ -1,18 +1,21 @@
 /**
  * Smoke test — boots the built bundle against a synthetic IdleWorlds-shaped DOM
- * in jsdom, drives a few mutation cycles, and asserts that:
+ * in jsdom, drives mutation cycles and a full disable/re-enable lifecycle, and
+ * asserts that:
  *
  *   • the bundle boots without throwing
- *   • no network request is made (assets and cache must be local)
+ *   • no third-party network request is made
  *   • the game's own text nodes are never detached  <- the S1.4 regression guard
- *   • an inventory row gets skinned
- *   • the kill switch fully restores the native DOM
+ *   • inventory / skill / navigation presentation mounts
+ *   • the kill switch removes the COMPLETE active theme
+ *   • native inline styles survive teardown exactly
+ *   • re-enable rebuilds presentation without duplicating listeners/surfaces
+ *   • a second teardown is just as clean as the first
  *
  * This is not a visual test. It exists to catch the class of failure that is
  * invisible until it breaks someone's game: DOM mutation of React-owned nodes,
- * boot-order errors, and teardown leaks.
- *
- *   node test/smoke.mjs
+ * boot-order errors, teardown leaks, destructive style cleanup and asymmetric
+ * enable/disable state.
  */
 
 import { JSDOM } from 'jsdom';
@@ -22,11 +25,6 @@ const bundle = readFileSync(new URL('../dist/content.bundle.js', import.meta.url
 
 const settle = ms => new Promise(r => setTimeout(r, ms));
 
-/**
- * Poll until `predicate` holds. jsdom only advances requestAnimationFrame when
- * the event loop cycles, so a single long sleep starves the frame loop and
- * makes the skin look broken when it is not. Poll in short slices instead.
- */
 async function waitFor(predicate, { timeout = 4000, step = 40 } = {}) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -52,7 +50,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
       <nav><button>Game</button><button>Market</button><button>Leaderboards</button>
            <button>Village</button><button>Dungeon</button></nav>
       <h2>Inventory</h2>
-      <section aria-label="Inventory">
+      <section aria-label="Inventory" id="inventory-section" style="background-color:#0f172a">
         <div class="compact-row">
           <div><span>Iron Sword</span><span>Lv 3</span></div>
           <div><span>Tier 4 · Weapon</span></div>
@@ -63,7 +61,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
       <div class="compact-panel">
         <div><span>Mining</span></div>
         <div><span>Mine Copper Ore</span><span>Requires Mining Lv 2</span></div>
-        <div><button>Mine</button></div>
+        <div><button id="skill-action" style="width:77px;color:rgb(1, 2, 3)">Mine</button></div>
       </div>
       <div class="quest-description"><p>Bring the smith an Iron Sword to continue.</p></div>
     </div>
@@ -81,7 +79,6 @@ window.fetch = (url, ...rest) => {
   return Promise.reject(new Error('network disabled in smoke test'));
 };
 
-// jsdom does not implement matchMedia; TooltipEngine.isMobile() needs it.
 if (!window.matchMedia) {
   window.matchMedia = () => ({ matches: false, addListener() {}, removeListener() {} });
 }
@@ -107,6 +104,11 @@ window.chrome = {
 // jsdom has no CSS Custom Highlight API; NameScanner must degrade, not throw.
 // Deliberately left undefined.
 
+const skillAction = window.document.getElementById('skill-action');
+const inventorySection = window.document.getElementById('inventory-section');
+const nativeSkillStyle = skillAction.style.cssText;
+const nativeSectionStyle = inventorySection.style.cssText;
+
 // Track every text node the "game" created, so we can prove none was detached.
 const gameTextNodes = [];
 (function collect(node) {
@@ -116,7 +118,7 @@ const gameTextNodes = [];
   }
 })(window.document.body);
 
-const document_ready = () =>
+const documentReady = () =>
   !!window.document.querySelector('.compact-row > .fs-inv-row') &&
   !!window.document.querySelector('[data-iw-ui="main-nav"]');
 
@@ -136,16 +138,21 @@ try {
 }
 check('bundle boots without throwing', !bootThrew, bootThrew?.message);
 
-await waitFor(() => document_ready());
+await waitFor(() => documentReady());
 
-// items.json is the game's own same-origin API and is expected. What must NOT
-// appear is any THIRD-PARTY origin: those are the CSP-exposed fetches the S1.1
-// and S1.2 fixes removed.
 const thirdParty = networkCalls.filter(u => !/^chrome-extension:/.test(u) && !/^https:\/\/idleworlds\.com\//.test(u));
 check('no third-party network requests', thirdParty.length === 0, thirdParty.join(', '));
 check('atlas assets fetched from the extension bundle',
   networkCalls.some(u => u.startsWith('chrome-extension://')),
   networkCalls.join(', '));
+check('all five runtime stylesheets mounted',
+  window.document.querySelectorAll('style[data-iw-style]').length === 5,
+  `${window.document.querySelectorAll('style[data-iw-style]').length} mounted`);
+check('base stylesheet is runtime-owned',
+  !!window.document.querySelector('style[data-iw-style="base"]'));
+check('base stylesheet rewrites font URLs to extension assets',
+  window.document.querySelector('style[data-iw-style="base"]')?.textContent.includes('chrome-extension://smoke/assets/fonts/') === true);
+check('exactly one tooltip surface exists', window.document.querySelectorAll('.iw-tip').length === 1);
 
 /* ── React-safety: the core S1.4 guarantee ───────────────────────────── */
 
@@ -170,7 +177,10 @@ check('native Equip button still present',
 const panel = window.document.querySelector('.compact-panel');
 check('mining panel classified as a skill panel', panel.classList.contains('fs-skill--mining'),
   panel.className);
-
+check('skill renderer actively overrides native inline width while enabled', skillAction.style.width === '96px', skillAction.style.cssText);
+check('background painter actively overrides native navy while enabled',
+  inventorySection.style.getPropertyValue('background-color') !== 'rgb(15, 23, 42)',
+  inventorySection.style.cssText);
 check('main nav classified', !!window.document.querySelector('[data-iw-ui="main-nav"]'));
 
 /* ── Mutation burst: the flush budget must not drop work ─────────────── */
@@ -189,21 +199,58 @@ const rendered = [...window.document.querySelectorAll('.compact-row')]
   .filter(r => r.querySelector(':scope > .fs-inv-row')).length;
 check('all 121 rows eventually rendered across frames', rendered === 121, `rendered ${rendered}`);
 
-/* ── Kill switch ─────────────────────────────────────────────────────── */
+/* ── First disable ───────────────────────────────────────────────────── */
 
-console.log('\nsmoke: kill switch');
+console.log('\nsmoke: first disable');
 window.chrome.storage.onChanged._emit({ 'iw-skin-enabled': { newValue: false } });
 await waitFor(() => window.document.querySelectorAll('.fs-inv-row').length === 0);
 
 check('overlays removed', window.document.querySelectorAll('.fs-inv-row').length === 0);
-check('skin stylesheets removed', window.document.querySelectorAll('style[data-iw-style]').length === 0);
+check('ALL runtime stylesheets removed', window.document.querySelectorAll('style[data-iw-style]').length === 0);
 check('ui role attributes removed', window.document.querySelectorAll('[data-iw-ui]').length === 0);
 check('skill panel classes removed', window.document.querySelectorAll('.fs-skill-panel').length === 0);
 check('native Equip button survived teardown',
   [...window.document.querySelector('.compact-row').querySelectorAll('button')]
     .some(b => b.textContent.trim() === 'Equip'));
-check('no game text node detached after teardown',
-  gameTextNodes.every(n => n.isConnected));
+check('skill native inline style restored exactly', skillAction.style.cssText === nativeSkillStyle,
+  `expected ${JSON.stringify(nativeSkillStyle)}, got ${JSON.stringify(skillAction.style.cssText)}`);
+check('background native inline style restored exactly', inventorySection.style.cssText === nativeSectionStyle,
+  `expected ${JSON.stringify(nativeSectionStyle)}, got ${JSON.stringify(inventorySection.style.cssText)}`);
+check('no game text node detached after teardown', gameTextNodes.every(n => n.isConnected));
+
+/* ── Re-enable ───────────────────────────────────────────────────────── */
+
+console.log('\nsmoke: re-enable');
+window.chrome.storage.onChanged._emit({ 'iw-skin-enabled': { newValue: true } });
+await waitFor(() => documentReady(), { timeout: 8000 });
+
+check('inventory presentation returns after re-enable',
+  !!window.document.querySelector('.compact-row > .fs-inv-row'));
+check('navigation classification returns after re-enable',
+  !!window.document.querySelector('[data-iw-ui="main-nav"]'));
+check('skill presentation returns after re-enable', panel.classList.contains('fs-skill--mining'));
+check('exactly five stylesheets re-injected',
+  window.document.querySelectorAll('style[data-iw-style]').length === 5,
+  `${window.document.querySelectorAll('style[data-iw-style]').length} mounted`);
+check('base stylesheet re-injected', !!window.document.querySelector('style[data-iw-style="base"]'));
+check('tooltip surface was not duplicated', window.document.querySelectorAll('.iw-tip').length === 1);
+check('storage listener was not duplicated', window.chrome.storage.onChanged._listeners.length === 1,
+  `${window.chrome.storage.onChanged._listeners.length} storage listeners`);
+
+/* ── Second disable ──────────────────────────────────────────────────── */
+
+console.log('\nsmoke: second disable');
+window.chrome.storage.onChanged._emit({ 'iw-skin-enabled': { newValue: false } });
+await waitFor(() => window.document.querySelectorAll('.fs-inv-row').length === 0);
+
+check('second teardown removes overlays', window.document.querySelectorAll('.fs-inv-row').length === 0);
+check('second teardown removes all styles', window.document.querySelectorAll('style[data-iw-style]').length === 0);
+check('second teardown restores skill inline style', skillAction.style.cssText === nativeSkillStyle,
+  skillAction.style.cssText);
+check('second teardown restores background inline style', inventorySection.style.cssText === nativeSectionStyle,
+  inventorySection.style.cssText);
+check('tooltip surface remains singular', window.document.querySelectorAll('.iw-tip').length === 1);
+check('no game text node detached after full lifecycle', gameTextNodes.every(n => n.isConnected));
 
 /* ── Result ──────────────────────────────────────────────────────────── */
 
