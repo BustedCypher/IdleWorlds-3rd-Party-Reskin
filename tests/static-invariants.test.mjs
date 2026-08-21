@@ -123,6 +123,10 @@ assert.match(inventory, /isInventoryContext\(row\)/,
 assert.match(inventory, /data-fs-preserved-action/,
   'real React controls must remain the action surface');
 assert.match(inventory, /buildInventoryDetails/);
+assert.match(inventory, /createInlineStyleOwner/,
+  'Inventory display suppression must use property-level inline style ownership');
+assert.doesNotMatch(inventory, /data-fs-original-display|ORIGINAL_DISPLAY_ATTR/,
+  'Inventory must not restore stale display snapshots from data attributes');
 assert.match(inventory, /data-iw-tooltip-trigger/);
 assert.doesNotMatch(inventory, /host\.setAttribute\(['"]role['"],\s*['"]button['"]\)/,
   'atlas icon must not inherit generic button background paint');

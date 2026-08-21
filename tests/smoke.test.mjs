@@ -479,6 +479,12 @@ const rendered = [...window.document.querySelectorAll('.compact-row')]
   .filter(r => r.querySelector(':scope > .fs-inv-row')).length;
 check('all 122 rows eventually rendered across frames', rendered === 122, `rendered ${rendered}`);
 
+const nativeIdentityBranch = row.children[0];
+check('Inventory skin owns suppressed native display while active',
+  nativeIdentityBranch.style.display === 'none', nativeIdentityBranch.style.cssText);
+nativeIdentityBranch.style.display = 'grid';
+await settle(80);
+
 /* ── First disable ───────────────────────────────────────────────────── */
 
 console.log('\nsmoke: first disable');
@@ -492,6 +498,8 @@ check('skill panel classes removed', window.document.querySelectorAll('.fs-skill
 check('native Equip button survived teardown',
   [...window.document.querySelector('.compact-row').querySelectorAll('button')]
     .some(b => b.textContent.trim() === 'Equip'));
+check('Inventory teardown preserves React display changes made while skin was active',
+  nativeIdentityBranch.style.display === 'grid', nativeIdentityBranch.style.cssText);
 check('skill native inline style restored exactly', skillAction.style.cssText === nativeSkillStyle,
   `expected ${JSON.stringify(nativeSkillStyle)}, got ${JSON.stringify(skillAction.style.cssText)}`);
 check('background native inline style restored exactly', inventorySection.style.cssText === nativeSectionStyle,

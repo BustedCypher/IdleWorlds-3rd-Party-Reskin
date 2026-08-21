@@ -1475,9 +1475,9 @@
     const { tierClass, statChips } = require("modules/itemDisplay.js");
     const { buildInventoryDetails, inventoryDetailSignature, resolveInventoryItemName } = require("modules/InventoryModel.js");
     const { guard, guardEach, raf } = require("modules/Runtime.js");
+    const { createInlineStyleOwner } = require("modules/InlineStyleOwner.js");
     const css = require("styles/inventory.css").default;
     const RENDERED_ATTR = 'data-fs-inv';
-    const ORIGINAL_DISPLAY_ATTR = 'data-fs-original-display';
     const HIDDEN_ATTR = 'data-fs-hidden';
     const ACTION_ATTR = 'data-fs-preserved-action';
     const ACTION_HOST_ATTR = 'data-fs-action-host';
@@ -1488,6 +1488,7 @@
     const INVENTORY_TITLE_ATTR = 'data-iw-inventory-title';
     const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [role="button"], [tabindex]';
     const pendingEmptyRetries = new WeakSet();
+    const displayStyleOwner = createInlineStyleOwner();
     
     /** row -> exact cheap change signature, see renderRow(). */
     const cheapSignatures = new WeakMap();
@@ -1657,26 +1658,15 @@
       return !!(el.matches?.(INTERACTIVE_SELECTOR) || el.querySelector?.(INTERACTIVE_SELECTOR));
     }
     
-    function rememberDisplay(el) {
-      if (!el.hasAttribute(ORIGINAL_DISPLAY_ATTR)) {
-        el.setAttribute(ORIGINAL_DISPLAY_ATTR, el.style.display || '');
-      }
-    }
-    
     function restoreDisplay(el) {
-      if (!el?.hasAttribute?.(ORIGINAL_DISPLAY_ATTR)) return;
-      const original = el.getAttribute(ORIGINAL_DISPLAY_ATTR);
-      if (original) el.style.display = original;
-      else el.style.removeProperty('display');
-      el.removeAttribute(ORIGINAL_DISPLAY_ATTR);
+      displayStyleOwner.restoreElement(el);
     }
     
     function suppressDisplayBranch(el) {
-      rememberDisplay(el);
       el.setAttribute(SUPPRESSED_ATTR, '1');
       el.removeAttribute(ACTION_ATTR);
       el.removeAttribute(ACTION_HOST_ATTR);
-      if (el.style.display !== 'none') el.style.display = 'none';
+      displayStyleOwner.set(el, 'display', 'none', '');
     }
     
     function classifyActionControl(el) {
@@ -1722,7 +1712,7 @@
     }
     
     function restoreOriginalChildren(row) {
-      row.querySelectorAll(`[${ORIGINAL_DISPLAY_ATTR}]`).forEach(restoreDisplay);
+      displayStyleOwner.restoreWithin(row);
       row.querySelectorAll(`[${HIDDEN_ATTR}], [${ACTION_ATTR}], [${ACTION_HOST_ATTR}], [${SUPPRESSED_ATTR}]`).forEach(el => {
         el.removeAttribute(HIDDEN_ATTR);
         el.removeAttribute(ACTION_ATTR);
@@ -1923,6 +1913,7 @@
         el.removeAttribute(INVENTORY_CONTROL_ATTR);
         el.removeAttribute(INVENTORY_TITLE_ATTR);
       });
+      displayStyleOwner.restoreAll();
     }
     
     function initInventoryRenderer() {
