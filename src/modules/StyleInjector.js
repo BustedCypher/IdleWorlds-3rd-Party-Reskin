@@ -1,17 +1,25 @@
 /**
  * StyleInjector
  *
- * Injects CSS strings into the page as <style> tags.
- * Because MV3 bundles CSS as text via the `loader: {'.css': 'text'}` esbuild
- * config, each module can import its own .css file and call inject() once.
+ * Injects CSS strings into the page as <style> tags. Every skin stylesheet is
+ * lifecycle-owned so the runtime kill switch can remove the COMPLETE theme,
+ * including base.css, without uninstalling or reloading the extension.
  *
- * Usage:
- *   import css from '../styles/inventory.css';
- *   import { inject } from './StyleInjector.js';
- *   inject('inventory', css);
+ * CSS imported as text resolves relative url() references against the PAGE,
+ * not the extension. Rewrite ../assets/... references to chrome-extension://
+ * URLs before injection so self-hosted fonts/sprites remain CSP-proof.
  */
 
+import { assetUrl } from './Runtime.js';
+
 const _injected = new Set();
+
+function rewriteAssetUrls(css) {
+  return String(css || '').replace(
+    /url\(\s*(['"]?)\.\.\/assets\/([^)'"\s]+)\1\s*\)/g,
+    (_match, _quote, path) => `url("${assetUrl(`assets/${path}`)}")`
+  );
+}
 
 /**
  * @param {string} id   Unique identifier — prevents double injection.
@@ -23,7 +31,7 @@ export function inject(id, css) {
 
   const style = document.createElement('style');
   style.setAttribute('data-iw-style', id);
-  style.textContent = css;
+  style.textContent = rewriteAssetUrls(css);
   (document.head || document.documentElement).appendChild(style);
 }
 
