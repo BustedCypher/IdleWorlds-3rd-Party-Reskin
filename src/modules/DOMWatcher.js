@@ -59,19 +59,28 @@ function nearest(el, selector) {
 }
 
 /**
- * Skill detection is pure with respect to a panel's button/heading text, and
- * that text is stable for the life of the panel. Recomputing it on every flush
- * meant reading `textContent` of every button in every `.compact-panel` on the
- * page ~60×/s for a result that essentially never changes. Cache it against a
- * cheap signature and recompute only when the signature moves. (Audit S4.3)
+ * Skill detection is pure with respect to a panel's button/heading text.
+ * Recomputing detection on every flush is unnecessary, but the cache key must
+ * represent the CONTENT that detection actually reads. The old key stored only
+ * button count + text lengths, so an equal-length change such as Mine -> Fish
+ * returned the previous skill type indefinitely on a reused React panel.
  */
 const skillTypeCache = new WeakMap();
 
+function normaliseSkillSignal(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
 function skillSignature(panel) {
-  const buttons = panel.querySelectorAll('button');
-  let sig = `${buttons.length}|`;
-  for (const btn of buttons) sig += `${(btn.textContent || '').length},`;
-  return sig;
+  const buttons = [...panel.querySelectorAll('button')]
+    .map(btn => normaliseSkillSignal(btn.textContent));
+  const headings = [...panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"]')]
+    .map(el => normaliseSkillSignal(el.textContent));
+
+  // JSON preserves array boundaries and exact signal content without a
+  // collision-prone delimiter/hash scheme. These strings are tiny compared
+  // with the panel subtree scans detection would otherwise repeat.
+  return JSON.stringify([buttons, headings]);
 }
 
 function detectSkillTypeCached(panel) {
@@ -88,7 +97,7 @@ function detectSkillType(panel) {
   // bosses, village and other systems, so searching arbitrary panel body text
   // for words such as "craft" caused unrelated cards to inherit skill chrome.
   const actionTexts = [...panel.querySelectorAll('button')]
-    .map(btn => String(btn.textContent || '').trim().toLowerCase())
+    .map(btn => normaliseSkillSignal(btn.textContent))
     .filter(Boolean);
 
   const hasAction = (...names) => actionTexts.some(text => names.includes(text));
@@ -105,7 +114,7 @@ function detectSkillType(panel) {
 
   // Fallback only to explicit skill labels/headings, never the whole body.
   const headings = [...panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"]')];
-  const labels = headings.map(h => String(h.textContent || '').trim().toLowerCase());
+  const labels = headings.map(h => normaliseSkillSignal(h.textContent));
   if (labels.some(t => /^combat(?:\s|$)/.test(t))) return 'combat';
   if (labels.some(t => /^mining(?:\s|$)|^mine(?:\s|$)/.test(t))) return 'mining';
   if (labels.some(t => /^jewelcrafting(?:\s|$)|^prospect(?:\s|$)/.test(t))) return 'jewelcrafting';
