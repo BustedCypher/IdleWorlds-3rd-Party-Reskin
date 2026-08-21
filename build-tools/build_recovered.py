@@ -14,15 +14,12 @@ DIST = ROOT / 'dist'
 ASSETS = ROOT / 'assets'
 DIST.mkdir(parents=True, exist_ok=True)
 
-# styles/base.css is NOT bundled as a text module any more.
-#
-# It ships as a real stylesheet via manifest.content_scripts[].css, because:
-#   * it then applies before first paint instead of at document_idle, which
-#     removes the flash of stock UI on every load; and
-#   * Chrome resolves relative url() in a declarative content-script stylesheet
-#     against the EXTENSION, whereas a JS-injected <style> resolves it against
-#     the PAGE. That difference is what makes the self-hosted @font-face work.
-STANDALONE_CSS = {'styles/base.css'}
+# v1.6.x lifecycle hardening: every stylesheet, including base.css, is bundled
+# as a text module and injected by StyleInjector. A manifest-declared base.css
+# cannot be removed by the runtime kill switch, so it made "native restore"
+# impossible. StyleInjector rewrites ../assets/... url() references to extension
+# URLs before injection, preserving the CSP-proof self-hosted fonts.
+STANDALONE_CSS = set()
 
 # Assets that must be present for icons and typefaces to render at runtime.
 # Populated by `npm run vendor` (build-tools/vendor-assets.mjs).
@@ -72,7 +69,7 @@ def transform_js(path: Path) -> str:
         return f"const {{ {', '.join(names)} }} = require({json.dumps(dep)});"
     src = pat_named.sub(repl_named, src)
 
-    # Default imports (used for CSS text modules only in this project).
+    # Default imports are used for CSS text modules in this project.
     pat_default = re.compile(r"^\s*import\s+([A-Za-z_$][\w$]*)\s+from\s*['\"]([^'\"]+)['\"]\s*;\s*$", re.M)
     def repl_default(m):
         dep = resolve_import(mid, m.group(2))
@@ -154,12 +151,12 @@ out = DIST / 'content.bundle.js'
 out.write_text('\n'.join(parts), encoding='utf-8')
 print(f'Built {out} ({out.stat().st_size:,} bytes, {len(modules)} modules)')
 
-# Standalone stylesheets, copied verbatim so the manifest can reference them.
-for rel in sorted(STANDALONE_CSS):
-    src_css = SRC / rel
-    dst_css = DIST / Path(rel).name
-    shutil.copyfile(src_css, dst_css)
-    print(f'Copied {dst_css} ({dst_css.stat().st_size:,} bytes)')
+# A previous build may have left dist/base.css behind. It is no longer a runtime
+# artifact and keeping it risks someone re-adding it to manifest.json later.
+stale_base = DIST / 'base.css'
+if stale_base.exists():
+    stale_base.unlink()
+    print(f'Removed stale {stale_base}')
 
 # Missing assets are a BUILD FAILURE, not a warning.
 #
