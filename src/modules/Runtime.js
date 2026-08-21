@@ -10,8 +10,8 @@
  *     GAME's localStorage, which we share with the page and must not fill.
  *     (Audit S1.3)
  *   • A thrown consumer can never take down the rest of a flush. (Audit S3.7)
- *   • Work queued by an old skin activation cannot wake up after teardown or
- *     a later re-enable. The activation generation invalidates stale RAF work.
+ *   • Reconciliation work is ignored while the skin is disabled, without
+ *     preventing queued callbacks from running their own bookkeeping cleanup.
  *
  * The module degrades gracefully when `chrome` is unavailable (unit tests,
  * a plain <script> harness) so the presentation layer stays testable.
@@ -24,13 +24,9 @@ const hasChrome = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
 // Default to active for isolated module/unit tests. content.js explicitly sets
 // the real page state before boot/after teardown.
 let runtimeActive = true;
-let runtimeGeneration = 0;
 
 export function setRuntimeActive(active) {
-  const next = active !== false;
-  if (runtimeActive === next) return;
-  runtimeActive = next;
-  runtimeGeneration += 1;
+  runtimeActive = active !== false;
 }
 
 export function isRuntimeActive() {
@@ -113,10 +109,13 @@ export function onStorageChanged(key, handler) {
   if (!hasChrome || !chrome.storage?.onChanged) return () => {};
   const listener = (changes, area) => {
     if (area !== 'local' || !(key in changes)) return;
-    // Storage changes must remain observable while the skin is disabled — this
-    // is the path that turns it back on — so guard() is intentionally not tied
-    // to runtimeActive.
-    guard('storage-change', () => handler(changes[key].newValue));
+    // This path MUST work while runtimeActive is false: it is how the disabled
+    // skin receives the command to turn itself back on.
+    try {
+      handler(changes[key].newValue);
+    } catch (err) {
+      warnOnce('storage-change', err);
+    }
   };
   chrome.storage.onChanged.addListener(listener);
   return () => chrome.storage.onChanged.removeListener(listener);
@@ -138,15 +137,13 @@ export function warnOnce(key, err) {
 }
 
 /**
- * Run `fn`, swallowing and reporting any exception.
- *
- * The skin reconciles the DOM of an app it does not control. A single
- * malformed row must degrade to "that row stays native", never to "the rest
- * of this frame's work silently never ran".
+ * Run `fn`, swallowing and reporting any exception. Reconciliation callbacks
+ * that arrive after teardown are deliberately ignored.
  *
  * @returns {boolean} true when fn completed without throwing
  */
 export function guard(label, fn) {
+  if (!runtimeActive) return false;
   try {
     fn();
     return true;
@@ -158,11 +155,6 @@ export function guard(label, fn) {
 
 /**
  * Map `fn` across `items` with per-item isolation.
- *
- * Synchronous reconciliation kicked by a late ItemDatabase/Atlas event is
- * ignored after teardown. Teardown itself runs before content.js marks the
- * runtime inactive, so its cleanup guardEach() calls still execute normally.
- *
  * @returns {number} count of items processed without throwing
  */
 export function guardEach(label, items, fn) {
@@ -176,19 +168,10 @@ export function guardEach(label, items, fn) {
 
 /* ── Scheduling ──────────────────────────────────────────────────────── */
 
-const scheduleFrame = typeof window !== 'undefined' && window.requestAnimationFrame
+// Do NOT discard callbacks at the scheduler level. Modules use their RAF body
+// to clear flags such as `queued`, `flushQueued` and `pointerQueued`; skipping
+// the callback can strand those flags permanently. Runtime guards inside the
+// callback suppress the actual reconciliation while disabled.
+export const raf = typeof window !== 'undefined' && window.requestAnimationFrame
   ? window.requestAnimationFrame.bind(window)
   : (fn => setTimeout(fn, 16));
-
-/**
- * Schedule work for the current activation only. A callback queued before a
- * disable/re-enable cycle is stale even if the skin is active again by the time
- * the browser reaches that frame, so capture and compare the generation too.
- */
-export function raf(fn) {
-  const generation = runtimeGeneration;
-  return scheduleFrame(() => {
-    if (!runtimeActive || generation !== runtimeGeneration) return;
-    fn();
-  });
-}
