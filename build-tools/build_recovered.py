@@ -105,7 +105,7 @@ def transform_js(path: Path) -> str:
 
 
 modules = []
-for path in sorted(SRC.rglob('*')):
+for path in sorted(SRC.rglob('*'), key=module_id):
     if not path.is_file():
         continue
     mid = module_id(path)
