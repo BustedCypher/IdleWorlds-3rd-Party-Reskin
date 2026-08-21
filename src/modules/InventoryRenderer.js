@@ -31,8 +31,29 @@ const INVENTORY_TITLE_ATTR = 'data-iw-inventory-title';
 const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [role="button"], [tabindex]';
 const pendingEmptyRetries = new WeakSet();
 
-/** row -> cheap change signature, see renderRow(). */
+/** row -> exact cheap change signature, see renderRow(). */
 const cheapSignatures = new WeakMap();
+let listenerBound = false;
+
+function cheapSignature(row) {
+  // Reading textContent is cheap compared with the two selector sweeps in
+  // extractRowData(). Store the ACTUAL text rather than only its length: equal-
+  // length changes such as x1 -> x2 are semantically real and must reconcile.
+  return {
+    childCount: row.childElementCount,
+    text: row.textContent || '',
+    dbRevision: ItemDatabase.revision(),
+    atlasRevision: AtlasService.revision(),
+  };
+}
+
+function sameCheapSignature(a, b) {
+  return !!a && !!b &&
+    a.childCount === b.childCount &&
+    a.text === b.text &&
+    a.dbRevision === b.dbRevision &&
+    a.atlasRevision === b.atlasRevision;
+}
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -386,15 +407,12 @@ function renderRow(row) {
 
   // Cheap pre-check before the expensive path.
   //
-  // extractRowData() runs two full querySelectorAll('span, div, p[, li]')
-  // sweeps over the row, and was doing so on every flush — before the signature
-  // comparison that would have said "nothing changed". A row's own text length
-  // and child count are enough to prove nothing changed, and cost one property
-  // read each. When they hold, we still re-assert our display suppression
-  // (React may have written display back) and skip the rest. (Audit S4.4)
-  const cheapSig = `${row.childElementCount}|${(row.textContent || '').length}|`
-                 + `${ItemDatabase.revision()}|${AtlasService.revision()}`;
-  if (existingOverlay && cheapSignatures.get(row) === cheapSig) {
+  // extractRowData() runs two querySelectorAll sweeps over the row. One exact
+  // textContent read plus child/revision fields is still much cheaper, but unlike
+  // the old text-LENGTH signature it cannot miss an equal-length semantic
+  // change such as x1 -> x2 or one item name being replaced by another.
+  const cheapSig = cheapSignature(row);
+  if (existingOverlay && sameCheapSignature(cheapSignatures.get(row), cheapSig)) {
     hideOriginalChildren(row, existingOverlay);
     syncRowState(row, existingOverlay);
     return;
@@ -484,6 +502,8 @@ export function clearInventoryRenderer() {
 
 export function initInventoryRenderer() {
   inject('inventory', css);
+  if (listenerBound) return;
+  listenerBound = true;
   on('iw:inventory-row', e => guard('inventory:row', () => renderRow(e.detail.row)));
   document.addEventListener('iw:item-db-updated', reconcileAll);
   document.addEventListener('iw:atlas-updated', reconcileAll);
