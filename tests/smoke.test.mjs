@@ -7,6 +7,7 @@
  *   • no third-party network request is made
  *   • the game's own text nodes are never detached  <- the S1.4 regression guard
  *   • inventory / skill / navigation presentation mounts
+ *   • equal-length native text changes still reconcile
  *   • the kill switch removes the COMPLETE active theme
  *   • native inline styles survive teardown exactly
  *   • re-enable rebuilds presentation without duplicating listeners/surfaces
@@ -14,8 +15,8 @@
  *
  * This is not a visual test. It exists to catch the class of failure that is
  * invisible until it breaks someone's game: DOM mutation of React-owned nodes,
- * boot-order errors, teardown leaks, destructive style cleanup and asymmetric
- * enable/disable state.
+ * boot-order errors, stale reconciliation caches, teardown leaks, destructive
+ * style cleanup and asymmetric enable/disable state.
  */
 
 import { JSDOM } from 'jsdom';
@@ -55,6 +56,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
           <div><span>Iron Sword</span><span>Lv 3</span></div>
           <div><span>Tier 4 · Weapon</span></div>
           <div><span>In loadout: Main</span></div>
+          <div><span id="native-qty">x1</span></div>
           <button>Equip</button><button>List</button>
         </div>
       </section>
@@ -105,6 +107,7 @@ window.chrome = {
 // Deliberately left undefined.
 
 const skillAction = window.document.getElementById('skill-action');
+const nativeQty = window.document.getElementById('native-qty');
 const inventorySection = window.document.getElementById('inventory-section');
 const nativeSkillStyle = skillAction.style.cssText;
 const nativeSectionStyle = inventorySection.style.cssText;
@@ -173,6 +176,8 @@ check('inventory row received an overlay', !!row.querySelector(':scope > .fs-inv
 check('inventory root was classified', !!window.document.querySelector('[data-iw-inventory-root]'));
 check('native Equip button still present',
   [...row.querySelectorAll('button')].some(b => b.textContent.trim() === 'Equip'));
+check('initial quantity rendered', row.querySelector('.fs-inv-qty')?.textContent === '×1',
+  row.querySelector('.fs-inv-qty')?.textContent || 'missing');
 
 const panel = window.document.querySelector('.compact-panel');
 check('mining panel classified as a skill panel', panel.classList.contains('fs-skill--mining'),
@@ -182,6 +187,33 @@ check('background painter actively overrides native navy while enabled',
   inventorySection.style.getPropertyValue('background-color') !== 'rgb(15, 23, 42)',
   inventorySection.style.cssText);
 check('main nav classified', !!window.document.querySelector('[data-iw-ui="main-nav"]'));
+
+/* ── Equal-length reconciliation ─────────────────────────────────────── */
+
+console.log('\nsmoke: equal-length reconciliation');
+// Let the renderer consume the mutation caused by adding its own overlay so the
+// cheap Inventory signature is definitely in its steady state before mutation.
+await settle(120);
+
+nativeQty.textContent = 'x2'; // same length as x1
+await waitFor(() => row.querySelector('.fs-inv-qty')?.textContent === '×2');
+check('equal-length inventory quantity change reconciles',
+  row.querySelector('.fs-inv-qty')?.textContent === '×2',
+  row.querySelector('.fs-inv-qty')?.textContent || 'missing');
+
+nativeQty.textContent = 'x1';
+await waitFor(() => row.querySelector('.fs-inv-qty')?.textContent === '×1');
+check('inventory quantity reconciles back', row.querySelector('.fs-inv-qty')?.textContent === '×1');
+
+skillAction.textContent = 'Fish'; // same length as Mine
+await waitFor(() => panel.classList.contains('fs-skill--fishing'));
+check('equal-length skill action change invalidates skill cache',
+  panel.classList.contains('fs-skill--fishing'), panel.className);
+
+skillAction.textContent = 'Mine';
+await waitFor(() => panel.classList.contains('fs-skill--mining'));
+check('skill classification reconciles back to mining',
+  panel.classList.contains('fs-skill--mining'), panel.className);
 
 /* ── Mutation burst: the flush budget must not drop work ─────────────── */
 
