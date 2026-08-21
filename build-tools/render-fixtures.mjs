@@ -95,7 +95,7 @@ const itemSprite = id => {
 
 const TIERS = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
 
-const invRow = ({ sprite, name, tier, level, stats, details, reqs, qty, equipped }) => `
+const invRow = ({ sprite, name, tier, level, stats, details, reqs, qty, equipped, setAction = false }) => `
 <div class="compact-row" style="display:flex;align-items:center;gap:0;min-height:62px;padding:0;position:relative;overflow:hidden;border:1px solid var(--iw-line);border-radius:3px;background:linear-gradient(180deg,rgba(255,255,255,.014),transparent 38%),#12110E;margin-bottom:6px;">
   <div class="fs-inv-row tier-${tier}${details ? ' has-details' : ''}${reqs ? ' has-requirements' : ''}${equipped ? ' is-equipped' : ''}">
     <div class="fs-inv-icon" style="${sprite}"></div>
@@ -110,6 +110,7 @@ const invRow = ({ sprite, name, tier, level, stats, details, reqs, qty, equipped
   ${equipped
     ? '<button data-fs-preserved-action="control" data-fs-action-kind="equipped">Equipped</button>'
     : '<button data-fs-preserved-action="control" data-fs-action-kind="equip">Equip</button>'}
+  ${setAction ? '<button data-fs-preserved-action="control" data-fs-action-kind="set">Set Bonus</button>' : ''}
   <button data-fs-preserved-action="control" data-fs-action-kind="secondary">List</button>
   <button data-fs-preserved-action="control" data-fs-action-kind="icon">🔒</button>
 </div>`;
@@ -203,7 +204,7 @@ ${invRow({ sprite: gearSprite('Iron Sword'), name: 'Iron Sword', tier: 'common',
 ${invRow({ sprite: gearSprite('Mythril Sword'), name: 'Mythril Sword', tier: 'uncommon', level: '11', stats: ['Tier 9 · Weapon', 'ATK +64', 'WAR +6'], details: [{ kind: 'loadout', text: 'In loadout: Main' }], equipped: true })}
 ${invRow({ sprite: gearSprite('Voidglass Gloves'), name: 'Voidglass Gloves', tier: 'rare', level: null, stats: ['Tier 16 · Hands', 'DEF +41', 'HP +120'], details: [{ kind: 'socket', text: 'Cut Sunstone: +4% gold find', count: 2 }] })}
 ${invRow({ sprite: gearSprite('Thalassic Shield'), name: 'Thalassic Shield', tier: 'epic', level: '22', stats: ['Tier 21 · Off-hand', 'DEF +88'], details: [{ kind: 'effect', text: 'Item find: +7%' }], reqs: ['Requires Combat Lv 45'] })}
-${invRow({ sprite: gearSprite('Voidglass Leggings'), name: 'Voidglass Leggings', tier: 'legendary', level: null, stats: ['Tier 27 · Legs', 'DEF +140', 'HP +310'], details: [{ kind: 'set', text: 'Set bonus active' }, { kind: 'status', text: 'Not upgradable' }] })}
+${invRow({ sprite: gearSprite('Voidglass Leggings'), name: 'Voidglass Leggings', tier: 'legendary', level: null, stats: ['Tier 27 · Legs', 'DEF +140', 'HP +310'], details: [{ kind: 'set', text: 'Set bonus active' }, { kind: 'status', text: 'Not upgradable' }], setAction: true })}
 ${invRow({ sprite: gearSprite('Voidglass Boots'), name: 'Voidglass Boots', tier: 'mythic', level: '30', stats: ['Tier 33 · Feet', 'DEF +198', '2× gather 12%'], details: [{ kind: 'loadout', text: 'In loadout: Gathering' }], reqs: ['Requires Gathering Lv 80'] })}
 
 <div class="fx-h">Inventory rows — item atlas (consumables / materials)</div>
@@ -314,6 +315,21 @@ await p.waitForTimeout(400);
 
 await p.screenshot({ path: resolve(OUT, 'full.png'), fullPage: true });
 await p.locator('.fx-tooltip-grid').screenshot({ path: resolve(OUT, 'tooltips.png') });
+
+await p.setViewportSize({ width: 390, height: 844 });
+await p.waitForTimeout(100);
+await p.screenshot({ path: resolve(OUT, 'mobile-inventory.png'), fullPage: true });
+const mobileInventory = await p.evaluate(() => ({
+  overflow: [...document.querySelectorAll('.compact-row:has(> .fs-inv-row)')].some(el => el.scrollWidth > el.clientWidth + 1),
+  setVisible: !![...document.querySelectorAll('[data-fs-action-kind="set"]')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0),
+  detailsVisible: !![...document.querySelectorAll('.fs-inv-details')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
+  requirementsVisible: !![...document.querySelectorAll('.fs-inv-requirements')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
+}));
+if (mobileInventory.overflow) throw new Error('mobile Inventory causes horizontal page overflow');
+if (!mobileInventory.setVisible) throw new Error('mobile Inventory hides Set action');
+if (!mobileInventory.detailsVisible) throw new Error('mobile Inventory hides dynamic details');
+if (!mobileInventory.requirementsVisible) throw new Error('mobile Inventory hides requirements');
+await p.setViewportSize({ width: 1240, height: 1000 });
 
 /* ── Automated checks ───────────────────────────────────────────────────── */
 
