@@ -15,7 +15,7 @@
  */
 
 import { chromium } from 'playwright';
-import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -64,12 +64,21 @@ const itemRows = lines.map(l => {
   return Object.fromEntries(cols.map((c, i) => [c, cells[i] ?? '']));
 });
 const itemById = new Map(itemRows.map(r => [r.item_id, r]));
-let maxRow = 0, maxCol = 0;
+const itemCell = Number(itemRows[0]?.width) || 128;
+let maxX = 0, maxY = 0;
 for (const r of itemRows) {
-  maxRow = Math.max(maxRow, Number(r.row) || 0);
-  maxCol = Math.max(maxCol, Number(r.column) || 0);
+  const x = Number(r.x) || 0;
+  const y = Number(r.y) || 0;
+  const w = Number(r.width) || itemCell;
+  const h = Number(r.height) || itemCell;
+  maxX = Math.max(maxX, x + w);
+  maxY = Math.max(maxY, y + h);
 }
-const itemDims = { cols: maxCol + 1, rows: maxRow + 1, cell: Number(itemRows[0]?.width) || 128 };
+const itemDims = {
+  cols: Math.max(1, Math.ceil(maxX / itemCell)),
+  rows: Math.max(1, Math.ceil(maxY / itemCell)),
+  cell: itemCell,
+};
 
 const gearSprite = name => {
   const e = gearByName.get(name.toLowerCase());
@@ -125,16 +134,18 @@ const skillPanel = ({ type, label, title, pct, xp, reward, ingredients }) => `
   </div>
 </div>`;
 
-const tooltipCard = ({ sprite, name, tier, badges, stats, acqMain, acqSub }) => `
+const tooltipCard = ({ sprite, name, tier, badges, effect, stats, acqMain, acqSub, glyph = '&#x1F6E1;&#xFE0F;', source = 'cached data' }) => `
 <div class="iw-tip is-open" style="position:relative;display:block;opacity:1;left:0;top:0;margin-bottom:14px;">
-  <div class="iw-tip-head">
-    <div class="iw-tip-icon"><span class="iw-tip-icon-host" style="${sprite}"></span></div>
+  <div class="iw-tip-head has-art has-gear-art">
+    <div class="iw-tip-icon" aria-hidden="true">${glyph}</div>
     <div class="iw-tip-title-block">
       <div class="iw-tip-name tier-${tier}">${name}</div>
-      <div class="iw-tip-badges">${badges.map((b, i) => `<span class="iw-tip-badge${i === 0 ? ' t' : ''}${b.startsWith('Req') ? ' req' : ''}">${b}</span>`).join('')}</div>
+      <div class="iw-tip-badges">${badges.map((b, i) => `<span class="iw-tip-badge${i === 0 ? ' t' : ''}${b.startsWith('Requires') ? ' req' : ''}">${b}</span>`).join('')}</div>
     </div>
+    <div class="iw-tip-art iw-tip-gear-art" aria-hidden="true"><span class="iw-tip-art-host iw-tip-art-painted" style="${sprite}"></span></div>
   </div>
   <div class="iw-tip-body">
+    ${effect ? `<div class="iw-tip-sec iw-tip-effect-sec"><div class="iw-tip-effect">${effect}</div></div>` : ''}
     <div class="iw-tip-sec"><div class="iw-tip-sec-title">Stats</div><div class="iw-tip-stats">
       ${stats.map(([k, v, cls]) => `<div class="iw-tip-stat"><span class="k">${k}</span><span class="v${cls ? ' ' + cls : ''}">${v}</span></div>`).join('')}
     </div></div>
@@ -142,12 +153,15 @@ const tooltipCard = ({ sprite, name, tier, badges, stats, acqMain, acqSub }) => 
       <div class="iw-tip-acq"><div class="iw-tip-acq-main">${acqMain}</div><div class="iw-tip-acq-sub">${acqSub}</div></div>
     </div>
   </div>
-  <div class="iw-tip-foot"><a class="iw-tip-link" href="#">Wiki ↗</a></div>
+  <div class="iw-tip-foot"><a class="iw-tip-link" href="#">&#x1F4D6; Wiki &#x2197;</a><span class="iw-tip-source">${source}</span></div>
 </div>`;
 
+const baseCss = (await readFile(resolve(ROOT, 'src/styles/base.css'), 'utf8'))
+  .replaceAll('../assets/', fileUrl('assets') + '/');
+
 const page = `<!doctype html><html><head><meta charset="utf-8">
-<link rel="stylesheet" href="${fileUrl('dist/base.css')}">
 <style>
+${baseCss}
 ${await readFile(resolve(ROOT, 'src/styles/inventory.css'), 'utf8')}
 ${await readFile(resolve(ROOT, 'src/styles/skillpanel.css'), 'utf8')}
 ${await readFile(resolve(ROOT, 'src/styles/tooltip-engine.css'), 'utf8')}
@@ -213,16 +227,18 @@ ${skillPanel({ type: 'crafting', label: 'Crafting', title: 'Craft Upgrade Orb', 
 ${skillPanel({ type: 'fishing', label: 'Fishing', title: 'Fish Abyssal Eel', pct: 67, xp: '220' })}
 </div></div>
 
-<div class="fx-h">Tooltip cards</div>
-<div class="fx-grid">
-<div>${tooltipCard({ sprite: gearSprite('Thalassic Sword'), name: 'Thalassic Sword', tier: 'epic',
-  badges: ['Tier 21', 'Weapon', 'Req Combat Lv 45'],
-  stats: [['Attack', '+142', 'good'], ['Warfare', '+18', 'good'], ['Sockets', '2'], ['Market price', '184,000g', 'amber']],
-  acqMain: 'Boss drop &middot; Zone 21', acqSub: 'Rate 1/240' })}</div>
-<div>${tooltipCard({ sprite: itemSprite('silver_ore'), name: 'Silver Ore', tier: 'common',
-  badges: ['Tier 5', 'Raw material'],
-  stats: [['Market price', '640g', 'amber']],
-  acqMain: 'Gathered', acqSub: 'Mined in zones 5–9' })}</div>
+<div class="fx-h">Tooltip cards ? Toolkit-style rich equipment detail</div>
+<div class="fx-grid fx-tooltip-grid">
+<div>${tooltipCard({ sprite: gearSprite('Dreadguard Signet'), name: 'Dreadguard Signet', tier: 'rare',
+  badges: ['Tier 16', '&#x1F6E1;&#xFE0F; Equipment', 'Ring slot', 'Requires Lv 53 (any skill)'],
+  effect: 'ATK +22 &#x2022; DEF +16, Requires Lv 53 (any skill), XP +16/task, +32% 2x gather chance, +12% gold find',
+  stats: [['&#x2694;&#xFE0F; ATK', '22'], ['&#x1F6E1;&#xFE0F; DEF', '16'], ['&#x2728; XP/task', '16'], ['&#x1F33F; 2&#x00D7; Gather', '32%'], ['&#x1F4B0; Gold Find', '12%'], ['&#x1F4B0; Base value', '8,000g', 'amber'], ['&#x1F3F7;&#xFE0F; Turn-in', '1 token']],
+  acqMain: 'Zone drop', acqSub: 'Rate 1/20000 &#x00B7; boosted by Item Find %' })}</div>
+<div>${tooltipCard({ sprite: gearSprite('Eye of the Tempest'), name: 'Eye of the Tempest', tier: 'rare',
+  badges: ['Tier 17', '&#x1F6E1;&#xFE0F; Equipment', 'Amulet slot', 'Requires Lv 57 (any skill)'],
+  effect: 'ATK +23 &#x2022; DEF +17, Requires Lv 57 (any skill), XP +17/task, +34% 2x gather chance, +14% gold find',
+  stats: [['&#x2694;&#xFE0F; ATK', '23'], ['&#x1F6E1;&#xFE0F; DEF', '17'], ['&#x2728; XP/task', '17'], ['&#x1F33F; 2&#x00D7; Gather', '34%'], ['&#x1F4B0; Gold Find', '14%'], ['&#x1F4B0; Base value', '10,000g', 'amber'], ['&#x1F3F7;&#xFE0F; Turn-in', '1 token']],
+  acqMain: 'Zone drop', acqSub: 'Rate 1/20000 &#x00B7; boosted by Item Find %' })}</div>
 </div>
 
 <div class="fx-h">Navigation rail &amp; controls</div>
@@ -260,6 +276,16 @@ await writeFile(resolve(OUT, 'fixture.html'), page, 'utf8');
 // expected revision, and PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD stops it fetching one.
 // Point at whatever is actually on disk.
 async function findChromium() {
+  if (process.platform === 'win32') {
+    const candidates = [
+      'C:/Program Files/Google/Chrome/Application/chrome.exe',
+      'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+      'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
+    ];
+    for (const candidate of candidates) {
+      try { await access(candidate); return candidate; } catch { /* try next */ }
+    }
+  }
   const base = '/opt/pw-browsers';
   try {
     const dirs = (await readdir(base)).filter(d => d.startsWith('chromium-')).sort().reverse();
@@ -287,6 +313,7 @@ await p.evaluate(() => document.fonts.ready);
 await p.waitForTimeout(400);
 
 await p.screenshot({ path: resolve(OUT, 'full.png'), fullPage: true });
+await p.locator('.fx-tooltip-grid').screenshot({ path: resolve(OUT, 'tooltips.png') });
 
 /* ── Automated checks ───────────────────────────────────────────────────── */
 

@@ -81,6 +81,18 @@ assert.doesNotMatch(code(scanner), /\.innerHTML/,
   'NameScanner must never write markup into React-owned prose');
 assert.match(scanner, /CSS\.highlights/);
 assert.match(scanner, /ItemDatabase\.revision\(\)/);
+
+const tooltipEngine = await read('src/modules/TooltipEngine.js');
+const tooltipCss = await read('src/styles/tooltip-engine.css');
+const itemDb = await read('src/modules/ItemDatabase.js');
+assert.match(tooltipEngine, /cleanEffectText/);
+assert.match(tooltipEngine, /drop_boosted_by/);
+assert.match(tooltipEngine, /ItemDatabase\.source\(\)/,
+  'tooltip footer must expose actual item-data provenance');
+assert.match(tooltipCss, /\.iw-tip-art/);
+assert.match(tooltipCss, /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
+  'rich tooltip stats should use a deterministic two-column layout');
+assert.match(itemDb, /source\(\)\s*\{[\s\S]*return this\._source/);
 assert.match(scanner, /caretPositionFromPoint/,
   'native item-name hit testing should resolve the actual text node under the pointer');
 assert.match(scanner, /pointerInsideTooltip/,

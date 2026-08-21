@@ -82,30 +82,27 @@ export function statChips(item, opts = {}) {
 export function statRows(item) {
   if (!item) return [];
   const rows = [];
+  const gold = value => `${Number(value).toLocaleString()}g`;
 
-  if (has(item.atk))     rows.push({ label: 'Attack',   value: `+${item.atk}`, cls: 'good' });
-  if (has(item.def))     rows.push({ label: 'Defence',  value: `+${item.def}`, cls: 'good' });
-  if (has(item.hp))      rows.push({ label: 'Health',   value: `+${item.hp}`,  cls: 'good' });
-  if (has(item.warfare)) rows.push({ label: 'Warfare',  value: `+${item.warfare}`, cls: 'good' });
+  if (has(item.atk))     rows.push({ label: '⚔️ ATK',       value: String(item.atk) });
+  if (has(item.def))     rows.push({ label: '🛡️ DEF',       value: String(item.def) });
+  if (has(item.hp))      rows.push({ label: '❤️ HP',         value: String(item.hp) });
+  if (has(item.warfare)) rows.push({ label: '⚔️ Warfare',   value: String(item.warfare) });
 
-  if (has(item.xp_per_task))       rows.push({ label: 'XP per task',    value: `+${item.xp_per_task}` });
-  if (has(item.double_gather_pct)) rows.push({ label: 'Double gather',  value: `${item.double_gather_pct}%` });
-  if (has(item.gold_find_pct))     rows.push({ label: 'Gold find',      value: `+${item.gold_find_pct}%` });
-  if (has(item.item_find_pct))     rows.push({ label: 'Item find',      value: `+${item.item_find_pct}%` });
+  if (has(item.xp_per_task))       rows.push({ label: '✨ XP/task',     value: String(item.xp_per_task) });
+  if (has(item.double_gather_pct)) rows.push({ label: '🌿 2× Gather',   value: `${item.double_gather_pct}%` });
+  if (has(item.gold_find_pct))     rows.push({ label: '💰 Gold Find',   value: `${item.gold_find_pct}%` });
+  if (has(item.item_find_pct))     rows.push({ label: '🔎 Item Find',   value: `${item.item_find_pct}%` });
 
   if (has(item.skill_bonus_skill) && has(item.skill_bonus_value)) {
-    rows.push({ label: item.skill_bonus_skill, value: `+${item.skill_bonus_value}` });
+    rows.push({ label: `✨ ${item.skill_bonus_skill}`, value: `+${item.skill_bonus_value}` });
   }
+  if (has(item.sockets)) rows.push({ label: '🔷 Sockets', value: String(item.sockets) });
 
-  if (has(item.sockets)) rows.push({ label: 'Sockets', value: String(item.sockets) });
-
-  if (has(item.suggested_market_price)) {
-    rows.push({
-      label: 'Market price',
-      value: `${Number(item.suggested_market_price).toLocaleString()}g`,
-      cls: 'amber',
-    });
+  if (has(item.base_value)) rows.push({ label: '💰 Base value', value: gold(item.base_value), cls: 'amber' });
+  if (has(item.trader_token_value)) {
+    const n = Number(item.trader_token_value);
+    rows.push({ label: '🏷️ Turn-in', value: `${n} token${n === 1 ? '' : 's'}` });
   }
-
   return rows;
 }

@@ -48,6 +48,7 @@ class _ItemDatabase {
     this._byId = null;
     this._byName = null;
     this._generatedAt = null;
+    this._source = null;
     this._promise = null;
     this._revision = 0;
   }
@@ -75,6 +76,9 @@ class _ItemDatabase {
     return this._generatedAt;
   }
 
+  source() {
+    return this._source;
+  }
   async _load() {
     evictLegacyCache();
     const cached = await this._readCache({ allowStale: true });
@@ -116,6 +120,7 @@ class _ItemDatabase {
     // generation stamp, refresh the cache timestamp without forcing every
     // renderer and scanner to rebuild needlessly.
     if (this.isReady() && data.generatedAt && data.generatedAt === this._generatedAt) {
+      this._source = 'network';
       this._writeCache(data.items, data.generatedAt);
       return;
     }
@@ -130,6 +135,7 @@ class _ItemDatabase {
 
     this._items = items;
     this._generatedAt = generatedAt || null;
+    this._source = source || null;
     this._byId = new Map();
     this._byName = new Map();
 

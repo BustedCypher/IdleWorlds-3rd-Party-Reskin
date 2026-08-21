@@ -107,9 +107,12 @@ window.matchMedia = query => ({
 const storage = new Map();
 storage.set('iw-item-db-cache', {
   items: [{
-    item_id: 'iron_sword', name: 'Iron Sword', tier: 4,
-    category: 'Equipment', subcategory: 'Weapon slot', atk: 18,
-    acquisition_type: 'ZoneDrop', source_zone: 4,
+    item_id: 'iron_sword', name: 'Iron Sword', wiki_slug: 'iron_sword', tier: 4,
+    category: 'Equipment', subcategory: 'Weapon slot', req_skill: 'combat', req_level: 3,
+    req_text: 'Requires Combat Lv 3', atk: 18, def: 7, xp_per_task: 4,
+    double_gather_pct: 8, gold_find_pct: 3, base_value: 125, trader_token_value: 1,
+    effects_raw: 'ATK +18 \u0007 DEF +7, Requires Combat Lv 3, XP +4/task, +8% 2x gather chance',
+    acquisition_type: 'ZoneDrop', drop_rate: '1/20000', drop_boosted_by: 'Item Find %',
   }],
   generatedAt: 'smoke-tooltip-data', cachedAt: Date.now(),
 });
@@ -263,6 +266,20 @@ explicitItemRef.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true
 await waitFor(() => tooltip.classList.contains('is-open'));
 check('explicit inventory item name opens tooltip on hover',
   tooltip.classList.contains('is-open') && tooltip.querySelector('.iw-tip-name')?.textContent === 'Iron Sword');
+check('rich tooltip renders large atlas artwork slot',
+  !!tooltip.querySelector('.iw-tip-art') && !!tooltip.querySelector('.iw-tip-art-fallback'));
+check('rich tooltip renders requirement badge',
+  [...tooltip.querySelectorAll('.iw-tip-badge.req')].some(el => el.textContent.includes('Requires Combat Lv 3')));
+check('rich tooltip renders authoritative effect text',
+  (() => { const text = tooltip.querySelector('.iw-tip-effect')?.textContent || ''; return text.includes('ATK +18') && text.includes('DEF +7') && !/[\u0000-\u001f\u007f]/.test(text); })(), tooltip.querySelector('.iw-tip-effect')?.textContent || 'missing');
+const richStatText = [...tooltip.querySelectorAll('.iw-tip-stat')].map(el => el.textContent.replace(/\s+/g, ' ').trim()).join(' | ');
+check('rich tooltip renders base value and trader turn-in',
+  richStatText.includes('Base value125g') && richStatText.includes('Turn-in1 token'), richStatText);
+check('rich tooltip renders drop rate and boost source',
+  (() => { const text = tooltip.querySelector('.iw-tip-acq-sub')?.textContent || ''; return text.includes('Rate 1/20000') && text.includes('boosted by Item Find %'); })(), tooltip.querySelector('.iw-tip-acq-sub')?.textContent || 'missing');
+check('rich tooltip renders wiki link and cache provenance',
+  tooltip.querySelector('.iw-tip-link')?.getAttribute('href')?.endsWith('/wiki/items/iron_sword') === true &&
+  tooltip.querySelector('.iw-tip-source')?.textContent === 'cached data');
 explicitItemRef.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, clientX: 300, clientY: 300, relatedTarget: window.document.body }));
 await waitFor(() => !tooltip.classList.contains('is-open'));
 

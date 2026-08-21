@@ -53,6 +53,7 @@ await staleDb.ready();
 assert.equal(staleDb.isReady(), true);
 assert.equal(staleDb.getByName('Kings Blade')?.item_id, 'blade_1');
 assert.ok(staleDb.revision() >= 1);
+assert.equal(staleDb.source(), 'stale-cache');
 
 // 1b) The legacy page-storage cache must be evicted, not merely ignored.
 assert.equal(localStorage.getItem('iw-item-db-cache'), null,
@@ -77,6 +78,7 @@ await assert.rejects(retryDb.ready(), /temporary/);
 failFirst = false;
 await retryDb.ready();
 assert.equal(retryDb.getByName('Copper-Ore')?.item_id, 'ore_1');
+assert.equal(retryDb.source(), 'network');
 assert.ok(extStorage.has('iw-item-db-cache'), 'fresh table must be cached in extension storage');
 assert.equal(localStorage.getItem('iw-item-db-cache'), null,
   'the skin must never write its cache into the page origin');

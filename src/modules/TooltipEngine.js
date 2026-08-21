@@ -28,7 +28,7 @@
 
 import { ItemDatabase } from './ItemDatabase.js';
 import { AtlasService } from './AtlasService.js';
-import { tierClass, slotLabel, statRows } from './itemDisplay.js';
+import { tierClass, statRows } from './itemDisplay.js';
 import { inject } from './StyleInjector.js';
 import css from '../styles/tooltip-engine.css';
 
@@ -61,6 +61,23 @@ function findItem(ref) {
   return ItemDatabase.find(ref);
 }
 
+function categoryGlyph(item) {
+  const category = String(item?.category || '').toLowerCase();
+  const sub = String(item?.subcategory || '').toLowerCase();
+  if (category.includes('equipment')) return '🛡️';
+  if (category.includes('potion') || sub.includes('potion')) return '🧪';
+  if (category.includes('gem') || sub.includes('gem')) return '💎';
+  if (category.includes('scroll') || sub.includes('scroll')) return '📜';
+  if (category.includes('material') || sub.includes('ore')) return '📦';
+  return '◆';
+}
+function cleanEffectText(item) {
+  return String(item?.effects_raw || '')
+    .replace(/[\u0000-\u001f\u007f]+/g, ' • ')
+    .replace(/\s+([,.;:])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
 // ── Acquisition block ("How to get it") ─────────────────────────────────
 
 function renderAcquisition(item) {
@@ -77,11 +94,13 @@ function renderAcquisition(item) {
     if (item.tier != null && item.tier !== '') bits.push('Tier ' + item.tier + ' recipe');
     sub = bits.join(' &middot; ');
   } else if (t === 'ZoneDrop' || t === 'BossDrop') {
-    main = (t === 'BossDrop' ? 'Boss drop' : 'Zone drop') +
-           (item.source_zone ? ' &middot; Zone ' + item.source_zone : '');
+    main = t === 'BossDrop' ? 'Boss drop' : 'Zone drop';
     const bits = [];
+    if (item.source_zone) bits.push('Zone ' + esc(item.source_zone));
     if (item.drop_rate) bits.push('Rate ' + esc(item.drop_rate));
+    if (item.drop_boosted_by) bits.push('boosted by ' + esc(item.drop_boosted_by));
     sub = bits.join(' &middot; ');
+    if (!sub) sub = esc(item.acquisition_summary || item.acquisition_detail || '');
   } else if (t === 'Gathered' || t === 'Prospected') {
     main = t === 'Gathered' ? 'Gathered' : 'Prospected';
     sub  = item.acquisition_summary ? esc(item.acquisition_summary) : '';
@@ -128,12 +147,20 @@ function renderStats(item) {
 
 function renderBadges(item) {
   const badges = [];
+  const glyph = categoryGlyph(item);
   if (item.tier != null && item.tier !== '') badges.push(`<span class="iw-tip-badge t">Tier ${esc(item.tier)}</span>`);
-  if (item.category) badges.push(`<span class="iw-tip-badge">${esc(item.category)}</span>`);
-  const slot = slotLabel(item);
+  if (item.category) badges.push(`<span class="iw-tip-badge">${glyph} ${esc(item.category)}</span>`);
+  const slot = String(item.subcategory || '').trim();
   if (slot) badges.push(`<span class="iw-tip-badge">${esc(slot)}</span>`);
-  if (item.req_skill && item.req_level) {
-    badges.push(`<span class="iw-tip-badge req">${esc(item.req_skill)} Lv ${esc(item.req_level)}</span>`);
+  const requirement = String(item.req_text || '').trim();
+  if (requirement) {
+    badges.push(`<span class="iw-tip-badge req">${esc(requirement)}</span>`);
+  } else if (item.req_level) {
+    const skill = String(item.req_skill || '').trim();
+    const fallback = skill.toLowerCase() === 'any'
+      ? `Requires Lv ${item.req_level} (any skill)`
+      : `Requires ${skill || 'skill'} Lv ${item.req_level}`;
+    badges.push(`<span class="iw-tip-badge req">${esc(fallback)}</span>`);
   }
   return badges.join('');
 }
@@ -141,35 +168,48 @@ function renderBadges(item) {
 // ── Full card ────────────────────────────────────────────────────────────
 
 function renderCard(item) {
-  const iconHost = document.createElement('span');
-  iconHost.className = 'iw-tip-icon-host';
-  const painted = AtlasService.paint(iconHost, { id: item.item_id, name: item.name });
-
-  const acq    = renderAcquisition(item);
-  const stats  = renderStats(item);
-  const badges = renderBadges(item);
-  const tier   = tierClass(item);
+  const artHost = document.createElement('span');
+  artHost.className = 'iw-tip-art-host';
+  const painted = AtlasService.paint(artHost, { id: item.item_id, name: item.name });
+  const acq       = renderAcquisition(item);
+  const stats     = renderStats(item);
+  const badges    = renderBadges(item);
+  const tier      = tierClass(item);
+  const glyph     = categoryGlyph(item);
+  const effect    = cleanEffectText(item);
+  const effectSec = effect
+    ? `<div class="iw-tip-sec iw-tip-effect-sec"><div class="iw-tip-effect">${esc(effect)}</div></div>`
+    : '';
+  const isGear = String(item.category || '').toLowerCase().includes('equipment');
+  const artClass = isGear ? 'iw-tip-gear-art' : 'iw-tip-item-art';
 
   const wikiLink = item.wiki_slug
-    ? `<a class="iw-tip-link" href="https://idleworlds.com/wiki/items/${esc(item.wiki_slug)}" target="_blank" rel="noopener noreferrer">Wiki \u2197</a>`
+    ? `<a class="iw-tip-link" href="https://idleworlds.com/wiki/items/${esc(item.wiki_slug)}" target="_blank" rel="noopener noreferrer">📖 Wiki \u2197</a>`
     : '';
+  const source = ItemDatabase.source();
+  const sourceLabel = source === 'network' ? 'live data'
+    : source === 'stale-cache' ? 'stale cached data'
+    : source === 'cache' ? 'cached data' : 'item data';
+  const sourceClass = source === 'stale-cache' ? ' is-stale' : '';
 
   return {
     html: `
-      <div class="iw-tip-head">
-        <div class="iw-tip-icon"></div>
+      <div class="iw-tip-head has-art ${isGear ? 'has-gear-art' : 'has-item-art'}">
+        <div class="iw-tip-icon" aria-hidden="true">${glyph}</div>
         <div class="iw-tip-title-block">
           <div class="iw-tip-name ${tier}">${esc(item.name)}</div>
           <div class="iw-tip-badges">${badges}</div>
         </div>
+        <div class="iw-tip-art ${artClass}" aria-hidden="true"><span class="iw-tip-art-fallback">${glyph}</span></div>
       </div>
       <div class="iw-tip-body">
+        ${effectSec}
         ${stats}
         ${acq}
       </div>
-      <div class="iw-tip-foot">${wikiLink}</div>
+      <div class="iw-tip-foot">${wikiLink}<span class="iw-tip-source${sourceClass}">${esc(sourceLabel)}</span></div>
     `,
-    iconHost,
+    artHost,
     painted,
   };
 }
@@ -292,17 +332,14 @@ function show(anchor) {
 
   if (STATE.anchor && STATE.anchor !== anchor) cleanupAnchor(STATE.anchor);
 
-  const { html, iconHost, painted } = renderCard(item);
+  const { html, artHost, painted } = renderCard(item);
   STATE.el.innerHTML = html;
 
-  const iconSlot = STATE.el.querySelector('.iw-tip-icon');
-  if (iconSlot) {
-    if (painted) {
-      iconHost.classList.add('iw-tip-icon-painted');
-      iconSlot.appendChild(iconHost);
-    } else {
-      iconSlot.textContent = '\u2753'; // fallback glyph — no icon resolved
-    }
+  const artSlot = STATE.el.querySelector('.iw-tip-art');
+  if (artSlot && painted) {
+    artSlot.textContent = '';
+    artHost.classList.add('iw-tip-art-painted');
+    artSlot.appendChild(artHost);
   }
 
   STATE.anchor = anchor;
