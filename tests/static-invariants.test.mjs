@@ -135,6 +135,8 @@ assert.match(inventory, /if \(listenerBound\) return/,
 const inventoryCSS = await read('src/styles/inventory.css');
 assert.match(inventoryCSS, /\.fs-inv-body\s*\{[^}]*overflow:\s*hidden/s);
 assert.match(inventoryCSS, /\.fs-inv-detail[^}]*text-overflow:\s*ellipsis/s);
+assert.match(inventoryCSS, /\.fs-inv-name\s*\{[^}]*-webkit-line-clamp:\s*2[^}]*white-space:\s*normal/s,
+  'Inventory names must wrap to at most two lines rather than reverting to single-line ellipsis');
 assert.match(inventoryCSS, /@media \(max-width: 700px\)[\s\S]*flex-wrap:\s*wrap\s*!important/,
   'mobile Inventory must wrap native actions instead of removing them');
 assert.doesNotMatch(inventoryCSS, /data-fs-action-kind=\\?"set\\?"[^}]*display:\s*none/s,

@@ -201,6 +201,7 @@ ${['ink-950', 'ink-900', 'ink-850', 'ink-800', 'ink-750', 'ink-700', 'ink-600', 
 
 <div class="fx-h">Inventory rows — gear atlas, all six tiers</div>
 ${invRow({ sprite: gearSprite('Iron Sword'), name: 'Iron Sword', tier: 'common', level: '3', stats: ['Tier 4 · Weapon', 'ATK +18'], qty: null, equipped: false })}
+${invRow({ sprite: gearSprite('Fortunate Dragonscale Silk Cloak of the Harvest'), name: 'Fortunate Dragonscale Silk Cloak of the Harvest', tier: 'common', level: null, stats: ['Tier 7 · Cloak', 'Find +4%', '2× gather 6%'], qty: null, equipped: false })}
 ${invRow({ sprite: gearSprite('Mythril Sword'), name: 'Mythril Sword', tier: 'uncommon', level: '11', stats: ['Tier 9 · Weapon', 'ATK +64', 'WAR +6'], details: [{ kind: 'loadout', text: 'In loadout: Main' }], equipped: true })}
 ${invRow({ sprite: gearSprite('Voidglass Gloves'), name: 'Voidglass Gloves', tier: 'rare', level: null, stats: ['Tier 16 · Hands', 'DEF +41', 'HP +120'], details: [{ kind: 'socket', text: 'Cut Sunstone: +4% gold find', count: 2 }] })}
 ${invRow({ sprite: gearSprite('Thalassic Shield'), name: 'Thalassic Shield', tier: 'epic', level: '22', stats: ['Tier 21 · Off-hand', 'DEF +88'], details: [{ kind: 'effect', text: 'Item find: +7%' }], reqs: ['Requires Combat Lv 45'] })}
@@ -319,16 +320,26 @@ await p.locator('.fx-tooltip-grid').screenshot({ path: resolve(OUT, 'tooltips.pn
 await p.setViewportSize({ width: 390, height: 844 });
 await p.waitForTimeout(100);
 await p.screenshot({ path: resolve(OUT, 'mobile-inventory.png'), fullPage: true });
-const mobileInventory = await p.evaluate(() => ({
-  overflow: [...document.querySelectorAll('.compact-row:has(> .fs-inv-row)')].some(el => el.scrollWidth > el.clientWidth + 1),
-  setVisible: !![...document.querySelectorAll('[data-fs-action-kind="set"]')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0),
-  detailsVisible: !![...document.querySelectorAll('.fs-inv-details')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
-  requirementsVisible: !![...document.querySelectorAll('.fs-inv-requirements')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
-}));
+const mobileInventory = await p.evaluate(() => {
+  const longName = [...document.querySelectorAll('.fs-inv-name')]
+    .find(el => el.textContent.includes('Fortunate Dragonscale Silk Cloak of the Harvest'));
+  const longStyle = longName ? getComputedStyle(longName) : null;
+  const longLines = longName && longStyle ? longName.getBoundingClientRect().height / parseFloat(longStyle.lineHeight) : 0;
+  return {
+    overflow: [...document.querySelectorAll('.compact-row:has(> .fs-inv-row)')].some(el => el.scrollWidth > el.clientWidth + 1),
+    setVisible: !![...document.querySelectorAll('[data-fs-action-kind="set"]')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0),
+    detailsVisible: !![...document.querySelectorAll('.fs-inv-details')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
+    requirementsVisible: !![...document.querySelectorAll('.fs-inv-requirements')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
+    longNameLines: longLines,
+  };
+});
 if (mobileInventory.overflow) throw new Error('mobile Inventory causes horizontal page overflow');
 if (!mobileInventory.setVisible) throw new Error('mobile Inventory hides Set action');
 if (!mobileInventory.detailsVisible) throw new Error('mobile Inventory hides dynamic details');
 if (!mobileInventory.requirementsVisible) throw new Error('mobile Inventory hides requirements');
+if (mobileInventory.longNameLines < 1.5 || mobileInventory.longNameLines > 2.2) {
+  throw new Error(`long Inventory name must wrap to two lines, got ${mobileInventory.longNameLines.toFixed(2)}`);
+}
 await p.setViewportSize({ width: 1240, height: 1000 });
 
 /* ── Automated checks ───────────────────────────────────────────────────── */

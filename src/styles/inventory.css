@@ -172,13 +172,18 @@
 }
 
 .fs-inv-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   font-family: var(--iw-font-ui);
   font-size: 13px;
   font-weight: 700;
   line-height: 1.18;
   letter-spacing: .005em;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
+  overflow-wrap: anywhere;
   text-overflow: ellipsis;
   text-shadow: 0 1px 0 #000;
 }
