@@ -9,6 +9,7 @@
 import { on } from './DOMWatcher.js';
 import { inject } from './StyleInjector.js';
 import { guard, guardEach } from './Runtime.js';
+import { createInlineStyleOwner } from './InlineStyleOwner.js';
 import css from '../styles/skillpanel.css';
 
 const RENDERED_ATTR = 'data-fs-skill';
@@ -17,23 +18,24 @@ const ZONE_ATTR = 'data-iw-skill-zone';
 const buttonStyleSnapshots = new WeakMap();
 const readoutStyleSnapshots = new WeakMap();
 const ingredientStyleSnapshots = new WeakMap();
+const styleOwner = createInlineStyleOwner();
+let listenerBound = false;
 
 const SKILL_META = {
   combat:    { label: 'Combat',    glyph: '⚔︎', actions: ['fight'] },
   mining:    { label: 'Mining',    glyph: '⛏︎', actions: ['mine'] },
   smithing:  { label: 'Smithing',  glyph: '⚒︎', actions: ['smelt', 'forge'] },
-  gathering: { label: 'Gathering', glyph: '❧',  actions: ['gather', 'harvest'] },
+  gathering: { label: 'Gathering', glyph: '❧', actions: ['gather', 'harvest'] },
   alchemy:   { label: 'Alchemy',   glyph: '⚗︎', actions: ['brew'] },
   jewelcrafting: { label: 'Jewelcrafting', glyph: '◆', actions: ['prospect'] },
   spellcrafting: { label: 'Spellcrafting', glyph: '✧', actions: ['enchant'] },
   tailoring: { label: 'Tailoring', glyph: '⋈', actions: ['tailor', 'sew'] },
-  crafting:  { label: 'Crafting',  glyph: '✦',  actions: ['craft'] },
-  fishing:   { label: 'Fishing',   glyph: '⌁',  actions: ['fish'] },
+  crafting:  { label: 'Crafting',  glyph: '✦', actions: ['craft'] },
+  fishing:   { label: 'Fishing',   glyph: '⌁', actions: ['fish'] },
 };
 
 function setStyle(el, prop, value, priority = 'important') {
-  if (el.style.getPropertyValue(prop) === value && el.style.getPropertyPriority(prop) === priority) return;
-  el.style.setProperty(prop, value, priority);
+  return styleOwner.set(el, prop, value, priority);
 }
 
 function normText(value) {
@@ -105,8 +107,10 @@ const BUTTON_STYLES = {
 function styleButton(btn) {
   const role = btn.getAttribute(ROLE_ATTR) || '';
   // Live IdleWorlds renders the level/XP datum as a real <button>. It is data,
-  // not a command. Never pass it through the generic action-button painter.
+  // not a command. If React repurposed a button we styled in an earlier flush,
+  // restore our owned action properties before treating it as readout data.
   if (role === 'level-progress') {
+    styleOwner.restoreElement(btn);
     delete btn.dataset.iwBtnState;
     buttonStyleSnapshots.delete(btn);
     return;
@@ -216,9 +220,10 @@ function readoutBranch(el, panel) {
 }
 
 function neutraliseReadouts(panel) {
-  // Clear stale marks first. React may replace only the inner readout while
-  // preserving a previously classified wrapper.
+  // Restore stale readout branches before discovering the new live branch.
+  // React may replace only the inner readout while preserving a wrapper.
   panel.querySelectorAll('[data-iw-readout]').forEach(el => {
+    styleOwner.restoreElement(el);
     delete el.dataset.iwReadout;
     readoutStyleSnapshots.delete(el);
   });
@@ -263,7 +268,10 @@ function neutraliseIngredients(panel) {
     const text = normText(el.textContent);
     const matches = INGR_PATTERN.test(text);
     if (!matches) {
-      if (el.dataset.iwIngr) delete el.dataset.iwIngr;
+      if (el.dataset.iwIngr) {
+        styleOwner.restoreElement(el);
+        delete el.dataset.iwIngr;
+      }
       ingredientStyleSnapshots.delete(el);
       continue;
     }
@@ -402,8 +410,8 @@ function annotateStructure(panel, type, meta) {
   }
 
   // Opt into the rigid three-column layout only when the live React panel
-  // already exposes exactly three distinct top-level zones. This gives us
-  // deterministic alignment without forcing unknown DOM shapes into a grid.
+  // already exposes three distinct top-level zones. Unknown visible branches
+  // disable the grid so native layout remains the safe fallback.
   const identityRole = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
   const titleRole = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
   const actionRole = panel.querySelector(`[${ROLE_ATTR}="action-button"]`);
@@ -421,10 +429,8 @@ function annotateStructure(panel, type, meta) {
     commandZone.setAttribute(ZONE_ATTR, 'commands');
 
     // Some skills include an extra absolutely-positioned/decorative React child
-    // while others expose only the three functional branches. The previous
-    // exact child-count gate meant the shared layout applied to only a subset
-    // of skills. Ignore non-flow decoration, but refuse the rigid layout when
-    // there is an additional visible functional branch we do not understand.
+    // while others expose only the three functional branches. Ignore non-flow
+    // decoration, but refuse rigid layout for an unknown visible branch.
     const functionalZones = new Set([identityZone, contentZone, commandZone]);
     const unexpectedFlowChild = directChildren.some(el => {
       if (functionalZones.has(el)) return false;
@@ -458,14 +464,28 @@ function migrateLegacyWrapper(panel) {
   wrapper.remove();
 }
 
+function clearPanelInlineTreatment(panel) {
+  styleOwner.restoreWithin(panel);
+  panel.querySelectorAll('[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]').forEach(el => {
+    delete el.dataset.iwReadout;
+    delete el.dataset.iwIngr;
+    delete el.dataset.iwBtnState;
+    buttonStyleSnapshots.delete(el);
+    readoutStyleSnapshots.delete(el);
+    ingredientStyleSnapshots.delete(el);
+  });
+}
+
 function clearPanelChrome(panel) {
   migrateLegacyWrapper(panel);
+  clearPanelInlineTreatment(panel);
   clearStructureRoles(panel);
   panel.classList.remove('fs-skill-panel', ...SKILL_CLASSES);
   delete panel.dataset.fsSkillLabel;
   delete panel.dataset.fsSkillRune;
   delete panel.dataset.fsSkillFlavour;
   delete panel.dataset.iwSkillGlyph;
+  delete panel.dataset.iwSkill;
   delete panel.dataset.iwUi;
   panel.removeAttribute(RENDERED_ATTR);
 }
@@ -499,18 +519,22 @@ function renderPanel(panel, skillType) {
   applyPanelTreatment(panel, skillType, meta);
 }
 
-/** Strip skill chrome from every panel. Kill switch. */
+/** Strip skill chrome and restore only the inline properties this module owns. */
 export function clearSkillPanels() {
   guardEach('skill:teardown', document.querySelectorAll('.compact-panel'), clearPanelChrome);
+  // Defensive cleanup for a previously styled node that React moved outside a
+  // .compact-panel before teardown.
+  styleOwner.restoreAll();
   document.querySelectorAll('[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]').forEach(el => {
     delete el.dataset.iwReadout;
     delete el.dataset.iwIngr;
     delete el.dataset.iwBtnState;
-    el.removeAttribute('style');
   });
 }
 
 export function initSkillPanelRenderer() {
   inject('skillpanel', css);
+  if (listenerBound) return;
+  listenerBound = true;
   on('iw:skill-panel', e => guard('skill:panel', () => renderPanel(e.detail.panel, e.detail.skill)));
 }
