@@ -3,10 +3,9 @@ name: CI
 on:
   push:
     branches:
-      - 'fix/**'
-  pull_request:
-    branches:
       - main
+      - 'fix/**'
+      - 'feature/**'
 
 permissions:
   contents: write
@@ -23,7 +22,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install test dependencies
         run: npm install --no-audit --no-fund
@@ -31,8 +30,8 @@ jobs:
       - name: Rebuild, syntax-check and run regression suites
         run: npm test
 
-      - name: Sync generated production bundle on same-repository fix branches
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/fix/')
+      - name: Sync generated production bundle on same-repository working branches
+        if: github.ref != 'refs/heads/main'
         shell: bash
         run: |
           git add -- dist/content.bundle.js
