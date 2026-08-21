@@ -23,20 +23,11 @@ const SEL_SKILL_PANEL = '.compact-panel';
 const SEL_EQUIP_PANEL = '[class*="equipment"]';
 const SEL_SHOP_PANEL  = '[class*="shop"]';
 
-// Inventory rows are deliberately excluded: InventoryRenderer already
-// provides item-name tooltips there, so annotating inventory text a second
-// time buys us nothing.
-//
-// `[class*="tooltip"]` was removed in the S1.4 pass. The game's own tooltips
-// are measured and positioned by the game; they are the single worst place to
-// introduce any additional decoration, and they are transient enough that the
-// annotation rarely survives to be useful.
-const SEL_SCAN_ROOTS = [
-  '.compact-panel',
-  '[class*="equipment"]',
-  '[class*="shop"]',
-  '[class*="description"]',
-].join(', ');
+// Item-name discovery is intentionally not tied to a small selector list.
+// IdleWorlds can surface an item name in quests, skills, equipment, shops,
+// combat results, dialogs, village panels and new React features we do not yet
+// know about. NameScanner is read-only, so every dirty subtree can safely be
+// considered while the scanner itself rejects unsafe/skin-owned containers.
 
 // Upper bound on elements reconciled per animation frame. A mutation burst
 // (zone change, page switch, a big market refresh) should spread across a few
@@ -176,6 +167,15 @@ function addIfConnected(set, el) {
   if (isElement(el)) set.add(el);
 }
 
+function addNameRoot(el) {
+  if (!isElement(el)) return;
+  for (const root of [...pendingNameRoots]) {
+    if (root === el || root.contains?.(el)) return;
+    if (el.contains?.(root)) pendingNameRoots.delete(root);
+  }
+  pendingNameRoots.add(el);
+}
+
 function queueContext(el, reason = 'update', opts = {}) {
   if (!isElement(el)) return;
   const {
@@ -191,7 +191,7 @@ function queueContext(el, reason = 'update', opts = {}) {
   if (skill)     addIfConnected(pendingSkills,    nearest(el, SEL_SKILL_PANEL));
   if (equipment) addIfConnected(pendingEquipment, nearest(el, SEL_EQUIP_PANEL));
   if (shop)      addIfConnected(pendingShop,      nearest(el, SEL_SHOP_PANEL));
-  if (names)     addIfConnected(pendingNameRoots, nearest(el, SEL_SCAN_ROOTS));
+  if (names)     addNameRoot(el);
   if (background) addIfConnected(pendingBgRoots, el);
   scheduleFlush(reason);
 }
@@ -211,8 +211,7 @@ function discover(root, reason = 'mount') {
   if (root.matches?.(SEL_SHOP_PANEL)) addIfConnected(pendingShop, root);
   root.querySelectorAll?.(SEL_SHOP_PANEL).forEach(el => addIfConnected(pendingShop, el));
 
-  if (root.matches?.(SEL_SCAN_ROOTS)) addIfConnected(pendingNameRoots, root);
-  root.querySelectorAll?.(SEL_SCAN_ROOTS).forEach(el => addIfConnected(pendingNameRoots, el));
+  addNameRoot(root);
 
   addIfConnected(pendingBgRoots, root);
   scheduleFlush(reason);
@@ -301,7 +300,7 @@ export function startWatcher() {
         // need repainting: any newly added subtree is queued for background
         // work by discover() below, and the container's own surface colour
         // cannot change just because a child arrived.
-        if (isElement(m.target)) queueContext(m.target, 'children', { background: false });
+        if (isElement(m.target)) queueContext(m.target, 'children', { background: false, names: false });
 
         for (const n of m.addedNodes) {
           if (isElement(n)) discover(n, 'mount');
@@ -395,7 +394,8 @@ export function stopWatcher() {
 }
 
 export function getScanRoots(root = document) {
-  return root.querySelectorAll ? root.querySelectorAll(SEL_SCAN_ROOTS) : [];
+  const target = root?.body || root;
+  return isElement(target) ? [target] : [];
 }
 
 export function on(eventType, handler) {

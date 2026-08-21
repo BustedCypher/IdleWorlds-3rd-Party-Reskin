@@ -81,6 +81,8 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
         <div><div><button>‹</button><button>›</button></div><button id="tailor-action">Weave</button></div>
       </div>
       <div class="quest-description"><p>Bring the smith an Iron Sword to continue.</p></div>
+      <div id="unclassified-area"><div><span><em id="plain-item-text">Found an Iron Sword in the wilderness.</em></span></div></div>
+      <button id="native-item-button"><span><strong id="button-item-text">Iron Sword</strong></span></button>
     </div>
   </div>
 </body></html>`;
@@ -96,11 +98,21 @@ window.fetch = (url, ...rest) => {
   return Promise.reject(new Error('network disabled in smoke test'));
 };
 
-if (!window.matchMedia) {
-  window.matchMedia = () => ({ matches: false, addListener() {}, removeListener() {} });
-}
+let coarsePointer = false;
+window.matchMedia = query => ({
+  matches: coarsePointer && /(hover:\s*none|pointer:\s*coarse)/i.test(query),
+  addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {},
+});
 
 const storage = new Map();
+storage.set('iw-item-db-cache', {
+  items: [{
+    item_id: 'iron_sword', name: 'Iron Sword', tier: 4,
+    category: 'Equipment', subcategory: 'Weapon slot', atk: 18,
+    acquisition_type: 'ZoneDrop', source_zone: 4,
+  }],
+  generatedAt: 'smoke-tooltip-data', cachedAt: Date.now(),
+});
 window.chrome = {
   runtime: { id: 'smoke-test', getURL: p => `chrome-extension://smoke/${p}` },
   storage: {
@@ -116,6 +128,21 @@ window.chrome = {
       _emit(changes) { for (const fn of this._listeners) fn(changes, 'local'); },
     },
   },
+};
+
+let pointerTarget = window.document.body;
+let caretNode = null;
+window.document.elementFromPoint = () => pointerTarget;
+window.document.caretPositionFromPoint = () => caretNode ? { offsetNode: caretNode, offset: 0 } : null;
+window.document.caretRangeFromPoint = () => {
+  if (!caretNode) return null;
+  const r = window.document.createRange();
+  r.setStart(caretNode, 0);
+  r.setEnd(caretNode, 0);
+  return r;
+};
+window.Range.prototype.getClientRects = function getClientRects() {
+  return [{ left: 10, top: 10, right: 110, bottom: 30, width: 100, height: 20 }];
 };
 
 // jsdom has no CSS Custom Highlight API; NameScanner must degrade, not throw.
@@ -220,6 +247,94 @@ check('live Tailor + Weave gets tailoring three-zone layout',
     [...tailorPanel.querySelectorAll('[data-iw-skill-role]')].map(el => el.getAttribute('data-iw-skill-role') + ':' + el.textContent.trim()).join(' | '));
 check('live skill action buttons use deterministic width',
   ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '96px'));
+
+/* ── Tooltip coverage / ownership ────────────────────────────────────── */
+
+console.log('\nsmoke: tooltip coverage');
+await waitFor(() => !!row.querySelector('.iw-item-ref[data-iw-item]'));
+await settle(80); // item-db update also schedules the page-wide name scan
+const tooltip = window.document.querySelector('.iw-tip');
+const explicitItemRef = row.querySelector('.iw-item-ref[data-iw-item]');
+const nativeExplicitMatches = explicitItemRef.matches.bind(explicitItemRef);
+explicitItemRef.matches = selector => selector === ':hover' ? true : nativeExplicitMatches(selector);
+pointerTarget = explicitItemRef;
+caretNode = null;
+explicitItemRef.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true, clientX: 50, clientY: 20 }));
+await waitFor(() => tooltip.classList.contains('is-open'));
+check('explicit inventory item name opens tooltip on hover',
+  tooltip.classList.contains('is-open') && tooltip.querySelector('.iw-tip-name')?.textContent === 'Iron Sword');
+explicitItemRef.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, clientX: 300, clientY: 300, relatedTarget: window.document.body }));
+await waitFor(() => !tooltip.classList.contains('is-open'));
+
+const plainItem = window.document.getElementById('plain-item-text');
+const plainText = plainItem.firstChild;
+const nativeItemButton = window.document.getElementById('native-item-button');
+const buttonItem = window.document.getElementById('button-item-text');
+const buttonText = buttonItem.firstChild;
+let nativeButtonClicks = 0;
+nativeItemButton.addEventListener('click', () => { nativeButtonClicks += 1; });
+
+pointerTarget = plainItem;
+caretNode = plainText;
+plainItem.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 50, clientY: 20 }));
+await waitFor(() => tooltip.classList.contains('is-open'));
+check('unclassified nested native item name opens tooltip on hover',
+  tooltip.classList.contains('is-open') && tooltip.querySelector('.iw-tip-name')?.textContent === 'Iron Sword');
+
+pointerTarget = tooltip;
+caretNode = null;
+tooltip.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 50, clientY: 20 }));
+await settle(80);
+check('virtual item tooltip survives name-to-card pointer handoff', tooltip.classList.contains('is-open'));
+
+pointerTarget = window.document.body;
+window.document.body.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 300, clientY: 300 }));
+await waitFor(() => !tooltip.classList.contains('is-open'));
+check('virtual item tooltip closes after pointer leaves name and card', !tooltip.classList.contains('is-open'));
+
+pointerTarget = buttonItem;
+caretNode = buttonText;
+buttonItem.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 50, clientY: 20 }));
+await waitFor(() => tooltip.classList.contains('is-open'));
+check('item name nested inside native button is also hover-discoverable',
+  tooltip.classList.contains('is-open') && tooltip.querySelector('.iw-tip-name')?.textContent === 'Iron Sword');
+
+window.document.body.dispatchEvent(new window.MouseEvent('click', { bubbles: true, clientX: 300, clientY: 300 }));
+await waitFor(() => !tooltip.classList.contains('is-open'));
+check('void click dismisses an open tooltip', !tooltip.classList.contains('is-open'));
+
+coarsePointer = true;
+pointerTarget = buttonItem;
+caretNode = buttonText;
+buttonItem.dispatchEvent(new window.MouseEvent('click', { bubbles: true, clientX: 50, clientY: 20 }));
+await waitFor(() => tooltip.classList.contains('is-open'));
+check('touch tap on native item text opens tooltip without stealing native click',
+  tooltip.classList.contains('is-open') && nativeButtonClicks === 1,
+  `open=${tooltip.classList.contains('is-open')} clicks=${nativeButtonClicks}`);
+
+pointerTarget = window.document.body;
+caretNode = null;
+window.document.body.dispatchEvent(new window.MouseEvent('click', { bubbles: true, clientX: 300, clientY: 300 }));
+await waitFor(() => !tooltip.classList.contains('is-open'));
+check('touch void tap dismisses tooltip', !tooltip.classList.contains('is-open'));
+coarsePointer = false;
+
+const lateArea = window.document.createElement('section');
+lateArea.id = 'late-unknown-feature';
+lateArea.innerHTML = '<div><span><em id="late-item-text">Iron Sword</em></span></div>';
+window.document.querySelector('.app').appendChild(lateArea);
+await settle(120);
+const lateItem = window.document.getElementById('late-item-text');
+pointerTarget = lateItem;
+caretNode = lateItem.firstChild;
+lateItem.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 50, clientY: 20 }));
+await waitFor(() => tooltip.classList.contains('is-open'));
+check('newly mounted unknown React subtree gains item tooltip coverage',
+  tooltip.classList.contains('is-open') && tooltip.querySelector('.iw-tip-name')?.textContent === 'Iron Sword');
+pointerTarget = window.document.body;
+caretNode = null;
+window.document.body.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 300, clientY: 300 }));
+await waitFor(() => !tooltip.classList.contains('is-open'));
 
 /* ── Equal-length reconciliation ─────────────────────────────────────── */
 

@@ -81,6 +81,22 @@ assert.doesNotMatch(code(scanner), /\.innerHTML/,
   'NameScanner must never write markup into React-owned prose');
 assert.match(scanner, /CSS\.highlights/);
 assert.match(scanner, /ItemDatabase\.revision\(\)/);
+assert.match(scanner, /caretPositionFromPoint/,
+  'native item-name hit testing should resolve the actual text node under the pointer');
+assert.match(scanner, /pointerInsideTooltip/,
+  'virtual item tooltips must survive pointer handoff onto the card');
+assert.match(scanner, /if \(!isTouchLike\(\)\) return/,
+  'native React item text needs an explicit touch activation path');
+assert.doesNotMatch(scanner, /SKIP_CONTAINERS[^\n]*button/,
+  'native clickable item names must remain eligible for read-only tooltip discovery');
+
+const watcherNames = await read('src/modules/DOMWatcher.js');
+assert.doesNotMatch(watcherNames, /SEL_SCAN_ROOTS/,
+  'item-name coverage must not be restricted to a hand-maintained panel selector list');
+assert.match(watcherNames, /addNameRoot\(root\)/,
+  'new React subtrees should be considered directly for item-name scanning');
+assert.match(watcherNames, /root\?\.body \|\| root/,
+  'item database refresh should trigger one page-wide scan');
 
 /* ── Inventory ItemRow ───────────────────────────────────────────────── */
 

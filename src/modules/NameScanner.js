@@ -43,7 +43,7 @@ const HIGHLIGHT_NAME = 'iw-item-name';
 const MIN_NAME_LENGTH = 3;
 
 const SKIP_TAGS = new Set([
-  'SCRIPT', 'STYLE', 'BUTTON', 'A', 'INPUT', 'TEXTAREA',
+  'SCRIPT', 'STYLE', 'INPUT', 'TEXTAREA',
   'SELECT', 'OPTION', 'IW-TIP', 'CANVAS', 'SVG',
 ]);
 
@@ -52,11 +52,10 @@ const SKIP_TAGS = new Set([
  *
  * `.iw-item-ref` — already an explicit trigger.
  * `.fs-inv-row` / `.fs-skill-header` / `.iw-tip` — skin-owned surfaces.
- * The game's own tooltips are excluded at the scan-root level (see DOMWatcher):
- * decorating text inside a native tooltip is the most likely way to disturb its
- * measurement and positioning.
+ * `[role="tooltip"]` — native tooltip surfaces should never recursively spawn
+ * our own card while the game is measuring/positioning theirs.
  */
-const SKIP_CONTAINERS = '.iw-item-ref, .fs-inv-row, .fs-skill-header, .iw-tip, button, a, input, textarea, select, [role="button"]';
+const SKIP_CONTAINERS = '.iw-item-ref, .fs-inv-row, .fs-skill-header, .iw-tip, [role="tooltip"], input, textarea, select';
 
 /* ── Trie ────────────────────────────────────────────────────────────── */
 
@@ -209,35 +208,81 @@ function rectContains(rect, x, y) {
 }
 
 /**
- * Find the item whose matched range sits under the pointer.
- * Scoped to the hovered element's own text nodes, so cost is bounded by that
- * element rather than by the number of matches on the page.
+ * Resolve the matched text range under the pointer. Prefer the browser caret
+ * API for an exact text node; a small local ancestor fallback covers engines
+ * that do not expose caretPositionFromPoint without walking the page-wide index.
  */
+function pointTextNode(x, y) {
+  try {
+    const pos = document.caretPositionFromPoint?.(x, y);
+    if (pos?.offsetNode?.nodeType === 3) return pos.offsetNode;
+  } catch { /* use WebKit/legacy fallback */ }
+  try {
+    const range = document.caretRangeFromPoint?.(x, y);
+    if (range?.startContainer?.nodeType === 3) return range.startContainer;
+  } catch { /* fall through */ }
+  return null;
+}
+
+function hitInTextNode(node, x, y) {
+  const matches = matchIndex.get(node);
+  if (!matches?.length) return null;
+  const len = node.nodeValue ? node.nodeValue.length : 0;
+  for (const m of matches) {
+    if (m.end > len) continue;
+    const range = document.createRange();
+    try {
+      range.setStart(node, m.start);
+      range.setEnd(node, m.end);
+    } catch { continue; }
+    for (const rect of range.getClientRects()) {
+      if (rectContains(rect, x, y)) return { item: m.item, rect };
+    }
+  }
+  return null;
+}
+
 function hitTest(x, y) {
   const el = document.elementFromPoint(x, y);
   if (!el || shouldSkipParent(el)) return null;
 
-  for (const node of el.childNodes) {
-    if (node.nodeType !== 3) continue;
-    const matches = matchIndex.get(node);
-    if (!matches || !matches.length) continue;
+  const precise = pointTextNode(x, y);
+  if (precise && !shouldSkipParent(precise.parentElement)) {
+    const hit = hitInTextNode(precise, x, y);
+    if (hit) return hit;
+  }
 
-    const len = node.nodeValue ? node.nodeValue.length : 0;
-    for (const m of matches) {
-      if (m.end > len) continue;
-      const range = document.createRange();
-      try {
-        range.setStart(node, m.start);
-        range.setEnd(node, m.end);
-      } catch (err) {
-        continue;
-      }
-      for (const rect of range.getClientRects()) {
-        if (rectContains(rect, x, y)) return { item: m.item, rect };
-      }
+  // Fallback for browsers/edge cases where caret hit-testing is unavailable.
+  // Check the hit element's subtree plus direct text owned by a few ancestors;
+  // range geometry still decides which actual word is under the pointer.
+  const seen = new Set();
+  const candidates = [];
+  const add = node => {
+    if (node?.nodeType === 3 && !seen.has(node) && matchIndex.has(node)) {
+      seen.add(node); candidates.push(node);
     }
+  };
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) add(node);
+  let cur = el;
+  for (let depth = 0; cur && depth < 5; depth += 1, cur = cur.parentElement) {
+    for (const child of cur.childNodes) add(child);
+  }
+  for (const candidate of candidates) {
+    const hit = hitInTextNode(candidate, x, y);
+    if (hit) return hit;
   }
   return null;
+}
+
+function pointerInsideTooltip(x, y) {
+  const el = document.elementFromPoint(x, y);
+  return !!el?.closest?.('.iw-tip');
+}
+
+function isTouchLike() {
+  return matchMedia('(hover: none), (pointer: coarse)').matches;
 }
 
 function handlePointer() {
@@ -245,6 +290,10 @@ function handlePointer() {
   const hit = hitTest(lastX, lastY);
 
   if (!hit) {
+    // Moving from a virtual item name onto the interactive tooltip itself is
+    // still active ownership. Do not let NameScanner race TooltipEngine and
+    // close the card before the user can reach Wiki/future footer controls.
+    if (activeItem && isTooltipOpen() && pointerInsideTooltip(lastX, lastY)) return;
     if (activeItem) {
       activeItem = null;
       hideTooltip('name-scan');
@@ -273,6 +322,20 @@ function bindHover() {
     pointerQueued = true;
     raf(() => guard('name-scan:pointer', handlePointer));
   }, { passive: true, capture: true });
+
+  // Native React text has no element trigger, so delegated TooltipEngine click
+  // handling cannot discover it on touch devices. Hit-test the tapped word and
+  // open the same virtual-anchor card without cancelling the game's click.
+  document.addEventListener('click', e => {
+    if (!isTouchLike()) return;
+    const hit = hitTest(e.clientX, e.clientY);
+    if (!hit) return;
+    activeItem = hit.item;
+    showForItem(hit.item, () => {
+      const fresh = hitTest(e.clientX, e.clientY);
+      return fresh ? fresh.rect : hit.rect;
+    }, 'name-scan');
+  });
 
   // Any scroll invalidates the cached rect geometry.
   window.addEventListener('scroll', () => {
