@@ -120,6 +120,6 @@ Teardown disconnects the central observer, removes Inventory overlays and semant
 
 `npm run fixtures` renders the visual harness and audits responsive Inventory/Skill behavior at 320, 360, 390, 430, 600 and 768px, plus short-viewport tooltip scrolling. `npm run audit:items` fetches the current public `/items.json` and validates the live item-data contract; it is intentionally manual rather than a CI gate because it depends on a live external endpoint.
 
-CI runs `npm test` on pushes and pull requests, then fails if rebuilding changes the committed production bundle. CI never writes back to the repository.
+CI runs `npm test` for pull requests and pushes to `main`, then fails if rebuilding changes the committed production bundle. CI never writes back to the repository.
 
 The synthetic smoke test is not a substitute for live IdleWorlds verification. Any change that depends on real React/Tailwind structure still needs to be checked in Chrome against the current game DOM before the draft PR is considered ready to merge.
