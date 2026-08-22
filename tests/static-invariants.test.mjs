@@ -280,7 +280,10 @@ assert.match(vendor, /39bc876307c3183d160a5e2c5868d37b50c1660b/,
 
 const build = await read('build-tools/build.mjs');
 assert.match(build, /format:\s*'iife'/, 'production bundle must remain a single content-script IIFE');
-assert.match(build, /loader:\s*\{\s*'\.css':\s*'text'\s*\}/,
+assert.match(build, /normalizedCssTextPlugin/);
+assert.ok(build.includes("replace(/\\r\\n?/g, '\\n')"),
+  'CSS text must normalize line endings before bundling');
+assert.match(build, /loader:\s*'text'/,
   'CSS must remain bundled as removable runtime-owned text');
 assert.match(build, /REQUIRED_ASSETS/);
 assert.match(build, /allowMissingAssets/);

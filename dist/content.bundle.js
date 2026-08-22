@@ -975,7 +975,7 @@
   }
 
   // src/styles/tooltip-engine.css
-  var tooltip_engine_default = '/* ══════════════════════════════════════════════════════════════════════\r\n   Tooltip engine — rich item-card treatment\r\n   ══════════════════════════════════════════════════════════════════════ */\r\n\r\n.iw-item-ref {\r\n  display: inline;\r\n  background: none !important;\r\n  border: 0 !important;\r\n  border-bottom: 1px solid transparent !important;\r\n  border-radius: 0 !important;\r\n  padding: 0 !important;\r\n  margin: 0 !important;\r\n  box-shadow: none !important;\r\n  font: inherit !important;\r\n  line-height: inherit !important;\r\n  font-weight: 700 !important;\r\n  letter-spacing: inherit !important;\r\n  text-transform: none !important;\r\n  color: var(--iw-gold);\r\n  cursor: help;\r\n  text-decoration: none;\r\n  transition: border-color .12s, color .12s;\r\n  vertical-align: baseline;\r\n}\r\n.iw-item-ref:hover,\r\n.iw-item-ref:focus-visible {\r\n  color: var(--iw-gold);\r\n  border-bottom-color: var(--iw-gold-dim) !important;\r\n}\r\n.iw-item-ref:focus-visible {\r\n  outline: 1px solid var(--iw-gold) !important;\r\n  outline-offset: 2px !important;\r\n}\r\n.iw-item-info { display: none; }\r\n\r\n.iw-tip {\r\n  position: fixed;\r\n  z-index: 99999;\r\n  width: 380px;\r\n  max-width: calc(100vw - 20px);\r\n  box-sizing: border-box;\r\n  background:\r\n    linear-gradient(180deg, rgba(255,255,255,.018), transparent 78px),\r\n    #151511;\r\n  border: 1px solid #57472C;\r\n  border-radius: 8px;\r\n  box-shadow: 0 18px 46px rgba(0,0,0,.82), inset 0 0 0 1px rgba(0,0,0,.58);\r\n  max-height: calc(100vh - 20px);\r\n  max-height: calc(100dvh - 20px);\r\n  flex-direction: column;\r\n  overflow: hidden;\r\n  overscroll-behavior: contain;\r\n  font-family: var(--iw-font-ui);\r\n  font-size: 13px;\r\n  line-height: 1.4;\r\n  color: var(--iw-text);\r\n  opacity: 0;\r\n  pointer-events: none;\r\n  transition: none;\r\n}\r\n.iw-tip::before {\r\n  content: "";\r\n  position: absolute;\r\n  z-index: 2;\r\n  left: 0; right: 0; top: 0;\r\n  height: 2px;\r\n  background: linear-gradient(90deg, var(--iw-gold), var(--iw-line-hot) 42%, transparent 92%);\r\n  pointer-events: none;\r\n}\r\n.iw-tip.is-open { opacity: 1; pointer-events: auto; }\r\n.iw-tip:focus-visible {\r\n  outline: 2px solid var(--iw-gold);\r\n  outline-offset: -3px;\r\n}\r\n\r\n.iw-tip-head {\r\n  position: relative;\r\n  flex: none;\r\n  flex: none;\r\n  flex: none;\r\n  display: flex;\r\n  align-items: flex-start;\r\n  gap: 9px;\r\n  min-height: 116px;\r\n  padding: 12px 118px 12px 13px;\r\n  box-sizing: border-box;\r\n  background: linear-gradient(90deg, #1D1B17, #14130F 76%);\r\n  border-bottom: 1px solid #302A20;\r\n}\r\n.iw-tip-icon {\r\n  flex: none;\r\n  width: 24px;\r\n  padding-top: 2px;\r\n  font-size: 21px;\r\n  line-height: 1;\r\n  text-align: center;\r\n  filter: saturate(.85);\r\n}\r\n.iw-tip-title-block { flex: 1; min-width: 0; }\r\n.iw-tip-name {\r\n  font-family: var(--iw-font-ui);\r\n  font-size: 18px;\r\n  font-weight: 700;\r\n  line-height: 1.15;\r\n  word-break: break-word;\r\n  text-shadow: 0 1px 0 #000;\r\n}\r\n\r\n.iw-tip-art {\r\n  position: absolute;\r\n  top: 8px;\r\n  right: 8px;\r\n  width: 100px;\r\n  height: 100px;\r\n  box-sizing: border-box;\r\n  display: grid;\r\n  place-items: center;\r\n  padding: 14px;\r\n  border: 1px solid rgba(240,232,214,.82);\r\n  border-radius: 12px;\r\n  background: #11110E;\r\n  box-shadow: inset 0 0 18px rgba(0,0,0,.62);\r\n  overflow: visible;\r\n  pointer-events: none;\r\n}\r\n.iw-tip-art-host {\r\n  position: relative;\r\n  display: block;\r\n  width: 70px;\r\n  height: 70px;\r\n  min-width: 70px;\r\n  min-height: 70px;\r\n  max-width: 70px;\r\n  max-height: 70px;\r\n  background-repeat: no-repeat;\r\n}\r\n.iw-tip-art-fallback {\r\n  display: grid;\r\n  place-items: center;\r\n  width: 70px;\r\n  height: 70px;\r\n  font-size: 34px;\r\n  opacity: .35;\r\n}\r\n.iw-tip-close {\r\n  flex: none;\r\n  width: 26px;\r\n  height: 26px;\r\n  display: grid;\r\n  place-items: center;\r\n  padding: 0 !important;\r\n  border: 1px solid #4A4031 !important;\r\n  border-radius: 4px !important;\r\n  background: rgba(12,11,9,.88) !important;\r\n  color: #C8BFAE !important;\r\n  font: 700 18px/1 var(--iw-font-ui) !important;\r\n  cursor: pointer;\r\n}\r\n.iw-tip-close:hover,\r\n.iw-tip-close:focus-visible {\r\n  border-color: var(--iw-gold) !important;\r\n  color: var(--iw-text-hi) !important;\r\n  outline: 1px solid var(--iw-gold) !important;\r\n}\r\n\r\n.iw-tip-badges {\r\n  display: flex;\r\n  flex-wrap: wrap;\r\n  align-items: center;\r\n  gap: 5px;\r\n  margin-top: 8px;\r\n}\r\n.iw-tip-badge {\r\n  font-size: 10.5px;\r\n  font-weight: 650;\r\n  line-height: 1.1;\r\n  letter-spacing: .01em;\r\n  white-space: nowrap;\r\n  padding: 4px 7px;\r\n  border: 1px solid #343027;\r\n  border-radius: 999px;\r\n  background: #1B1A17;\r\n  color: #B9B2A3;\r\n}\r\n.iw-tip-badge.t {\r\n  color: #AFC8F3;\r\n  border-color: rgba(91,155,213,.48);\r\n}\r\n.iw-tip-badge.req {\r\n  color: #E6A05B;\r\n  border-color: rgba(217,138,58,.48);\r\n}\r\n\r\n.iw-tip-body {\r\n  flex: 1 1 auto;\r\n  min-height: 0;\r\n  padding: 12px 13px 13px;\r\n  overflow-y: auto;\r\n  overscroll-behavior: contain;\r\n  -webkit-overflow-scrolling: touch;\r\n  scrollbar-gutter: stable;\r\n}\r\n.iw-tip-sec {\r\n  margin-top: 12px;\r\n  padding-top: 10px;\r\n  border-top: 1px solid #302A20;\r\n}\r\n.iw-tip-sec:first-child { margin-top: 0; padding-top: 0; border-top: 0; }\r\n.iw-tip-sec-title {\r\n  font-family: var(--iw-font-ui);\r\n  font-size: 10px;\r\n  font-weight: 800;\r\n  letter-spacing: .14em;\r\n  text-transform: uppercase;\r\n  color: #969080;\r\n  margin-bottom: 7px;\r\n}\r\n.iw-tip-effect {\r\n  color: #C4BDAF;\r\n  font-size: 13px;\r\n  line-height: 1.45;\r\n}\r\n\r\n.iw-tip-stats {\r\n  display: grid;\r\n  grid-template-columns: repeat(2, minmax(0, 1fr));\r\n  gap: 4px 16px;\r\n}\r\n.iw-tip-stat-block { min-width: 0; }\r\n.iw-tip-stat {\r\n  min-width: 0;\r\n  display: flex;\r\n  justify-content: space-between;\r\n  align-items: baseline;\r\n  gap: 8px;\r\n  font-size: 12.5px;\r\n  padding: 2px 0;\r\n}\r\n.iw-tip-stat .k {\r\n  min-width: 0;\r\n  color: #AAA394;\r\n  white-space: nowrap;\r\n}\r\n.iw-tip-stat .v {\r\n  flex: none;\r\n  color: var(--iw-text-hi);\r\n  font-weight: 700;\r\n  text-align: right;\r\n  font-variant-numeric: tabular-nums;\r\n}\r\n.iw-tip-stat .v.amber { color: #E19A50; }\r\n.iw-tip-stat .v.good { color: var(--iw-good); }\r\n.iw-tip-stat-note {\r\n  margin-top: 1px;\r\n  color: var(--iw-faint);\r\n  font-size: 9.5px;\r\n  line-height: 1.25;\r\n}\r\n\r\n.iw-tip-acq {\r\n  position: relative;\r\n  padding: 2px 0 2px 11px;\r\n}\r\n.iw-tip-acq::before {\r\n  content: "";\r\n  position: absolute;\r\n  left: 0;\r\n  top: 0;\r\n  bottom: 0;\r\n  width: 2px;\r\n  background: #5878AC;\r\n}\r\n.iw-tip-acq-main {\r\n  font-size: 13.5px;\r\n  font-weight: 600;\r\n  color: var(--iw-text-hi);\r\n}\r\n.iw-tip-acq-sub {\r\n  font-size: 12px;\r\n  color: #8F899C;\r\n  margin-top: 3px;\r\n  line-height: 1.4;\r\n}\r\n.iw-tip-acq.is-unknown .iw-tip-acq-main { color: var(--iw-faint); font-style: italic; }\r\n.iw-tip-flavour {\r\n  font-family: var(--iw-font-flav);\r\n  font-style: italic;\r\n  font-size: 13px;\r\n  color: var(--iw-gold-dim);\r\n  line-height: 1.5;\r\n}\r\n\r\n.iw-tip-foot {\r\n  flex: none;\r\n  min-height: 38px;\r\n  padding: 8px 13px;\r\n  border-top: 1px solid #302A20;\r\n  background: #0C0B09;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  gap: 12px;\r\n}\r\n.iw-tip-foot:empty { display: none; }\r\n.iw-tip-link {\r\n  font-size: 12px;\r\n  font-weight: 700;\r\n  letter-spacing: .02em;\r\n  color: #70A1EE;\r\n  text-decoration: none;\r\n}\r\n.iw-tip-link:hover { color: #9FC0F3; }\r\n.iw-tip-link:focus-visible {\r\n  color: #BBD2F5;\r\n  outline: 1px solid #70A1EE;\r\n  outline-offset: 3px;\r\n}\r\n.iw-tip-source {\r\n  margin-left: auto;\r\n  font-size: 10.5px;\r\n  font-weight: 700;\r\n  letter-spacing: .04em;\r\n  color: #B07846;\r\n  text-transform: lowercase;\r\n}\r\n.iw-tip-source.is-stale { color: #D58A52; }\r\n\r\n@media (max-width: 420px) {\r\n  .iw-tip { width: calc(100vw - 20px); }\r\n  .iw-tip-stats { grid-template-columns: 1fr; }\r\n  .iw-tip-head { padding-right: 108px; }\r\n  .iw-tip-art { width: 90px; height: 90px; padding: 10px; }\r\n  .iw-tip-art-host, .iw-tip-art-fallback { width: 68px; height: 68px; min-width: 68px; min-height: 68px; }\r\n}\r\n';
+  var tooltip_engine_default = '/* ══════════════════════════════════════════════════════════════════════\n   Tooltip engine — rich item-card treatment\n   ══════════════════════════════════════════════════════════════════════ */\n\n.iw-item-ref {\n  display: inline;\n  background: none !important;\n  border: 0 !important;\n  border-bottom: 1px solid transparent !important;\n  border-radius: 0 !important;\n  padding: 0 !important;\n  margin: 0 !important;\n  box-shadow: none !important;\n  font: inherit !important;\n  line-height: inherit !important;\n  font-weight: 700 !important;\n  letter-spacing: inherit !important;\n  text-transform: none !important;\n  color: var(--iw-gold);\n  cursor: help;\n  text-decoration: none;\n  transition: border-color .12s, color .12s;\n  vertical-align: baseline;\n}\n.iw-item-ref:hover,\n.iw-item-ref:focus-visible {\n  color: var(--iw-gold);\n  border-bottom-color: var(--iw-gold-dim) !important;\n}\n.iw-item-ref:focus-visible {\n  outline: 1px solid var(--iw-gold) !important;\n  outline-offset: 2px !important;\n}\n.iw-item-info { display: none; }\n\n.iw-tip {\n  position: fixed;\n  z-index: 99999;\n  width: 380px;\n  max-width: calc(100vw - 20px);\n  box-sizing: border-box;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.018), transparent 78px),\n    #151511;\n  border: 1px solid #57472C;\n  border-radius: 8px;\n  box-shadow: 0 18px 46px rgba(0,0,0,.82), inset 0 0 0 1px rgba(0,0,0,.58);\n  max-height: calc(100vh - 20px);\n  max-height: calc(100dvh - 20px);\n  flex-direction: column;\n  overflow: hidden;\n  overscroll-behavior: contain;\n  font-family: var(--iw-font-ui);\n  font-size: 13px;\n  line-height: 1.4;\n  color: var(--iw-text);\n  opacity: 0;\n  pointer-events: none;\n  transition: none;\n}\n.iw-tip::before {\n  content: "";\n  position: absolute;\n  z-index: 2;\n  left: 0; right: 0; top: 0;\n  height: 2px;\n  background: linear-gradient(90deg, var(--iw-gold), var(--iw-line-hot) 42%, transparent 92%);\n  pointer-events: none;\n}\n.iw-tip.is-open { opacity: 1; pointer-events: auto; }\n.iw-tip:focus-visible {\n  outline: 2px solid var(--iw-gold);\n  outline-offset: -3px;\n}\n\n.iw-tip-head {\n  position: relative;\n  flex: none;\n  flex: none;\n  flex: none;\n  display: flex;\n  align-items: flex-start;\n  gap: 9px;\n  min-height: 116px;\n  padding: 12px 118px 12px 13px;\n  box-sizing: border-box;\n  background: linear-gradient(90deg, #1D1B17, #14130F 76%);\n  border-bottom: 1px solid #302A20;\n}\n.iw-tip-icon {\n  flex: none;\n  width: 24px;\n  padding-top: 2px;\n  font-size: 21px;\n  line-height: 1;\n  text-align: center;\n  filter: saturate(.85);\n}\n.iw-tip-title-block { flex: 1; min-width: 0; }\n.iw-tip-name {\n  font-family: var(--iw-font-ui);\n  font-size: 18px;\n  font-weight: 700;\n  line-height: 1.15;\n  word-break: break-word;\n  text-shadow: 0 1px 0 #000;\n}\n\n.iw-tip-art {\n  position: absolute;\n  top: 8px;\n  right: 8px;\n  width: 100px;\n  height: 100px;\n  box-sizing: border-box;\n  display: grid;\n  place-items: center;\n  padding: 14px;\n  border: 1px solid rgba(240,232,214,.82);\n  border-radius: 12px;\n  background: #11110E;\n  box-shadow: inset 0 0 18px rgba(0,0,0,.62);\n  overflow: visible;\n  pointer-events: none;\n}\n.iw-tip-art-host {\n  position: relative;\n  display: block;\n  width: 70px;\n  height: 70px;\n  min-width: 70px;\n  min-height: 70px;\n  max-width: 70px;\n  max-height: 70px;\n  background-repeat: no-repeat;\n}\n.iw-tip-art-fallback {\n  display: grid;\n  place-items: center;\n  width: 70px;\n  height: 70px;\n  font-size: 34px;\n  opacity: .35;\n}\n.iw-tip-close {\n  flex: none;\n  width: 26px;\n  height: 26px;\n  display: grid;\n  place-items: center;\n  padding: 0 !important;\n  border: 1px solid #4A4031 !important;\n  border-radius: 4px !important;\n  background: rgba(12,11,9,.88) !important;\n  color: #C8BFAE !important;\n  font: 700 18px/1 var(--iw-font-ui) !important;\n  cursor: pointer;\n}\n.iw-tip-close:hover,\n.iw-tip-close:focus-visible {\n  border-color: var(--iw-gold) !important;\n  color: var(--iw-text-hi) !important;\n  outline: 1px solid var(--iw-gold) !important;\n}\n\n.iw-tip-badges {\n  display: flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 5px;\n  margin-top: 8px;\n}\n.iw-tip-badge {\n  font-size: 10.5px;\n  font-weight: 650;\n  line-height: 1.1;\n  letter-spacing: .01em;\n  white-space: nowrap;\n  padding: 4px 7px;\n  border: 1px solid #343027;\n  border-radius: 999px;\n  background: #1B1A17;\n  color: #B9B2A3;\n}\n.iw-tip-badge.t {\n  color: #AFC8F3;\n  border-color: rgba(91,155,213,.48);\n}\n.iw-tip-badge.req {\n  color: #E6A05B;\n  border-color: rgba(217,138,58,.48);\n}\n\n.iw-tip-body {\n  flex: 1 1 auto;\n  min-height: 0;\n  padding: 12px 13px 13px;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n  scrollbar-gutter: stable;\n}\n.iw-tip-sec {\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid #302A20;\n}\n.iw-tip-sec:first-child { margin-top: 0; padding-top: 0; border-top: 0; }\n.iw-tip-sec-title {\n  font-family: var(--iw-font-ui);\n  font-size: 10px;\n  font-weight: 800;\n  letter-spacing: .14em;\n  text-transform: uppercase;\n  color: #969080;\n  margin-bottom: 7px;\n}\n.iw-tip-effect {\n  color: #C4BDAF;\n  font-size: 13px;\n  line-height: 1.45;\n}\n\n.iw-tip-stats {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 4px 16px;\n}\n.iw-tip-stat-block { min-width: 0; }\n.iw-tip-stat {\n  min-width: 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: baseline;\n  gap: 8px;\n  font-size: 12.5px;\n  padding: 2px 0;\n}\n.iw-tip-stat .k {\n  min-width: 0;\n  color: #AAA394;\n  white-space: nowrap;\n}\n.iw-tip-stat .v {\n  flex: none;\n  color: var(--iw-text-hi);\n  font-weight: 700;\n  text-align: right;\n  font-variant-numeric: tabular-nums;\n}\n.iw-tip-stat .v.amber { color: #E19A50; }\n.iw-tip-stat .v.good { color: var(--iw-good); }\n.iw-tip-stat-note {\n  margin-top: 1px;\n  color: var(--iw-faint);\n  font-size: 9.5px;\n  line-height: 1.25;\n}\n\n.iw-tip-acq {\n  position: relative;\n  padding: 2px 0 2px 11px;\n}\n.iw-tip-acq::before {\n  content: "";\n  position: absolute;\n  left: 0;\n  top: 0;\n  bottom: 0;\n  width: 2px;\n  background: #5878AC;\n}\n.iw-tip-acq-main {\n  font-size: 13.5px;\n  font-weight: 600;\n  color: var(--iw-text-hi);\n}\n.iw-tip-acq-sub {\n  font-size: 12px;\n  color: #8F899C;\n  margin-top: 3px;\n  line-height: 1.4;\n}\n.iw-tip-acq.is-unknown .iw-tip-acq-main { color: var(--iw-faint); font-style: italic; }\n.iw-tip-flavour {\n  font-family: var(--iw-font-flav);\n  font-style: italic;\n  font-size: 13px;\n  color: var(--iw-gold-dim);\n  line-height: 1.5;\n}\n\n.iw-tip-foot {\n  flex: none;\n  min-height: 38px;\n  padding: 8px 13px;\n  border-top: 1px solid #302A20;\n  background: #0C0B09;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.iw-tip-foot:empty { display: none; }\n.iw-tip-link {\n  font-size: 12px;\n  font-weight: 700;\n  letter-spacing: .02em;\n  color: #70A1EE;\n  text-decoration: none;\n}\n.iw-tip-link:hover { color: #9FC0F3; }\n.iw-tip-link:focus-visible {\n  color: #BBD2F5;\n  outline: 1px solid #70A1EE;\n  outline-offset: 3px;\n}\n.iw-tip-source {\n  margin-left: auto;\n  font-size: 10.5px;\n  font-weight: 700;\n  letter-spacing: .04em;\n  color: #B07846;\n  text-transform: lowercase;\n}\n.iw-tip-source.is-stale { color: #D58A52; }\n\n@media (max-width: 420px) {\n  .iw-tip { width: calc(100vw - 20px); }\n  .iw-tip-stats { grid-template-columns: 1fr; }\n  .iw-tip-head { padding-right: 108px; }\n  .iw-tip-art { width: 90px; height: 90px; padding: 10px; }\n  .iw-tip-art-host, .iw-tip-art-fallback { width: 68px; height: 68px; min-width: 68px; min-height: 68px; }\n}\n';
 
   // src/modules/TooltipEngine.js
   var SHOW_DELAY = 120;
@@ -1939,7 +1939,7 @@
   }
 
   // src/styles/inventory.css
-  var inventory_default = '/* ══════════════════════════════════════════════════════════════════════\r\n   Inventory / ItemRow — reusable owned-item presentation\r\n\r\n   Inventory is the reference implementation for reusable RPG item rows.\r\n   React-owned commands remain live DOM nodes; the Fantasy Skin owns the\r\n   item presentation and semantic action treatment only.\r\n   ══════════════════════════════════════════════════════════════════════ */\r\n\r\n/* ── Inventory chrome ─────────────────────────────────────────────── */\r\n[data-iw-inventory-root="1"] {\r\n  --fs-inv-command-w: 54px;\r\n}\r\n\r\n[data-iw-inventory-title="1"] {\r\n  /* --iw-font-display was never defined in base.css (only --iw-font-head,\r\n     --iw-font-ui and --iw-font-flav), so this declaration was invalid at\r\n     computed-value time and the Inventory title silently inherited whatever\r\n     the game was using. (Audit S3.1) */\r\n  font-family: var(--iw-font-head) !important;\r\n  font-size: 16px !important;\r\n  font-weight: 700 !important;\r\n  letter-spacing: .045em !important;\r\n  text-transform: uppercase !important;\r\n  color: var(--iw-text) !important;\r\n}\r\n\r\n[data-iw-inventory-root="1"] [data-iw-inventory-control="filter"],\r\n[data-iw-inventory-root="1"] [data-iw-inventory-control="page"] {\r\n  min-height: 28px !important;\r\n  height: 28px !important;\r\n  border-radius: 2px !important;\r\n  padding: 0 10px !important;\r\n  font-family: var(--iw-font-ui) !important;\r\n  font-size: 11px !important;\r\n  font-weight: 700 !important;\r\n  line-height: 26px !important;\r\n  letter-spacing: .015em !important;\r\n}\r\n\r\n[data-iw-inventory-root="1"] [data-iw-inventory-control="icon"] {\r\n  width: 28px !important;\r\n  height: 28px !important;\r\n  min-width: 28px !important;\r\n  min-height: 28px !important;\r\n  padding: 0 !important;\r\n  border-radius: 2px !important;\r\n}\r\n\r\n[data-iw-inventory-root="1"] [data-iw-inventory-control="page-count"] {\r\n  color: var(--iw-faint) !important;\r\n  font-family: var(--iw-font-ui) !important;\r\n  font-size: 10px !important;\r\n  font-variant-numeric: tabular-nums;\r\n  letter-spacing: .08em;\r\n}\r\n\r\n/* ── Row shell ────────────────────────────────────────────────────── */\r\n.compact-row:has(> .fs-inv-row),\r\n[class*="item-row"]:has(> .fs-inv-row) {\r\n  display: flex !important;\r\n  align-items: center !important;\r\n  gap: 0 !important;\r\n  min-height: 62px !important;\r\n  padding: 0 !important;\r\n  position: relative !important;\r\n  overflow: hidden !important;\r\n  border: 1px solid var(--iw-line) !important;\r\n  border-radius: 3px !important;\r\n  background:\r\n    linear-gradient(180deg, rgba(255,255,255,.014), transparent 38%),\r\n    #12110E !important;\r\n  box-shadow:\r\n    inset 0 1px 0 rgba(255,255,255,.014),\r\n    inset 0 -1px 0 rgba(0,0,0,.35) !important;\r\n  transition: border-color .12s, background-color .12s !important;\r\n}\r\n\r\n.compact-row:has(> .fs-inv-row):hover,\r\n[class*="item-row"]:has(> .fs-inv-row):hover {\r\n  border-color: #4B402B !important;\r\n  background:\r\n    linear-gradient(90deg, rgba(232,183,106,.025), transparent 32%),\r\n    #14120F !important;\r\n}\r\n\r\n.fs-inv-row {\r\n  --fs-tier: var(--iw-t-common);\r\n  order: 1;\r\n  flex: 1 1 auto;\r\n  min-width: 0;\r\n  min-height: 60px;\r\n  box-sizing: border-box;\r\n  display: grid;\r\n  grid-template-columns: 52px minmax(0, 1fr) 38px;\r\n  grid-template-areas: "icon body qty";\r\n  align-items: center;\r\n  column-gap: 11px;\r\n  padding: 6px 8px 6px 13px;\r\n  position: relative;\r\n  cursor: default;\r\n}\r\n.fs-inv-row.has-details,\r\n.fs-inv-row.has-requirements { min-height: 68px; }\r\n.fs-inv-row.has-details.has-requirements { min-height: 76px; }\r\n\r\n.fs-inv-row.tier-uncommon  { --fs-tier: var(--iw-t-uncommon); }\r\n.fs-inv-row.tier-rare      { --fs-tier: var(--iw-t-rare); }\r\n.fs-inv-row.tier-epic      { --fs-tier: var(--iw-t-epic); }\r\n.fs-inv-row.tier-legendary { --fs-tier: var(--iw-t-legendary); }\r\n.fs-inv-row.tier-mythic    { --fs-tier: var(--iw-t-mythic); }\r\n\r\n.fs-inv-row::before {\r\n  content: "";\r\n  position: absolute;\r\n  left: 0;\r\n  top: 8px;\r\n  bottom: 8px;\r\n  width: 2px;\r\n  background: var(--fs-tier);\r\n  opacity: .82;\r\n  pointer-events: none;\r\n}\r\n\r\n/* ── Icon slot ────────────────────────────────────────────────────── */\r\n.fs-inv-icon {\r\n  grid-area: icon;\r\n  width: 52px;\r\n  height: 52px;\r\n  min-width: 52px;\r\n  min-height: 52px;\r\n  position: relative;\r\n  background-repeat: no-repeat;\r\n  background-color: #080806;\r\n  border: 1px solid #3A3020;\r\n  border-radius: 2px;\r\n  box-shadow:\r\n    inset 0 0 0 1px rgba(0,0,0,.62),\r\n    inset 0 0 14px rgba(0,0,0,.5);\r\n  image-rendering: auto;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  font-size: 18px;\r\n  color: var(--iw-faint);\r\n  overflow: hidden;\r\n  cursor: help;\r\n  outline: none;\r\n}\r\n.fs-inv-icon:hover,\r\n.fs-inv-icon:focus-visible {\r\n  border-color: var(--fs-tier);\r\n  box-shadow:\r\n    inset 0 0 0 1px rgba(0,0,0,.62),\r\n    inset 0 0 14px rgba(0,0,0,.5),\r\n    0 0 0 1px color-mix(in srgb, var(--fs-tier) 22%, transparent);\r\n}\r\n.fs-inv-row.is-equipped .fs-inv-icon {\r\n  box-shadow:\r\n    inset 0 0 0 1px rgba(0,0,0,.62),\r\n    inset 0 0 14px rgba(0,0,0,.5),\r\n    0 0 0 1px rgba(80,150,94,.18);\r\n}\r\n\r\n/* ── Identity / information rails ────────────────────────────────── */\r\n.fs-inv-body {\r\n  grid-area: body;\r\n  min-width: 0;\r\n  max-width: 100%;\r\n  overflow: hidden;\r\n  align-self: center;\r\n  padding-block: 1px;\r\n}\r\n\r\n.fs-inv-name {\r\n  display: -webkit-box;\r\n  -webkit-box-orient: vertical;\r\n  -webkit-line-clamp: 2;\r\n  line-clamp: 2;\r\n  font-family: var(--iw-font-ui);\r\n  font-size: 13px;\r\n  font-weight: 700;\r\n  line-height: 1.18;\r\n  letter-spacing: .005em;\r\n  white-space: normal;\r\n  overflow: hidden;\r\n  overflow-wrap: anywhere;\r\n  text-overflow: ellipsis;\r\n  text-shadow: 0 1px 0 #000;\r\n}\r\n.fs-inv-name .fs-inv-sub {\r\n  color: var(--iw-faint);\r\n  font-size: 11px;\r\n  font-weight: 600;\r\n}\r\n.fs-inv-name-plain { color: var(--iw-text); }\r\n.fs-inv-name .iw-item-ref { color: inherit; }\r\n.fs-inv-name .iw-item-ref:hover,\r\n.fs-inv-name .iw-item-ref:focus-visible { border-bottom-color: currentColor; }\r\n\r\n/* Stable database information: one compact rail, no boxed stat chips. */\r\n.fs-inv-stats {\r\n  display: flex;\r\n  flex-wrap: wrap;\r\n  align-items: center;\r\n  gap: 0;\r\n  margin-top: 3px;\r\n  min-height: 13px;\r\n}\r\n.fs-stat {\r\n  position: relative;\r\n  font-family: var(--iw-font-ui);\r\n  font-size: 10px;\r\n  line-height: 1.25;\r\n  font-weight: 600;\r\n  color: var(--iw-dim);\r\n  background: none;\r\n  border: 0;\r\n  border-radius: 0;\r\n  padding: 0 7px 0 0;\r\n  margin-right: 7px;\r\n  font-variant-numeric: tabular-nums;\r\n  white-space: nowrap;\r\n}\r\n.fs-stat:not(:last-child)::after {\r\n  content: "";\r\n  position: absolute;\r\n  right: 0;\r\n  top: 2px;\r\n  bottom: 1px;\r\n  width: 1px;\r\n  background: #332C1E;\r\n}\r\n.fs-stat--pos  { color: var(--iw-good); }\r\n.fs-stat--tier { color: var(--iw-gold-dim); }\r\n\r\n/* Dynamic owned-item state. These lines deliberately look like equipment\r\n   inscriptions, not application badges. */\r\n.fs-inv-details,\r\n.fs-inv-requirements {\r\n  display: flex;\r\n  min-width: 0;\r\n  max-width: 100%;\r\n  overflow: hidden;\r\n  flex-wrap: wrap;\r\n  align-items: center;\r\n  gap: 3px 12px;\r\n  margin-top: 3px;\r\n  font-family: var(--iw-font-ui);\r\n  font-size: 9.5px;\r\n  line-height: 1.25;\r\n}\r\n\r\n.fs-inv-detail,\r\n.fs-inv-requirement {\r\n  position: relative;\r\n  min-width: 0;\r\n  color: var(--iw-dim);\r\n  max-width: 100%;\r\n  overflow: hidden;\r\n  text-overflow: ellipsis;\r\n  white-space: nowrap;\r\n}\r\n.fs-inv-detail::before,\r\n.fs-inv-requirement::before {\r\n  content: "◆";\r\n  margin-right: 4px;\r\n  font-size: 6px;\r\n  vertical-align: 1px;\r\n  color: var(--iw-gold-dim);\r\n}\r\n.fs-inv-detail--loadout { color: #74AFCB; }\r\n.fs-inv-detail--loadout::before { color: #5D97B3; }\r\n.fs-inv-detail--socket { color: #C7B56A; }\r\n.fs-inv-detail--socket::before { color: #73B7D4; }\r\n.fs-inv-detail--effect { color: #B8C6A2; }\r\n.fs-inv-detail--effect::before { color: #879A73; }\r\n.fs-inv-detail--status { color: var(--iw-faint); }\r\n.fs-inv-detail--status::before { color: var(--iw-faint); }\r\n.fs-inv-detail--set { color: #C8B562; }\r\n.fs-inv-requirement { color: #D8C76A; }\r\n.fs-inv-requirement::before { color: #BCA744; }\r\n.fs-inv-detail-count {\r\n  margin-left: 4px;\r\n  color: var(--iw-faint);\r\n  font-variant-numeric: tabular-nums;\r\n}\r\n\r\n.fs-inv-qty {\r\n  grid-area: qty;\r\n  justify-self: end;\r\n  align-self: center;\r\n  min-width: 34px;\r\n  padding-right: 2px;\r\n  text-align: right;\r\n  font-family: var(--iw-font-ui);\r\n  font-size: 11px;\r\n  font-weight: 700;\r\n  color: var(--iw-dim);\r\n  font-variant-numeric: tabular-nums;\r\n  white-space: nowrap;\r\n}\r\n\r\n/* ── React-owned action rail ─────────────────────────────────────── */\r\n[data-fs-action-host="1"] {\r\n  display: contents !important;\r\n  font-size: 0 !important;\r\n  line-height: 0 !important;\r\n  color: transparent !important;\r\n}\r\n[data-fs-suppressed="1"] { display: none !important; }\r\n\r\n[data-fs-preserved-action="control"] {\r\n  order: 2;\r\n  flex: 0 0 auto !important;\r\n  align-self: center !important;\r\n  position: relative;\r\n  z-index: 2;\r\n  margin: 0 5px 0 0 !important;\r\n  min-width: 0 !important;\r\n  max-width: none !important;\r\n}\r\n\r\nbutton[data-fs-preserved-action="control"],\r\na[data-fs-preserved-action="control"],\r\n[role="button"][data-fs-preserved-action="control"] {\r\n  height: 28px !important;\r\n  min-height: 28px !important;\r\n  padding: 0 8px !important;\r\n  border-radius: 2px !important;\r\n  border: 1px solid var(--iw-line-hi) !important;\r\n  background: linear-gradient(180deg, #201D17, #15130F) !important;\r\n  color: var(--iw-text) !important;\r\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 1px 0 #000 !important;\r\n  font-family: var(--iw-font-ui) !important;\r\n  font-size: 10px !important;\r\n  line-height: 26px !important;\r\n  font-weight: 700 !important;\r\n  letter-spacing: .025em !important;\r\n  text-transform: none !important;\r\n  white-space: nowrap !important;\r\n}\r\nbutton[data-fs-preserved-action="control"]:hover:not(:disabled),\r\na[data-fs-preserved-action="control"]:hover,\r\n[role="button"][data-fs-preserved-action="control"]:hover {\r\n  border-color: var(--iw-gold-dim) !important;\r\n  color: var(--iw-gold) !important;\r\n  background: linear-gradient(180deg, #29241A, #19160F) !important;\r\n}\r\n\r\n[data-fs-action-kind="equipped"] {\r\n  width: 70px !important;\r\n  border-color: #315E3A !important;\r\n  background: linear-gradient(180deg, #193520, #102518) !important;\r\n  color: #A9D7AF !important;\r\n}\r\n[data-fs-action-kind="equip"] {\r\n  width: 48px !important;\r\n  border-color: #5A4728 !important;\r\n  color: #E1C48A !important;\r\n}\r\n[data-fs-action-kind="set"] {\r\n  width: 72px !important;\r\n  color: #D1C06C !important;\r\n  border-color: #514621 !important;\r\n}\r\n[data-fs-action-kind="secondary"] { width: 44px !important; }\r\n[data-fs-action-kind="icon"] {\r\n  width: 28px !important;\r\n  min-width: 28px !important;\r\n  padding: 0 !important;\r\n  display: inline-flex !important;\r\n  align-items: center !important;\r\n  justify-content: center !important;\r\n  line-height: 1 !important;\r\n}\r\n\r\nbutton[data-fs-preserved-action="control"]:disabled,\r\n[role="button"][data-fs-preserved-action="control"][aria-disabled="true"] {\r\n  opacity: .42 !important;\r\n  color: var(--iw-faint) !important;\r\n  border-color: var(--iw-line) !important;\r\n  background: #12110E !important;\r\n}\r\n\r\n/* ── Responsive collapse ─────────────────────────────────────────── */\r\n@media (max-width: 900px) {\r\n  .fs-inv-row {\r\n    grid-template-columns: 46px minmax(0, 1fr) 34px;\r\n    min-height: 56px;\r\n    padding-left: 10px;\r\n    column-gap: 9px;\r\n  }\r\n  .fs-inv-icon { width: 46px; height: 46px; min-width: 46px; min-height: 46px; }\r\n  .fs-inv-stats .fs-stat:nth-child(n+6) { display: none; }\r\n  .fs-inv-details { max-height: 26px; overflow: hidden; }\r\n}\r\n\r\n@media (max-width: 700px) {\r\n  .compact-row:has(> .fs-inv-row),\r\n  [class*="item-row"]:has(> .fs-inv-row) {\r\n    flex-wrap: wrap !important;\r\n    align-items: center !important;\r\n    padding-bottom: 5px !important;\r\n  }\r\n  .fs-inv-row {\r\n    flex: 1 0 100%;\r\n    grid-template-columns: 42px minmax(0, 1fr) 34px;\r\n    grid-template-areas: "icon body qty";\r\n  }\r\n  .fs-inv-icon { width: 42px; height: 42px; min-width: 42px; min-height: 42px; }\r\n  .fs-inv-qty { justify-self: end; padding: 0 2px 0 0; text-align: right; }\r\n  .fs-inv-stats .fs-stat:nth-child(n+4) { display: none; }\r\n  .fs-inv-details,\r\n  .fs-inv-requirements {\r\n    display: flex;\r\n    max-height: none;\r\n    overflow: visible;\r\n    gap: 2px 8px;\r\n    font-size: 9px;\r\n  }\r\n  .fs-inv-detail,\r\n  .fs-inv-requirement {\r\n    white-space: normal;\r\n    overflow: visible;\r\n    text-overflow: clip;\r\n  }\r\n  [data-fs-preserved-action="control"] {\r\n    margin-top: 3px !important;\r\n  }\r\n  button[data-fs-preserved-action="control"],\r\n  a[data-fs-preserved-action="control"],\r\n  [role="button"][data-fs-preserved-action="control"] {\r\n    padding-inline: 6px !important;\r\n  }\r\n}\r\n';
+  var inventory_default = '/* ══════════════════════════════════════════════════════════════════════\n   Inventory / ItemRow — reusable owned-item presentation\n\n   Inventory is the reference implementation for reusable RPG item rows.\n   React-owned commands remain live DOM nodes; the Fantasy Skin owns the\n   item presentation and semantic action treatment only.\n   ══════════════════════════════════════════════════════════════════════ */\n\n/* ── Inventory chrome ─────────────────────────────────────────────── */\n[data-iw-inventory-root="1"] {\n  --fs-inv-command-w: 54px;\n}\n\n[data-iw-inventory-title="1"] {\n  /* --iw-font-display was never defined in base.css (only --iw-font-head,\n     --iw-font-ui and --iw-font-flav), so this declaration was invalid at\n     computed-value time and the Inventory title silently inherited whatever\n     the game was using. (Audit S3.1) */\n  font-family: var(--iw-font-head) !important;\n  font-size: 16px !important;\n  font-weight: 700 !important;\n  letter-spacing: .045em !important;\n  text-transform: uppercase !important;\n  color: var(--iw-text) !important;\n}\n\n[data-iw-inventory-root="1"] [data-iw-inventory-control="filter"],\n[data-iw-inventory-root="1"] [data-iw-inventory-control="page"] {\n  min-height: 28px !important;\n  height: 28px !important;\n  border-radius: 2px !important;\n  padding: 0 10px !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 11px !important;\n  font-weight: 700 !important;\n  line-height: 26px !important;\n  letter-spacing: .015em !important;\n}\n\n[data-iw-inventory-root="1"] [data-iw-inventory-control="icon"] {\n  width: 28px !important;\n  height: 28px !important;\n  min-width: 28px !important;\n  min-height: 28px !important;\n  padding: 0 !important;\n  border-radius: 2px !important;\n}\n\n[data-iw-inventory-root="1"] [data-iw-inventory-control="page-count"] {\n  color: var(--iw-faint) !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 10px !important;\n  font-variant-numeric: tabular-nums;\n  letter-spacing: .08em;\n}\n\n/* ── Row shell ────────────────────────────────────────────────────── */\n.compact-row:has(> .fs-inv-row),\n[class*="item-row"]:has(> .fs-inv-row) {\n  display: flex !important;\n  align-items: center !important;\n  gap: 0 !important;\n  min-height: 62px !important;\n  padding: 0 !important;\n  position: relative !important;\n  overflow: hidden !important;\n  border: 1px solid var(--iw-line) !important;\n  border-radius: 3px !important;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.014), transparent 38%),\n    #12110E !important;\n  box-shadow:\n    inset 0 1px 0 rgba(255,255,255,.014),\n    inset 0 -1px 0 rgba(0,0,0,.35) !important;\n  transition: border-color .12s, background-color .12s !important;\n}\n\n.compact-row:has(> .fs-inv-row):hover,\n[class*="item-row"]:has(> .fs-inv-row):hover {\n  border-color: #4B402B !important;\n  background:\n    linear-gradient(90deg, rgba(232,183,106,.025), transparent 32%),\n    #14120F !important;\n}\n\n.fs-inv-row {\n  --fs-tier: var(--iw-t-common);\n  order: 1;\n  flex: 1 1 auto;\n  min-width: 0;\n  min-height: 60px;\n  box-sizing: border-box;\n  display: grid;\n  grid-template-columns: 52px minmax(0, 1fr) 38px;\n  grid-template-areas: "icon body qty";\n  align-items: center;\n  column-gap: 11px;\n  padding: 6px 8px 6px 13px;\n  position: relative;\n  cursor: default;\n}\n.fs-inv-row.has-details,\n.fs-inv-row.has-requirements { min-height: 68px; }\n.fs-inv-row.has-details.has-requirements { min-height: 76px; }\n\n.fs-inv-row.tier-uncommon  { --fs-tier: var(--iw-t-uncommon); }\n.fs-inv-row.tier-rare      { --fs-tier: var(--iw-t-rare); }\n.fs-inv-row.tier-epic      { --fs-tier: var(--iw-t-epic); }\n.fs-inv-row.tier-legendary { --fs-tier: var(--iw-t-legendary); }\n.fs-inv-row.tier-mythic    { --fs-tier: var(--iw-t-mythic); }\n\n.fs-inv-row::before {\n  content: "";\n  position: absolute;\n  left: 0;\n  top: 8px;\n  bottom: 8px;\n  width: 2px;\n  background: var(--fs-tier);\n  opacity: .82;\n  pointer-events: none;\n}\n\n/* ── Icon slot ────────────────────────────────────────────────────── */\n.fs-inv-icon {\n  grid-area: icon;\n  width: 52px;\n  height: 52px;\n  min-width: 52px;\n  min-height: 52px;\n  position: relative;\n  background-repeat: no-repeat;\n  background-color: #080806;\n  border: 1px solid #3A3020;\n  border-radius: 2px;\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.62),\n    inset 0 0 14px rgba(0,0,0,.5);\n  image-rendering: auto;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 18px;\n  color: var(--iw-faint);\n  overflow: hidden;\n  cursor: help;\n  outline: none;\n}\n.fs-inv-icon:hover,\n.fs-inv-icon:focus-visible {\n  border-color: var(--fs-tier);\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.62),\n    inset 0 0 14px rgba(0,0,0,.5),\n    0 0 0 1px color-mix(in srgb, var(--fs-tier) 22%, transparent);\n}\n.fs-inv-row.is-equipped .fs-inv-icon {\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.62),\n    inset 0 0 14px rgba(0,0,0,.5),\n    0 0 0 1px rgba(80,150,94,.18);\n}\n\n/* ── Identity / information rails ────────────────────────────────── */\n.fs-inv-body {\n  grid-area: body;\n  min-width: 0;\n  max-width: 100%;\n  overflow: hidden;\n  align-self: center;\n  padding-block: 1px;\n}\n\n.fs-inv-name {\n  display: -webkit-box;\n  -webkit-box-orient: vertical;\n  -webkit-line-clamp: 2;\n  line-clamp: 2;\n  font-family: var(--iw-font-ui);\n  font-size: 13px;\n  font-weight: 700;\n  line-height: 1.18;\n  letter-spacing: .005em;\n  white-space: normal;\n  overflow: hidden;\n  overflow-wrap: anywhere;\n  text-overflow: ellipsis;\n  text-shadow: 0 1px 0 #000;\n}\n.fs-inv-name .fs-inv-sub {\n  color: var(--iw-faint);\n  font-size: 11px;\n  font-weight: 600;\n}\n.fs-inv-name-plain { color: var(--iw-text); }\n.fs-inv-name .iw-item-ref { color: inherit; }\n.fs-inv-name .iw-item-ref:hover,\n.fs-inv-name .iw-item-ref:focus-visible { border-bottom-color: currentColor; }\n\n/* Stable database information: one compact rail, no boxed stat chips. */\n.fs-inv-stats {\n  display: flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 0;\n  margin-top: 3px;\n  min-height: 13px;\n}\n.fs-stat {\n  position: relative;\n  font-family: var(--iw-font-ui);\n  font-size: 10px;\n  line-height: 1.25;\n  font-weight: 600;\n  color: var(--iw-dim);\n  background: none;\n  border: 0;\n  border-radius: 0;\n  padding: 0 7px 0 0;\n  margin-right: 7px;\n  font-variant-numeric: tabular-nums;\n  white-space: nowrap;\n}\n.fs-stat:not(:last-child)::after {\n  content: "";\n  position: absolute;\n  right: 0;\n  top: 2px;\n  bottom: 1px;\n  width: 1px;\n  background: #332C1E;\n}\n.fs-stat--pos  { color: var(--iw-good); }\n.fs-stat--tier { color: var(--iw-gold-dim); }\n\n/* Dynamic owned-item state. These lines deliberately look like equipment\n   inscriptions, not application badges. */\n.fs-inv-details,\n.fs-inv-requirements {\n  display: flex;\n  min-width: 0;\n  max-width: 100%;\n  overflow: hidden;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 3px 12px;\n  margin-top: 3px;\n  font-family: var(--iw-font-ui);\n  font-size: 9.5px;\n  line-height: 1.25;\n}\n\n.fs-inv-detail,\n.fs-inv-requirement {\n  position: relative;\n  min-width: 0;\n  color: var(--iw-dim);\n  max-width: 100%;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.fs-inv-detail::before,\n.fs-inv-requirement::before {\n  content: "◆";\n  margin-right: 4px;\n  font-size: 6px;\n  vertical-align: 1px;\n  color: var(--iw-gold-dim);\n}\n.fs-inv-detail--loadout { color: #74AFCB; }\n.fs-inv-detail--loadout::before { color: #5D97B3; }\n.fs-inv-detail--socket { color: #C7B56A; }\n.fs-inv-detail--socket::before { color: #73B7D4; }\n.fs-inv-detail--effect { color: #B8C6A2; }\n.fs-inv-detail--effect::before { color: #879A73; }\n.fs-inv-detail--status { color: var(--iw-faint); }\n.fs-inv-detail--status::before { color: var(--iw-faint); }\n.fs-inv-detail--set { color: #C8B562; }\n.fs-inv-requirement { color: #D8C76A; }\n.fs-inv-requirement::before { color: #BCA744; }\n.fs-inv-detail-count {\n  margin-left: 4px;\n  color: var(--iw-faint);\n  font-variant-numeric: tabular-nums;\n}\n\n.fs-inv-qty {\n  grid-area: qty;\n  justify-self: end;\n  align-self: center;\n  min-width: 34px;\n  padding-right: 2px;\n  text-align: right;\n  font-family: var(--iw-font-ui);\n  font-size: 11px;\n  font-weight: 700;\n  color: var(--iw-dim);\n  font-variant-numeric: tabular-nums;\n  white-space: nowrap;\n}\n\n/* ── React-owned action rail ─────────────────────────────────────── */\n[data-fs-action-host="1"] {\n  display: contents !important;\n  font-size: 0 !important;\n  line-height: 0 !important;\n  color: transparent !important;\n}\n[data-fs-suppressed="1"] { display: none !important; }\n\n[data-fs-preserved-action="control"] {\n  order: 2;\n  flex: 0 0 auto !important;\n  align-self: center !important;\n  position: relative;\n  z-index: 2;\n  margin: 0 5px 0 0 !important;\n  min-width: 0 !important;\n  max-width: none !important;\n}\n\nbutton[data-fs-preserved-action="control"],\na[data-fs-preserved-action="control"],\n[role="button"][data-fs-preserved-action="control"] {\n  height: 28px !important;\n  min-height: 28px !important;\n  padding: 0 8px !important;\n  border-radius: 2px !important;\n  border: 1px solid var(--iw-line-hi) !important;\n  background: linear-gradient(180deg, #201D17, #15130F) !important;\n  color: var(--iw-text) !important;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 1px 0 #000 !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 10px !important;\n  line-height: 26px !important;\n  font-weight: 700 !important;\n  letter-spacing: .025em !important;\n  text-transform: none !important;\n  white-space: nowrap !important;\n}\nbutton[data-fs-preserved-action="control"]:hover:not(:disabled),\na[data-fs-preserved-action="control"]:hover,\n[role="button"][data-fs-preserved-action="control"]:hover {\n  border-color: var(--iw-gold-dim) !important;\n  color: var(--iw-gold) !important;\n  background: linear-gradient(180deg, #29241A, #19160F) !important;\n}\n\n[data-fs-action-kind="equipped"] {\n  width: 70px !important;\n  border-color: #315E3A !important;\n  background: linear-gradient(180deg, #193520, #102518) !important;\n  color: #A9D7AF !important;\n}\n[data-fs-action-kind="equip"] {\n  width: 48px !important;\n  border-color: #5A4728 !important;\n  color: #E1C48A !important;\n}\n[data-fs-action-kind="set"] {\n  width: 72px !important;\n  color: #D1C06C !important;\n  border-color: #514621 !important;\n}\n[data-fs-action-kind="secondary"] { width: 44px !important; }\n[data-fs-action-kind="icon"] {\n  width: 28px !important;\n  min-width: 28px !important;\n  padding: 0 !important;\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  line-height: 1 !important;\n}\n\nbutton[data-fs-preserved-action="control"]:disabled,\n[role="button"][data-fs-preserved-action="control"][aria-disabled="true"] {\n  opacity: .42 !important;\n  color: var(--iw-faint) !important;\n  border-color: var(--iw-line) !important;\n  background: #12110E !important;\n}\n\n/* ── Responsive collapse ─────────────────────────────────────────── */\n@media (max-width: 900px) {\n  .fs-inv-row {\n    grid-template-columns: 46px minmax(0, 1fr) 34px;\n    min-height: 56px;\n    padding-left: 10px;\n    column-gap: 9px;\n  }\n  .fs-inv-icon { width: 46px; height: 46px; min-width: 46px; min-height: 46px; }\n  .fs-inv-stats .fs-stat:nth-child(n+6) { display: none; }\n  .fs-inv-details { max-height: 26px; overflow: hidden; }\n}\n\n@media (max-width: 700px) {\n  .compact-row:has(> .fs-inv-row),\n  [class*="item-row"]:has(> .fs-inv-row) {\n    flex-wrap: wrap !important;\n    align-items: center !important;\n    padding-bottom: 5px !important;\n  }\n  .fs-inv-row {\n    flex: 1 0 100%;\n    grid-template-columns: 42px minmax(0, 1fr) 34px;\n    grid-template-areas: "icon body qty";\n  }\n  .fs-inv-icon { width: 42px; height: 42px; min-width: 42px; min-height: 42px; }\n  .fs-inv-qty { justify-self: end; padding: 0 2px 0 0; text-align: right; }\n  .fs-inv-stats .fs-stat:nth-child(n+4) { display: none; }\n  .fs-inv-details,\n  .fs-inv-requirements {\n    display: flex;\n    max-height: none;\n    overflow: visible;\n    gap: 2px 8px;\n    font-size: 9px;\n  }\n  .fs-inv-detail,\n  .fs-inv-requirement {\n    white-space: normal;\n    overflow: visible;\n    text-overflow: clip;\n  }\n  [data-fs-preserved-action="control"] {\n    margin-top: 3px !important;\n  }\n  button[data-fs-preserved-action="control"],\n  a[data-fs-preserved-action="control"],\n  [role="button"][data-fs-preserved-action="control"] {\n    padding-inline: 6px !important;\n  }\n}\n';
 
   // src/modules/InventoryRenderer.js
   var RENDERED_ATTR = "data-fs-inv";
@@ -2290,413 +2290,413 @@
   }
 
   // src/styles/skillpanel.css
-  var skillpanel_default = `/* ══════════════════════════════════════════════════════════════════════\r
-   Skill panels — compact action frame\r
-\r
-   The panel is a dense RPG action row, not a metric card. Native gameplay DOM\r
-   remains intact; semantic role attributes provide deterministic alignment.\r
-   ══════════════════════════════════════════════════════════════════════ */\r
-\r
-.fs-skill--combat    { --fs-skill-accent: #B84A20; }\r
-.fs-skill--mining    { --fs-skill-accent: #84919B; }\r
-.fs-skill--smithing  { --fs-skill-accent: #B28A2A; }\r
-.fs-skill--gathering { --fs-skill-accent: #579A5D; }\r
-.fs-skill--alchemy   { --fs-skill-accent: #9271B2; }\r
-.fs-skill--jewelcrafting { --fs-skill-accent: #4E9FB8; }\r
-.fs-skill--spellcrafting { --fs-skill-accent: #8B6FC3; }\r
-.fs-skill--tailoring { --fs-skill-accent: #A56E86; }\r
-.fs-skill--crafting  { --fs-skill-accent: #5E8FB7; }\r
-.fs-skill--fishing   { --fs-skill-accent: #478FA8; }\r
-\r
-.compact-panel.fs-skill-panel {\r
-  position: relative !important;\r
-  min-height: 0 !important;\r
-  margin-bottom: 6px !important;\r
-  padding-top: 8px !important;\r
-  padding-bottom: 8px !important;\r
-  background:\r
-    linear-gradient(90deg, color-mix(in srgb, var(--fs-skill-accent) 4%, transparent), transparent 28%),\r
-    linear-gradient(180deg, rgba(255,255,255,.010), transparent 34px),\r
-    #12110E !important;\r
-  border: 1px solid #392F21 !important;\r
-  border-left: 2px solid var(--fs-skill-accent, var(--iw-line-hi)) !important;\r
-  border-radius: 3px !important;\r
-  box-shadow:\r
-    inset 0 0 0 1px rgba(0,0,0,.38),\r
-    inset 0 1px 0 rgba(255,255,255,.012),\r
-    inset 0 -1px 0 rgba(0,0,0,.44) !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel::before {\r
-  content: "";\r
-  position: absolute;\r
-  z-index: 0;\r
-  pointer-events: none;\r
-  left: 0;\r
-  top: 0;\r
-  width: 64px;\r
-  height: 1px;\r
-  background: linear-gradient(90deg, var(--iw-gold), var(--iw-line-hot) 62%, transparent);\r
-  opacity: .78;\r
-}\r
-\r
-/* v1.5.0 used a large watermark glyph here. It fought with the information\r
-   hierarchy, so the pseudo-element is intentionally disabled. */\r
-.compact-panel.fs-skill-panel::after { content: none !important; }\r
-\r
-.fs-skill-wrapper { display: contents !important; }\r
-.fs-skill-header { display: none !important; }\r
-\r
-/* Strict alignment only when the renderer proves three existing top-level\r
-   zones: skill identity, action content and commands. */\r
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {\r
-  display: grid !important;\r
-  grid-template-columns: 96px minmax(0, 1fr) 126px !important;\r
-  grid-template-areas: "identity content commands" !important;\r
-  gap: 0 14px !important;\r
-  align-items: center !important;\r
-  padding: 8px 12px !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="identity"] {\r
-  grid-area: identity !important;\r
-  min-width: 0 !important;\r
-}\r
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="content"] {\r
-  grid-area: content !important;\r
-  min-width: 0 !important;\r
-}\r
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="commands"] {\r
-  grid-area: commands !important;\r
-  min-width: 0 !important;\r
-  justify-self: stretch !important;\r
-}\r
-\r
-/* ── Skill information hierarchy ────────────────────────────────────── */\r
-[data-iw-skill-role="identity"] {\r
-  position: relative !important;\r
-  min-width: 78px !important;\r
-  color: var(--iw-text-hi) !important;\r
-  font-family: var(--iw-font-ui) !important;\r
-  font-size: 12.5px !important;\r
-  font-weight: 700 !important;\r
-  line-height: 1.18 !important;\r
-  letter-spacing: .015em !important;\r
-  text-shadow: 0 1px 0 #000 !important;\r
-}\r
-\r
-[data-iw-skill-role="identity"]::after {\r
-  content: "";\r
-  position: absolute;\r
-  left: 0;\r
-  right: 28%;\r
-  bottom: -5px;\r
-  height: 1px;\r
-  background: linear-gradient(90deg, var(--fs-skill-accent), transparent);\r
-  opacity: .34;\r
-}\r
-\r
-[data-iw-skill-role="action-title"] {\r
-  color: var(--iw-text-hi) !important;\r
-  font-family: var(--iw-font-ui) !important;\r
-  font-size: 16.5px !important;\r
-  line-height: 1.1 !important;\r
-  font-weight: 700 !important;\r
-  letter-spacing: 0 !important;\r
-  text-shadow: 0 1px 0 #000 !important;\r
-}\r
-\r
-/* XP readout is data, never a callout card. */\r
-[data-iw-skill-role="level-progress"] {\r
-  display: block !important;\r
-  width: auto !important;\r
-  max-width: none !important;\r
-  min-width: 0 !important;\r
-  min-height: 0 !important;\r
-  height: auto !important;\r
-  margin: 3px 0 0 !important;\r
-  padding: 0 !important;\r
-  color: #B7AF9F !important;\r
-  font-family: var(--iw-font-ui) !important;\r
-  font-size: 11.5px !important;\r
-  line-height: 1.2 !important;\r
-  font-weight: 600 !important;\r
-  font-variant-numeric: tabular-nums !important;\r
-  letter-spacing: .01em !important;\r
-  text-transform: none !important;\r
-  border: 0 !important;\r
-  outline: 0 !important;\r
-  border-radius: 0 !important;\r
-  background: transparent !important;\r
-  background-image: none !important;\r
-  box-shadow: none !important;\r
-}\r
-\r
-[data-iw-skill-role="xp-gain"] {\r
-  display: inline-block !important;\r
-  margin-top: 2px !important;\r
-  color: var(--iw-gold-dim) !important;\r
-  font-size: 10.5px !important;\r
-  line-height: 1.15 !important;\r
-  font-weight: 700 !important;\r
-  font-variant-numeric: tabular-nums !important;\r
-}\r
-\r
-[data-iw-skill-role="requirement"] {\r
-  margin-top: 2px !important;\r
-  color: #D58282 !important;\r
-  font-size: 10.8px !important;\r
-  line-height: 1.15 !important;\r
-  font-weight: 600 !important;\r
-}\r
-\r
-[data-iw-skill-role="reward"] {\r
-  margin-top: 2px !important;\r
-  color: #AAA291 !important;\r
-  font-size: 10.8px !important;\r
-  line-height: 1.15 !important;\r
-}\r
-\r
-[data-iw-skill-role="action-detail"] {\r
-  margin-top: 3px !important;\r
-  color: #C7C0B2 !important;\r
-  font-family: var(--iw-font-ui) !important;\r
-  font-size: 11.5px !important;\r
-  line-height: 1.2 !important;\r
-  font-weight: 500 !important;\r
-  letter-spacing: 0 !important;\r
-}\r
-\r
-[data-iw-skill-role="ingredient"] {\r
-  display: inline-flex !important;\r
-  align-items: baseline !important;\r
-  gap: 5px !important;\r
-  margin-top: 3px !important;\r
-  padding: 0 !important;\r
-  color: var(--iw-dim) !important;\r
-  border: 0 !important;\r
-  border-radius: 0 !important;\r
-  background: transparent !important;\r
-  background-image: none !important;\r
-  box-shadow: none !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel .iw-item-ref {\r
-  color: #C9B17A !important;\r
-  font-weight: 700 !important;\r
-  letter-spacing: .015em !important;\r
-  text-transform: uppercase !important;\r
-  border-bottom-color: rgba(201,177,122,.20) !important;\r
-}\r
-\r
-/* ── Progress rail ──────────────────────────────────────────────────── */\r
-[data-iw-skill-role="progress-track"] {\r
-  height: 4px !important;\r
-  min-height: 4px !important;\r
-  max-height: 4px !important;\r
-  margin-top: 5px !important;\r
-  overflow: hidden !important;\r
-  border: 1px solid #29241B !important;\r
-  border-radius: 0 !important;\r
-  background: #080806 !important;\r
-  box-shadow: inset 0 1px 2px rgba(0,0,0,.80) !important;\r
-}\r
-\r
-[data-iw-skill-role="progress-fill"] {\r
-  height: 100% !important;\r
-  border-radius: 0 !important;\r
-  background: linear-gradient(90deg, color-mix(in srgb, var(--fs-skill-accent) 68%, #5F2914), var(--fs-skill-accent)) !important;\r
-  box-shadow: none !important;\r
-}\r
-\r
-/* Existing readout/ingredient shells are data, not boxed controls. */\r
-/* Metric shells in the live skill panel may draw their frame with pseudo\r
-   elements rather than the element's own border/background. Kill those only on\r
-   the positively identified XP readout branch. */\r
-.compact-panel.fs-skill-panel [data-iw-readout]::before,\r
-.compact-panel.fs-skill-panel [data-iw-readout]::after {\r
-  content: none !important;\r
-  display: none !important;\r
-  border: 0 !important;\r
-  background: none !important;\r
-  box-shadow: none !important;\r
-}\r
-\r
-[data-iw-readout],\r
-[data-iw-ingr] {\r
-  width: auto !important;\r
-  max-width: none !important;\r
-  min-width: 0 !important;\r
-  min-height: 0 !important;\r
-  height: auto !important;\r
-  max-height: none !important;\r
-  margin: 0 !important;\r
-  background: transparent !important;\r
-  background-color: transparent !important;\r
-  background-image: none !important;\r
-  border: 0 !important;\r
-  border-radius: 0 !important;\r
-  outline: 0 !important;\r
-  padding: 0 !important;\r
-  box-shadow: none !important;\r
-  cursor: default !important;\r
-}\r
-\r
-/* The live game nests the XP text inside several same-text shells. Every shell\r
-   is now marked/neutralised by the renderer; keep their typography inherited so\r
-   an inner Tailwind text class cannot recreate the large metric-card look. */\r
-.compact-panel.fs-skill-panel [data-iw-readout] {\r
-  color: #B7AF9F !important;\r
-  font-family: var(--iw-font-ui) !important;\r
-  font-size: 11.5px !important;\r
-  line-height: 1.18 !important;\r
-  font-weight: 600 !important;\r
-  letter-spacing: .01em !important;\r
-  text-transform: none !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel [data-iw-skill-role="level-progress"] {\r
-  margin-top: 2px !important;\r
-}\r
-\r
-/* ── Command rail ───────────────────────────────────────────────────── */\r
-[data-iw-skill-role="nav-group"] {\r
-  display: inline-flex !important;\r
-  align-items: center !important;\r
-  justify-content: flex-end !important;\r
-  gap: 4px !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel button:not([data-iw-skill-role="level-progress"]) {\r
-  align-self: center !important;\r
-  border-radius: 2px !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel button[data-iw-skill-role="nav-button"] {\r
-  width: 30px !important;\r
-  min-width: 30px !important;\r
-  height: 30px !important;\r
-  min-height: 30px !important;\r
-  padding: 0 !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"] {\r
-  width: 96px !important;\r
-  min-width: 96px !important;\r
-  height: 34px !important;\r
-  min-height: 34px !important;\r
-  justify-content: center !important;\r
-  letter-spacing: .07em !important;\r
-}\r
-\r
-/* CSS fallbacks for the button skins SkillPanelRenderer also writes inline.\r
-   The inline copies exist because React re-asserts its own geometry during\r
-   updates; these exist because the inline copies are only present once the\r
-   renderer has run. Without them a panel renders its commands as bare controls\r
-   between mount and first reconcile — pale boxes with near-invisible labels.\r
-   Keep the two in sync with BUTTON_STYLES in SkillPanelRenderer.js. */\r
-.compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"],\r
-.compact-panel.fs-skill-panel button[data-iw-btn-state="primary"] {\r
-  background: linear-gradient(180deg, #A94318, #742A0D) !important;\r
-  border: 1px solid #C05A28 !important;\r
-  color: #FFEAD1 !important;\r
-  font-family: var(--iw-font-ui) !important;\r
-  font-size: 12px !important;\r
-  font-weight: 700 !important;\r
-  letter-spacing: .06em !important;\r
-  text-transform: uppercase !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel button[data-iw-skill-role="nav-button"],\r
-.compact-panel.fs-skill-panel button[data-iw-btn-state="secondary"],\r
-.compact-panel.fs-skill-panel button[data-iw-btn-state="icon"] {\r
-  background: linear-gradient(180deg, #242018, #17140F) !important;\r
-  border: 1px solid #58482B !important;\r
-  color: #DAD3C3 !important;\r
-  font-family: var(--iw-font-ui) !important;\r
-  font-weight: 700 !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"]:hover:not(:disabled) {\r
-  background: linear-gradient(180deg, #C04D1C, #87310E) !important;\r
-  border-color: var(--iw-ember-hi) !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel button[data-iw-btn-state="primary"] {\r
-  color: #FFE8CE !important;\r
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 1px 0 #000 !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel button[data-iw-btn-state="disabled"] {\r
-  opacity: .94 !important;\r
-  color: #8E8676 !important;\r
-  background: #15130F !important;\r
-  border-color: #3A3022 !important;\r
-  filter: none !important;\r
-}\r
-\r
-/* Existing direct React branches get deterministic roles without reparenting. */\r
-.compact-panel.fs-skill-panel > [data-iw-skill-zone="identity"] {\r
-  align-self: stretch !important;\r
-  display: flex !important;\r
-  flex-direction: column !important;\r
-  justify-content: center !important;\r
-}\r
-.compact-panel.fs-skill-panel > [data-iw-skill-zone="content"] {\r
-  min-width: 0 !important;\r
-}\r
-.compact-panel.fs-skill-panel > [data-iw-skill-zone="commands"] {\r
-  display: flex !important;\r
-  flex-direction: column !important;\r
-  align-items: flex-end !important;\r
-  justify-content: center !important;\r
-  gap: 5px !important;\r
-}\r
-\r
-.compact-panel.fs-skill-panel [data-iw-readout] {\r
-  font-family: var(--iw-font-ui) !important;\r
-  font-size: 11.5px !important;\r
-  line-height: 1.18 !important;\r
-  font-weight: 500 !important;\r
-  color: #B7AF9F !important;\r
-  letter-spacing: normal !important;\r
-  text-transform: none !important;\r
-}\r
-.compact-panel.fs-skill-panel [data-iw-ingr] {\r
-  font-family: var(--iw-font-ui) !important;\r
-  font-size: 11px !important;\r
-  line-height: 1.15 !important;\r
-  color: var(--iw-dim) !important;\r
-  letter-spacing: normal !important;\r
-  text-transform: none !important;\r
-}\r
-\r
-@media (max-width: 800px) {\r
-  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {\r
-    grid-template-columns: 82px minmax(0, 1fr) 112px !important;\r
-    gap: 0 8px !important;\r
-    padding-inline: 8px !important;\r
-  }\r
-  .compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"] {\r
-    width: 88px !important;\r
-    min-width: 88px !important;\r
-  }\r
-  [data-iw-skill-role="action-title"] { font-size: 15px !important; }\r
-}\r
-\r
-/* v1.5.3 hard fallback: an identified XP branch must never retain native card\r
-   geometry, even when the game adds a new utility class to an intermediate\r
-   wrapper. */\r
-.compact-panel.fs-skill-panel [data-iw-readout] {\r
-  display: block !important;\r
-  position: static !important;\r
-  float: none !important;\r
-  transform: none !important;\r
-  filter: none !important;\r
-  backdrop-filter: none !important;\r
-  -webkit-backdrop-filter: none !important;\r
-  clip-path: none !important;\r
-}\r
+  var skillpanel_default = `/* ══════════════════════════════════════════════════════════════════════
+   Skill panels — compact action frame
+
+   The panel is a dense RPG action row, not a metric card. Native gameplay DOM
+   remains intact; semantic role attributes provide deterministic alignment.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.fs-skill--combat    { --fs-skill-accent: #B84A20; }
+.fs-skill--mining    { --fs-skill-accent: #84919B; }
+.fs-skill--smithing  { --fs-skill-accent: #B28A2A; }
+.fs-skill--gathering { --fs-skill-accent: #579A5D; }
+.fs-skill--alchemy   { --fs-skill-accent: #9271B2; }
+.fs-skill--jewelcrafting { --fs-skill-accent: #4E9FB8; }
+.fs-skill--spellcrafting { --fs-skill-accent: #8B6FC3; }
+.fs-skill--tailoring { --fs-skill-accent: #A56E86; }
+.fs-skill--crafting  { --fs-skill-accent: #5E8FB7; }
+.fs-skill--fishing   { --fs-skill-accent: #478FA8; }
+
+.compact-panel.fs-skill-panel {
+  position: relative !important;
+  min-height: 0 !important;
+  margin-bottom: 6px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--fs-skill-accent) 4%, transparent), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,.010), transparent 34px),
+    #12110E !important;
+  border: 1px solid #392F21 !important;
+  border-left: 2px solid var(--fs-skill-accent, var(--iw-line-hi)) !important;
+  border-radius: 3px !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.012),
+    inset 0 -1px 0 rgba(0,0,0,.44) !important;
+}
+
+.compact-panel.fs-skill-panel::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  left: 0;
+  top: 0;
+  width: 64px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--iw-gold), var(--iw-line-hot) 62%, transparent);
+  opacity: .78;
+}
+
+/* v1.5.0 used a large watermark glyph here. It fought with the information
+   hierarchy, so the pseudo-element is intentionally disabled. */
+.compact-panel.fs-skill-panel::after { content: none !important; }
+
+.fs-skill-wrapper { display: contents !important; }
+.fs-skill-header { display: none !important; }
+
+/* Strict alignment only when the renderer proves three existing top-level
+   zones: skill identity, action content and commands. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+  display: grid !important;
+  grid-template-columns: 96px minmax(0, 1fr) 126px !important;
+  grid-template-areas: "identity content commands" !important;
+  gap: 0 14px !important;
+  align-items: center !important;
+  padding: 8px 12px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="identity"] {
+  grid-area: identity !important;
+  min-width: 0 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="content"] {
+  grid-area: content !important;
+  min-width: 0 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="commands"] {
+  grid-area: commands !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+}
+
+/* ── Skill information hierarchy ────────────────────────────────────── */
+[data-iw-skill-role="identity"] {
+  position: relative !important;
+  min-width: 78px !important;
+  color: var(--iw-text-hi) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.18 !important;
+  letter-spacing: .015em !important;
+  text-shadow: 0 1px 0 #000 !important;
+}
+
+[data-iw-skill-role="identity"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 28%;
+  bottom: -5px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--fs-skill-accent), transparent);
+  opacity: .34;
+}
+
+[data-iw-skill-role="action-title"] {
+  color: var(--iw-text-hi) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 16.5px !important;
+  line-height: 1.1 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  text-shadow: 0 1px 0 #000 !important;
+}
+
+/* XP readout is data, never a callout card. */
+[data-iw-skill-role="level-progress"] {
+  display: block !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 3px 0 0 !important;
+  padding: 0 !important;
+  color: #B7AF9F !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: .01em !important;
+  text-transform: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+[data-iw-skill-role="xp-gain"] {
+  display: inline-block !important;
+  margin-top: 2px !important;
+  color: var(--iw-gold-dim) !important;
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+[data-iw-skill-role="requirement"] {
+  margin-top: 2px !important;
+  color: #D58282 !important;
+  font-size: 10.8px !important;
+  line-height: 1.15 !important;
+  font-weight: 600 !important;
+}
+
+[data-iw-skill-role="reward"] {
+  margin-top: 2px !important;
+  color: #AAA291 !important;
+  font-size: 10.8px !important;
+  line-height: 1.15 !important;
+}
+
+[data-iw-skill-role="action-detail"] {
+  margin-top: 3px !important;
+  color: #C7C0B2 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  line-height: 1.2 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+[data-iw-skill-role="ingredient"] {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 5px !important;
+  margin-top: 3px !important;
+  padding: 0 !important;
+  color: var(--iw-dim) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.compact-panel.fs-skill-panel .iw-item-ref {
+  color: #C9B17A !important;
+  font-weight: 700 !important;
+  letter-spacing: .015em !important;
+  text-transform: uppercase !important;
+  border-bottom-color: rgba(201,177,122,.20) !important;
+}
+
+/* ── Progress rail ──────────────────────────────────────────────────── */
+[data-iw-skill-role="progress-track"] {
+  height: 4px !important;
+  min-height: 4px !important;
+  max-height: 4px !important;
+  margin-top: 5px !important;
+  overflow: hidden !important;
+  border: 1px solid #29241B !important;
+  border-radius: 0 !important;
+  background: #080806 !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.80) !important;
+}
+
+[data-iw-skill-role="progress-fill"] {
+  height: 100% !important;
+  border-radius: 0 !important;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--fs-skill-accent) 68%, #5F2914), var(--fs-skill-accent)) !important;
+  box-shadow: none !important;
+}
+
+/* Existing readout/ingredient shells are data, not boxed controls. */
+/* Metric shells in the live skill panel may draw their frame with pseudo
+   elements rather than the element's own border/background. Kill those only on
+   the positively identified XP readout branch. */
+.compact-panel.fs-skill-panel [data-iw-readout]::before,
+.compact-panel.fs-skill-panel [data-iw-readout]::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+[data-iw-readout],
+[data-iw-ingr] {
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  cursor: default !important;
+}
+
+/* The live game nests the XP text inside several same-text shells. Every shell
+   is now marked/neutralised by the renderer; keep their typography inherited so
+   an inner Tailwind text class cannot recreate the large metric-card look. */
+.compact-panel.fs-skill-panel [data-iw-readout] {
+  color: #B7AF9F !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  line-height: 1.18 !important;
+  font-weight: 600 !important;
+  letter-spacing: .01em !important;
+  text-transform: none !important;
+}
+
+.compact-panel.fs-skill-panel [data-iw-skill-role="level-progress"] {
+  margin-top: 2px !important;
+}
+
+/* ── Command rail ───────────────────────────────────────────────────── */
+[data-iw-skill-role="nav-group"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 4px !important;
+}
+
+.compact-panel.fs-skill-panel button:not([data-iw-skill-role="level-progress"]) {
+  align-self: center !important;
+  border-radius: 2px !important;
+}
+
+.compact-panel.fs-skill-panel button[data-iw-skill-role="nav-button"] {
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 !important;
+}
+
+.compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"] {
+  width: 96px !important;
+  min-width: 96px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  justify-content: center !important;
+  letter-spacing: .07em !important;
+}
+
+/* CSS fallbacks for the button skins SkillPanelRenderer also writes inline.
+   The inline copies exist because React re-asserts its own geometry during
+   updates; these exist because the inline copies are only present once the
+   renderer has run. Without them a panel renders its commands as bare controls
+   between mount and first reconcile — pale boxes with near-invisible labels.
+   Keep the two in sync with BUTTON_STYLES in SkillPanelRenderer.js. */
+.compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"],
+.compact-panel.fs-skill-panel button[data-iw-btn-state="primary"] {
+  background: linear-gradient(180deg, #A94318, #742A0D) !important;
+  border: 1px solid #C05A28 !important;
+  color: #FFEAD1 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+
+.compact-panel.fs-skill-panel button[data-iw-skill-role="nav-button"],
+.compact-panel.fs-skill-panel button[data-iw-btn-state="secondary"],
+.compact-panel.fs-skill-panel button[data-iw-btn-state="icon"] {
+  background: linear-gradient(180deg, #242018, #17140F) !important;
+  border: 1px solid #58482B !important;
+  color: #DAD3C3 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-weight: 700 !important;
+}
+
+.compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"]:hover:not(:disabled) {
+  background: linear-gradient(180deg, #C04D1C, #87310E) !important;
+  border-color: var(--iw-ember-hi) !important;
+}
+
+.compact-panel.fs-skill-panel button[data-iw-btn-state="primary"] {
+  color: #FFE8CE !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 1px 0 #000 !important;
+}
+
+.compact-panel.fs-skill-panel button[data-iw-btn-state="disabled"] {
+  opacity: .94 !important;
+  color: #8E8676 !important;
+  background: #15130F !important;
+  border-color: #3A3022 !important;
+  filter: none !important;
+}
+
+/* Existing direct React branches get deterministic roles without reparenting. */
+.compact-panel.fs-skill-panel > [data-iw-skill-zone="identity"] {
+  align-self: stretch !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+.compact-panel.fs-skill-panel > [data-iw-skill-zone="content"] {
+  min-width: 0 !important;
+}
+.compact-panel.fs-skill-panel > [data-iw-skill-zone="commands"] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  gap: 5px !important;
+}
+
+.compact-panel.fs-skill-panel [data-iw-readout] {
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  line-height: 1.18 !important;
+  font-weight: 500 !important;
+  color: #B7AF9F !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+.compact-panel.fs-skill-panel [data-iw-ingr] {
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11px !important;
+  line-height: 1.15 !important;
+  color: var(--iw-dim) !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+@media (max-width: 800px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    grid-template-columns: 82px minmax(0, 1fr) 112px !important;
+    gap: 0 8px !important;
+    padding-inline: 8px !important;
+  }
+  .compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"] {
+    width: 88px !important;
+    min-width: 88px !important;
+  }
+  [data-iw-skill-role="action-title"] { font-size: 15px !important; }
+}
+
+/* v1.5.3 hard fallback: an identified XP branch must never retain native card
+   geometry, even when the game adds a new utility class to an intermediate
+   wrapper. */
+.compact-panel.fs-skill-panel [data-iw-readout] {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  transform: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  clip-path: none !important;
+}
 
 /* Phone layout: keep commands immediately reachable while giving action content
    the full second row. This replaces the cramped three-column phone layout. */
@@ -3176,7 +3176,7 @@
   }
 
   // src/styles/ui-system.css
-  var ui_system_default = '/* ══════════════════════════════════════════════════════════════════════\r\n   IdleWorlds Fantasy Skin — shared UI and navigation refinement\r\n\r\n   The shared language is deliberately dense: forged rails, restrained brass,\r\n   flat data, compact controls. Boxes are reserved for real controls/actions.\r\n   ══════════════════════════════════════════════════════════════════════ */\r\n\r\n:root {\r\n  --iw-space-1: 4px;\r\n  --iw-space-2: 6px;\r\n  --iw-space-3: 9px;\r\n  --iw-space-4: 12px;\r\n  --iw-space-5: 16px;\r\n  --iw-control-h: 32px;\r\n  --iw-control-h-lg: 36px;\r\n  --iw-frame-edge: #4B3D26;\r\n  --iw-frame-inner: #19150F;\r\n  --iw-steel: #26231D;\r\n}\r\n\r\n/* ── Major frames ───────────────────────────────────────────────────── */\r\n[data-iw-ui="section-frame"] {\r\n  position: relative !important;\r\n  border: 1px solid var(--iw-frame-edge) !important;\r\n  border-radius: 6px !important;\r\n  background:\r\n    linear-gradient(180deg, rgba(255,255,255,.012), transparent 48px),\r\n    linear-gradient(90deg, rgba(110,80,35,.014), transparent 26%),\r\n    var(--iw-ink-800) !important;\r\n  box-shadow:\r\n    inset 0 0 0 1px rgba(0,0,0,.48),\r\n    inset 0 1px 0 rgba(255,255,255,.014),\r\n    0 6px 18px rgba(0,0,0,.18) !important;\r\n}\r\n\r\n[data-iw-ui="section-frame"]::before {\r\n  content: "";\r\n  position: absolute;\r\n  z-index: 0;\r\n  pointer-events: none;\r\n  left: 14px;\r\n  right: 14px;\r\n  top: 0;\r\n  height: 1px;\r\n  background: linear-gradient(90deg, var(--iw-gold-dim), rgba(157,132,88,.16) 34%, transparent 78%);\r\n}\r\n\r\n[data-iw-ui="section-title"] {\r\n  font-family: var(--iw-font-head) !important;\r\n  letter-spacing: .035em !important;\r\n  color: var(--iw-text-hi) !important;\r\n  text-shadow: 0 1px 0 #000 !important;\r\n}\r\n\r\n/* ── Main navigation rail ───────────────────────────────────────────── */\r\n[data-iw-ui="main-nav-shell"] {\r\n  margin: 0 !important;\r\n  padding: 0 !important;\r\n  border: 0 !important;\r\n  border-radius: 0 !important;\r\n  background: transparent !important;\r\n  box-shadow: none !important;\r\n}\r\n\r\n[data-iw-ui="main-nav"] {\r\n  display: flex !important;\r\n  align-items: stretch !important;\r\n  flex-wrap: wrap !important;\r\n  gap: 0 !important;\r\n  width: max-content !important;\r\n  max-width: 100% !important;\r\n  min-height: 0 !important;\r\n  margin: 0 !important;\r\n  padding: 0 !important;\r\n  border: 1px solid #3A3225 !important;\r\n  border-radius: 3px !important;\r\n  background: #11100D !important;\r\n  box-shadow: inset 0 0 0 1px rgba(0,0,0,.52) !important;\r\n  overflow: visible !important;\r\n}\r\n\r\n[data-iw-ui="nav-tab"] {\r\n  position: relative !important;\r\n  min-height: var(--iw-control-h) !important;\r\n  height: var(--iw-control-h) !important;\r\n  margin: 0 !important;\r\n  padding: 0 16px !important;\r\n  border: 0 !important;\r\n  border-right: 1px solid #3A3225 !important;\r\n  border-radius: 0 !important;\r\n  background: linear-gradient(180deg, #211E18, #16140F) !important;\r\n  color: #AAA291 !important;\r\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.022) !important;\r\n  font-family: var(--iw-font-ui) !important;\r\n  font-size: 11.5px !important;\r\n  font-weight: 700 !important;\r\n  letter-spacing: .025em !important;\r\n  text-transform: uppercase !important;\r\n  line-height: 1 !important;\r\n}\r\n\r\n[data-iw-ui="nav-tab"]:last-of-type { border-right: 0 !important; }\r\n\r\n[data-iw-ui="nav-tab"]:hover:not(:disabled) {\r\n  z-index: 1;\r\n  background: linear-gradient(180deg, #29241C, #1A1711) !important;\r\n  color: var(--iw-text-hi) !important;\r\n  filter: none !important;\r\n}\r\n\r\n[data-iw-ui="nav-tab"][data-iw-state="active"] {\r\n  z-index: 2;\r\n  color: #FFE8CB !important;\r\n  background:\r\n    linear-gradient(180deg, rgba(255,255,255,.035), transparent 46%),\r\n    linear-gradient(180deg, #9D3C16, #67250C) !important;\r\n  box-shadow:\r\n    inset 0 1px 0 rgba(255,226,191,.13),\r\n    inset 0 -2px 0 rgba(55,16,4,.58) !important;\r\n}\r\n\r\n[data-iw-ui="nav-tab"][data-iw-state="active"]::after {\r\n  content: "";\r\n  position: absolute;\r\n  left: 9px;\r\n  right: 9px;\r\n  bottom: -4px;\r\n  height: 2px;\r\n  background: var(--iw-ember-hi);\r\n  box-shadow: 0 0 6px rgba(209,90,34,.28);\r\n}\r\n\r\n/* ── Zone command rail ──────────────────────────────────────────────── */\r\n[data-iw-ui="zone-bar"] {\r\n  border-radius: 5px !important;\r\n  padding-top: 8px !important;\r\n  padding-bottom: 8px !important;\r\n  min-height: 0 !important;\r\n}\r\n\r\n[data-iw-ui="zone-title"] {\r\n  color: var(--iw-text-hi) !important;\r\n  font-weight: 700 !important;\r\n}\r\n\r\n[data-iw-ui="zone-action"] {\r\n  background: linear-gradient(180deg, #242018, #17140F) !important;\r\n  border: 1px solid var(--iw-line-hi) !important;\r\n  color: var(--iw-text) !important;\r\n  height: 32px !important;\r\n  min-height: 32px !important;\r\n  min-width: 0 !important;\r\n  padding: 0 12px !important;\r\n  font-size: 11px !important;\r\n  letter-spacing: .025em !important;\r\n}\r\n\r\n/* ── Generic control language ───────────────────────────────────────── */\r\n\r\n/* Surface treatment is safe to apply globally: it changes how a control is\r\n   painted, never how much room it takes. */\r\nbutton:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),\r\n[role="button"]:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {\r\n  border-color: var(--iw-line-hi) !important;\r\n  background-image: linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,0,0,.09)) !important;\r\n}\r\n\r\n/* Geometry is NOT safe to apply globally.\r\n   `min-height: 30px` on every button forced small icon controls — chat\r\n   toolbar, modal close buttons, market row steppers — up to 30px regardless\r\n   of the game\'s own sizing, because min-height does not compete with the\r\n   Tailwind `h-*` height utilities, it simply wins. That overflowed dense\r\n   regions and was itself a source of "looks broken in some places".\r\n\r\n   Apply the minimum only where a control has been positively classified as\r\n   a real action, and only when the game has not sized it explicitly.\r\n   (Audit S3.5) */\r\n[data-iw-ui="zone-action"],\r\n[data-iw-inventory-control="filter"],\r\n[data-iw-inventory-control="page"],\r\n.compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"],\r\n.compact-panel.fs-skill-panel button[data-iw-skill-role="nav-button"] {\r\n  min-height: 30px;\r\n}\r\n\r\nbutton:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):disabled,\r\n[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {\r\n  filter: saturate(.58) brightness(.84) !important;\r\n  box-shadow: inset 0 0 0 1px rgba(0,0,0,.22) !important;\r\n}\r\n\r\ninput[type="search"],\r\ninput[placeholder*="Search" i] {\r\n  border: 1px solid #30291E !important;\r\n  border-bottom-color: var(--iw-line-hi) !important;\r\n  border-radius: 2px !important;\r\n  background: linear-gradient(180deg, #080A0A, #0D0E0C) !important;\r\n  box-shadow: inset 0 2px 6px rgba(0,0,0,.72) !important;\r\n}\r\n\r\n@media (max-width: 780px) {\r\n  [data-iw-ui="main-nav"] { width: 100% !important; }\r\n  [data-iw-ui="nav-tab"] {\r\n    flex: 1 1 auto !important;\r\n    padding-inline: 9px !important;\r\n    font-size: 10.5px !important;\r\n  }\r\n}\r\n';
+  var ui_system_default = '/* ══════════════════════════════════════════════════════════════════════\n   IdleWorlds Fantasy Skin — shared UI and navigation refinement\n\n   The shared language is deliberately dense: forged rails, restrained brass,\n   flat data, compact controls. Boxes are reserved for real controls/actions.\n   ══════════════════════════════════════════════════════════════════════ */\n\n:root {\n  --iw-space-1: 4px;\n  --iw-space-2: 6px;\n  --iw-space-3: 9px;\n  --iw-space-4: 12px;\n  --iw-space-5: 16px;\n  --iw-control-h: 32px;\n  --iw-control-h-lg: 36px;\n  --iw-frame-edge: #4B3D26;\n  --iw-frame-inner: #19150F;\n  --iw-steel: #26231D;\n}\n\n/* ── Major frames ───────────────────────────────────────────────────── */\n[data-iw-ui="section-frame"] {\n  position: relative !important;\n  border: 1px solid var(--iw-frame-edge) !important;\n  border-radius: 6px !important;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.012), transparent 48px),\n    linear-gradient(90deg, rgba(110,80,35,.014), transparent 26%),\n    var(--iw-ink-800) !important;\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.48),\n    inset 0 1px 0 rgba(255,255,255,.014),\n    0 6px 18px rgba(0,0,0,.18) !important;\n}\n\n[data-iw-ui="section-frame"]::before {\n  content: "";\n  position: absolute;\n  z-index: 0;\n  pointer-events: none;\n  left: 14px;\n  right: 14px;\n  top: 0;\n  height: 1px;\n  background: linear-gradient(90deg, var(--iw-gold-dim), rgba(157,132,88,.16) 34%, transparent 78%);\n}\n\n[data-iw-ui="section-title"] {\n  font-family: var(--iw-font-head) !important;\n  letter-spacing: .035em !important;\n  color: var(--iw-text-hi) !important;\n  text-shadow: 0 1px 0 #000 !important;\n}\n\n/* ── Main navigation rail ───────────────────────────────────────────── */\n[data-iw-ui="main-nav-shell"] {\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n\n[data-iw-ui="main-nav"] {\n  display: flex !important;\n  align-items: stretch !important;\n  flex-wrap: wrap !important;\n  gap: 0 !important;\n  width: max-content !important;\n  max-width: 100% !important;\n  min-height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 1px solid #3A3225 !important;\n  border-radius: 3px !important;\n  background: #11100D !important;\n  box-shadow: inset 0 0 0 1px rgba(0,0,0,.52) !important;\n  overflow: visible !important;\n}\n\n[data-iw-ui="nav-tab"] {\n  position: relative !important;\n  min-height: var(--iw-control-h) !important;\n  height: var(--iw-control-h) !important;\n  margin: 0 !important;\n  padding: 0 16px !important;\n  border: 0 !important;\n  border-right: 1px solid #3A3225 !important;\n  border-radius: 0 !important;\n  background: linear-gradient(180deg, #211E18, #16140F) !important;\n  color: #AAA291 !important;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.022) !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 11.5px !important;\n  font-weight: 700 !important;\n  letter-spacing: .025em !important;\n  text-transform: uppercase !important;\n  line-height: 1 !important;\n}\n\n[data-iw-ui="nav-tab"]:last-of-type { border-right: 0 !important; }\n\n[data-iw-ui="nav-tab"]:hover:not(:disabled) {\n  z-index: 1;\n  background: linear-gradient(180deg, #29241C, #1A1711) !important;\n  color: var(--iw-text-hi) !important;\n  filter: none !important;\n}\n\n[data-iw-ui="nav-tab"][data-iw-state="active"] {\n  z-index: 2;\n  color: #FFE8CB !important;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.035), transparent 46%),\n    linear-gradient(180deg, #9D3C16, #67250C) !important;\n  box-shadow:\n    inset 0 1px 0 rgba(255,226,191,.13),\n    inset 0 -2px 0 rgba(55,16,4,.58) !important;\n}\n\n[data-iw-ui="nav-tab"][data-iw-state="active"]::after {\n  content: "";\n  position: absolute;\n  left: 9px;\n  right: 9px;\n  bottom: -4px;\n  height: 2px;\n  background: var(--iw-ember-hi);\n  box-shadow: 0 0 6px rgba(209,90,34,.28);\n}\n\n/* ── Zone command rail ──────────────────────────────────────────────── */\n[data-iw-ui="zone-bar"] {\n  border-radius: 5px !important;\n  padding-top: 8px !important;\n  padding-bottom: 8px !important;\n  min-height: 0 !important;\n}\n\n[data-iw-ui="zone-title"] {\n  color: var(--iw-text-hi) !important;\n  font-weight: 700 !important;\n}\n\n[data-iw-ui="zone-action"] {\n  background: linear-gradient(180deg, #242018, #17140F) !important;\n  border: 1px solid var(--iw-line-hi) !important;\n  color: var(--iw-text) !important;\n  height: 32px !important;\n  min-height: 32px !important;\n  min-width: 0 !important;\n  padding: 0 12px !important;\n  font-size: 11px !important;\n  letter-spacing: .025em !important;\n}\n\n/* ── Generic control language ───────────────────────────────────────── */\n\n/* Surface treatment is safe to apply globally: it changes how a control is\n   painted, never how much room it takes. */\nbutton:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),\n[role="button"]:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {\n  border-color: var(--iw-line-hi) !important;\n  background-image: linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,0,0,.09)) !important;\n}\n\n/* Geometry is NOT safe to apply globally.\n   `min-height: 30px` on every button forced small icon controls — chat\n   toolbar, modal close buttons, market row steppers — up to 30px regardless\n   of the game\'s own sizing, because min-height does not compete with the\n   Tailwind `h-*` height utilities, it simply wins. That overflowed dense\n   regions and was itself a source of "looks broken in some places".\n\n   Apply the minimum only where a control has been positively classified as\n   a real action, and only when the game has not sized it explicitly.\n   (Audit S3.5) */\n[data-iw-ui="zone-action"],\n[data-iw-inventory-control="filter"],\n[data-iw-inventory-control="page"],\n.compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"],\n.compact-panel.fs-skill-panel button[data-iw-skill-role="nav-button"] {\n  min-height: 30px;\n}\n\nbutton:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):disabled,\n[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {\n  filter: saturate(.58) brightness(.84) !important;\n  box-shadow: inset 0 0 0 1px rgba(0,0,0,.22) !important;\n}\n\ninput[type="search"],\ninput[placeholder*="Search" i] {\n  border: 1px solid #30291E !important;\n  border-bottom-color: var(--iw-line-hi) !important;\n  border-radius: 2px !important;\n  background: linear-gradient(180deg, #080A0A, #0D0E0C) !important;\n  box-shadow: inset 0 2px 6px rgba(0,0,0,.72) !important;\n}\n\n@media (max-width: 780px) {\n  [data-iw-ui="main-nav"] { width: 100% !important; }\n  [data-iw-ui="nav-tab"] {\n    flex: 1 1 auto !important;\n    padding-inline: 9px !important;\n    font-size: 10.5px !important;\n  }\n}\n';
 
   // src/modules/UIFoundation.js
   var NAV_LABELS = ["game", "market", "leaderboards", "village", "dungeon"];
@@ -3459,427 +3459,427 @@
   }
 
   // src/styles/base.css
-  var base_default = `/* ══════════════════════════════════════════════════════════════════════\r
-   IdleWorlds Fantasy Skin — "Ashen Iron" base theme\r
-\r
-   Visual goal: dense ARPG utility rather than rounded dashboard cards.\r
-   The palette borrows the material language of forged iron, soot, tarnished\r
-   brass and ember without copying any game's assets. Layout remains owned by\r
-   IdleWorlds/React; this layer standardises geometry, typography and surfaces.\r
-   ══════════════════════════════════════════════════════════════════════ */\r
-\r
-/* ── Typefaces ────────────────────────────────────────────────────────────\r
-   Self-hosted from the extension bundle. These used to come from a Google\r
-   Fonts @import, which had two problems:\r
-\r
-     1. An @import inside a content-script stylesheet is fetched by the PAGE\r
-        and is therefore subject to idleworlds.com's style-src / font-src CSP,\r
-        not to our host_permissions. A CSP tightening on the game's side would\r
-        silently drop every custom face.\r
-     2. It resolves asynchronously AFTER the rest of the sheet applies, so the\r
-        failure mode was intermittent and cache-dependent — the single most\r
-        likely reason the theme looked right on some loads and not others.\r
-\r
-   font-display: swap keeps text visible during load; the src paths resolve\r
-   against the extension root and are listed in web_accessible_resources.\r
-   Run \`npm run vendor\` to populate assets/fonts/. (Audit S1.2) */\r
-\r
-@font-face {\r
-  font-family: 'Cinzel';\r
-  font-style: normal;\r
-  font-weight: 600 700;\r
-  font-display: swap;\r
-  src: url('../assets/fonts/cinzel-variable.woff2') format('woff2');\r
-}\r
-\r
-@font-face {\r
-  font-family: 'Barlow';\r
-  font-style: normal;\r
-  font-weight: 400;\r
-  font-display: swap;\r
-  src: url('../assets/fonts/barlow-400.woff2') format('woff2');\r
-}\r
-\r
-@font-face {\r
-  font-family: 'Barlow';\r
-  font-style: normal;\r
-  font-weight: 500;\r
-  font-display: swap;\r
-  src: url('../assets/fonts/barlow-500.woff2') format('woff2');\r
-}\r
-\r
-@font-face {\r
-  font-family: 'Barlow';\r
-  font-style: normal;\r
-  font-weight: 600;\r
-  font-display: swap;\r
-  src: url('../assets/fonts/barlow-600.woff2') format('woff2');\r
-}\r
-\r
-@font-face {\r
-  font-family: 'Barlow';\r
-  font-style: normal;\r
-  font-weight: 700;\r
-  font-display: swap;\r
-  src: url('../assets/fonts/barlow-700.woff2') format('woff2');\r
-}\r
-\r
-@font-face {\r
-  font-family: 'Crimson Text';\r
-  font-style: italic;\r
-  font-weight: 400;\r
-  font-display: swap;\r
-  src: url('../assets/fonts/crimson-text-italic.woff2') format('woff2');\r
-}\r
-\r
-:root {\r
-  /* Forged surfaces */\r
-  --iw-ink-950: #070806;\r
-  --iw-ink-900: #0B0C0A;\r
-  --iw-ink-850: #10100D;\r
-  --iw-ink-800: #14130F;\r
-  --iw-ink-750: #191711;\r
-  --iw-ink-700: #1E1B15;\r
-  --iw-ink-600: #29251C;\r
-\r
-  /* Brass / iron edges */\r
-  --iw-line:    #342D20;\r
-  --iw-line-hi: #58482B;\r
-  --iw-line-hot:#806337;\r
-\r
-  /* Accents */\r
-  --iw-gold:     #D4AD63;\r
-  --iw-gold-dim: #9D8458;\r
-  --iw-ember:    #B64619;\r
-  --iw-ember-hi: #D15A22;\r
-\r
-  /* Text */\r
-  --iw-text:   #DDD6C6;\r
-  --iw-text-hi:#F0E8D6;\r
-  --iw-dim:    #938A79;\r
-  --iw-faint:  #666052;\r
-\r
-  /* Semantic */\r
-  --iw-good: #82B88A;\r
-  --iw-bad:  #D27171;\r
-  --iw-info: #75A8C8;\r
-\r
-  /* Tier colours */\r
-  --iw-t-common:    #B9B4A8;\r
-  --iw-t-uncommon:  #6FBF73;\r
-  --iw-t-rare:      #5B9BD5;\r
-  --iw-t-epic:      #B98FE0;\r
-  --iw-t-legendary: #D98A3A;\r
-  --iw-t-mythic:    #E06666;\r
-\r
-  /* Typography */\r
-  --iw-font-head: 'Cinzel', Georgia, serif;\r
-  --iw-font-ui:   'Barlow', system-ui, -apple-system, sans-serif;\r
-  --iw-font-flav: 'Crimson Text', Georgia, serif;\r
-\r
-  /* Geometry — intentionally restrained. Round pills are not the house style. */\r
-  --iw-r-panel:   3px;\r
-  --iw-r-control: 2px;\r
-  --iw-r-slot:    2px;\r
-  --iw-r:         var(--iw-r-control);\r
-  --iw-r-sm:      var(--iw-r-slot);\r
-\r
-  /* Game theme tokens */\r
-  --background:          var(--iw-ink-900) !important;\r
-  --foreground:          var(--iw-text)    !important;\r
-  --card:                var(--iw-ink-800) !important;\r
-  --card-foreground:     var(--iw-text)    !important;\r
-  --popover:             var(--iw-ink-800) !important;\r
-  --popover-foreground:  var(--iw-text)    !important;\r
-  --panel-bg:            var(--iw-ink-800) !important;\r
-  --panel-border:        var(--iw-line)    !important;\r
-  --surface-bg:          var(--iw-ink-700) !important;\r
-  --surface-border:      var(--iw-line)    !important;\r
-  --primary:             var(--iw-ember)   !important;\r
-  --primary-foreground:  #FFEAD1           !important;\r
-  --accent:              var(--iw-ember)   !important;\r
-  --accent-foreground:   var(--iw-text-hi) !important;\r
-  --ring:                var(--iw-gold-dim)!important;\r
-  --border:              var(--iw-line)    !important;\r
-  --input:               var(--iw-ink-850) !important;\r
-  --muted:               var(--iw-ink-700) !important;\r
-  --muted-foreground:    var(--iw-dim)     !important;\r
-  --sidebar:             var(--iw-ink-800) !important;\r
-  --sidebar-foreground:  var(--iw-text)    !important;\r
-  --sidebar-border:      var(--iw-line)    !important;\r
-  --sidebar-accent:      var(--iw-ink-700) !important;\r
-}\r
-\r
-html,\r
-body {\r
-  background-color: var(--iw-ink-900) !important;\r
-  color: var(--iw-text) !important;\r
-  font-family: var(--iw-font-ui) !important;\r
-}\r
-\r
-body {\r
-  background-image:\r
-    radial-gradient(1200px 520px at 50% -140px, rgba(124, 91, 42, .10), transparent 68%),\r
-    linear-gradient(180deg, rgba(255,255,255,.012), transparent 220px) !important;\r
-  background-attachment: fixed !important;\r
-}\r
-\r
-/* Major semantic text. Item names remain Barlow via their own selectors. */\r
-h1, h2, h3 {\r
-  font-family: var(--iw-font-head) !important;\r
-  letter-spacing: .025em;\r
-  color: var(--iw-text-hi) !important;\r
-}\r
-\r
-/* ── Core surfaces ──────────────────────────────────────────────────── */\r
-\r
-.compact-panel,\r
-[class~="compact-panel"] {\r
-  background:\r
-    linear-gradient(180deg, rgba(255,255,255,.018), transparent 48px),\r
-    var(--iw-ink-800) !important;\r
-  border-color: var(--iw-line) !important;\r
-  color: var(--iw-text) !important;\r
-  border-radius: var(--iw-r-panel) !important;\r
-  box-shadow:\r
-    inset 0 1px 0 rgba(255,255,255,.018),\r
-    inset 0 -1px 0 rgba(0,0,0,.42) !important;\r
-}\r
-\r
-.compact-row,\r
-[class*="item-row"] {\r
-  background-color: var(--iw-ink-800) !important;\r
-  border-color: var(--iw-line) !important;\r
-  color: var(--iw-text) !important;\r
-}\r
-\r
-/* Tailwind's generous radii are a major source of the dashboard aesthetic.\r
-   Flatten the large/medium utility radii, while leaving rounded-full alone\r
-   for true status dots/avatars. Buttons receive their own stricter rule. */\r
-[class*="rounded-3xl"],\r
-[class*="rounded-2xl"],\r
-[class*="rounded-xl"],\r
-[class*="rounded-lg"],\r
-[class*="rounded-md"] {\r
-  border-radius: var(--iw-r-panel) !important;\r
-}\r
-\r
-button:not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),\r
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {\r
-  border-radius: var(--iw-r-control) !important;\r
-}\r
-\r
-/* ── Controls ───────────────────────────────────────────────────────── */\r
-\r
-/* Forged base colour for controls.\r
-   Deliberately ONE element-selector of specificity (0,0,1) and NOT !important:\r
-   any colour the game sets itself — a Tailwind bg-* utility, an inline style,\r
-   a cosmetic chat-name gradient — outranks this and still wins. It exists only\r
-   to catch buttons the game leaves unpainted, which previously fell through to\r
-   the user agent's light \`buttonface\` and rendered as a pale box with our dark\r
-   gradient laid over it. Found by build-tools/render-fixtures.mjs. */\r
-button,\r
-[role="button"] {\r
-  background-color: var(--iw-ink-750);\r
-  color: var(--iw-text);\r
-}\r
-\r
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),\r
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),\r
-input,\r
-select,\r
-textarea {\r
-  font-family: var(--iw-font-ui) !important;\r
-}\r
-\r
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),\r
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {\r
-  box-shadow:\r
-    inset 0 1px 0 rgba(255,255,255,.028),\r
-    0 1px 0 rgba(0,0,0,.65) !important;\r
-  transition: color .12s ease, border-color .12s ease, background-color .12s ease, filter .12s ease !important;\r
-}\r
-\r
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):hover:not(:disabled),\r
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):hover {\r
-  filter: brightness(1.08);\r
-}\r
-\r
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):focus-visible,\r
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):focus-visible,\r
-input:focus-visible,\r
-select:focus-visible,\r
-textarea:focus-visible {\r
-  outline: 1px solid var(--iw-gold) !important;\r
-  outline-offset: 2px !important;\r
-}\r
-\r
-input:not([type="checkbox"]):not([type="radio"]),\r
-select,\r
-textarea {\r
-  border-radius: var(--iw-r-control) !important;\r
-  border-color: var(--iw-line) !important;\r
-  background: linear-gradient(180deg, #090C0D, #0C0E0D) !important;\r
-  color: var(--iw-text) !important;\r
-  box-shadow:\r
-    inset 0 1px 4px rgba(0,0,0,.7),\r
-    0 1px 0 rgba(255,255,255,.018) !important;\r
-}\r
-\r
-input::placeholder,\r
-textarea::placeholder {\r
-  color: var(--iw-faint) !important;\r
-}\r
-\r
-/* Main nav/tabs often arrive as heavily rounded buttons. Keep their native\r
-   selected colour, but make the rail read like game tabs instead of pills. */\r
-nav button,\r
-nav [role="button"],\r
-header button:not([class*="chat-name-"]),\r
-[class*="tab"] button {\r
-  border-radius: var(--iw-r-control) !important;\r
-  font-weight: 700 !important;\r
-}\r
-\r
-hr {\r
-  border-color: var(--iw-line) !important;\r
-}\r
-\r
-/* ── Shared icon slot ───────────────────────────────────────────────── */\r
-\r
-.iw-ico {\r
-  flex: none;\r
-  display: block;\r
-  position: relative;\r
-  background-repeat: no-repeat;\r
-  background-color: #090806;\r
-  border: 1px solid var(--iw-line-hi);\r
-  border-radius: var(--iw-r-slot);\r
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.45);\r
-}\r
-\r
-.iw-icon-badge {\r
-  position: absolute;\r
-  right: -3px;\r
-  bottom: -3px;\r
-  font-family: var(--iw-font-ui);\r
-  font-size: 9px;\r
-  font-weight: 700;\r
-  line-height: 1;\r
-  padding: 2px 3px;\r
-  border-radius: 1px;\r
-  background: var(--iw-ink-950);\r
-  border: 1px solid var(--iw-ember);\r
-  color: var(--iw-gold);\r
-  font-variant-numeric: tabular-nums;\r
-  pointer-events: none;\r
-}\r
-\r
-/* ── Tier colours ───────────────────────────────────────────────────── */\r
-\r
-.tier-common    { color: var(--iw-t-common); }\r
-.tier-uncommon  { color: var(--iw-t-uncommon); }\r
-.tier-rare      { color: var(--iw-t-rare); }\r
-.tier-epic      { color: var(--iw-t-epic); }\r
-.tier-legendary { color: var(--iw-t-legendary); }\r
-.tier-mythic    { color: var(--iw-t-mythic); }\r
-\r
-/* ── Extension-owned button primitive ───────────────────────────────── */\r
-\r
-.iw-btn {\r
-  font-family: var(--iw-font-ui);\r
-  font-size: 12px;\r
-  font-weight: 700;\r
-  letter-spacing: .055em;\r
-  text-transform: uppercase;\r
-  padding: 7px 14px;\r
-  min-width: 76px;\r
-  border-radius: var(--iw-r-control);\r
-  cursor: pointer;\r
-  border: 1px solid var(--iw-line-hi);\r
-  background: linear-gradient(180deg, #242018, #17140F);\r
-  color: var(--iw-text);\r
-  transition: background .13s, border-color .13s, color .13s;\r
-  align-self: center;\r
-  height: auto;\r
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 1px 0 #000;\r
-}\r
-.iw-btn:hover {\r
-  background: linear-gradient(180deg, #2B261C, #1A1711);\r
-  border-color: var(--iw-gold-dim);\r
-  color: var(--iw-gold);\r
-}\r
-.iw-btn--primary {\r
-  background: linear-gradient(180deg, #A94318, #742A0D);\r
-  border-color: #C05A28;\r
-  color: #FFEAD1;\r
-}\r
-.iw-btn--primary:hover {\r
-  background: linear-gradient(180deg, #C04D1C, #87310E);\r
-  border-color: var(--iw-ember-hi);\r
-  color: #fff;\r
-}\r
-.iw-btn--disabled,\r
-.iw-btn:disabled {\r
-  background: #100F0C;\r
-  border-color: #282218;\r
-  color: var(--iw-faint);\r
-  cursor: not-allowed;\r
-  box-shadow: none;\r
-}\r
-\r
-/* ── Progress / XP primitive ────────────────────────────────────────── */\r
-\r
-.iw-xp { display:flex; flex-direction:column; gap:4px; }\r
-.iw-xp__line {\r
-  display:flex;\r
-  align-items:baseline;\r
-  gap:8px;\r
-  font-size:12px;\r
-  font-family:var(--iw-font-ui);\r
-}\r
-.iw-xp__pct  { color:var(--iw-gold); font-weight:700; font-variant-numeric:tabular-nums; }\r
-.iw-xp__togo { margin-left:auto; color:var(--iw-faint); font-variant-numeric:tabular-nums; }\r
-.iw-xp__track {\r
-  height:4px;\r
-  background:#080806;\r
-  border:1px solid #272117;\r
-  border-radius:0;\r
-  overflow:hidden;\r
-  box-shadow: inset 0 1px 2px rgba(0,0,0,.75);\r
-}\r
-.iw-xp__fill  { height:100%; background:linear-gradient(90deg,#7B3515,var(--iw-ember)); transition:width .3s ease; }\r
-.iw-xp__fill--ready { background:linear-gradient(90deg,#2E6438,#4D9859); }\r
-\r
-/* ── Scrollbars ─────────────────────────────────────────────────────── */\r
-\r
-::-webkit-scrollbar { width: 7px; height: 7px; }\r
-::-webkit-scrollbar-track { background: var(--iw-ink-950); }\r
-::-webkit-scrollbar-thumb { background: #403625; border-radius: 1px; }\r
-::-webkit-scrollbar-thumb:hover { background: var(--iw-line-hi); }\r
-\r
-@media (prefers-reduced-motion: reduce) {\r
-  * { transition:none !important; animation:none !important; }\r
-}\r
-\r
-/* Padded rounded-full elements are almost always pills/tabs/status readouts,\r
-   not true circular glyphs. Flatten them while preserving tiny round dots. */\r
-[class*="rounded-full"][class*="px-"],\r
-button[class*="rounded-full"]:not([class*="chat-name-"]),\r
-[role="button"][class*="rounded-full"]:not([class*="chat-name-"]) {\r
-  border-radius: var(--iw-r-control) !important;\r
-}\r
-\r
-/* Bordered large-radius frames get the same forged edge treatment even when\r
-   they are not .compact-panel (top HUD, inventory shell, market, leaderboard). */\r
-[class*="border"][class*="rounded-3xl"],\r
-[class*="border"][class*="rounded-2xl"],\r
-[class*="border"][class*="rounded-xl"] {\r
-  border-color: var(--iw-line) !important;\r
-  box-shadow:\r
-    inset 0 1px 0 rgba(255,255,255,.018),\r
-    inset 0 -1px 0 rgba(0,0,0,.38) !important;\r
-}\r
+  var base_default = `/* ══════════════════════════════════════════════════════════════════════
+   IdleWorlds Fantasy Skin — "Ashen Iron" base theme
+
+   Visual goal: dense ARPG utility rather than rounded dashboard cards.
+   The palette borrows the material language of forged iron, soot, tarnished
+   brass and ember without copying any game's assets. Layout remains owned by
+   IdleWorlds/React; this layer standardises geometry, typography and surfaces.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Typefaces ────────────────────────────────────────────────────────────
+   Self-hosted from the extension bundle. These used to come from a Google
+   Fonts @import, which had two problems:
+
+     1. An @import inside a content-script stylesheet is fetched by the PAGE
+        and is therefore subject to idleworlds.com's style-src / font-src CSP,
+        not to our host_permissions. A CSP tightening on the game's side would
+        silently drop every custom face.
+     2. It resolves asynchronously AFTER the rest of the sheet applies, so the
+        failure mode was intermittent and cache-dependent — the single most
+        likely reason the theme looked right on some loads and not others.
+
+   font-display: swap keeps text visible during load; the src paths resolve
+   against the extension root and are listed in web_accessible_resources.
+   Run \`npm run vendor\` to populate assets/fonts/. (Audit S1.2) */
+
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 600 700;
+  font-display: swap;
+  src: url('../assets/fonts/cinzel-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/barlow-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../assets/fonts/barlow-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../assets/fonts/barlow-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/barlow-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Crimson Text';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/crimson-text-italic.woff2') format('woff2');
+}
+
+:root {
+  /* Forged surfaces */
+  --iw-ink-950: #070806;
+  --iw-ink-900: #0B0C0A;
+  --iw-ink-850: #10100D;
+  --iw-ink-800: #14130F;
+  --iw-ink-750: #191711;
+  --iw-ink-700: #1E1B15;
+  --iw-ink-600: #29251C;
+
+  /* Brass / iron edges */
+  --iw-line:    #342D20;
+  --iw-line-hi: #58482B;
+  --iw-line-hot:#806337;
+
+  /* Accents */
+  --iw-gold:     #D4AD63;
+  --iw-gold-dim: #9D8458;
+  --iw-ember:    #B64619;
+  --iw-ember-hi: #D15A22;
+
+  /* Text */
+  --iw-text:   #DDD6C6;
+  --iw-text-hi:#F0E8D6;
+  --iw-dim:    #938A79;
+  --iw-faint:  #666052;
+
+  /* Semantic */
+  --iw-good: #82B88A;
+  --iw-bad:  #D27171;
+  --iw-info: #75A8C8;
+
+  /* Tier colours */
+  --iw-t-common:    #B9B4A8;
+  --iw-t-uncommon:  #6FBF73;
+  --iw-t-rare:      #5B9BD5;
+  --iw-t-epic:      #B98FE0;
+  --iw-t-legendary: #D98A3A;
+  --iw-t-mythic:    #E06666;
+
+  /* Typography */
+  --iw-font-head: 'Cinzel', Georgia, serif;
+  --iw-font-ui:   'Barlow', system-ui, -apple-system, sans-serif;
+  --iw-font-flav: 'Crimson Text', Georgia, serif;
+
+  /* Geometry — intentionally restrained. Round pills are not the house style. */
+  --iw-r-panel:   3px;
+  --iw-r-control: 2px;
+  --iw-r-slot:    2px;
+  --iw-r:         var(--iw-r-control);
+  --iw-r-sm:      var(--iw-r-slot);
+
+  /* Game theme tokens */
+  --background:          var(--iw-ink-900) !important;
+  --foreground:          var(--iw-text)    !important;
+  --card:                var(--iw-ink-800) !important;
+  --card-foreground:     var(--iw-text)    !important;
+  --popover:             var(--iw-ink-800) !important;
+  --popover-foreground:  var(--iw-text)    !important;
+  --panel-bg:            var(--iw-ink-800) !important;
+  --panel-border:        var(--iw-line)    !important;
+  --surface-bg:          var(--iw-ink-700) !important;
+  --surface-border:      var(--iw-line)    !important;
+  --primary:             var(--iw-ember)   !important;
+  --primary-foreground:  #FFEAD1           !important;
+  --accent:              var(--iw-ember)   !important;
+  --accent-foreground:   var(--iw-text-hi) !important;
+  --ring:                var(--iw-gold-dim)!important;
+  --border:              var(--iw-line)    !important;
+  --input:               var(--iw-ink-850) !important;
+  --muted:               var(--iw-ink-700) !important;
+  --muted-foreground:    var(--iw-dim)     !important;
+  --sidebar:             var(--iw-ink-800) !important;
+  --sidebar-foreground:  var(--iw-text)    !important;
+  --sidebar-border:      var(--iw-line)    !important;
+  --sidebar-accent:      var(--iw-ink-700) !important;
+}
+
+html,
+body {
+  background-color: var(--iw-ink-900) !important;
+  color: var(--iw-text) !important;
+  font-family: var(--iw-font-ui) !important;
+}
+
+body {
+  background-image:
+    radial-gradient(1200px 520px at 50% -140px, rgba(124, 91, 42, .10), transparent 68%),
+    linear-gradient(180deg, rgba(255,255,255,.012), transparent 220px) !important;
+  background-attachment: fixed !important;
+}
+
+/* Major semantic text. Item names remain Barlow via their own selectors. */
+h1, h2, h3 {
+  font-family: var(--iw-font-head) !important;
+  letter-spacing: .025em;
+  color: var(--iw-text-hi) !important;
+}
+
+/* ── Core surfaces ──────────────────────────────────────────────────── */
+
+.compact-panel,
+[class~="compact-panel"] {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.018), transparent 48px),
+    var(--iw-ink-800) !important;
+  border-color: var(--iw-line) !important;
+  color: var(--iw-text) !important;
+  border-radius: var(--iw-r-panel) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.018),
+    inset 0 -1px 0 rgba(0,0,0,.42) !important;
+}
+
+.compact-row,
+[class*="item-row"] {
+  background-color: var(--iw-ink-800) !important;
+  border-color: var(--iw-line) !important;
+  color: var(--iw-text) !important;
+}
+
+/* Tailwind's generous radii are a major source of the dashboard aesthetic.
+   Flatten the large/medium utility radii, while leaving rounded-full alone
+   for true status dots/avatars. Buttons receive their own stricter rule. */
+[class*="rounded-3xl"],
+[class*="rounded-2xl"],
+[class*="rounded-xl"],
+[class*="rounded-lg"],
+[class*="rounded-md"] {
+  border-radius: var(--iw-r-panel) !important;
+}
+
+button:not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {
+  border-radius: var(--iw-r-control) !important;
+}
+
+/* ── Controls ───────────────────────────────────────────────────────── */
+
+/* Forged base colour for controls.
+   Deliberately ONE element-selector of specificity (0,0,1) and NOT !important:
+   any colour the game sets itself — a Tailwind bg-* utility, an inline style,
+   a cosmetic chat-name gradient — outranks this and still wins. It exists only
+   to catch buttons the game leaves unpainted, which previously fell through to
+   the user agent's light \`buttonface\` and rendered as a pale box with our dark
+   gradient laid over it. Found by build-tools/render-fixtures.mjs. */
+button,
+[role="button"] {
+  background-color: var(--iw-ink-750);
+  color: var(--iw-text);
+}
+
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),
+input,
+select,
+textarea {
+  font-family: var(--iw-font-ui) !important;
+}
+
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.028),
+    0 1px 0 rgba(0,0,0,.65) !important;
+  transition: color .12s ease, border-color .12s ease, background-color .12s ease, filter .12s ease !important;
+}
+
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):hover:not(:disabled),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):hover {
+  filter: brightness(1.08);
+}
+
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):focus-visible,
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 1px solid var(--iw-gold) !important;
+  outline-offset: 2px !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border-radius: var(--iw-r-control) !important;
+  border-color: var(--iw-line) !important;
+  background: linear-gradient(180deg, #090C0D, #0C0E0D) !important;
+  color: var(--iw-text) !important;
+  box-shadow:
+    inset 0 1px 4px rgba(0,0,0,.7),
+    0 1px 0 rgba(255,255,255,.018) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--iw-faint) !important;
+}
+
+/* Main nav/tabs often arrive as heavily rounded buttons. Keep their native
+   selected colour, but make the rail read like game tabs instead of pills. */
+nav button,
+nav [role="button"],
+header button:not([class*="chat-name-"]),
+[class*="tab"] button {
+  border-radius: var(--iw-r-control) !important;
+  font-weight: 700 !important;
+}
+
+hr {
+  border-color: var(--iw-line) !important;
+}
+
+/* ── Shared icon slot ───────────────────────────────────────────────── */
+
+.iw-ico {
+  flex: none;
+  display: block;
+  position: relative;
+  background-repeat: no-repeat;
+  background-color: #090806;
+  border: 1px solid var(--iw-line-hi);
+  border-radius: var(--iw-r-slot);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.45);
+}
+
+.iw-icon-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  font-family: var(--iw-font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 3px;
+  border-radius: 1px;
+  background: var(--iw-ink-950);
+  border: 1px solid var(--iw-ember);
+  color: var(--iw-gold);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* ── Tier colours ───────────────────────────────────────────────────── */
+
+.tier-common    { color: var(--iw-t-common); }
+.tier-uncommon  { color: var(--iw-t-uncommon); }
+.tier-rare      { color: var(--iw-t-rare); }
+.tier-epic      { color: var(--iw-t-epic); }
+.tier-legendary { color: var(--iw-t-legendary); }
+.tier-mythic    { color: var(--iw-t-mythic); }
+
+/* ── Extension-owned button primitive ───────────────────────────────── */
+
+.iw-btn {
+  font-family: var(--iw-font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  min-width: 76px;
+  border-radius: var(--iw-r-control);
+  cursor: pointer;
+  border: 1px solid var(--iw-line-hi);
+  background: linear-gradient(180deg, #242018, #17140F);
+  color: var(--iw-text);
+  transition: background .13s, border-color .13s, color .13s;
+  align-self: center;
+  height: auto;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 1px 0 #000;
+}
+.iw-btn:hover {
+  background: linear-gradient(180deg, #2B261C, #1A1711);
+  border-color: var(--iw-gold-dim);
+  color: var(--iw-gold);
+}
+.iw-btn--primary {
+  background: linear-gradient(180deg, #A94318, #742A0D);
+  border-color: #C05A28;
+  color: #FFEAD1;
+}
+.iw-btn--primary:hover {
+  background: linear-gradient(180deg, #C04D1C, #87310E);
+  border-color: var(--iw-ember-hi);
+  color: #fff;
+}
+.iw-btn--disabled,
+.iw-btn:disabled {
+  background: #100F0C;
+  border-color: #282218;
+  color: var(--iw-faint);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Progress / XP primitive ────────────────────────────────────────── */
+
+.iw-xp { display:flex; flex-direction:column; gap:4px; }
+.iw-xp__line {
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  font-size:12px;
+  font-family:var(--iw-font-ui);
+}
+.iw-xp__pct  { color:var(--iw-gold); font-weight:700; font-variant-numeric:tabular-nums; }
+.iw-xp__togo { margin-left:auto; color:var(--iw-faint); font-variant-numeric:tabular-nums; }
+.iw-xp__track {
+  height:4px;
+  background:#080806;
+  border:1px solid #272117;
+  border-radius:0;
+  overflow:hidden;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.75);
+}
+.iw-xp__fill  { height:100%; background:linear-gradient(90deg,#7B3515,var(--iw-ember)); transition:width .3s ease; }
+.iw-xp__fill--ready { background:linear-gradient(90deg,#2E6438,#4D9859); }
+
+/* ── Scrollbars ─────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: var(--iw-ink-950); }
+::-webkit-scrollbar-thumb { background: #403625; border-radius: 1px; }
+::-webkit-scrollbar-thumb:hover { background: var(--iw-line-hi); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition:none !important; animation:none !important; }
+}
+
+/* Padded rounded-full elements are almost always pills/tabs/status readouts,
+   not true circular glyphs. Flatten them while preserving tiny round dots. */
+[class*="rounded-full"][class*="px-"],
+button[class*="rounded-full"]:not([class*="chat-name-"]),
+[role="button"][class*="rounded-full"]:not([class*="chat-name-"]) {
+  border-radius: var(--iw-r-control) !important;
+}
+
+/* Bordered large-radius frames get the same forged edge treatment even when
+   they are not .compact-panel (top HUD, inventory shell, market, leaderboard). */
+[class*="border"][class*="rounded-3xl"],
+[class*="border"][class*="rounded-2xl"],
+[class*="border"][class*="rounded-xl"] {
+  border-color: var(--iw-line) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.018),
+    inset 0 -1px 0 rgba(0,0,0,.38) !important;
+}
 `;
 
   // src/content.js

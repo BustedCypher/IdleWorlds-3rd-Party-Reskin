@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { access, mkdir, rm, stat } from 'node:fs/promises';
+import { access, mkdir, readFile, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,6 +41,15 @@ if (missing.length) {
 
 await mkdir(DIST, { recursive: true });
 
+const normalizedCssTextPlugin = {
+  name: 'normalized-css-text',
+  setup(buildApi) {
+    buildApi.onLoad({ filter: /\.css$/ }, async ({ path: cssPath }) => ({
+      contents: (await readFile(cssPath, 'utf8')).replace(/\r\n?/g, '\n'),
+      loader: 'text',
+    }));
+  },
+};
 const result = await build({
   entryPoints: [path.join(ROOT, 'src', 'content.js')],
   outfile: OUTFILE,
@@ -48,13 +57,14 @@ const result = await build({
   format: 'iife',
   platform: 'browser',
   target: ['chrome109'],
-  loader: { '.css': 'text' },
+  plugins: [normalizedCssTextPlugin],
   charset: 'utf8',
   sourcemap: false,
   minify: false,
   legalComments: 'none',
   metafile: true,
 });
+
 const output = await stat(OUTFILE);
 const sourceInputs = Object.keys(result.metafile.inputs)
   .filter(file => /\.(?:js|css)$/i.test(file)).length;
