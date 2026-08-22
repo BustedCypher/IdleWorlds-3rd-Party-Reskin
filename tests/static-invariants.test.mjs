@@ -166,6 +166,10 @@ assert.doesNotMatch(watcher, /panel\.textContent\.slice/,
   'skill detection must not search arbitrary panel body text');
 assert.match(watcher, /JSON\.stringify\(\[buttons, identities\]\)/,
   'skill cache must represent exact normalized detection signals');
+assert.match(watcher, /drainGlobalBudget\(FLUSH_BUDGET\)/,
+  'DOM reconciliation must enforce one global per-frame budget');
+assert.doesNotMatch(watcher, /drainConnected\([^\n]+FLUSH_BUDGET/,
+  'per-queue frame budgets can multiply work far beyond the intended cap');
 const skillSigStart = watcher.indexOf('function skillSignature(panel)');
 const skillSigEnd = watcher.indexOf('\n}', skillSigStart);
 assert.doesNotMatch(watcher.slice(skillSigStart, skillSigEnd), /textContent[^\n]*\.length/,

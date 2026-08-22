@@ -948,28 +948,36 @@
      *  • Anything over budget STAYS in the set and a follow-up frame is scheduled,
      *    so a burst degrades into several frames instead of one long one.
      */
-    function drainConnected(set, budget) {
-      const out = [];
-      const keep = [];
+    function takeConnected(set) {
       for (const el of set) {
-        if (!el || !el.isConnected) continue;
-        if (out.length < budget) out.push(el);
-        else keep.push(el);
+        set.delete(el);
+        if (el?.isConnected) return el;
       }
-      set.clear();
-      for (const el of keep) set.add(el);
+      return null;
+    }
+    function drainGlobalBudget(budget) {
+      const groups = [
+        ['inventory', pendingInventory], ['skills', pendingSkills],
+        ['equipment', pendingEquipment], ['shop', pendingShop],
+        ['bgRoots', pendingBgRoots], ['nameRoots', pendingNameRoots],
+      ];
+      const out = Object.fromEntries(groups.map(([key]) => [key, []]));
+      let cursor = 0, idle = 0, remaining = budget;
+      while (remaining > 0 && idle < groups.length) {
+        const [key, set] = groups[cursor];
+        cursor = (cursor + 1) % groups.length;
+        const el = takeConnected(set);
+        if (el) { out[key].push(el); remaining -= 1; idle = 0; }
+        else idle += 1;
+      }
       return out;
     }
     
     function flushPending() {
       flushQueued = false;
     
-      const inventory = drainConnected(pendingInventory, FLUSH_BUDGET);
-      const skills    = drainConnected(pendingSkills,    FLUSH_BUDGET);
-      const equipment = drainConnected(pendingEquipment, FLUSH_BUDGET);
-      const shop      = drainConnected(pendingShop,      FLUSH_BUDGET);
-      const bgRoots   = drainConnected(pendingBgRoots,   FLUSH_BUDGET);
-      const nameRoots = drainConnected(pendingNameRoots, FLUSH_BUDGET);
+      const { inventory, skills, equipment, shop, bgRoots, nameRoots } =
+        drainGlobalBudget(FLUSH_BUDGET);
     
       // guardEach so one malformed row degrades to "that row stays native" instead
       // of silently cancelling the rest of this category's work. (Audit S3.7)
