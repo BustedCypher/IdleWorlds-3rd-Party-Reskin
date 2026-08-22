@@ -9,13 +9,13 @@ The skin is **presentation only**. React keeps ownership of every gameplay node 
 ## Setup
 
 ```bash
-npm install       # jsdom / Playwright development dependencies
+npm ci            # install locked jsdom / Playwright development dependencies
 npm run vendor    # downloads pinned sprite atlases + typefaces into assets/
 npm run build     # strict production build; requires vendored assets
-npm test          # rebuilds the current bundle, syntax-checks it, then runs four suites
+npm test          # rebuilds the current bundle, syntax-checks it, then runs five suites
 ```
 
-Or perform the strict fresh-clone sequence after `npm install`:
+Or perform the strict fresh-clone sequence after `npm ci`:
 
 ```bash
 npm run setup
@@ -34,11 +34,12 @@ Then load the folder in Chrome via `chrome://extensions` → **Load unpacked**.
 ```text
 manifest.json          MV3 manifest
 .github/workflows/
-  ci.yml                rebuild-first source / smoke validation for PRs and fix branches
+  ci.yml                read-only rebuild/test validation for pushes and PRs
 build-tools/
-  build_recovered.py   deterministic recovered-source bundler
-  vendor-assets.mjs    pinned atlas + typeface downloader / verifier
-  render-fixtures.mjs  optional visual fixture renderer
+  build_recovered.py      deterministic recovered-source bundler
+  vendor-assets.mjs       pinned atlas + typeface downloader / verifier
+  render-fixtures.mjs     responsive visual fixture renderer
+  audit-items-contract.mjs live items.json schema/contract audit
 assets/                vendored atlas metadata + fonts; large PNGs produced by vendor
 dist/                  build output — do not edit
   content.bundle.js    production content bundle
@@ -66,7 +67,8 @@ src/
     inventory.css  skillpanel.css  tooltip-engine.css  ui-system.css
 tests/
   data-services.test.mjs    ItemDatabase / AtlasService resilience
-  inventory-model.test.mjs  pure parser cases
+  inventory-model.test.mjs  pure owned-item parser cases
+  item-display.test.mjs     enhanced/current item stat presentation contracts
   static-invariants.test.mjs architecture rules, asserted against source
   smoke.test.mjs            real built bundle against a synthetic live-like DOM
 ```
@@ -101,19 +103,23 @@ Teardown disconnects the central observer, removes Inventory overlays and semant
 
 ## Testing
 
-`npm test` first rebuilds the production bundle with `--allow-missing-assets`, runs `node --check` on that generated bundle, then executes the four regression suites. This ordering is intentional: the smoke test must never execute stale `dist` output.
+`npm test` first rebuilds the production bundle with `--allow-missing-assets`, runs `node --check` on that generated bundle, then executes the five regression suites. This ordering is intentional: the smoke test must never execute stale `dist` output.
 
 `static-invariants.test.mjs` asserts architecture directly against the source. `smoke.test.mjs` boots the **real rebuilt bundle** in jsdom against a synthetic IdleWorlds-shaped DOM and checks, among other things:
 
 - bundle boot succeeds without third-party runtime requests
 - none of the game's original Text nodes are detached
 - Inventory, skill and navigation presentation mounts
-- a 121-row mutation burst drains across frames without dropping work
+- a 122-row mutation burst drains across frames without dropping work
 - equal-length Inventory (`x1 → x2`) changes reconcile
 - equal-length skill action (`Mine → Fish`) changes invalidate the skill cache
 - native inline skill/background styles survive teardown exactly
 - all five runtime stylesheets disappear on disable
 - disable → re-enable restores presentation without duplicating tooltip/storage surfaces
 - a second disable is just as clean as the first
+
+`npm run fixtures` renders the visual harness and audits responsive Inventory/Skill behavior at 320, 360, 390, 430, 600 and 768px, plus short-viewport tooltip scrolling. `npm run audit:items` fetches the current public `/items.json` and validates the live item-data contract; it is intentionally manual rather than a CI gate because it depends on a live external endpoint.
+
+CI runs `npm test` on pushes and pull requests, then fails if rebuilding changes the committed production bundle. CI never writes back to the repository.
 
 The synthetic smoke test is not a substitute for live IdleWorlds verification. Any change that depends on real React/Tailwind structure still needs to be checked in Chrome against the current game DOM before the draft PR is considered ready to merge.

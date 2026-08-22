@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════
-   Inventory / ItemRow — v1.5.10
+   Inventory / ItemRow — reusable owned-item presentation
 
    Inventory is the reference implementation for reusable RPG item rows.
    React-owned commands remain live DOM nodes; the Fantasy Skin owns the

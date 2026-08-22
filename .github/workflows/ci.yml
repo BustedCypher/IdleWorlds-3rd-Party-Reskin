@@ -6,9 +6,14 @@ on:
       - main
       - 'fix/**'
       - 'feature/**'
+  pull_request:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
@@ -23,24 +28,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-
+          cache: npm
       - name: Install test dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Rebuild, syntax-check and run regression suites
         run: npm test
 
-      - name: Sync generated production bundle on same-repository working branches
-        if: github.ref != 'refs/heads/main'
+      - name: Verify committed production bundle is current
         shell: bash
-        run: |
-          git add -- dist/content.bundle.js
-          if git diff --cached --quiet; then
-            echo "dist/content.bundle.js is already current"
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Rebuild production bundle"
-          git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+        run: git diff --exit-code -- dist/content.bundle.js

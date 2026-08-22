@@ -1,5 +1,5 @@
 /**
- * InventoryRenderer — v1.5.10 ItemRow correction pass
+ * InventoryRenderer — reusable owned-item row presentation
  *
  * Inventory is the first full reusable RPG item-row implementation. React
  * keeps ownership of every real command; the skin owns only presentation.

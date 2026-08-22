@@ -2,7 +2,7 @@
  * SkillPanelRenderer
  *
  * Reconciles skill panels and attaches semantic role attributes for the shared
- * v1.5.0 action-panel layout. React owns the DOM; we never reparent gameplay
+ * action-panel layout. React owns the DOM; we never reparent gameplay
  * nodes or create another observer.
  */
 

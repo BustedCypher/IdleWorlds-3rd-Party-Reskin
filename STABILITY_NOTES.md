@@ -1,65 +1,57 @@
-# IdleWorlds Fantasy Skin v1.4.1 — Stability Pass
+# IdleWorlds Fantasy Skin — Stability and Validation Notes
 
-## Scope
+## Current status
 
-This source tree was recovered from the inline source map shipped in the v1.4.0 release bundle, then revised for the v1.4.1 stability pass. It is **not** a replacement for the canonical full development project: the uploaded v1.4.0 release ZIP did not contain the original `package.json`, `build-tools/build.js`, `build-tools/pack.js`, or `src/loader/skin-loader.js`.
+The current source is a hardened Manifest V3 content-script skin for IdleWorlds. The project still uses the deterministic recovered Python bundler because build-system replacement is gated behind final live-game validation; runtime architecture and source code are otherwise maintained directly in `src/`.
 
-The supplied `build-tools/build_recovered.py` is a deterministic recovery build used only to reproduce the patched Chrome content bundle without the unavailable original esbuild project.
+The feature branch is intentionally kept separate from `main` while hardening is reviewed. The skin remains presentation-only: React owns gameplay DOM, state and event handlers.
 
-## v1.4.1 changes
+## Completed hardening
 
-- Register all renderers/listeners before initial DOM discovery.
-- Use one central `MutationObserver` with batched dirty-root/component reconciliation.
-- Observe relevant React state changes (`class`, `style`, `disabled`, `aria-disabled`, text and child changes).
-- Remove one-shot inventory rendering; rows reconcile when data/atlas state changes.
-- Preserve interactive game controls in inventory rows instead of hiding every original child indiscriminately.
-- Remove per-skill-panel observers.
-- Stop reparenting React-owned skill panels; skill chrome now uses CSS pseudo-elements on the existing panel.
-- Allow BackgroundPainter to repair a previously painted node when React writes game colours back to it.
-- Replace permanent NameScanner root marks with repeatable scanning and ItemDatabase revision invalidation.
-- Unify item-name normalisation across ItemDatabase and AtlasService.
-- Make ItemDatabase cache/load failures retryable, including stale-cache fallback.
-- Make atlas metadata loading independently recoverable so one failed atlas does not disable the other.
-- Pin atlas/index assets to immutable Git commit `c4695b7f5519789558b0d72fa85e60338070e4b5` instead of the mutable `main` branch.
-- Refresh open tooltips after item/atlas updates.
-- Remove the inline source map from the production content bundle.
+- Centralized all DOM observation in one budgeted `MutationObserver`.
+- Removed producer-only equipment/shop watcher queues that had no consumers.
+- Prevented reparenting/replacement of React-owned gameplay nodes and text.
+- Added reversible property-level inline style ownership for Inventory, Skills and background treatment.
+- Fixed disable/re-enable lifecycle symmetry and listener duplication risks.
+- Made enhanced `+1` through `+4` equipment resolve to the correct item records.
+- Added current resistance, bonus-proc and work-order stat coverage from the live item contract.
+- Preserved native Inventory actions, loadout/socket details and requirements on narrow screens.
+- Restored long Inventory names to a two-line presentation.
+- Expanded item-name tooltip discovery without consuming native game clicks.
+- Hardened interactive item hovercards for keyboard, touch and short viewports.
+- Removed the dormant player-HUD relayout subsystem rather than leaving an untested activation path.
+- Added periodic ItemDatabase refresh so long-lived sessions do not stay pinned to stale cache data.
+- Enforced one global per-frame DOM flush budget and reduced hot-path mutation work.
+- Reduced long-session retention by pruning detached inline-style ownership records.
+- Added responsive fixture coverage at 320, 360, 390, 430, 600 and 768px.
 
-## Automated checks
+## Automated validation
 
-Run:
+Run the local validation sequence with:
 
 ```bash
 npm test
-npm run build
-node --check dist/content.bundle.js
+npm run fixtures
+npm run audit:items
 ```
 
-Current automated coverage verifies:
+`npm test` rebuilds `dist/content.bundle.js`, syntax-checks it, then runs data-service, Inventory-model, item-display, architecture-invariant and full lifecycle smoke suites. The smoke suite exercises disable → enable → disable, equal-length native text changes, mutation bursts, tooltip ownership, enhanced gear and React text-node preservation.
 
-- ItemDatabase stale-cache fallback and retry after an initial failure.
-- Partial AtlasService load and later recovery of the missing atlas.
-- Renderer listeners register before DOMWatcher.
-- Runtime contains exactly one `MutationObserver`.
-- Inventory rows can reconcile on item-database and atlas updates and preserve interactive hosts.
-- NameScanner no longer uses a permanent scanned marker.
-- BackgroundPainter no longer permanently excludes previously painted nodes.
-- SkillPanelRenderer has no private observer and does not append the game panel into an extension wrapper.
-- Atlas assets are pinned to an immutable revision rather than `main`.
-- Production bundle contains no inline source map and stays below the size guard.
+`npm run fixtures` performs visual and responsive assertions, including short-viewport tooltip scrolling and narrow Inventory/Skill layouts. `npm run audit:items` validates assumptions against the current public `/items.json` export and is kept out of CI because it depends on a live endpoint.
 
-## Deliberately deferred
-
-These items need the canonical full source and/or live IdleWorlds DOM before they should be changed:
-
-- Audit and modification of the hosted `skin-loader.js` path.
-- Original esbuild/pack pipeline and web-deploy ZIP generation.
-- Hosted CSP/font dependency verification.
-- Narrowing broad legacy CSS selectors after live coverage testing.
-- Exact inventory action-host layout verification against every live row type. v1.4.1 chooses gameplay safety over aggressive hiding; a mixed content/action host may therefore temporarily retain some duplicate visual content.
-- A less DOM-invasive replacement for NameScanner in React-owned skill text, if live testing shows reconciliation conflicts.
-- EquipmentRenderer and ShopRenderer.
-- Temporary cloak aliases and +4/+5 placeholder badge art.
-
+CI is read-only: pushes and pull requests run `npm ci`, rebuild/test the source, and fail if the committed production bundle is stale.
 ## Validation boundary
 
-The recovered source, data-service tests, structural lifecycle tests, build, and JavaScript syntax checks pass. This environment's Chromium process did not run even a trivial local page reliably, so **no claim is made that v1.4.1 has completed live browser/IdleWorlds regression testing yet**. The next step is to load the v1.4.1 extension in Chrome and exercise live panel mount/remount, inventory actions, cache states, and button state changes before expanding features.
+Automated and fixture validation is strong but is not a substitute for an authenticated live IdleWorlds regression pass. Real React/Tailwind structure, every Inventory action variant, and game updates can only be confirmed against the current live application.
+
+For that reason:
+
+- `main` should remain untouched until the feature branch passes live Chrome regression.
+- No claim should be made that every live game panel has been verified from this development environment.
+- Build-system modernization should remain gated until the current runtime behavior is accepted as stable; replacing the recovered bundler at the same time as unresolved live-DOM changes would make regressions harder to isolate.
+
+## Remaining maintenance items
+
+- Revisit the temporary cloak alias compatibility layer when the upstream item naming contract no longer requires it.
+- Re-run the live item contract audit after major IdleWorlds patches that change item statistics or acquisition metadata.
+- Perform the final authenticated live regression before merge and before replacing the recovered bundler.

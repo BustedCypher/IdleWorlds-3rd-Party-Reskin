@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════
-   IdleWorlds Fantasy Skin — v1.5.1 "Ashen Iron" refinement
+   IdleWorlds Fantasy Skin — "Ashen Iron" base theme
 
    Visual goal: dense ARPG utility rather than rounded dashboard cards.
    The palette borrows the material language of forged iron, soot, tarnished
@@ -21,7 +21,7 @@
 
    font-display: swap keeps text visible during load; the src paths resolve
    against the extension root and are listed in web_accessible_resources.
-   Run `npm run vendor` to populate src/assets/fonts/. (Audit S1.2) */
+   Run `npm run vendor` to populate assets/fonts/. (Audit S1.2) */
 
 @font-face {
   font-family: 'Cinzel';
