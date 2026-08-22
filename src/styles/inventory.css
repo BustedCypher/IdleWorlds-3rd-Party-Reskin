@@ -142,7 +142,8 @@
   justify-content: center;
   font-size: 18px;
   color: var(--iw-faint);
-  overflow: hidden;
+  /* Enhancement sprite intentionally overhangs the bottom-right frame. */
+  overflow: visible;
   cursor: help;
   outline: none;
 }

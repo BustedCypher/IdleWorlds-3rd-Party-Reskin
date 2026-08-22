@@ -342,6 +342,17 @@ class _AtlasService {
     if (!result) return false;
 
     const { atlas, entry, badge } = result;
+    this._applySprite(hostEl, atlas, entry);
+    hostEl.dataset.iwAtlas = atlas;
+
+    if (badge) this._paintBadge(hostEl, badge);
+    else this._clearBadge(hostEl);
+
+    return true;
+  }
+
+  /** Paint one manifest/index entry from either atlas into any sized element. */
+  _applySprite(el, atlas, entry) {
     const isGear = atlas === 'gear';
     const atlasUrl = isGear ? GEAR_ATLAS_URL : ITEM_ATLAS_URL;
     const dims = isGear ? this._gearDims : this._itemDims;
@@ -358,28 +369,46 @@ class _AtlasService {
     const xPct = atlasW > w ? (x / (atlasW - w)) * 100 : 0;
     const yPct = atlasH > h ? (y / (atlasH - h)) * 100 : 0;
 
-    hostEl.style.backgroundImage    = `url("${atlasUrl}")`;
-    hostEl.style.backgroundSize     = `${(atlasW / w) * 100}% ${(atlasH / h) * 100}%`;
-    hostEl.style.backgroundPosition = `${xPct.toFixed(6)}% ${yPct.toFixed(6)}%`;
-    hostEl.style.backgroundRepeat   = 'no-repeat';
-    hostEl.dataset.iwAtlas          = atlas;
-
-    if (badge) this._paintPlaceholderBadge(hostEl, badge);
-    else this._clearBadge(hostEl);
-
-    return true;
+    el.style.backgroundImage    = `url("${atlasUrl}")`;
+    el.style.backgroundSize     = `${(atlasW / w) * 100}% ${(atlasH / h) * 100}%`;
+    el.style.backgroundPosition = `${xPct.toFixed(6)}% ${yPct.toFixed(6)}%`;
+    el.style.backgroundRepeat   = 'no-repeat';
   }
 
-  _paintPlaceholderBadge(hostEl, level) {
+  /**
+   * Paint the dedicated gear-atlas enhancement art. The current manifest keeps
+   * +1, +2, +3 and +4 at indexes 0..3. Name lookup remains authoritative so
+   * sprite coordinates can move without hard-coded atlas math in the renderer.
+   * A text chip is retained only for a future enhancement level with no art.
+   */
+  _paintBadge(hostEl, level) {
     if (typeof getComputedStyle === 'function' && getComputedStyle(hostEl).position === 'static') {
       hostEl.style.position = 'relative';
     }
     let badgeEl = hostEl.querySelector('.iw-icon-badge');
     if (!badgeEl) {
       badgeEl = document.createElement('span');
-      badgeEl.className = 'iw-icon-badge';
       hostEl.appendChild(badgeEl);
     }
+
+    const entry = this._gearByName ? this._gearByName.get(normalise(`+${level}`)) : null;
+
+    if (entry) {
+      badgeEl.className = 'iw-icon-badge iw-icon-badge--sprite';
+      badgeEl.textContent = '';
+      badgeEl.setAttribute('aria-hidden', 'true');
+      badgeEl.setAttribute('data-iw-badge', String(level));
+      this._applySprite(badgeEl, 'gear', entry);
+      return;
+    }
+
+    badgeEl.className = 'iw-icon-badge';
+    badgeEl.removeAttribute('aria-hidden');
+    badgeEl.setAttribute('data-iw-badge', String(level));
+    badgeEl.style.removeProperty('background-image');
+    badgeEl.style.removeProperty('background-size');
+    badgeEl.style.removeProperty('background-position');
+    badgeEl.style.removeProperty('background-repeat');
     badgeEl.textContent = `+${level}`;
   }
 
