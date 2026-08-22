@@ -109,6 +109,7 @@ function boot() {
     console.warn('[IW Fantasy Skin] Atlas failed to load:', err.message);
   });
 
+  ItemDatabase.startAutoRefresh();
   ItemDatabase.ready().catch(err => {
     console.warn('[IW Fantasy Skin] Item database failed to load:', err.message);
   });
@@ -138,6 +139,7 @@ function teardown() {
   booted = false;
 
   guard('teardown:watcher', stopWatcher);
+  ItemDatabase.stopAutoRefresh();
   guard('teardown:tooltip', () => hideTooltip());
   guard('teardown:name-scan', clearItemNameScan);
   guard('teardown:inventory', clearInventoryRenderer);

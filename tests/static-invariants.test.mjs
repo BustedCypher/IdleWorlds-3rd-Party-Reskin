@@ -155,6 +155,12 @@ assert.doesNotMatch(inventoryCSS, /\.fs-inv-details,\s*\.fs-inv-requirements\s*\
 
 /* â”€â”€ Skill detection / treatment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
+const contentEntry = await read('src/content.js');
+assert.match(contentEntry, /ItemDatabase\.startAutoRefresh\(\)/,
+  'boot must enable periodic item-data refresh');
+assert.match(contentEntry, /ItemDatabase\.stopAutoRefresh\(\)/,
+  'teardown must stop periodic item-data refresh');
+
 const watcher = await read('src/modules/DOMWatcher.js');
 assert.doesNotMatch(watcher, /panel\.textContent\.slice/,
   'skill detection must not search arbitrary panel body text');
