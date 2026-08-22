@@ -1161,14 +1161,40 @@
     
     function createInlineStyleOwner() {
       const states = new WeakMap();
-      const touched = new Set();
+      const tracked = new Set();
+      const refByElement = new WeakMap();
+      const weakTracking = typeof WeakRef === 'function' && typeof FinalizationRegistry === 'function';
+      const finalizer = weakTracking ? new FinalizationRegistry(ref => tracked.delete(ref)) : null;
+      function track(el) {
+        if (refByElement.has(el)) return;
+        const ref = weakTracking ? new WeakRef(el) : el;
+        refByElement.set(el, ref);
+        tracked.add(ref);
+        finalizer?.register(el, ref, ref);
+      }
+      function untrack(el) {
+        const ref = refByElement.get(el);
+        if (!ref) return;
+        tracked.delete(ref);
+        finalizer?.unregister(ref);
+        refByElement.delete(el);
+      }
+      function trackedElements() {
+        const live = [];
+        for (const ref of [...tracked]) {
+          const el = weakTracking ? ref.deref() : ref;
+          if (el) live.push(el);
+          else tracked.delete(ref);
+        }
+        return live;
+      }
     
       function stateFor(el, prop) {
         let props = states.get(el);
         if (!props) {
           props = new Map();
           states.set(el, props);
-          touched.add(el);
+          track(el);
         }
     
         let state = props.get(prop);
@@ -1238,18 +1264,18 @@
         }
     
         states.delete(el);
-        touched.delete(el);
+        untrack(el);
       }
     
       function restoreWithin(root) {
         if (!root) return;
-        for (const el of [...touched]) {
+        for (const el of trackedElements()) {
           if (el === root || root.contains?.(el)) restoreElement(el);
         }
       }
     
       function restoreAll() {
-        for (const el of [...touched]) restoreElement(el);
+        for (const el of trackedElements()) restoreElement(el);
       }
     
       return { set, restoreElement, restoreWithin, restoreAll };

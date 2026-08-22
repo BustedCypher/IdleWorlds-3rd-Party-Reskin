@@ -61,6 +61,9 @@ assert.match(styleOwner, /appliedValue/);
 assert.match(styleOwner, /restoreElement/);
 assert.match(styleOwner, /restoreWithin/);
 assert.match(styleOwner, /restoreAll/);
+assert.match(styleOwner, /new WeakRef\(el\)/, 'inline-style ownership should not strongly retain detached DOM nodes');
+assert.match(styleOwner, /FinalizationRegistry/, 'dead weak refs should be pruned after collection');
+assert.doesNotMatch(styleOwner, /const touched = new Set\(\)/, 'style ownership must not keep a strong set of every touched element');
 assert.doesNotMatch(styleOwner, /removeAttribute\(['"]style['"]\)/,
   'property ownership must never erase an entire native style attribute');
 
