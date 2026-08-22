@@ -10,7 +10,8 @@
     "test:run": "node tests/data-services.test.mjs && node tests/inventory-model.test.mjs && node tests/item-display.test.mjs && node tests/static-invariants.test.mjs && node tests/smoke.test.mjs",
     "test": "node build-tools/run-python.mjs build-tools/build_recovered.py --allow-missing-assets && node --check dist/content.bundle.js && npm run test:run",
     "setup": "npm run vendor && npm run build && npm run test:run",
-    "fixtures": "node build-tools/render-fixtures.mjs"
+    "fixtures": "node build-tools/render-fixtures.mjs",
+    "audit:items": "node build-tools/audit-items-contract.mjs"
   },
   "devDependencies": {
     "jsdom": "^25.0.0",
