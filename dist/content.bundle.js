@@ -726,16 +726,12 @@
      * Events dispatched on document:
      *   iw:inventory-row      detail: { row, reason }
      *   iw:skill-panel        detail: { panel, skill, reason }
-     *   iw:equipment-panel    detail: { panel, reason }
-     *   iw:shop-panel         detail: { panel, reason }
      *   iw:dom-flush          detail: { roots }
      *   iw:name-scan-flush    detail: { roots }
      */
     const { guard, guardEach, raf } = require("modules/Runtime.js");
     const SEL_INV_ROW     = '.compact-row, [class*="item-row"]';
     const SEL_SKILL_PANEL = '.compact-panel';
-    const SEL_EQUIP_PANEL = '[class*="equipment"]';
-    const SEL_SHOP_PANEL  = '[class*="shop"]';
     
     // Item-name discovery is intentionally not tied to a small selector list.
     // IdleWorlds can surface an item name in quests, skills, equipment, shops,
@@ -871,8 +867,6 @@
     
     const pendingInventory = new Set();
     const pendingSkills    = new Set();
-    const pendingEquipment = new Set();
-    const pendingShop      = new Set();
     const pendingBgRoots   = new Set();
     const pendingNameRoots = new Set();
     let flushQueued = false;
@@ -895,16 +889,12 @@
       const {
         inventory = true,
         skill = true,
-        equipment = true,
-        shop = true,
         names = true,
         background = true,
       } = opts;
     
       if (inventory) addIfConnected(pendingInventory, nearest(el, SEL_INV_ROW));
       if (skill)     addIfConnected(pendingSkills,    nearest(el, SEL_SKILL_PANEL));
-      if (equipment) addIfConnected(pendingEquipment, nearest(el, SEL_EQUIP_PANEL));
-      if (shop)      addIfConnected(pendingShop,      nearest(el, SEL_SHOP_PANEL));
       if (names)     addNameRoot(el);
       if (background) addIfConnected(pendingBgRoots, el);
       scheduleFlush(reason);
@@ -918,12 +908,6 @@
     
       if (root.matches?.(SEL_SKILL_PANEL)) addIfConnected(pendingSkills, root);
       root.querySelectorAll?.(SEL_SKILL_PANEL).forEach(el => addIfConnected(pendingSkills, el));
-    
-      if (root.matches?.(SEL_EQUIP_PANEL)) addIfConnected(pendingEquipment, root);
-      root.querySelectorAll?.(SEL_EQUIP_PANEL).forEach(el => addIfConnected(pendingEquipment, el));
-    
-      if (root.matches?.(SEL_SHOP_PANEL)) addIfConnected(pendingShop, root);
-      root.querySelectorAll?.(SEL_SHOP_PANEL).forEach(el => addIfConnected(pendingShop, el));
     
       addNameRoot(root);
     
@@ -958,7 +942,6 @@
     function drainGlobalBudget(budget) {
       const groups = [
         ['inventory', pendingInventory], ['skills', pendingSkills],
-        ['equipment', pendingEquipment], ['shop', pendingShop],
         ['bgRoots', pendingBgRoots], ['nameRoots', pendingNameRoots],
       ];
       const out = Object.fromEntries(groups.map(([key]) => [key, []]));
@@ -976,7 +959,7 @@
     function flushPending() {
       flushQueued = false;
     
-      const { inventory, skills, equipment, shop, bgRoots, nameRoots } =
+      const { inventory, skills, bgRoots, nameRoots } =
         drainGlobalBudget(FLUSH_BUDGET);
     
       // guardEach so one malformed row degrades to "that row stays native" instead
@@ -987,12 +970,6 @@
       guardEach('emit:skill-panel', skills, panel =>
         emit('iw:skill-panel', { panel, skill: detectSkillTypeCached(panel), reason: 'reconcile' }));
     
-      guardEach('emit:equipment-panel', equipment, panel =>
-        emit('iw:equipment-panel', { panel, reason: 'reconcile' }));
-    
-      guardEach('emit:shop-panel', shop, panel =>
-        emit('iw:shop-panel', { panel, reason: 'reconcile' }));
-    
       // These two are guarded individually so a throwing dom-flush consumer cannot
       // prevent the name-scan consumers from running, and — critically — cannot
       // skip the re-schedule below, which would strand every element still queued
@@ -1001,8 +978,8 @@
       if (nameRoots.length) guard('emit:name-scan-flush', () => emit('iw:name-scan-flush', { roots: nameRoots }));
     
       // Anything left over after the budget gets the next frame.
-      if (pendingInventory.size || pendingSkills.size || pendingEquipment.size
-          || pendingShop.size || pendingBgRoots.size || pendingNameRoots.size) {
+      if (pendingInventory.size || pendingSkills.size
+          || pendingBgRoots.size || pendingNameRoots.size) {
         scheduleFlush();
       }
     }
@@ -1047,15 +1024,11 @@
             if (m.attributeName === 'style') {
               queueContext(m.target, 'attr:style', {
                 inventory: false,
-                equipment: false,
-                shop: false,
                 names: false,
               });
             } else if (m.attributeName === 'disabled' || m.attributeName === 'aria-disabled') {
               queueContext(m.target, `attr:${m.attributeName}`, {
                 inventory: false,
-                equipment: false,
-                shop: false,
                 names: false,
                 background: false,
               });
@@ -1063,7 +1036,7 @@
               // A class change can make an existing node become (or cease being) a
               // row/panel, so structural consumers must reconsider THAT NODE.
               //
-              // It used to also call discover(m.target), which runs five
+              // It used to also call discover(m.target), which runs structural
               // querySelectorAll sweeps over the whole subtree. React toggles
               // classes on containers constantly (data-[state=…], animation
               // classes, progress steps), so a class flip on a high-level container
@@ -1109,8 +1082,6 @@
       flushQueued = false;
       pendingInventory.clear();
       pendingSkills.clear();
-      pendingEquipment.clear();
-      pendingShop.clear();
       pendingBgRoots.clear();
       pendingNameRoots.clear();
     }
@@ -4106,27 +4077,8 @@
     const { guard, raf } = require("modules/Runtime.js");
     const css = require("styles/ui-system.css").default;
     const NAV_LABELS = ['game', 'market', 'leaderboards', 'village', 'dungeon'];
-    // The audited v1.5.3 visual baseline never successfully activated the HUD
-    // relayout path on the current live DOM. Keep that structural rewrite disabled
-    // until it is rebuilt/tested as an isolated feature; name/readout fixes must not
-    // implicitly switch on a dormant layout system.
-    const ENABLE_PLAYER_HUD_RELAYOUT = false;
-    const HUD_METRIC_PATTERNS = [
-      /^\s*[💰🪙]?\s*[\d,]+\s*$/u,
-      /\batk\s*\d+\s*[•·]\s*def\s*\d+\s*[•·]\s*hp\s*\d+/i,
-      /\bxp\s*[+\-]?\d+\s*\/\s*task\b/i,
-      /\b(?:no\s+)?atk\s+potion\b/i,
-      /\b(?:no\s+)?def\s+potion\b/i,
-      /\bworld\s+buff\b/i,
-      /\bboosted\b/i,
-    ];
-    
     function normText(value) {
       return String(value || '').replace(/\s+/g, ' ').trim();
-    }
-    
-    function lower(el) {
-      return normText(el?.textContent).toLowerCase();
     }
     
     function setRole(el, role) {
@@ -4147,13 +4099,6 @@
         cur = cur.parentElement;
       }
       return null;
-    }
-    
-    function directChildUnder(root, el) {
-      if (!root || !el || !root.contains(el)) return null;
-      let cur = el;
-      while (cur && cur.parentElement !== root) cur = cur.parentElement;
-      return cur?.parentElement === root ? cur : null;
     }
     
     function sameTextShell(el, stop, maxDepth = 4) {
@@ -4248,228 +4193,6 @@
       });
     }
     
-    function chooseHudHost(marker) {
-      let cur = marker;
-      let best = null;
-      for (let depth = 0; cur && depth < 9; depth += 1, cur = cur.parentElement) {
-        const text = lower(cur);
-        if (!/players online/.test(text) || !/combat\s+lv\s*\d+/.test(text)) continue;
-        if (/\batk\s*\d+/.test(text) && /\bdef\s*\d+/.test(text) && /\bhp\s*\d+/.test(text)) {
-          best = cur;
-          const rect = cur.getBoundingClientRect?.();
-          if (rect && rect.width >= Math.min(720, window.innerWidth * .62) && rect.height < 360) return cur;
-        }
-      }
-      return best;
-    }
-    
-    function chooseIdentityHost(marker, hud) {
-      let cur = marker;
-      let best = marker.parentElement;
-      for (let depth = 0; cur && cur !== hud && depth < 7; depth += 1, cur = cur.parentElement) {
-        const text = lower(cur);
-        if (/players online/.test(text) && /combat\s+lv\s*\d+/.test(text) && !/\batk\s*\d+\s*[•·]\s*def/.test(text)) {
-          best = cur;
-        }
-      }
-      return best;
-    }
-    
-    function hudLeafCandidates(identity) {
-      // The live game can render the player name as a clickable control so other
-      // players can inspect/profile it, and cosmetic name colours may live on a
-      // nested span. Do not exclude buttons/anchors here; only reject containers
-      // that contain unrelated interactive descendants.
-      return [...identity.querySelectorAll('h1,h2,h3,h4,div,span,p,button,a,[role="button"]')]
-        .filter(el => {
-          const nestedControls = [...el.querySelectorAll('button,a,input,select,textarea,[role="button"]')]
-            .filter(control => control !== el);
-          return nestedControls.length === 0;
-        })
-        .filter(el => el.childElementCount <= 2)
-        .filter(el => {
-          const text = normText(el.textContent);
-          return text && text.length <= 80;
-        });
-    }
-    
-    function hudOrderedTextCandidates(identity) {
-      const candidates = hudLeafCandidates(identity);
-      const position = new Map();
-      candidates.forEach((el, index) => position.set(el, index));
-    
-      // Prefer the smallest shell for duplicate same-text candidates, then preserve
-      // DOM order. This makes the sequence robust to wrappers introduced by React.
-      const byText = new Map();
-      for (const el of candidates) {
-        const text = normText(el.textContent);
-        const previous = byText.get(text);
-        if (!previous || previous.contains(el)) byText.set(text, el);
-      }
-      return [...byText.values()].sort((a, b) => {
-        if (a === b) return 0;
-        const relation = a.compareDocumentPosition?.(b) || 0;
-        if (relation & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
-        if (relation & Node.DOCUMENT_POSITION_PRECEDING) return 1;
-        return (position.get(a) || 0) - (position.get(b) || 0);
-      });
-    }
-    
-    function markPlayerName(name, identity) {
-      if (!name) return;
-      const shell = sameTextShell(name, identity, 6);
-      setRole(shell, 'hud-player-name');
-      shell.dataset.iwHudPlayerText = '1';
-      name.dataset.iwHudPlayerText = '1';
-    
-      // Classification only. IdleWorlds owns the cosmetic player-name treatment
-      // (for example chat-name-celestial), including transparent text fill plus a
-      // clipped background gradient on the clickable name button. Never write
-      // colour/background/text-fill here: doing so destroys the native cosmetic.
-    }
-    
-    function classifyHudIdentity(identity) {
-      if (!identity) return;
-    
-      // Reclassification happens repeatedly as React updates the header. Clear only
-      // the identity sub-roles we own so a stale earlier guess cannot keep styling
-      // the wrong node after the player header is reconciled.
-      identity.querySelectorAll('[data-iw-ui="hud-brand"], [data-iw-ui="hud-player-name"], [data-iw-ui="hud-title"], [data-iw-ui="hud-location"], [data-iw-ui="hud-online"]').forEach(el => {
-        delete el.dataset.iwUi;
-      });
-      identity.querySelectorAll('[data-iw-hud-player-text]').forEach(el => {
-        delete el.dataset.iwHudPlayerText;
-      });
-    
-      const candidates = hudOrderedTextCandidates(identity);
-      const brand = candidates.find(el => /^idleworlds$/i.test(normText(el.textContent)));
-      const location = candidates.find(el => /combat\s+lv\s*\d+.*zone\s*\d+/i.test(normText(el.textContent)));
-      const online = candidates.find(el => /^players online\s*:/i.test(normText(el.textContent)));
-    
-      if (brand) setRole(sameTextShell(brand, identity, 2), 'hud-brand');
-      if (location) setRole(sameTextShell(location, identity, 2), 'hud-location');
-      if (online) setRole(sameTextShell(online, identity, 2), 'hud-online');
-    
-      // The desktop header's identity block is ordered Brand -> Player -> Title ->
-      // Combat/Zone -> Online. Use that structural fact before any font-size
-      // heuristic. It remains valid when the player name is an <a>/<button> and
-      // when its cosmetic colour makes computed font styling misleading.
-      const brandIndex = brand ? candidates.indexOf(brand) : -1;
-      const locationIndex = location ? candidates.indexOf(location) : candidates.length;
-      const between = candidates.filter((el, index) => {
-        if (index <= brandIndex || index >= locationIndex) return false;
-        const text = normText(el.textContent);
-        if (!text || /^(?:idleworlds|players online\s*:)/i.test(text)) return false;
-        if (/combat\s+lv|zone\s*\d+/i.test(text)) return false;
-        return true;
-      });
-    
-      let name = between[0] || null;
-      let title = between[1] || null;
-    
-      // Fallback for unexpected header ordering: prefer a clickable short control,
-      // then the largest remaining short text. This is intentionally secondary to
-      // DOM order because cosmetic gradients can distort computed styles.
-      if (!name) {
-        const excluded = new Set([brand, location, online].filter(Boolean));
-        const remaining = candidates.filter(el => !excluded.has(el));
-        name = remaining.find(el => el.matches?.('button,a,[role="button"]')) || remaining
-          .map(el => {
-            let size = 0;
-            let weight = 0;
-            try {
-              const cs = getComputedStyle(el);
-              size = parseFloat(cs.fontSize) || 0;
-              weight = parseInt(cs.fontWeight, 10) || 400;
-            } catch { /* no-op */ }
-            return { el, score: size * 10 + weight / 100 };
-          })
-          .sort((a, b) => b.score - a.score)[0]?.el || null;
-      }
-    
-      if (name) markPlayerName(name, identity);
-    
-      if (!title) {
-        title = candidates.find(el => {
-          if (el === name || el === brand || el === location || el === online) return false;
-          const text = normText(el.textContent);
-          return text.length <= 42 && !/combat\s+lv|zone\s*\d+|players online/i.test(text);
-        }) || null;
-      }
-      if (title) setRole(sameTextShell(title, identity, 2), 'hud-title');
-    }
-    
-    function classifyHudMetrics(hud) {
-      if (!hud) return [];
-      const candidates = [...hud.querySelectorAll('div, span, p')]
-        .filter(el => !el.querySelector('button, input, select, textarea'))
-        .filter(el => el.childElementCount <= 2);
-    
-      const used = new Set();
-      const metrics = [];
-      for (const el of candidates) {
-        const text = normText(el.textContent);
-        if (!text || text.length > 100 || !HUD_METRIC_PATTERNS.some(re => re.test(text))) continue;
-        const shell = sameTextShell(el, hud, 4);
-        if (!shell || used.has(shell)) continue;
-        used.add(shell);
-        setRole(shell, 'hud-metric');
-        metrics.push(shell);
-      }
-      return metrics;
-    }
-    
-    function classifyHudZones(hud, identity, metrics) {
-      if (!hud || !identity) return;
-      const identityZone = directChildUnder(hud, identity);
-      if (identityZone) identityZone.dataset.iwHudZone = 'identity';
-    
-      let statusHost = commonAncestor(metrics);
-      if (statusHost === hud) statusHost = null;
-      const statusZone = directChildUnder(hud, statusHost || metrics[0]);
-      if (statusZone && statusZone !== identityZone) {
-        statusZone.dataset.iwHudZone = 'status';
-        setRole(statusHost || statusZone, 'hud-status');
-      }
-    
-      const utilityButtons = [...hud.querySelectorAll('button')]
-        .filter(btn => !statusZone?.contains(btn))
-        .filter(btn => {
-          const text = normText(btn.textContent);
-          const aria = normText(btn.getAttribute('aria-label') || btn.getAttribute('title'));
-          return text.length <= 2 || (!!aria && aria.length <= 28);
-        });
-      const utilityHost = commonAncestor(utilityButtons);
-      const utilityZone = directChildUnder(hud, utilityHost || utilityButtons[0]);
-      if (utilityZone && utilityZone !== identityZone && utilityZone !== statusZone) {
-        utilityZone.dataset.iwHudZone = 'utility';
-        if (utilityHost && utilityHost !== hud) setRole(utilityHost, 'hud-utility');
-        utilityButtons.forEach(btn => setRole(btn, 'hud-utility-button'));
-      }
-    
-      const zones = [identityZone, utilityZone, statusZone].filter(Boolean);
-      if (zones.length === 3 && new Set(zones).size === 3) hud.dataset.iwHudLayout = 'three-zone';
-      else delete hud.dataset.iwHudLayout;
-    }
-    
-    function classifyPlayerHud() {
-      const marker = [...document.querySelectorAll('div, span, p')]
-        .find(el => /^players online\s*:/i.test(normText(el.textContent)) && el.childElementCount <= 2);
-      if (!marker) return;
-    
-      const hud = chooseHudHost(marker);
-      if (!hud || hud === document.body) return;
-      setRole(hud, 'player-hud');
-    
-      const identity = chooseIdentityHost(marker, hud);
-      if (identity && hud.contains(identity)) {
-        setRole(identity, 'hud-identity');
-        classifyHudIdentity(identity);
-      }
-      const metrics = classifyHudMetrics(hud);
-      classifyHudZones(hud, identity, metrics);
-    }
-    
     function classifyZoneBar() {
       const labels = [...document.querySelectorAll('div,span,p,strong')]
         .filter(el => /^zone\s*\d+\s*:/i.test(normText(el.textContent)) && el.childElementCount <= 2);
@@ -4521,7 +4244,6 @@
         // Each classifier is isolated: a throw inside classifyMainNav() must not
         // stop the zone bar and section frames from being classified. (Audit S3.7)
         guard('ui:main-nav', classifyMainNav);
-        if (ENABLE_PLAYER_HUD_RELAYOUT) guard('ui:player-hud', classifyPlayerHud);
         guard('ui:zone-bar', classifyZoneBar);
         guard('ui:section-frames', classifySectionFrames);
       });
@@ -4532,11 +4254,6 @@
       document.querySelectorAll('[data-iw-ui]').forEach(el => { delete el.dataset.iwUi; });
       document.querySelectorAll('[data-iw-tab]').forEach(el => { delete el.dataset.iwTab; });
       document.querySelectorAll('[data-iw-state]').forEach(el => { delete el.dataset.iwState; });
-      document.querySelectorAll('[data-iw-hud-zone]').forEach(el => { delete el.dataset.iwHudZone; });
-      document.querySelectorAll('[data-iw-hud-layout]').forEach(el => { delete el.dataset.iwHudLayout; });
-      document.querySelectorAll('[data-iw-hud-player-text]').forEach(el => {
-        delete el.dataset.iwHudPlayerText;
-      });
     }
     
     function initUIFoundation() {
@@ -4805,7 +4522,7 @@
     exports.default = "/* ══════════════════════════════════════════════════════════════════════\n   Tooltip engine — rich item-card treatment\n   ══════════════════════════════════════════════════════════════════════ */\n\n.iw-item-ref {\n  display: inline;\n  background: none !important;\n  border: 0 !important;\n  border-bottom: 1px solid transparent !important;\n  border-radius: 0 !important;\n  padding: 0 !important;\n  margin: 0 !important;\n  box-shadow: none !important;\n  font: inherit !important;\n  line-height: inherit !important;\n  font-weight: 700 !important;\n  letter-spacing: inherit !important;\n  text-transform: none !important;\n  color: var(--iw-gold);\n  cursor: help;\n  text-decoration: none;\n  transition: border-color .12s, color .12s;\n  vertical-align: baseline;\n}\n.iw-item-ref:hover,\n.iw-item-ref:focus-visible {\n  color: var(--iw-gold);\n  border-bottom-color: var(--iw-gold-dim) !important;\n}\n.iw-item-ref:focus-visible {\n  outline: 1px solid var(--iw-gold) !important;\n  outline-offset: 2px !important;\n}\n.iw-item-info { display: none; }\n\n.iw-tip {\n  position: fixed;\n  z-index: 99999;\n  width: 380px;\n  max-width: calc(100vw - 20px);\n  box-sizing: border-box;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.018), transparent 78px),\n    #151511;\n  border: 1px solid #57472C;\n  border-radius: 8px;\n  box-shadow: 0 18px 46px rgba(0,0,0,.82), inset 0 0 0 1px rgba(0,0,0,.58);\n  max-height: calc(100vh - 20px);\n  max-height: calc(100dvh - 20px);\n  flex-direction: column;\n  overflow: hidden;\n  overscroll-behavior: contain;\n  font-family: var(--iw-font-ui);\n  font-size: 13px;\n  line-height: 1.4;\n  color: var(--iw-text);\n  opacity: 0;\n  pointer-events: none;\n  transition: none;\n}\n.iw-tip::before {\n  content: \"\";\n  position: absolute;\n  z-index: 2;\n  left: 0; right: 0; top: 0;\n  height: 2px;\n  background: linear-gradient(90deg, var(--iw-gold), var(--iw-line-hot) 42%, transparent 92%);\n  pointer-events: none;\n}\n.iw-tip.is-open { opacity: 1; pointer-events: auto; }\n.iw-tip:focus-visible {\n  outline: 2px solid var(--iw-gold);\n  outline-offset: -3px;\n}\n\n.iw-tip-head {\n  position: relative;\n  flex: none;\n  flex: none;\n  flex: none;\n  display: flex;\n  align-items: flex-start;\n  gap: 9px;\n  min-height: 116px;\n  padding: 12px 118px 12px 13px;\n  box-sizing: border-box;\n  background: linear-gradient(90deg, #1D1B17, #14130F 76%);\n  border-bottom: 1px solid #302A20;\n}\n.iw-tip-icon {\n  flex: none;\n  width: 24px;\n  padding-top: 2px;\n  font-size: 21px;\n  line-height: 1;\n  text-align: center;\n  filter: saturate(.85);\n}\n.iw-tip-title-block { flex: 1; min-width: 0; }\n.iw-tip-name {\n  font-family: var(--iw-font-ui);\n  font-size: 18px;\n  font-weight: 700;\n  line-height: 1.15;\n  word-break: break-word;\n  text-shadow: 0 1px 0 #000;\n}\n\n.iw-tip-art {\n  position: absolute;\n  top: 8px;\n  right: 8px;\n  width: 100px;\n  height: 100px;\n  box-sizing: border-box;\n  display: grid;\n  place-items: center;\n  padding: 14px;\n  border: 1px solid rgba(240,232,214,.82);\n  border-radius: 12px;\n  background: #11110E;\n  box-shadow: inset 0 0 18px rgba(0,0,0,.62);\n  overflow: visible;\n  pointer-events: none;\n}\n.iw-tip-art-host {\n  position: relative;\n  display: block;\n  width: 70px;\n  height: 70px;\n  min-width: 70px;\n  min-height: 70px;\n  max-width: 70px;\n  max-height: 70px;\n  background-repeat: no-repeat;\n}\n.iw-tip-art-fallback {\n  display: grid;\n  place-items: center;\n  width: 70px;\n  height: 70px;\n  font-size: 34px;\n  opacity: .35;\n}\n.iw-tip-close {\n  flex: none;\n  width: 26px;\n  height: 26px;\n  display: grid;\n  place-items: center;\n  padding: 0 !important;\n  border: 1px solid #4A4031 !important;\n  border-radius: 4px !important;\n  background: rgba(12,11,9,.88) !important;\n  color: #C8BFAE !important;\n  font: 700 18px/1 var(--iw-font-ui) !important;\n  cursor: pointer;\n}\n.iw-tip-close:hover,\n.iw-tip-close:focus-visible {\n  border-color: var(--iw-gold) !important;\n  color: var(--iw-text-hi) !important;\n  outline: 1px solid var(--iw-gold) !important;\n}\n\n.iw-tip-badges {\n  display: flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 5px;\n  margin-top: 8px;\n}\n.iw-tip-badge {\n  font-size: 10.5px;\n  font-weight: 650;\n  line-height: 1.1;\n  letter-spacing: .01em;\n  white-space: nowrap;\n  padding: 4px 7px;\n  border: 1px solid #343027;\n  border-radius: 999px;\n  background: #1B1A17;\n  color: #B9B2A3;\n}\n.iw-tip-badge.t {\n  color: #AFC8F3;\n  border-color: rgba(91,155,213,.48);\n}\n.iw-tip-badge.req {\n  color: #E6A05B;\n  border-color: rgba(217,138,58,.48);\n}\n\n.iw-tip-body {\n  flex: 1 1 auto;\n  min-height: 0;\n  padding: 12px 13px 13px;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  -webkit-overflow-scrolling: touch;\n  scrollbar-gutter: stable;\n}\n.iw-tip-sec {\n  margin-top: 12px;\n  padding-top: 10px;\n  border-top: 1px solid #302A20;\n}\n.iw-tip-sec:first-child { margin-top: 0; padding-top: 0; border-top: 0; }\n.iw-tip-sec-title {\n  font-family: var(--iw-font-ui);\n  font-size: 10px;\n  font-weight: 800;\n  letter-spacing: .14em;\n  text-transform: uppercase;\n  color: #969080;\n  margin-bottom: 7px;\n}\n.iw-tip-effect {\n  color: #C4BDAF;\n  font-size: 13px;\n  line-height: 1.45;\n}\n\n.iw-tip-stats {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 4px 16px;\n}\n.iw-tip-stat-block { min-width: 0; }\n.iw-tip-stat {\n  min-width: 0;\n  display: flex;\n  justify-content: space-between;\n  align-items: baseline;\n  gap: 8px;\n  font-size: 12.5px;\n  padding: 2px 0;\n}\n.iw-tip-stat .k {\n  min-width: 0;\n  color: #AAA394;\n  white-space: nowrap;\n}\n.iw-tip-stat .v {\n  flex: none;\n  color: var(--iw-text-hi);\n  font-weight: 700;\n  text-align: right;\n  font-variant-numeric: tabular-nums;\n}\n.iw-tip-stat .v.amber { color: #E19A50; }\n.iw-tip-stat .v.good { color: var(--iw-good); }\n.iw-tip-stat-note {\n  margin-top: 1px;\n  color: var(--iw-faint);\n  font-size: 9.5px;\n  line-height: 1.25;\n}\n\n.iw-tip-acq {\n  position: relative;\n  padding: 2px 0 2px 11px;\n}\n.iw-tip-acq::before {\n  content: \"\";\n  position: absolute;\n  left: 0;\n  top: 0;\n  bottom: 0;\n  width: 2px;\n  background: #5878AC;\n}\n.iw-tip-acq-main {\n  font-size: 13.5px;\n  font-weight: 600;\n  color: var(--iw-text-hi);\n}\n.iw-tip-acq-sub {\n  font-size: 12px;\n  color: #8F899C;\n  margin-top: 3px;\n  line-height: 1.4;\n}\n.iw-tip-acq.is-unknown .iw-tip-acq-main { color: var(--iw-faint); font-style: italic; }\n.iw-tip-flavour {\n  font-family: var(--iw-font-flav);\n  font-style: italic;\n  font-size: 13px;\n  color: var(--iw-gold-dim);\n  line-height: 1.5;\n}\n\n.iw-tip-foot {\n  flex: none;\n  min-height: 38px;\n  padding: 8px 13px;\n  border-top: 1px solid #302A20;\n  background: #0C0B09;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n.iw-tip-foot:empty { display: none; }\n.iw-tip-link {\n  font-size: 12px;\n  font-weight: 700;\n  letter-spacing: .02em;\n  color: #70A1EE;\n  text-decoration: none;\n}\n.iw-tip-link:hover { color: #9FC0F3; }\n.iw-tip-link:focus-visible {\n  color: #BBD2F5;\n  outline: 1px solid #70A1EE;\n  outline-offset: 3px;\n}\n.iw-tip-source {\n  margin-left: auto;\n  font-size: 10.5px;\n  font-weight: 700;\n  letter-spacing: .04em;\n  color: #B07846;\n  text-transform: lowercase;\n}\n.iw-tip-source.is-stale { color: #D58A52; }\n\n@media (max-width: 420px) {\n  .iw-tip { width: calc(100vw - 20px); }\n  .iw-tip-stats { grid-template-columns: 1fr; }\n  .iw-tip-head { padding-right: 108px; }\n  .iw-tip-art { width: 90px; height: 90px; padding: 10px; }\n  .iw-tip-art-host, .iw-tip-art-fallback { width: 68px; height: 68px; min-width: 68px; min-height: 68px; }\n}\n";
   };
   __modules["styles/ui-system.css"] = (module, exports, require) => {
-    exports.default = "/* ══════════════════════════════════════════════════════════════════════\n   IdleWorlds Fantasy Skin — v1.5.1 HUD / navigation refinement\n\n   The shared language is deliberately dense: forged rails, restrained brass,\n   flat data, compact controls. Boxes are reserved for real controls/actions.\n   ══════════════════════════════════════════════════════════════════════ */\n\n:root {\n  --iw-space-1: 4px;\n  --iw-space-2: 6px;\n  --iw-space-3: 9px;\n  --iw-space-4: 12px;\n  --iw-space-5: 16px;\n  --iw-control-h: 32px;\n  --iw-control-h-lg: 36px;\n  --iw-frame-edge: #4B3D26;\n  --iw-frame-inner: #19150F;\n  --iw-steel: #26231D;\n}\n\n/* ── Major frames ───────────────────────────────────────────────────── */\n[data-iw-ui=\"section-frame\"] {\n  position: relative !important;\n  border: 1px solid var(--iw-frame-edge) !important;\n  border-radius: 6px !important;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.012), transparent 48px),\n    linear-gradient(90deg, rgba(110,80,35,.014), transparent 26%),\n    var(--iw-ink-800) !important;\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.48),\n    inset 0 1px 0 rgba(255,255,255,.014),\n    0 6px 18px rgba(0,0,0,.18) !important;\n}\n\n[data-iw-ui=\"section-frame\"]::before {\n  content: \"\";\n  position: absolute;\n  z-index: 0;\n  pointer-events: none;\n  left: 14px;\n  right: 14px;\n  top: 0;\n  height: 1px;\n  background: linear-gradient(90deg, var(--iw-gold-dim), rgba(157,132,88,.16) 34%, transparent 78%);\n}\n\n[data-iw-ui=\"section-title\"] {\n  font-family: var(--iw-font-head) !important;\n  letter-spacing: .035em !important;\n  color: var(--iw-text-hi) !important;\n  text-shadow: 0 1px 0 #000 !important;\n}\n\n/* ── Player HUD ─────────────────────────────────────────────────────── */\n[data-iw-ui=\"player-hud\"] {\n  position: relative !important;\n  min-height: 0 !important;\n  border: 1px solid var(--iw-frame-edge) !important;\n  border-radius: 6px !important;\n  background:\n    radial-gradient(420px 90px at 8% 0%, rgba(140,96,37,.052), transparent 72%),\n    linear-gradient(180deg, rgba(255,255,255,.014), transparent 38px),\n    var(--iw-ink-800) !important;\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.50),\n    inset 0 1px 0 rgba(255,255,255,.014),\n    0 6px 20px rgba(0,0,0,.20) !important;\n  overflow: hidden !important;\n}\n\n[data-iw-ui=\"player-hud\"]::before {\n  content: \"\";\n  position: absolute;\n  left: 16px;\n  right: 16px;\n  top: 0;\n  height: 1px;\n  background: linear-gradient(90deg, var(--iw-gold), var(--iw-line-hot) 22%, transparent 68%);\n  opacity: .66;\n  pointer-events: none;\n}\n\n/* Use the live three-column shape only when UIFoundation positively identifies\n   identity, utility and status zones as distinct direct children. */\n[data-iw-ui=\"player-hud\"][data-iw-hud-layout=\"three-zone\"] {\n  display: grid !important;\n  grid-template-columns: minmax(280px, .95fr) auto minmax(620px, 2.15fr) !important;\n  align-items: center !important;\n  column-gap: 18px !important;\n  padding: 12px 20px !important;\n}\n\n[data-iw-ui=\"player-hud\"] > [data-iw-hud-zone=\"identity\"] {\n  min-width: 0 !important;\n  align-self: stretch !important;\n  display: flex !important;\n  align-items: center !important;\n}\n[data-iw-ui=\"player-hud\"] > [data-iw-hud-zone=\"utility\"] {\n  align-self: stretch !important;\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n}\n[data-iw-ui=\"player-hud\"] > [data-iw-hud-zone=\"status\"] {\n  min-width: 0 !important;\n  align-self: stretch !important;\n  display: flex !important;\n  align-items: center !important;\n}\n\n[data-iw-ui=\"hud-identity\"] {\n  position: relative !important;\n  width: 100% !important;\n  min-width: 0 !important;\n  padding: 0 0 0 12px !important;\n}\n\n[data-iw-ui=\"hud-identity\"]::before {\n  content: \"\";\n  position: absolute;\n  left: 0;\n  top: 3px;\n  bottom: 3px;\n  width: 2px;\n  background: linear-gradient(180deg, var(--iw-gold), #70411F 65%, var(--iw-ember));\n  opacity: .82;\n}\n\n/* HUD identity fallback. Keep inherited text readable, but never touch the\n   player cosmetic button's gradient/text-fill. */\n[data-iw-ui=\"hud-identity\"] {\n  color: var(--iw-text-hi) !important;\n  opacity: 1 !important;\n}\n\n[data-iw-ui=\"hud-brand\"],\n[data-iw-ui=\"hud-identity\"] [data-iw-ui=\"hud-brand\"] {\n  color: var(--iw-gold-dim) !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 10px !important;\n  font-weight: 700 !important;\n  line-height: 1.1 !important;\n  letter-spacing: .28em !important;\n  text-transform: uppercase !important;\n}\n\n[data-iw-ui=\"hud-player-name\"],\n[data-iw-ui=\"hud-player-name\"] *,\n[data-iw-hud-player-text=\"1\"],\n[data-iw-hud-player-text=\"1\"] * {\n  opacity: 1 !important;\n  filter: none !important;\n  mix-blend-mode: normal !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 22px !important;\n  font-weight: 700 !important;\n  line-height: 1.02 !important;\n  letter-spacing: -.015em !important;\n  text-shadow: 0 1px 0 #000 !important;\n}\n\n[data-iw-ui=\"hud-player-name\"] {\n  min-height: 22px !important;\n  border: 0 !important;\n  outline: 0 !important;\n  box-shadow: none !important;\n}\n\n[data-iw-ui=\"hud-title\"],\n[data-iw-ui=\"hud-identity\"] [data-iw-ui=\"hud-title\"] {\n  color: var(--iw-gold) !important;\n  font-size: 11.5px !important;\n  font-weight: 600 !important;\n  line-height: 1.25 !important;\n}\n\n[data-iw-ui=\"hud-location\"],\n[data-iw-ui=\"hud-online\"],\n[data-iw-ui=\"hud-identity\"] [data-iw-ui=\"hud-location\"],\n[data-iw-ui=\"hud-identity\"] [data-iw-ui=\"hud-online\"],\n[data-iw-ui=\"hud-identity\"] [data-iw-ui=\"hud-online\"] {\n  color: var(--iw-dim) !important;\n  font-size: 11px !important;\n  line-height: 1.25 !important;\n}\n\n[data-iw-ui=\"hud-online\"] {\n  color: #918A79 !important;\n}\n\n[data-iw-ui=\"hud-status\"] {\n  width: 100% !important;\n  min-width: 0 !important;\n  display: grid !important;\n  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;\n  align-items: center !important;\n  gap: 0 !important;\n  border-top: 1px solid rgba(88,72,43,.30) !important;\n  border-bottom: 1px solid rgba(0,0,0,.42) !important;\n  background: linear-gradient(180deg, rgba(255,255,255,.008), rgba(0,0,0,.08)) !important;\n}\n\n[data-iw-ui=\"hud-metric\"] {\n  min-width: 0 !important;\n  min-height: 30px !important;\n  margin: 0 !important;\n  padding: 6px 10px !important;\n  border: 0 !important;\n  border-left: 1px solid var(--iw-line) !important;\n  border-radius: 0 !important;\n  outline: 0 !important;\n  background: transparent !important;\n  background-image: none !important;\n  box-shadow: none !important;\n  color: #B8B09F !important;\n  font-size: 11.5px !important;\n  font-weight: 600 !important;\n  line-height: 1.15 !important;\n  font-variant-numeric: tabular-nums !important;\n}\n\n[data-iw-ui=\"hud-metric\"]:nth-child(3n + 1) {\n  border-left-color: transparent !important;\n}\n\n[data-iw-ui=\"hud-metric\"]:hover {\n  color: var(--iw-text-hi) !important;\n  background: linear-gradient(90deg, rgba(212,173,99,.025), transparent) !important;\n}\n\n[data-iw-ui=\"hud-utility\"] {\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  gap: 5px !important;\n  padding: 0 4px !important;\n  border: 0 !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n\n[data-iw-ui=\"hud-utility-button\"] {\n  width: 30px !important;\n  min-width: 30px !important;\n  height: 30px !important;\n  min-height: 30px !important;\n  padding: 0 !important;\n  border: 1px solid transparent !important;\n  background: transparent !important;\n  color: #A59E8E !important;\n  box-shadow: none !important;\n}\n[data-iw-ui=\"hud-utility-button\"]:hover:not(:disabled) {\n  color: var(--iw-gold) !important;\n  border-color: var(--iw-line-hi) !important;\n  background: rgba(255,255,255,.018) !important;\n}\n\n/* ── Main navigation rail ───────────────────────────────────────────── */\n[data-iw-ui=\"main-nav-shell\"] {\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n\n[data-iw-ui=\"main-nav\"] {\n  display: flex !important;\n  align-items: stretch !important;\n  flex-wrap: wrap !important;\n  gap: 0 !important;\n  width: max-content !important;\n  max-width: 100% !important;\n  min-height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 1px solid #3A3225 !important;\n  border-radius: 3px !important;\n  background: #11100D !important;\n  box-shadow: inset 0 0 0 1px rgba(0,0,0,.52) !important;\n  overflow: visible !important;\n}\n\n[data-iw-ui=\"nav-tab\"] {\n  position: relative !important;\n  min-height: var(--iw-control-h) !important;\n  height: var(--iw-control-h) !important;\n  margin: 0 !important;\n  padding: 0 16px !important;\n  border: 0 !important;\n  border-right: 1px solid #3A3225 !important;\n  border-radius: 0 !important;\n  background: linear-gradient(180deg, #211E18, #16140F) !important;\n  color: #AAA291 !important;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.022) !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 11.5px !important;\n  font-weight: 700 !important;\n  letter-spacing: .025em !important;\n  text-transform: uppercase !important;\n  line-height: 1 !important;\n}\n\n[data-iw-ui=\"nav-tab\"]:last-of-type { border-right: 0 !important; }\n\n[data-iw-ui=\"nav-tab\"]:hover:not(:disabled) {\n  z-index: 1;\n  background: linear-gradient(180deg, #29241C, #1A1711) !important;\n  color: var(--iw-text-hi) !important;\n  filter: none !important;\n}\n\n[data-iw-ui=\"nav-tab\"][data-iw-state=\"active\"] {\n  z-index: 2;\n  color: #FFE8CB !important;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.035), transparent 46%),\n    linear-gradient(180deg, #9D3C16, #67250C) !important;\n  box-shadow:\n    inset 0 1px 0 rgba(255,226,191,.13),\n    inset 0 -2px 0 rgba(55,16,4,.58) !important;\n}\n\n[data-iw-ui=\"nav-tab\"][data-iw-state=\"active\"]::after {\n  content: \"\";\n  position: absolute;\n  left: 9px;\n  right: 9px;\n  bottom: -4px;\n  height: 2px;\n  background: var(--iw-ember-hi);\n  box-shadow: 0 0 6px rgba(209,90,34,.28);\n}\n\n/* ── Zone command rail ──────────────────────────────────────────────── */\n[data-iw-ui=\"zone-bar\"] {\n  border-radius: 5px !important;\n  padding-top: 8px !important;\n  padding-bottom: 8px !important;\n  min-height: 0 !important;\n}\n\n[data-iw-ui=\"zone-title\"] {\n  color: var(--iw-text-hi) !important;\n  font-weight: 700 !important;\n}\n\n[data-iw-ui=\"zone-action\"] {\n  background: linear-gradient(180deg, #242018, #17140F) !important;\n  border: 1px solid var(--iw-line-hi) !important;\n  color: var(--iw-text) !important;\n  height: 32px !important;\n  min-height: 32px !important;\n  min-width: 0 !important;\n  padding: 0 12px !important;\n  font-size: 11px !important;\n  letter-spacing: .025em !important;\n}\n\n/* ── Generic control language ───────────────────────────────────────── */\n\n/* Surface treatment is safe to apply globally: it changes how a control is\n   painted, never how much room it takes. */\nbutton:not(.iw-item-ref):not([data-iw-ui=\"nav-tab\"]):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]),\n[role=\"button\"]:not(.iw-item-ref):not([data-iw-ui=\"nav-tab\"]):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]) {\n  border-color: var(--iw-line-hi) !important;\n  background-image: linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,0,0,.09)) !important;\n}\n\n/* Geometry is NOT safe to apply globally.\n   `min-height: 30px` on every button forced small icon controls — chat\n   toolbar, modal close buttons, market row steppers — up to 30px regardless\n   of the game's own sizing, because min-height does not compete with the\n   Tailwind `h-*` height utilities, it simply wins. That overflowed dense\n   regions and was itself a source of \"looks broken in some places\".\n\n   Apply the minimum only where a control has been positively classified as\n   a real action, and only when the game has not sized it explicitly.\n   (Audit S3.5) */\n[data-iw-ui=\"zone-action\"],\n[data-iw-ui=\"hud-utility-button\"],\n[data-iw-inventory-control=\"filter\"],\n[data-iw-inventory-control=\"page\"],\n.compact-panel.fs-skill-panel button[data-iw-skill-role=\"action-button\"],\n.compact-panel.fs-skill-panel button[data-iw-skill-role=\"nav-button\"] {\n  min-height: 30px;\n}\n\nbutton:not(.iw-item-ref):not([data-iw-ui=\"nav-tab\"]):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]):disabled,\n[role=\"button\"][aria-disabled=\"true\"]:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]) {\n  filter: saturate(.58) brightness(.84) !important;\n  box-shadow: inset 0 0 0 1px rgba(0,0,0,.22) !important;\n}\n\ninput[type=\"search\"],\ninput[placeholder*=\"Search\" i] {\n  border: 1px solid #30291E !important;\n  border-bottom-color: var(--iw-line-hi) !important;\n  border-radius: 2px !important;\n  background: linear-gradient(180deg, #080A0A, #0D0E0C) !important;\n  box-shadow: inset 0 2px 6px rgba(0,0,0,.72) !important;\n}\n\n@media (max-width: 1100px) {\n  [data-iw-ui=\"player-hud\"][data-iw-hud-layout=\"three-zone\"] {\n    grid-template-columns: minmax(230px, .9fr) auto minmax(440px, 1.7fr) !important;\n    column-gap: 10px !important;\n    padding-inline: 14px !important;\n  }\n  [data-iw-ui=\"hud-status\"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }\n  [data-iw-ui=\"hud-metric\"]:nth-child(3n + 1) { border-left-color: var(--iw-line) !important; }\n  [data-iw-ui=\"hud-metric\"]:nth-child(2n + 1) { border-left-color: transparent !important; }\n}\n\n@media (max-width: 780px) {\n  [data-iw-ui=\"player-hud\"][data-iw-hud-layout=\"three-zone\"] {\n    display: block !important;\n    padding: 10px !important;\n  }\n  [data-iw-ui=\"player-hud\"] > [data-iw-hud-zone=\"utility\"] { justify-content: flex-start !important; margin-top: 8px !important; }\n  [data-iw-ui=\"player-hud\"] > [data-iw-hud-zone=\"status\"] { margin-top: 8px !important; }\n  [data-iw-ui=\"hud-status\"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }\n  [data-iw-ui=\"hud-player-name\"] { font-size: 19px !important; }\n  [data-iw-ui=\"main-nav\"] { width: 100% !important; }\n  [data-iw-ui=\"nav-tab\"] {\n    flex: 1 1 auto !important;\n    padding-inline: 9px !important;\n    font-size: 10.5px !important;\n  }\n}\n";
+    exports.default = "/* ══════════════════════════════════════════════════════════════════════\n   IdleWorlds Fantasy Skin — v1.5.1 HUD / navigation refinement\n\n   The shared language is deliberately dense: forged rails, restrained brass,\n   flat data, compact controls. Boxes are reserved for real controls/actions.\n   ══════════════════════════════════════════════════════════════════════ */\n\n:root {\n  --iw-space-1: 4px;\n  --iw-space-2: 6px;\n  --iw-space-3: 9px;\n  --iw-space-4: 12px;\n  --iw-space-5: 16px;\n  --iw-control-h: 32px;\n  --iw-control-h-lg: 36px;\n  --iw-frame-edge: #4B3D26;\n  --iw-frame-inner: #19150F;\n  --iw-steel: #26231D;\n}\n\n/* ── Major frames ───────────────────────────────────────────────────── */\n[data-iw-ui=\"section-frame\"] {\n  position: relative !important;\n  border: 1px solid var(--iw-frame-edge) !important;\n  border-radius: 6px !important;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.012), transparent 48px),\n    linear-gradient(90deg, rgba(110,80,35,.014), transparent 26%),\n    var(--iw-ink-800) !important;\n  box-shadow:\n    inset 0 0 0 1px rgba(0,0,0,.48),\n    inset 0 1px 0 rgba(255,255,255,.014),\n    0 6px 18px rgba(0,0,0,.18) !important;\n}\n\n[data-iw-ui=\"section-frame\"]::before {\n  content: \"\";\n  position: absolute;\n  z-index: 0;\n  pointer-events: none;\n  left: 14px;\n  right: 14px;\n  top: 0;\n  height: 1px;\n  background: linear-gradient(90deg, var(--iw-gold-dim), rgba(157,132,88,.16) 34%, transparent 78%);\n}\n\n[data-iw-ui=\"section-title\"] {\n  font-family: var(--iw-font-head) !important;\n  letter-spacing: .035em !important;\n  color: var(--iw-text-hi) !important;\n  text-shadow: 0 1px 0 #000 !important;\n}\n\n/* ── Main navigation rail ───────────────────────────────────────────── */\n[data-iw-ui=\"main-nav-shell\"] {\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  background: transparent !important;\n  box-shadow: none !important;\n}\n\n[data-iw-ui=\"main-nav\"] {\n  display: flex !important;\n  align-items: stretch !important;\n  flex-wrap: wrap !important;\n  gap: 0 !important;\n  width: max-content !important;\n  max-width: 100% !important;\n  min-height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 1px solid #3A3225 !important;\n  border-radius: 3px !important;\n  background: #11100D !important;\n  box-shadow: inset 0 0 0 1px rgba(0,0,0,.52) !important;\n  overflow: visible !important;\n}\n\n[data-iw-ui=\"nav-tab\"] {\n  position: relative !important;\n  min-height: var(--iw-control-h) !important;\n  height: var(--iw-control-h) !important;\n  margin: 0 !important;\n  padding: 0 16px !important;\n  border: 0 !important;\n  border-right: 1px solid #3A3225 !important;\n  border-radius: 0 !important;\n  background: linear-gradient(180deg, #211E18, #16140F) !important;\n  color: #AAA291 !important;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.022) !important;\n  font-family: var(--iw-font-ui) !important;\n  font-size: 11.5px !important;\n  font-weight: 700 !important;\n  letter-spacing: .025em !important;\n  text-transform: uppercase !important;\n  line-height: 1 !important;\n}\n\n[data-iw-ui=\"nav-tab\"]:last-of-type { border-right: 0 !important; }\n\n[data-iw-ui=\"nav-tab\"]:hover:not(:disabled) {\n  z-index: 1;\n  background: linear-gradient(180deg, #29241C, #1A1711) !important;\n  color: var(--iw-text-hi) !important;\n  filter: none !important;\n}\n\n[data-iw-ui=\"nav-tab\"][data-iw-state=\"active\"] {\n  z-index: 2;\n  color: #FFE8CB !important;\n  background:\n    linear-gradient(180deg, rgba(255,255,255,.035), transparent 46%),\n    linear-gradient(180deg, #9D3C16, #67250C) !important;\n  box-shadow:\n    inset 0 1px 0 rgba(255,226,191,.13),\n    inset 0 -2px 0 rgba(55,16,4,.58) !important;\n}\n\n[data-iw-ui=\"nav-tab\"][data-iw-state=\"active\"]::after {\n  content: \"\";\n  position: absolute;\n  left: 9px;\n  right: 9px;\n  bottom: -4px;\n  height: 2px;\n  background: var(--iw-ember-hi);\n  box-shadow: 0 0 6px rgba(209,90,34,.28);\n}\n\n/* ── Zone command rail ──────────────────────────────────────────────── */\n[data-iw-ui=\"zone-bar\"] {\n  border-radius: 5px !important;\n  padding-top: 8px !important;\n  padding-bottom: 8px !important;\n  min-height: 0 !important;\n}\n\n[data-iw-ui=\"zone-title\"] {\n  color: var(--iw-text-hi) !important;\n  font-weight: 700 !important;\n}\n\n[data-iw-ui=\"zone-action\"] {\n  background: linear-gradient(180deg, #242018, #17140F) !important;\n  border: 1px solid var(--iw-line-hi) !important;\n  color: var(--iw-text) !important;\n  height: 32px !important;\n  min-height: 32px !important;\n  min-width: 0 !important;\n  padding: 0 12px !important;\n  font-size: 11px !important;\n  letter-spacing: .025em !important;\n}\n\n/* ── Generic control language ───────────────────────────────────────── */\n\n/* Surface treatment is safe to apply globally: it changes how a control is\n   painted, never how much room it takes. */\nbutton:not(.iw-item-ref):not([data-iw-ui=\"nav-tab\"]):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]),\n[role=\"button\"]:not(.iw-item-ref):not([data-iw-ui=\"nav-tab\"]):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]) {\n  border-color: var(--iw-line-hi) !important;\n  background-image: linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,0,0,.09)) !important;\n}\n\n/* Geometry is NOT safe to apply globally.\n   `min-height: 30px` on every button forced small icon controls — chat\n   toolbar, modal close buttons, market row steppers — up to 30px regardless\n   of the game's own sizing, because min-height does not compete with the\n   Tailwind `h-*` height utilities, it simply wins. That overflowed dense\n   regions and was itself a source of \"looks broken in some places\".\n\n   Apply the minimum only where a control has been positively classified as\n   a real action, and only when the game has not sized it explicitly.\n   (Audit S3.5) */\n[data-iw-ui=\"zone-action\"],\n[data-iw-inventory-control=\"filter\"],\n[data-iw-inventory-control=\"page\"],\n.compact-panel.fs-skill-panel button[data-iw-skill-role=\"action-button\"],\n.compact-panel.fs-skill-panel button[data-iw-skill-role=\"nav-button\"] {\n  min-height: 30px;\n}\n\nbutton:not(.iw-item-ref):not([data-iw-ui=\"nav-tab\"]):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]):disabled,\n[role=\"button\"][aria-disabled=\"true\"]:not(.iw-item-ref):not([class*=\"chat-name-\"]):not([data-iw-skill-role=\"level-progress\"]) {\n  filter: saturate(.58) brightness(.84) !important;\n  box-shadow: inset 0 0 0 1px rgba(0,0,0,.22) !important;\n}\n\ninput[type=\"search\"],\ninput[placeholder*=\"Search\" i] {\n  border: 1px solid #30291E !important;\n  border-bottom-color: var(--iw-line-hi) !important;\n  border-radius: 2px !important;\n  background: linear-gradient(180deg, #080A0A, #0D0E0C) !important;\n  box-shadow: inset 0 2px 6px rgba(0,0,0,.72) !important;\n}\n\n@media (max-width: 780px) {\n  [data-iw-ui=\"main-nav\"] { width: 100% !important; }\n  [data-iw-ui=\"nav-tab\"] {\n    flex: 1 1 auto !important;\n    padding-inline: 9px !important;\n    font-size: 10.5px !important;\n  }\n}\n";
   };
   const __cache = Object.create(null);
   function __require(id) {

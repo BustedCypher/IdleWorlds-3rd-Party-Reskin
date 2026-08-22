@@ -10,8 +10,6 @@
  * Events dispatched on document:
  *   iw:inventory-row      detail: { row, reason }
  *   iw:skill-panel        detail: { panel, skill, reason }
- *   iw:equipment-panel    detail: { panel, reason }
- *   iw:shop-panel         detail: { panel, reason }
  *   iw:dom-flush          detail: { roots }
  *   iw:name-scan-flush    detail: { roots }
  */
@@ -20,8 +18,6 @@ import { guard, guardEach, raf } from './Runtime.js';
 
 const SEL_INV_ROW     = '.compact-row, [class*="item-row"]';
 const SEL_SKILL_PANEL = '.compact-panel';
-const SEL_EQUIP_PANEL = '[class*="equipment"]';
-const SEL_SHOP_PANEL  = '[class*="shop"]';
 
 // Item-name discovery is intentionally not tied to a small selector list.
 // IdleWorlds can surface an item name in quests, skills, equipment, shops,
@@ -157,8 +153,6 @@ function detectSkillType(panel) {
 
 const pendingInventory = new Set();
 const pendingSkills    = new Set();
-const pendingEquipment = new Set();
-const pendingShop      = new Set();
 const pendingBgRoots   = new Set();
 const pendingNameRoots = new Set();
 let flushQueued = false;
@@ -181,16 +175,12 @@ function queueContext(el, reason = 'update', opts = {}) {
   const {
     inventory = true,
     skill = true,
-    equipment = true,
-    shop = true,
     names = true,
     background = true,
   } = opts;
 
   if (inventory) addIfConnected(pendingInventory, nearest(el, SEL_INV_ROW));
   if (skill)     addIfConnected(pendingSkills,    nearest(el, SEL_SKILL_PANEL));
-  if (equipment) addIfConnected(pendingEquipment, nearest(el, SEL_EQUIP_PANEL));
-  if (shop)      addIfConnected(pendingShop,      nearest(el, SEL_SHOP_PANEL));
   if (names)     addNameRoot(el);
   if (background) addIfConnected(pendingBgRoots, el);
   scheduleFlush(reason);
@@ -204,12 +194,6 @@ function discover(root, reason = 'mount') {
 
   if (root.matches?.(SEL_SKILL_PANEL)) addIfConnected(pendingSkills, root);
   root.querySelectorAll?.(SEL_SKILL_PANEL).forEach(el => addIfConnected(pendingSkills, el));
-
-  if (root.matches?.(SEL_EQUIP_PANEL)) addIfConnected(pendingEquipment, root);
-  root.querySelectorAll?.(SEL_EQUIP_PANEL).forEach(el => addIfConnected(pendingEquipment, el));
-
-  if (root.matches?.(SEL_SHOP_PANEL)) addIfConnected(pendingShop, root);
-  root.querySelectorAll?.(SEL_SHOP_PANEL).forEach(el => addIfConnected(pendingShop, el));
 
   addNameRoot(root);
 
@@ -244,7 +228,6 @@ function takeConnected(set) {
 function drainGlobalBudget(budget) {
   const groups = [
     ['inventory', pendingInventory], ['skills', pendingSkills],
-    ['equipment', pendingEquipment], ['shop', pendingShop],
     ['bgRoots', pendingBgRoots], ['nameRoots', pendingNameRoots],
   ];
   const out = Object.fromEntries(groups.map(([key]) => [key, []]));
@@ -262,7 +245,7 @@ function drainGlobalBudget(budget) {
 function flushPending() {
   flushQueued = false;
 
-  const { inventory, skills, equipment, shop, bgRoots, nameRoots } =
+  const { inventory, skills, bgRoots, nameRoots } =
     drainGlobalBudget(FLUSH_BUDGET);
 
   // guardEach so one malformed row degrades to "that row stays native" instead
@@ -273,12 +256,6 @@ function flushPending() {
   guardEach('emit:skill-panel', skills, panel =>
     emit('iw:skill-panel', { panel, skill: detectSkillTypeCached(panel), reason: 'reconcile' }));
 
-  guardEach('emit:equipment-panel', equipment, panel =>
-    emit('iw:equipment-panel', { panel, reason: 'reconcile' }));
-
-  guardEach('emit:shop-panel', shop, panel =>
-    emit('iw:shop-panel', { panel, reason: 'reconcile' }));
-
   // These two are guarded individually so a throwing dom-flush consumer cannot
   // prevent the name-scan consumers from running, and — critically — cannot
   // skip the re-schedule below, which would strand every element still queued
@@ -287,8 +264,8 @@ function flushPending() {
   if (nameRoots.length) guard('emit:name-scan-flush', () => emit('iw:name-scan-flush', { roots: nameRoots }));
 
   // Anything left over after the budget gets the next frame.
-  if (pendingInventory.size || pendingSkills.size || pendingEquipment.size
-      || pendingShop.size || pendingBgRoots.size || pendingNameRoots.size) {
+  if (pendingInventory.size || pendingSkills.size
+      || pendingBgRoots.size || pendingNameRoots.size) {
     scheduleFlush();
   }
 }
@@ -333,15 +310,11 @@ export function startWatcher() {
         if (m.attributeName === 'style') {
           queueContext(m.target, 'attr:style', {
             inventory: false,
-            equipment: false,
-            shop: false,
             names: false,
           });
         } else if (m.attributeName === 'disabled' || m.attributeName === 'aria-disabled') {
           queueContext(m.target, `attr:${m.attributeName}`, {
             inventory: false,
-            equipment: false,
-            shop: false,
             names: false,
             background: false,
           });
@@ -349,7 +322,7 @@ export function startWatcher() {
           // A class change can make an existing node become (or cease being) a
           // row/panel, so structural consumers must reconsider THAT NODE.
           //
-          // It used to also call discover(m.target), which runs five
+          // It used to also call discover(m.target), which runs structural
           // querySelectorAll sweeps over the whole subtree. React toggles
           // classes on containers constantly (data-[state=…], animation
           // classes, progress steps), so a class flip on a high-level container
@@ -395,8 +368,6 @@ export function stopWatcher() {
   flushQueued = false;
   pendingInventory.clear();
   pendingSkills.clear();
-  pendingEquipment.clear();
-  pendingShop.clear();
   pendingBgRoots.clear();
   pendingNameRoots.clear();
 }

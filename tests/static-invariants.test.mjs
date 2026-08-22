@@ -171,6 +171,8 @@ assert.match(watcher, /JSON\.stringify\(\[buttons, identities\]\)/,
   'skill cache must represent exact normalized detection signals');
 assert.match(watcher, /drainGlobalBudget\(FLUSH_BUDGET\)/,
   'DOM reconciliation must enforce one global per-frame budget');
+assert.doesNotMatch(watcher, /iw:equipment-panel|iw:shop-panel|pendingEquipment|pendingShop/,
+  'DOM watcher must not spend budget on producer-only equipment/shop pipelines');
 assert.doesNotMatch(watcher, /drainConnected\([^\n]+FLUSH_BUDGET/,
   'per-queue frame budgets can multiply work far beyond the intended cap');
 const skillSigStart = watcher.indexOf('function skillSignature(panel)');
@@ -221,10 +223,11 @@ assert.match(skillCSS, /data-iw-readout\]::before/);
 const ui = await read('src/modules/UIFoundation.js');
 assert.doesNotMatch(ui, /new\s+MutationObserver/);
 assert.match(ui, /main-nav/);
-assert.match(ui, /player-hud/);
-assert.match(ui, /hud-player-name/);
-assert.match(ui, /hudOrderedTextCandidates/);
-assert.match(ui, /iwHudLayout/);
+assert.doesNotMatch(ui, /ENABLE_PLAYER_HUD_RELAYOUT|classifyPlayerHud|hud-player-name|iwHudLayout/,
+  'disabled player-HUD relayout code must not remain as a dormant activation path');
+const uiCss = await read('src/styles/ui-system.css');
+assert.doesNotMatch(uiCss, /player-hud|hud-identity|hud-metric|hud-utility/,
+  'disabled player-HUD role CSS must be removed with its dead classifier');
 
 const tooltip = await read('src/modules/TooltipEngine.js');
 assert.match(tooltip, /<span class="iw-item-ref" role="button" tabindex="0"/);
