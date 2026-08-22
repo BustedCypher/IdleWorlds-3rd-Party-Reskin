@@ -39,7 +39,7 @@ npm run audit:items
 
 `npm run fixtures` performs visual and responsive assertions, including short-viewport tooltip scrolling and narrow Inventory/Skill layouts. `npm run audit:items` validates assumptions against the current public `/items.json` export and is kept out of CI because it depends on a live endpoint.
 
-CI is read-only: pushes and pull requests run `npm ci`, rebuild/test the source, and fail if the committed production bundle is stale.
+CI is read-only: pull requests and pushes to `main` run `npm ci`, rebuild/test the source, and fail if the committed production bundle is stale.
 ## Validation boundary
 
 Automated and fixture validation is strong but is not a substitute for an authenticated live IdleWorlds regression pass. Real React/Tailwind structure, every Inventory action variant, and game updates can only be confirmed against the current live application.
