@@ -25,7 +25,7 @@ const OUT = resolve(HERE, 'fixtures');
 
 const fileUrl = rel => 'file://' + resolve(ROOT, rel).replace(/\\/g, '/');
 
-/* ── Atlas maths — must mirror AtlasService.paint() exactly ─────────────── */
+/* ── Atlas maths — must mirror AtlasService._applySprite() exactly ───────── */
 
 function spriteStyle(entry, dims, atlasRel) {
   const cell = dims.cell;
@@ -95,10 +95,10 @@ const itemSprite = id => {
 
 const TIERS = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
 
-const invRow = ({ sprite, name, tier, level, stats, details, reqs, qty, equipped, setAction = false }) => `
+const invRow = ({ sprite, badge, name, tier, level, stats, details, reqs, qty, equipped, setAction = false }) => `
 <div class="compact-row" style="display:flex;align-items:center;gap:0;min-height:62px;padding:0;position:relative;overflow:hidden;border:1px solid var(--iw-line);border-radius:3px;background:linear-gradient(180deg,rgba(255,255,255,.014),transparent 38%),#12110E;margin-bottom:6px;">
   <div class="fs-inv-row tier-${tier}${details ? ' has-details' : ''}${reqs ? ' has-requirements' : ''}${equipped ? ' is-equipped' : ''}">
-    <div class="fs-inv-icon" style="${sprite}"></div>
+    <div class="fs-inv-icon" style="${sprite}">${badge ? `<span class="iw-icon-badge iw-icon-badge--sprite" data-iw-badge="${badge.level}" style="${badge.sprite}"></span>` : ''}</div>
     <div class="fs-inv-body">
       <div class="fs-inv-name tier-${tier}"><span class="iw-item-ref">${name}</span>${level ? ` <span class="fs-inv-sub">Lv ${level}</span>` : ''}</div>
       ${stats ? `<div class="fs-inv-stats">${stats.map((s, i) => `<span class="fs-stat${i === 0 ? ' fs-stat--tier' : ' fs-stat--pos'}">${s}</span>`).join('')}</div>` : ''}
@@ -201,7 +201,7 @@ ${['ink-950', 'ink-900', 'ink-850', 'ink-800', 'ink-750', 'ink-700', 'ink-600', 
 </div>
 
 <div class="fx-h">Inventory rows — gear atlas, all six tiers</div>
-${invRow({ sprite: gearSprite('Iron Sword'), name: 'Iron Sword', tier: 'common', level: '3', stats: ['Tier 4 · Weapon', 'ATK +18'], qty: null, equipped: false })}
+${invRow({ sprite: gearSprite('Iron Sword'), badge: { level: 4, sprite: gearSprite('+4') }, name: 'Iron Sword+4', tier: 'common', level: '3', stats: ['Tier 4 · Weapon', 'ATK +18'], qty: null, equipped: false })}
 ${invRow({ sprite: gearSprite('Fortunate Dragonscale Silk Cloak of the Harvest'), name: 'Fortunate Dragonscale Silk Cloak of the Harvest', tier: 'common', level: null, stats: ['Tier 7 · Cloak', 'Find +4%', '2× gather 6%'], qty: null, equipped: false })}
 ${invRow({ sprite: gearSprite('Mythril Sword'), name: 'Mythril Sword', tier: 'uncommon', level: '11', stats: ['Tier 9 · Weapon', 'ATK +64', 'WAR +6'], details: [{ kind: 'loadout', text: 'In loadout: Main' }], equipped: true })}
 ${invRow({ sprite: gearSprite('Voidglass Gloves'), name: 'Voidglass Gloves', tier: 'rare', level: null, stats: ['Tier 16 · Hands', 'DEF +41', 'HP +120'], details: [{ kind: 'socket', text: 'Cut Sunstone: +4% gold find', count: 2 }] })}
@@ -343,8 +343,18 @@ const auditResponsive = async width => {
       .find(el => el.textContent.includes('Fortunate Dragonscale Silk Cloak of the Harvest'));
     const longStyle = longName ? getComputedStyle(longName) : null;
     const longLines = longName && longStyle ? longName.getBoundingClientRect().height / parseFloat(longStyle.lineHeight) : 0;
+    const badge = document.querySelector('.iw-icon-badge--sprite');
+    const badgeHost = badge?.parentElement || null;
+    const badgeRect = badge?.getBoundingClientRect() || null;
+    const hostRect = badgeHost?.getBoundingClientRect() || null;
+    const badgeStyle = badge ? getComputedStyle(badge) : null;
+    const hostStyle = badgeHost ? getComputedStyle(badgeHost) : null;
     return {
       inventoryOverflow: rows.some(el => el.scrollWidth > el.clientWidth + 1),
+      badgeVisible: !!badgeRect && badgeRect.width >= 21 && badgeRect.height >= 21,
+      badgeUsesGearAtlas: !!badgeStyle?.backgroundImage.includes('gear_icons_atlas.png'),
+      badgeOverhangs: !!badgeRect && !!hostRect && badgeRect.right > hostRect.right + 2 && badgeRect.bottom > hostRect.bottom + 2,
+      badgeHostOverflowVisible: hostStyle?.overflow === 'visible',
       setVisible: !![...document.querySelectorAll('[data-fs-action-kind="set"]')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0),
       detailsVisible: !![...document.querySelectorAll('.fs-inv-details')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
       requirementsVisible: !![...document.querySelectorAll('.fs-inv-requirements')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
@@ -359,6 +369,9 @@ const auditResponsive = async width => {
     };
   });
   if (audit.inventoryOverflow) throw new Error(`Inventory overflows at ${width}px`);
+  if (!audit.badgeVisible || !audit.badgeUsesGearAtlas || !audit.badgeOverhangs || !audit.badgeHostOverflowVisible) {
+    throw new Error(`enhancement badge is clipped or not atlas-backed at ${width}px: ${JSON.stringify(audit)}`);
+  }
   if (width <= 700 && (!audit.setVisible || !audit.detailsVisible || !audit.requirementsVisible)) {
     throw new Error(`mobile Inventory loses actions/details at ${width}px`);
   }

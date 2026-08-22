@@ -112,7 +112,13 @@ globalThis.fetch = async (url) => {
       ok: true,
       status: 200,
       async json() {
-        return { columns: 10, rows: 1, cell_size: 128, icons: [{ name: 'Iron Sword', x: 0, y: 0, width: 128, height: 128 }] };
+        return { columns: 10, rows: 2, cell_size: 128, icons: [
+          { name: '+1', index: 0, x: 0, y: 0, width: 128, height: 128 },
+          { name: '+2', index: 1, x: 128, y: 0, width: 128, height: 128 },
+          { name: '+3', index: 2, x: 256, y: 0, width: 128, height: 128 },
+          { name: '+4', index: 3, x: 384, y: 0, width: 128, height: 128 },
+          { name: 'Iron Sword', index: 4, x: 0, y: 128, width: 128, height: 128 },
+        ] };
       },
     };
   }
@@ -139,5 +145,12 @@ atlas._nextRetryAt = 0;
 await atlas.ready();
 assert.equal(atlas.isComplete(), true);
 assert.equal(atlas.resolve({ name: 'Iron Sword' })?.atlas, 'gear');
+for (let level = 1; level <= 4; level += 1) {
+  const resolved = atlas.resolve({ name: `Iron Sword+${level}` });
+  assert.equal(resolved?.badge, level, `+${level} gear must retain its enhancement level`);
+  const badgeArt = atlas.resolve({ name: `+${level}` });
+  assert.equal(badgeArt?.entry?.index, level - 1,
+    `+${level} enhancement art must use gear atlas index ${level - 1}`);
+}
 
 console.log('PASS data service resilience tests');

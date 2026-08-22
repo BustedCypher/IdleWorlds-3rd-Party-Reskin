@@ -145,6 +145,8 @@ assert.match(inventory, /if \(listenerBound\) return/,
   'Inventory initializer should remain independently idempotent');
 
 const inventoryCSS = await read('src/styles/inventory.css');
+assert.match(inventoryCSS, /\.fs-inv-icon\s*\{[^}]*overflow:\s*visible/s,
+  'Inventory enhancement sprites must be allowed to overhang the icon frame');
 assert.match(inventoryCSS, /\.fs-inv-body\s*\{[^}]*overflow:\s*hidden/s);
 assert.match(inventoryCSS, /\.fs-inv-detail[^}]*text-overflow:\s*ellipsis/s);
 assert.match(inventoryCSS, /\.fs-inv-name\s*\{[^}]*-webkit-line-clamp:\s*2[^}]*white-space:\s*normal/s,
@@ -259,10 +261,21 @@ assert.doesNotMatch(baseCSS, /\[class\*="card"\],\s*\[class\*="panel"\]/,
 assert.match(baseCSS, /--iw-r-panel:\s+3px/);
 assert.match(baseCSS, /chat-name-/);
 assert.match(baseCSS, /level-progress/);
+assert.match(baseCSS, /\.iw-icon-badge--sprite\s*\{[^}]*width:\s*22px[^}]*height:\s*22px/s,
+  'enhancement sprite must retain the proven 22px corner size');
 
 /* â”€â”€ Atlas correctness / dependency pin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const atlas = await read('src/modules/AtlasService.js');
+assert.match(atlas, /_paintBadge\(hostEl, level\)/,
+  'enhanced gear must use the atlas-backed badge painter');
+assert.match(atlas, /iw-icon-badge iw-icon-badge--sprite/,
+  'enhancement art must use the sprite badge class rather than plain text');
+const gearManifest = JSON.parse(await read('assets/gear_icons_manifest.json'));
+assert.deepEqual(gearManifest.icons.slice(0, 4).map(({ name, index }) => ({ name, index })), [
+  { name: '+1', index: 0 }, { name: '+2', index: 1 },
+  { name: '+3', index: 2 }, { name: '+4', index: 3 },
+], 'gear atlas indexes 0..3 must remain the +1..+4 enhancement overlays');
 assert.doesNotMatch(atlas, /https:\/\/raw\.githubusercontent\.com/,
   'runtime must not fetch atlas assets from third-party origins');
 assert.match(atlas, /REQUIRED_ITEM_COLUMNS/);
