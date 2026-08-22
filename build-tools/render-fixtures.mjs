@@ -332,37 +332,25 @@ if (shortTooltipAudit.height > 341) throw new Error(`mobile tooltip exceeds shor
 if (!shortTooltipAudit.scrollable) throw new Error('mobile tooltip body must scroll when content exceeds the viewport');
 if (!shortTooltipAudit.closeVisible) throw new Error('mobile tooltip close control is not visible');
 
-await p.setViewportSize({ width: 390, height: 844 });
-await p.waitForTimeout(100);
-await p.screenshot({ path: resolve(OUT, 'mobile-inventory.png'), fullPage: true });
-const mobileInventory = await p.evaluate(() => {
-  const longName = [...document.querySelectorAll('.fs-inv-name')]
-    .find(el => el.textContent.includes('Fortunate Dragonscale Silk Cloak of the Harvest'));
-  const longStyle = longName ? getComputedStyle(longName) : null;
-  const longLines = longName && longStyle ? longName.getBoundingClientRect().height / parseFloat(longStyle.lineHeight) : 0;
-  return {
-    overflow: [...document.querySelectorAll('.compact-row:has(> .fs-inv-row)')].some(el => el.scrollWidth > el.clientWidth + 1),
-    setVisible: !![...document.querySelectorAll('[data-fs-action-kind="set"]')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0),
-    detailsVisible: !![...document.querySelectorAll('.fs-inv-details')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
-    requirementsVisible: !![...document.querySelectorAll('.fs-inv-requirements')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
-    longNameLines: longLines,
-  };
-});
-if (mobileInventory.overflow) throw new Error('mobile Inventory causes horizontal page overflow');
-if (!mobileInventory.setVisible) throw new Error('mobile Inventory hides Set action');
-if (!mobileInventory.detailsVisible) throw new Error('mobile Inventory hides dynamic details');
-if (!mobileInventory.requirementsVisible) throw new Error('mobile Inventory hides requirements');
-if (mobileInventory.longNameLines < 1.5 || mobileInventory.longNameLines > 2.2) {
-  throw new Error(`long Inventory name must wrap to two lines, got ${mobileInventory.longNameLines.toFixed(2)}`);
-}
-const auditMobileSkills = async width => {
+const RESPONSIVE_WIDTHS = [320, 360, 390, 430, 600, 768];
+const auditResponsive = async width => {
   await p.setViewportSize({ width, height: 844 });
   await p.waitForTimeout(60);
   const audit = await p.evaluate(() => {
+    const rows = [...document.querySelectorAll('.compact-row:has(> .fs-inv-row)')];
     const panels = [...document.querySelectorAll('.fx-skill-grid .compact-panel.fs-skill-panel')];
+    const longName = [...document.querySelectorAll('.fs-inv-name')]
+      .find(el => el.textContent.includes('Fortunate Dragonscale Silk Cloak of the Harvest'));
+    const longStyle = longName ? getComputedStyle(longName) : null;
+    const longLines = longName && longStyle ? longName.getBoundingClientRect().height / parseFloat(longStyle.lineHeight) : 0;
     return {
-      count: panels.length,
-      overflow: panels.some(el => el.scrollWidth > el.clientWidth + 1),
+      inventoryOverflow: rows.some(el => el.scrollWidth > el.clientWidth + 1),
+      setVisible: !![...document.querySelectorAll('[data-fs-action-kind="set"]')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0),
+      detailsVisible: !![...document.querySelectorAll('.fs-inv-details')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
+      requirementsVisible: !![...document.querySelectorAll('.fs-inv-requirements')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
+      longNameLines: longLines,
+      skillCount: panels.length,
+      skillOverflow: panels.some(el => el.scrollWidth > el.clientWidth + 1),
       twoRow: panels.every(el => getComputedStyle(el).gridTemplateAreas.includes('content content')),
       commandsVisible: panels.every(el => {
         const cmd = el.querySelector('[data-iw-skill-zone="commands"]');
@@ -370,13 +358,23 @@ const auditMobileSkills = async width => {
       }),
     };
   });
-  if (!audit.count || audit.overflow) throw new Error(`mobile skill panels overflow at ${width}px`);
-  if (!audit.twoRow) throw new Error(`mobile skill panels did not switch to two-row layout at ${width}px`);
-  if (!audit.commandsVisible) throw new Error(`mobile skill commands hidden at ${width}px`);
+  if (audit.inventoryOverflow) throw new Error(`Inventory overflows at ${width}px`);
+  if (width <= 700 && (!audit.setVisible || !audit.detailsVisible || !audit.requirementsVisible)) {
+    throw new Error(`mobile Inventory loses actions/details at ${width}px`);
+  }
+  if (width <= 430 && (audit.longNameLines < 1.5 || audit.longNameLines > 2.2)) {
+    throw new Error(`long Inventory name must wrap to two lines at ${width}px, got ${audit.longNameLines.toFixed(2)}`);
+  }
+  if (width > 430 && width <= 700 && (audit.longNameLines < 0.9 || audit.longNameLines > 2.2)) {
+    throw new Error(`long Inventory name exceeded its two-line cap at ${width}px: ${audit.longNameLines.toFixed(2)}`);
+  }
+  if (!audit.skillCount || audit.skillOverflow) throw new Error(`skill panels overflow at ${width}px`);
+  if (audit.twoRow !== (width <= 520)) throw new Error(`skill breakpoint mismatch at ${width}px`);
+  if (!audit.commandsVisible) throw new Error(`skill commands hidden at ${width}px`);
 };
-await auditMobileSkills(390);
-await p.screenshot({ path: resolve(OUT, 'mobile-skills.png'), fullPage: true });
-await auditMobileSkills(320);
+for (const width of RESPONSIVE_WIDTHS) await auditResponsive(width);
+await p.setViewportSize({ width: 390, height: 844 });
+await p.screenshot({ path: resolve(OUT, 'mobile-responsive.png'), fullPage: true });
 
 await p.setViewportSize({ width: 1240, height: 1000 });
 
