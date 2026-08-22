@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "atlas": "skills_icons_atlas.webp",
+  "width": 672,
+  "height": 224,
+  "cellWidth": 112,
+  "cellHeight": 112,
+  "columns": 6,
+  "rows": 2,
+  "entries": [
+    {
+      "key": "combat",
+      "label": "Combat",
+      "index": 0,
+      "row": 0,
+      "col": 0,
+      "x": 0,
+      "y": 0,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "mining",
+      "label": "Mining",
+      "index": 1,
+      "row": 0,
+      "col": 1,
+      "x": 112,
+      "y": 0,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "smithing",
+      "label": "Smithing",
+      "index": 2,
+      "row": 0,
+      "col": 2,
+      "x": 224,
+      "y": 0,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "gathering",
+      "label": "Gathering",
+      "index": 3,
+      "row": 0,
+      "col": 3,
+      "x": 336,
+      "y": 0,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "alchemy",
+      "label": "Alchemy",
+      "index": 4,
+      "row": 0,
+      "col": 4,
+      "x": 448,
+      "y": 0,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "jewelcrafting",
+      "label": "Jewelcrafting",
+      "index": 5,
+      "row": 0,
+      "col": 5,
+      "x": 560,
+      "y": 0,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "spellcrafting",
+      "label": "Spellcrafting",
+      "index": 6,
+      "row": 1,
+      "col": 0,
+      "x": 0,
+      "y": 112,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "tailoring",
+      "label": "Tailoring",
+      "index": 7,
+      "row": 1,
+      "col": 1,
+      "x": 112,
+      "y": 112,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "crafting",
+      "label": "Crafting",
+      "index": 8,
+      "row": 1,
+      "col": 2,
+      "x": 224,
+      "y": 112,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "fishing",
+      "label": "Fishing",
+      "index": 9,
+      "row": 1,
+      "col": 3,
+      "x": 336,
+      "y": 112,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "locked",
+      "label": "Coming Soon / Locked",
+      "index": 10,
+      "row": 1,
+      "col": 4,
+      "x": 448,
+      "y": 112,
+      "width": 112,
+      "height": 112
+    },
+    {
+      "key": "generic",
+      "label": "Generic Skill / Empty Slot",
+      "index": 11,
+      "row": 1,
+      "col": 5,
+      "x": 560,
+      "y": 112,
+      "width": 112,
+      "height": 112
+    }
+  ]
+}
