@@ -2,7 +2,7 @@
 
 ## Current status
 
-The current source is a hardened Manifest V3 content-script skin for IdleWorlds. The project still uses the deterministic recovered Python bundler because build-system replacement is gated behind final live-game validation; runtime architecture and source code are otherwise maintained directly in `src/`.
+The current source is a hardened Manifest V3 content-script skin for IdleWorlds. After the pre-migration live Chrome regression passed, the recovered Python bundler was replaced with a standard esbuild pipeline while preserving the same single-file content-script architecture and runtime-owned CSS model.
 
 The feature branch is intentionally kept separate from `main` while hardening is reviewed. The skin remains presentation-only: React owns gameplay DOM, state and event handlers.
 
@@ -24,6 +24,7 @@ The feature branch is intentionally kept separate from `main` while hardening is
 - Enforced one global per-frame DOM flush budget and reduced hot-path mutation work.
 - Reduced long-session retention by pruning detached inline-style ownership records.
 - Added responsive fixture coverage at 320, 360, 390, 430, 600 and 768px.
+- Replaced the recovered Python bundler with esbuild after the live regression gate passed.
 
 ## Automated validation
 
@@ -46,12 +47,12 @@ Automated and fixture validation is strong but is not a substitute for an authen
 
 For that reason:
 
-- `main` should remain untouched until the feature branch passes live Chrome regression.
-- No claim should be made that every live game panel has been verified from this development environment.
-- Build-system modernization should remain gated until the current runtime behavior is accepted as stable; replacing the recovered bundler at the same time as unresolved live-DOM changes would make regressions harder to isolate.
+- The pre-migration feature branch passed the user-run live Chrome regression on 2026-08-22.
+- Automated validation still cannot independently prove every live game panel or future React/Tailwind update.
+- A short post-migration live Chrome sanity check should be completed before merging the esbuild migration into `main`.
 
 ## Remaining maintenance items
 
 - Revisit the temporary cloak alias compatibility layer when the upstream item naming contract no longer requires it.
 - Re-run the live item contract audit after major IdleWorlds patches that change item statistics or acquisition metadata.
-- Perform the final authenticated live regression before merge and before replacing the recovered bundler.
+- Perform a short post-migration live Chrome sanity check before merge.

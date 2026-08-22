@@ -278,9 +278,12 @@ assert.match(vendor, /39bc876307c3183d160a5e2c5868d37b50c1660b/,
 
 /* â”€â”€ Build / manifest / test contract â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const build = await read('build-tools/build_recovered.py');
-assert.match(build, /STANDALONE_CSS\s*=\s*set\(\)/,
-  'base.css must be bundled as removable text rather than copied for manifest injection');
+const build = await read('build-tools/build.mjs');
+assert.match(build, /format:\s*'iife'/, 'production bundle must remain a single content-script IIFE');
+assert.match(build, /loader:\s*\{\s*'\.css':\s*'text'\s*\}/,
+  'CSS must remain bundled as removable runtime-owned text');
+assert.match(build, /REQUIRED_ASSETS/);
+assert.match(build, /allowMissingAssets/);
 
 const manifest = JSON.parse(await read('manifest.json'));
 assert.ok(manifest.permissions?.includes('storage'));
@@ -290,8 +293,8 @@ assert.ok(!(manifest.content_scripts?.[0]?.css || []).includes('dist/base.css'),
   'runtime kill switch cannot remove manifest-declared CSS');
 
 const pkg = JSON.parse(await read('package.json'));
-assert.match(pkg.scripts?.test || '', /build_recovered\.py --allow-missing-assets/,
-  'npm test must rebuild the bundle before smoke execution');
+assert.match(pkg.scripts?.test || '', /build\.mjs --allow-missing-assets/,
+  'npm test must rebuild the esbuild bundle before smoke execution');
 assert.match(pkg.scripts?.test || '', /node --check dist\/content\.bundle\.js/);
 assert.ok(pkg.scripts?.['test:run'], 'raw regression suite should remain separately invokable by strict setup');
 
@@ -300,8 +303,8 @@ assert.ok(!distFiles.includes('base.css'), 'obsolete standalone dist/base.css mu
 
 const bundle = await read('dist/content.bundle.js');
 assert.doesNotMatch(bundle, /sourceMappingURL=data:/);
-assert.match(bundle, /__modules\["styles\/base\.css"\]/,
-  'rebuilt production bundle must contain the runtime-owned base stylesheet module');
+assert.match(bundle, /--iw-ink-950:\s*#070806/,
+  'rebuilt production bundle must contain the runtime-owned base stylesheet text');
 const bundleStat = await stat(new URL('dist/content.bundle.js', root));
 assert.ok(bundleStat.size < 300_000, `production bundle unexpectedly large: ${bundleStat.size}`);
 

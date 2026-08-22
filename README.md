@@ -23,7 +23,7 @@ npm run setup
 
 `npm test` deliberately rebuilds `dist/content.bundle.js` before the smoke test so tests cannot accidentally validate an older committed bundle. Its rebuild allows missing binary assets because the jsdom regression suites do not render the real PNGs. `npm run setup` remains the strict path: it vendors the real assets first, performs the normal build, then runs the suites.
 
-The build is the project's own deterministic Python bundler, not esbuild. It is regex-based, which constrains the source: **only single-line relative imports, and only `export function` / `export const` / `export let`.** In particular `export async function` is neither rewritten nor rejected — it passes straight through into a CommonJS wrapper and throws at load. Use `export const name = async function name() {}` instead.
+The production bundle is built with `esbuild` from the standard ESM source graph. CSS imports use esbuild's text loader so every stylesheet remains lifecycle-owned and removable. The output is a single unminified UTF-8 IIFE targeting Chrome 109+ with no source map.
 
 Then load the folder in Chrome via `chrome://extensions` → **Load unpacked**.
 
@@ -34,9 +34,9 @@ Then load the folder in Chrome via `chrome://extensions` → **Load unpacked**.
 ```text
 manifest.json          MV3 manifest
 .github/workflows/
-  ci.yml                read-only rebuild/test validation for pushes and PRs
+  ci.yml                read-only rebuild/test validation for PRs + main pushes
 build-tools/
-  build_recovered.py      deterministic recovered-source bundler
+  build.mjs                 esbuild production bundler + asset validation
   vendor-assets.mjs       pinned atlas + typeface downloader / verifier
   render-fixtures.mjs     responsive visual fixture renderer
   audit-items-contract.mjs live items.json schema/contract audit
