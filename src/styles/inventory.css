@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════
-   Inventory / ItemRow — v1.5.10
+   Inventory / ItemRow — reusable owned-item presentation
 
    Inventory is the reference implementation for reusable RPG item rows.
    React-owned commands remain live DOM nodes; the Fantasy Skin owns the
@@ -89,6 +89,7 @@
   flex: 1 1 auto;
   min-width: 0;
   min-height: 60px;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr) 38px;
   grid-template-areas: "icon body qty";
@@ -171,13 +172,18 @@
 }
 
 .fs-inv-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   font-family: var(--iw-font-ui);
   font-size: 13px;
   font-weight: 700;
   line-height: 1.18;
   letter-spacing: .005em;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
+  overflow-wrap: anywhere;
   text-overflow: ellipsis;
   text-shadow: 0 1px 0 #000;
 }
@@ -390,18 +396,37 @@ button[data-fs-preserved-action="control"]:disabled,
 }
 
 @media (max-width: 700px) {
+  .compact-row:has(> .fs-inv-row),
+  [class*="item-row"]:has(> .fs-inv-row) {
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    padding-bottom: 5px !important;
+  }
   .fs-inv-row {
-    grid-template-columns: 42px minmax(0, 1fr);
-    grid-template-areas:
-      "icon body"
-      "icon qty";
+    flex: 1 0 100%;
+    grid-template-columns: 42px minmax(0, 1fr) 34px;
+    grid-template-areas: "icon body qty";
   }
   .fs-inv-icon { width: 42px; height: 42px; min-width: 42px; min-height: 42px; }
-  .fs-inv-qty { justify-self: start; padding: 2px 0 0; text-align: left; }
+  .fs-inv-qty { justify-self: end; padding: 0 2px 0 0; text-align: right; }
   .fs-inv-stats .fs-stat:nth-child(n+4) { display: none; }
   .fs-inv-details,
-  .fs-inv-requirements { display: none; }
-  [data-fs-action-kind="set"] { display: none !important; }
+  .fs-inv-requirements {
+    display: flex;
+    max-height: none;
+    overflow: visible;
+    gap: 2px 8px;
+    font-size: 9px;
+  }
+  .fs-inv-detail,
+  .fs-inv-requirement {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  [data-fs-preserved-action="control"] {
+    margin-top: 3px !important;
+  }
   button[data-fs-preserved-action="control"],
   a[data-fs-preserved-action="control"],
   [role="button"][data-fs-preserved-action="control"] {

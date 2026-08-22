@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { buildInventoryDetails, inventoryDetailSignature } from '../src/modules/InventoryModel.js';
+import { buildInventoryDetails, inventoryDetailSignature, resolveInventoryItemName } from '../src/modules/InventoryModel.js';
 
 const boots = {
   name: 'Eternal Weave Boots+1',
@@ -81,3 +81,13 @@ assert.deepEqual(setBonusGlyph.details.map(d => d.text), [
   'In loadout: Item Find',
   'Cut Sunstone: +6% Item Find',
 ], 'decorative-glyph Set Bonus action text must not duplicate the preserved button');
+
+const enhancedLookup = new Map([
+  ['wool boots', { name: 'Wool Boots' }],
+  ['wool boots+4', { name: 'Wool Boots+4' }],
+]);
+const lookupEnhanced = name => enhancedLookup.get(String(name).toLowerCase()) || null;
+assert.equal(resolveInventoryItemName(['Wool Boots', '+4', 'x1'], lookupEnhanced), 'Wool Boots+4',
+  'a separately rendered +4 badge must resolve the enhanced item before the base item');
+assert.equal(resolveInventoryItemName(['Wool Boots', 'x1'], lookupEnhanced), 'Wool Boots',
+  'ordinary base items must still resolve normally');

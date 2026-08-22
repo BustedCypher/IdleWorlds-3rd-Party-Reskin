@@ -3,15 +3,18 @@
   "version": "1.6.0",
   "private": true,
   "type": "module",
-  "description": "IdleWorlds Fantasy Skin \u2014 v1.6.0 hardening pass: bundled CSP-proof assets, extension-private storage, non-destructive item-name annotation, isolated consumers, budgeted flush.",
+  "description": "IdleWorlds Fantasy Skin — v1.6.0 hardening pass: bundled CSP-proof assets, extension-private storage, non-destructive item-name annotation, isolated consumers, budgeted flush.",
   "scripts": {
     "vendor": "node build-tools/vendor-assets.mjs",
-    "build": "python3 build-tools/build_recovered.py",
-    "test": "node tests/data-services.test.mjs && node tests/inventory-model.test.mjs && node tests/static-invariants.test.mjs && node tests/smoke.test.mjs",
-    "setup": "npm run vendor && npm run build && npm test",
-    "fixtures": "node build-tools/render-fixtures.mjs"
+    "build": "node build-tools/build.mjs",
+    "test:run": "node tests/data-services.test.mjs && node tests/inventory-model.test.mjs && node tests/item-display.test.mjs && node tests/static-invariants.test.mjs && node tests/smoke.test.mjs",
+    "test": "node build-tools/build.mjs --allow-missing-assets && node --check dist/content.bundle.js && npm run test:run",
+    "setup": "npm run vendor && npm run build && npm run test:run",
+    "fixtures": "node build-tools/render-fixtures.mjs",
+    "audit:items": "node build-tools/audit-items-contract.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "jsdom": "^25.0.0",
     "playwright": "^1.47.0"
   }

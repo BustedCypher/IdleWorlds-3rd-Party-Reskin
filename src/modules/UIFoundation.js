@@ -12,27 +12,8 @@ import { guard, raf } from './Runtime.js';
 import css from '../styles/ui-system.css';
 
 const NAV_LABELS = ['game', 'market', 'leaderboards', 'village', 'dungeon'];
-// The audited v1.5.3 visual baseline never successfully activated the HUD
-// relayout path on the current live DOM. Keep that structural rewrite disabled
-// until it is rebuilt/tested as an isolated feature; name/readout fixes must not
-// implicitly switch on a dormant layout system.
-const ENABLE_PLAYER_HUD_RELAYOUT = false;
-const HUD_METRIC_PATTERNS = [
-  /^\s*[💰🪙]?\s*[\d,]+\s*$/u,
-  /\batk\s*\d+\s*[•·]\s*def\s*\d+\s*[•·]\s*hp\s*\d+/i,
-  /\bxp\s*[+\-]?\d+\s*\/\s*task\b/i,
-  /\b(?:no\s+)?atk\s+potion\b/i,
-  /\b(?:no\s+)?def\s+potion\b/i,
-  /\bworld\s+buff\b/i,
-  /\bboosted\b/i,
-];
-
 function normText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
-}
-
-function lower(el) {
-  return normText(el?.textContent).toLowerCase();
 }
 
 function setRole(el, role) {
@@ -53,13 +34,6 @@ function commonAncestor(elements) {
     cur = cur.parentElement;
   }
   return null;
-}
-
-function directChildUnder(root, el) {
-  if (!root || !el || !root.contains(el)) return null;
-  let cur = el;
-  while (cur && cur.parentElement !== root) cur = cur.parentElement;
-  return cur?.parentElement === root ? cur : null;
 }
 
 function sameTextShell(el, stop, maxDepth = 4) {
@@ -154,228 +128,6 @@ function classifyMainNav() {
   });
 }
 
-function chooseHudHost(marker) {
-  let cur = marker;
-  let best = null;
-  for (let depth = 0; cur && depth < 9; depth += 1, cur = cur.parentElement) {
-    const text = lower(cur);
-    if (!/players online/.test(text) || !/combat\s+lv\s*\d+/.test(text)) continue;
-    if (/\batk\s*\d+/.test(text) && /\bdef\s*\d+/.test(text) && /\bhp\s*\d+/.test(text)) {
-      best = cur;
-      const rect = cur.getBoundingClientRect?.();
-      if (rect && rect.width >= Math.min(720, window.innerWidth * .62) && rect.height < 360) return cur;
-    }
-  }
-  return best;
-}
-
-function chooseIdentityHost(marker, hud) {
-  let cur = marker;
-  let best = marker.parentElement;
-  for (let depth = 0; cur && cur !== hud && depth < 7; depth += 1, cur = cur.parentElement) {
-    const text = lower(cur);
-    if (/players online/.test(text) && /combat\s+lv\s*\d+/.test(text) && !/\batk\s*\d+\s*[•·]\s*def/.test(text)) {
-      best = cur;
-    }
-  }
-  return best;
-}
-
-function hudLeafCandidates(identity) {
-  // The live game can render the player name as a clickable control so other
-  // players can inspect/profile it, and cosmetic name colours may live on a
-  // nested span. Do not exclude buttons/anchors here; only reject containers
-  // that contain unrelated interactive descendants.
-  return [...identity.querySelectorAll('h1,h2,h3,h4,div,span,p,button,a,[role="button"]')]
-    .filter(el => {
-      const nestedControls = [...el.querySelectorAll('button,a,input,select,textarea,[role="button"]')]
-        .filter(control => control !== el);
-      return nestedControls.length === 0;
-    })
-    .filter(el => el.childElementCount <= 2)
-    .filter(el => {
-      const text = normText(el.textContent);
-      return text && text.length <= 80;
-    });
-}
-
-function hudOrderedTextCandidates(identity) {
-  const candidates = hudLeafCandidates(identity);
-  const position = new Map();
-  candidates.forEach((el, index) => position.set(el, index));
-
-  // Prefer the smallest shell for duplicate same-text candidates, then preserve
-  // DOM order. This makes the sequence robust to wrappers introduced by React.
-  const byText = new Map();
-  for (const el of candidates) {
-    const text = normText(el.textContent);
-    const previous = byText.get(text);
-    if (!previous || previous.contains(el)) byText.set(text, el);
-  }
-  return [...byText.values()].sort((a, b) => {
-    if (a === b) return 0;
-    const relation = a.compareDocumentPosition?.(b) || 0;
-    if (relation & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
-    if (relation & Node.DOCUMENT_POSITION_PRECEDING) return 1;
-    return (position.get(a) || 0) - (position.get(b) || 0);
-  });
-}
-
-function markPlayerName(name, identity) {
-  if (!name) return;
-  const shell = sameTextShell(name, identity, 6);
-  setRole(shell, 'hud-player-name');
-  shell.dataset.iwHudPlayerText = '1';
-  name.dataset.iwHudPlayerText = '1';
-
-  // Classification only. IdleWorlds owns the cosmetic player-name treatment
-  // (for example chat-name-celestial), including transparent text fill plus a
-  // clipped background gradient on the clickable name button. Never write
-  // colour/background/text-fill here: doing so destroys the native cosmetic.
-}
-
-function classifyHudIdentity(identity) {
-  if (!identity) return;
-
-  // Reclassification happens repeatedly as React updates the header. Clear only
-  // the identity sub-roles we own so a stale earlier guess cannot keep styling
-  // the wrong node after the player header is reconciled.
-  identity.querySelectorAll('[data-iw-ui="hud-brand"], [data-iw-ui="hud-player-name"], [data-iw-ui="hud-title"], [data-iw-ui="hud-location"], [data-iw-ui="hud-online"]').forEach(el => {
-    delete el.dataset.iwUi;
-  });
-  identity.querySelectorAll('[data-iw-hud-player-text]').forEach(el => {
-    delete el.dataset.iwHudPlayerText;
-  });
-
-  const candidates = hudOrderedTextCandidates(identity);
-  const brand = candidates.find(el => /^idleworlds$/i.test(normText(el.textContent)));
-  const location = candidates.find(el => /combat\s+lv\s*\d+.*zone\s*\d+/i.test(normText(el.textContent)));
-  const online = candidates.find(el => /^players online\s*:/i.test(normText(el.textContent)));
-
-  if (brand) setRole(sameTextShell(brand, identity, 2), 'hud-brand');
-  if (location) setRole(sameTextShell(location, identity, 2), 'hud-location');
-  if (online) setRole(sameTextShell(online, identity, 2), 'hud-online');
-
-  // The desktop header's identity block is ordered Brand -> Player -> Title ->
-  // Combat/Zone -> Online. Use that structural fact before any font-size
-  // heuristic. It remains valid when the player name is an <a>/<button> and
-  // when its cosmetic colour makes computed font styling misleading.
-  const brandIndex = brand ? candidates.indexOf(brand) : -1;
-  const locationIndex = location ? candidates.indexOf(location) : candidates.length;
-  const between = candidates.filter((el, index) => {
-    if (index <= brandIndex || index >= locationIndex) return false;
-    const text = normText(el.textContent);
-    if (!text || /^(?:idleworlds|players online\s*:)/i.test(text)) return false;
-    if (/combat\s+lv|zone\s*\d+/i.test(text)) return false;
-    return true;
-  });
-
-  let name = between[0] || null;
-  let title = between[1] || null;
-
-  // Fallback for unexpected header ordering: prefer a clickable short control,
-  // then the largest remaining short text. This is intentionally secondary to
-  // DOM order because cosmetic gradients can distort computed styles.
-  if (!name) {
-    const excluded = new Set([brand, location, online].filter(Boolean));
-    const remaining = candidates.filter(el => !excluded.has(el));
-    name = remaining.find(el => el.matches?.('button,a,[role="button"]')) || remaining
-      .map(el => {
-        let size = 0;
-        let weight = 0;
-        try {
-          const cs = getComputedStyle(el);
-          size = parseFloat(cs.fontSize) || 0;
-          weight = parseInt(cs.fontWeight, 10) || 400;
-        } catch { /* no-op */ }
-        return { el, score: size * 10 + weight / 100 };
-      })
-      .sort((a, b) => b.score - a.score)[0]?.el || null;
-  }
-
-  if (name) markPlayerName(name, identity);
-
-  if (!title) {
-    title = candidates.find(el => {
-      if (el === name || el === brand || el === location || el === online) return false;
-      const text = normText(el.textContent);
-      return text.length <= 42 && !/combat\s+lv|zone\s*\d+|players online/i.test(text);
-    }) || null;
-  }
-  if (title) setRole(sameTextShell(title, identity, 2), 'hud-title');
-}
-
-function classifyHudMetrics(hud) {
-  if (!hud) return [];
-  const candidates = [...hud.querySelectorAll('div, span, p')]
-    .filter(el => !el.querySelector('button, input, select, textarea'))
-    .filter(el => el.childElementCount <= 2);
-
-  const used = new Set();
-  const metrics = [];
-  for (const el of candidates) {
-    const text = normText(el.textContent);
-    if (!text || text.length > 100 || !HUD_METRIC_PATTERNS.some(re => re.test(text))) continue;
-    const shell = sameTextShell(el, hud, 4);
-    if (!shell || used.has(shell)) continue;
-    used.add(shell);
-    setRole(shell, 'hud-metric');
-    metrics.push(shell);
-  }
-  return metrics;
-}
-
-function classifyHudZones(hud, identity, metrics) {
-  if (!hud || !identity) return;
-  const identityZone = directChildUnder(hud, identity);
-  if (identityZone) identityZone.dataset.iwHudZone = 'identity';
-
-  let statusHost = commonAncestor(metrics);
-  if (statusHost === hud) statusHost = null;
-  const statusZone = directChildUnder(hud, statusHost || metrics[0]);
-  if (statusZone && statusZone !== identityZone) {
-    statusZone.dataset.iwHudZone = 'status';
-    setRole(statusHost || statusZone, 'hud-status');
-  }
-
-  const utilityButtons = [...hud.querySelectorAll('button')]
-    .filter(btn => !statusZone?.contains(btn))
-    .filter(btn => {
-      const text = normText(btn.textContent);
-      const aria = normText(btn.getAttribute('aria-label') || btn.getAttribute('title'));
-      return text.length <= 2 || (!!aria && aria.length <= 28);
-    });
-  const utilityHost = commonAncestor(utilityButtons);
-  const utilityZone = directChildUnder(hud, utilityHost || utilityButtons[0]);
-  if (utilityZone && utilityZone !== identityZone && utilityZone !== statusZone) {
-    utilityZone.dataset.iwHudZone = 'utility';
-    if (utilityHost && utilityHost !== hud) setRole(utilityHost, 'hud-utility');
-    utilityButtons.forEach(btn => setRole(btn, 'hud-utility-button'));
-  }
-
-  const zones = [identityZone, utilityZone, statusZone].filter(Boolean);
-  if (zones.length === 3 && new Set(zones).size === 3) hud.dataset.iwHudLayout = 'three-zone';
-  else delete hud.dataset.iwHudLayout;
-}
-
-function classifyPlayerHud() {
-  const marker = [...document.querySelectorAll('div, span, p')]
-    .find(el => /^players online\s*:/i.test(normText(el.textContent)) && el.childElementCount <= 2);
-  if (!marker) return;
-
-  const hud = chooseHudHost(marker);
-  if (!hud || hud === document.body) return;
-  setRole(hud, 'player-hud');
-
-  const identity = chooseIdentityHost(marker, hud);
-  if (identity && hud.contains(identity)) {
-    setRole(identity, 'hud-identity');
-    classifyHudIdentity(identity);
-  }
-  const metrics = classifyHudMetrics(hud);
-  classifyHudZones(hud, identity, metrics);
-}
-
 function classifyZoneBar() {
   const labels = [...document.querySelectorAll('div,span,p,strong')]
     .filter(el => /^zone\s*\d+\s*:/i.test(normText(el.textContent)) && el.childElementCount <= 2);
@@ -427,7 +179,6 @@ function queueClassify() {
     // Each classifier is isolated: a throw inside classifyMainNav() must not
     // stop the zone bar and section frames from being classified. (Audit S3.7)
     guard('ui:main-nav', classifyMainNav);
-    if (ENABLE_PLAYER_HUD_RELAYOUT) guard('ui:player-hud', classifyPlayerHud);
     guard('ui:zone-bar', classifyZoneBar);
     guard('ui:section-frames', classifySectionFrames);
   });
@@ -438,11 +189,6 @@ export function clearUIFoundation() {
   document.querySelectorAll('[data-iw-ui]').forEach(el => { delete el.dataset.iwUi; });
   document.querySelectorAll('[data-iw-tab]').forEach(el => { delete el.dataset.iwTab; });
   document.querySelectorAll('[data-iw-state]').forEach(el => { delete el.dataset.iwState; });
-  document.querySelectorAll('[data-iw-hud-zone]').forEach(el => { delete el.dataset.iwHudZone; });
-  document.querySelectorAll('[data-iw-hud-layout]').forEach(el => { delete el.dataset.iwHudLayout; });
-  document.querySelectorAll('[data-iw-hud-player-text]').forEach(el => {
-    delete el.dataset.iwHudPlayerText;
-  });
 }
 
 export function initUIFoundation() {

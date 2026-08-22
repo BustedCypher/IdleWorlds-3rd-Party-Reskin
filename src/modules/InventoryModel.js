@@ -80,6 +80,45 @@ function isLikelyAggregate(text, nameParts) {
 }
 
 /**
+ * Resolve an item identity from native row text without losing a separately
+ * rendered +1..+4 enhancement badge. Prefer an exact enhanced record over the
+ * base item whenever the combined name exists in ItemDatabase.
+ */
+export function resolveInventoryItemName(texts, getByName) {
+  const lookup = typeof getByName === 'function' ? getByName : () => null;
+  const source = (texts || []).map(t => String(t == null ? '' : t).trim()).filter(Boolean);
+  const candidates = source.filter(t =>
+    t.length > 2 && !/^\d[\d,]*$/.test(t) && !/^[x×]\s*\d/i.test(t) &&
+    !/^lv\.?\s*\d+$/i.test(t) && !/^\+\s*[1-4]$/.test(t) &&
+    !/^(equip|equipped|unequip|use|drop|sell|list|lock|unlock|set bonus)$/i.test(t)
+  );
+  const upgradeToken = source.find(t => /^\+\s*[1-4]$/.test(t));
+  if (upgradeToken) {
+    const suffix = '+' + upgradeToken.replace(/\D/g, '');
+    for (const base of candidates) {
+      for (const combined of [base + suffix, base + ' ' + suffix]) {
+        if (lookup(combined)) return combined;
+      }
+    }
+  }
+  for (const c of candidates) if (lookup(c)) return c;
+  const lvPat = /^lv\.?\s*(\d+)$/i;
+  for (let i = 0; i < source.length; i++) {
+    const base = source[i];
+    if (!base || base.length < 3) continue;
+    const prev = source[i - 1] || '';
+    const next = source[i + 1] || '';
+    for (const lv of [prev, next]) {
+      const m = lvPat.exec(lv);
+      if (!m) continue;
+      for (const combined of [base + ' Lv. ' + m[1], base + ' Lv ' + m[1]]) {
+        if (lookup(combined)) return combined;
+      }
+    }
+  }
+  return candidates[0] || '';
+}
+/**
  * Convert native row text into dynamic detail lines.
  *
  * @param {string[]} rawTexts text fragments/compact element text from the live row

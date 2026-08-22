@@ -15,7 +15,7 @@
  */
 
 import { chromium } from 'playwright';
-import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -64,12 +64,21 @@ const itemRows = lines.map(l => {
   return Object.fromEntries(cols.map((c, i) => [c, cells[i] ?? '']));
 });
 const itemById = new Map(itemRows.map(r => [r.item_id, r]));
-let maxRow = 0, maxCol = 0;
+const itemCell = Number(itemRows[0]?.width) || 128;
+let maxX = 0, maxY = 0;
 for (const r of itemRows) {
-  maxRow = Math.max(maxRow, Number(r.row) || 0);
-  maxCol = Math.max(maxCol, Number(r.column) || 0);
+  const x = Number(r.x) || 0;
+  const y = Number(r.y) || 0;
+  const w = Number(r.width) || itemCell;
+  const h = Number(r.height) || itemCell;
+  maxX = Math.max(maxX, x + w);
+  maxY = Math.max(maxY, y + h);
 }
-const itemDims = { cols: maxCol + 1, rows: maxRow + 1, cell: Number(itemRows[0]?.width) || 128 };
+const itemDims = {
+  cols: Math.max(1, Math.ceil(maxX / itemCell)),
+  rows: Math.max(1, Math.ceil(maxY / itemCell)),
+  cell: itemCell,
+};
 
 const gearSprite = name => {
   const e = gearByName.get(name.toLowerCase());
@@ -86,7 +95,7 @@ const itemSprite = id => {
 
 const TIERS = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
 
-const invRow = ({ sprite, name, tier, level, stats, details, reqs, qty, equipped }) => `
+const invRow = ({ sprite, name, tier, level, stats, details, reqs, qty, equipped, setAction = false }) => `
 <div class="compact-row" style="display:flex;align-items:center;gap:0;min-height:62px;padding:0;position:relative;overflow:hidden;border:1px solid var(--iw-line);border-radius:3px;background:linear-gradient(180deg,rgba(255,255,255,.014),transparent 38%),#12110E;margin-bottom:6px;">
   <div class="fs-inv-row tier-${tier}${details ? ' has-details' : ''}${reqs ? ' has-requirements' : ''}${equipped ? ' is-equipped' : ''}">
     <div class="fs-inv-icon" style="${sprite}"></div>
@@ -101,6 +110,7 @@ const invRow = ({ sprite, name, tier, level, stats, details, reqs, qty, equipped
   ${equipped
     ? '<button data-fs-preserved-action="control" data-fs-action-kind="equipped">Equipped</button>'
     : '<button data-fs-preserved-action="control" data-fs-action-kind="equip">Equip</button>'}
+  ${setAction ? '<button data-fs-preserved-action="control" data-fs-action-kind="set">Set Bonus</button>' : ''}
   <button data-fs-preserved-action="control" data-fs-action-kind="secondary">List</button>
   <button data-fs-preserved-action="control" data-fs-action-kind="icon">🔒</button>
 </div>`;
@@ -125,16 +135,18 @@ const skillPanel = ({ type, label, title, pct, xp, reward, ingredients }) => `
   </div>
 </div>`;
 
-const tooltipCard = ({ sprite, name, tier, badges, stats, acqMain, acqSub }) => `
-<div class="iw-tip is-open" style="position:relative;display:block;opacity:1;left:0;top:0;margin-bottom:14px;">
-  <div class="iw-tip-head">
-    <div class="iw-tip-icon"><span class="iw-tip-icon-host" style="${sprite}"></span></div>
+const tooltipCard = ({ sprite, name, tier, badges, effect, stats, acqMain, acqSub, glyph = '&#x1F6E1;&#xFE0F;', source = 'cached data' }) => `
+<div class="iw-tip is-open" style="position:relative;display:flex;opacity:1;left:0;top:0;margin-bottom:14px;">
+  <div class="iw-tip-head has-art has-gear-art">
+    <div class="iw-tip-icon" aria-hidden="true">${glyph}</div>
     <div class="iw-tip-title-block">
       <div class="iw-tip-name tier-${tier}">${name}</div>
-      <div class="iw-tip-badges">${badges.map((b, i) => `<span class="iw-tip-badge${i === 0 ? ' t' : ''}${b.startsWith('Req') ? ' req' : ''}">${b}</span>`).join('')}</div>
+      <div class="iw-tip-badges">${badges.map((b, i) => `<span class="iw-tip-badge${i === 0 ? ' t' : ''}${b.startsWith('Requires') ? ' req' : ''}">${b}</span>`).join('')}</div>
     </div>
+    <div class="iw-tip-art iw-tip-gear-art" aria-hidden="true"><span class="iw-tip-art-host iw-tip-art-painted" style="${sprite}"></span></div>
   </div>
   <div class="iw-tip-body">
+    ${effect ? `<div class="iw-tip-sec iw-tip-effect-sec"><div class="iw-tip-effect">${effect}</div></div>` : ''}
     <div class="iw-tip-sec"><div class="iw-tip-sec-title">Stats</div><div class="iw-tip-stats">
       ${stats.map(([k, v, cls]) => `<div class="iw-tip-stat"><span class="k">${k}</span><span class="v${cls ? ' ' + cls : ''}">${v}</span></div>`).join('')}
     </div></div>
@@ -142,12 +154,15 @@ const tooltipCard = ({ sprite, name, tier, badges, stats, acqMain, acqSub }) => 
       <div class="iw-tip-acq"><div class="iw-tip-acq-main">${acqMain}</div><div class="iw-tip-acq-sub">${acqSub}</div></div>
     </div>
   </div>
-  <div class="iw-tip-foot"><a class="iw-tip-link" href="#">Wiki ↗</a></div>
+  <div class="iw-tip-foot"><a class="iw-tip-link" href="#">&#x1F4D6; Wiki &#x2197;</a><span class="iw-tip-source">${source}</span><button type="button" class="iw-tip-close" aria-label="Close item details">&times;</button></div>
 </div>`;
 
+const baseCss = (await readFile(resolve(ROOT, 'src/styles/base.css'), 'utf8'))
+  .replaceAll('../assets/', fileUrl('assets') + '/');
+
 const page = `<!doctype html><html><head><meta charset="utf-8">
-<link rel="stylesheet" href="${fileUrl('dist/base.css')}">
 <style>
+${baseCss}
 ${await readFile(resolve(ROOT, 'src/styles/inventory.css'), 'utf8')}
 ${await readFile(resolve(ROOT, 'src/styles/skillpanel.css'), 'utf8')}
 ${await readFile(resolve(ROOT, 'src/styles/tooltip-engine.css'), 'utf8')}
@@ -157,6 +172,7 @@ body { padding: 22px; max-width: 1180px; margin: 0 auto; }
         color: var(--iw-gold-dim); margin: 26px 0 9px; border-bottom: 1px solid var(--iw-line); padding-bottom: 6px; }
 .fx-h:first-child { margin-top: 0; }
 .fx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; align-items: start; }
+@media (max-width: 600px) { .fx-skill-grid { grid-template-columns: 1fr; } }
 .fx-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .fx-sw { width: 92px; }
 .fx-sw i { display: block; height: 34px; border: 1px solid var(--iw-line); border-radius: 2px; }
@@ -186,10 +202,11 @@ ${['ink-950', 'ink-900', 'ink-850', 'ink-800', 'ink-750', 'ink-700', 'ink-600', 
 
 <div class="fx-h">Inventory rows — gear atlas, all six tiers</div>
 ${invRow({ sprite: gearSprite('Iron Sword'), name: 'Iron Sword', tier: 'common', level: '3', stats: ['Tier 4 · Weapon', 'ATK +18'], qty: null, equipped: false })}
+${invRow({ sprite: gearSprite('Fortunate Dragonscale Silk Cloak of the Harvest'), name: 'Fortunate Dragonscale Silk Cloak of the Harvest', tier: 'common', level: null, stats: ['Tier 7 · Cloak', 'Find +4%', '2× gather 6%'], qty: null, equipped: false })}
 ${invRow({ sprite: gearSprite('Mythril Sword'), name: 'Mythril Sword', tier: 'uncommon', level: '11', stats: ['Tier 9 · Weapon', 'ATK +64', 'WAR +6'], details: [{ kind: 'loadout', text: 'In loadout: Main' }], equipped: true })}
 ${invRow({ sprite: gearSprite('Voidglass Gloves'), name: 'Voidglass Gloves', tier: 'rare', level: null, stats: ['Tier 16 · Hands', 'DEF +41', 'HP +120'], details: [{ kind: 'socket', text: 'Cut Sunstone: +4% gold find', count: 2 }] })}
 ${invRow({ sprite: gearSprite('Thalassic Shield'), name: 'Thalassic Shield', tier: 'epic', level: '22', stats: ['Tier 21 · Off-hand', 'DEF +88'], details: [{ kind: 'effect', text: 'Item find: +7%' }], reqs: ['Requires Combat Lv 45'] })}
-${invRow({ sprite: gearSprite('Voidglass Leggings'), name: 'Voidglass Leggings', tier: 'legendary', level: null, stats: ['Tier 27 · Legs', 'DEF +140', 'HP +310'], details: [{ kind: 'set', text: 'Set bonus active' }, { kind: 'status', text: 'Not upgradable' }] })}
+${invRow({ sprite: gearSprite('Voidglass Leggings'), name: 'Voidglass Leggings', tier: 'legendary', level: null, stats: ['Tier 27 · Legs', 'DEF +140', 'HP +310'], details: [{ kind: 'set', text: 'Set bonus active' }, { kind: 'status', text: 'Not upgradable' }], setAction: true })}
 ${invRow({ sprite: gearSprite('Voidglass Boots'), name: 'Voidglass Boots', tier: 'mythic', level: '30', stats: ['Tier 33 · Feet', 'DEF +198', '2× gather 12%'], details: [{ kind: 'loadout', text: 'In loadout: Gathering' }], reqs: ['Requires Gathering Lv 80'] })}
 
 <div class="fx-h">Inventory rows — item atlas (consumables / materials)</div>
@@ -198,7 +215,7 @@ ${invRow({ sprite: itemSprite('iron_ore'), name: 'Iron Ore', tier: 'common', sta
 ${invRow({ sprite: itemSprite('titanium_atk_potion_super'), name: 'Super Titanium ATK Potion', tier: 'epic', stats: ['Tier 20 · Consumable', 'ATK +90'], qty: '12' })}
 
 <div class="fx-h">Skill panels — accent per discipline</div>
-<div class="fx-grid">
+<div class="fx-grid fx-skill-grid">
 <div>
 ${skillPanel({ type: 'combat', label: 'Combat', title: 'Fight Bone Marauder', pct: 62, xp: '1,940', reward: '340g' })}
 ${skillPanel({ type: 'mining', label: 'Mining', title: 'Mine Copper Ore', pct: 28, xp: '85', ingredients: 'Copper Ore' })}
@@ -213,16 +230,18 @@ ${skillPanel({ type: 'crafting', label: 'Crafting', title: 'Craft Upgrade Orb', 
 ${skillPanel({ type: 'fishing', label: 'Fishing', title: 'Fish Abyssal Eel', pct: 67, xp: '220' })}
 </div></div>
 
-<div class="fx-h">Tooltip cards</div>
-<div class="fx-grid">
-<div>${tooltipCard({ sprite: gearSprite('Thalassic Sword'), name: 'Thalassic Sword', tier: 'epic',
-  badges: ['Tier 21', 'Weapon', 'Req Combat Lv 45'],
-  stats: [['Attack', '+142', 'good'], ['Warfare', '+18', 'good'], ['Sockets', '2'], ['Market price', '184,000g', 'amber']],
-  acqMain: 'Boss drop &middot; Zone 21', acqSub: 'Rate 1/240' })}</div>
-<div>${tooltipCard({ sprite: itemSprite('silver_ore'), name: 'Silver Ore', tier: 'common',
-  badges: ['Tier 5', 'Raw material'],
-  stats: [['Market price', '640g', 'amber']],
-  acqMain: 'Gathered', acqSub: 'Mined in zones 5–9' })}</div>
+<div class="fx-h">Tooltip cards ? Toolkit-style rich equipment detail</div>
+<div class="fx-grid fx-tooltip-grid">
+<div>${tooltipCard({ sprite: gearSprite('Dreadguard Signet'), name: 'Dreadguard Signet', tier: 'rare',
+  badges: ['Tier 16', '&#x1F6E1;&#xFE0F; Equipment', 'Ring slot', 'Requires Lv 53 (any skill)'],
+  effect: 'ATK +22 &#x2022; DEF +16, Requires Lv 53 (any skill), XP +16/task, +32% 2x gather chance, +12% gold find',
+  stats: [['&#x2694;&#xFE0F; ATK', '22'], ['&#x1F6E1;&#xFE0F; DEF', '16'], ['&#x2728; XP/task', '16'], ['&#x1F33F; 2&#x00D7; Gather', '32%'], ['&#x1F4B0; Gold Find', '12%'], ['&#x1F4B0; Base value', '8,000g', 'amber'], ['&#x1F3F7;&#xFE0F; Turn-in', '1 token']],
+  acqMain: 'Zone drop', acqSub: 'Rate 1/20000 &#x00B7; boosted by Item Find %' })}</div>
+<div>${tooltipCard({ sprite: gearSprite('Eye of the Tempest'), name: 'Eye of the Tempest', tier: 'rare',
+  badges: ['Tier 17', '&#x1F6E1;&#xFE0F; Equipment', 'Amulet slot', 'Requires Lv 57 (any skill)'],
+  effect: 'ATK +23 &#x2022; DEF +17, Requires Lv 57 (any skill), XP +17/task, +34% 2x gather chance, +14% gold find',
+  stats: [['&#x2694;&#xFE0F; ATK', '23'], ['&#x1F6E1;&#xFE0F; DEF', '17'], ['&#x2728; XP/task', '17'], ['&#x1F33F; 2&#x00D7; Gather', '34%'], ['&#x1F4B0; Gold Find', '14%'], ['&#x1F4B0; Base value', '10,000g', 'amber'], ['&#x1F3F7;&#xFE0F; Turn-in', '1 token']],
+  acqMain: 'Zone drop', acqSub: 'Rate 1/20000 &#x00B7; boosted by Item Find %' })}</div>
 </div>
 
 <div class="fx-h">Navigation rail &amp; controls</div>
@@ -260,6 +279,16 @@ await writeFile(resolve(OUT, 'fixture.html'), page, 'utf8');
 // expected revision, and PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD stops it fetching one.
 // Point at whatever is actually on disk.
 async function findChromium() {
+  if (process.platform === 'win32') {
+    const candidates = [
+      'C:/Program Files/Google/Chrome/Application/chrome.exe',
+      'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+      'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
+    ];
+    for (const candidate of candidates) {
+      try { await access(candidate); return candidate; } catch { /* try next */ }
+    }
+  }
   const base = '/opt/pw-browsers';
   try {
     const dirs = (await readdir(base)).filter(d => d.startsWith('chromium-')).sort().reverse();
@@ -287,6 +316,67 @@ await p.evaluate(() => document.fonts.ready);
 await p.waitForTimeout(400);
 
 await p.screenshot({ path: resolve(OUT, 'full.png'), fullPage: true });
+await p.locator('.fx-tooltip-grid').screenshot({ path: resolve(OUT, 'tooltips.png') });
+
+await p.setViewportSize({ width: 390, height: 360 });
+await p.waitForTimeout(50);
+const shortTooltip = p.locator('.fx-tooltip-grid .iw-tip').first();
+await shortTooltip.screenshot({ path: resolve(OUT, 'mobile-tooltip.png') });
+const shortTooltipAudit = await shortTooltip.evaluate(el => ({
+  height: el.getBoundingClientRect().height,
+  maxHeight: parseFloat(getComputedStyle(el).maxHeight),
+  scrollable: (() => { const body = el.querySelector('.iw-tip-body'); return body && body.scrollHeight > body.clientHeight; })(),
+  closeVisible: !!el.querySelector('.iw-tip-close') && getComputedStyle(el.querySelector('.iw-tip-close')).display !== 'none',
+}));
+if (shortTooltipAudit.height > 341) throw new Error(`mobile tooltip exceeds short viewport: ${shortTooltipAudit.height}px`);
+if (!shortTooltipAudit.scrollable) throw new Error('mobile tooltip body must scroll when content exceeds the viewport');
+if (!shortTooltipAudit.closeVisible) throw new Error('mobile tooltip close control is not visible');
+
+const RESPONSIVE_WIDTHS = [320, 360, 390, 430, 600, 768];
+const auditResponsive = async width => {
+  await p.setViewportSize({ width, height: 844 });
+  await p.waitForTimeout(60);
+  const audit = await p.evaluate(() => {
+    const rows = [...document.querySelectorAll('.compact-row:has(> .fs-inv-row)')];
+    const panels = [...document.querySelectorAll('.fx-skill-grid .compact-panel.fs-skill-panel')];
+    const longName = [...document.querySelectorAll('.fs-inv-name')]
+      .find(el => el.textContent.includes('Fortunate Dragonscale Silk Cloak of the Harvest'));
+    const longStyle = longName ? getComputedStyle(longName) : null;
+    const longLines = longName && longStyle ? longName.getBoundingClientRect().height / parseFloat(longStyle.lineHeight) : 0;
+    return {
+      inventoryOverflow: rows.some(el => el.scrollWidth > el.clientWidth + 1),
+      setVisible: !![...document.querySelectorAll('[data-fs-action-kind="set"]')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0),
+      detailsVisible: !![...document.querySelectorAll('.fs-inv-details')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
+      requirementsVisible: !![...document.querySelectorAll('.fs-inv-requirements')].find(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0),
+      longNameLines: longLines,
+      skillCount: panels.length,
+      skillOverflow: panels.some(el => el.scrollWidth > el.clientWidth + 1),
+      twoRow: panels.every(el => getComputedStyle(el).gridTemplateAreas.includes('content content')),
+      commandsVisible: panels.every(el => {
+        const cmd = el.querySelector('[data-iw-skill-zone="commands"]');
+        return cmd && getComputedStyle(cmd).display !== 'none' && cmd.getBoundingClientRect().width > 0;
+      }),
+    };
+  });
+  if (audit.inventoryOverflow) throw new Error(`Inventory overflows at ${width}px`);
+  if (width <= 700 && (!audit.setVisible || !audit.detailsVisible || !audit.requirementsVisible)) {
+    throw new Error(`mobile Inventory loses actions/details at ${width}px`);
+  }
+  if (width <= 430 && (audit.longNameLines < 1.5 || audit.longNameLines > 2.2)) {
+    throw new Error(`long Inventory name must wrap to two lines at ${width}px, got ${audit.longNameLines.toFixed(2)}`);
+  }
+  if (width > 430 && width <= 700 && (audit.longNameLines < 0.9 || audit.longNameLines > 2.2)) {
+    throw new Error(`long Inventory name exceeded its two-line cap at ${width}px: ${audit.longNameLines.toFixed(2)}`);
+  }
+  if (!audit.skillCount || audit.skillOverflow) throw new Error(`skill panels overflow at ${width}px`);
+  if (audit.twoRow !== (width <= 520)) throw new Error(`skill breakpoint mismatch at ${width}px`);
+  if (!audit.commandsVisible) throw new Error(`skill commands hidden at ${width}px`);
+};
+for (const width of RESPONSIVE_WIDTHS) await auditResponsive(width);
+await p.setViewportSize({ width: 390, height: 844 });
+await p.screenshot({ path: resolve(OUT, 'mobile-responsive.png'), fullPage: true });
+
+await p.setViewportSize({ width: 1240, height: 1000 });
 
 /* ── Automated checks ───────────────────────────────────────────────────── */
 

@@ -13,6 +13,7 @@ import { storageGet, storageSet, warnOnce } from './Runtime.js';
 const API_URL = 'https://idleworlds.com/items.json';
 const CACHE_KEY = 'iw-item-db-cache';
 const CACHE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+const REFRESH_RETRY_MS = 15 * 60 * 1000;
 
 // The cache used to live in localStorage. A content script shares the PAGE's
 // localStorage, so the full items.json table was being written into
@@ -48,13 +49,19 @@ class _ItemDatabase {
     this._byId = null;
     this._byName = null;
     this._generatedAt = null;
+    this._source = null;
     this._promise = null;
     this._revision = 0;
+    this._autoRefresh = false;
+    this._refreshTimer = null;
+    this._refreshPromise = null;
   }
 
   ready() {
     if (!this._promise) {
-      this._promise = this._load().catch(err => {
+      this._promise = this._load().then(() => {
+        if (this._autoRefresh) this._scheduleRefresh(CACHE_MAX_AGE_MS);
+      }).catch(err => {
         // Do not permanently poison the singleton after a transient failure.
         this._promise = null;
         throw err;
@@ -62,7 +69,15 @@ class _ItemDatabase {
     }
     return this._promise;
   }
-
+  startAutoRefresh() {
+    this._autoRefresh = true;
+    if (this.isReady()) this._scheduleRefresh(CACHE_MAX_AGE_MS);
+  }
+  stopAutoRefresh() {
+    this._autoRefresh = false;
+    if (this._refreshTimer) clearTimeout(this._refreshTimer);
+    this._refreshTimer = null;
+  }
   isReady() {
     return Array.isArray(this._items) && !!this._byName;
   }
@@ -75,6 +90,30 @@ class _ItemDatabase {
     return this._generatedAt;
   }
 
+  source() {
+    return this._source;
+  }
+  _scheduleRefresh(delayMs) {
+    if (!this._autoRefresh) return;
+    if (this._refreshTimer) clearTimeout(this._refreshTimer);
+    this._refreshTimer = setTimeout(() => {
+      this._refreshTimer = null;
+      this._refreshOnce()
+        .then(() => this._scheduleRefresh(CACHE_MAX_AGE_MS))
+        .catch(err => {
+          console.warn('[ItemDatabase] Scheduled refresh failed:', err.message);
+          this._scheduleRefresh(REFRESH_RETRY_MS);
+        });
+    }, delayMs);
+    this._refreshTimer?.unref?.();
+  }
+
+  _refreshOnce() {
+    if (!this._refreshPromise) {
+      this._refreshPromise = this._fetchFresh().finally(() => { this._refreshPromise = null; });
+    }
+    return this._refreshPromise;
+  }
   async _load() {
     evictLegacyCache();
     const cached = await this._readCache({ allowStale: true });
@@ -82,7 +121,7 @@ class _ItemDatabase {
     if (cached && !cached.stale) {
       this._index(cached.items, cached.generatedAt, 'cache');
       // A refresh failure does not invalidate a known-good fresh cache.
-      this._fetchFresh().catch(err => {
+      this._refreshOnce().catch(err => {
         console.warn('[ItemDatabase] Background refresh failed:', err.message);
       });
       return;
@@ -93,14 +132,14 @@ class _ItemDatabase {
       // then attempt to replace it with the live table before ready resolves.
       this._index(cached.items, cached.generatedAt, 'stale-cache');
       try {
-        await this._fetchFresh();
+        await this._refreshOnce();
       } catch (err) {
         console.warn('[ItemDatabase] Using stale cache after refresh failure:', err.message);
       }
       return;
     }
 
-    await this._fetchFresh();
+    await this._refreshOnce();
   }
 
   async _fetchFresh() {
@@ -116,6 +155,7 @@ class _ItemDatabase {
     // generation stamp, refresh the cache timestamp without forcing every
     // renderer and scanner to rebuild needlessly.
     if (this.isReady() && data.generatedAt && data.generatedAt === this._generatedAt) {
+      this._source = 'network';
       this._writeCache(data.items, data.generatedAt);
       return;
     }
@@ -130,6 +170,7 @@ class _ItemDatabase {
 
     this._items = items;
     this._generatedAt = generatedAt || null;
+    this._source = source || null;
     this._byId = new Map();
     this._byName = new Map();
 

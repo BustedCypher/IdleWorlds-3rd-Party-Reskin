@@ -53,6 +53,7 @@ await staleDb.ready();
 assert.equal(staleDb.isReady(), true);
 assert.equal(staleDb.getByName('Kings Blade')?.item_id, 'blade_1');
 assert.ok(staleDb.revision() >= 1);
+assert.equal(staleDb.source(), 'stale-cache');
 
 // 1b) The legacy page-storage cache must be evicted, not merely ignored.
 assert.equal(localStorage.getItem('iw-item-db-cache'), null,
@@ -77,9 +78,29 @@ await assert.rejects(retryDb.ready(), /temporary/);
 failFirst = false;
 await retryDb.ready();
 assert.equal(retryDb.getByName('Copper-Ore')?.item_id, 'ore_1');
+assert.equal(retryDb.source(), 'network');
 assert.ok(extStorage.has('iw-item-db-cache'), 'fresh table must be cached in extension storage');
 assert.equal(localStorage.getItem('iw-item-db-cache'), null,
   'the skin must never write its cache into the page origin');
+
+// 2b) Long-running tabs refresh without overlapping requests and stop cleanly.
+let releaseRefresh;
+let refreshCalls = 0;
+globalThis.fetch = async () => {
+  refreshCalls += 1;
+  await new Promise(resolve => { releaseRefresh = resolve; });
+  return { ok: true, status: 200, async json() { return { items: [{ item_id: 'ore_1', name: 'Copper Ore', tier: 3 }], generatedAt: 'fresh-generation' }; } };
+};
+const refreshA = retryDb._refreshOnce();
+const refreshB = retryDb._refreshOnce();
+assert.equal(refreshA, refreshB, 'concurrent refresh requests must share one promise');
+releaseRefresh();
+await Promise.all([refreshA, refreshB]);
+assert.equal(refreshCalls, 1, 'only one live items request may be in flight');
+retryDb.startAutoRefresh();
+assert.ok(retryDb._refreshTimer, 'auto-refresh must schedule after enable');
+retryDb.stopAutoRefresh();
+assert.equal(retryDb._refreshTimer, null, 'disable must clear the refresh timer');
 
 // 3) One atlas metadata failure no longer disables the other atlas.
 let gearFails = true;

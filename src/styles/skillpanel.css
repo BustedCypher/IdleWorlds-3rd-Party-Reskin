@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════
-   Skill panels — v1.5.1 compact action frame
+   Skill panels — compact action frame
 
    The panel is a dense RPG action row, not a metric card. Native gameplay DOM
    remains intact; semantic role attributes provide deterministic alignment.
@@ -163,6 +163,16 @@
   color: #AAA291 !important;
   font-size: 10.8px !important;
   line-height: 1.15 !important;
+}
+
+[data-iw-skill-role="action-detail"] {
+  margin-top: 3px !important;
+  color: #C7C0B2 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  line-height: 1.2 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
 }
 
 [data-iw-skill-role="ingredient"] {
@@ -394,4 +404,26 @@
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   clip-path: none !important;
+}
+
+/* Phone layout: keep commands immediately reachable while giving action content
+   the full second row. This replaces the cramped three-column phone layout. */
+@media (max-width: 520px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    grid-template-columns: minmax(0, 1fr) 112px !important;
+    grid-template-areas:
+      "identity commands"
+      "content content" !important;
+    gap: 8px 10px !important;
+    align-items: start !important;
+    padding: 8px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="identity"] {
+    align-self: center !important;
+    min-width: 0 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="commands"] {
+    align-self: center !important;
+    justify-self: end !important;
+  }
 }

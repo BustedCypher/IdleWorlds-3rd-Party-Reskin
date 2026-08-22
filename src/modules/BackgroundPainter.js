@@ -12,6 +12,9 @@
  */
 
 import { warnOnce } from './Runtime.js';
+import { createInlineStyleOwner } from './InlineStyleOwner.js';
+
+const styleOwner = createInlineStyleOwner();
 
 const GAME_NAVIES = new Set([
   '#0f172a', '#111827', '#131d28', '#131e28', '#131d27',
@@ -81,9 +84,7 @@ function isSurfaceCandidate(el) {
 }
 
 function setImportant(el, prop, value) {
-  if (el.style.getPropertyValue(prop) === value && el.style.getPropertyPriority(prop) === 'important') return false;
-  el.style.setProperty(prop, value, 'important');
-  return true;
+  return styleOwner.set(el, prop, value, 'important');
 }
 
 function paintElement(el) {
@@ -132,15 +133,10 @@ export function paintBackground(root = document.body) {
   return changed;
 }
 
-/** Undo every repaint this module performed. Kill switch. */
+/** Undo every inline property this module owns. Kill switch. */
 export function clearBackgroundPaint() {
-  const props = [
-    'background-color',
-    'border-color',
-    'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color',
-  ];
+  styleOwner.restoreAll();
   document.querySelectorAll('[data-iw-painted="1"]').forEach(el => {
-    for (const prop of props) el.style.removeProperty(prop);
     delete el.dataset.iwPainted;
   });
 }

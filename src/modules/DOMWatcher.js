@@ -10,8 +10,6 @@
  * Events dispatched on document:
  *   iw:inventory-row      detail: { row, reason }
  *   iw:skill-panel        detail: { panel, skill, reason }
- *   iw:equipment-panel    detail: { panel, reason }
- *   iw:shop-panel         detail: { panel, reason }
  *   iw:dom-flush          detail: { roots }
  *   iw:name-scan-flush    detail: { roots }
  */
@@ -20,23 +18,12 @@ import { guard, guardEach, raf } from './Runtime.js';
 
 const SEL_INV_ROW     = '.compact-row, [class*="item-row"]';
 const SEL_SKILL_PANEL = '.compact-panel';
-const SEL_EQUIP_PANEL = '[class*="equipment"]';
-const SEL_SHOP_PANEL  = '[class*="shop"]';
 
-// Inventory rows are deliberately excluded: InventoryRenderer already
-// provides item-name tooltips there, so annotating inventory text a second
-// time buys us nothing.
-//
-// `[class*="tooltip"]` was removed in the S1.4 pass. The game's own tooltips
-// are measured and positioned by the game; they are the single worst place to
-// introduce any additional decoration, and they are transient enough that the
-// annotation rarely survives to be useful.
-const SEL_SCAN_ROOTS = [
-  '.compact-panel',
-  '[class*="equipment"]',
-  '[class*="shop"]',
-  '[class*="description"]',
-].join(', ');
+// Item-name discovery is intentionally not tied to a small selector list.
+// IdleWorlds can surface an item name in quests, skills, equipment, shops,
+// combat results, dialogs, village panels and new React features we do not yet
+// know about. NameScanner is read-only, so every dirty subtree can safely be
+// considered while the scanner itself rejects unsafe/skin-owned containers.
 
 // Upper bound on elements reconciled per animation frame. A mutation burst
 // (zone change, page switch, a big market refresh) should spread across a few
@@ -59,19 +46,59 @@ function nearest(el, selector) {
 }
 
 /**
- * Skill detection is pure with respect to a panel's button/heading text, and
- * that text is stable for the life of the panel. Recomputing it on every flush
- * meant reading `textContent` of every button in every `.compact-panel` on the
- * page ~60×/s for a result that essentially never changes. Cache it against a
- * cheap signature and recompute only when the signature moves. (Audit S4.3)
+ * Skill detection is pure with respect to a panel's button/heading text.
+ * Recomputing detection on every flush is unnecessary, but the cache key must
+ * represent the CONTENT that detection actually reads. The old key stored only
+ * button count + text lengths, so an equal-length change such as Mine -> Fish
+ * returned the previous skill type indefinitely on a reused React panel.
  */
 const skillTypeCache = new WeakMap();
 
+function normaliseSkillSignal(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+const SKILL_IDENTITY_ALIASES = {
+  combat: ['combat'],
+  mining: ['mining'],
+  smithing: ['smithing'],
+  gathering: ['gathering'],
+  alchemy: ['alchemy'],
+  jewelcrafting: ['jewel', 'jewelcrafting'],
+  spellcrafting: ['spellcraft', 'spellcrafting'],
+  tailoring: ['tailor', 'tailoring'],
+  crafting: ['crafting'],
+  fishing: ['fishing'],
+};
+
+function skillIdentitySignals(panel) {
+  const signals = new Set();
+  for (const el of panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span')) {
+    if (el.closest('button,a')) continue;
+    const explicitHeading = /^H[1-4]$/.test(el.tagName) || /skill-name/i.test(String(el.className || ''));
+    if (!explicitHeading && el.childElementCount) continue;
+    const text = normaliseSkillSignal(el.textContent);
+    if (text && text.length <= 32) signals.add(text);
+  }
+  return [...signals];
+}
+
+function skillTypeFromIdentity(signals) {
+  for (const [type, aliases] of Object.entries(SKILL_IDENTITY_ALIASES)) {
+    if (aliases.some(alias => signals.includes(alias))) return type;
+  }
+  return null;
+}
+
 function skillSignature(panel) {
-  const buttons = panel.querySelectorAll('button');
-  let sig = `${buttons.length}|`;
-  for (const btn of buttons) sig += `${(btn.textContent || '').length},`;
-  return sig;
+  const buttons = [...panel.querySelectorAll('button')]
+    .map(btn => normaliseSkillSignal(btn.textContent));
+  const identities = skillIdentitySignals(panel);
+
+  // JSON preserves array boundaries and exact signal content without a
+  // collision-prone delimiter/hash scheme. These strings are tiny compared
+  // with the panel subtree scans detection would otherwise repeat.
+  return JSON.stringify([buttons, identities]);
 }
 
 function detectSkillTypeCached(panel) {
@@ -88,32 +115,37 @@ function detectSkillType(panel) {
   // bosses, village and other systems, so searching arbitrary panel body text
   // for words such as "craft" caused unrelated cards to inherit skill chrome.
   const actionTexts = [...panel.querySelectorAll('button')]
-    .map(btn => String(btn.textContent || '').trim().toLowerCase())
+    .map(btn => normaliseSkillSignal(btn.textContent))
     .filter(Boolean);
 
   const hasAction = (...names) => actionTexts.some(text => names.includes(text));
+
+  // Specific verbs are authoritative. GATHER/HARVEST are deferred because
+  // Spellcraft currently reuses those verbs for mana harvesting.
   if (hasAction('fight'))                    return 'combat';
-  if (hasAction('mine'))                    return 'mining';
-  if (hasAction('prospect'))                return 'jewelcrafting';
+  if (hasAction('mine'))                     return 'mining';
+  if (hasAction('prospect'))                 return 'jewelcrafting';
   if (hasAction('smelt', 'forge'))           return 'smithing';
-  if (hasAction('gather', 'harvest'))        return 'gathering';
   if (hasAction('brew'))                     return 'alchemy';
   if (hasAction('enchant'))                  return 'spellcrafting';
-  if (hasAction('tailor', 'sew'))            return 'tailoring';
+  if (hasAction('tailor', 'sew', 'weave'))   return 'tailoring';
   if (hasAction('craft'))                    return 'crafting';
   if (hasAction('fish'))                     return 'fishing';
 
-  // Fallback only to explicit skill labels/headings, never the whole body.
-  const headings = [...panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"]')];
-  const labels = headings.map(h => String(h.textContent || '').trim().toLowerCase());
+  const labels = skillIdentitySignals(panel);
+  const identityType = skillTypeFromIdentity(labels);
+  if (identityType) return identityType;
+  if (hasAction('gather', 'harvest'))        return 'gathering';
+
+  // Fallback remains exact/anchored and never searches arbitrary body prose.
   if (labels.some(t => /^combat(?:\s|$)/.test(t))) return 'combat';
   if (labels.some(t => /^mining(?:\s|$)|^mine(?:\s|$)/.test(t))) return 'mining';
-  if (labels.some(t => /^jewelcrafting(?:\s|$)|^prospect(?:\s|$)/.test(t))) return 'jewelcrafting';
+  if (labels.some(t => /^(?:jewel|jewelcrafting)(?:\s|$)|^prospect(?:\s|$)/.test(t))) return 'jewelcrafting';
   if (labels.some(t => /^smithing(?:\s|$)|^smelt(?:\s|$)/.test(t))) return 'smithing';
   if (labels.some(t => /^gathering(?:\s|$)|^gather(?:\s|$)/.test(t))) return 'gathering';
   if (labels.some(t => /^alchemy(?:\s|$)|^brew(?:\s|$)/.test(t))) return 'alchemy';
-  if (labels.some(t => /^spellcrafting(?:\s|$)|^enchant(?:\s|$)/.test(t))) return 'spellcrafting';
-  if (labels.some(t => /^tailoring(?:\s|$)|^tailor(?:\s|$)/.test(t))) return 'tailoring';
+  if (labels.some(t => /^(?:spellcraft|spellcrafting)(?:\s|$)|^enchant(?:\s|$)/.test(t))) return 'spellcrafting';
+  if (labels.some(t => /^(?:tailor|tailoring)(?:\s|$)|^(?:tailor|sew|weave)(?:\s|$)/.test(t))) return 'tailoring';
   if (labels.some(t => /^crafting(?:\s|$)/.test(t))) return 'crafting';
   if (labels.some(t => /^fishing(?:\s|$)|^fish(?:\s|$)/.test(t))) return 'fishing';
   return 'unknown';
@@ -121,8 +153,6 @@ function detectSkillType(panel) {
 
 const pendingInventory = new Set();
 const pendingSkills    = new Set();
-const pendingEquipment = new Set();
-const pendingShop      = new Set();
 const pendingBgRoots   = new Set();
 const pendingNameRoots = new Set();
 let flushQueued = false;
@@ -131,22 +161,27 @@ function addIfConnected(set, el) {
   if (isElement(el)) set.add(el);
 }
 
+function addNameRoot(el) {
+  if (!isElement(el)) return;
+  for (const root of [...pendingNameRoots]) {
+    if (root === el || root.contains?.(el)) return;
+    if (el.contains?.(root)) pendingNameRoots.delete(root);
+  }
+  pendingNameRoots.add(el);
+}
+
 function queueContext(el, reason = 'update', opts = {}) {
   if (!isElement(el)) return;
   const {
     inventory = true,
     skill = true,
-    equipment = true,
-    shop = true,
     names = true,
     background = true,
   } = opts;
 
   if (inventory) addIfConnected(pendingInventory, nearest(el, SEL_INV_ROW));
   if (skill)     addIfConnected(pendingSkills,    nearest(el, SEL_SKILL_PANEL));
-  if (equipment) addIfConnected(pendingEquipment, nearest(el, SEL_EQUIP_PANEL));
-  if (shop)      addIfConnected(pendingShop,      nearest(el, SEL_SHOP_PANEL));
-  if (names)     addIfConnected(pendingNameRoots, nearest(el, SEL_SCAN_ROOTS));
+  if (names)     addNameRoot(el);
   if (background) addIfConnected(pendingBgRoots, el);
   scheduleFlush(reason);
 }
@@ -160,14 +195,7 @@ function discover(root, reason = 'mount') {
   if (root.matches?.(SEL_SKILL_PANEL)) addIfConnected(pendingSkills, root);
   root.querySelectorAll?.(SEL_SKILL_PANEL).forEach(el => addIfConnected(pendingSkills, el));
 
-  if (root.matches?.(SEL_EQUIP_PANEL)) addIfConnected(pendingEquipment, root);
-  root.querySelectorAll?.(SEL_EQUIP_PANEL).forEach(el => addIfConnected(pendingEquipment, el));
-
-  if (root.matches?.(SEL_SHOP_PANEL)) addIfConnected(pendingShop, root);
-  root.querySelectorAll?.(SEL_SHOP_PANEL).forEach(el => addIfConnected(pendingShop, el));
-
-  if (root.matches?.(SEL_SCAN_ROOTS)) addIfConnected(pendingNameRoots, root);
-  root.querySelectorAll?.(SEL_SCAN_ROOTS).forEach(el => addIfConnected(pendingNameRoots, el));
+  addNameRoot(root);
 
   addIfConnected(pendingBgRoots, root);
   scheduleFlush(reason);
@@ -190,28 +218,35 @@ function scheduleFlush() {
  *  • Anything over budget STAYS in the set and a follow-up frame is scheduled,
  *    so a burst degrades into several frames instead of one long one.
  */
-function drainConnected(set, budget) {
-  const out = [];
-  const keep = [];
+function takeConnected(set) {
   for (const el of set) {
-    if (!el || !el.isConnected) continue;
-    if (out.length < budget) out.push(el);
-    else keep.push(el);
+    set.delete(el);
+    if (el?.isConnected) return el;
   }
-  set.clear();
-  for (const el of keep) set.add(el);
+  return null;
+}
+function drainGlobalBudget(budget) {
+  const groups = [
+    ['inventory', pendingInventory], ['skills', pendingSkills],
+    ['bgRoots', pendingBgRoots], ['nameRoots', pendingNameRoots],
+  ];
+  const out = Object.fromEntries(groups.map(([key]) => [key, []]));
+  let cursor = 0, idle = 0, remaining = budget;
+  while (remaining > 0 && idle < groups.length) {
+    const [key, set] = groups[cursor];
+    cursor = (cursor + 1) % groups.length;
+    const el = takeConnected(set);
+    if (el) { out[key].push(el); remaining -= 1; idle = 0; }
+    else idle += 1;
+  }
   return out;
 }
 
 function flushPending() {
   flushQueued = false;
 
-  const inventory = drainConnected(pendingInventory, FLUSH_BUDGET);
-  const skills    = drainConnected(pendingSkills,    FLUSH_BUDGET);
-  const equipment = drainConnected(pendingEquipment, FLUSH_BUDGET);
-  const shop      = drainConnected(pendingShop,      FLUSH_BUDGET);
-  const bgRoots   = drainConnected(pendingBgRoots,   FLUSH_BUDGET);
-  const nameRoots = drainConnected(pendingNameRoots, FLUSH_BUDGET);
+  const { inventory, skills, bgRoots, nameRoots } =
+    drainGlobalBudget(FLUSH_BUDGET);
 
   // guardEach so one malformed row degrades to "that row stays native" instead
   // of silently cancelling the rest of this category's work. (Audit S3.7)
@@ -221,12 +256,6 @@ function flushPending() {
   guardEach('emit:skill-panel', skills, panel =>
     emit('iw:skill-panel', { panel, skill: detectSkillTypeCached(panel), reason: 'reconcile' }));
 
-  guardEach('emit:equipment-panel', equipment, panel =>
-    emit('iw:equipment-panel', { panel, reason: 'reconcile' }));
-
-  guardEach('emit:shop-panel', shop, panel =>
-    emit('iw:shop-panel', { panel, reason: 'reconcile' }));
-
   // These two are guarded individually so a throwing dom-flush consumer cannot
   // prevent the name-scan consumers from running, and — critically — cannot
   // skip the re-schedule below, which would strand every element still queued
@@ -235,8 +264,8 @@ function flushPending() {
   if (nameRoots.length) guard('emit:name-scan-flush', () => emit('iw:name-scan-flush', { roots: nameRoots }));
 
   // Anything left over after the budget gets the next frame.
-  if (pendingInventory.size || pendingSkills.size || pendingEquipment.size
-      || pendingShop.size || pendingBgRoots.size || pendingNameRoots.size) {
+  if (pendingInventory.size || pendingSkills.size
+      || pendingBgRoots.size || pendingNameRoots.size) {
     scheduleFlush();
   }
 }
@@ -256,7 +285,7 @@ export function startWatcher() {
         // need repainting: any newly added subtree is queued for background
         // work by discover() below, and the container's own surface colour
         // cannot change just because a child arrived.
-        if (isElement(m.target)) queueContext(m.target, 'children', { background: false });
+        if (isElement(m.target)) queueContext(m.target, 'children', { background: false, names: false });
 
         for (const n of m.addedNodes) {
           if (isElement(n)) discover(n, 'mount');
@@ -281,15 +310,11 @@ export function startWatcher() {
         if (m.attributeName === 'style') {
           queueContext(m.target, 'attr:style', {
             inventory: false,
-            equipment: false,
-            shop: false,
             names: false,
           });
         } else if (m.attributeName === 'disabled' || m.attributeName === 'aria-disabled') {
           queueContext(m.target, `attr:${m.attributeName}`, {
             inventory: false,
-            equipment: false,
-            shop: false,
             names: false,
             background: false,
           });
@@ -297,7 +322,7 @@ export function startWatcher() {
           // A class change can make an existing node become (or cease being) a
           // row/panel, so structural consumers must reconsider THAT NODE.
           //
-          // It used to also call discover(m.target), which runs five
+          // It used to also call discover(m.target), which runs structural
           // querySelectorAll sweeps over the whole subtree. React toggles
           // classes on containers constantly (data-[state=…], animation
           // classes, progress steps), so a class flip on a high-level container
@@ -343,14 +368,13 @@ export function stopWatcher() {
   flushQueued = false;
   pendingInventory.clear();
   pendingSkills.clear();
-  pendingEquipment.clear();
-  pendingShop.clear();
   pendingBgRoots.clear();
   pendingNameRoots.clear();
 }
 
 export function getScanRoots(root = document) {
-  return root.querySelectorAll ? root.querySelectorAll(SEL_SCAN_ROOTS) : [];
+  const target = root?.body || root;
+  return isElement(target) ? [target] : [];
 }
 
 export function on(eventType, handler) {

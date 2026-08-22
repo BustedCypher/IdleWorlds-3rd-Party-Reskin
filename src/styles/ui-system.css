@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════
-   IdleWorlds Fantasy Skin — v1.5.1 HUD / navigation refinement
+   IdleWorlds Fantasy Skin — shared UI and navigation refinement
 
    The shared language is deliberately dense: forged rails, restrained brass,
    flat data, compact controls. Boxes are reserved for real controls/actions.
@@ -50,212 +50,6 @@
   letter-spacing: .035em !important;
   color: var(--iw-text-hi) !important;
   text-shadow: 0 1px 0 #000 !important;
-}
-
-/* ── Player HUD ─────────────────────────────────────────────────────── */
-[data-iw-ui="player-hud"] {
-  position: relative !important;
-  min-height: 0 !important;
-  border: 1px solid var(--iw-frame-edge) !important;
-  border-radius: 6px !important;
-  background:
-    radial-gradient(420px 90px at 8% 0%, rgba(140,96,37,.052), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,.014), transparent 38px),
-    var(--iw-ink-800) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,.50),
-    inset 0 1px 0 rgba(255,255,255,.014),
-    0 6px 20px rgba(0,0,0,.20) !important;
-  overflow: hidden !important;
-}
-
-[data-iw-ui="player-hud"]::before {
-  content: "";
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, var(--iw-gold), var(--iw-line-hot) 22%, transparent 68%);
-  opacity: .66;
-  pointer-events: none;
-}
-
-/* Use the live three-column shape only when UIFoundation positively identifies
-   identity, utility and status zones as distinct direct children. */
-[data-iw-ui="player-hud"][data-iw-hud-layout="three-zone"] {
-  display: grid !important;
-  grid-template-columns: minmax(280px, .95fr) auto minmax(620px, 2.15fr) !important;
-  align-items: center !important;
-  column-gap: 18px !important;
-  padding: 12px 20px !important;
-}
-
-[data-iw-ui="player-hud"] > [data-iw-hud-zone="identity"] {
-  min-width: 0 !important;
-  align-self: stretch !important;
-  display: flex !important;
-  align-items: center !important;
-}
-[data-iw-ui="player-hud"] > [data-iw-hud-zone="utility"] {
-  align-self: stretch !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-[data-iw-ui="player-hud"] > [data-iw-hud-zone="status"] {
-  min-width: 0 !important;
-  align-self: stretch !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-[data-iw-ui="hud-identity"] {
-  position: relative !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  padding: 0 0 0 12px !important;
-}
-
-[data-iw-ui="hud-identity"]::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 3px;
-  bottom: 3px;
-  width: 2px;
-  background: linear-gradient(180deg, var(--iw-gold), #70411F 65%, var(--iw-ember));
-  opacity: .82;
-}
-
-/* HUD identity fallback. Keep inherited text readable, but never touch the
-   player cosmetic button's gradient/text-fill. */
-[data-iw-ui="hud-identity"] {
-  color: var(--iw-text-hi) !important;
-  opacity: 1 !important;
-}
-
-[data-iw-ui="hud-brand"],
-[data-iw-ui="hud-identity"] [data-iw-ui="hud-brand"] {
-  color: var(--iw-gold-dim) !important;
-  font-family: var(--iw-font-ui) !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  line-height: 1.1 !important;
-  letter-spacing: .28em !important;
-  text-transform: uppercase !important;
-}
-
-[data-iw-ui="hud-player-name"],
-[data-iw-ui="hud-player-name"] *,
-[data-iw-hud-player-text="1"],
-[data-iw-hud-player-text="1"] * {
-  opacity: 1 !important;
-  filter: none !important;
-  mix-blend-mode: normal !important;
-  font-family: var(--iw-font-ui) !important;
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  line-height: 1.02 !important;
-  letter-spacing: -.015em !important;
-  text-shadow: 0 1px 0 #000 !important;
-}
-
-[data-iw-ui="hud-player-name"] {
-  min-height: 22px !important;
-  border: 0 !important;
-  outline: 0 !important;
-  box-shadow: none !important;
-}
-
-[data-iw-ui="hud-title"],
-[data-iw-ui="hud-identity"] [data-iw-ui="hud-title"] {
-  color: var(--iw-gold) !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
-  line-height: 1.25 !important;
-}
-
-[data-iw-ui="hud-location"],
-[data-iw-ui="hud-online"],
-[data-iw-ui="hud-identity"] [data-iw-ui="hud-location"],
-[data-iw-ui="hud-identity"] [data-iw-ui="hud-online"],
-[data-iw-ui="hud-identity"] [data-iw-ui="hud-online"] {
-  color: var(--iw-dim) !important;
-  font-size: 11px !important;
-  line-height: 1.25 !important;
-}
-
-[data-iw-ui="hud-online"] {
-  color: #918A79 !important;
-}
-
-[data-iw-ui="hud-status"] {
-  width: 100% !important;
-  min-width: 0 !important;
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  align-items: center !important;
-  gap: 0 !important;
-  border-top: 1px solid rgba(88,72,43,.30) !important;
-  border-bottom: 1px solid rgba(0,0,0,.42) !important;
-  background: linear-gradient(180deg, rgba(255,255,255,.008), rgba(0,0,0,.08)) !important;
-}
-
-[data-iw-ui="hud-metric"] {
-  min-width: 0 !important;
-  min-height: 30px !important;
-  margin: 0 !important;
-  padding: 6px 10px !important;
-  border: 0 !important;
-  border-left: 1px solid var(--iw-line) !important;
-  border-radius: 0 !important;
-  outline: 0 !important;
-  background: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  color: #B8B09F !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
-  line-height: 1.15 !important;
-  font-variant-numeric: tabular-nums !important;
-}
-
-[data-iw-ui="hud-metric"]:nth-child(3n + 1) {
-  border-left-color: transparent !important;
-}
-
-[data-iw-ui="hud-metric"]:hover {
-  color: var(--iw-text-hi) !important;
-  background: linear-gradient(90deg, rgba(212,173,99,.025), transparent) !important;
-}
-
-[data-iw-ui="hud-utility"] {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 5px !important;
-  padding: 0 4px !important;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-[data-iw-ui="hud-utility-button"] {
-  width: 30px !important;
-  min-width: 30px !important;
-  height: 30px !important;
-  min-height: 30px !important;
-  padding: 0 !important;
-  border: 1px solid transparent !important;
-  background: transparent !important;
-  color: #A59E8E !important;
-  box-shadow: none !important;
-}
-[data-iw-ui="hud-utility-button"]:hover:not(:disabled) {
-  color: var(--iw-gold) !important;
-  border-color: var(--iw-line-hi) !important;
-  background: rgba(255,255,255,.018) !important;
 }
 
 /* ── Main navigation rail ───────────────────────────────────────────── */
@@ -382,7 +176,6 @@ button:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):
    a real action, and only when the game has not sized it explicitly.
    (Audit S3.5) */
 [data-iw-ui="zone-action"],
-[data-iw-ui="hud-utility-button"],
 [data-iw-inventory-control="filter"],
 [data-iw-inventory-control="page"],
 .compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"],
@@ -405,26 +198,7 @@ input[placeholder*="Search" i] {
   box-shadow: inset 0 2px 6px rgba(0,0,0,.72) !important;
 }
 
-@media (max-width: 1100px) {
-  [data-iw-ui="player-hud"][data-iw-hud-layout="three-zone"] {
-    grid-template-columns: minmax(230px, .9fr) auto minmax(440px, 1.7fr) !important;
-    column-gap: 10px !important;
-    padding-inline: 14px !important;
-  }
-  [data-iw-ui="hud-status"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  [data-iw-ui="hud-metric"]:nth-child(3n + 1) { border-left-color: var(--iw-line) !important; }
-  [data-iw-ui="hud-metric"]:nth-child(2n + 1) { border-left-color: transparent !important; }
-}
-
 @media (max-width: 780px) {
-  [data-iw-ui="player-hud"][data-iw-hud-layout="three-zone"] {
-    display: block !important;
-    padding: 10px !important;
-  }
-  [data-iw-ui="player-hud"] > [data-iw-hud-zone="utility"] { justify-content: flex-start !important; margin-top: 8px !important; }
-  [data-iw-ui="player-hud"] > [data-iw-hud-zone="status"] { margin-top: 8px !important; }
-  [data-iw-ui="hud-status"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  [data-iw-ui="hud-player-name"] { font-size: 19px !important; }
   [data-iw-ui="main-nav"] { width: 100% !important; }
   [data-iw-ui="nav-tab"] {
     flex: 1 1 auto !important;

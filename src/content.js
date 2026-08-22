@@ -1,24 +1,17 @@
 /**
  * IdleWorlds Fantasy Skin — content script entry point
  *
- * v1.6.0 boot order (retains the v1.4.1 stability guarantees):
- *   1. Inject module CSS. (base.css now ships declaratively via the manifest,
- *      so the theme lands at parse time instead of after document_idle — the
- *      flash of stock UI on every load is gone.)
- *   2. Register every consumer/listener (tooltip + renderers + repaint/scanner).
- *   3. Start async data services.
- *   4. Paint the existing page once.
- *   5. Start DOMWatcher LAST, so its initial discovery cannot emit events
- *      before consumers are listening.
- *
- * New in v1.6.0: the whole skin can be switched off at runtime without
- * uninstalling. Toggling `iw-skin-enabled` in extension storage tears every
- * module's decoration back off the live page and disconnects the observer,
- * which is the only practical way to A/B a suspected skin/game interaction
- * without losing the page state you are investigating.
+ * Lifecycle rules:
+ *   1. Every stylesheet is runtime-owned and removable, including base.css.
+ *   2. Consumer/listener registration happens ONCE for the page lifetime.
+ *   3. Each activation re-injects presentation CSS, starts services/painting,
+ *      then starts DOMWatcher LAST.
+ *   4. Teardown reverses the active work and removes every skin stylesheet.
+ *   5. Runtime guards make late reconciliation callbacks inert while disabled;
+ *      queued callbacks still run their bookkeeping so no queue flag is stranded.
  */
 
-import { removeAll as removeAllStyles } from './modules/StyleInjector.js';
+import { inject, removeAll as removeAllStyles } from './modules/StyleInjector.js';
 import { startWatcher, stopWatcher, on, getScanRoots } from './modules/DOMWatcher.js';
 import { AtlasService } from './modules/AtlasService.js';
 import { ItemDatabase } from './modules/ItemDatabase.js';
@@ -28,12 +21,36 @@ import { initInventoryRenderer, clearInventoryRenderer } from './modules/Invento
 import { initSkillPanelRenderer, clearSkillPanels } from './modules/SkillPanelRenderer.js';
 import { initUIFoundation, clearUIFoundation } from './modules/UIFoundation.js';
 import { paintBackground, clearBackgroundPaint } from './modules/BackgroundPainter.js';
-import { guard, guardEach, storageGet, onStorageChanged } from './modules/Runtime.js';
+import {
+  guard,
+  guardEach,
+  storageGet,
+  onStorageChanged,
+  setRuntimeActive,
+} from './modules/Runtime.js';
+
+import baseCss from './styles/base.css';
+import tooltipCss from './styles/tooltip-engine.css';
+import inventoryCss from './styles/inventory.css';
+import skillPanelCss from './styles/skillpanel.css';
+import uiSystemCss from './styles/ui-system.css';
 
 const ENABLED_KEY = 'iw-skin-enabled';
 const VERSION = '1.6.0';
 
 let booted = false;
+let consumersBound = false;
+
+function injectPresentationStyles() {
+  // base.css used to be declared in manifest.json. That made the kill switch
+  // incapable of restoring the native page because manifest CSS cannot be
+  // removed by StyleInjector. Keep ALL presentation lifecycle-owned instead.
+  inject('base', baseCss);
+  inject('tooltip-engine', tooltipCss);
+  inject('inventory', inventoryCss);
+  inject('skillpanel', skillPanelCss);
+  inject('ui-system', uiSystemCss);
+}
 
 function scanRoots(roots) {
   if (!ItemDatabase.isReady()) return;
@@ -44,25 +61,13 @@ function scanRoots(roots) {
   guardEach('scan-roots', unique, root => scanForItemNames(root));
 }
 
-function boot() {
-  if (booted) return;
-  booted = true;
+function bindConsumersOnce() {
+  if (consumersBound) return;
+  consumersBound = true;
 
-  // 1. Theme CSS.
-  //
-  // base.css is NOT injected from here any more. It is declared in
-  // manifest.content_scripts[].css, for two reasons:
-  //
-  //   • it applies before first paint rather than at document_idle, so the
-  //     flash of stock UI on every load is gone;
-  //   • relative url() inside a JS-injected <style> resolves against the PAGE,
-  //     while Chrome resolves it against the EXTENSION for declarative content
-  //     script CSS — which is what makes the self-hosted @font-face work.
-  //
-  // The per-module sheets have no url() references, so they still go through
-  // the injector and stay colocated with the code that depends on them.
-
-  // 2. Register ALL consumers before the watcher is allowed to discover DOM.
+  // Module initializers register their delegated/document listeners. They are
+  // intentionally page-lifetime bindings; activation state is controlled by
+  // DOMWatcher + Runtime rather than adding another copy on every re-enable.
   guard('init:tooltip', initTooltipEngine);
   guard('init:inventory', initInventoryRenderer);
   guard('init:skill-panel', initSkillPanelRenderer);
@@ -85,6 +90,18 @@ function boot() {
   document.addEventListener('iw:item-db-updated', () => {
     scanRoots([...getScanRoots()]);
   });
+}
+
+function boot() {
+  if (booted) return;
+  booted = true;
+  setRuntimeActive(true);
+
+  // 1. Presentation CSS belongs to THIS activation.
+  injectPresentationStyles();
+
+  // 2. Event consumers belong to the PAGE lifetime and are bound once.
+  bindConsumersOnce();
 
   // 3. Start async services. Neither is allowed to poison itself forever
   // after a transient failure; renderers reconcile again on update events.
@@ -92,6 +109,7 @@ function boot() {
     console.warn('[IW Fantasy Skin] Atlas failed to load:', err.message);
   });
 
+  ItemDatabase.startAutoRefresh();
   ItemDatabase.ready().catch(err => {
     console.warn('[IW Fantasy Skin] Item database failed to load:', err.message);
   });
@@ -106,17 +124,22 @@ function boot() {
 }
 
 /**
- * Remove every trace of the skin from the live page.
+ * Remove the active skin from the live page.
  *
- * Teardown order is the reverse of boot: stop producing work, drop the
- * decorations that depend on the DOM, then remove the stylesheets that were
- * making them visible.
+ * Keep Runtime active until module cleanup has completed: teardown functions use
+ * guardEach(), and they must be allowed to restore/remove the active decoration.
+ * Runtime is marked inactive only after the page has been cleaned, which also
+ * suppresses late data-service/reconciliation events until the next boot.
  */
 function teardown() {
-  if (!booted) return;
+  if (!booted) {
+    setRuntimeActive(false);
+    return;
+  }
   booted = false;
 
   guard('teardown:watcher', stopWatcher);
+  ItemDatabase.stopAutoRefresh();
   guard('teardown:tooltip', () => hideTooltip());
   guard('teardown:name-scan', clearItemNameScan);
   guard('teardown:inventory', clearInventoryRenderer);
@@ -125,7 +148,10 @@ function teardown() {
   guard('teardown:background', clearBackgroundPaint);
   guard('teardown:styles', removeAllStyles);
 
-  console.log('[IW Fantasy Skin] disabled — page restored to native presentation');
+  // From here until the next boot, any late async/data callbacks are inert.
+  setRuntimeActive(false);
+
+  console.log('[IW Fantasy Skin] disabled — active presentation removed');
 }
 
 function applyEnabled(enabled) {
@@ -134,9 +160,15 @@ function applyEnabled(enabled) {
 }
 
 (async function start() {
+  // Nothing should reconcile before the persisted enable state is known.
+  setRuntimeActive(false);
+
   // Default to enabled: a storage read failure must never leave the user with
   // a silently inert extension.
   const stored = await storageGet(ENABLED_KEY);
   applyEnabled(stored === null ? true : stored !== false);
+
+  // This listener intentionally remains active while the skin is disabled: it
+  // is the mechanism that can turn the skin back on.
   onStorageChanged(ENABLED_KEY, value => applyEnabled(value !== false));
 })();

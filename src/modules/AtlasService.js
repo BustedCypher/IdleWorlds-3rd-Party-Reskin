@@ -47,10 +47,10 @@ const GEAR_ATLAS_URL    = assetUrl('assets/gear_icons_atlas.png');
 const ITEM_INDEX_URL    = assetUrl('assets/item_icons_index.csv');
 const ITEM_ATLAS_URL    = assetUrl('assets/item_icons_atlas.png');
 
-// Columns parseCSV() must find in item_icons_index.csv before any icon is
-// painted. Without this check a renamed column or a stray BOM silently made
-// every `Number(entry.x) || 0` collapse to 0, painting the whole game with
-// atlas cell 0,0 and no warning anywhere. (Audit S3.3)
+// These are the columns runtime rendering ACTUALLY depends on. `row` and
+// `column` may exist as convenient metadata, but atlas dimensions are derived
+// from x/y/width/height so removing optional grid labels cannot silently turn
+// the atlas into a calculated 1x1 image.
 const REQUIRED_ITEM_COLUMNS = ['item_id', 'name', 'x', 'y', 'width', 'height'];
 
 const UPGRADE_SUFFIX = /\s*\+\s*\d+\s*$/i;
@@ -59,7 +59,6 @@ const OF_SUFFIX       = /\s+of\s+.+$/i;
 const PREFIX_AFFIX    = /^(gilded|fortunate|enchanted|nimble|sturdy|keen|blessed|arcane|savage|swift|mighty|precise|reinforced|masterwork|superior|pristine)\s+/i;
 
 const normalise = normaliseItemName;
-
 
 function parseCSV(text) {
   // A UTF-8 BOM would otherwise become part of the first header name, so the
@@ -257,20 +256,33 @@ class _AtlasService {
     this._itemById = new Map();
     this._itemByName = new Map();
 
-    let maxRow = 0, maxCol = 0;
+    const cell = Number(rows[0]?.width) || 128;
+    let maxX = 0, maxY = 0;
     for (const row of rows) {
       if (row.item_id !== undefined && row.item_id !== null && row.item_id !== '') {
         this._itemById.set(String(row.item_id), row);
       }
       const key = normalise(row.name);
       if (key && !this._itemByName.has(key)) this._itemByName.set(key, row);
-      maxRow = Math.max(maxRow, Number(row.row) || 0);
-      maxCol = Math.max(maxCol, Number(row.column) || 0);
+
+      const x = Number(row.x);
+      const y = Number(row.y);
+      const w = Number(row.width);
+      const h = Number(row.height);
+      if (![x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0) {
+        throw new Error(`Item index contains invalid sprite bounds for ${row.item_id || row.name || 'unknown item'}`);
+      }
+      maxX = Math.max(maxX, x + w);
+      maxY = Math.max(maxY, y + h);
     }
+
+    // Runtime paint() needs the atlas pixel extent, not human-friendly grid
+    // labels. Derive it from required coordinates so optional row/column fields
+    // cannot affect correctness.
     this._itemDims = {
-      cols: maxCol + 1,
-      rows: maxRow + 1,
-      cell: Number(rows[0]?.width) || 128,
+      cols: Math.max(1, Math.ceil(maxX / cell)),
+      rows: Math.max(1, Math.ceil(maxY / cell)),
+      cell,
     };
   }
 

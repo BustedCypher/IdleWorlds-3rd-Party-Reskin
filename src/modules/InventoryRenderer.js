@@ -1,5 +1,5 @@
 /**
- * InventoryRenderer — v1.5.10 ItemRow correction pass
+ * InventoryRenderer — reusable owned-item row presentation
  *
  * Inventory is the first full reusable RPG item-row implementation. React
  * keeps ownership of every real command; the skin owns only presentation.
@@ -14,12 +14,12 @@ import { ItemDatabase } from './ItemDatabase.js';
 import { itemRef } from './TooltipEngine.js';
 import { inject } from './StyleInjector.js';
 import { tierClass, statChips } from './itemDisplay.js';
-import { buildInventoryDetails, inventoryDetailSignature } from './InventoryModel.js';
+import { buildInventoryDetails, inventoryDetailSignature, resolveInventoryItemName } from './InventoryModel.js';
 import { guard, guardEach, raf } from './Runtime.js';
+import { createInlineStyleOwner } from './InlineStyleOwner.js';
 import css from '../styles/inventory.css';
 
 const RENDERED_ATTR = 'data-fs-inv';
-const ORIGINAL_DISPLAY_ATTR = 'data-fs-original-display';
 const HIDDEN_ATTR = 'data-fs-hidden';
 const ACTION_ATTR = 'data-fs-preserved-action';
 const ACTION_HOST_ATTR = 'data-fs-action-host';
@@ -30,9 +30,31 @@ const INVENTORY_CONTROL_ATTR = 'data-iw-inventory-control';
 const INVENTORY_TITLE_ATTR = 'data-iw-inventory-title';
 const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [role="button"], [tabindex]';
 const pendingEmptyRetries = new WeakSet();
+const displayStyleOwner = createInlineStyleOwner();
 
-/** row -> cheap change signature, see renderRow(). */
+/** row -> exact cheap change signature, see renderRow(). */
 const cheapSignatures = new WeakMap();
+let listenerBound = false;
+
+function cheapSignature(row) {
+  // Reading textContent is cheap compared with the two selector sweeps in
+  // extractRowData(). Store the ACTUAL text rather than only its length: equal-
+  // length changes such as x1 -> x2 are semantically real and must reconcile.
+  return {
+    childCount: row.childElementCount,
+    text: row.textContent || '',
+    dbRevision: ItemDatabase.revision(),
+    atlasRevision: AtlasService.revision(),
+  };
+}
+
+function sameCheapSignature(a, b) {
+  return !!a && !!b &&
+    a.childCount === b.childCount &&
+    a.text === b.text &&
+    a.dbRevision === b.dbRevision &&
+    a.atlasRevision === b.atlasRevision;
+}
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -102,39 +124,6 @@ function detailTexts(row, displayName = '') {
   return kept.map(rec => rec.text);
 }
 
-function guessName(texts) {
-  const candidates = texts.filter(t =>
-    t.length > 2 &&
-    !/^\d[\d,]*$/.test(t) &&
-    !/^[x×]\s*\d/i.test(t) &&
-    !/^lv\.?\s*\d+$/i.test(t) &&
-    !/^(equip|equipped|unequip|use|drop|sell|list|lock|unlock|set bonus)$/i.test(t)
-  );
-  if (!candidates.length) return '';
-
-  for (const c of candidates) {
-    if (ItemDatabase.getByName(c)) return c;
-  }
-
-  const lvPat = /^lv\.?\s*(\d+)$/i;
-  for (let i = 0; i < texts.length; i++) {
-    const base = texts[i];
-    if (!base || base.length < 3) continue;
-    const prev = texts[i - 1] || '';
-    const next = texts[i + 1] || '';
-    for (const lv of [prev, next]) {
-      const m = lvPat.exec(lv.trim());
-      if (!m) continue;
-      const combined = `${base} Lv. ${m[1]}`;
-      if (ItemDatabase.getByName(combined)) return combined;
-      const combined2 = `${base} Lv ${m[1]}`;
-      if (ItemDatabase.getByName(combined2)) return combined2;
-    }
-  }
-
-  return candidates[0];
-}
-
 function guessQuantity(texts) {
   for (const t of texts) {
     const m = t.match(/^[x×]\s*(\d[\d,]*)$/i);
@@ -146,7 +135,7 @@ function guessQuantity(texts) {
 
 function extractRowData(row) {
   const texts = leafTexts(row);
-  const name = guessName(texts);
+  const name = resolveInventoryItemName(texts, name => ItemDatabase.getByName(name));
   return { name, qty: guessQuantity(texts), detailTexts: detailTexts(row, name) };
 }
 
@@ -211,26 +200,15 @@ function isInteractiveHost(el) {
   return !!(el.matches?.(INTERACTIVE_SELECTOR) || el.querySelector?.(INTERACTIVE_SELECTOR));
 }
 
-function rememberDisplay(el) {
-  if (!el.hasAttribute(ORIGINAL_DISPLAY_ATTR)) {
-    el.setAttribute(ORIGINAL_DISPLAY_ATTR, el.style.display || '');
-  }
-}
-
 function restoreDisplay(el) {
-  if (!el?.hasAttribute?.(ORIGINAL_DISPLAY_ATTR)) return;
-  const original = el.getAttribute(ORIGINAL_DISPLAY_ATTR);
-  if (original) el.style.display = original;
-  else el.style.removeProperty('display');
-  el.removeAttribute(ORIGINAL_DISPLAY_ATTR);
+  displayStyleOwner.restoreElement(el);
 }
 
 function suppressDisplayBranch(el) {
-  rememberDisplay(el);
   el.setAttribute(SUPPRESSED_ATTR, '1');
   el.removeAttribute(ACTION_ATTR);
   el.removeAttribute(ACTION_HOST_ATTR);
-  if (el.style.display !== 'none') el.style.display = 'none';
+  displayStyleOwner.set(el, 'display', 'none', '');
 }
 
 function classifyActionControl(el) {
@@ -276,7 +254,7 @@ function hideOriginalChildren(row, overlay) {
 }
 
 function restoreOriginalChildren(row) {
-  row.querySelectorAll(`[${ORIGINAL_DISPLAY_ATTR}]`).forEach(restoreDisplay);
+  displayStyleOwner.restoreWithin(row);
   row.querySelectorAll(`[${HIDDEN_ATTR}], [${ACTION_ATTR}], [${ACTION_HOST_ATTR}], [${SUPPRESSED_ATTR}]`).forEach(el => {
     el.removeAttribute(HIDDEN_ATTR);
     el.removeAttribute(ACTION_ATTR);
@@ -386,15 +364,12 @@ function renderRow(row) {
 
   // Cheap pre-check before the expensive path.
   //
-  // extractRowData() runs two full querySelectorAll('span, div, p[, li]')
-  // sweeps over the row, and was doing so on every flush — before the signature
-  // comparison that would have said "nothing changed". A row's own text length
-  // and child count are enough to prove nothing changed, and cost one property
-  // read each. When they hold, we still re-assert our display suppression
-  // (React may have written display back) and skip the rest. (Audit S4.4)
-  const cheapSig = `${row.childElementCount}|${(row.textContent || '').length}|`
-                 + `${ItemDatabase.revision()}|${AtlasService.revision()}`;
-  if (existingOverlay && cheapSignatures.get(row) === cheapSig) {
+  // extractRowData() runs two querySelectorAll sweeps over the row. One exact
+  // textContent read plus child/revision fields is still much cheaper, but unlike
+  // the old text-LENGTH signature it cannot miss an equal-length semantic
+  // change such as x1 -> x2 or one item name being replaced by another.
+  const cheapSig = cheapSignature(row);
+  if (existingOverlay && sameCheapSignature(cheapSignatures.get(row), cheapSig)) {
     hideOriginalChildren(row, existingOverlay);
     syncRowState(row, existingOverlay);
     return;
@@ -480,10 +455,13 @@ export function clearInventoryRenderer() {
     el.removeAttribute(INVENTORY_CONTROL_ATTR);
     el.removeAttribute(INVENTORY_TITLE_ATTR);
   });
+  displayStyleOwner.restoreAll();
 }
 
 export function initInventoryRenderer() {
   inject('inventory', css);
+  if (listenerBound) return;
+  listenerBound = true;
   on('iw:inventory-row', e => guard('inventory:row', () => renderRow(e.detail.row)));
   document.addEventListener('iw:item-db-updated', reconcileAll);
   document.addEventListener('iw:atlas-updated', reconcileAll);

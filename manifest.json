@@ -16,9 +16,6 @@
         "https://idleworlds.com/*",
         "https://www.idleworlds.com/*"
       ],
-      "css": [
-        "dist/base.css"
-      ],
       "js": [
         "dist/content.bundle.js"
       ],
