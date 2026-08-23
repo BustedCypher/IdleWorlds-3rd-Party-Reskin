@@ -1509,3 +1509,135 @@
 .compact-panel.fs-skill-panel.fs-skill--locked[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
   color: #8E877B !important;
 }
+
+/* ── Skills polish: identity completion + generated navigation ───────── */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent {
+  order: 3 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  margin-top: 3px !important;
+  color: #C8BEAB !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: .045em !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent::before {
+  content: "" !important;
+  display: block !important;
+  width: 46px !important;
+  height: 1px !important;
+  margin: 0 auto 5px !important;
+  background: linear-gradient(90deg, transparent, #9B7437 28%, #D09A4B 50%, #9B7437 72%, transparent) !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,.75) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+  order: 4 !important;
+  margin-top: 5px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="level-progress"][data-iw-progress-display] {
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  text-align: center !important;
+  pointer-events: none !important;
+  cursor: default !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="level-progress"][data-iw-progress-display]::before {
+  content: attr(data-iw-progress-display) !important;
+  color: #C9C0AF !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: .015em !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+  width: 96px !important;
+  gap: 8px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] {
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  background-color: transparent !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-nav-direction="prev"] {
+  background-image: var(--fs-skills-nav-prev) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-nav-direction="next"] {
+  background-image: var(--fs-skills-nav-next) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:hover:not(:disabled) {
+  filter: brightness(1.13) saturate(1.08) !important;
+  transform: translateY(-1px) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="action-title"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="level-progress"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="ingredient"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="requirement"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="action-detail"] {
+  text-align: center !important;
+  justify-content: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] > :first-child > :not([data-iw-skill-role="nav-group"]) {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.fs-skills-section-frame[data-iw-skills-ui-ready="1"] {
+  position: relative !important;
+  border: 1px solid #6B4F28 !important;
+  border-radius: 4px !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 32%),
+    var(--fs-skills-panel-texture),
+    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+  background-blend-mode: normal, soft-light, normal !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.78),
+    inset 0 1px 0 rgba(226,164,72,.08),
+    0 5px 18px rgba(0,0,0,.24) !important;
+}
+.fs-skills-section-frame[data-iw-skills-ui-ready="1"]::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  left: 12px !important;
+  right: 12px !important;
+  top: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, #9B7437 14%, #D09A4B 50%, #9B7437 86%, transparent) !important;
+  opacity: .78 !important;
+}
+
+/* Keep generated nav artwork above the shared global button skin. */
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"] {
+  background-image: var(--fs-skills-nav-prev) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"] {
+  background-image: var(--fs-skills-nav-next) !important;
+}

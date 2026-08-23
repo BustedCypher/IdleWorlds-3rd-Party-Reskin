@@ -11,6 +11,8 @@ import { assetUrl, warnOnce } from './Runtime.js';
 const ICON_INDEX_URL = 'assets/skills_icons_index.json';
 const UI_INDEX_URL = 'assets/skills_ui_index.json';
 const TEXTURE_URL = 'assets/skills_panel_texture.webp';
+const NAV_PREV_URL = 'assets/skills_nav_prev.svg';
+const NAV_NEXT_URL = 'assets/skills_nav_next.svg';
 
 const UI_TOKENS = {
   medallion_frame: 'medallion-frame',
@@ -76,6 +78,8 @@ function applyUiVariables(panel) {
   if (!panel || !uiIndex) return false;
   setVar(panel, '--fs-skills-panel-texture', `url("${assetUrl(TEXTURE_URL)}")`);
   setVar(panel, '--fs-skills-ui-atlas', `url("${assetUrl(`assets/${uiIndex.atlas}`)}")`);
+  setVar(panel, '--fs-skills-nav-prev', `url("${assetUrl(NAV_PREV_URL)}")`);
+  setVar(panel, '--fs-skills-nav-next', `url("${assetUrl(NAV_NEXT_URL)}")`);
 
   for (const [key, token] of Object.entries(UI_TOKENS)) {
     const entry = uiByKey.get(key);
@@ -92,6 +96,8 @@ function clearUiVariables(panel) {
   if (!panel?.style) return;
   panel.style.removeProperty('--fs-skills-panel-texture');
   panel.style.removeProperty('--fs-skills-ui-atlas');
+  panel.style.removeProperty('--fs-skills-nav-prev');
+  panel.style.removeProperty('--fs-skills-nav-next');
   for (const token of Object.values(UI_TOKENS)) {
     panel.style.removeProperty(`--fs-ui-${token}-size`);
     panel.style.removeProperty(`--fs-ui-${token}-position`);

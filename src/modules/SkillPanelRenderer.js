@@ -146,9 +146,15 @@ function styleButton(btn) {
   if (role === 'nav-button') {
     setOwnedStyle(buttonStyleOwner, btn, 'width', '40px');
     setOwnedStyle(buttonStyleOwner, btn, 'min-width', '40px');
-    setOwnedStyle(buttonStyleOwner, btn, 'height', '40px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '40px');
+    setOwnedStyle(buttonStyleOwner, btn, 'height', '44px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '44px');
     setOwnedStyle(buttonStyleOwner, btn, 'padding', '0');
+    setOwnedStyle(buttonStyleOwner, btn, 'background', 'transparent');
+    const navImage = btn.dataset.iwNavDirection === 'prev' ? 'var(--fs-skills-nav-prev)' : 'var(--fs-skills-nav-next)';
+    setOwnedStyle(buttonStyleOwner, btn, 'background-image', navImage);
+    setOwnedStyle(buttonStyleOwner, btn, 'background-size', '100% 100%');
+    setOwnedStyle(buttonStyleOwner, btn, 'background-position', 'center');
+    setOwnedStyle(buttonStyleOwner, btn, 'background-repeat', 'no-repeat');
   } else if (role === 'action-button') {
     setOwnedStyle(buttonStyleOwner, btn, 'width', '132px');
     setOwnedStyle(buttonStyleOwner, btn, 'min-width', '132px');
@@ -331,10 +337,11 @@ function setRole(el, role) {
 }
 
 function clearStructureRoles(panel) {
-  panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}]`).forEach(el => {
+  panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction]`).forEach(el => {
     el.removeAttribute(ROLE_ATTR);
     el.removeAttribute(ZONE_ATTR);
     el.removeAttribute(SHELL_ATTR);
+    delete el.dataset.iwNavDirection;
   });
   delete panel.dataset.iwSkillLayout;
 }
@@ -452,6 +459,12 @@ function annotateStructure(panel, type, meta) {
   }
 
   const navButtons = buttons.filter(btn => btn.getAttribute(ROLE_ATTR) === 'nav-button');
+  navButtons.forEach((btn, index) => {
+    const aria = normText(btn.getAttribute('aria-label')).toLowerCase();
+    const text = normText(btn.textContent);
+    const isPrev = /prev|previous/.test(aria) || /^[‹<←]$/.test(text) || (navButtons.length >= 2 && index === 0);
+    btn.dataset.iwNavDirection = isPrev ? 'prev' : 'next';
+  });
   if (navButtons.length >= 2) {
     const parent = navButtons[0].parentElement;
     if (parent && navButtons.every(btn => btn.parentElement === parent)) setRole(parent, 'nav-group');
@@ -596,17 +609,66 @@ function progressPercent(panel) {
   if (Number.isFinite(now) && Number.isFinite(max) && max > 0) {
     return `${Math.max(0, Math.min(100, (now / max) * 100))}%`;
   }
-  return '0%';
+
+  const readout = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
+  const match = normText(readout?.textContent).match(/(\d+(?:\.\d+)?)%/);
+  return match ? `${match[1]}%` : '';
+}
+
+function centralProgressText(text) {
+  const value = normText(text);
+  if (!value) return '';
+  return value
+    .replace(/\s*[-–]\s*\d+(?:\.\d+)?%\s*[•·]\s*/i, ' • ')
+    .replace(/\s*[•·]\s*\d+(?:\.\d+)?%\s*[•·]\s*/i, ' • ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function skillActionsFrame(panel) {
+  let cur = panel?.parentElement || null;
+  for (let depth = 0; cur && depth < 8; depth += 1, cur = cur.parentElement) {
+    const heading = cur.querySelector?.('h1,h2,h3,h4');
+    if (heading && /^skill actions$/i.test(normText(heading.textContent))) return cur;
+  }
+  return null;
+}
+
+function ensureSkillActionsFrame(panel) {
+  const frame = skillActionsFrame(panel);
+  if (!frame) return;
+  frame.classList.add('fs-skills-section-frame');
+  const paint = () => SkillsArtService.decoratePanel(frame);
+  if (SkillsArtService.isReady()) paint();
+  else SkillsArtService.ready().then(paint).catch(() => {});
 }
 
 function ensureSkillPresentation(panel, meta) {
+  ensureSkillActionsFrame(panel);
+
   const identity = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
   const title = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
+  const levelProgress = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
   if (identity) identity.dataset.iwCleanText = textWithoutLeadingGlyph(identity.textContent) || meta.label;
   if (title) title.dataset.iwCleanText = textWithoutLeadingGlyph(title.textContent);
+  if (levelProgress) levelProgress.dataset.iwProgressDisplay = centralProgressText(levelProgress.textContent);
 
   const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
   if (identityZone) {
+    const percentValue = progressPercent(panel);
+    let percent = identityZone.querySelector(':scope > .fs-skill-identity-percent');
+    if (percentValue) {
+      if (!percent) {
+        percent = document.createElement('span');
+        percent.className = 'fs-skill-identity-percent';
+        percent.setAttribute('aria-hidden', 'true');
+        identityZone.appendChild(percent);
+      }
+      percent.textContent = percentValue;
+    } else {
+      percent?.remove();
+    }
+
     let progress = identityZone.querySelector(':scope > .fs-skill-identity-progress');
     if (!progress) {
       progress = document.createElement('span');
@@ -616,7 +678,7 @@ function ensureSkillPresentation(panel, meta) {
       identityZone.appendChild(progress);
     }
     const fill = progress.querySelector('.fs-skill-identity-progress-fill');
-    if (fill) fill.style.width = progressPercent(panel);
+    if (fill) fill.style.width = percentValue || '0%';
   }
 
   const contentZone = panel.querySelector(`[${ZONE_ATTR}="content"]`);
@@ -667,10 +729,11 @@ function clearPanelInlineTreatment(panel) {
 function clearPanelChrome(panel) {
   clearPanelInlineTreatment(panel);
   SkillsArtService.clearPanel(panel);
-  panel.querySelectorAll('.fs-skill-medallion-art, .fs-skill-identity-progress, .fs-skill-base-exp').forEach(el => el.remove());
-  panel.querySelectorAll('[data-iw-clean-text], [data-iw-base-exp]').forEach(el => {
+  panel.querySelectorAll('.fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp').forEach(el => el.remove());
+  panel.querySelectorAll('[data-iw-clean-text], [data-iw-base-exp], [data-iw-progress-display]').forEach(el => {
     delete el.dataset.iwCleanText;
     delete el.dataset.iwBaseExp;
+    delete el.dataset.iwProgressDisplay;
   });
   clearStructureRoles(panel);
   panel.classList.remove('fs-skill-panel', ...SKILL_CLASSES);
@@ -714,6 +777,10 @@ function renderPanel(panel, skillType) {
 /** Strip skill chrome and restore only the inline properties this module owns. */
 export function clearSkillPanels() {
   guardEach('skill:teardown', document.querySelectorAll('.compact-panel'), clearPanelChrome);
+  document.querySelectorAll('.fs-skills-section-frame').forEach(frame => {
+    SkillsArtService.clearPanel(frame);
+    frame.classList.remove('fs-skills-section-frame');
+  });
   // Defensive cleanup for previously styled nodes that React moved outside a
   // .compact-panel before teardown.
   buttonStyleOwner.restoreAll();

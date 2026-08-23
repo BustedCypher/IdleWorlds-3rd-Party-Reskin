@@ -2319,6 +2319,8 @@
   var ICON_INDEX_URL = "assets/skills_icons_index.json";
   var UI_INDEX_URL = "assets/skills_ui_index.json";
   var TEXTURE_URL = "assets/skills_panel_texture.webp";
+  var NAV_PREV_URL = "assets/skills_nav_prev.svg";
+  var NAV_NEXT_URL = "assets/skills_nav_next.svg";
   var UI_TOKENS = {
     medallion_frame: "medallion-frame",
     nav_frame_idle: "nav-idle",
@@ -2378,6 +2380,8 @@
     if (!panel || !uiIndex) return false;
     setVar(panel, "--fs-skills-panel-texture", `url("${assetUrl(TEXTURE_URL)}")`);
     setVar(panel, "--fs-skills-ui-atlas", `url("${assetUrl(`assets/${uiIndex.atlas}`)}")`);
+    setVar(panel, "--fs-skills-nav-prev", `url("${assetUrl(NAV_PREV_URL)}")`);
+    setVar(panel, "--fs-skills-nav-next", `url("${assetUrl(NAV_NEXT_URL)}")`);
     for (const [key, token] of Object.entries(UI_TOKENS)) {
       const entry = uiByKey.get(key);
       if (!entry) continue;
@@ -2392,6 +2396,8 @@
     if (!panel?.style) return;
     panel.style.removeProperty("--fs-skills-panel-texture");
     panel.style.removeProperty("--fs-skills-ui-atlas");
+    panel.style.removeProperty("--fs-skills-nav-prev");
+    panel.style.removeProperty("--fs-skills-nav-next");
     for (const token of Object.values(UI_TOKENS)) {
       panel.style.removeProperty(`--fs-ui-${token}-size`);
       panel.style.removeProperty(`--fs-ui-${token}-position`);
@@ -3950,6 +3956,138 @@
 .compact-panel.fs-skill-panel.fs-skill--locked[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
   color: #8E877B !important;
 }
+
+/* ── Skills polish: identity completion + generated navigation ───────── */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent {
+  order: 3 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  margin-top: 3px !important;
+  color: #C8BEAB !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: .045em !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent::before {
+  content: "" !important;
+  display: block !important;
+  width: 46px !important;
+  height: 1px !important;
+  margin: 0 auto 5px !important;
+  background: linear-gradient(90deg, transparent, #9B7437 28%, #D09A4B 50%, #9B7437 72%, transparent) !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,.75) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+  order: 4 !important;
+  margin-top: 5px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="level-progress"][data-iw-progress-display] {
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  text-align: center !important;
+  pointer-events: none !important;
+  cursor: default !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="level-progress"][data-iw-progress-display]::before {
+  content: attr(data-iw-progress-display) !important;
+  color: #C9C0AF !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: .015em !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+  width: 96px !important;
+  gap: 8px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] {
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  background-color: transparent !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-nav-direction="prev"] {
+  background-image: var(--fs-skills-nav-prev) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-nav-direction="next"] {
+  background-image: var(--fs-skills-nav-next) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:hover:not(:disabled) {
+  filter: brightness(1.13) saturate(1.08) !important;
+  transform: translateY(-1px) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="action-title"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="level-progress"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="ingredient"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="requirement"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="action-detail"] {
+  text-align: center !important;
+  justify-content: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] > :first-child > :not([data-iw-skill-role="nav-group"]) {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.fs-skills-section-frame[data-iw-skills-ui-ready="1"] {
+  position: relative !important;
+  border: 1px solid #6B4F28 !important;
+  border-radius: 4px !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 32%),
+    var(--fs-skills-panel-texture),
+    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+  background-blend-mode: normal, soft-light, normal !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.78),
+    inset 0 1px 0 rgba(226,164,72,.08),
+    0 5px 18px rgba(0,0,0,.24) !important;
+}
+.fs-skills-section-frame[data-iw-skills-ui-ready="1"]::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  left: 12px !important;
+  right: 12px !important;
+  top: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, #9B7437 14%, #D09A4B 50%, #9B7437 86%, transparent) !important;
+  opacity: .78 !important;
+}
+
+/* Keep generated nav artwork above the shared global button skin. */
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"] {
+  background-image: var(--fs-skills-nav-prev) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"] {
+  background-image: var(--fs-skills-nav-next) !important;
+}
 `;
 
   // src/modules/SkillPanelRenderer.js
@@ -4068,9 +4206,15 @@
     if (role === "nav-button") {
       setOwnedStyle(buttonStyleOwner, btn, "width", "40px");
       setOwnedStyle(buttonStyleOwner, btn, "min-width", "40px");
-      setOwnedStyle(buttonStyleOwner, btn, "height", "40px");
-      setOwnedStyle(buttonStyleOwner, btn, "min-height", "40px");
+      setOwnedStyle(buttonStyleOwner, btn, "height", "44px");
+      setOwnedStyle(buttonStyleOwner, btn, "min-height", "44px");
       setOwnedStyle(buttonStyleOwner, btn, "padding", "0");
+      setOwnedStyle(buttonStyleOwner, btn, "background", "transparent");
+      const navImage = btn.dataset.iwNavDirection === "prev" ? "var(--fs-skills-nav-prev)" : "var(--fs-skills-nav-next)";
+      setOwnedStyle(buttonStyleOwner, btn, "background-image", navImage);
+      setOwnedStyle(buttonStyleOwner, btn, "background-size", "100% 100%");
+      setOwnedStyle(buttonStyleOwner, btn, "background-position", "center");
+      setOwnedStyle(buttonStyleOwner, btn, "background-repeat", "no-repeat");
     } else if (role === "action-button") {
       setOwnedStyle(buttonStyleOwner, btn, "width", "132px");
       setOwnedStyle(buttonStyleOwner, btn, "min-width", "132px");
@@ -4220,10 +4364,11 @@
     return el;
   }
   function clearStructureRoles(panel) {
-    panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}]`).forEach((el) => {
+    panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction]`).forEach((el) => {
       el.removeAttribute(ROLE_ATTR);
       el.removeAttribute(ZONE_ATTR);
       el.removeAttribute(SHELL_ATTR);
+      delete el.dataset.iwNavDirection;
     });
     delete panel.dataset.iwSkillLayout;
   }
@@ -4323,6 +4468,12 @@
       }
     }
     const navButtons = buttons.filter((btn) => btn.getAttribute(ROLE_ATTR) === "nav-button");
+    navButtons.forEach((btn, index) => {
+      const aria = normText(btn.getAttribute("aria-label")).toLowerCase();
+      const text = normText(btn.textContent);
+      const isPrev = /prev|previous/.test(aria) || /^[‹<←]$/.test(text) || navButtons.length >= 2 && index === 0;
+      btn.dataset.iwNavDirection = isPrev ? "prev" : "next";
+    });
     if (navButtons.length >= 2) {
       const parent = navButtons[0].parentElement;
       if (parent && navButtons.every((btn) => btn.parentElement === parent)) setRole(parent, "nav-group");
@@ -4430,15 +4581,55 @@
     if (Number.isFinite(now) && Number.isFinite(max) && max > 0) {
       return `${Math.max(0, Math.min(100, now / max * 100))}%`;
     }
-    return "0%";
+    const readout = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
+    const match = normText(readout?.textContent).match(/(\d+(?:\.\d+)?)%/);
+    return match ? `${match[1]}%` : "";
+  }
+  function centralProgressText(text) {
+    const value = normText(text);
+    if (!value) return "";
+    return value.replace(/\s*[-–]\s*\d+(?:\.\d+)?%\s*[•·]\s*/i, " • ").replace(/\s*[•·]\s*\d+(?:\.\d+)?%\s*[•·]\s*/i, " • ").replace(/\s{2,}/g, " ").trim();
+  }
+  function skillActionsFrame(panel) {
+    let cur = panel?.parentElement || null;
+    for (let depth = 0; cur && depth < 8; depth += 1, cur = cur.parentElement) {
+      const heading = cur.querySelector?.("h1,h2,h3,h4");
+      if (heading && /^skill actions$/i.test(normText(heading.textContent))) return cur;
+    }
+    return null;
+  }
+  function ensureSkillActionsFrame(panel) {
+    const frame = skillActionsFrame(panel);
+    if (!frame) return;
+    frame.classList.add("fs-skills-section-frame");
+    const paint2 = () => SkillsArtService.decoratePanel(frame);
+    if (SkillsArtService.isReady()) paint2();
+    else SkillsArtService.ready().then(paint2).catch(() => {
+    });
   }
   function ensureSkillPresentation(panel, meta) {
+    ensureSkillActionsFrame(panel);
     const identity = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
     const title = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
+    const levelProgress = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
     if (identity) identity.dataset.iwCleanText = textWithoutLeadingGlyph(identity.textContent) || meta.label;
     if (title) title.dataset.iwCleanText = textWithoutLeadingGlyph(title.textContent);
+    if (levelProgress) levelProgress.dataset.iwProgressDisplay = centralProgressText(levelProgress.textContent);
     const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
     if (identityZone) {
+      const percentValue = progressPercent(panel);
+      let percent = identityZone.querySelector(":scope > .fs-skill-identity-percent");
+      if (percentValue) {
+        if (!percent) {
+          percent = document.createElement("span");
+          percent.className = "fs-skill-identity-percent";
+          percent.setAttribute("aria-hidden", "true");
+          identityZone.appendChild(percent);
+        }
+        percent.textContent = percentValue;
+      } else {
+        percent?.remove();
+      }
       let progress = identityZone.querySelector(":scope > .fs-skill-identity-progress");
       if (!progress) {
         progress = document.createElement("span");
@@ -4448,7 +4639,7 @@
         identityZone.appendChild(progress);
       }
       const fill = progress.querySelector(".fs-skill-identity-progress-fill");
-      if (fill) fill.style.width = progressPercent(panel);
+      if (fill) fill.style.width = percentValue || "0%";
     }
     const contentZone = panel.querySelector(`[${ZONE_ATTR}="content"]`);
     if (contentZone) {
@@ -4493,10 +4684,11 @@
   function clearPanelChrome(panel) {
     clearPanelInlineTreatment(panel);
     SkillsArtService.clearPanel(panel);
-    panel.querySelectorAll(".fs-skill-medallion-art, .fs-skill-identity-progress, .fs-skill-base-exp").forEach((el) => el.remove());
-    panel.querySelectorAll("[data-iw-clean-text], [data-iw-base-exp]").forEach((el) => {
+    panel.querySelectorAll(".fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp").forEach((el) => el.remove());
+    panel.querySelectorAll("[data-iw-clean-text], [data-iw-base-exp], [data-iw-progress-display]").forEach((el) => {
       delete el.dataset.iwCleanText;
       delete el.dataset.iwBaseExp;
+      delete el.dataset.iwProgressDisplay;
     });
     clearStructureRoles(panel);
     panel.classList.remove("fs-skill-panel", ...SKILL_CLASSES);
@@ -4532,6 +4724,10 @@
   }
   function clearSkillPanels() {
     guardEach("skill:teardown", document.querySelectorAll(".compact-panel"), clearPanelChrome);
+    document.querySelectorAll(".fs-skills-section-frame").forEach((frame) => {
+      SkillsArtService.clearPanel(frame);
+      frame.classList.remove("fs-skills-section-frame");
+    });
     buttonStyleOwner.restoreAll();
     readoutStyleOwner.restoreAll();
     ingredientStyleOwner.restoreAll();

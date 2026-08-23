@@ -16,14 +16,14 @@
 
 import { chromium } from 'playwright';
 import { readFile, writeFile, mkdir, readdir, access } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const OUT = resolve(HERE, 'fixtures');
 
-const fileUrl = rel => 'file://' + resolve(ROOT, rel).replace(/\\/g, '/');
+const fileUrl = rel => pathToFileURL(resolve(ROOT, rel)).href;
 
 /* ── Atlas maths — must mirror AtlasService._applySprite() exactly ───────── */
 
@@ -117,6 +117,8 @@ const SKILL_UI_TOKENS = {
 const skillUiVars = [
   `--fs-skills-panel-texture:url('${fileUrl('assets/skills_panel_texture.webp')}')`,
   `--fs-skills-ui-atlas:url('${fileUrl('assets/skills_ui_atlas.webp')}')`,
+  `--fs-skills-nav-prev:url('${fileUrl('assets/skills_nav_prev.svg')}')`,
+  `--fs-skills-nav-next:url('${fileUrl('assets/skills_nav_next.svg')}')`,
 ];
 for (const [key, token] of Object.entries(SKILL_UI_TOKENS)) {
   const entry = skillUiByKey.get(key);
@@ -191,11 +193,12 @@ const skillPanel = ({ type, label, title, pct, xp, reward, ingredients, requirem
       <span class="fs-skill-medallion-art" data-iw-skill-art="${type}" data-iw-skill-art-ready="1" aria-hidden="true" style="${art}"></span>
       <div data-iw-skill-role="identity" data-iw-clean-text="${label}">${label}</div>
       <div data-iw-skill-role="identity-level">Level ${level}</div>
+      <span class="fs-skill-identity-percent">${pct}%</span>
       <span class="fs-skill-identity-progress"><span class="fs-skill-identity-progress-fill" style="width:${pct}%"></span></span>
     </div>
     <div data-iw-skill-zone="content">
-      <div><div data-iw-skill-role="action-title" data-iw-clean-text="${title}">${title}</div><div data-iw-skill-role="level-progress">Lv ${level} - ${pct}% • 12,480 XP to go</div>
-        <div data-iw-skill-role="nav-group"><button data-iw-skill-role="nav-button">‹</button><button data-iw-skill-role="nav-button">›</button></div></div>
+      <div><div data-iw-skill-role="action-title" data-iw-clean-text="${title}">${title}</div><div data-iw-skill-role="level-progress" data-iw-progress-display="Lv ${level} • 12,480 XP to go">Lv ${level} - ${pct}% • 12,480 XP to go</div>
+        <div data-iw-skill-role="nav-group"><button data-iw-skill-role="nav-button" data-iw-nav-direction="prev">‹</button><button data-iw-skill-role="nav-button" data-iw-nav-direction="next">›</button></div></div>
       <div data-iw-skill-role="xp-gain">+${xp} XP</div>
       <div data-iw-skill-role="progress-track"><div data-iw-skill-role="progress-fill" style="width:${pct}%"></div></div>
       ${ingredients ? `<div data-iw-skill-role="ingredient"><span class="iw-item-ref">${ingredients}</span> 12/20</div>` : ''}
@@ -289,7 +292,7 @@ ${invRow({ sprite: itemSprite('iron_ore'), name: 'Iron Ore', tier: 'common', sta
 ${invRow({ sprite: itemSprite('titanium_atk_potion_super'), name: 'Super Titanium ATK Potion', tier: 'epic', stats: ['Tier 20 · Consumable', 'ATK +90'], qty: '12' })}
 
 <div class="fx-h">Skill panels — accent per discipline</div>
-<div class="fx-grid fx-skill-grid">
+<div class="fx-grid fx-skill-grid fs-skills-section-frame" data-iw-skills-ui-ready="1" style="${SKILL_UI_STYLE}">
 <div>
 ${skillPanel({ type: 'combat', label: 'Combat', title: 'Fight Bone Marauder', pct: 62, xp: '123456', reward: '340g' })}
 ${skillPanel({ type: 'mining', label: 'Mining', title: 'Mine Copper Ore', pct: 28, xp: '85', ingredients: 'Copper Ore' })}
