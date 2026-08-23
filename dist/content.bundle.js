@@ -3791,7 +3791,7 @@
   width: 190px !important;
   min-width: 190px !important;
   max-width: 100% !important;
-  min-height: 50px !important;
+  min-height: 60px !important;
   margin: 3px auto !important;
   padding: 0 24px !important;
   box-sizing: border-box !important;
