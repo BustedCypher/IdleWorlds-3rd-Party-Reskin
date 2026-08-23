@@ -182,11 +182,13 @@ const skillSigEnd = watcher.indexOf('\n}', skillSigStart);
 assert.doesNotMatch(watcher.slice(skillSigStart, skillSigEnd), /textContent[^\n]*\.length/,
   'equal-length skill action changes must invalidate the cache');
 assert.match(watcher, /hasAction\('fight'\)/);
-assert.match(watcher, /hasAction\('prospect'\).*jewelcrafting/s);
+assert.match(watcher, /hasAction\('prospect', 'cut'\).*jewelcrafting/s);
 assert.match(watcher, /skillTypeFromIdentity/);
 assert.match(watcher, /'jewel', 'jewelcrafting'/);
 assert.match(watcher, /'spellcraft', 'spellcrafting'/);
 assert.match(watcher, /hasAction\('tailor', 'sew', 'weave'\).*tailoring/s);
+assert.ok(watcher.indexOf('if (identityType) return identityType;') < watcher.indexOf("if (hasAction('craft'))"),
+  'generic Craft actions must defer to the visible skill identity');
 
 const skill = await read('src/modules/SkillPanelRenderer.js');
 assert.doesNotMatch(skill, /migrateLegacyWrapper|insertBefore\\(panel, wrapper\\)/,
@@ -207,8 +209,10 @@ assert.match(skill, /levelProgressButton/);
 assert.match(skill, /role === 'level-progress'/);
 assert.match(skill, /unexpectedFlowChild/);
 assert.match(skill, /labels: \['Jewel', 'Jewelcrafting'\]/);
+assert.match(skill, /actions: \['prospect', 'cut'\]/);
 assert.match(skill, /labels: \['Spellcraft', 'Spellcrafting'\]/);
-assert.match(skill, /actions: \['tailor', 'sew', 'weave'\]/);
+assert.match(skill, /actions: \['enchant', 'gather', 'harvest', 'craft'\]/);
+assert.match(skill, /actions: \['tailor', 'sew', 'weave', 'craft'\]/);
 assert.match(skill, /action-detail/);
 assert.match(skill, /SkillsArtService/,
   'Skill renderer must delegate dedicated artwork to SkillsArtService');

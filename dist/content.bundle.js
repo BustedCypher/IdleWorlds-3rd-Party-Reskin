@@ -167,16 +167,16 @@
     const hasAction = (...names) => actionTexts.some((text) => names.includes(text));
     if (hasAction("fight")) return "combat";
     if (hasAction("mine")) return "mining";
-    if (hasAction("prospect")) return "jewelcrafting";
+    if (hasAction("prospect", "cut")) return "jewelcrafting";
     if (hasAction("smelt", "forge")) return "smithing";
     if (hasAction("brew")) return "alchemy";
     if (hasAction("enchant")) return "spellcrafting";
     if (hasAction("tailor", "sew", "weave")) return "tailoring";
-    if (hasAction("craft")) return "crafting";
     if (hasAction("fish")) return "fishing";
     const labels = skillIdentitySignals(panel);
     const identityType = skillTypeFromIdentity(labels);
     if (identityType) return identityType;
+    if (hasAction("craft")) return "crafting";
     if (hasAction("gather", "harvest")) return "gathering";
     if (labels.some((t) => /^combat(?:\s|$)/.test(t))) return "combat";
     if (labels.some((t) => /^mining(?:\s|$)|^mine(?:\s|$)/.test(t))) return "mining";
@@ -4130,9 +4130,9 @@
     smithing: { label: "Smithing", labels: ["Smith", "Smithing"], glyph: "⚒︎", actions: ["smelt", "forge"] },
     gathering: { label: "Gathering", labels: ["Gathering"], glyph: "❧", actions: ["gather", "harvest"] },
     alchemy: { label: "Alchemy", labels: ["Alchemy"], glyph: "⚗︎", actions: ["brew"] },
-    jewelcrafting: { label: "Jewelcrafting", labels: ["Jewel", "Jewelcrafting"], glyph: "◆", actions: ["prospect"] },
-    spellcrafting: { label: "Spellcrafting", labels: ["Spellcraft", "Spellcrafting"], glyph: "✧", actions: ["enchant", "gather", "harvest"], titleActions: ["enchant", "harvest"], details: [/from the ether$/i] },
-    tailoring: { label: "Tailoring", labels: ["Tailor", "Tailoring"], glyph: "⋈", actions: ["tailor", "sew", "weave"], details: [/^missing materials\b/i] },
+    jewelcrafting: { label: "Jewelcrafting", labels: ["Jewel", "Jewelcrafting"], glyph: "◆", actions: ["prospect", "cut"] },
+    spellcrafting: { label: "Spellcrafting", labels: ["Spellcraft", "Spellcrafting"], glyph: "✧", actions: ["enchant", "gather", "harvest", "craft"], titleActions: ["enchant", "harvest", "craft"], details: [/from the ether$/i] },
+    tailoring: { label: "Tailoring", labels: ["Tailor", "Tailoring"], glyph: "⋈", actions: ["tailor", "sew", "weave", "craft"], details: [/^missing materials\b/i] },
     crafting: { label: "Crafting", labels: ["Craft", "Crafting"], glyph: "✦", actions: ["craft"] },
     fishing: { label: "Fishing", labels: ["Fish", "Fishing"], glyph: "⌁", actions: ["fish"] },
     locked: { label: "Coming Soon", labels: ["Coming Soon"], glyph: "◇", actions: [], titleActions: ["upcoming skill"], details: [/^unlock in a future update$/i] }
@@ -4546,6 +4546,7 @@
       const functionalZones = /* @__PURE__ */ new Set([identityZone, contentZone, commandZone]);
       const unexpectedFlowChild = shellChildren.some((el) => {
         if (functionalZones.has(el)) return false;
+        if (el.matches?.(`[${ROLE_ATTR}="progress-track"]`) || el.querySelector?.(`[${ROLE_ATTR}="progress-track"]`)) return false;
         try {
           const cs = getComputedStyle(el);
           if (cs.display === "none" || cs.visibility === "hidden" || cs.position === "absolute" || cs.position === "fixed") return false;

@@ -125,17 +125,20 @@ function detectSkillType(panel) {
   // Spellcraft currently reuses those verbs for mana harvesting.
   if (hasAction('fight'))                    return 'combat';
   if (hasAction('mine'))                     return 'mining';
-  if (hasAction('prospect'))                 return 'jewelcrafting';
+  if (hasAction('prospect', 'cut'))          return 'jewelcrafting';
   if (hasAction('smelt', 'forge'))           return 'smithing';
   if (hasAction('brew'))                     return 'alchemy';
   if (hasAction('enchant'))                  return 'spellcrafting';
   if (hasAction('tailor', 'sew', 'weave'))   return 'tailoring';
-  if (hasAction('craft'))                    return 'crafting';
   if (hasAction('fish'))                     return 'fishing';
 
+  // CRAFT is now reused by Spellcrafting and Tailoring recipes, so unlike the
+  // discipline-specific verbs above it cannot identify the skill by itself.
+  // Prefer the visible identity label before falling back to Crafting.
   const labels = skillIdentitySignals(panel);
   const identityType = skillTypeFromIdentity(labels);
   if (identityType) return identityType;
+  if (hasAction('craft'))                     return 'crafting';
   if (hasAction('gather', 'harvest'))        return 'gathering';
 
   // Fallback remains exact/anchored and never searches arbitrary body prose.

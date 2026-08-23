@@ -300,9 +300,9 @@ ${skillPanel({ type: 'smithing', label: 'Smithing', title: 'Forge Iron Sword', p
 ${skillPanel({ type: 'gathering', label: 'Gathering', title: 'Harvest Duskroot', pct: 45, xp: '150' })}
 ${skillPanel({ type: 'alchemy', label: 'Alchemy', title: 'Brew ATK Potion', pct: 12, xp: '260' })}
 </div><div>
-${skillPanel({ type: 'jewelcrafting', label: 'Jewelcrafting', title: 'Prospect Silver Ore', pct: 49.3, xp: '43', ingredients: 'Silver Ore', requirement: 'Requires Jewelcrafting Lv 9' })}
-${skillPanel({ type: 'spellcrafting', label: 'Spellcrafting', title: 'Harvest Silver Mana', pct: 94.6, xp: '22', requirement: 'Requires Spellcrafting Lv 9', detail: 'Gather Silver Mana from the ether' })}
-${skillPanel({ type: 'tailoring', label: 'Tailoring', title: 'Weave Wool Cloth', pct: 21, xp: '130', ingredients: 'Wool', requirement: 'Requires Tailoring Lv 9 and Gathering Lv 5', detail: 'Missing materials — will queue (gather first)' })}
+${skillPanel({ type: 'jewelcrafting', label: 'Jewelcrafting', title: 'Cut Lapis', pct: 0.4, xp: '1253', ingredients: 'Eternium Bar / Lapis', requirement: 'Requires Jewelcrafting Lv 73', detail: 'Missing materials — will queue (gather first)' })}
+${skillPanel({ type: 'spellcrafting', label: 'Spellcrafting', title: 'Craft Eternium Weapon Enchant - Attack', pct: 94.6, xp: '3370', ingredients: 'Eternium Mana / Eternal Orchid', requirement: 'Requires Spellcraft Lv 73' })}
+${skillPanel({ type: 'tailoring', label: 'Tailoring', title: 'Craft Eternal Weave Hood', pct: 21, xp: '12636', ingredients: 'Eternal Weave Cloth', requirement: 'Requires Tailoring Lv 73 and Gathering Lv 69' })}
 ${skillPanel({ type: 'crafting', label: 'Crafting', title: 'Craft Upgrade Orb', pct: 33, xp: '190' })}
 ${skillPanel({ type: 'fishing', label: 'Fishing', title: 'Fish Abyssal Eel', pct: 67, xp: '220' })}
 </div></div>

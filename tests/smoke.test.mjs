@@ -76,24 +76,25 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
       </div>
       <div class="compact-panel" id="jewel-panel">
         <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
-          <div><p>💎 Jewel</p><p>LV 68</p></div>
-          <div><p>💎 Prospect Silver Ore</p><div id="jewel-xp-shell" style="background:#334155;border:2px solid #64748b;padding:8px"><button>Lv 68 - 49.3% • 27,902,163 to go</button></div><span>Silver Ore 6277/2</span><span>Requires Jewelcrafting Lv 9</span><span>Base reward: +43 jewelcrafting XP/task</span></div>
-          <div><div><button>‹</button><button>›</button></div><button id="jewel-action">Prospect</button></div>
+          <div><p>💎 Jewel</p><p>LV 69+4</p></div>
+          <div><p>💎 Cut Lapis</p><div id="jewel-xp-shell" style="background:#334155;border:2px solid #64748b;padding:8px"><button>Lv 69+4 - 0.4% • 66,873,914 to go</button></div><span>Eternium Bar 0/1 • Lapis 1/1</span><span>Requires Jewelcrafting Lv 73</span><span>Base reward: +1253 jewelcrafting XP/task</span><span>Missing materials — will queue (gather first)</span></div>
+          <div><div><button>‹</button><button>›</button></div><button id="jewel-action">Cut</button></div>
         </div>
       </div>
       <div class="compact-panel" id="spell-panel">
         <div><p>✨ Spellcraft</p><p>LV 57</p></div>
-        <div><p>✨ Harvest Silver Mana</p><p>Gather Silver Mana from the ether</p><button>Lv 57 - 94.6% • 334,517 to go</button><p>Requires Spellcraft Lv 9</p><p>Base reward: +22 spellcrafting XP/task</p></div>
-        <div><div><button>‹</button><button>›</button></div><button id="spell-action">Gather</button></div>
+        <div><p>✨ Craft Eternium Weapon Enchant - Attack</p><button>Lv 57 - 94.6% • 334,517 to go</button><p>Eternium Mana 0/200 • Eternal Orchid 0/200</p><p>Requires Spellcraft Lv 73</p><p>Base reward: +3370 spellcrafting XP/task</p></div>
+        <div><div><button>‹</button><button>›</button></div><button id="spell-action">Craft</button></div>
       </div>
       <div class="compact-panel" id="tailor-panel">
         <div><span>🧵</span><span>Tailor</span><span>LV 26</span></div>
-        <div><span>Weave Wool Cloth</span><button>Lv 26 - 21.0% • 13,450 to go</button><span>Wool 4/6</span><span>Requires Tailoring Lv 9 and Gathering Lv 5</span><span>Base reward: +130 tailoring XP/task</span><span>Missing materials — will queue (gather first)</span></div>
-        <div><div><button>‹</button><button>›</button></div><button id="tailor-action">Weave</button></div>
+        <div><span>Craft Eternal Weave Hood</span><button>Lv 26 - 21.0% • 13,450 to go</button><span>Eternal Weave Cloth 0/10</span><span>Requires Tailoring Lv 73 and Gathering Lv 69</span><span>Base reward: +12636 tailoring XP/task</span></div>
+        <div><div><button>‹</button><button>›</button></div><button id="tailor-action">Craft</button></div>
       </div>
       <div class="compact-panel" id="locked-panel">
         <div><p>🔒 Coming Soon</p><p>LV —</p></div>
-        <div><p>Upcoming Skill</p><p>Unlock in a future update</p><div role="progressbar"><div style="width:0%"></div></div></div>
+        <div><p>Upcoming Skill</p><p>Unlock in a future update</p></div>
+        <div role="progressbar"><div style="width:0%"></div></div>
         <button id="locked-action" disabled aria-label="Locked">🔒</button>
       </div>
       <div class="quest-description"><p>Bring the smith an Iron Sword to continue.</p></div>
@@ -286,9 +287,10 @@ const tailorPanel = window.document.getElementById('tailor-panel');
 const lockedPanel = window.document.getElementById('locked-panel');
 check('live Jewel label gets jewelcrafting three-zone layout',
   jewelPanel.classList.contains('fs-skill--jewelcrafting') && jewelPanel.dataset.iwSkillLayout === 'three-zone');
-check('live wrapped skill identity exposes label, level and layout-shell roles',
+check('live wrapped Cut identity exposes label, level and layout-shell roles',
   jewelPanel.querySelector('[data-iw-skill-role="identity"]')?.textContent.trim().includes('Jewel') === true &&
-  jewelPanel.querySelector('[data-iw-skill-role="identity-level"]')?.textContent.trim() === 'LV 68' &&
+  jewelPanel.querySelector('[data-iw-skill-role="identity-level"]')?.textContent.trim() === 'LV 69+4' &&
+  jewelPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Cut' &&
   jewelPanel.querySelector('[data-iw-skill-layout-shell="1"]') !== null);
 check('skill identity receives a skin-owned medallion host without replacing native identity text',
   jewelPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'jewelcrafting' &&
@@ -299,12 +301,13 @@ check('live XP wrapper is neutralised with the readout branch',
   jewelXpShell.style.getPropertyValue('background') === 'none' &&
   !/2px\s+solid/i.test(jewelXpShell.style.cssText),
   jewelXpShell?.getAttribute('style') || 'missing');
-check('Spellcraft identity wins over ambiguous Gather action',
-  spellPanel.classList.contains('fs-skill--spellcrafting') && !spellPanel.classList.contains('fs-skill--gathering') && spellPanel.dataset.iwSkillLayout === 'three-zone');
-check('Spellcraft secondary description is normalised',
-  !!spellPanel.querySelector('[data-iw-skill-role="action-detail"]'));
-check('live Tailor + Weave gets tailoring three-zone layout',
-  tailorPanel.classList.contains('fs-skill--tailoring') && tailorPanel.dataset.iwSkillLayout === 'three-zone',
+check('Spellcraft identity wins over ambiguous Craft action',
+  spellPanel.classList.contains('fs-skill--spellcrafting') && !spellPanel.classList.contains('fs-skill--crafting') && spellPanel.dataset.iwSkillLayout === 'three-zone' &&
+  spellPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Craft');
+check('Spellcraft Craft title is normalised',
+  spellPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Craft Eternium Weapon Enchant - Attack');
+check('live Tailor + Craft gets tailoring three-zone layout',
+  tailorPanel.classList.contains('fs-skill--tailoring') && !tailorPanel.classList.contains('fs-skill--crafting') && tailorPanel.dataset.iwSkillLayout === 'three-zone',
   tailorPanel.className + ' layout=' + (tailorPanel.dataset.iwSkillLayout || 'none') + ' roles=' +
     [...tailorPanel.querySelectorAll('[data-iw-skill-role]')].map(el => el.getAttribute('data-iw-skill-role') + ':' + el.textContent.trim()).join(' | '));
 check('coming-soon skill gets locked three-zone artwork',
