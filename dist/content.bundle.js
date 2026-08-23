@@ -3793,7 +3793,8 @@
   max-width: 100% !important;
   min-height: 60px !important;
   margin: 3px auto !important;
-  padding: 0 24px !important;
+  /* The plaque artwork's visual centre sits slightly above its CSS box centre. */
+  padding: 0 24px 6px !important;
   box-sizing: border-box !important;
   white-space: nowrap !important;
   color: #F0D8A6 !important;
