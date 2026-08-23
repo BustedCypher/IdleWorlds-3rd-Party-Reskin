@@ -67,25 +67,34 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
           <button>Equip</button><button>List</button>
         </div>
       </section>
-      <div class="compact-panel">
-        <div><span>Mining</span></div>
-        <div><span>Mine Copper Ore</span><span>Requires Mining Lv 2</span></div>
-        <div><button id="skill-action" style="width:77px;color:rgb(1, 2, 3)">Mine</button></div>
+      <div class="compact-panel" id="mine-live-panel">
+        <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
+          <div><p>⛏️ Mine</p><p>LV 2</p></div>
+          <div><div><div><p>⛏️ Mine Copper Ore</p><button id="mining-xp-absolute">Lv 2 • 10/96 XP</button></div></div><p>8 XP</p><p id="mining-material">🪨 Copper Ore 2/4</p><div role="progressbar" aria-valuenow="10" aria-valuemax="100"><div style="width:10%"></div></div><p>Needs level 1</p></div>
+          <button id="skill-action" style="width:77px;color:rgb(1, 2, 3)">Mine</button>
+        </div>
       </div>
       <div class="compact-panel" id="jewel-panel">
-        <div><span>💎</span><span>Jewel</span><span>LV 68</span></div>
-        <div><span>Prospect Silver Ore</span><button>Lv 68 - 49.3% • 27,902,163 to go</button><span>Silver Ore 6277/2</span><span>Requires Jewelcrafting Lv 9</span><span>Base reward: +43 jewelcrafting XP/task</span></div>
-        <div><div><button>‹</button><button>›</button></div><button id="jewel-action">Prospect</button></div>
+        <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
+          <div><p>💎 Jewel</p><p>LV 68</p></div>
+          <div><p>💎 Prospect Silver Ore</p><div id="jewel-xp-shell" style="background:#334155;border:2px solid #64748b;padding:8px"><button>Lv 68 - 49.3% • 27,902,163 to go</button></div><span>Silver Ore 6277/2</span><span>Requires Jewelcrafting Lv 9</span><span>Base reward: +43 jewelcrafting XP/task</span></div>
+          <div><div><button>‹</button><button>›</button></div><button id="jewel-action">Prospect</button></div>
+        </div>
       </div>
       <div class="compact-panel" id="spell-panel">
-        <div><span>✨</span><span>Spellcraft</span><span>LV 57</span></div>
-        <div><span>Harvest Silver Mana</span><span>Gather Silver Mana from the ether</span><button>Lv 57 - 94.6% • 334,517 to go</button><span>Requires Spellcraft Lv 9</span><span>Base reward: +22 spellcrafting XP/task</span></div>
+        <div><p>✨ Spellcraft</p><p>LV 57</p></div>
+        <div><p>✨ Harvest Silver Mana</p><p>Gather Silver Mana from the ether</p><button>Lv 57 - 94.6% • 334,517 to go</button><p>Requires Spellcraft Lv 9</p><p>Base reward: +22 spellcrafting XP/task</p></div>
         <div><div><button>‹</button><button>›</button></div><button id="spell-action">Gather</button></div>
       </div>
       <div class="compact-panel" id="tailor-panel">
         <div><span>🧵</span><span>Tailor</span><span>LV 26</span></div>
         <div><span>Weave Wool Cloth</span><button>Lv 26 - 21.0% • 13,450 to go</button><span>Wool 4/6</span><span>Requires Tailoring Lv 9 and Gathering Lv 5</span><span>Base reward: +130 tailoring XP/task</span><span>Missing materials — will queue (gather first)</span></div>
         <div><div><button>‹</button><button>›</button></div><button id="tailor-action">Weave</button></div>
+      </div>
+      <div class="compact-panel" id="locked-panel">
+        <div><p>🔒 Coming Soon</p><p>LV —</p></div>
+        <div><p>Upcoming Skill</p><p>Unlock in a future update</p><div role="progressbar"><div style="width:0%"></div></div></div>
+        <button id="locked-action" disabled aria-label="Locked">🔒</button>
       </div>
       <div class="quest-description"><p>Bring the smith an Iron Sword to continue.</p></div>
       <div id="unclassified-area"><div><span><em id="plain-item-text">Found an Iron Sword in the wilderness.</em></span></div></div>
@@ -250,9 +259,22 @@ check('enhanced Tailoring bonus survives Inventory replacement', [...enhancedOve
 check('enhanced row preserves per-copy loadout and socket details', enhancedOverlay.textContent.includes('In loadout: Item Find') && enhancedOverlay.textContent.includes('Cut Sunstone: +6% Item Find'));
 
 const panel = window.document.querySelector('.compact-panel');
-check('mining panel classified as a skill panel', panel.classList.contains('fs-skill--mining'),
-  panel.className);
-check('skill renderer actively overrides native inline width while enabled', skillAction.style.width === '96px', skillAction.style.cssText);
+check('live Mine alias gets mining three-zone layout',
+  panel.classList.contains('fs-skill--mining') && panel.dataset.iwSkillLayout === 'three-zone', panel.className);
+check('live Mine wrapper is retained as the layout shell without ingredient pollution',
+  !!panel.querySelector('[data-iw-skill-layout-shell="1"]') && !panel.querySelector('[data-iw-skill-layout-shell="1"]')?.dataset.iwIngr);
+check('absolute XP display is recognised as a readout',
+  window.document.getElementById('mining-xp-absolute')?.dataset.iwReadout === '1');
+check('material fraction is neutralised without matching XP fractions',
+  window.document.getElementById('mining-material')?.dataset.iwIngr === '1');
+check('approved layout adds a left-column progress mirror',
+  panel.querySelector('.fs-skill-identity-progress-fill')?.style.width === '10%');
+check('approved layout adds a Base: plaque from the live XP datum',
+  panel.querySelector('.fs-skill-base-exp')?.textContent === 'Base: 8');
+check('approved layout stores emoji-free visible title and identity text',
+  panel.querySelector('[data-iw-skill-role="identity"]')?.dataset.iwCleanText === 'Mine' &&
+  panel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Mine Copper Ore');
+check('skill renderer actively overrides native inline width while enabled', skillAction.style.width === '132px', skillAction.style.cssText);
 check('background painter actively overrides native navy while enabled',
   inventorySection.style.getPropertyValue('background-color') !== 'rgb(15, 23, 42)',
   inventorySection.style.cssText);
@@ -261,8 +283,22 @@ check('main nav classified', !!window.document.querySelector('[data-iw-ui="main-
 const jewelPanel = window.document.getElementById('jewel-panel');
 const spellPanel = window.document.getElementById('spell-panel');
 const tailorPanel = window.document.getElementById('tailor-panel');
+const lockedPanel = window.document.getElementById('locked-panel');
 check('live Jewel label gets jewelcrafting three-zone layout',
   jewelPanel.classList.contains('fs-skill--jewelcrafting') && jewelPanel.dataset.iwSkillLayout === 'three-zone');
+check('live wrapped skill identity exposes label, level and layout-shell roles',
+  jewelPanel.querySelector('[data-iw-skill-role="identity"]')?.textContent.trim().includes('Jewel') === true &&
+  jewelPanel.querySelector('[data-iw-skill-role="identity-level"]')?.textContent.trim() === 'LV 68' &&
+  jewelPanel.querySelector('[data-iw-skill-layout-shell="1"]') !== null);
+check('skill identity receives a skin-owned medallion host without replacing native identity text',
+  jewelPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'jewelcrafting' &&
+  jewelPanel.querySelector('[data-iw-skill-role="identity"]')?.textContent.trim().includes('💎') === true);
+const jewelXpShell = window.document.getElementById('jewel-xp-shell');
+check('live XP wrapper is neutralised with the readout branch',
+  jewelXpShell?.dataset.iwReadout === '1' &&
+  jewelXpShell.style.getPropertyValue('background') === 'none' &&
+  !/2px\s+solid/i.test(jewelXpShell.style.cssText),
+  jewelXpShell?.getAttribute('style') || 'missing');
 check('Spellcraft identity wins over ambiguous Gather action',
   spellPanel.classList.contains('fs-skill--spellcrafting') && !spellPanel.classList.contains('fs-skill--gathering') && spellPanel.dataset.iwSkillLayout === 'three-zone');
 check('Spellcraft secondary description is normalised',
@@ -271,8 +307,18 @@ check('live Tailor + Weave gets tailoring three-zone layout',
   tailorPanel.classList.contains('fs-skill--tailoring') && tailorPanel.dataset.iwSkillLayout === 'three-zone',
   tailorPanel.className + ' layout=' + (tailorPanel.dataset.iwSkillLayout || 'none') + ' roles=' +
     [...tailorPanel.querySelectorAll('[data-iw-skill-role]')].map(el => el.getAttribute('data-iw-skill-role') + ':' + el.textContent.trim()).join(' | '));
+check('coming-soon skill gets locked three-zone artwork',
+  lockedPanel.classList.contains('fs-skill--locked') && lockedPanel.dataset.iwSkillLayout === 'three-zone' &&
+  lockedPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'locked');
+check('coming-soon skill keeps dash level and lock control',
+  lockedPanel.querySelector('[data-iw-skill-role="identity-level"]')?.textContent.trim() === 'LV —' &&
+  window.document.getElementById('locked-action')?.getAttribute('data-iw-skill-role') === 'action-button');
+check('coming-soon copy is normalised without inventing EXP',
+  lockedPanel.querySelector('[data-iw-skill-role="identity"]')?.dataset.iwCleanText === 'Coming Soon' &&
+  lockedPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Upcoming Skill' &&
+  !lockedPanel.querySelector('.fs-skill-base-exp'));
 check('live skill action buttons use deterministic width',
-  ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '96px'));
+  ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '132px'));
 
 /* ── Tooltip coverage / ownership ────────────────────────────────────── */
 
@@ -319,12 +365,20 @@ const nativeUnknownMatches = sourcedUnknownRef.matches.bind(sourcedUnknownRef);
 sourcedUnknownRef.matches = selector => selector === ':hover' ? true : nativeUnknownMatches(selector);
 pointerTarget = sourcedUnknownRef;
 sourcedUnknownRef.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true, clientX: 50, clientY: 20 }));
-await waitFor(() => tooltip.classList.contains('is-open'));
+let sourcedUnknownSnapshot = null;
+await waitFor(() => {
+  const name = tooltip.querySelector('.iw-tip-name')?.textContent || '';
+  const main = tooltip.querySelector('.iw-tip-acq-main')?.textContent || '';
+  const sub = tooltip.querySelector('.iw-tip-acq-sub')?.textContent || '';
+  if (!tooltip.classList.contains('is-open') || name !== "Merchant's Coffer" || main !== 'Source details' || !sub.includes('Emberclad Juggernaut')) return false;
+  sourcedUnknownSnapshot = { name, main, sub, text: tooltip.textContent };
+  return true;
+});
 check('Unknown acquisition with authoritative text preserves source details',
-  tooltip.querySelector('.iw-tip-acq-main')?.textContent === 'Source details' &&
-  tooltip.querySelector('.iw-tip-acq-sub')?.textContent.includes('Emberclad Juggernaut') &&
-  !tooltip.textContent.includes('Source not documented'),
-  `main=${tooltip.querySelector('.iw-tip-acq-main')?.textContent || 'none'} sub=${tooltip.querySelector('.iw-tip-acq-sub')?.textContent || 'none'} name=${tooltip.querySelector('.iw-tip-name')?.textContent || 'none'}`);
+  sourcedUnknownSnapshot?.main === 'Source details' &&
+  sourcedUnknownSnapshot?.sub.includes('Emberclad Juggernaut') &&
+  !sourcedUnknownSnapshot?.text.includes('Source not documented'),
+  `main=${sourcedUnknownSnapshot?.main || 'none'} sub=${sourcedUnknownSnapshot?.sub || 'none'} name=${sourcedUnknownSnapshot?.name || 'none'}`);
 sourcedUnknownRef.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, clientX: 300, clientY: 300, relatedTarget: window.document.body }));
 await waitFor(() => !tooltip.classList.contains('is-open'));
 
@@ -495,6 +549,9 @@ check('overlays removed', window.document.querySelectorAll('.fs-inv-row').length
 check('ALL runtime stylesheets removed', window.document.querySelectorAll('style[data-iw-style]').length === 0);
 check('ui role attributes removed', window.document.querySelectorAll('[data-iw-ui]').length === 0);
 check('skill panel classes removed', window.document.querySelectorAll('.fs-skill-panel').length === 0);
+check('skill medallion artwork removed on teardown', window.document.querySelectorAll('.fs-skill-medallion-art').length === 0);
+check('skill presentation artifacts removed on teardown',
+  window.document.querySelectorAll('.fs-skill-identity-progress, .fs-skill-base-exp, [data-iw-clean-text]').length === 0);
 check('native Equip button survived teardown',
   [...window.document.querySelector('.compact-row').querySelectorAll('button')]
     .some(b => b.textContent.trim() === 'Equip'));

@@ -69,15 +69,16 @@ const SKILL_IDENTITY_ALIASES = {
   tailoring: ['tailor', 'tailoring'],
   crafting: ['crafting'],
   fishing: ['fishing'],
+  locked: ['coming soon', 'upcoming skill'],
 };
 
 function skillIdentitySignals(panel) {
   const signals = new Set();
-  for (const el of panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span')) {
+  for (const el of panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span,p,strong')) {
     if (el.closest('button,a')) continue;
     const explicitHeading = /^H[1-4]$/.test(el.tagName) || /skill-name/i.test(String(el.className || ''));
     if (!explicitHeading && el.childElementCount) continue;
-    const text = normaliseSkillSignal(el.textContent);
+    const text = normaliseSkillSignal(el.textContent).replace(/^[^a-z0-9]+/i, '');
     if (text && text.length <= 32) signals.add(text);
   }
   return [...signals];

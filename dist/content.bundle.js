@@ -129,15 +129,16 @@
     spellcrafting: ["spellcraft", "spellcrafting"],
     tailoring: ["tailor", "tailoring"],
     crafting: ["crafting"],
-    fishing: ["fishing"]
+    fishing: ["fishing"],
+    locked: ["coming soon", "upcoming skill"]
   };
   function skillIdentitySignals(panel) {
     const signals = /* @__PURE__ */ new Set();
-    for (const el of panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span')) {
+    for (const el of panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span,p,strong')) {
       if (el.closest("button,a")) continue;
       const explicitHeading = /^H[1-4]$/.test(el.tagName) || /skill-name/i.test(String(el.className || ""));
       if (!explicitHeading && el.childElementCount) continue;
-      const text = normaliseSkillSignal(el.textContent);
+      const text = normaliseSkillSignal(el.textContent).replace(/^[^a-z0-9]+/i, "");
       if (text && text.length <= 32) signals.add(text);
     }
     return [...signals];
@@ -2314,6 +2315,129 @@
     document.addEventListener("iw:atlas-updated", reconcileAll);
   }
 
+  // src/modules/SkillsArtService.js
+  var ICON_INDEX_URL = "assets/skills_icons_index.json";
+  var UI_INDEX_URL = "assets/skills_ui_index.json";
+  var TEXTURE_URL = "assets/skills_panel_texture.webp";
+  var UI_TOKENS = {
+    medallion_frame: "medallion-frame",
+    nav_frame_idle: "nav-idle",
+    nav_frame_active: "nav-active",
+    action_frame_idle: "action-idle",
+    action_frame_disabled: "action-disabled",
+    corner_filigree: "corner",
+    xp_plaque: "xp-plaque",
+    horizontal_separator: "separator",
+    separator_flourish: "flourish"
+  };
+  var loadPromise = null;
+  var iconIndex = null;
+  var uiIndex = null;
+  var iconByKey = /* @__PURE__ */ new Map();
+  var uiByKey = /* @__PURE__ */ new Map();
+  function validateIndex(data, label) {
+    if (!data || !Number.isFinite(data.width) || !Number.isFinite(data.height) || !Array.isArray(data.entries)) {
+      throw new Error(`${label} index is malformed`);
+    }
+    for (const entry of data.entries) {
+      if (!entry?.key || !Number.isFinite(entry.x) || !Number.isFinite(entry.y) || !Number.isFinite(entry.width) || !Number.isFinite(entry.height)) {
+        throw new Error(`${label} contains a malformed entry`);
+      }
+    }
+    return data;
+  }
+  async function fetchIndex(path, label) {
+    const response = await fetch(assetUrl(path), { cache: "no-store" });
+    if (!response.ok) throw new Error(`${label} fetch failed: ${response.status}`);
+    return validateIndex(await response.json(), label);
+  }
+  function spriteGeometry(index, entry) {
+    const xRange = Math.max(1, index.width - entry.width);
+    const yRange = Math.max(1, index.height - entry.height);
+    return {
+      image: `url("${assetUrl(`assets/${index.atlas}`)}")`,
+      size: `${index.width / entry.width * 100}% ${index.height / entry.height * 100}%`,
+      position: `${entry.x / xRange * 100}% ${entry.y / yRange * 100}%`
+    };
+  }
+  function paint(host, index, entry) {
+    if (!host || !index || !entry) return false;
+    const sprite = spriteGeometry(index, entry);
+    host.style.backgroundImage = sprite.image;
+    host.style.backgroundSize = sprite.size;
+    host.style.backgroundPosition = sprite.position;
+    host.style.backgroundRepeat = "no-repeat";
+    host.dataset.iwSkillsAtlas = index.atlas;
+    host.dataset.iwSkillsAtlasIndex = String(entry.index ?? "");
+    return true;
+  }
+  function setVar(panel, name, value) {
+    panel.style.setProperty(name, value);
+  }
+  function applyUiVariables(panel) {
+    if (!panel || !uiIndex) return false;
+    setVar(panel, "--fs-skills-panel-texture", `url("${assetUrl(TEXTURE_URL)}")`);
+    setVar(panel, "--fs-skills-ui-atlas", `url("${assetUrl(`assets/${uiIndex.atlas}`)}")`);
+    for (const [key, token] of Object.entries(UI_TOKENS)) {
+      const entry = uiByKey.get(key);
+      if (!entry) continue;
+      const sprite = spriteGeometry(uiIndex, entry);
+      setVar(panel, `--fs-ui-${token}-size`, sprite.size);
+      setVar(panel, `--fs-ui-${token}-position`, sprite.position);
+    }
+    panel.dataset.iwSkillsUiReady = "1";
+    return true;
+  }
+  function clearUiVariables(panel) {
+    if (!panel?.style) return;
+    panel.style.removeProperty("--fs-skills-panel-texture");
+    panel.style.removeProperty("--fs-skills-ui-atlas");
+    for (const token of Object.values(UI_TOKENS)) {
+      panel.style.removeProperty(`--fs-ui-${token}-size`);
+      panel.style.removeProperty(`--fs-ui-${token}-position`);
+    }
+    delete panel.dataset.iwSkillsUiReady;
+  }
+  async function load() {
+    const [icons, ui] = await Promise.all([
+      fetchIndex(ICON_INDEX_URL, "Skills icon"),
+      fetchIndex(UI_INDEX_URL, "Skills UI")
+    ]);
+    iconIndex = icons;
+    uiIndex = ui;
+    iconByKey = new Map(icons.entries.map((entry) => [entry.key, entry]));
+    uiByKey = new Map(ui.entries.map((entry) => [entry.key, entry]));
+    return true;
+  }
+  var SkillsArtService = {
+    ready() {
+      if (!loadPromise) {
+        loadPromise = load().catch((err) => {
+          loadPromise = null;
+          warnOnce("skills-art", err);
+          throw err;
+        });
+      }
+      return loadPromise;
+    },
+    isReady() {
+      return !!iconIndex && !!uiIndex;
+    },
+    paintIcon(host, key) {
+      const entry = iconByKey.get(key) || iconByKey.get("generic");
+      return paint(host, iconIndex, entry);
+    },
+    decoratePanel(panel) {
+      return applyUiVariables(panel);
+    },
+    clearPanel(panel) {
+      clearUiVariables(panel);
+    },
+    iconEntry(key) {
+      return iconByKey.get(key) || null;
+    }
+  };
+
   // src/styles/skillpanel.css
   var skillpanel_default = `/* ══════════════════════════════════════════════════════════════════════
    Skill panels — compact action frame
@@ -2332,6 +2456,7 @@
 .fs-skill--tailoring { --fs-skill-accent: #A56E86; }
 .fs-skill--crafting  { --fs-skill-accent: #5E8FB7; }
 .fs-skill--fishing   { --fs-skill-accent: #478FA8; }
+.fs-skill--locked    { --fs-skill-accent: #6A6257; }
 
 .compact-panel.fs-skill-panel {
   position: relative !important;
@@ -2383,15 +2508,15 @@
   padding: 8px 12px !important;
 }
 
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="identity"] {
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
   grid-area: identity !important;
   min-width: 0 !important;
 }
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="content"] {
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
   grid-area: content !important;
   min-width: 0 !important;
 }
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="commands"] {
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] {
   grid-area: commands !important;
   min-width: 0 !important;
   justify-self: stretch !important;
@@ -2661,16 +2786,16 @@
 }
 
 /* Existing direct React branches get deterministic roles without reparenting. */
-.compact-panel.fs-skill-panel > [data-iw-skill-zone="identity"] {
+.compact-panel.fs-skill-panel [data-iw-skill-zone="identity"] {
   align-self: stretch !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
 }
-.compact-panel.fs-skill-panel > [data-iw-skill-zone="content"] {
+.compact-panel.fs-skill-panel [data-iw-skill-zone="content"] {
   min-width: 0 !important;
 }
-.compact-panel.fs-skill-panel > [data-iw-skill-zone="commands"] {
+.compact-panel.fs-skill-panel [data-iw-skill-zone="commands"] {
   display: flex !important;
   flex-direction: column !important;
   align-items: flex-end !important;
@@ -2735,14 +2860,1094 @@
     align-items: start !important;
     padding: 8px !important;
   }
-  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="identity"] {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
     align-self: center !important;
     min-width: 0 !important;
   }
-  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-zone="commands"] {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] {
     align-self: center !important;
     justify-self: end !important;
   }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   Skills redesign — premium three-zone action card
+   Keeps React-owned identity/content/command branches in place and changes
+   presentation only. Inspired by the approved Option 3 concept.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+  --fs-skill-identity-w: 188px;
+  --fs-skill-command-w: 164px;
+  display: grid !important;
+  grid-template-columns: var(--fs-skill-identity-w) minmax(0, 1fr) var(--fs-skill-command-w) !important;
+  grid-template-areas: "identity content commands" !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+  min-height: 154px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #554326 !important;
+  border-left: 2px solid color-mix(in srgb, var(--fs-skill-accent) 72%, #8B6C34) !important;
+  border-radius: 4px !important;
+  background: linear-gradient(180deg, #151511 0%, #0F0F0D 100%) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.54), 0 1px 0 rgba(255,255,255,.018) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"]::before {
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 1px !important;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--fs-skill-accent) 78%, #C8A861),
+    rgba(200,168,97,.16) 34%, transparent 72%) !important;
+  opacity: .9 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+  grid-area: identity !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 14px 14px 12px !important;
+  border-right: 1px solid #332B20 !important;
+  background:
+    radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--fs-skill-accent) 10%, transparent), transparent 42%),
+    linear-gradient(90deg, rgba(255,255,255,.012), rgba(0,0,0,.12)) !important;
+  text-align: center !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-icon"] {
+  order: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 68px !important;
+  min-width: 68px !important;
+  height: 68px !important;
+  min-height: 68px !important;
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 48%, #8C7448) !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(circle at 42% 34%, color-mix(in srgb, var(--fs-skill-accent) 24%, #242019), #0D0D0B 68%) !important;
+  color: color-mix(in srgb, var(--fs-skill-accent) 76%, #F0D9A8) !important;
+  box-shadow:
+    inset 0 0 0 5px #11100D,
+    inset 0 0 0 6px rgba(190,153,83,.32),
+    0 2px 8px rgba(0,0,0,.48) !important;
+  font-size: 30px !important;
+  line-height: 1 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"] {
+  order: 1 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  color: color-mix(in srgb, var(--fs-skill-accent) 72%, #F0DEC0) !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.12 !important;
+  letter-spacing: .055em !important;
+  text-transform: uppercase !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::after {
+  content: none !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"] {
+  order: 2 !important;
+  margin: 0 !important;
+  color: #AFA796 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  letter-spacing: .04em !important;
+  text-transform: uppercase !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+  grid-area: content !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(180px, auto) minmax(0, 1fr) !important;
+  grid-template-rows: auto auto 5px auto auto auto !important;
+  column-gap: 18px !important;
+  align-content: center !important;
+  padding: 16px 20px 14px !important;
+  overflow: hidden !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"] {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  align-self: end !important;
+  margin: 0 !important;
+  color: #F2EBDD !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 19px !important;
+  line-height: 1.08 !important;
+  font-weight: 700 !important;
+  letter-spacing: .015em !important;
+  text-transform: none !important;
+  text-shadow: 0 1px 0 #000 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="level-progress"] {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  margin: 5px 0 0 !important;
+  color: #B9B1A1 !important;
+  font-size: 11.8px !important;
+  font-weight: 600 !important;
+  line-height: 1.15 !important;
+  letter-spacing: .01em !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="progress-track"] {
+  grid-column: 1 / -1 !important;
+  grid-row: 3 !important;
+  align-self: center !important;
+  width: 100% !important;
+  height: 5px !important;
+  min-height: 5px !important;
+  max-height: 5px !important;
+  margin: 8px 0 0 !important;
+  border: 1px solid #2D281F !important;
+  background: #070706 !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.82) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"] {
+  grid-column: 1 / -1 !important;
+  grid-row: 4 !important;
+  align-self: center !important;
+  margin: 10px 0 0 !important;
+  padding: 0 !important;
+  color: #D8D0C0 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"]::before {
+  content: "◆";
+  margin-right: 7px;
+  color: color-mix(in srgb, var(--fs-skill-accent) 72%, #C9A66A);
+  font-size: 8px;
+  transform: translateY(-1px);
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="requirement"] {
+  grid-column: 1 !important;
+  grid-row: 5 !important;
+  margin: 9px 0 0 !important;
+  padding-top: 8px !important;
+  border-top: 1px solid #2C271E !important;
+  color: #D8847D !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="reward"] {
+  grid-column: 2 !important;
+  grid-row: 5 !important;
+  margin: 9px 0 0 !important;
+  padding: 8px 0 0 18px !important;
+  border-top: 1px solid #2C271E !important;
+  border-left: 1px solid #2C271E !important;
+  color: #B7AF9F !important;
+  font-size: 10.9px !important;
+  line-height: 1.2 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="xp-gain"] {
+  grid-column: 2 !important;
+  grid-row: 5 !important;
+  justify-self: end !important;
+  align-self: end !important;
+  margin: 0 !important;
+  color: color-mix(in srgb, var(--fs-skill-accent) 68%, #D5B875) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+  grid-column: 1 / -1 !important;
+  grid-row: 6 !important;
+  margin: 6px 0 0 !important;
+  color: #D4A65C !important;
+  font-size: 10.8px !important;
+  line-height: 1.18 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] {
+  grid-area: commands !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  padding: 16px 14px !important;
+  border-left: 1px solid #332B20 !important;
+  background: linear-gradient(90deg, rgba(0,0,0,.06), rgba(255,255,255,.012)) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"] {
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  border-color: #665234 !important;
+  background: linear-gradient(180deg, #211E18, #14120F) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"] {
+  width: 132px !important;
+  min-width: 132px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 12px !important;
+  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 72%, #8A6633) !important;
+  border-radius: 3px !important;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--fs-skill-accent) 74%, #593018),
+      color-mix(in srgb, var(--fs-skill-accent) 48%, #25170F)) !important;
+  color: #FFF0D8 !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: .07em !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,.8) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 -1px 0 rgba(0,0,0,.48),
+    0 2px 5px rgba(0,0,0,.28) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--fs-skill-accent) 86%, #744020),
+      color-mix(in srgb, var(--fs-skill-accent) 58%, #2A190F)) !important;
+  border-color: color-mix(in srgb, var(--fs-skill-accent) 86%, #C49A55) !important;
+  filter: brightness(1.06) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-btn-state="disabled"] {
+  filter: saturate(.45) brightness(.82) !important;
+  opacity: .9 !important;
+}
+
+@media (max-width: 900px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    --fs-skill-identity-w: 154px;
+    --fs-skill-command-w: 148px;
+    min-height: 146px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+    padding-inline: 14px !important;
+    column-gap: 12px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-icon"] {
+    width: 58px !important; min-width: 58px !important;
+    height: 58px !important; min-height: 58px !important;
+    font-size: 25px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    grid-template-columns: minmax(104px, 1fr) auto !important;
+    grid-template-areas:
+      "identity commands"
+      "content content" !important;
+    min-height: 0 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+    min-height: 114px !important;
+    padding: 10px 12px !important;
+    border-right: 1px solid #332B20 !important;
+    border-bottom: 1px solid #332B20 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] {
+    min-height: 114px !important;
+    padding: 10px 12px !important;
+    border-left: 0 !important;
+    border-bottom: 1px solid #332B20 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+    padding: 13px 14px 12px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-icon"] {
+    width: 48px !important; min-width: 48px !important;
+    height: 48px !important; min-height: 48px !important;
+    margin-bottom: 3px !important;
+    font-size: 21px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto 5px auto auto auto auto !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"] {
+    font-size: 16.5px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="requirement"] {
+    grid-column: 1 !important;
+    grid-row: 5 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="reward"],
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="xp-gain"] {
+    grid-column: 1 !important;
+    grid-row: 6 !important;
+    justify-self: start !important;
+    padding-left: 0 !important;
+    border-left: 0 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+    grid-column: 1 !important;
+    grid-row: 7 !important;
+  }
+}
+
+/* Final information-flow refinements for the premium card. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+  grid-template-columns: minmax(0, 1.2fr) minmax(180px, .8fr) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="level-progress"] {
+  grid-column: 1 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="xp-gain"] {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  justify-self: end !important;
+  align-self: end !important;
+  margin: 5px 0 0 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+  order: 0 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"] {
+  order: 1 !important;
+}
+
+@media (max-width: 420px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="xp-gain"] {
+    grid-column: 1 !important;
+    grid-row: 6 !important;
+    justify-self: start !important;
+  }
+}
+
+/* Approved Option 3 finishing details. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"]::after {
+  content: "" !important;
+  display: block !important;
+  width: 72px !important;
+  height: 2px !important;
+  margin: 7px auto 0 !important;
+  background: linear-gradient(90deg, transparent, var(--fs-skill-accent), transparent) !important;
+  opacity: .78 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"] {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--fs-skill-accent) 84%, #754522),
+      color-mix(in srgb, var(--fs-skill-accent) 62%, #2B1B10)) !important;
+  border-color: color-mix(in srgb, var(--fs-skill-accent) 88%, #B58B4B) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(0,0,0,.52),
+    0 2px 6px rgba(0,0,0,.32),
+    0 0 12px color-mix(in srgb, var(--fs-skill-accent) 16%, transparent) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Option 3 art-direction fidelity pass
+   Real atlas art + metallic/recessed fantasy card chrome.
+   ══════════════════════════════════════════════════════════════════════ */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+  border: 1px solid #6A5430 !important;
+  border-left-width: 2px !important;
+  border-left-color: color-mix(in srgb, var(--fs-skill-accent) 70%, #B68A45) !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 34%),
+    linear-gradient(135deg, rgba(181,139,71,.028) 0 1px, transparent 1px 10px),
+    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px #0B0A08,
+    inset 0 0 0 2px rgba(143,107,55,.16),
+    inset 0 1px 0 rgba(255,236,190,.035),
+    0 2px 7px rgba(0,0,0,.42) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"]::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 4px !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  border: 1px solid rgba(133,101,54,.22) !important;
+  border-radius: 2px !important;
+  background: none !important;
+  box-shadow: inset 0 0 12px rgba(0,0,0,.26) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone] {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--fs-skill-accent) 13%, transparent), transparent 36%),
+    linear-gradient(90deg, rgba(255,255,255,.018), rgba(0,0,0,.20)) !important;
+  box-shadow: inset -1px 0 0 rgba(155,119,62,.08) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+  order: 0 !important;
+  display: block !important;
+  position: relative !important;
+  width: 78px !important;
+  min-width: 78px !important;
+  height: 78px !important;
+  min-height: 78px !important;
+  margin: 0 0 8px !important;
+  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 45%, #A98247) !important;
+  border-radius: 50% !important;
+  background-color: #0D0D0B !important;
+  box-shadow:
+    inset 0 0 0 5px #11100D,
+    inset 0 0 0 6px rgba(187,146,78,.36),
+    inset 0 0 18px rgba(0,0,0,.35),
+    0 0 0 3px #0A0907,
+    0 0 0 4px rgba(123,92,49,.55),
+    0 3px 10px rgba(0,0,0,.52) !important;
+  pointer-events: none !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art::after {
+  content: "" !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art::before {
+  width: 9px !important;
+  height: 9px !important;
+  left: 50% !important;
+  top: -6px !important;
+  transform: translateX(-50%) rotate(45deg) !important;
+  border: 1px solid #846638 !important;
+  background: #15120D !important;
+  box-shadow: 0 0 0 2px #090806 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art::after {
+  width: 9px !important;
+  height: 9px !important;
+  left: 50% !important;
+  bottom: -6px !important;
+  transform: translateX(-50%) rotate(45deg) !important;
+  border: 1px solid #846638 !important;
+  background: #15120D !important;
+  box-shadow: 0 0 0 2px #090806 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"]:has(> .fs-skill-medallion-art[data-iw-skill-art-ready="1"]) [data-iw-skill-role="identity-icon"] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.008), transparent 36%),
+    linear-gradient(90deg, rgba(0,0,0,.06), transparent 24%, transparent 76%, rgba(0,0,0,.08)) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] {
+  border-left: 1px solid #46371F !important;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.22), rgba(255,255,255,.012) 55%, rgba(0,0,0,.11)),
+    linear-gradient(180deg, #15140F, #0E0E0B) !important;
+  box-shadow:
+    inset 1px 0 0 rgba(175,133,70,.08),
+    inset 0 0 16px rgba(0,0,0,.18) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"] {
+  color: #F4EBDD !important;
+  text-shadow: 0 1px 0 #000, 0 0 8px rgba(225,194,139,.035) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="progress-track"] {
+  border-color: #3B3020 !important;
+  background: #060604 !important;
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,.92),
+    0 1px 0 rgba(144,109,57,.08) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"] {
+  position: relative !important;
+  border: 1px solid #715A35 !important;
+  border-radius: 3px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 38%),
+    linear-gradient(180deg, #211E17, #11100D) !important;
+  color: #E6D8C0 !important;
+  box-shadow:
+    inset 0 0 0 1px #0B0A08,
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 1px 3px rgba(0,0,0,.30) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"]:hover:not(:disabled) {
+  border-color: #9A7842 !important;
+  background: linear-gradient(180deg, #2A251C, #15120E) !important;
+  color: #FFF0D5 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"] {
+  position: relative !important;
+  overflow: visible !important;
+  border-width: 1px !important;
+  border-radius: 3px !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.46),
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -2px 0 rgba(0,0,0,.35),
+    0 2px 7px rgba(0,0,0,.40),
+    0 0 15px color-mix(in srgb, var(--fs-skill-accent) 13%, transparent) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 50% !important;
+  width: 8px !important;
+  height: 8px !important;
+  transform: translateX(-50%) rotate(45deg) !important;
+  pointer-events: none !important;
+  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 70%, #C49B58) !important;
+  background: #17120D !important;
+  box-shadow: 0 0 0 2px #090806 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::before {
+  top: -5px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::after {
+  bottom: -5px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-readout],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-readout]::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-readout]::after {
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+@media (max-width: 900px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+    width: 66px !important;
+    min-width: 66px !important;
+    height: 66px !important;
+    min-height: 66px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+    width: 54px !important;
+    min-width: 54px !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    margin-bottom: 5px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+    background:
+      radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--fs-skill-accent) 11%, transparent), transparent 38%),
+      linear-gradient(90deg, rgba(255,255,255,.015), rgba(0,0,0,.16)) !important;
+  }
+}
+@media (max-width: 420px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto 5px auto auto auto auto auto !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="reward"] {
+    grid-column: 1 !important;
+    grid-row: 6 !important;
+    padding-left: 0 !important;
+    border-left: 0 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="xp-gain"] {
+    grid-column: 1 !important;
+    grid-row: 7 !important;
+    justify-self: start !important;
+    align-self: start !important;
+    margin-top: 4px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+    grid-column: 1 !important;
+    grid-row: 8 !important;
+  }
+}
+
+
+/* Dedicated Skills art atlas integration.
+   These rules activate only after SkillsArtService has resolved both indexes,
+   so native glyph/CSS fallbacks remain intact if an asset cannot load. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"][data-iw-skills-ui-ready="1"] {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.03), transparent 34%),
+    var(--fs-skills-panel-texture),
+    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+  background-blend-mode: normal, soft-light, normal !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] .fs-skill-medallion-art::before {
+  inset: -11px -8px !important;
+  width: auto !important;
+  height: auto !important;
+  left: -8px !important;
+  top: -11px !important;
+  transform: none !important;
+  z-index: 2 !important;
+  border: 0 !important;
+  background-color: transparent !important;
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-medallion-frame-size) !important;
+  background-position: var(--fs-ui-medallion-frame-position) !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] .fs-skill-medallion-art::after {
+  display: none !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] [data-iw-skill-zone="identity"]::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 4px !important;
+  top: 4px !important;
+  width: 38px !important;
+  height: 41px !important;
+  pointer-events: none !important;
+  opacity: .42 !important;
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-corner-size) !important;
+  background-position: var(--fs-ui-corner-position) !important;
+  background-repeat: no-repeat !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] [data-iw-skill-role="identity-level"]::after {
+  width: 90px !important;
+  height: 12px !important;
+  margin-top: 4px !important;
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-separator-size) !important;
+  background-position: var(--fs-ui-separator-position) !important;
+  background-repeat: no-repeat !important;
+  opacity: .72 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"] {
+  background-image: var(--fs-skills-ui-atlas), linear-gradient(180deg, #211E17, #11100D) !important;
+  background-size: var(--fs-ui-nav-idle-size), 100% 100% !important;
+  background-position: var(--fs-ui-nav-idle-position), center !important;
+  background-repeat: no-repeat, no-repeat !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"]:hover:not(:disabled) {
+  background-image: var(--fs-skills-ui-atlas), linear-gradient(180deg, #2A251C, #15120E) !important;
+  background-size: var(--fs-ui-nav-active-size), 100% 100% !important;
+  background-position: var(--fs-ui-nav-active-position), center !important;
+  background-repeat: no-repeat, no-repeat !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"] {
+  background-image:
+    var(--fs-skills-ui-atlas),
+    linear-gradient(180deg, color-mix(in srgb, var(--fs-skill-accent) 84%, #754522), color-mix(in srgb, var(--fs-skill-accent) 62%, #2B1B10)) !important;
+  background-size: var(--fs-ui-action-idle-size), 100% 100% !important;
+  background-position: var(--fs-ui-action-idle-position), center !important;
+  background-repeat: no-repeat, no-repeat !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"][data-iw-btn-state="disabled"] {
+  background-image: var(--fs-skills-ui-atlas), linear-gradient(180deg, #2A261F, #171510) !important;
+  background-size: var(--fs-ui-action-disabled-size), 100% 100% !important;
+  background-position: var(--fs-ui-action-disabled-position), center !important;
+  background-repeat: no-repeat, no-repeat !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] [data-iw-skill-role="xp-gain"] {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 92px !important;
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-xp-plaque-size) !important;
+  background-position: var(--fs-ui-xp-plaque-position) !important;
+  background-repeat: no-repeat !important;
+  color: #F0D8A6 !important;
+  text-shadow: 0 1px 1px #000 !important;
+}
+
+@media (max-width: 600px) {
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] [data-iw-skill-role="xp-gain"] {
+    min-width: 84px !important;
+    min-height: 30px !important;
+  }
+}
+
+/* ── Live IdleWorlds wrapper compatibility ─────────────────────────────
+   Current production wraps identity/content/action in one native grid. Keep
+   that React-owned wrapper intact and make it the layout host instead of
+   flattening it into the panel. This prevents zero-width title columns and
+   runaway card heights on live skill rows. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"]:has(> [data-iw-skill-layout-shell="1"]) {
+  display: block !important;
+  min-height: 0 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+  display: grid !important;
+  grid-template-columns: var(--fs-skill-identity-w, 188px) minmax(0, 1fr) var(--fs-skill-command-w, 164px) !important;
+  grid-template-areas: "identity content commands" !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  width: 100% !important;
+  min-height: 154px !important;
+  padding: 0 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+  box-sizing: border-box !important;
+}.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 14px 20px !important;
+  row-gap: 5px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] > :first-child {
+  width: 100% !important;
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"] {
+  width: auto !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+  display: grid !important;
+  place-items: center !important;
+  justify-self: center !important;
+  align-self: center !important;
+}.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+  padding: 0 14px !important;
+  width: 132px !important;
+  min-width: 132px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+  flex: 0 0 auto !important;
+  width: auto !important;
+}
+@media (max-width: 600px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+    grid-template-columns: minmax(104px, 1fr) auto !important;
+    grid-template-areas:
+      "identity commands"
+      "content content" !important;
+    min-height: 0 !important;
+  }
+}
+/* ══════════════════════════════════════════════════════════════════════
+   Final approved Skills composition
+   Left: identity + level progress. Center: centered task information +
+   base-EXP plaque. Right: navigation above the native action button.
+   ══════════════════════════════════════════════════════════════════════ */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+  position: relative !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+  position: static !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 18px 26px !important;
+  text-align: center !important;
+  overflow: visible !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] > :first-child {
+  width: 100% !important;
+  min-width: 0 !important;
+  text-align: center !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"] {
+  font-size: 0 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::before {
+  content: attr(data-iw-clean-text) !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1.08 !important;
+  letter-spacing: .055em !important;
+  color: color-mix(in srgb, var(--fs-skill-accent) 72%, #F0DEC0) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"]::before {
+  content: attr(data-iw-clean-text) !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 21px !important;
+  font-weight: 700 !important;
+  line-height: 1.08 !important;
+  letter-spacing: .015em !important;
+  color: #F4EBDD !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"]::after {
+  display: none !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+  order: 3 !important;
+  display: block !important;
+  width: 116px !important;
+  height: 6px !important;
+  margin-top: 5px !important;
+  overflow: hidden !important;
+  border: 1px solid #3B3020 !important;
+  background: #060604 !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.92), 0 1px 0 rgba(144,109,57,.08) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress-fill {
+  display: block !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--fs-skill-accent) 92%, #D9B164),
+    color-mix(in srgb, var(--fs-skill-accent) 72%, #85652E)) !important;
+  box-shadow: 0 0 5px color-mix(in srgb, var(--fs-skill-accent) 22%, transparent) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="progress-track"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="progress-fill"] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp {
+  display: grid !important;
+  place-items: center !important;
+  width: 190px !important;
+  min-width: 190px !important;
+  max-width: 100% !important;
+  min-height: 50px !important;
+  margin: 3px auto !important;
+  padding: 0 24px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  color: #F0D8A6 !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: .04em !important;
+  text-shadow: 0 1px 1px #000 !important;
+  border: 1px solid #6B4F28 !important;
+  background: linear-gradient(180deg, #21170E, #100D09) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] .fs-skill-base-exp {
+  border: 0 !important;
+  background-color: transparent !important;
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-xp-plaque-size) !important;
+  background-position: var(--fs-ui-xp-plaque-position) !important;
+  background-repeat: no-repeat !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="xp-gain"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="reward"] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="level-progress"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="requirement"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  border-left: 0 !important;
+  text-align: center !important;
+  justify-self: center !important;
+  align-self: center !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="requirement"] {
+  padding-top: 0 !important;
+  border-top: 0 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"]::before {
+  content: none !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+  position: absolute !important;
+  top: 17px !important;
+  right: 38px !important;
+  z-index: 4 !important;
+  display: flex !important;
+  width: 88px !important;
+  gap: 8px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"]::after {
+  content: "" !important;
+  position: absolute !important;
+  left: -12px !important;
+  top: 47px !important;
+  width: 112px !important;
+  height: 12px !important;
+  pointer-events: none !important;
+  opacity: .72 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] [data-iw-skill-role="nav-group"]::after {
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-separator-size) !important;
+  background-position: var(--fs-ui-separator-position) !important;
+  background-repeat: no-repeat !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+  transform: translateY(24px) !important;
+}
+@media (max-width: 900px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+    width: 102px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+    right: 30px !important;
+  }
+}
+@media (max-width: 600px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+    position: static !important;
+    padding: 16px 14px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+    position: absolute !important;
+    top: 8px !important;
+    right: 22px !important;
+    margin: 0 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"]::after {
+    display: none !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+    transform: translateY(26px) !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+    width: 86px !important;
+    height: 5px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"]::before {
+    font-size: 17px !important;
+  }
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] > * {
+  order: 3 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] > :first-child {
+  order: 0 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp {
+  order: 1 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"] {
+  order: 2 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+  order: 4 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="xp-gain"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="progress-track"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="reward"] {
+  order: 99 !important;
+}
+
+/* Locked / coming-soon skill cards use the same atlas-backed composition. */
+.compact-panel.fs-skill-panel.fs-skill--locked[data-iw-skill-layout="three-zone"] {
+  filter: saturate(.72) brightness(.88) !important;
+}
+.compact-panel.fs-skill-panel.fs-skill--locked[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+  filter: grayscale(.18) brightness(.82) !important;
+}
+.compact-panel.fs-skill-panel.fs-skill--locked[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+  transform: none !important;
+}
+.compact-panel.fs-skill-panel.fs-skill--locked[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"]::before {
+  color: #BEB6A8 !important;
+}
+.compact-panel.fs-skill-panel.fs-skill--locked[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+  color: #8E877B !important;
 }
 `;
 
@@ -2750,6 +3955,7 @@
   var RENDERED_ATTR2 = "data-fs-skill";
   var ROLE_ATTR = "data-iw-skill-role";
   var ZONE_ATTR = "data-iw-skill-zone";
+  var SHELL_ATTR = "data-iw-skill-layout-shell";
   var buttonStyleSnapshots = /* @__PURE__ */ new WeakMap();
   var readoutStyleSnapshots = /* @__PURE__ */ new WeakMap();
   var ingredientStyleSnapshots = /* @__PURE__ */ new WeakMap();
@@ -2758,22 +3964,26 @@
   var ingredientStyleOwner = createInlineStyleOwner();
   var listenerBound2 = false;
   var SKILL_META = {
-    combat: { label: "Combat", glyph: "âš”ï¸Ž", actions: ["fight"] },
-    mining: { label: "Mining", glyph: "â›ï¸Ž", actions: ["mine"] },
-    smithing: { label: "Smithing", glyph: "âš’ï¸Ž", actions: ["smelt", "forge"] },
-    gathering: { label: "Gathering", glyph: "â§", actions: ["gather", "harvest"] },
-    alchemy: { label: "Alchemy", glyph: "âš—ï¸Ž", actions: ["brew"] },
-    jewelcrafting: { label: "Jewelcrafting", labels: ["Jewel", "Jewelcrafting"], glyph: "â—†", actions: ["prospect"] },
-    spellcrafting: { label: "Spellcrafting", labels: ["Spellcraft", "Spellcrafting"], glyph: "âœ§", actions: ["enchant", "gather", "harvest"], titleActions: ["enchant", "harvest"], details: [/from the ether$/i] },
-    tailoring: { label: "Tailoring", labels: ["Tailor", "Tailoring"], glyph: "â‹ˆ", actions: ["tailor", "sew", "weave"], details: [/^missing materials\b/i] },
-    crafting: { label: "Crafting", glyph: "âœ¦", actions: ["craft"] },
-    fishing: { label: "Fishing", glyph: "âŒ", actions: ["fish"] }
+    combat: { label: "Combat", labels: ["Combat"], glyph: "⚔︎", actions: ["fight"] },
+    mining: { label: "Mining", labels: ["Mine", "Mining"], glyph: "⛏︎", actions: ["mine"] },
+    smithing: { label: "Smithing", labels: ["Smith", "Smithing"], glyph: "⚒︎", actions: ["smelt", "forge"] },
+    gathering: { label: "Gathering", labels: ["Gathering"], glyph: "❧", actions: ["gather", "harvest"] },
+    alchemy: { label: "Alchemy", labels: ["Alchemy"], glyph: "⚗︎", actions: ["brew"] },
+    jewelcrafting: { label: "Jewelcrafting", labels: ["Jewel", "Jewelcrafting"], glyph: "◆", actions: ["prospect"] },
+    spellcrafting: { label: "Spellcrafting", labels: ["Spellcraft", "Spellcrafting"], glyph: "✧", actions: ["enchant", "gather", "harvest"], titleActions: ["enchant", "harvest"], details: [/from the ether$/i] },
+    tailoring: { label: "Tailoring", labels: ["Tailor", "Tailoring"], glyph: "⋈", actions: ["tailor", "sew", "weave"], details: [/^missing materials\b/i] },
+    crafting: { label: "Crafting", labels: ["Craft", "Crafting"], glyph: "✦", actions: ["craft"] },
+    fishing: { label: "Fishing", labels: ["Fish", "Fishing"], glyph: "⌁", actions: ["fish"] },
+    locked: { label: "Coming Soon", labels: ["Coming Soon"], glyph: "◇", actions: [], titleActions: ["upcoming skill"], details: [/^unlock in a future update$/i] }
   };
   function setOwnedStyle(owner, el, prop, value, priority = "important") {
     return owner.set(el, prop, value, priority);
   }
   function normText(value) {
     return String(value || "").replace(/\s+/g, " ").trim();
+  }
+  function textWithoutLeadingGlyph(value) {
+    return normText(value).replace(/^[^a-z0-9]+/i, "");
   }
   function classifyButton(btn) {
     if (btn.disabled || btn.getAttribute("aria-disabled") === "true") return "disabled";
@@ -2798,8 +4008,8 @@
       "flex-shrink": "0"
     },
     primary: {
-      "background": "linear-gradient(180deg, #A94318, #742A0D)",
-      "border": "1px solid #C05A28",
+      "background": "linear-gradient(180deg, color-mix(in srgb, var(--fs-skill-accent) 74%, #593018), color-mix(in srgb, var(--fs-skill-accent) 48%, #25170F))",
+      "border": "1px solid color-mix(in srgb, var(--fs-skill-accent) 72%, #8A6633)",
       "color": "#FFEAD1",
       "padding": "0 17px",
       "min-width": "96px",
@@ -2843,7 +4053,8 @@
       buttonStyleSnapshots.delete(btn);
       return;
     }
-    const state = classifyButton(btn);
+    const classifiedState = classifyButton(btn);
+    const state = role === "action-button" && classifiedState !== "disabled" ? "primary" : classifiedState;
     const currentStyle = btn.getAttribute("style") || "";
     const previous = buttonStyleSnapshots.get(btn);
     if (previous && previous.state === state && previous.role === role && previous.style === currentStyle) return;
@@ -2854,22 +4065,22 @@
       setOwnedStyle(buttonStyleOwner, btn, prop, value);
     }
     if (role === "nav-button") {
-      setOwnedStyle(buttonStyleOwner, btn, "width", "30px");
-      setOwnedStyle(buttonStyleOwner, btn, "min-width", "30px");
-      setOwnedStyle(buttonStyleOwner, btn, "height", "30px");
-      setOwnedStyle(buttonStyleOwner, btn, "min-height", "30px");
+      setOwnedStyle(buttonStyleOwner, btn, "width", "40px");
+      setOwnedStyle(buttonStyleOwner, btn, "min-width", "40px");
+      setOwnedStyle(buttonStyleOwner, btn, "height", "40px");
+      setOwnedStyle(buttonStyleOwner, btn, "min-height", "40px");
       setOwnedStyle(buttonStyleOwner, btn, "padding", "0");
     } else if (role === "action-button") {
-      setOwnedStyle(buttonStyleOwner, btn, "width", "96px");
-      setOwnedStyle(buttonStyleOwner, btn, "min-width", "96px");
-      setOwnedStyle(buttonStyleOwner, btn, "height", "34px");
-      setOwnedStyle(buttonStyleOwner, btn, "min-height", "34px");
+      setOwnedStyle(buttonStyleOwner, btn, "width", "132px");
+      setOwnedStyle(buttonStyleOwner, btn, "min-width", "132px");
+      setOwnedStyle(buttonStyleOwner, btn, "height", "48px");
+      setOwnedStyle(buttonStyleOwner, btn, "min-height", "48px");
       setOwnedStyle(buttonStyleOwner, btn, "padding", "0 14px");
     }
     if (btn.dataset.iwBtnState !== state) btn.dataset.iwBtnState = state;
     buttonStyleSnapshots.set(btn, { state, role, style: btn.getAttribute("style") || "" });
   }
-  var LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?\s*[-â€“]\s*\d+(?:\.\d+)?%\s*[â€¢Â·]\s*[\d,]+\s+(?:xp\s+)?to\s+go$/i;
+  var LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?(?:\s*[-\u2013]\s*\d+(?:\.\d+)?%\s*[\u2022\u00b7]\s*[\d,]+\s+(?:xp\s+)?to\s+go|\s*[\u2022\u00b7]\s*[\d,]+\s*\/\s*[\d,]+\s*xp)$/i;
   var READOUT_STYLES = {
     "background": "none",
     "background-color": "transparent",
@@ -2922,8 +4133,8 @@
         const role = node.getAttribute(ROLE_ATTR);
         return role && role !== "level-progress";
       });
-      const ownsControl = !!parent.querySelector('button,a,input,select,textarea,[role="button"]');
-      if (ownsOtherRole || ownsControl) break;
+      const ownsOtherControl = [...parent.querySelectorAll('button,a,input,select,textarea,[role="button"]')].some((control) => control !== el && !branch.includes(control));
+      if (ownsOtherRole || ownsOtherControl) break;
       branch.push(parent);
       cur = parent;
     }
@@ -2946,7 +4157,10 @@
       }
       return;
     }
-    const branch = readoutBranch(readout, panel);
+    const branch = [.../* @__PURE__ */ new Set([
+      ...readoutBranch(readout, panel),
+      ...sameTextShellChain(readout, panel)
+    ])];
     const current = new Set(branch);
     for (const old of previouslyMarked) {
       if (current.has(old)) continue;
@@ -2965,7 +4179,7 @@
       readoutStyleSnapshots.set(target, target.getAttribute("style") || "");
     }
   }
-  var INGR_PATTERN = /[A-Z\s]{4,}\s+\d+\/\d+|\d+\/\d+/;
+  var INGR_PATTERN = /^(?!.*\bxp\b).{0,80}\b\d+\s*\/\s*\d+\b/i;
   var INGR_STYLES = {
     "background": "none",
     "background-color": "transparent",
@@ -2975,7 +4189,7 @@
     "box-shadow": "none"
   };
   function neutraliseIngredients(panel) {
-    for (const el of panel.querySelectorAll("div, span")) {
+    for (const el of panel.querySelectorAll("div, span, p")) {
       if (el.tagName === "BUTTON" || el.closest('button, a, [role="button"]')) continue;
       if (el.childElementCount > 3) continue;
       const text = normText(el.textContent);
@@ -3005,17 +4219,28 @@
     return el;
   }
   function clearStructureRoles(panel) {
-    panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}]`).forEach((el) => {
+    panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}]`).forEach((el) => {
       el.removeAttribute(ROLE_ATTR);
       el.removeAttribute(ZONE_ATTR);
+      el.removeAttribute(SHELL_ATTR);
     });
     delete panel.dataset.iwSkillLayout;
   }
-  function directChildUnder(panel, el) {
-    if (!el || !panel.contains(el)) return null;
+  function childUnder(container, el) {
+    if (!container || !el || !container.contains(el)) return null;
     let cur = el;
-    while (cur && cur.parentElement !== panel) cur = cur.parentElement;
-    return cur?.parentElement === panel ? cur : null;
+    while (cur && cur.parentElement !== container) cur = cur.parentElement;
+    return cur?.parentElement === container ? cur : null;
+  }
+  function commonAncestorWithin(panel, elements) {
+    const nodes = elements.filter(Boolean);
+    if (!nodes.length || nodes.some((node) => !panel.contains(node))) return null;
+    let cur = nodes[0];
+    while (cur && cur !== panel) {
+      if (nodes.every((node) => cur.contains(node))) return cur;
+      cur = cur.parentElement;
+    }
+    return panel;
   }
   function textCandidates(panel) {
     return [...panel.querySelectorAll("h1,h2,h3,h4,div,span,p")].filter((el) => !el.closest("button, a")).filter((el) => normText(el.textContent).length <= 130);
@@ -3048,7 +4273,7 @@
   function annotateStructure(panel, type, meta) {
     clearStructureRoles(panel);
     const identityLabels = (meta.labels || [meta.label]).map((label) => label.toLowerCase());
-    const identity = findBestText(panel, (text) => identityLabels.includes(text.toLowerCase()));
+    const identity = findBestText(panel, (text) => identityLabels.includes(textWithoutLeadingGlyph(text).toLowerCase()));
     if (identity) {
       const shell = outerSameTextShell(identity, panel);
       setRole(shell, "identity");
@@ -3056,7 +4281,7 @@
     const actionWord = (meta.titleActions || meta.actions).join("|");
     const actionTitleRe = new RegExp(`^(?:${actionWord})\\b`, "i");
     const actionTitle = findBestText(panel, (text, el) => {
-      if (!text || text.length > 90 || !actionTitleRe.test(text)) return false;
+      if (!text || text.length > 90 || !actionTitleRe.test(textWithoutLeadingGlyph(text))) return false;
       if (el.closest(".iw-item-ref")) return false;
       if (el.matches?.(`[${ROLE_ATTR}="identity"]`) || el.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
       return true;
@@ -3067,16 +4292,34 @@
     if (levelProgressButton) setRole(levelProgressButton, "level-progress");
     let actionButton = null;
     const commandWord = meta.actions.join("|");
-    const actionExact = new RegExp(`^(?:${commandWord})$`, "i");
+    const actionExact = commandWord ? new RegExp(`^(?:${commandWord})$`, "i") : null;
     for (const btn of buttons) {
       const text = normText(btn.textContent);
       const aria = normText(btn.getAttribute("aria-label"));
-      if (actionExact.test(text) || actionExact.test(aria)) {
+      const disabled = btn.disabled || btn.getAttribute("aria-disabled") === "true";
+      if (type === "locked" && btn !== levelProgressButton && disabled && !/^(?:prev|previous|next)$/i.test(aria)) {
+        actionButton = btn;
+        setRole(btn, "action-button");
+        continue;
+      }
+      if (actionExact && (actionExact.test(text) || actionExact.test(aria))) {
         actionButton = btn;
         setRole(btn, "action-button");
         continue;
       }
       if (text.length <= 2 || /^(?:prev|previous|next)$/i.test(aria)) setRole(btn, "nav-button");
+    }
+    if (type === "locked" && !actionButton) {
+      const lockedControl = buttons.find((btn) => {
+        if (btn === levelProgressButton) return false;
+        const aria = normText(btn.getAttribute("aria-label"));
+        const text = normText(btn.textContent);
+        return !/^(?:prev|previous|next)$/i.test(aria) && !/^[‹›<>]$/.test(text);
+      }) || null;
+      if (lockedControl) {
+        actionButton = lockedControl;
+        setRole(lockedControl, "action-button");
+      }
     }
     const navButtons = buttons.filter((btn) => btn.getAttribute(ROLE_ATTR) === "nav-button");
     if (navButtons.length >= 2) {
@@ -3105,17 +4348,29 @@
     const identityRole = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
     const titleRole = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
     const actionRole = panel.querySelector(`[${ROLE_ATTR}="action-button"]`);
-    const identityZone = directChildUnder(panel, identityRole);
-    const contentZone = directChildUnder(panel, titleRole);
-    const commandZone = directChildUnder(panel, actionRole);
-    const directChildren = [...panel.children].filter((el) => !el.classList.contains("fs-skill-header"));
+    const layoutShell = commonAncestorWithin(panel, [identityRole, titleRole, actionRole]);
+    const supportedShell = layoutShell && (layoutShell === panel || layoutShell.parentElement === panel);
+    const identityZone = supportedShell ? childUnder(layoutShell, identityRole) : null;
+    const contentZone = supportedShell ? childUnder(layoutShell, titleRole) : null;
+    const commandZone = supportedShell ? childUnder(layoutShell, actionRole) : null;
+    const shellChildren = supportedShell ? [...layoutShell.children].filter((el) => !el.classList.contains("fs-skill-header")) : [];
     const distinctZones = identityZone && contentZone && commandZone && (/* @__PURE__ */ new Set([identityZone, contentZone, commandZone])).size === 3;
     if (distinctZones) {
+      if (layoutShell !== panel) layoutShell.setAttribute(SHELL_ATTR, "1");
       identityZone.setAttribute(ZONE_ATTR, "identity");
       contentZone.setAttribute(ZONE_ATTR, "content");
       commandZone.setAttribute(ZONE_ATTR, "commands");
+      const identityLeaves = [...identityZone.querySelectorAll("span,div,p,strong")].filter((el) => el.childElementCount === 0);
+      const identityLevel = identityLeaves.find((el) => /^(?:lv|level)\s*(?:\d+|[—–-])/i.test(normText(el.textContent))) || null;
+      if (identityLevel) setRole(identityLevel, "identity-level");
+      const identityIcon = identityLeaves.find((el) => {
+        if (el === identity || el === identityLevel || el.closest(`[${ROLE_ATTR}="identity"]`)) return false;
+        const text = normText(el.textContent);
+        return text && text.length <= 4 && /[^a-z0-9]/i.test(text);
+      }) || null;
+      if (identityIcon) setRole(identityIcon, "identity-icon");
       const functionalZones = /* @__PURE__ */ new Set([identityZone, contentZone, commandZone]);
-      const unexpectedFlowChild = directChildren.some((el) => {
+      const unexpectedFlowChild = shellChildren.some((el) => {
         if (functionalZones.has(el)) return false;
         try {
           const cs = getComputedStyle(el);
@@ -3128,8 +4383,94 @@
       if (!unexpectedFlowChild) panel.dataset.iwSkillLayout = "three-zone";
     }
   }
+  function ensureSkillArtwork(panel, type) {
+    const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
+    if (!identityZone) return;
+    let artHost = identityZone.querySelector(":scope > .fs-skill-medallion-art");
+    if (!artHost || artHost.dataset.iwSkillArt !== type) {
+      artHost?.remove();
+      artHost = document.createElement("span");
+      artHost.className = "fs-skill-medallion-art";
+      artHost.setAttribute("aria-hidden", "true");
+      artHost.dataset.iwSkillArt = type;
+      identityZone.appendChild(artHost);
+    }
+    const paint2 = () => {
+      if (!artHost.isConnected || !panel.isConnected) return;
+      SkillsArtService.decoratePanel(panel);
+      if (SkillsArtService.paintIcon(artHost, type)) artHost.dataset.iwSkillArtReady = "1";
+    };
+    if (SkillsArtService.isReady()) {
+      paint2();
+    } else if (!artHost.dataset.iwSkillArtPending) {
+      artHost.dataset.iwSkillArtPending = "1";
+      SkillsArtService.ready().then(paint2).catch(() => {
+      }).finally(() => {
+        if (artHost.isConnected) delete artHost.dataset.iwSkillArtPending;
+      });
+    }
+  }
+  function baseExpValue(panel) {
+    const reward = panel.querySelector(`[${ROLE_ATTR}="reward"]`);
+    const rewardText = normText(reward?.textContent);
+    const rewardMatch = /\bxp\b/i.test(rewardText) ? rewardText.match(/base reward\s*:\s*\+?\s*([\d,]+)/i) : null;
+    if (rewardMatch) return rewardMatch[1].replace(/,/g, "");
+    const xpGain = panel.querySelector(`[${ROLE_ATTR}="xp-gain"]`);
+    const xpMatch = normText(xpGain?.textContent).match(/^\+?\s*([\d,]+)\s*xp$/i);
+    return xpMatch ? xpMatch[1].replace(/,/g, "") : "";
+  }
+  function progressPercent(panel) {
+    const fill = panel.querySelector(`[${ROLE_ATTR}="progress-fill"]`);
+    const width = String(fill?.style?.width || "").trim();
+    if (/^\d+(?:\.\d+)?%$/.test(width)) return width;
+    const track = panel.querySelector(`[${ROLE_ATTR}="progress-track"]`);
+    const now = Number(track?.getAttribute("aria-valuenow"));
+    const max = Number(track?.getAttribute("aria-valuemax"));
+    if (Number.isFinite(now) && Number.isFinite(max) && max > 0) {
+      return `${Math.max(0, Math.min(100, now / max * 100))}%`;
+    }
+    return "0%";
+  }
+  function ensureSkillPresentation(panel, meta) {
+    const identity = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
+    const title = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
+    if (identity) identity.dataset.iwCleanText = textWithoutLeadingGlyph(identity.textContent) || meta.label;
+    if (title) title.dataset.iwCleanText = textWithoutLeadingGlyph(title.textContent);
+    const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
+    if (identityZone) {
+      let progress = identityZone.querySelector(":scope > .fs-skill-identity-progress");
+      if (!progress) {
+        progress = document.createElement("span");
+        progress.className = "fs-skill-identity-progress";
+        progress.setAttribute("aria-hidden", "true");
+        progress.innerHTML = '<span class="fs-skill-identity-progress-fill"></span>';
+        identityZone.appendChild(progress);
+      }
+      const fill = progress.querySelector(".fs-skill-identity-progress-fill");
+      if (fill) fill.style.width = progressPercent(panel);
+    }
+    const contentZone = panel.querySelector(`[${ZONE_ATTR}="content"]`);
+    if (contentZone) {
+      const amount = baseExpValue(panel);
+      let plaque = contentZone.querySelector(":scope > .fs-skill-base-exp");
+      if (amount) {
+        if (!plaque) {
+          plaque = document.createElement("span");
+          plaque.className = "fs-skill-base-exp";
+          plaque.setAttribute("aria-hidden", "true");
+          contentZone.appendChild(plaque);
+        }
+        plaque.textContent = `Base: ${amount}`;
+        plaque.dataset.iwBaseExp = amount;
+      } else {
+        plaque?.remove();
+      }
+    }
+  }
   function applyPanelTreatment(panel, type, meta) {
     annotateStructure(panel, type, meta);
+    ensureSkillArtwork(panel, type, meta);
+    ensureSkillPresentation(panel, meta);
     panel.querySelectorAll("button").forEach(styleButton);
     neutraliseReadouts(panel);
     neutraliseIngredients(panel);
@@ -3150,6 +4491,12 @@
   }
   function clearPanelChrome(panel) {
     clearPanelInlineTreatment(panel);
+    SkillsArtService.clearPanel(panel);
+    panel.querySelectorAll(".fs-skill-medallion-art, .fs-skill-identity-progress, .fs-skill-base-exp").forEach((el) => el.remove());
+    panel.querySelectorAll("[data-iw-clean-text], [data-iw-base-exp]").forEach((el) => {
+      delete el.dataset.iwCleanText;
+      delete el.dataset.iwBaseExp;
+    });
     clearStructureRoles(panel);
     panel.classList.remove("fs-skill-panel", ...SKILL_CLASSES);
     delete panel.dataset.fsSkillLabel;

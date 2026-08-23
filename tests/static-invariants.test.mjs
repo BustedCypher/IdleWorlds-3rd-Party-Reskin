@@ -210,15 +210,59 @@ assert.match(skill, /labels: \['Jewel', 'Jewelcrafting'\]/);
 assert.match(skill, /labels: \['Spellcraft', 'Spellcrafting'\]/);
 assert.match(skill, /actions: \['tailor', 'sew', 'weave'\]/);
 assert.match(skill, /action-detail/);
+assert.match(skill, /SkillsArtService/,
+  'Skill renderer must delegate dedicated artwork to SkillsArtService');
+assert.doesNotMatch(skill, /Prospector's Pick|Weaver's Needle|Copper Upgrade Orb/,
+  'Skill renderer must not reuse equipment/item artwork for skill identities');
+assert.match(skill, /fs-skill-medallion-art/,
+  'three-zone Skills must create a skin-owned medallion art host');
+assert.match(skill, /fs-skill-identity-progress/,
+  'approved Skills layout must mirror native progress into the identity column');
+assert.match(skill, /fs-skill-base-exp/,
+  'approved Skills layout must render a dedicated Base EXP plaque');
+assert.match(skill, /data\.iwCleanText|dataset\.iwCleanText/,
+  'approved Skills layout must preserve emoji-free visible labels without rewriting React text');
+assert.match(skill, /ownsOtherControl/,
+  'XP readout wrapper traversal must ignore the readout control itself');
 assert.doesNotMatch(skill, /directChildren\.length === 3/);
+
+const skillsArt = await read('src/modules/SkillsArtService.js');
+assert.match(skillsArt, /assets\/skills_icons_index\.json/);
+assert.match(skillsArt, /assets\/skills_ui_index\.json/);
+assert.match(skillsArt, /assets\/skills_panel_texture\.webp/);
+assert.match(skillsArt, /assetUrl\(/,
+  'Skills artwork must resolve through bundled extension URLs');
+assert.doesNotMatch(skillsArt, /gear_icons_atlas|item_icons_atlas|https?:\/\//,
+  'Skills artwork service must use only its dedicated bundled assets');
+assert.match(skillsArt, /medallion_frame/);
+assert.match(skillsArt, /action_frame_idle/);
+assert.match(skillsArt, /xp_plaque/);
+const skillsUiIndex = JSON.parse(await read('assets/skills_ui_index.json'));
+const xpPlaque = skillsUiIndex.entries.find(entry => entry.key === 'xp_plaque');
+assert.ok(skillsUiIndex.width >= 860 && xpPlaque?.width >= 300 && xpPlaque?.height >= 100,
+  'Skills UI atlas must retain the expanded six-digit Base: plaque artwork');
 
 const skillCSS = await read('src/styles/skillpanel.css');
 assert.doesNotMatch(skillCSS, /border-top:\s*54px/);
 assert.match(skillCSS, /data-iw-skill-layout=\"three-zone\"/);
-assert.match(skillCSS, /@media \(max-width: 520px\)[\s\S]*grid-template-areas:[\s\S]*identity commands[\s\S]*content content/,
+assert.match(skillCSS, /@media \(max-width: 600px\)[\s\S]*grid-template-areas:[\s\S]*identity commands[\s\S]*content content/,
   'phone skill cards must switch to a two-row mobile topology');
 assert.match(skillCSS, /data-iw-skill-role=\"level-progress\"/);
 assert.match(skillCSS, /data-iw-readout\]::before/);
+assert.match(skillCSS, /fs-skill-medallion-art/,
+  'Skills CSS must retain the atlas-backed medallion treatment');
+assert.match(skillCSS, /data-iw-skill-art-ready/,
+  'native skill glyphs must hide only after atlas art is ready');
+assert.match(skillCSS, /action-button\"]::before/,
+  'primary skill actions must retain the ornate stud treatment');
+assert.match(skillCSS, /fs-skill-identity-progress/,
+  'approved Skills CSS must place level progress beneath the left identity');
+assert.match(skillCSS, /fs-skill-base-exp/,
+  'approved Skills CSS must retain the atlas-backed Base EXP plaque');
+assert.match(skillCSS, /content:\s*attr\(data-iw-clean-text\)/,
+  'approved Skills CSS must render emoji-free title and identity text');
+assert.match(skillCSS, /nav-group[^}]*position:\s*absolute/s,
+  'desktop navigation controls must sit independently above the action button');
 
 /* â”€â”€ Shared UI / tooltip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 

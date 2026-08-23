@@ -91,6 +91,43 @@ const itemSprite = id => {
   return spriteStyle(e, itemDims, 'assets/item_icons_atlas.png');
 };
 
+function indexedSpriteStyle(entry, index, atlasRel) {
+  if (!entry) throw new Error(`atlas entry missing from ${atlasRel}`);
+  const xRange = Math.max(1, index.width - entry.width);
+  const yRange = Math.max(1, index.height - entry.height);
+  return [
+    `background-image:url('${fileUrl(atlasRel)}')`,
+    `background-size:${(index.width / entry.width) * 100}% ${(index.height / entry.height) * 100}%`,
+    `background-position:${((entry.x / xRange) * 100).toFixed(6)}% ${((entry.y / yRange) * 100).toFixed(6)}%`,
+    'background-repeat:no-repeat',
+  ].join(';');
+}
+
+const skillsIconIndex = JSON.parse(await readFile(resolve(ROOT, 'assets/skills_icons_index.json'), 'utf8'));
+const skillsUiIndex = JSON.parse(await readFile(resolve(ROOT, 'assets/skills_ui_index.json'), 'utf8'));
+const skillIconByKey = new Map(skillsIconIndex.entries.map(entry => [entry.key, entry]));
+const skillUiByKey = new Map(skillsUiIndex.entries.map(entry => [entry.key, entry]));
+const skillSprite = key => indexedSpriteStyle(skillIconByKey.get(key), skillsIconIndex, 'assets/skills_icons_atlas.webp');
+
+const SKILL_UI_TOKENS = {
+  medallion_frame: 'medallion-frame', nav_frame_idle: 'nav-idle', nav_frame_active: 'nav-active',
+  action_frame_idle: 'action-idle', action_frame_disabled: 'action-disabled', corner_filigree: 'corner',
+  xp_plaque: 'xp-plaque', horizontal_separator: 'separator', separator_flourish: 'flourish',
+};
+const skillUiVars = [
+  `--fs-skills-panel-texture:url('${fileUrl('assets/skills_panel_texture.webp')}')`,
+  `--fs-skills-ui-atlas:url('${fileUrl('assets/skills_ui_atlas.webp')}')`,
+];
+for (const [key, token] of Object.entries(SKILL_UI_TOKENS)) {
+  const entry = skillUiByKey.get(key);
+  if (!entry) continue;
+  const xRange = Math.max(1, skillsUiIndex.width - entry.width);
+  const yRange = Math.max(1, skillsUiIndex.height - entry.height);
+  skillUiVars.push(`--fs-ui-${token}-size:${(skillsUiIndex.width / entry.width) * 100}% ${(skillsUiIndex.height / entry.height) * 100}%`);
+  skillUiVars.push(`--fs-ui-${token}-position:${((entry.x / xRange) * 100).toFixed(6)}% ${((entry.y / yRange) * 100).toFixed(6)}%`);
+}
+const SKILL_UI_STYLE = skillUiVars.join(';');
+
 /* ── Fixture markup ─────────────────────────────────────────────────────── */
 
 const TIERS = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
@@ -115,25 +152,62 @@ const invRow = ({ sprite, badge, name, tier, level, stats, details, reqs, qty, e
   <button data-fs-preserved-action="control" data-fs-action-kind="icon">🔒</button>
 </div>`;
 
-const skillPanel = ({ type, label, title, pct, xp, reward, ingredients }) => `
-<div class="compact-panel fs-skill-panel fs-skill--${type}" data-iw-skill-layout="three-zone" style="margin-bottom:8px;">
-  <div data-iw-skill-zone="identity"><div data-iw-skill-role="identity">${label}</div></div>
-  <div data-iw-skill-zone="content">
-    <div data-iw-skill-role="action-title">${title}</div>
-    <div data-iw-skill-role="level-progress">Lv 42 - ${pct}% • 12,480 XP to go</div>
-    <div data-iw-skill-role="progress-track"><div data-iw-skill-role="progress-fill" style="width:${pct}%"></div></div>
-    ${ingredients ? `<div data-iw-skill-role="ingredient"><span class="iw-item-ref">${ingredients}</span> 12/20</div>` : ''}
-    ${reward ? `<div data-iw-skill-role="reward">Base reward: ${reward}</div>` : ''}
-    <div data-iw-skill-role="xp-gain">${xp} XP</div>
-  </div>
-  <div data-iw-skill-zone="commands">
-    <button data-iw-skill-role="action-button" data-iw-btn-state="primary">${label.slice(0, 6)}</button>
-    <div data-iw-skill-role="nav-group">
-      <button data-iw-skill-role="nav-button">‹</button>
-      <button data-iw-skill-role="nav-button">›</button>
+const SKILL_GLYPHS = {
+  combat: '⚔', mining: '⛏', smithing: '⚒', gathering: '❧', alchemy: '⚗',
+  jewelcrafting: '◆', spellcrafting: '✧', tailoring: '⋈', crafting: '✦', fishing: '⌁',
+};
+const SKILL_ART = {
+  combat: skillSprite('combat'),
+  mining: skillSprite('mining'),
+  smithing: skillSprite('smithing'),
+  gathering: skillSprite('gathering'),
+  alchemy: skillSprite('alchemy'),
+  jewelcrafting: skillSprite('jewelcrafting'),
+  spellcrafting: skillSprite('spellcrafting'),
+  tailoring: skillSprite('tailoring'),
+  crafting: skillSprite('crafting'),
+  fishing: skillSprite('fishing'),
+};
+const SKILL_LEVELS = {
+  combat: 42, mining: 42, smithing: 42, gathering: 42, alchemy: 42,
+  jewelcrafting: 68, spellcrafting: 57, tailoring: 26, crafting: 42, fishing: 42,
+};
+
+const skillPanel = ({ type, label, title, pct, xp, reward, ingredients, requirement, detail }) => {
+  const glyph = SKILL_GLYPHS[type] || '✦';
+  const art = SKILL_ART[type] || '';
+  const level = SKILL_LEVELS[type] || 42;
+  const requirementText = requirement || `Requires ${label} Lv 9`;
+  const rewardText = reward || `+${xp} ${label} XP/task`;
+  const baseExp = /\bxp\b/i.test(String(rewardText))
+    ? (String(rewardText).match(/[\d,]+/)?.[0]?.replaceAll(',', '') || String(xp).replaceAll(',', ''))
+    : String(xp).replaceAll(',', '');
+  const action = title.split(/\s+/)[0].toUpperCase();
+  return `
+<div class="compact-panel fs-skill-panel fs-skill--${type}" data-iw-skill-layout="three-zone" data-iw-skills-ui-ready="1" style="margin-bottom:8px;${SKILL_UI_STYLE}">
+  <div data-iw-skill-layout-shell="1">
+    <div data-iw-skill-zone="identity">
+      <div data-iw-skill-role="identity-icon">${glyph}</div>
+      <span class="fs-skill-medallion-art" data-iw-skill-art="${type}" data-iw-skill-art-ready="1" aria-hidden="true" style="${art}"></span>
+      <div data-iw-skill-role="identity" data-iw-clean-text="${label}">${label}</div>
+      <div data-iw-skill-role="identity-level">Level ${level}</div>
+      <span class="fs-skill-identity-progress"><span class="fs-skill-identity-progress-fill" style="width:${pct}%"></span></span>
     </div>
+    <div data-iw-skill-zone="content">
+      <div><div data-iw-skill-role="action-title" data-iw-clean-text="${title}">${title}</div><div data-iw-skill-role="level-progress">Lv ${level} - ${pct}% • 12,480 XP to go</div>
+        <div data-iw-skill-role="nav-group"><button data-iw-skill-role="nav-button">‹</button><button data-iw-skill-role="nav-button">›</button></div></div>
+      <div data-iw-skill-role="xp-gain">+${xp} XP</div>
+      <div data-iw-skill-role="progress-track"><div data-iw-skill-role="progress-fill" style="width:${pct}%"></div></div>
+      ${ingredients ? `<div data-iw-skill-role="ingredient"><span class="iw-item-ref">${ingredients}</span> 12/20</div>` : ''}
+      <span class="fs-skill-base-exp" data-iw-base-exp="${baseExp}">Base: ${baseExp}</span>
+      <div data-iw-skill-role="requirement">${requirementText}</div>
+      <div data-iw-skill-role="reward">Base reward: ${rewardText}</div>
+      ${detail ? `<div data-iw-skill-role="action-detail">${detail}</div>` : ''}
+    </div>
+    <button data-iw-skill-zone="commands" data-iw-skill-role="action-button" data-iw-btn-state="primary">${action}</button>
   </div>
 </div>`;
+};
 
 const tooltipCard = ({ sprite, name, tier, badges, effect, stats, acqMain, acqSub, glyph = '&#x1F6E1;&#xFE0F;', source = 'cached data' }) => `
 <div class="iw-tip is-open" style="position:relative;display:flex;opacity:1;left:0;top:0;margin-bottom:14px;">
@@ -172,7 +246,7 @@ body { padding: 22px; max-width: 1180px; margin: 0 auto; }
         color: var(--iw-gold-dim); margin: 26px 0 9px; border-bottom: 1px solid var(--iw-line); padding-bottom: 6px; }
 .fx-h:first-child { margin-top: 0; }
 .fx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; align-items: start; }
-@media (max-width: 600px) { .fx-skill-grid { grid-template-columns: 1fr; } }
+.fx-skill-grid { grid-template-columns: 1fr; }
 .fx-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .fx-sw { width: 92px; }
 .fx-sw i { display: block; height: 34px; border: 1px solid var(--iw-line); border-radius: 2px; }
@@ -217,15 +291,15 @@ ${invRow({ sprite: itemSprite('titanium_atk_potion_super'), name: 'Super Titaniu
 <div class="fx-h">Skill panels — accent per discipline</div>
 <div class="fx-grid fx-skill-grid">
 <div>
-${skillPanel({ type: 'combat', label: 'Combat', title: 'Fight Bone Marauder', pct: 62, xp: '1,940', reward: '340g' })}
+${skillPanel({ type: 'combat', label: 'Combat', title: 'Fight Bone Marauder', pct: 62, xp: '123456', reward: '340g' })}
 ${skillPanel({ type: 'mining', label: 'Mining', title: 'Mine Copper Ore', pct: 28, xp: '85', ingredients: 'Copper Ore' })}
 ${skillPanel({ type: 'smithing', label: 'Smithing', title: 'Forge Iron Sword', pct: 91, xp: '410', ingredients: 'Iron Ore' })}
 ${skillPanel({ type: 'gathering', label: 'Gathering', title: 'Harvest Duskroot', pct: 45, xp: '150' })}
 ${skillPanel({ type: 'alchemy', label: 'Alchemy', title: 'Brew ATK Potion', pct: 12, xp: '260' })}
 </div><div>
-${skillPanel({ type: 'jewelcrafting', label: 'Jewelcrafting', title: 'Prospect Sunstone', pct: 74, xp: '520' })}
-${skillPanel({ type: 'spellcrafting', label: 'Spellcrafting', title: 'Enchant Voidglass', pct: 8, xp: '780' })}
-${skillPanel({ type: 'tailoring', label: 'Tailoring', title: 'Sew Mythril Cloak', pct: 55, xp: '300' })}
+${skillPanel({ type: 'jewelcrafting', label: 'Jewelcrafting', title: 'Prospect Silver Ore', pct: 49.3, xp: '43', ingredients: 'Silver Ore', requirement: 'Requires Jewelcrafting Lv 9' })}
+${skillPanel({ type: 'spellcrafting', label: 'Spellcrafting', title: 'Harvest Silver Mana', pct: 94.6, xp: '22', requirement: 'Requires Spellcrafting Lv 9', detail: 'Gather Silver Mana from the ether' })}
+${skillPanel({ type: 'tailoring', label: 'Tailoring', title: 'Weave Wool Cloth', pct: 21, xp: '130', ingredients: 'Wool', requirement: 'Requires Tailoring Lv 9 and Gathering Lv 5', detail: 'Missing materials — will queue (gather first)' })}
 ${skillPanel({ type: 'crafting', label: 'Crafting', title: 'Craft Upgrade Orb', pct: 33, xp: '190' })}
 ${skillPanel({ type: 'fishing', label: 'Fishing', title: 'Fish Abyssal Eel', pct: 67, xp: '220' })}
 </div></div>
@@ -316,6 +390,7 @@ await p.evaluate(() => document.fonts.ready);
 await p.waitForTimeout(400);
 
 await p.screenshot({ path: resolve(OUT, 'full.png'), fullPage: true });
+await p.locator('.fx-skill-grid').screenshot({ path: resolve(OUT, 'skills-panel.png') });
 await p.locator('.fx-tooltip-grid').screenshot({ path: resolve(OUT, 'tooltips.png') });
 
 await p.setViewportSize({ width: 390, height: 360 });
@@ -339,6 +414,10 @@ const auditResponsive = async width => {
   const audit = await p.evaluate(() => {
     const rows = [...document.querySelectorAll('.compact-row:has(> .fs-inv-row)')];
     const panels = [...document.querySelectorAll('.fx-skill-grid .compact-panel.fs-skill-panel')];
+    const medallions = panels.map(el => el.querySelector('.fs-skill-medallion-art')).filter(Boolean);
+    const identityLevels = panels.map(el => el.querySelector('[data-iw-skill-role="identity-level"]')).filter(Boolean);
+    const actionButtons = panels.map(el => el.querySelector('[data-iw-skill-role="action-button"]')).filter(Boolean);
+    const basePlaques = panels.map(el => el.querySelector('.fs-skill-base-exp')).filter(Boolean);
     const longName = [...document.querySelectorAll('.fs-inv-name')]
       .find(el => el.textContent.includes('Fortunate Dragonscale Silk Cloak of the Harvest'));
     const longStyle = longName ? getComputedStyle(longName) : null;
@@ -361,6 +440,20 @@ const auditResponsive = async width => {
       longNameLines: longLines,
       skillCount: panels.length,
       skillOverflow: panels.some(el => el.scrollWidth > el.clientWidth + 1),
+      medallionsVisible: medallions.length === panels.length && medallions.every(el => el.getBoundingClientRect().width >= 46 && el.getBoundingClientRect().height >= 46),
+      medallionsPainted: medallions.length === panels.length && medallions.every(el => {
+        const bg = getComputedStyle(el).backgroundImage;
+        return bg && bg !== 'none' && /skills_icons_atlas\.webp/.test(bg);
+      }),
+      identityLevelsVisible: identityLevels.length === panels.length && identityLevels.every(el => el.getBoundingClientRect().height > 0),
+      actionButtonsSized: actionButtons.length === panels.length && actionButtons.every(el => el.getBoundingClientRect().width >= 128 && el.getBoundingClientRect().height >= 46),
+      basePlaquesFit: basePlaques.length === panels.length && basePlaques.every(el => el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().width >= 188),
+      sixDigitBaseFits: !!document.querySelector('.fs-skill-base-exp[data-iw-base-exp="123456"]') && document.querySelector('.fs-skill-base-exp[data-iw-base-exp="123456"]').scrollWidth <= document.querySelector('.fs-skill-base-exp[data-iw-base-exp="123456"]').clientWidth + 1,
+      navAboveAction: panels.every(el => {
+        const nav = el.querySelector('[data-iw-skill-role="nav-group"]')?.getBoundingClientRect();
+        const action = el.querySelector('[data-iw-skill-role="action-button"]')?.getBoundingClientRect();
+        return nav && action && nav.top <= action.top;
+      }),
       twoRow: panels.every(el => getComputedStyle(el).gridTemplateAreas.includes('content content')),
       commandsVisible: panels.every(el => {
         const cmd = el.querySelector('[data-iw-skill-zone="commands"]');
@@ -382,12 +475,22 @@ const auditResponsive = async width => {
     throw new Error(`long Inventory name exceeded its two-line cap at ${width}px: ${audit.longNameLines.toFixed(2)}`);
   }
   if (!audit.skillCount || audit.skillOverflow) throw new Error(`skill panels overflow at ${width}px`);
-  if (audit.twoRow !== (width <= 520)) throw new Error(`skill breakpoint mismatch at ${width}px`);
+  if (!audit.medallionsVisible || !audit.medallionsPainted || !audit.identityLevelsVisible) {
+    throw new Error(`skill identity card is incomplete at ${width}px: ${JSON.stringify(audit)}`);
+  }
+  if (!audit.actionButtonsSized || !audit.navAboveAction) {
+    throw new Error(`skill command rail is malformed at ${width}px: ${JSON.stringify(audit)}`);
+  }
+  if (!audit.basePlaquesFit || !audit.sixDigitBaseFits) {
+    throw new Error(`Base: plaque cannot contain six digits at ${width}px: ${JSON.stringify(audit)}`);
+  }
+  if (audit.twoRow !== (width <= 600)) throw new Error(`skill breakpoint mismatch at ${width}px`);
   if (!audit.commandsVisible) throw new Error(`skill commands hidden at ${width}px`);
 };
 for (const width of RESPONSIVE_WIDTHS) await auditResponsive(width);
 await p.setViewportSize({ width: 390, height: 844 });
 await p.screenshot({ path: resolve(OUT, 'mobile-responsive.png'), fullPage: true });
+await p.locator('.fx-skill-grid').screenshot({ path: resolve(OUT, 'skills-mobile.png') });
 
 await p.setViewportSize({ width: 1240, height: 1000 });
 
@@ -486,4 +589,4 @@ if (consoleIssues.length) {
 } else {
   console.log('page issues: none');
 }
-console.log(`\nWrote ${resolve(OUT, 'full.png')} and ${pixelResults.length} icon crops`);
+console.log(`\nWrote ${resolve(OUT, 'full.png')}, ${resolve(OUT, 'skills-panel.png')} and ${pixelResults.length} icon crops`);

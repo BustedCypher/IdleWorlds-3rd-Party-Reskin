@@ -10,11 +10,13 @@ import { on } from './DOMWatcher.js';
 import { inject } from './StyleInjector.js';
 import { guard, guardEach } from './Runtime.js';
 import { createInlineStyleOwner } from './InlineStyleOwner.js';
+import { SkillsArtService } from './SkillsArtService.js';
 import css from '../styles/skillpanel.css';
 
 const RENDERED_ATTR = 'data-fs-skill';
 const ROLE_ATTR = 'data-iw-skill-role';
 const ZONE_ATTR = 'data-iw-skill-zone';
+const SHELL_ATTR = 'data-iw-skill-layout-shell';
 const buttonStyleSnapshots = new WeakMap();
 const readoutStyleSnapshots = new WeakMap();
 const ingredientStyleSnapshots = new WeakMap();
@@ -28,16 +30,17 @@ const ingredientStyleOwner = createInlineStyleOwner();
 let listenerBound = false;
 
 const SKILL_META = {
-  combat:    { label: 'Combat',    glyph: 'âš”ï¸Ž', actions: ['fight'] },
-  mining:    { label: 'Mining',    glyph: 'â›ï¸Ž', actions: ['mine'] },
-  smithing:  { label: 'Smithing',  glyph: 'âš’ï¸Ž', actions: ['smelt', 'forge'] },
-  gathering: { label: 'Gathering', glyph: 'â§',  actions: ['gather', 'harvest'] },
-  alchemy:   { label: 'Alchemy',   glyph: 'âš—ï¸Ž', actions: ['brew'] },
-  jewelcrafting: { label: 'Jewelcrafting', labels: ['Jewel', 'Jewelcrafting'], glyph: 'â—†', actions: ['prospect'] },
-  spellcrafting: { label: 'Spellcrafting', labels: ['Spellcraft', 'Spellcrafting'], glyph: 'âœ§', actions: ['enchant', 'gather', 'harvest'], titleActions: ['enchant', 'harvest'], details: [/from the ether$/i] },
-  tailoring: { label: 'Tailoring', labels: ['Tailor', 'Tailoring'], glyph: 'â‹ˆ', actions: ['tailor', 'sew', 'weave'], details: [/^missing materials\b/i] },
-  crafting:  { label: 'Crafting',  glyph: 'âœ¦', actions: ['craft'] },
-  fishing:   { label: 'Fishing',   glyph: 'âŒ', actions: ['fish'] },
+  combat:    { label: 'Combat',    labels: ['Combat'],             glyph: '⚔︎', actions: ['fight'] },
+  mining:    { label: 'Mining',    labels: ['Mine', 'Mining'],     glyph: '⛏︎', actions: ['mine'] },
+  smithing:  { label: 'Smithing',  labels: ['Smith', 'Smithing'],  glyph: '⚒︎', actions: ['smelt', 'forge'] },
+  gathering: { label: 'Gathering', labels: ['Gathering'],          glyph: '❧', actions: ['gather', 'harvest'] },
+  alchemy:   { label: 'Alchemy',   labels: ['Alchemy'],            glyph: '⚗︎', actions: ['brew'] },
+  jewelcrafting: { label: 'Jewelcrafting', labels: ['Jewel', 'Jewelcrafting'], glyph: '◆', actions: ['prospect'] },
+  spellcrafting: { label: 'Spellcrafting', labels: ['Spellcraft', 'Spellcrafting'], glyph: '✧', actions: ['enchant', 'gather', 'harvest'], titleActions: ['enchant', 'harvest'], details: [/from the ether$/i] },
+  tailoring: { label: 'Tailoring', labels: ['Tailor', 'Tailoring'], glyph: '⋈', actions: ['tailor', 'sew', 'weave'], details: [/^missing materials\b/i] },
+  crafting:  { label: 'Crafting',  labels: ['Craft', 'Crafting'], glyph: '✦', actions: ['craft'] },
+  fishing:   { label: 'Fishing',   labels: ['Fish', 'Fishing'],   glyph: '⌁', actions: ['fish'] },
+  locked:    { label: 'Coming Soon', labels: ['Coming Soon'], glyph: '◇', actions: [], titleActions: ['upcoming skill'], details: [/^unlock in a future update$/i] },
 };
 
 function setOwnedStyle(owner, el, prop, value, priority = 'important') {
@@ -46,6 +49,10 @@ function setOwnedStyle(owner, el, prop, value, priority = 'important') {
 
 function normText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function textWithoutLeadingGlyph(value) {
+  return normText(value).replace(/^[^a-z0-9]+/i, '');
 }
 
 function classifyButton(btn) {
@@ -72,8 +79,8 @@ const BUTTON_STYLES = {
     'flex-shrink': '0',
   },
   primary: {
-    'background': 'linear-gradient(180deg, #A94318, #742A0D)',
-    'border': '1px solid #C05A28',
+    'background': 'linear-gradient(180deg, color-mix(in srgb, var(--fs-skill-accent) 74%, #593018), color-mix(in srgb, var(--fs-skill-accent) 48%, #25170F))',
+    'border': '1px solid color-mix(in srgb, var(--fs-skill-accent) 72%, #8A6633)',
     'color': '#FFEAD1',
     'padding': '0 17px',
     'min-width': '96px',
@@ -121,7 +128,8 @@ function styleButton(btn) {
     buttonStyleSnapshots.delete(btn);
     return;
   }
-  const state = classifyButton(btn);
+  const classifiedState = classifyButton(btn);
+  const state = role === 'action-button' && classifiedState !== 'disabled' ? 'primary' : classifiedState;
   const currentStyle = btn.getAttribute('style') || '';
   const previous = buttonStyleSnapshots.get(btn);
   if (previous && previous.state === state && previous.role === role && previous.style === currentStyle) return;
@@ -136,16 +144,16 @@ function styleButton(btn) {
   // Role geometry is applied inline because IdleWorlds frequently writes its
   // own inline button dimensions during React updates.
   if (role === 'nav-button') {
-    setOwnedStyle(buttonStyleOwner, btn, 'width', '30px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '30px');
-    setOwnedStyle(buttonStyleOwner, btn, 'height', '30px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '30px');
+    setOwnedStyle(buttonStyleOwner, btn, 'width', '40px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '40px');
+    setOwnedStyle(buttonStyleOwner, btn, 'height', '40px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '40px');
     setOwnedStyle(buttonStyleOwner, btn, 'padding', '0');
   } else if (role === 'action-button') {
-    setOwnedStyle(buttonStyleOwner, btn, 'width', '96px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '96px');
-    setOwnedStyle(buttonStyleOwner, btn, 'height', '34px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '34px');
+    setOwnedStyle(buttonStyleOwner, btn, 'width', '132px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '132px');
+    setOwnedStyle(buttonStyleOwner, btn, 'height', '48px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '48px');
     setOwnedStyle(buttonStyleOwner, btn, 'padding', '0 14px');
   }
 
@@ -153,7 +161,7 @@ function styleButton(btn) {
   buttonStyleSnapshots.set(btn, { state, role, style: btn.getAttribute('style') || '' });
 }
 
-const LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?\s*[-â€“]\s*\d+(?:\.\d+)?%\s*[â€¢Â·]\s*[\d,]+\s+(?:xp\s+)?to\s+go$/i;
+const LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?(?:\s*[-\u2013]\s*\d+(?:\.\d+)?%\s*[\u2022\u00b7]\s*[\d,]+\s+(?:xp\s+)?to\s+go|\s*[\u2022\u00b7]\s*[\d,]+\s*\/\s*[\d,]+\s*xp)$/i;
 const READOUT_STYLES = {
   'background': 'none',
   'background-color': 'transparent',
@@ -220,8 +228,9 @@ function readoutBranch(el, panel) {
       const role = node.getAttribute(ROLE_ATTR);
       return role && role !== 'level-progress';
     });
-    const ownsControl = !!parent.querySelector('button,a,input,select,textarea,[role="button"]');
-    if (ownsOtherRole || ownsControl) break;
+    const ownsOtherControl = [...parent.querySelectorAll('button,a,input,select,textarea,[role="button"]')]
+      .some(control => control !== el && !branch.includes(control));
+    if (ownsOtherRole || ownsOtherControl) break;
 
     branch.push(parent);
     cur = parent;
@@ -251,7 +260,10 @@ function neutraliseReadouts(panel) {
     return;
   }
 
-  const branch = readoutBranch(readout, panel);
+  const branch = [...new Set([
+    ...readoutBranch(readout, panel),
+    ...sameTextShellChain(readout, panel),
+  ])];
   const current = new Set(branch);
 
   // Restore ONLY nodes that left the readout branch. Restoring every marked
@@ -275,7 +287,7 @@ function neutraliseReadouts(panel) {
   }
 }
 
-const INGR_PATTERN = /[A-Z\s]{4,}\s+\d+\/\d+|\d+\/\d+/;
+const INGR_PATTERN = /^(?!.*\bxp\b).{0,80}\b\d+\s*\/\s*\d+\b/i;
 const INGR_STYLES = {
   'background': 'none',
   'background-color': 'transparent',
@@ -286,7 +298,7 @@ const INGR_STYLES = {
 };
 
 function neutraliseIngredients(panel) {
-  for (const el of panel.querySelectorAll('div, span')) {
+  for (const el of panel.querySelectorAll('div, span, p')) {
     if (el.tagName === 'BUTTON' || el.closest('button, a, [role="button"]')) continue;
     if (el.childElementCount > 3) continue;
     const text = normText(el.textContent);
@@ -319,18 +331,30 @@ function setRole(el, role) {
 }
 
 function clearStructureRoles(panel) {
-  panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}]`).forEach(el => {
+  panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}]`).forEach(el => {
     el.removeAttribute(ROLE_ATTR);
     el.removeAttribute(ZONE_ATTR);
+    el.removeAttribute(SHELL_ATTR);
   });
   delete panel.dataset.iwSkillLayout;
 }
 
-function directChildUnder(panel, el) {
-  if (!el || !panel.contains(el)) return null;
+function childUnder(container, el) {
+  if (!container || !el || !container.contains(el)) return null;
   let cur = el;
-  while (cur && cur.parentElement !== panel) cur = cur.parentElement;
-  return cur?.parentElement === panel ? cur : null;
+  while (cur && cur.parentElement !== container) cur = cur.parentElement;
+  return cur?.parentElement === container ? cur : null;
+}
+
+function commonAncestorWithin(panel, elements) {
+  const nodes = elements.filter(Boolean);
+  if (!nodes.length || nodes.some(node => !panel.contains(node))) return null;
+  let cur = nodes[0];
+  while (cur && cur !== panel) {
+    if (nodes.every(node => cur.contains(node))) return cur;
+    cur = cur.parentElement;
+  }
+  return panel;
 }
 
 function textCandidates(panel) {
@@ -371,7 +395,7 @@ function annotateStructure(panel, type, meta) {
   clearStructureRoles(panel);
 
   const identityLabels = (meta.labels || [meta.label]).map(label => label.toLowerCase());
-  const identity = findBestText(panel, text => identityLabels.includes(text.toLowerCase()));
+  const identity = findBestText(panel, text => identityLabels.includes(textWithoutLeadingGlyph(text).toLowerCase()));
   if (identity) {
     const shell = outerSameTextShell(identity, panel);
     setRole(shell, 'identity');
@@ -380,7 +404,7 @@ function annotateStructure(panel, type, meta) {
   const actionWord = (meta.titleActions || meta.actions).join('|');
   const actionTitleRe = new RegExp(`^(?:${actionWord})\\b`, 'i');
   const actionTitle = findBestText(panel, (text, el) => {
-    if (!text || text.length > 90 || !actionTitleRe.test(text)) return false;
+    if (!text || text.length > 90 || !actionTitleRe.test(textWithoutLeadingGlyph(text))) return false;
     if (el.closest('.iw-item-ref')) return false;
     if (el.matches?.(`[${ROLE_ATTR}="identity"]`) || el.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
     return true;
@@ -396,16 +420,35 @@ function annotateStructure(panel, type, meta) {
 
   let actionButton = null;
   const commandWord = meta.actions.join('|');
-  const actionExact = new RegExp(`^(?:${commandWord})$`, 'i');
+  const actionExact = commandWord ? new RegExp(`^(?:${commandWord})$`, 'i') : null;
   for (const btn of buttons) {
     const text = normText(btn.textContent);
     const aria = normText(btn.getAttribute('aria-label'));
-    if (actionExact.test(text) || actionExact.test(aria)) {
+    const disabled = btn.disabled || btn.getAttribute('aria-disabled') === 'true';
+    if (type === 'locked' && btn !== levelProgressButton && disabled && !/^(?:prev|previous|next)$/i.test(aria)) {
+      actionButton = btn;
+      setRole(btn, 'action-button');
+      continue;
+    }
+    if (actionExact && (actionExact.test(text) || actionExact.test(aria))) {
       actionButton = btn;
       setRole(btn, 'action-button');
       continue;
     }
     if (text.length <= 2 || /^(?:prev|previous|next)$/i.test(aria)) setRole(btn, 'nav-button');
+  }
+
+  if (type === 'locked' && !actionButton) {
+    const lockedControl = buttons.find(btn => {
+      if (btn === levelProgressButton) return false;
+      const aria = normText(btn.getAttribute('aria-label'));
+      const text = normText(btn.textContent);
+      return !/^(?:prev|previous|next)$/i.test(aria) && !/^[‹›<>]$/.test(text);
+    }) || null;
+    if (lockedControl) {
+      actionButton = lockedControl;
+      setRole(lockedControl, 'action-button');
+    }
   }
 
   const navButtons = buttons.filter(btn => btn.getAttribute(ROLE_ATTR) === 'nav-button');
@@ -444,29 +487,49 @@ function annotateStructure(panel, type, meta) {
   }
 
   // Opt into the rigid three-column layout only when the live React panel
-  // already exposes three distinct top-level zones. Unknown visible branches
-  // disable the grid so native layout remains the safe fallback.
+  // exposes three distinct sibling zones. IdleWorlds currently wraps those
+  // zones in one native grid element, while older/test DOMs place them directly
+  // under .compact-panel. Supporting both avoids any React-owned reparenting.
   const identityRole = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
   const titleRole = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
   const actionRole = panel.querySelector(`[${ROLE_ATTR}="action-button"]`);
-  const identityZone = directChildUnder(panel, identityRole);
-  const contentZone = directChildUnder(panel, titleRole);
-  const commandZone = directChildUnder(panel, actionRole);
-  const directChildren = [...panel.children].filter(el => !el.classList.contains('fs-skill-header'));
+  const layoutShell = commonAncestorWithin(panel, [identityRole, titleRole, actionRole]);
+  const supportedShell = layoutShell && (layoutShell === panel || layoutShell.parentElement === panel);
+  const identityZone = supportedShell ? childUnder(layoutShell, identityRole) : null;
+  const contentZone = supportedShell ? childUnder(layoutShell, titleRole) : null;
+  const commandZone = supportedShell ? childUnder(layoutShell, actionRole) : null;
+  const shellChildren = supportedShell
+    ? [...layoutShell.children].filter(el => !el.classList.contains('fs-skill-header'))
+    : [];
 
   const distinctZones = identityZone && contentZone && commandZone &&
     new Set([identityZone, contentZone, commandZone]).size === 3;
 
   if (distinctZones) {
+    if (layoutShell !== panel) layoutShell.setAttribute(SHELL_ATTR, '1');
     identityZone.setAttribute(ZONE_ATTR, 'identity');
     contentZone.setAttribute(ZONE_ATTR, 'content');
     commandZone.setAttribute(ZONE_ATTR, 'commands');
+
+    // Identify the native skill glyph and level text so CSS can turn the
+    // existing React-owned identity branch into the visual medallion/card.
+    const identityLeaves = [...identityZone.querySelectorAll('span,div,p,strong')]
+      .filter(el => el.childElementCount === 0);
+    const identityLevel = identityLeaves.find(el => /^(?:lv|level)\s*(?:\d+|[—–-])/i.test(normText(el.textContent))) || null;
+    if (identityLevel) setRole(identityLevel, 'identity-level');
+
+    const identityIcon = identityLeaves.find(el => {
+      if (el === identity || el === identityLevel || el.closest(`[${ROLE_ATTR}="identity"]`)) return false;
+      const text = normText(el.textContent);
+      return text && text.length <= 4 && /[^a-z0-9]/i.test(text);
+    }) || null;
+    if (identityIcon) setRole(identityIcon, 'identity-icon');
 
     // Some skills include an extra absolutely-positioned/decorative React child
     // while others expose only the three functional branches. Ignore non-flow
     // decoration, but refuse rigid layout for an unknown visible branch.
     const functionalZones = new Set([identityZone, contentZone, commandZone]);
-    const unexpectedFlowChild = directChildren.some(el => {
+    const unexpectedFlowChild = shellChildren.some(el => {
       if (functionalZones.has(el)) return false;
       try {
         const cs = getComputedStyle(el);
@@ -479,9 +542,107 @@ function annotateStructure(panel, type, meta) {
   }
 }
 
+function ensureSkillArtwork(panel, type) {
+  const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
+  if (!identityZone) return;
+
+  let artHost = identityZone.querySelector(':scope > .fs-skill-medallion-art');
+  if (!artHost || artHost.dataset.iwSkillArt !== type) {
+    artHost?.remove();
+    artHost = document.createElement('span');
+    artHost.className = 'fs-skill-medallion-art';
+    artHost.setAttribute('aria-hidden', 'true');
+    artHost.dataset.iwSkillArt = type;
+    identityZone.appendChild(artHost);
+  }
+
+  const paint = () => {
+    if (!artHost.isConnected || !panel.isConnected) return;
+    SkillsArtService.decoratePanel(panel);
+    if (SkillsArtService.paintIcon(artHost, type)) artHost.dataset.iwSkillArtReady = '1';
+  };
+
+  if (SkillsArtService.isReady()) {
+    paint();
+  } else if (!artHost.dataset.iwSkillArtPending) {
+    artHost.dataset.iwSkillArtPending = '1';
+    SkillsArtService.ready().then(paint).catch(() => {}).finally(() => {
+      if (artHost.isConnected) delete artHost.dataset.iwSkillArtPending;
+    });
+  }
+}
+
+function baseExpValue(panel) {
+  const reward = panel.querySelector(`[${ROLE_ATTR}="reward"]`);
+  const rewardText = normText(reward?.textContent);
+  const rewardMatch = /\bxp\b/i.test(rewardText)
+    ? rewardText.match(/base reward\s*:\s*\+?\s*([\d,]+)/i)
+    : null;
+  if (rewardMatch) return rewardMatch[1].replace(/,/g, '');
+
+  const xpGain = panel.querySelector(`[${ROLE_ATTR}="xp-gain"]`);
+  const xpMatch = normText(xpGain?.textContent).match(/^\+?\s*([\d,]+)\s*xp$/i);
+  return xpMatch ? xpMatch[1].replace(/,/g, '') : '';
+}
+
+function progressPercent(panel) {
+  const fill = panel.querySelector(`[${ROLE_ATTR}="progress-fill"]`);
+  const width = String(fill?.style?.width || '').trim();
+  if (/^\d+(?:\.\d+)?%$/.test(width)) return width;
+
+  const track = panel.querySelector(`[${ROLE_ATTR}="progress-track"]`);
+  const now = Number(track?.getAttribute('aria-valuenow'));
+  const max = Number(track?.getAttribute('aria-valuemax'));
+  if (Number.isFinite(now) && Number.isFinite(max) && max > 0) {
+    return `${Math.max(0, Math.min(100, (now / max) * 100))}%`;
+  }
+  return '0%';
+}
+
+function ensureSkillPresentation(panel, meta) {
+  const identity = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
+  const title = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
+  if (identity) identity.dataset.iwCleanText = textWithoutLeadingGlyph(identity.textContent) || meta.label;
+  if (title) title.dataset.iwCleanText = textWithoutLeadingGlyph(title.textContent);
+
+  const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
+  if (identityZone) {
+    let progress = identityZone.querySelector(':scope > .fs-skill-identity-progress');
+    if (!progress) {
+      progress = document.createElement('span');
+      progress.className = 'fs-skill-identity-progress';
+      progress.setAttribute('aria-hidden', 'true');
+      progress.innerHTML = '<span class="fs-skill-identity-progress-fill"></span>';
+      identityZone.appendChild(progress);
+    }
+    const fill = progress.querySelector('.fs-skill-identity-progress-fill');
+    if (fill) fill.style.width = progressPercent(panel);
+  }
+
+  const contentZone = panel.querySelector(`[${ZONE_ATTR}="content"]`);
+  if (contentZone) {
+    const amount = baseExpValue(panel);
+    let plaque = contentZone.querySelector(':scope > .fs-skill-base-exp');
+    if (amount) {
+      if (!plaque) {
+        plaque = document.createElement('span');
+        plaque.className = 'fs-skill-base-exp';
+        plaque.setAttribute('aria-hidden', 'true');
+        contentZone.appendChild(plaque);
+      }
+      plaque.textContent = `Base: ${amount}`;
+      plaque.dataset.iwBaseExp = amount;
+    } else {
+      plaque?.remove();
+    }
+  }
+}
+
 function applyPanelTreatment(panel, type, meta) {
   // Structure first so button styling can use semantic action/nav roles.
   annotateStructure(panel, type, meta);
+  ensureSkillArtwork(panel, type, meta);
+  ensureSkillPresentation(panel, meta);
   panel.querySelectorAll('button').forEach(styleButton);
   neutraliseReadouts(panel);
   neutraliseIngredients(panel);
@@ -505,6 +666,12 @@ function clearPanelInlineTreatment(panel) {
 
 function clearPanelChrome(panel) {
   clearPanelInlineTreatment(panel);
+  SkillsArtService.clearPanel(panel);
+  panel.querySelectorAll('.fs-skill-medallion-art, .fs-skill-identity-progress, .fs-skill-base-exp').forEach(el => el.remove());
+  panel.querySelectorAll('[data-iw-clean-text], [data-iw-base-exp]').forEach(el => {
+    delete el.dataset.iwCleanText;
+    delete el.dataset.iwBaseExp;
+  });
   clearStructureRoles(panel);
   panel.classList.remove('fs-skill-panel', ...SKILL_CLASSES);
   delete panel.dataset.fsSkillLabel;

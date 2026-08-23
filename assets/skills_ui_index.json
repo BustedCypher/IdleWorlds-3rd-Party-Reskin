@@ -1,7 +1,7 @@
 {
   "version": 1,
   "atlas": "skills_ui_atlas.webp",
-  "width": 700,
+  "width": 860,
   "height": 463,
   "entries": [
     {
@@ -87,10 +87,10 @@
     {
       "key": "xp_plaque",
       "index": 10,
-      "x": 100,
-      "y": 362,
-      "width": 176,
-      "height": 78
+      "x": 554,
+      "y": 357,
+      "width": 300,
+      "height": 100
     },
     {
       "key": "horizontal_separator",
