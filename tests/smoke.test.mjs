@@ -361,6 +361,7 @@ sourcedUnknownRef.className = 'iw-item-ref';
 sourcedUnknownRef.setAttribute('data-iw-item', 'merchant_coffer');
 sourcedUnknownRef.textContent = "Merchant's Coffer";
 window.document.body.appendChild(sourcedUnknownRef);
+await settle(80); // allow the delegated item-name scan to classify this late-mounted trigger
 const nativeUnknownMatches = sourcedUnknownRef.matches.bind(sourcedUnknownRef);
 sourcedUnknownRef.matches = selector => selector === ':hover' ? true : nativeUnknownMatches(selector);
 pointerTarget = sourcedUnknownRef;

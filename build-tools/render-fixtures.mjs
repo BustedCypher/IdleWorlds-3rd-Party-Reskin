@@ -198,7 +198,7 @@ const skillPanel = ({ type, label, title, pct, xp, reward, ingredients, requirem
     </div>
     <div data-iw-skill-zone="content">
       <div><div data-iw-skill-role="action-title" data-iw-clean-text="${title}">${title}</div><div data-iw-skill-role="level-progress" data-iw-progress-display="Lv ${level} • 12,480 XP to go">Lv ${level} - ${pct}% • 12,480 XP to go</div>
-        <div data-iw-skill-role="nav-group"><button data-iw-skill-role="nav-button" data-iw-nav-direction="prev">‹</button><button data-iw-skill-role="nav-button" data-iw-nav-direction="next">›</button></div></div>
+        <div data-iw-skill-role="nav-group"><button data-iw-skill-role="nav-button" data-iw-nav-direction="prev"><span>‹</span></button><button data-iw-skill-role="nav-button" data-iw-nav-direction="next"><span>›</span></button></div></div>
       <div data-iw-skill-role="xp-gain">+${xp} XP</div>
       <div data-iw-skill-role="progress-track"><div data-iw-skill-role="progress-fill" style="width:${pct}%"></div></div>
       ${ingredients ? `<div data-iw-skill-role="ingredient"><span class="iw-item-ref">${ingredients}</span> 12/20</div>` : ''}

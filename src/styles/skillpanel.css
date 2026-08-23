@@ -1641,3 +1641,25 @@
 .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"] {
   background-image: var(--fs-skills-nav-next) !important;
 }
+
+/* Live nav cleanup: suppress the game's own chevron so only the generated artwork is visible. */
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] {
+  color: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  text-indent: -9999px !important;
+  text-shadow: none !important;
+  overflow: hidden !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 88% 88% !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] > * {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::before,
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::after {
+  content: none !important;
+  display: none !important;
+}
