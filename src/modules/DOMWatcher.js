@@ -91,15 +91,28 @@ function skillTypeFromIdentity(signals) {
   return null;
 }
 
+function lockedCopySignal(panel) {
+  let hasLabel = false;
+  let hasUnlock = false;
+  for (const el of panel.querySelectorAll('div,span,p,strong')) {
+    const text = normaliseSkillSignal(el.textContent);
+    if (!text || text.length > 96) continue;
+    if (text.includes('coming soon') || text.includes('upcoming skill')) hasLabel = true;
+    if (text.includes('unlock in a future update')) hasUnlock = true;
+  }
+  return hasLabel && hasUnlock;
+}
+
 function skillSignature(panel) {
   const buttons = [...panel.querySelectorAll('button')]
     .map(btn => normaliseSkillSignal(btn.textContent));
   const identities = skillIdentitySignals(panel);
+  const lockedCopy = lockedCopySignal(panel);
 
   // JSON preserves array boundaries and exact signal content without a
   // collision-prone delimiter/hash scheme. These strings are tiny compared
   // with the panel subtree scans detection would otherwise repeat.
-  return JSON.stringify([buttons, identities]);
+  return JSON.stringify([buttons, identities, lockedCopy]);
 }
 
 function detectSkillTypeCached(panel) {
@@ -137,6 +150,9 @@ function detectSkillType(panel) {
   // Prefer the visible identity label before falling back to Crafting.
   const labels = skillIdentitySignals(panel);
   const identityType = skillTypeFromIdentity(labels);
+  const hasDisabledControl = [...panel.querySelectorAll('button')].some(btn =>
+    btn.disabled || btn.getAttribute('aria-disabled') === 'true');
+  if (hasDisabledControl && lockedCopySignal(panel)) return 'locked';
   if (identityType) return identityType;
   if (hasAction('craft'))                     return 'crafting';
   if (hasAction('gather', 'harvest'))        return 'gathering';

@@ -169,7 +169,7 @@ assert.match(contentEntry, /ItemDatabase\.stopAutoRefresh\(\)/,
 const watcher = await read('src/modules/DOMWatcher.js');
 assert.doesNotMatch(watcher, /panel\.textContent\.slice/,
   'skill detection must not search arbitrary panel body text');
-assert.match(watcher, /JSON\.stringify\(\[buttons, identities\]\)/,
+assert.match(watcher, /JSON\.stringify\(\[buttons, identities, lockedCopy\]\)/,
   'skill cache must represent exact normalized detection signals');
 assert.match(watcher, /drainGlobalBudget\(FLUSH_BUDGET\)/,
   'DOM reconciliation must enforce one global per-frame budget');
@@ -187,6 +187,8 @@ assert.match(watcher, /skillTypeFromIdentity/);
 assert.match(watcher, /'jewel', 'jewelcrafting'/);
 assert.match(watcher, /'spellcraft', 'spellcrafting'/);
 assert.match(watcher, /hasAction\('tailor', 'sew', 'weave'\).*tailoring/s);
+assert.match(watcher, /unlock in a future update/,
+  'locked skill detection must support split Coming Soon markup');
 assert.ok(watcher.indexOf('if (identityType) return identityType;') < watcher.indexOf("if (hasAction('craft'))"),
   'generic Craft actions must defer to the visible skill identity');
 
@@ -214,6 +216,10 @@ assert.match(skill, /labels: \['Spellcraft', 'Spellcrafting'\]/);
 assert.match(skill, /actions: \['enchant', 'gather', 'harvest', 'craft'\]/);
 assert.match(skill, /actions: \['tailor', 'sew', 'weave', 'craft'\]/);
 assert.match(skill, /action-detail/);
+assert.match(skill, /remaining native command button/,
+  'identified skill panels must tolerate newly introduced action verbs');
+assert.match(skill, /visibleActions/,
+  'fallback action discovery must prefer the visible current action over stale hidden variants');
 assert.match(skill, /SkillsArtService/,
   'Skill renderer must delegate dedicated artwork to SkillsArtService');
 assert.doesNotMatch(skill, /Prospector's Pick|Weaver's Needle|Copper Upgrade Orb/,

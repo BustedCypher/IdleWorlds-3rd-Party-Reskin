@@ -364,10 +364,19 @@ function commonAncestorWithin(panel, elements) {
   return panel;
 }
 
+function isPresentationHidden(el) {
+  if (!el || el.hidden || el.getAttribute?.('aria-hidden') === 'true') return true;
+  try {
+    const cs = getComputedStyle(el);
+    return cs.display === 'none' || cs.visibility === 'hidden' || cs.contentVisibility === 'hidden';
+  } catch { return false; }
+}
+
 function textCandidates(panel) {
-  return [...panel.querySelectorAll('h1,h2,h3,h4,div,span,p')]
+  const candidates = [...panel.querySelectorAll('h1,h2,h3,h4,div,span,p')]
     .filter(el => !el.closest('button, a'))
     .filter(el => normText(el.textContent).length <= 130);
+  return candidates.sort((a, b) => Number(isPresentationHidden(a)) - Number(isPresentationHidden(b)));
 }
 
 function findBestText(panel, predicate) {
@@ -402,7 +411,23 @@ function annotateStructure(panel, type, meta) {
   clearStructureRoles(panel);
 
   const identityLabels = (meta.labels || [meta.label]).map(label => label.toLowerCase());
-  const identity = findBestText(panel, text => identityLabels.includes(textWithoutLeadingGlyph(text).toLowerCase()));
+  let identity = findBestText(panel, text => identityLabels.includes(textWithoutLeadingGlyph(text).toLowerCase()));
+  if (!identity) {
+    identity = findBestText(panel, text => {
+      const clean = textWithoutLeadingGlyph(text).toLowerCase();
+      return identityLabels.some(label => clean === label || clean.startsWith(`${label} `));
+    });
+  }
+  if (!identity) {
+    identity = textCandidates(panel).find(el => {
+      const directText = [...el.childNodes]
+        .map(node => normText(node.textContent))
+        .filter(Boolean)
+        .join(' ');
+      const clean = textWithoutLeadingGlyph(directText).toLowerCase();
+      return identityLabels.some(label => clean === label || clean.startsWith(`${label} `));
+    }) || null;
+  }
   if (identity) {
     const shell = outerSameTextShell(identity, panel);
     setRole(shell, 'identity');
@@ -410,7 +435,7 @@ function annotateStructure(panel, type, meta) {
 
   const actionWord = (meta.titleActions || meta.actions).join('|');
   const actionTitleRe = new RegExp(`^(?:${actionWord})\\b`, 'i');
-  const actionTitle = findBestText(panel, (text, el) => {
+  let actionTitle = findBestText(panel, (text, el) => {
     if (!text || text.length > 90 || !actionTitleRe.test(textWithoutLeadingGlyph(text))) return false;
     if (el.closest('.iw-item-ref')) return false;
     if (el.matches?.(`[${ROLE_ATTR}="identity"]`) || el.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
@@ -418,7 +443,8 @@ function annotateStructure(panel, type, meta) {
   });
   if (actionTitle) setRole(outerSameTextShell(actionTitle, panel), 'action-title');
 
-  const buttons = [...panel.querySelectorAll('button')];
+  const buttons = [...panel.querySelectorAll('button')]
+    .sort((a, b) => Number(isPresentationHidden(a)) - Number(isPresentationHidden(b)));
 
   // Audit 1.5.5 proved the visible "Lv N - X% â€¢ ... to go" widget is itself
   // a button. Mark that exact live control before any button receives chrome.
@@ -432,12 +458,12 @@ function annotateStructure(panel, type, meta) {
     const text = normText(btn.textContent);
     const aria = normText(btn.getAttribute('aria-label'));
     const disabled = btn.disabled || btn.getAttribute('aria-disabled') === 'true';
-    if (type === 'locked' && btn !== levelProgressButton && disabled && !/^(?:prev|previous|next)$/i.test(aria)) {
+    if (!actionButton && type === 'locked' && btn !== levelProgressButton && disabled && !/^(?:prev|previous|next)$/i.test(aria)) {
       actionButton = btn;
       setRole(btn, 'action-button');
       continue;
     }
-    if (actionExact && (actionExact.test(text) || actionExact.test(aria))) {
+    if (!actionButton && actionExact && (actionExact.test(text) || actionExact.test(aria))) {
       actionButton = btn;
       setRole(btn, 'action-button');
       continue;
@@ -455,6 +481,43 @@ function annotateStructure(panel, type, meta) {
     if (lockedControl) {
       actionButton = lockedControl;
       setRole(lockedControl, 'action-button');
+    }
+  }
+
+  // Once the panel itself is positively identified as a skill, accept the
+  // remaining native command button even when IdleWorlds introduces a new verb
+  // (for example Jewelcrafting CRAFT or Tailoring UPGRADE). This keeps action
+  // discovery resilient without broadening global skill-type detection.
+  if (!actionButton && type !== 'locked') {
+    const fallbackActions = buttons.filter(btn => {
+      if (btn === levelProgressButton || btn.getAttribute(ROLE_ATTR) === 'nav-button') return false;
+      const text = normText(btn.textContent);
+      const aria = normText(btn.getAttribute('aria-label'));
+      const signal = text || aria;
+      if (!signal || signal.length > 32) return false;
+      if (/^lv\b.*(?:%|\bxp\b|to go)/i.test(signal)) return false;
+      return true;
+    });
+    const visibleActions = fallbackActions.filter(btn => !isPresentationHidden(btn));
+    actionButton = visibleActions[visibleActions.length - 1] || fallbackActions[0] || null;
+    if (actionButton) setRole(actionButton, 'action-button');
+  }
+
+  // If the skill uses a newly introduced action verb, derive the title prefix
+  // from that native action control rather than requiring a hard-coded verb.
+  if (!actionTitle && actionButton) {
+    const actionSignal = textWithoutLeadingGlyph(
+      normText(actionButton.textContent) || normText(actionButton.getAttribute('aria-label')));
+    if (actionSignal && actionSignal.length <= 32) {
+      const needle = actionSignal.toLowerCase();
+      actionTitle = findBestText(panel, (text, el) => {
+        const clean = textWithoutLeadingGlyph(text).toLowerCase();
+        if (!(clean === needle || clean.startsWith(`${needle} `))) return false;
+        if (el.closest('.iw-item-ref')) return false;
+        if (el.matches?.(`[${ROLE_ATTR}="identity"]`) || el.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
+        return true;
+      });
+      if (actionTitle) setRole(outerSameTextShell(actionTitle, panel), 'action-title');
     }
   }
 
@@ -654,7 +717,13 @@ function ensureSkillPresentation(panel, meta) {
   const identity = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
   const title = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
   const levelProgress = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
-  if (identity) identity.dataset.iwCleanText = textWithoutLeadingGlyph(identity.textContent) || meta.label;
+  if (identity) {
+    const nativeIdentity = textWithoutLeadingGlyph(identity.textContent);
+    const aliases = meta.labels || [meta.label];
+    const alias = aliases.find(label => nativeIdentity.toLowerCase() === label.toLowerCase() ||
+      nativeIdentity.toLowerCase().startsWith(`${label.toLowerCase()} `));
+    identity.dataset.iwCleanText = alias || (identity.childElementCount ? meta.label : nativeIdentity) || meta.label;
+  }
   if (title) title.dataset.iwCleanText = textWithoutLeadingGlyph(title.textContent);
   if (levelProgress) levelProgress.dataset.iwProgressDisplay = centralProgressText(levelProgress.textContent);
 
