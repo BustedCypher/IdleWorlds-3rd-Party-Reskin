@@ -43,6 +43,8 @@ const DISCIPLINE_STYLE = [
   [/\bjewel(?:crafting)?\b/i,  { accent: '#4E9FB8', glyph: '◆' }],
   [/\bspell(?:crafting)?\b/i,  { accent: '#8B6FC3', glyph: '✧' }],
   [/\btailoring\b/i,     { accent: '#A56E86', glyph: '⋈' }],
+  [/\bwood(?:cutting)?\b/i, { accent: '#8B6A3A', glyph: '⋔' }],
+  [/\bconstruction\b/i,  { accent: '#5F7F72', glyph: '⌂' }],
   [/\bcrafting\b/i,      { accent: '#5E8FB7', glyph: '✦' }],
   [/\bfishing\b/i,       { accent: '#478FA8', glyph: '⌁' }],
 ];

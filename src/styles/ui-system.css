@@ -220,6 +220,46 @@
   text-transform: uppercase !important;
 }
 
+/* Action Log's title is a <button> that wraps the label text node AND a nested
+   "View All" span (see UIFoundation.activityPanelLabelNodes). The header-control
+   plate above therefore framed the entire title as one big button, which no
+   other panel has. Present it like World Chat's plain title and let only the
+   nested "View All" read as a link. The game's click target is untouched --
+   this is paint only. Specificity: the host carries BOTH data-iw-panel and
+   data-iw-ui="section-frame", so (0,3,0) clears the (0,2,1) header-button rule
+   without escalating with a duplicate !important war. */
+[data-iw-panel="action-log"][data-iw-ui="section-frame"] [data-iw-ui="section-title"] {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--iw-text-hi) !important;
+  font-family: var(--iw-font-head) !important;
+  text-align: left !important;
+  cursor: pointer !important;
+}
+[data-iw-panel="action-log"][data-iw-ui="section-frame"] [data-iw-ui="section-title"]:hover {
+  border-color: transparent !important;
+  color: var(--iw-text-hi) !important;
+}
+[data-iw-panel="action-log"][data-iw-ui="section-frame"] [data-iw-ui="section-title"] > * {
+  color: var(--iw-gold-dim) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  text-shadow: none !important;
+}
+[data-iw-panel="action-log"][data-iw-ui="section-frame"] [data-iw-ui="section-title"]:hover > * {
+  color: var(--iw-gold) !important;
+}
+
 @media (min-width: 601px) {
   [data-iw-panel="action-log"] [data-iw-panel-part="header"] > :first-child {
     display: flex !important;
@@ -316,6 +356,21 @@
 }
 
 [data-iw-panel="action-log"] [data-iw-panel-part="feed"] { max-height: 300px !important; }
+/* The log's ground is flat BLACK -- no gradient, no inset vignette, so the
+   rows read as text on the page itself rather than on a plate.
+   The generic feed above keeps its #0B0C0A + sheen for chat. Anything BETWEEN the
+   feed and its rows (the game ships translucent wrappers around the scroll
+   list) must not paint its own plate, or that ground is lifted right back up --
+   only containers are cleared, so a row's own state colour is untouched. */
+[data-iw-panel="action-log"] [data-iw-panel-part="feed"] {
+  background-color: #000 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+[data-iw-panel="action-log"] [data-iw-panel-part="feed"] *:has([data-iw-panel-part="feed-row"]) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
 [data-iw-panel="world-chat"] [data-iw-panel-part="feed"] { max-height: min(46vh, 430px) !important; }
 
 [data-iw-panel-part="feed-row"] {
@@ -550,8 +605,24 @@
    chased with an ever-higher `html …` override. */
 button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]),
 [role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]) {
-  border-color: var(--iw-line-hi) !important;
-  background-image: linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,0,0,.09)) !important;
+  border-color: #2A241A !important;
+  background-image: linear-gradient(180deg, rgba(255,255,255,.035), rgba(0,0,0,.28)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    inset 0 -7px 10px -8px rgba(0,0,0,.9) !important;
+}
+
+/* Carved slate: at rest a control is recessed into the panel; hover lights the
+   ember from INSIDE the plate rather than filling it. Surface only — no
+   `color`, because a button's own text colour is frequently live state (the
+   ember active-filter tab, red/green market steppers) and repainting it here
+   would delete that meaning (rule 5). */
+button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):hover,
+[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):hover {
+  border-color: var(--iw-line-hot) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 0 10px -3px rgba(216,121,31,.35) !important;
 }
 
 /* Geometry is NOT safe to apply globally.
@@ -565,11 +636,17 @@ button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved
    a real action, and only when the game has not sized it explicitly.
    (Audit S3.5) */
 [data-iw-ui="zone-action"],
-[data-iw-inventory-control="filter"],
-[data-iw-inventory-control="page"],
 .compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"],
 .compact-panel.fs-skill-panel button[data-iw-skill-role="nav-button"] {
   min-height: 30px;
+}
+
+/* The inventory filter/pager row sets its own 26px height in inventory.css.
+   `min-height` beats `height` outright, so this floor has to come down with
+   it or the controls silently stay 30px. */
+[data-iw-inventory-control="filter"],
+[data-iw-inventory-control="page"] {
+  min-height: 26px;
 }
 
 button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):disabled,
@@ -594,4 +671,52 @@ input[placeholder*="Search" i] {
     padding-inline: 9px !important;
     font-size: 10.5px !important;
   }
+}
+
+/* -- World Boss cards ---------------------------------------------------
+   The boss list ships `.compact-panel` cards that carried the game's flat
+   grey plate inside our forged frame, so the panel read as two unrelated
+   materials. Their ground is flat BLACK with the gold rim, no sprite texture
+   and no top sheen -- the card is a bordered opening onto the page, not a
+   raised plate. The frame
+   behind them already carries the texture, and repeating it per card made
+   the stack busy. No corner filigree either: that ornament marks a PANEL,
+   and repeating it would flatten the frame/contents distinction.
+   ---------------------------------------------------------------------- */
+[data-iw-boss="card"] {
+  position: relative !important;
+  border: 1px solid #6A5430 !important;
+  border-radius: 4px !important;
+  background: #000 !important;
+  box-shadow:
+    inset 0 0 0 1px #0B0A08,
+    0 2px 7px rgba(0,0,0,.42) !important;
+}
+
+/* Gold hairline across the head of each card, dimmer than the panel frame's
+   so the frame still outranks the cards inside it. */
+[data-iw-boss="card"]::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  left: 10px !important;
+  right: 10px !important;
+  top: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, #9B7437 18%, #C08F45 50%, #9B7437 82%, transparent) !important;
+  opacity: .55 !important;
+}
+
+/* A wrapper inside the card must not re-plate what the card just made black.
+   Interactive nodes are exempt: the Prejoined button's fill is live state and
+   flattening it would delete that meaning (rule 5). */
+[data-iw-boss="card"] > *:not(button):not(a):not([role="button"]) {
+  background: transparent !important;
+}
+
+/* Card content sits above the hairline, the same lift the panel frames use. */
+[data-iw-boss="card"] > * {
+  position: relative;
+  z-index: 1;
 }

@@ -86,6 +86,21 @@ Anything you style on a `<button>` loses to it. Do **not** escalate specificity
 skill controls already do. This trap has bitten at least four times: inventory
 tool buttons, inventory filters, the active-filter ember, and skill nav arrows.
 
+**Two modules must never write the same attribute on the same node.**
+`.compact-panel` is the game's shared card class - skills, quests, bosses,
+village and shop all use it - so every one of those nodes reaches
+`SkillPanelRenderer` on `iw:skill-panel`. For a non-skill it calls
+`clearPanelChrome()`, which used to `delete panel.dataset.iwUi`
+unconditionally. When `UIFoundation` tagged World Boss cards
+`data-iw-ui="boss-card"`, the two writers fought once per flush and the cards
+VISIBLY FLASHED between the skinned and the vanilla ground - the symptom reads
+like an artwork/loading problem, not an attribute problem. Two fixes, both
+kept: `clearPanelChrome` now deletes `iwUi` only when it is its own
+`'skill-panel'`, and the boss role lives in its own `data-iw-boss` namespace,
+the way `QuestPanelRenderer` already namespaces `data-iw-quest-role`. Give a
+new role on a shared node its own attribute; teardown it in the owning
+module's `clear*()`.
+
 **The page ships a hidden duplicate.** There is an `xl:hidden` column that
 mirrors the whole panel stack. `document.querySelector('…')` frequently returns
 the **invisible** copy. Always check `getBoundingClientRect()` — a capture where
@@ -102,6 +117,24 @@ bare. `sectionFrameResolutionValid` re-resolves any frame that is not a
 `.panel` but contains one. `classifyActivityPanels` also matches a **non-heading
 leaf label** ("Action Log" is not an `<h1–4>`), and both classifiers skip
 `[class~="xl:hidden"]` mirror copies.
+
+**Adding a skill IdleWorlds ships later touches five places, and the icon
+atlas is full.** Woodcutting (`Wood` / CHOP) and Construction (`Build` /
+`Craft Parts`) both arrived unskinned because CHOP was an unknown verb and
+"Craft Parts" is not the bare CRAFT the crafting branch matches on. A new
+discipline needs: `SKILL_IDENTITY_ALIASES` + the verb and anchored-label
+branches in `DOMWatcher.detectSkillType`; a `SKILL_META` row in
+`SkillPanelRenderer` (`actions` is matched EXACTLY against the button text,
+`titleActions` is a `^verb` prefix test against the card title — Construction
+needs `craft parts` in the first and `craft` in the second); an accent in
+`skillpanel.css`; a `DISCIPLINE_STYLE` row in `QuestPanelRenderer` so its work
+orders match; and the fixture's `SKILL_GLYPHS`/`SKILL_ART`/`SKILL_LEVELS` maps.
+`assets/skills_icons_atlas.webp` is a fixed 6x2 sheet with **all twelve cells
+spoken for**, so there is no cell to add art to — `SkillsArtService.ICON_ALIASES`
+points a new skill at the nearest existing sprite (woodcutting -> gathering,
+construction -> crafting) instead of letting `paintIcon` fall through to the
+featureless `generic` slot. Accent, glyph and label still separate them. If the
+atlas is ever redrawn wider, drop the alias and add real cells.
 
 **`AtlasService` owns the item icon.** It writes `background-image`,
 `-position` and `-size` **inline** on `.fs-inv-icon` and appends
@@ -246,6 +279,103 @@ you" trap wearing a different hat — the sheet was there, its art was not. One
 
 Note the plate sets `overflow: hidden`, which clips to the padding box — a
 pseudo-element at `inset: -1px` loses its 1px rules entirely.
+
+**A sprite frame on a button means the button's own plate must go.** The
+quest rail drew `action_frame_idle` on top of its own `border` + gradient +
+`box-shadow`. The frame art tapers to transparent over the outer ~28px of its
+264px cell (measured column alpha: 1% at x=0, 94% by x=28), so the plate showed
+through as a second, squarer rectangle around the art — "the game's old button
+underneath the graphic". Once the sprite is on: `border: 0`,
+`background-color: transparent`, `box-shadow: none`, and the drop shadow moves
+into `filter: drop-shadow(...)` so it follows the art's alpha instead of the
+box. Keep the plate only as the pre-atlas fallback. Same lesson as the recipe
+pager's "the artwork is the control", one surface over.
+
+**A plaque whose LABEL length is not yours to control needs 3 slices, not a
+sprite window.** Quest reward text ranges from "+1,875g • +810 combat XP" to
+"+1,284,500g • +212,480 spellcrafting XP". A percentage `background-size`
+window stretches the cell to exactly fill its box, so a content-width box
+distorts the art — the plaque shipped ~200x30 (6.7:1) against 3.00:1 art, and
+since the horns occupy the outer 19% of the sprite, stretching them 2.2x
+horizontally dragged them inward over the text. Restoring 3:1 is not available
+either: at that label width it demands a ~90px-tall plaque. `border-image` on
+the standalone `assets/skills_xp_plaque_wide.webp` (an atlas cannot be a
+`border-image-source` — the slice applies to the whole image) fixes the horns
+and stretches only the flat centre. Measured from the art: opaque bbox
+`0,7 300x71`, horn/flat boundary at x=58 and x=242. The centre is **not**
+featureless — there is a small diamond stud at x 137..165 that rises to source
+row 7 and drops to row 77 — so the stretched middle does smear it, by the
+ratio of the plaque's inner width to 184px (about +20% at a 292px plaque).
+It is small and symmetric, so this is accepted; do not read the flat 52%
+column-alpha plateau as proof there is nothing there, which is the mistake
+that missed it (the stud reads as only 53->71 opaque rows over 28 columns,
+and looks just like the two horn diamonds in a strided printout). Setting
+`border-image-width: 0 <cap> 0 <cap>` draws no top/bottom band, so the middle
+row alone fills the box and source rows 7..77 (71px) map to the full height —
+which is why undistorted horns need `cap = 58 x height / 71`, not `58 x
+height / 100`. That ratio is the whole trick; a future "tidy-up" that rounds
+`--fs-plaque-cap` to a plain px value re-breaks it at the next height change.
+
+**`place-items: center` does not centre a `::before` that has a text-node
+sibling.** The reward plaque keeps the game's own "Reward: ..." text as the
+accessible copy at `font-size: 0` and draws the trimmed value with `::before`.
+In a GRID that leftover text node becomes a second, anonymous grid item on its
+own row; both rows then stretch to share the height, and the label is pushed
+into the top half. Measured with a debug tint (paint the `::before` green and
+screenshot), its line box sat at **7.0..20.8 in a 42px plaque** — 7px high, and
+exactly the "text is not in the centre of the frame" report. Row-flex fixes it:
+the same text node becomes a zero-width sibling. `.fs-skill-base-exp` is built
+the same way (`display: grid` + `place-items: center` + `::before`) and its
+`padding: 0 34px 4px` bottom bias is probably compensating for the same thing —
+measure before touching it.
+
+**To centre a label in a sprite frame, measure GAP SYMMETRY — do not compute
+two centres and match them.** Optically centring the reward label took three
+wrong values (.07, .16, .10 of the plaque height) before the method changed,
+and every one came from a model that looked sound:
+
+- "Walk inward from the bright rails to find the interior." The top ornate band
+  is source rows 17..24 but dips to 42/76/65/44 mid-band, so any single
+  threshold ends the walk at row 19 and the interior reads ~6 rows too tall on
+  top — computed centre 46.5% instead of 49.3%.
+- "Centre the ink centroid." The intensity-weighted centroid is dragged low by
+  the single `g` descender and by `text-shadow`, so centring it leaves the
+  cap band — what the eye reads — sitting high.
+
+Both were self-consistent and both were visibly wrong to the user. What works
+is measuring what a person actually compares: `gapTop` = label cap-top minus
+the inner edge of the top rail, `gapBot` = inner edge of the bottom rail minus
+the baseline. Render a sweep of candidate values at `deviceScaleFactor: 8`,
+diff each against a blank frame to isolate ink, and read off where the two gaps
+are equal. Pick from the MIDDLE of the flat band, not its edge — the answer
+quantises to device pixels, so a value on the boundary flips at another height
+(`.045` is 0.00px at h=38 and −0.63px at h=42; `.06` is fine at 42 and 2px off
+at 38). Keep the sweep viewport wider than 600px or the mobile block shrinks
+`--fs-plaque-h` and the sweep answers the wrong question.
+
+**One unclassified tab in a rail looks like "the rim skips that button".**
+The main nav is matched tab-by-tab against a fixed label set
+(`NAV_LABELS`), and anything that misses the set keeps its vanilla surfacing
+INSIDE a rail the skin has already reframed -- which reads as a missing rim
+on that one control, not as a classifier miss. Two ways a single tab drops
+out, both now covered by `tests/smoke.test.mjs` (revert either half and the
+"decorated tab" check fails):
+
+- The label was matched with `nearestButtonLabel` (raw text, exact compare),
+  so any decoration at all -- a leading emoji, a trailing lock/NEW badge --
+  fails the compare. `navLabelText` strips a non-alphanumeric run from BOTH
+  ends. Same family as the zone bar's leading-glyph trap below.
+- `mainNavResolutionValid` validated only the tabs it already knew, so a rail
+  that GAINS a tab after the first classification (Dungeon unlocks, or the
+  route mounts it late) stayed cached forever and the new sibling was never
+  visited. It now re-counts the rail's own labelled controls and re-resolves
+  on a change. Count distinct LABELS, not elements: counting elements makes a
+  duplicate control permanently mismatch the deduped tab list and re-resolution (a
+  whole-document scan) then runs on every flush.
+
+`claude/probe-nav.js` is the read-only capture for this surface -- it reports
+whether every labelled tab is inside the element that draws the rim, the rim
+box against the union of the tab boxes, and each tab's computed paint.
 
 **Anchored label regexes break on the game's leading icons.** IdleWorlds
 prefixes many labels with an emoji — `🧭 Zone 19: …`, `🌐 Zones`, `⚔️ Combat

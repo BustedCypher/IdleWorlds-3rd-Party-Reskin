@@ -13,6 +13,8 @@
 .fs-skill--jewelcrafting { --fs-skill-accent: #4E9FB8; }
 .fs-skill--spellcrafting { --fs-skill-accent: #8B6FC3; }
 .fs-skill--tailoring { --fs-skill-accent: #A56E86; }
+.fs-skill--woodcutting { --fs-skill-accent: #8B6A3A; }
+.fs-skill--construction { --fs-skill-accent: #5F7F72; }
 .fs-skill--crafting  { --fs-skill-accent: #5E8FB7; }
 .fs-skill--fishing   { --fs-skill-accent: #478FA8; }
 .fs-skill--locked    { --fs-skill-accent: #6A6257; }
@@ -2543,15 +2545,40 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   --fs-plaque-h: 42px;
   --fs-plaque-cap: calc(var(--fs-plaque-h) * 58 / 71);
   align-self: flex-start !important;
-  display: grid !important;
-  place-items: center !important;
+  /* FLEX, not grid. The native "Reward: ..." text stays in the node as the
+     accessible copy at font-size: 0 -- and in a GRID that leftover text node
+     becomes a second, anonymous grid item on its own row. Both rows then
+     stretch to share the plaque's height, so the label was pushed into the
+     top half: measured with a debug tint, its line box sat at 7.0..20.8 in a
+     42px plaque instead of centred. In a row-flex the same text node is a
+     zero-width sibling and centring works. */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   box-sizing: border-box !important;
   min-width: 0 !important;
   height: var(--fs-plaque-h) !important;
   min-height: var(--fs-plaque-h) !important;
   margin-top: 4px !important;
-  /* Clear of the horns, plus a little air. */
-  padding: 0 calc(var(--fs-plaque-cap) + 7px) !important;
+  /* Clear of the horns, plus a little air. The bottom bias optically centres
+     the label in the frame. It is set by GAP SYMMETRY -- the thing the eye
+     actually compares -- not by computing an "interior centre" and a "text
+     centre" and matching them:
+
+       gapTop = label's cap-top  -  inner edge of the frame's top rail
+       gapBot = inner edge of the bottom rail  -  label's baseline
+
+     Sweep the factor, render at deviceScaleFactor 8, diff against a blank
+     plaque to isolate ink, and read off the value where gapTop == gapBot.
+     Measured: .045 gives 0.00px at h=38 and -0.63px at h=42, and sits inside
+     the flat band at BOTH heights so device-pixel rounding cannot flip it.
+
+     Deriving it instead cost three wrong values (.07, .16, .10), each from a
+     defensible-looking model of where "the centre" is: rail-walking mis-read
+     the dipping top band, and the ink centroid is dragged low by the one
+     descender and the text-shadow. Both were self-consistent and both were
+     visibly wrong. Re-sweep if the font, font-size or --fs-plaque-h changes. */
+  padding: 0 calc(var(--fs-plaque-cap) + 7px) calc(var(--fs-plaque-h) * .045) !important;
   border: 0 solid transparent !important;
   border-radius: 0 !important;
   background: none !important;
@@ -2632,10 +2659,16 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
    saturation and opacity and takes not-allowed. */
 .compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"],
 .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
+  /* Both controls are the SAME size -- the rail would otherwise stretch them
+     to its widest child. Hierarchy is carried by the frame (gold vs grey),
+     not by scale. 148 x 42 holds the frame's 3.52 ratio; the 44px touch
+     target is met on the long axis and missed by 2px on the short one,
+     which is the trade the matching sizes buy. */
+  align-self: center !important;
   aspect-ratio: 264 / 75 !important;
-  min-width: 176px !important;
-  min-height: 44px !important;
-  padding: 0 26px !important;
+  min-width: 148px !important;
+  min-height: 42px !important;
+  padding: 0 20px !important;
   border-radius: 3px !important;
   font-family: var(--iw-font-head) !important;
   font-size: 12px !important;
@@ -2660,6 +2693,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
     0 2px 6px rgba(0,0,0,.32) !important;
 }
 .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
+  font-size: 11px !important;
   border: 1px solid #58482B !important;
   background: linear-gradient(180deg, #242018, #17140F) !important;
   color: #C9BFA6 !important;

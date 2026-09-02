@@ -25,6 +25,17 @@ const UI_TOKENS = {
   horizontal_separator: 'separator',
   separator_flourish: 'flourish',
 };
+/**
+ * The icon atlas is a fixed 6x2 sheet and every cell is spoken for, so skills
+ * IdleWorlds added after it was drawn borrow the closest existing sprite rather
+ * than falling through to the featureless `generic` slot. Accent colour, glyph
+ * and label still distinguish them; only the medallion art is shared.
+ */
+const ICON_ALIASES = {
+  woodcutting: 'gathering',
+  construction: 'crafting',
+};
+
 let loadPromise = null;
 let iconIndex = null;
 let uiIndex = null;
@@ -132,7 +143,9 @@ export const SkillsArtService = {
     return !!iconIndex && !!uiIndex;
   },
   paintIcon(host, key) {
-    const entry = iconByKey.get(key) || iconByKey.get('generic');
+    const entry = iconByKey.get(key)
+      || iconByKey.get(ICON_ALIASES[key])
+      || iconByKey.get('generic');
     return paint(host, iconIndex, entry);
   },
 
@@ -145,6 +158,6 @@ export const SkillsArtService = {
   },
 
   iconEntry(key) {
-    return iconByKey.get(key) || null;
+    return iconByKey.get(key) || iconByKey.get(ICON_ALIASES[key]) || null;
   },
 };

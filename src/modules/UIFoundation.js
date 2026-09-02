@@ -50,6 +50,21 @@ function buttonLabelText(btn) {
   return nearestButtonLabel(btn).replace(/^[^a-z0-9]+/i, '').trim();
 }
 
+/**
+ * A nav tab's label with a leading OR trailing icon/badge run removed. The
+ * nav tab set is matched by exact label, so a single decorated tab
+ * ("Dungeon 🔒", "⚔️ Dungeon") drops out of the set while its siblings match:
+ * it keeps its vanilla surfacing inside a rail the skin has reframed, which
+ * reads as "the rim skips that one button". Same family as the zone bar's
+ * leading-glyph trap (CLAUDE.md).
+ */
+function navLabelText(btn) {
+  return nearestButtonLabel(btn)
+    .replace(/^[^a-z0-9]+/i, '')
+    .replace(/[^a-z0-9]+$/i, '')
+    .trim();
+}
+
 function commonAncestor(elements) {
   const list = elements.filter(Boolean);
   if (!list.length) return null;
@@ -110,18 +125,38 @@ function deriveTabActive(btn) {
 // Cache the former, always recompute the latter.
 let mainNavResolution = null;
 
+// Distinct nav labels present under `root`. Counting LABELS, not elements,
+// matters: a duplicate control for the same label would otherwise never equal
+// the deduped tab list and the cache would re-resolve (a whole-document scan)
+// on every single flush.
+function countNavTabsIn(root) {
+  if (!root) return 0;
+  const seen = new Set();
+  for (const btn of root.querySelectorAll('button, a, [role="tab"]')) {
+    const label = navLabelText(btn);
+    if (NAV_LABELS.includes(label)) seen.add(label);
+  }
+  return seen.size;
+}
+
 function mainNavResolutionValid(entry) {
   return entry.track.isConnected && entry.track.dataset.iwUi === 'main-nav' &&
     entry.tabs.every(btn => btn.isConnected && btn.dataset.iwUi === 'nav-tab') &&
     (entry.shell === entry.track ||
-      (entry.shell.isConnected && entry.shell.dataset.iwUi === 'main-nav-shell'));
+      (entry.shell.isConnected && entry.shell.dataset.iwUi === 'main-nav-shell')) &&
+    // A rail that GAINS a tab after the first classification (Dungeon unlocks,
+    // or the route mounts it late) used to stay cached forever: every check
+    // above passes while the new sibling never gets `nav-tab` and renders
+    // vanilla inside a skinned rail. Re-count the rail's own labelled controls
+    // -- bounded to the rail, not the document -- and re-resolve on a change.
+    countNavTabsIn(entry.track) === entry.tabs.length;
 }
 
 function resolveMainNav() {
   const buttons = [...document.querySelectorAll('button, a, [role="tab"]')];
   const byLabel = new Map();
   for (const btn of buttons) {
-    const label = nearestButtonLabel(btn);
+    const label = navLabelText(btn);
     if (NAV_LABELS.includes(label) && !byLabel.has(label)) byLabel.set(label, btn);
   }
   if (byLabel.size < 4) return null;
@@ -156,7 +191,7 @@ function applyMainNavState(tabs) {
   const hasSemanticActive = semanticActive.some(Boolean);
   const route = `${location.pathname || ''} ${location.hash || ''}`.toLowerCase();
   const routeActive = tabs.map(btn => {
-    const label = nearestButtonLabel(btn);
+    const label = navLabelText(btn);
     if (label === 'game') return /(?:^|\/)(?:game)?\/?$/.test(location.pathname || '/') && !location.hash;
     return route.includes(label);
   });
@@ -167,7 +202,7 @@ function applyMainNavState(tabs) {
   tabs.forEach((btn, index) => {
     const wasActive = btn.dataset.iwState === 'active';
     setRole(btn, 'nav-tab');
-    btn.dataset.iwTab = nearestButtonLabel(btn);
+    btn.dataset.iwTab = navLabelText(btn);
     const active = hasSemanticActive
       ? semanticActive[index]
       : hasRouteActive
@@ -318,6 +353,68 @@ function classifySectionFrames() {
       setRole(heading, 'section-title');
       sectionFrameResolutions.push({ heading, frame: picked });
     }
+  }
+}
+
+/**
+ * World Boss cards.
+ *
+ * The boss list is a stack of the game's shared `.compact-panel` cards. Nothing
+ * else claims them - they expose no skill verb (DOMWatcher.detectSkillType
+ * returns 'unknown') and no Reward:/Turn In pair (QuestPanelRenderer rejects
+ * them) - so they kept the game's flat plate inside our forged frame. Tagging
+ * is scoped to the "World Bosses" panel, never `.compact-panel` at large, which
+ * quests, skills, village and shop all share.
+ *
+ * The role lives in its OWN attribute rather than `data-iw-ui`, the same way
+ * QuestPanelRenderer namespaces `data-iw-quest-role`: SkillPanelRenderer sees
+ * these cards on `iw:skill-panel`, reports 'unknown', and its clear path used
+ * to strip `data-iw-ui` off them on every flush - the card visibly flashed
+ * between the skinned and vanilla ground while the two writers fought over the
+ * one attribute.
+ *
+ * Resolution is cached like every other classifier here; only the card sweep
+ * (a small same-panel query) re-runs per tick, so a boss card that mounts late
+ * is still tagged.
+ */
+let bossPanelResolutions = null;
+
+function bossPanelResolutionValid(entry) {
+  return entry.heading.isConnected && entry.root.isConnected && entry.root.contains(entry.heading);
+}
+
+/** The panel that owns the boss list. The game's own `.panel` wrapper is
+ *  preferred - it also holds the Zone Control card below the boss stack - with
+ *  the resolved section frame as the fallback for variants without one. */
+function bossPanelRoot(heading) {
+  const panel = heading.closest('.panel');
+  if (panel) return panel;
+  const entry = (sectionFrameResolutions || []).find(e => e.heading === heading);
+  return entry ? entry.frame : null;
+}
+
+function tagBossCards(entry) {
+  for (const card of entry.root.querySelectorAll('.compact-panel')) {
+    // Tag the leaf card only, the same rule the panel frames follow.
+    if (card.querySelector('.compact-panel')) continue;
+    if (card.dataset.iwBoss !== 'card') card.dataset.iwBoss = 'card';
+  }
+}
+
+function classifyBossCards() {
+  if (bossPanelResolutions && bossPanelResolutions.every(bossPanelResolutionValid)) {
+    bossPanelResolutions.forEach(tagBossCards);
+    return;
+  }
+  bossPanelResolutions = [];
+  for (const heading of document.querySelectorAll('h1,h2,h3,h4')) {
+    if (!/^world bosses$/i.test(normText(heading.textContent))) continue;
+    if (heading.closest('[class~="xl:hidden"]')) continue;
+    const root = bossPanelRoot(heading);
+    if (!root || bossPanelResolutions.some(e => e.root === root)) continue;
+    const entry = { heading, root };
+    bossPanelResolutions.push(entry);
+    tagBossCards(entry);
   }
 }
 
@@ -551,6 +648,7 @@ function queueClassify() {
     guard('ui:main-nav', classifyMainNav);
     guard('ui:zone-bar', classifyZoneBar);
     guard('ui:section-frames', classifySectionFrames);
+    guard('ui:boss-cards', classifyBossCards);
     guard('ui:activity-panels', classifyActivityPanels);
   });
 }
@@ -560,6 +658,7 @@ export function clearUIFoundation() {
   mainNavResolution = null;
   zoneBarResolutions = null;
   sectionFrameResolutions = null;
+  bossPanelResolutions = null;
   activityPanelResolutions = null;
   document.querySelectorAll('[data-iw-ui]').forEach(el => { delete el.dataset.iwUi; });
   document.querySelectorAll('[data-iw-tab]').forEach(el => { delete el.dataset.iwTab; });
@@ -568,6 +667,7 @@ export function clearUIFoundation() {
   document.querySelectorAll('[data-iw-panel-part]').forEach(el => { delete el.dataset.iwPanelPart; });
   document.querySelectorAll('[data-iw-panel-header]').forEach(el => { delete el.dataset.iwPanelHeader; });
   document.querySelectorAll('[data-iw-zone-action]').forEach(el => { delete el.dataset.iwZoneAction; });
+  document.querySelectorAll('[data-iw-boss]').forEach(el => { delete el.dataset.iwBoss; });
 }
 
 export function initUIFoundation() {

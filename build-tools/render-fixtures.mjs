@@ -157,6 +157,7 @@ const invRow = ({ sprite, badge, name, tier, level, stats, details, reqs, qty, e
 const SKILL_GLYPHS = {
   combat: '⚔', mining: '⛏', smithing: '⚒', gathering: '❧', alchemy: '⚗',
   jewelcrafting: '◆', spellcrafting: '✧', tailoring: '⋈', crafting: '✦', fishing: '⌁',
+  woodcutting: '⋔', construction: '⌂',
 };
 const SKILL_ART = {
   combat: skillSprite('combat'),
@@ -169,10 +170,15 @@ const SKILL_ART = {
   tailoring: skillSprite('tailoring'),
   crafting: skillSprite('crafting'),
   fishing: skillSprite('fishing'),
+  // No free atlas cell — these two borrow the nearest existing sprite, matching
+  // SkillsArtService.ICON_ALIASES.
+  woodcutting: skillSprite('gathering'),
+  construction: skillSprite('crafting'),
 };
 const SKILL_LEVELS = {
   combat: 42, mining: 42, smithing: 42, gathering: 42, alchemy: 42,
   jewelcrafting: 68, spellcrafting: 57, tailoring: 26, crafting: 42, fishing: 42,
+  woodcutting: 35, construction: 29,
 };
 
 // `navIn` models the two shapes React actually ships: some panels put the
@@ -463,6 +469,8 @@ ${skillPanel({ type: 'spellcrafting', label: 'Spellcraft', title: 'Harvest Moons
 ${skillPanel({ type: 'tailoring', label: 'Tailor', title: 'Upgrade Moonsilk Silkbind Thread', pct: 21, xp: '5638', ingredients: 'Moonsilk Silkbind Thread / Moonsteel Upgrade Orb', requirement: 'Requires Tailoring Lv 53 and Gathering Lv 49', navIn: 'content' })}
 ${skillPanel({ type: 'crafting', label: 'Crafting', title: 'Craft Upgrade Orb', pct: 33, xp: '190' })}
 ${skillPanel({ type: 'fishing', label: 'Fishing', title: 'Fish Abyssal Eel', pct: 67, xp: '220' })}
+${skillPanel({ type: 'woodcutting', label: 'Wood', title: 'Chop Runic Oak', pct: 0.5, xp: '35', requirement: 'Needs level 29', nav: false })}
+${skillPanel({ type: 'construction', label: 'Build', title: 'Craft Runite Building Parts', pct: 52, xp: '461', ingredients: 'Runic Oak 473/16 / Runite Ore 19318/8', requirement: 'Needs Construction Lv 29 + Woodcutting Lv 25' })}
 </div></div>
 
 <div class="fx-h">Quest cards — forged into the skill-frame family</div>

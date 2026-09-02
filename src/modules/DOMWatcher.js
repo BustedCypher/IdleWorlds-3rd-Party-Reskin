@@ -67,6 +67,8 @@ const SKILL_IDENTITY_ALIASES = {
   jewelcrafting: ['jewel', 'jewelcrafting'],
   spellcrafting: ['spellcraft', 'spellcrafting'],
   tailoring: ['tailor', 'tailoring'],
+  woodcutting: ['wood', 'woodcutting'],
+  construction: ['build', 'construction'],
   crafting: ['crafting'],
   fishing: ['fishing'],
   locked: ['coming soon', 'upcoming skill'],
@@ -158,6 +160,10 @@ function detectSkillType(panel, precomputed) {
   if (hasAction('enchant'))                  return 'spellcrafting';
   if (hasAction('tailor', 'sew', 'weave'))   return 'tailoring';
   if (hasAction('fish'))                     return 'fishing';
+  if (hasAction('chop'))                     return 'woodcutting';
+  // Construction's control reads "Craft Parts", not a bare verb, so it is an
+  // exact match here and cannot be reached by the generic CRAFT test below.
+  if (hasAction('craft parts', 'build'))     return 'construction';
 
   // CRAFT is now reused by Spellcrafting and Tailoring recipes, so unlike the
   // discipline-specific verbs above it cannot identify the skill by itself.
@@ -179,6 +185,8 @@ function detectSkillType(panel, precomputed) {
   if (labels.some(t => /^alchemy(?:\s|$)|^brew(?:\s|$)/.test(t))) return 'alchemy';
   if (labels.some(t => /^(?:spellcraft|spellcrafting)(?:\s|$)|^enchant(?:\s|$)/.test(t))) return 'spellcrafting';
   if (labels.some(t => /^(?:tailor|tailoring)(?:\s|$)|^(?:tailor|sew|weave)(?:\s|$)/.test(t))) return 'tailoring';
+  if (labels.some(t => /^(?:wood|woodcutting)(?:\s|$)|^chop(?:\s|$)/.test(t))) return 'woodcutting';
+  if (labels.some(t => /^(?:build|construction)(?:\s|$)/.test(t))) return 'construction';
   if (labels.some(t => /^crafting(?:\s|$)/.test(t))) return 'crafting';
   if (labels.some(t => /^fishing(?:\s|$)|^fish(?:\s|$)/.test(t))) return 'fishing';
   return 'unknown';

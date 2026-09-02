@@ -38,6 +38,8 @@ const SKILL_META = {
   jewelcrafting: { label: 'Jewelcrafting', labels: ['Jewel', 'Jewelcrafting'], glyph: '◆', actions: ['prospect', 'cut'] },
   spellcrafting: { label: 'Spellcrafting', labels: ['Spellcraft', 'Spellcrafting'], glyph: '✧', actions: ['enchant', 'gather', 'harvest', 'craft'], titleActions: ['enchant', 'harvest', 'craft'], details: [/from the ether$/i] },
   tailoring: { label: 'Tailoring', labels: ['Tailor', 'Tailoring'], glyph: '⋈', actions: ['tailor', 'sew', 'weave', 'craft'], details: [/^missing materials\b/i] },
+  woodcutting: { label: 'Woodcutting', labels: ['Wood', 'Woodcutting'], glyph: '⋔', actions: ['chop'] },
+  construction: { label: 'Construction', labels: ['Build', 'Construction'], glyph: '⌂', actions: ['craft parts', 'build', 'craft'], titleActions: ['craft', 'build'] },
   crafting:  { label: 'Crafting',  labels: ['Craft', 'Crafting'], glyph: '✦', actions: ['craft'] },
   fishing:   { label: 'Fishing',   labels: ['Fish', 'Fishing'],   glyph: '⌁', actions: ['fish'] },
   locked:    { label: 'Coming Soon', labels: ['Coming Soon'], glyph: '◇', actions: [], titleActions: ['upcoming skill'], details: [/^unlock in a future update$/i] },
@@ -889,7 +891,11 @@ function clearPanelChrome(panel) {
   delete panel.dataset.fsSkillFlavour;
   delete panel.dataset.iwSkillGlyph;
   delete panel.dataset.iwSkill;
-  delete panel.dataset.iwUi;
+  // Only OUR role. This runs on every non-skill .compact-panel (bosses,
+  // village, shop), and an unconditional delete stripped another module's
+  // role off the same node every flush -- the card then flashed between the
+  // skinned and vanilla ground as the two writers fought.
+  if (panel.dataset.iwUi === 'skill-panel') delete panel.dataset.iwUi;
   panel.removeAttribute(RENDERED_ATTR);
 }
 

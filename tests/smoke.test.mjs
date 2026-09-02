@@ -54,7 +54,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
         <div id="status-grid"><div>💰 515,686</div><div>🧪 XP +36/task · 22h 53m left</div><div>⚔ ATK 292 · DEF 252 · HP 477</div><div>⚔ No ATK potion active</div><div>🛡 No DEF potion active</div><div>⚡ BritishDemon boosted (1/12) · 9h 15m left</div></div>
       </header>
       <nav><button>Game</button><button>Market</button><button>Leaderboards</button>
-           <button>Village</button><button>Dungeon</button></nav>
+           <button>Village</button></nav>
       <div id="announcement">You will auto-attack Ancient Treant when it respawns.</div>
       <div id="zone-bar-panel">
         <div id="zone-bar-text">
@@ -165,6 +165,20 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
         <div><span>🧵 Upgrade Moonsilk Silkbind Thread</span><button>Lv 26 - 21.0% • 13,450 to go</button><span>🔷 Moonsilk Silkbind Thread 0/3 • 🔴 Moonsteel Upgrade Orb 0/1</span><span>Requires Tailoring Lv 53 and Gathering Lv 49</span><span style="display:none">Base reward: +1008 tailoring XP/task</span><span>Base reward: +5638 tailoring XP/task</span></div>
         <div><div><button>‹</button><button>›</button></div><button id="tailor-action">Upgrade</button></div>
       </div>
+      <div class="compact-panel" id="wood-panel">
+        <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
+          <div><p>🪓 Wood</p><p>LV 35</p></div>
+          <div><p>🪓 Chop Runic Oak</p><button>Lv 35 - 0.5% • 84,604 to go</button><p>35 XP</p><div role="progressbar"><div style="width:0.5%"></div></div><p>Needs level 29</p></div>
+          <button id="wood-action">Chop</button>
+        </div>
+      </div>
+      <div class="compact-panel" id="build-panel">
+        <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
+          <div><p>🏗️ Build</p><p>LV 29</p></div>
+          <div><p>🏗️ Craft Runite Building Parts</p><button>Lv 29 - 52.0% • 13,741 to go</button><p>📦 Runic Oak 473/16 • 🪨 Runite Ore 19318/8</p><div role="progressbar"><div style="width:52%"></div></div><p>Needs Construction Lv 29 + Woodcutting Lv 25</p><p>Base reward: +461 construction XP/task</p></div>
+          <div><div><button>‹</button><button>›</button></div><button id="build-action">Craft Parts</button></div>
+        </div>
+      </div>
       <div class="compact-panel" id="locked-panel">
         <div><span>🔒</span><span>Coming</span><span>Soon</span><p>LV —</p></div>
         <div><p>Upcoming <span>Skill</span></p><p>Unlock in a future update</p></div>
@@ -209,6 +223,22 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
               <div class="text-[11px] text-white/45">0% complete</div>
             </div>
           </div>
+        </div>
+      </div>
+      <div class="panel p-3.5" id="world-boss-panel"><div class="mb-2 flex items-center justify-between"><h2>World Bosses</h2><span>Shared world events</span></div>
+        <div class="space-y-2">
+          <div class="compact-panel p-2.5" id="boss-treant">
+            <div><p>🌍 Ancient Treant</p><p>Solo</p><p>Buff on kill: +4 XP/task for 1h</p><p>World boss participation</p><p>Respawns 8m left</p></div>
+            <button id="boss-treant-join">⏳ Prejoined</button>
+          </div>
+          <div class="compact-panel p-2.5" id="boss-behemoth">
+            <div><p>🌍 Abyssal Behemoth</p><p>Raid</p><p>Buff on kill: +8 XP/task for 2h</p><p>World boss participation</p><p>Respawns 1h 26m left</p></div>
+            <button>⏳ Prejoined</button>
+          </div>
+        </div>
+        <h3>Zone Control</h3>
+        <div class="compact-panel p-2.5" id="zone-control-card">
+          <div><p>🔴 Red Team controls Zone 8</p><p>Protected for 3h 44m</p><p>Last battle participants</p></div>
         </div>
       </div>
       <div id="unclassified-area"><div><span><em id="plain-item-text">Found an Iron Sword in the wilderness.</em></span></div></div>
@@ -424,6 +454,24 @@ check('background painter actively overrides native navy while enabled',
   inventorySection.style.getPropertyValue('background-color') !== 'rgb(15, 23, 42)',
   inventorySection.style.cssText);
 check('main nav classified', !!window.document.querySelector('[data-iw-ui="main-nav"]'));
+// The rail is matched tab-by-tab against a fixed label set, so ONE tab that
+// fails to match keeps its vanilla surfacing inside a rail the skin has
+// reframed -- which reads as "the rim skips that one button". Two ways in: a
+// decorated label (the leading/trailing glyph trap), and a tab that mounts
+// after the first classification (the resolution cache used to stay valid
+// forever once resolved, so a late tab was never picked up).
+const navRail = window.document.querySelector('[data-iw-ui="main-nav"]');
+check('every nav tab in the rail is classified',
+  [...navRail.querySelectorAll('button')].every(b => b.dataset.iwUi === 'nav-tab'),
+  [...navRail.querySelectorAll('button')].map(b => b.textContent + '=' + b.dataset.iwUi).join(' '));
+const lateTab = window.document.createElement('button');
+lateTab.id = 'late-nav-tab';
+lateTab.textContent = '⚔️ Dungeon 🔒';
+navRail.appendChild(lateTab);
+await waitFor(() => lateTab.dataset.iwUi === 'nav-tab', { timeout: 6000 }).catch(() => {});
+check('a decorated tab that mounts after boot is still classified',
+  lateTab.dataset.iwUi === 'nav-tab' && lateTab.dataset.iwTab === 'dungeon',
+  lateTab.dataset.iwUi + '/' + lateTab.dataset.iwTab);
 const currentActionPanel = window.document.getElementById('current-action-panel');
 const actionLogPanel = window.document.getElementById('action-log-panel');
 const worldChatPanel = window.document.getElementById('world-chat-panel');
@@ -536,6 +584,27 @@ check('live XP wrapper is neutralised with the readout branch',
   jewelXpShell.style.getPropertyValue('background') === 'none' &&
   !/2px\s+solid/i.test(jewelXpShell.style.cssText),
   jewelXpShell?.getAttribute('style') || 'missing');
+const woodPanel = window.document.getElementById('wood-panel');
+const buildPanel = window.document.getElementById('build-panel');
+// Woodcutting and Construction shipped after the skin's skill table was
+// written, so both arrived unskinned: CHOP was an unknown verb and "Craft
+// Parts" is not the bare CRAFT the crafting branch matches.
+check('live Wood/Chop panel is identified as woodcutting and framed',
+  woodPanel.classList.contains('fs-skill--woodcutting') &&
+  woodPanel.dataset.iwSkillLayout === 'three-zone' &&
+  woodPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Chop' &&
+  woodPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Chop Runic Oak');
+check('live Build/Craft Parts panel is construction, not crafting',
+  buildPanel.classList.contains('fs-skill--construction') &&
+  !buildPanel.classList.contains('fs-skill--crafting') &&
+  buildPanel.dataset.iwSkillLayout === 'three-zone' &&
+  buildPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Craft Parts' &&
+  buildPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Craft Runite Building Parts');
+// The icon atlas has no free cell, so these two borrow an existing sprite
+// rather than falling through to the featureless `generic` slot.
+check('new skills still receive a medallion art host',
+  woodPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'woodcutting' &&
+  buildPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'construction');
 check('Spellcraft identity wins over ambiguous Craft action',
   spellPanel.classList.contains('fs-skill--spellcrafting') && !spellPanel.classList.contains('fs-skill--crafting') && spellPanel.dataset.iwSkillLayout === 'three-zone' &&
   spellPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Craft');
@@ -628,6 +697,22 @@ check('work order Skip control is classified and left native',
   [...questWorkOrder.querySelectorAll('button')].find(b => /skip/i.test(b.textContent))?.getAttribute('data-iw-quest-role') === 'skip');
 check('quest cards are not mistaken for skill panels',
   !questBounty.classList.contains('fs-skill-panel') && !questWorkOrder.classList.contains('fs-skill-panel'));
+
+/* ── World Boss cards ────────────────────────────────────────────────── */
+
+console.log('\nsmoke: world boss cards');
+const bossTreant = window.document.getElementById('boss-treant');
+const zoneControlCard = window.document.getElementById('zone-control-card');
+check('boss cards in the World Bosses panel are tagged for the card material',
+  bossTreant?.dataset.iwBoss === 'card' &&
+  window.document.getElementById('boss-behemoth')?.dataset.iwBoss === 'card');
+check('the Zone Control card in the same panel is tagged too',
+  zoneControlCard?.dataset.iwBoss === 'card');
+check('a compact-panel outside the boss panel is never tagged',
+  !questBounty.dataset.iwBoss && !window.document.getElementById('jewel-panel').dataset.iwBoss);
+check('boss cards are not mistaken for skill or quest panels',
+  !bossTreant.classList.contains('fs-skill-panel') && !bossTreant.classList.contains('fs-quest-panel') &&
+  bossTreant.getAttribute('data-fs-quest') === null);
 
 const bountyObjective = questBounty.querySelector('[data-iw-quest-role="objective"]');
 const workOrderObjective = questWorkOrder.querySelector('[data-iw-quest-role="objective"]');
@@ -904,6 +989,8 @@ check('quest chrome fully removed on teardown',
   questBounty.querySelector('button')?.isConnected === true &&
   !questBounty.querySelector('[data-iw-tooltip-trigger], [data-iw-item], [data-iw-item-name]') &&
   window.document.getElementById('quest-work-order').textContent.includes('Craft and turn in 1 Moonsilk Boots.'));
+check('boss card tagging removed on teardown',
+  window.document.querySelectorAll('[data-iw-boss]').length === 0);
 check('native Equip button survived teardown',
   [...window.document.querySelector('.compact-row').querySelectorAll('button')]
     .some(b => b.textContent.trim() === 'Equip'));
