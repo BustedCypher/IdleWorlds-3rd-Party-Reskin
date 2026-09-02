@@ -48,10 +48,84 @@ function check(label, cond, detail = '') {
 const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
   <div id="root">
     <div class="app">
+      <header id="top-header">
+        <div id="profile-block"><h1>BustedCypher</h1><p>Gemcutter Supreme</p><p>⚔ Combat Lv 62 · Zone 14: Moonsteel Basin</p><p>● Players online: 145</p></div>
+        <div id="utility-block"><button>☆</button><button>✉</button><button>+</button><button>1</button><button>⚙</button></div>
+        <div id="status-grid"><div>💰 515,686</div><div>🧪 XP +36/task · 22h 53m left</div><div>⚔ ATK 292 · DEF 252 · HP 477</div><div>⚔ No ATK potion active</div><div>🛡 No DEF potion active</div><div>⚡ BritishDemon boosted (1/12) · 9h 15m left</div></div>
+      </header>
       <nav><button>Game</button><button>Market</button><button>Leaderboards</button>
            <button>Village</button><button>Dungeon</button></nav>
+      <div id="announcement">You will auto-attack Ancient Treant when it respawns.</div>
+      <div id="zone-bar-panel">
+        <div id="zone-bar-text">
+          <p id="zone-label">🧭 Zone 19: Eternium Verge<button id="zone-whos-here">who's here?</button></p>
+          <p>Next zone target: ATK 287 / DEF 291 (or Lv 77 in any skill)</p>
+        </div>
+        <div id="zone-bar-actions">
+          <button id="zone-zones">🌐 Zones</button>
+          <button id="zone-prev">Previous Zone</button>
+          <button id="zone-next">Next Zone</button>
+        </div>
+      </div>
+      <section id="current-action-panel">
+        <header id="current-action-header"><h2>Current Action</h2><div><button id="cancel-current" aria-label="Cancel current action">×</button><span>3s</span></div></header>
+        <div><span>⚒</span><strong>Prospect Moonsteel Ore</strong></div>
+        <div id="current-action-progress" aria-valuenow="48" aria-valuemax="100"><div style="width:48%"></div></div>
+        <p>6457 crafts left before the next queued action (~10h 45m)</p>
+        <div id="current-action-queue"><span>Queued</span><div>1. Mine Moonsteel</div><button aria-label="Remove queued action">×</button></div>
+      </section>
+      <section id="action-log-panel">
+        <header id="action-log-header"><h2>Action Log</h2><button id="action-log-view-all">View All</button><span>832,170 XP/hr</span></header>
+        <div id="action-log-feed">
+          <article><div><span>System</span><time>12:33:37</time></div><p>Prospect Moonsteel Ore completed 1 time. Salvage Material x28.</p><p>XP jewelcrafting+1387</p></article>
+          <article><div><span>System</span><time>12:33:25</time></div><p>Prospect Moonsteel Ore completed 1 time. Salvage Material x28.</p><p>XP jewelcrafting+1387</p></article>
+        </div>
+      </section>
+      <section id="world-chat-panel">
+        <header id="world-chat-header"><div><h2>World Chat</h2><p>Showing the latest 100 messages.</p></div><div><button aria-label="Favourite chat">☆</button><button aria-label="Global chat">◎</button><button aria-label="Chat settings">⚙</button></div></header>
+        <div id="world-chat-feed">
+          <article><div><strong>📣 IdleWorlds</strong><time>12:16:44</time></div><p>Kno000 was trying to upgrade their Regal Silk Boots+1, but they failed.</p></article>
+          <article><div><strong>📣 IdleWorlds</strong><time>12:16:55</time></div><p>Kno000 successfully upgraded Regal Silk Boots+1 to Regal Silk Boots+2!</p></article>
+        </div>
+        <form id="world-chat-composer"><input id="world-chat-input" placeholder="Message world chat..."><button id="world-chat-send" type="button">Send</button></form>
+      </section>
+      <section id="current-action-no-queue">
+        <header><h2>Current Action</h2><button aria-label="Cancel current action">×</button></header>
+        <div><strong>Fight Ancient Treant</strong></div>
+        <div id="current-action-no-queue-progress" aria-valuenow="12" aria-valuemax="100"><div style="width:12%"></div></div>
+        <p>No action is queued.</p>
+      </section>
+      <section id="action-log-single">
+        <header><h2>Action Log</h2><button>View All</button></header>
+        <div id="action-log-single-feed"><article><div><span>System</span><time>12:34:01</time></div><p>One new action completed.</p></article></div>
+      </section>
+      <section id="action-log-empty">
+        <header><h2>Action Log</h2><button>View All</button></header>
+        <div id="action-log-empty-feed"></div>
+      </section>
+      <section id="world-chat-single-tool">
+        <header id="world-chat-single-tool-header"><div><h2>World Chat</h2><p>Showing the latest 100 messages.</p></div><button aria-label="Chat settings">⚙</button></header>
+        <div id="world-chat-single-feed"><article><div><strong>📣 IdleWorlds</strong><time>12:20:01</time></div><p>A single recent message.</p></article></div>
+        <form><input placeholder="Message world chat..."><button type="button">Send</button></form>
+      </section>
+      <section id="world-chat-split-header">
+        <div id="world-chat-split-title"><h2>World Chat</h2><p>Showing the latest 100 messages.</p></div>
+        <div id="world-chat-split-tools"><button aria-label="Favourite chat">☆</button><button aria-label="Chat settings">⚙</button></div>
+        <div><article><div><strong>📣 IdleWorlds</strong><time>12:21:01</time></div><p>Split header message.</p></article></div>
+        <form><input placeholder="Message world chat..."><button type="button">Send</button></form>
+      </section>
       <h2>Inventory</h2>
       <section aria-label="Inventory" id="inventory-section" style="background-color:#0f172a">
+        <!-- The tool row, verbatim from claude/probe-inventory-toolrow.js: only
+             TWO of the three controls are direct flex children (Filter is
+             wrapped in its dropdown anchor), and the row ends with a BARE <svg>
+             ornament that is not a control at all. -->
+        <div class="flex items-center gap-2" id="tool-row">
+          <div class="relative"><button aria-label="Filter inventory" title="Filter inventory"><svg id="ic-filter"></svg></button></div>
+          <button aria-label="Search inventory" title="Search inventory"><svg id="ic-search"></svg></button>
+          <button aria-label="Equipment Window" title="Equipment Window"><svg id="ic-equip"></svg></button>
+          <svg class="lucide lucide-package h-4 w-4 text-ember" id="pkg-ornament"></svg>
+        </div>
         <div class="compact-row">
           <div><span>Iron Sword</span><span>Lv 3</span></div>
           <div><span>Tier 4 · Weapon</span></div>
@@ -70,7 +144,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
       <div class="compact-panel" id="mine-live-panel">
         <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
           <div><p>⛏️ Mine</p><p>LV 2</p></div>
-          <div><div><div><p>⛏️ Mine Copper Ore</p><button id="mining-xp-absolute">Lv 2 • 10/96 XP</button></div></div><p>8 XP</p><p id="mining-material">🪨 Copper Ore 2/4</p><div role="progressbar" aria-valuenow="10" aria-valuemax="100"><div style="width:10%"></div></div><p>Needs level 1</p></div>
+          <div><div><div><p>⛏️ Mine Copper Ore</p><button id="mining-xp-absolute">Lv 2 • 10/96 XP</button></div></div><p>8 XP</p><p id="mining-material">🪨 Copper Ore 2/4</p><div role="progressbar" aria-valuenow="10" aria-valuemax="100"><div style="width:69.8192%"></div></div><p>Needs level 1</p></div>
           <button id="skill-action" style="width:77px;color:rgb(1, 2, 3)">Mine</button>
         </div>
       </div>
@@ -98,6 +172,45 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
         <button id="locked-action" disabled aria-label="Locked">🔒</button>
       </div>
       <div class="quest-description"><p>Bring the smith an Iron Sword to continue.</p></div>
+      <div class="panel p-3.5"><div class="mb-2 flex items-center justify-between"><h2>Quests</h2></div>
+        <div class="space-y-2">
+          <div class="compact-panel p-2.5" id="quest-bounty">
+            <div class="space-y-2">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs font-semibold text-white">Night Claw Bounty</p>
+                  <p class="text-[11px] leading-4 text-white/60">Bring back 100 Night Claws from Moonsteel Basin.</p>
+                  <p class="mt-1 text-[11px] text-white/45">\u{1F4A0} Night Claw 22/100</p>
+                  <p class="mt-1 text-[11px] text-emerald-100/85">Reward: +3,225g • +1350 combat XP</p>
+                </div>
+                <div class="flex shrink-0 flex-col gap-2" style="min-width:0px">
+                  <button class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-semibold text-white" disabled>Turn In</button>
+                </div>
+              </div>
+              <div class="h-1.5 overflow-hidden rounded-full bg-white/10"><div class="h-full rounded-full bg-emerald-400" style="width: 22%"></div></div>
+              <div class="text-[11px] text-white/45">22% complete</div>
+            </div>
+          </div>
+          <div class="compact-panel p-2.5" id="quest-work-order">
+            <div class="space-y-2">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <p class="text-[10px] uppercase tracking-[0.16em] text-white/40">Tailoring Work Order</p>
+                  <p class="text-xs font-semibold text-white">Craft and turn in 1 Moonsilk Boots.</p>
+                  <p class="mt-1 text-[11px] text-white/45">\u{1F9F5} Moonsilk Boots 0/1</p>
+                  <p class="mt-1 text-[11px] text-emerald-100/85">Reward: +3,870g • +3240 tailoring XP</p>
+                </div>
+                <div class="flex shrink-0 flex-col gap-2" style="min-width:0px">
+                  <button class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-semibold text-white">Turn In</button>
+                  <button class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-semibold text-white">Skip (8)</button>
+                </div>
+              </div>
+              <div class="h-1.5 overflow-hidden rounded-full bg-white/10"><div class="h-full rounded-full bg-emerald-400" style="width: 0%"></div></div>
+              <div class="text-[11px] text-white/45">0% complete</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="unclassified-area"><div><span><em id="plain-item-text">Found an Iron Sword in the wilderness.</em></span></div></div>
       <button id="native-item-button"><span><strong id="button-item-text">Iron Sword</strong></span></button>
     </div>
@@ -141,6 +254,14 @@ storage.set('iw-item-db-cache', {
     category: 'Container', subcategory: 'Coffer', effects_raw: '', base_value: 0,
     acquisition_type: 'Unknown',
     acquisition_summary: 'Ultra-rare zone drop: Fighting the Emberclad Juggernaut (Zone 21) - 1 in 240,000 per win',
+  }, {
+    item_id: 'night_claw', name: 'Night Claw', wiki_slug: 'night_claw', tier: 5,
+    category: 'Material', subcategory: 'Monster drop', effects_raw: '',
+    acquisition_type: 'ZoneDrop', source_zone: '14', drop_rate: '1/12',
+  }, {
+    item_id: 'moonsilk_boots', name: 'Moonsilk Boots', wiki_slug: 'moonsilk_boots', tier: 12,
+    category: 'Equipment', subcategory: 'Boots', def: 40, effects_raw: 'DEF +40',
+    acquisition_type: 'Crafted', craft_skill: 'tailoring', craft_level: 53,
   }],
   generatedAt: 'smoke-tooltip-data', cachedAt: Date.now(),
 });
@@ -223,8 +344,8 @@ check('no third-party network requests', thirdParty.length === 0, thirdParty.joi
 check('atlas assets fetched from the extension bundle',
   networkCalls.some(u => u.startsWith('chrome-extension://')),
   networkCalls.join(', '));
-check('all five runtime stylesheets mounted',
-  window.document.querySelectorAll('style[data-iw-style]').length === 5,
+check('all six runtime stylesheets mounted',
+  window.document.querySelectorAll('style[data-iw-style]').length === 6,
   `${window.document.querySelectorAll('style[data-iw-style]').length} mounted`);
 check('base stylesheet is runtime-owned',
   !!window.document.querySelector('style[data-iw-style="base"]'));
@@ -249,6 +370,23 @@ console.log('\nsmoke: rendering');
 const row = window.document.querySelector('.compact-row');
 check('inventory row received an overlay', !!row.querySelector(':scope > .fs-inv-row'));
 check('inventory root was classified', !!window.document.querySelector('[data-iw-inventory-root]'));
+
+// The tool row: three controls, one ornament. The game marks the ornament as
+// not-a-control (bare <svg>, no role/label/title, cursor auto) and the skin
+// must preserve that distinction rather than framing it into a fourth button.
+const toolButtons = [...window.document.querySelectorAll('#tool-row button')];
+const ornament = window.document.getElementById('pkg-ornament');
+check('all three tool controls classified as icon',
+  toolButtons.length === 3 && toolButtons.every(b => b.getAttribute('data-iw-inventory-control') === 'icon'),
+  toolButtons.map(b => b.getAttribute('data-iw-inventory-control')).join(','));
+check('bare package svg classified as ornament, not a control',
+  ornament.getAttribute('data-iw-inventory-control') === 'glyph',
+  ornament.getAttribute('data-iw-inventory-control') || 'unclassified');
+check('ornament is NOT framed as an icon control',
+  ornament.getAttribute('data-iw-inventory-control') !== 'icon');
+check('ornament tagging did not reach svgs inside the controls',
+  toolButtons.every(b => ![...b.querySelectorAll('svg')]
+    .some(g => g.hasAttribute('data-iw-inventory-control'))));
 check('native Equip button still present',
   [...row.querySelectorAll('button')].some(b => b.textContent.trim() === 'Equip'));
 check('initial quantity rendered', row.querySelector('.fs-inv-qty')?.textContent === '×1',
@@ -268,18 +406,115 @@ check('absolute XP display is recognised as a readout',
   window.document.getElementById('mining-xp-absolute')?.dataset.iwReadout === '1');
 check('material fraction is neutralised without matching XP fractions',
   window.document.getElementById('mining-material')?.dataset.iwIngr === '1');
-check('approved layout adds a left-column progress mirror',
-  panel.querySelector('.fs-skill-identity-progress-fill')?.style.width === '10%');
+// The mirror BAR must carry the native precision so it cannot drift from the
+// game's own rail; only the human-readable label beside it is rounded.
+check('approved layout adds a left-column progress mirror at native precision',
+  panel.querySelector('.fs-skill-identity-progress-fill')?.style.width === '69.8192%',
+  panel.querySelector('.fs-skill-identity-progress-fill')?.style.width || 'missing');
+check('identity completion label is rounded for reading, not printed raw',
+  panel.querySelector('.fs-skill-identity-percent')?.textContent === '69.8%',
+  panel.querySelector('.fs-skill-identity-percent')?.textContent || 'missing');
 check('approved layout adds a Base: plaque from the live XP datum',
   panel.querySelector('.fs-skill-base-exp')?.textContent === 'Base: 8');
 check('approved layout stores emoji-free visible title and identity text',
   panel.querySelector('[data-iw-skill-role="identity"]')?.dataset.iwCleanText === 'Mine' &&
   panel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Mine Copper Ore');
-check('skill renderer actively overrides native inline width while enabled', skillAction.style.width === '132px', skillAction.style.cssText);
+check('skill renderer actively overrides native inline width while enabled', skillAction.style.width === '155px', skillAction.style.cssText);
 check('background painter actively overrides native navy while enabled',
   inventorySection.style.getPropertyValue('background-color') !== 'rgb(15, 23, 42)',
   inventorySection.style.cssText);
 check('main nav classified', !!window.document.querySelector('[data-iw-ui="main-nav"]'));
+const currentActionPanel = window.document.getElementById('current-action-panel');
+const actionLogPanel = window.document.getElementById('action-log-panel');
+const worldChatPanel = window.document.getElementById('world-chat-panel');
+check('current action receives semantic frame and compact subregions',
+  currentActionPanel?.dataset.iwPanel === 'current-action' &&
+  window.document.getElementById('current-action-header')?.dataset.iwPanelPart === 'header' &&
+  window.document.getElementById('current-action-progress')?.dataset.iwPanelPart === 'progress' &&
+  window.document.getElementById('current-action-queue')?.dataset.iwPanelPart === 'queue');
+check('action log receives semantic feed and control roles',
+  actionLogPanel?.dataset.iwPanel === 'action-log' &&
+  window.document.getElementById('action-log-header')?.dataset.iwPanelPart === 'header' &&
+  window.document.getElementById('action-log-feed')?.dataset.iwPanelPart === 'feed' &&
+  window.document.getElementById('action-log-view-all')?.dataset.iwPanelPart === 'panel-control');
+check('world chat receives semantic feed and composer roles',
+  worldChatPanel?.dataset.iwPanel === 'world-chat' &&
+  window.document.getElementById('world-chat-header')?.dataset.iwPanelPart === 'header' &&
+  window.document.getElementById('world-chat-feed')?.dataset.iwPanelPart === 'feed' &&
+  window.document.getElementById('world-chat-composer')?.dataset.iwPanelPart === 'composer' &&
+  window.document.getElementById('world-chat-send')?.dataset.iwPanelPart === 'send');
+check('activity panel classification preserves native controls',
+  window.document.getElementById('cancel-current')?.isConnected === true &&
+  window.document.getElementById('world-chat-input')?.isConnected === true &&
+  window.document.getElementById('world-chat-send')?.isConnected === true);
+check('activity panels classify ordinary empty and single-entry states',
+  window.document.getElementById('current-action-no-queue')?.dataset.iwPanel === 'current-action' &&
+  window.document.getElementById('current-action-no-queue-progress')?.dataset.iwPanelPart === 'progress' &&
+  window.document.getElementById('action-log-single')?.dataset.iwPanel === 'action-log' &&
+  window.document.getElementById('action-log-single-feed')?.dataset.iwPanelPart === 'feed' &&
+  window.document.getElementById('action-log-empty')?.dataset.iwPanel === 'action-log' &&
+  window.document.getElementById('action-log-empty-feed')?.dataset.iwPanelPart === 'feed' &&
+  window.document.getElementById('world-chat-single-feed')?.dataset.iwPanelPart === 'feed');
+check('activity headers include metadata and even a single toolbar control',
+  window.document.getElementById('world-chat-single-tool-header')?.dataset.iwPanelPart === 'header');
+check('split activity headers classify title and sibling toolbar without moving native nodes',
+  window.document.getElementById('world-chat-split-header')?.dataset.iwPanelHeader === 'split' &&
+  window.document.getElementById('world-chat-split-title')?.dataset.iwPanelPart === 'header-title' &&
+  window.document.getElementById('world-chat-split-tools')?.dataset.iwPanelPart === 'header-tools');
+check('top header receives the Option 1 semantic layout',
+  window.document.getElementById('top-header')?.getAttribute('data-iw-header') === 'root' &&
+  window.document.getElementById('profile-block')?.getAttribute('data-iw-header') === 'profile' &&
+  window.document.getElementById('status-grid')?.getAttribute('data-iw-header') === 'status-grid');
+check('top header adds one skin-owned crest without replacing native profile text',
+  window.document.querySelectorAll('#profile-block > .fs-header-crest').length === 1 &&
+  window.document.getElementById('profile-block')?.textContent.includes('BustedCypher'));
+check('header utility buttons are classified without replacing native controls',
+  window.document.querySelectorAll('[data-iw-header="utility-button"]').length === 5);
+// The vitals/timers layout places cards by KIND, derived from their text. It
+// must not key off DOM position: the game drops buff tiles as they expire,
+// which reshuffles every index behind them and would silently move the wrong
+// card into the vitals column.
+{
+  const cards = [...window.document.getElementById('status-grid').children];
+  const kinds = cards.map(el => el.dataset.iwHeaderStat);
+  check('status tiles are classified by content, not position',
+    kinds[0] === 'gold' && kinds[2] === 'combat' &&
+    cards.filter(el => el.dataset.iwHeaderStat === 'timer').length >= 1,
+    kinds.join(','));
+}
+check('announcement strip is classified for layered header treatment',
+  window.document.getElementById('announcement')?.getAttribute('data-iw-header') === 'announcement');
+// The live zone label reads "🧭 Zone 19: …" and the live button reads
+// "🌐 Zones". Both were matched with anchored regexes that the leading icon
+// defeated, so the ENTIRE zone bar went unclassified and rendered vanilla —
+// and nothing here exercised it. These pin the icon-tolerant matching.
+// UIFoundation tags zone-bar and HeaderRenderer then binds zone-shell to it on
+// a later flush, so this pairing settles across frames rather than in one.
+await waitFor(() => window.document.getElementById('zone-bar-panel')?.getAttribute('data-iw-header') === 'zone-shell');
+check('zone bar resolves despite the leading icon on its label',
+  window.document.getElementById('zone-bar-panel')?.dataset.iwUi === 'zone-bar' &&
+  window.document.getElementById('zone-bar-panel')?.getAttribute('data-iw-header') === 'zone-shell',
+  `ui=${window.document.getElementById('zone-bar-panel')?.dataset.iwUi} header=${window.document.getElementById('zone-bar-panel')?.getAttribute('data-iw-header')}`);
+check('every zone action is classified and toned, icon prefix or not',
+  window.document.getElementById('zone-zones')?.dataset.iwUi === 'zone-action' &&
+  window.document.getElementById('zone-zones')?.dataset.iwZoneAction === 'zones' &&
+  window.document.getElementById('zone-prev')?.dataset.iwZoneAction === 'prev' &&
+  window.document.getElementById('zone-next')?.dataset.iwZoneAction === 'next',
+  ['zone-zones', 'zone-prev', 'zone-next']
+    .map(id => `${id}=${window.document.getElementById(id)?.dataset.iwZoneAction}`).join(' '));
+check('a non-navigation control in the zone bar is left alone',
+  !window.document.getElementById('zone-whos-here')?.dataset.iwUi &&
+  !window.document.getElementById('zone-whos-here')?.dataset.iwZoneAction);
+// The bar's own container text also begins "Zone 19: …", so treating it as a
+// label made the walk start at its PARENT and brand the page wrapper as the
+// zone bar — which then collected the header's artwork. Exactly one element
+// may carry the role, and it must be the bar itself.
+check('zone bar role is not smeared onto a page wrapper',
+  window.document.querySelectorAll('[data-iw-ui="zone-bar"]').length === 1 &&
+  window.document.querySelectorAll('[data-iw-header="zone-shell"]').length === 1 &&
+  !window.document.querySelector('.app')?.dataset.iwUi,
+  [...window.document.querySelectorAll('[data-iw-ui="zone-bar"]')]
+    .map(el => el.id || el.className || el.tagName).join(', '));
 
 const jewelPanel = window.document.getElementById('jewel-panel');
 const spellPanel = window.document.getElementById('spell-panel');
@@ -329,7 +564,101 @@ check('coming-soon copy is normalised without inventing EXP',
   lockedPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Upcoming Skill' &&
   !lockedPanel.querySelector('.fs-skill-base-exp'));
 check('live skill action buttons use deterministic width',
-  ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '132px'));
+  ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '155px'));
+// The pager IS the framed skills_nav_*.svg artwork. styleButton() writes these
+// inline with `!important`, which outranks every stylesheet rule — so the
+// artwork, the absence of a competing button outline, and the hidden native
+// glyph all have to be asserted on the inline copy. Two regressions this
+// guards: a second squarer outline drawn around the art's own frame, and a
+// vector arrow rendered on top of the drawn one.
+{
+  const navBtns = [...jewelPanel.querySelectorAll('[data-iw-skill-role="nav-button"]')];
+  const inlineOf = btn => btn.getAttribute('style') || '';
+  const dirOf = btn => btn.dataset.iwNavDirection;
+  check('recipe pager paints the framed arrow artwork inline, per direction',
+    navBtns.length === 2 &&
+    navBtns.every(btn => btn.style.getPropertyValue('background-image') === `var(--fs-skills-nav-${dirOf(btn)})`),
+    navBtns.map(btn => `${dirOf(btn)}=${btn.style.getPropertyValue('background-image')}`).join(' || ') || 'no nav buttons');
+  check('recipe pager artwork is inset inside its 44px touch target',
+    navBtns.every(btn => btn.style.getPropertyValue('background-size') === '68% 68%') &&
+    navBtns.every(btn => btn.style.getPropertyValue('width') === '44px' && btn.style.getPropertyValue('height') === '44px'),
+    navBtns.map(btn => btn.style.getPropertyValue('background-size')).join(' || '));
+  check('recipe pager carries no competing outline and no overlaid glyph',
+    navBtns.every(btn => /^0(px)?$/.test(btn.style.getPropertyValue('border').trim())) &&
+    navBtns.every(btn => btn.style.getPropertyValue('box-shadow') === 'none') &&
+    navBtns.every(btn => btn.style.getPropertyValue('color') === 'transparent') &&
+    navBtns.every(btn => /^0(px)?$/.test(btn.style.getPropertyValue('font-size').trim())),
+    navBtns.map(inlineOf).join(' || '));
+}
+
+/* ── Quest cards ─────────────────────────────────────────────────────── */
+
+console.log('\nsmoke: quest cards');
+const questBounty = window.document.getElementById('quest-bounty');
+const questWorkOrder = window.document.getElementById('quest-work-order');
+const bountyTurnIn = questBounty.querySelector('button');
+check('in-progress bounty gets the forged quest frame',
+  questBounty.classList.contains('fs-quest-panel') && questBounty.getAttribute('data-fs-quest') === '1' &&
+  questBounty.getAttribute('data-iw-quest-state') === 'active',
+  questBounty.className + ' state=' + questBounty.getAttribute('data-iw-quest-state'));
+check('bounty combat reward drives the combat accent',
+  questBounty.style.getPropertyValue('--fs-quest-accent').trim() === '#B84A20',
+  questBounty.style.getPropertyValue('--fs-quest-accent'));
+check('bounty native title / objective / reward / progress get semantic roles',
+  questBounty.querySelector('[data-iw-quest-role="title"]')?.textContent === 'Night Claw Bounty' &&
+  questBounty.querySelector('[data-iw-quest-role="objective"]')?.textContent.includes('22/100') &&
+  questBounty.querySelector('[data-iw-quest-role="reward"]')?.dataset.iwQuestReward === '+3,225g • +1350 combat XP' &&
+  questBounty.querySelector('[data-iw-quest-role="progress-fill"]')?.style.width === '22%' &&
+  questBounty.querySelector('[data-iw-quest-role="progress-label"]')?.dataset.iwQuestPercent === '22',
+  'title=' + JSON.stringify(questBounty.querySelector('[data-iw-quest-role="title"]')?.textContent));
+check('bounty gains a skin-owned sigil with the completion readout',
+  questBounty.querySelectorAll('.fs-quest-sigil').length === 1 &&
+  questBounty.querySelector('.fs-quest-sigil')?.dataset.iwQuestGlyph === '⚔' &&
+  questBounty.querySelector('.fs-quest-sigil-pct')?.textContent === '22%');
+check('bounty Turn In stays the native disabled control and opts out of the generic button skin',
+  bountyTurnIn.getAttribute('data-iw-quest-role') === 'turn-in' && bountyTurnIn.disabled === true &&
+  bountyTurnIn.isConnected === true);
+check('work order with an enabled Turn In is marked ready',
+  questWorkOrder.getAttribute('data-iw-quest-state') === 'ready' &&
+  questWorkOrder.style.getPropertyValue('--fs-quest-accent').trim() === '#A56E86');
+check('work order keeps the discipline kicker above the instruction title',
+  questWorkOrder.querySelector('[data-iw-quest-role="kicker"]')?.textContent === 'Tailoring Work Order' &&
+  questWorkOrder.querySelector('[data-iw-quest-role="title"]')?.textContent === 'Craft and turn in 1 Moonsilk Boots.');
+check('work order Skip control is classified and left native',
+  [...questWorkOrder.querySelectorAll('button')].find(b => /skip/i.test(b.textContent))?.getAttribute('data-iw-quest-role') === 'skip');
+check('quest cards are not mistaken for skill panels',
+  !questBounty.classList.contains('fs-skill-panel') && !questWorkOrder.classList.contains('fs-skill-panel'));
+
+const bountyObjective = questBounty.querySelector('[data-iw-quest-role="objective"]');
+const workOrderObjective = questWorkOrder.querySelector('[data-iw-quest-role="objective"]');
+check('known objective item turns the objective line into a tooltip trigger (attributes only)',
+  bountyObjective?.getAttribute('data-iw-tooltip-trigger') === '1' &&
+  bountyObjective?.getAttribute('data-iw-item') === 'night_claw' &&
+  bountyObjective?.getAttribute('tabindex') === '0' &&
+  bountyObjective?.childElementCount === 0 &&
+  bountyObjective?.textContent === '💠 Night Claw 22/100' &&
+  workOrderObjective?.getAttribute('data-iw-item') === 'moonsilk_boots',
+  `bounty=[${bountyObjective?.getAttribute('data-iw-item')}] wo=[${workOrderObjective?.getAttribute('data-iw-item')}]`);
+{
+  const tip = window.document.querySelector('.iw-tip');
+  await settle(150); // let the quest-render mutation burst drain before hovering
+  const nativeMatches = bountyObjective.matches.bind(bountyObjective);
+  bountyObjective.matches = sel => sel === ':hover' ? true : nativeMatches(sel);
+  pointerTarget = bountyObjective;
+  // A mousemove first so TooltipEngine's pointer invariant sees the cursor on
+  // the anchor (its dom-flush orphan check closes cards with no known pointer).
+  bountyObjective.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 40, clientY: 20 }));
+  bountyObjective.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true, clientX: 40, clientY: 20 }));
+  await waitFor(() => tip.classList.contains('is-open') && tip.querySelector('.iw-tip-name')?.textContent === 'Night Claw', { timeout: 6000 });
+  check('hovering the quest objective opens the item tooltip',
+    tip.classList.contains('is-open') && tip.querySelector('.iw-tip-name')?.textContent === 'Night Claw',
+    `open=${tip.classList.contains('is-open')} name=${JSON.stringify(tip.querySelector('.iw-tip-name')?.textContent)}`);
+  pointerTarget = window.document.body;
+  bountyObjective.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, clientX: 400, clientY: 400, relatedTarget: window.document.body }));
+  window.document.body.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 400, clientY: 400 }));
+  await waitFor(() => !tip.classList.contains('is-open'));
+  bountyObjective.matches = nativeMatches;
+}
 
 /* ── Tooltip coverage / ownership ────────────────────────────────────── */
 
@@ -560,10 +889,21 @@ await waitFor(() => window.document.querySelectorAll('.fs-inv-row').length === 0
 check('overlays removed', window.document.querySelectorAll('.fs-inv-row').length === 0);
 check('ALL runtime stylesheets removed', window.document.querySelectorAll('style[data-iw-style]').length === 0);
 check('ui role attributes removed', window.document.querySelectorAll('[data-iw-ui]').length === 0);
+check('zone action tone hooks removed', window.document.querySelectorAll('[data-iw-zone-action]').length === 0);
+check('activity panel role attributes removed',
+  window.document.querySelectorAll('[data-iw-panel], [data-iw-panel-part]').length === 0);
+check('header roles and decorative crest removed',
+  window.document.querySelectorAll('[data-iw-header], .fs-header-crest').length === 0);
 check('skill panel classes removed', window.document.querySelectorAll('.fs-skill-panel').length === 0);
 check('skill medallion artwork removed on teardown', window.document.querySelectorAll('.fs-skill-medallion-art').length === 0);
 check('skill presentation artifacts removed on teardown',
   window.document.querySelectorAll('.fs-skill-identity-progress, .fs-skill-base-exp, [data-iw-clean-text]').length === 0);
+check('quest chrome fully removed on teardown',
+  window.document.querySelectorAll('.fs-quest-panel, .fs-quest-sigil, .fs-quest-sigil-icon, [data-iw-quest-role], [data-iw-quest-zone], [data-fs-quest]').length === 0 &&
+  !questBounty.style.getPropertyValue('--fs-quest-accent') &&
+  questBounty.querySelector('button')?.isConnected === true &&
+  !questBounty.querySelector('[data-iw-tooltip-trigger], [data-iw-item], [data-iw-item-name]') &&
+  window.document.getElementById('quest-work-order').textContent.includes('Craft and turn in 1 Moonsilk Boots.'));
 check('native Equip button survived teardown',
   [...window.document.querySelector('.compact-row').querySelectorAll('button')]
     .some(b => b.textContent.trim() === 'Equip'));
@@ -585,9 +925,19 @@ check('inventory presentation returns after re-enable',
   !!window.document.querySelector('.compact-row > .fs-inv-row'));
 check('navigation classification returns after re-enable',
   !!window.document.querySelector('[data-iw-ui="main-nav"]'));
+check('activity panel classification returns after re-enable',
+  currentActionPanel?.dataset.iwPanel === 'current-action' &&
+  actionLogPanel?.dataset.iwPanel === 'action-log' &&
+  worldChatPanel?.dataset.iwPanel === 'world-chat');
+check('header presentation returns after re-enable',
+  window.document.getElementById('top-header')?.getAttribute('data-iw-header') === 'root' &&
+  window.document.querySelectorAll('#profile-block > .fs-header-crest').length === 1);
 check('skill presentation returns after re-enable', panel.classList.contains('fs-skill--mining'));
-check('exactly five stylesheets re-injected',
-  window.document.querySelectorAll('style[data-iw-style]').length === 5,
+check('quest presentation returns after re-enable',
+  window.document.getElementById('quest-bounty')?.classList.contains('fs-quest-panel') &&
+  window.document.getElementById('quest-work-order')?.getAttribute('data-iw-quest-state') === 'ready');
+check('exactly six stylesheets re-injected',
+  window.document.querySelectorAll('style[data-iw-style]').length === 6,
   `${window.document.querySelectorAll('style[data-iw-style]').length} mounted`);
 check('base stylesheet re-injected', !!window.document.querySelector('style[data-iw-style="base"]'));
 check('tooltip surface was not duplicated', window.document.querySelectorAll('.iw-tip').length === 1);
@@ -601,6 +951,11 @@ window.chrome.storage.onChanged._emit({ 'iw-skin-enabled': { newValue: false } }
 await waitFor(() => window.document.querySelectorAll('.fs-inv-row').length === 0);
 
 check('second teardown removes overlays', window.document.querySelectorAll('.fs-inv-row').length === 0);
+check('tool-row ornament attribute removed on teardown',
+  !window.document.getElementById('pkg-ornament').hasAttribute('data-iw-inventory-control'));
+check('tool-row control attributes removed on teardown',
+  [...window.document.querySelectorAll('#tool-row button')]
+    .every(b => !b.hasAttribute('data-iw-inventory-control')));
 check('second teardown removes all styles', window.document.querySelectorAll('style[data-iw-style]').length === 0);
 check('second teardown restores skill inline style', skillAction.style.cssText === nativeSkillStyle,
   skillAction.style.cssText);

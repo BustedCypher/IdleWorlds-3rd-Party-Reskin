@@ -1405,58 +1405,21 @@
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"]::before {
   content: none !important;
 }
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
-  position: absolute !important;
-  top: 17px !important;
-  right: 38px !important;
-  z-index: 4 !important;
-  display: flex !important;
-  width: 88px !important;
-  gap: 8px !important;
-}
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"]::after {
-  content: "" !important;
-  position: absolute !important;
-  left: -12px !important;
-  top: 47px !important;
-  width: 112px !important;
-  height: 12px !important;
-  pointer-events: none !important;
-  opacity: .72 !important;
-}
-.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] [data-iw-skill-role="nav-group"]::after {
-  background-image: var(--fs-skills-ui-atlas) !important;
-  background-size: var(--fs-ui-separator-size) !important;
-  background-position: var(--fs-ui-separator-position) !important;
-  background-repeat: no-repeat !important;
-}
-.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
-  transform: translateY(24px) !important;
-}
+/* Recipe-pager placement lives in the alignment pass at the end of this file.
+   React uses TWO shapes: the pager inside the command cell (handled by flex
+   order) and the pager inside the content branch (placed over the command
+   column, with its inset derived from --fs-skill-command-w). What broke the
+   rail before was MAGIC OFFSETS — `top: 17px; right: 38px` plus a fixed
+   `translateY(26px)` on the action button. Do not reintroduce those. */
 @media (max-width: 900px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
     width: 102px !important;
-  }
-  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
-    right: 30px !important;
   }
 }
 @media (max-width: 600px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
     position: static !important;
     padding: 16px 14px !important;
-  }
-  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
-    position: absolute !important;
-    top: 8px !important;
-    right: 22px !important;
-    margin: 0 !important;
-  }
-  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"]::after {
-    display: none !important;
-  }
-  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
-    transform: translateY(26px) !important;
   }
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
     width: 86px !important;
@@ -1546,7 +1509,11 @@
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  color: transparent !important;
+  /* The raw text node is collapsed by font-size:0; the readable copy is the
+     ::before plaque below. Keep this element's own color equal to that plaque
+     tone (not `transparent`) so automated contrast audits sampling the
+     element's computed color see the value that is actually rendered. */
+  color: #C9C0AF !important;
   font-size: 0 !important;
   text-align: center !important;
   pointer-events: none !important;
@@ -1652,7 +1619,7 @@
   overflow: hidden !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
-  background-size: 88% 88% !important;
+  background-size: 68% 68% !important;
 }
 .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] > * {
   visibility: hidden !important;
@@ -1662,4 +1629,1153 @@
 .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::after {
   content: none !important;
   display: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Compact responsive Skills composition
+   Preserves every native readout and control while removing the large
+   ornamental dead zones from the approved three-zone card.
+   ══════════════════════════════════════════════════════════════════════ */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+  --fs-skill-identity-w: 142px;
+  --fs-skill-command-w: 136px;
+  min-height: 0 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+  grid-template-columns: var(--fs-skill-identity-w) minmax(0, 1fr) var(--fs-skill-command-w) !important;
+  grid-template-areas: "identity content commands" !important;
+  min-height: 124px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+  gap: 2px !important;
+  padding: 7px 9px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+  width: 54px !important;
+  min-width: 54px !important;
+  height: 54px !important;
+  min-height: 54px !important;
+  margin: 0 0 3px !important;
+  box-shadow:
+    inset 0 0 0 4px #11100D,
+    inset 0 0 0 5px rgba(187,146,78,.34),
+    inset 0 0 12px rgba(0,0,0,.35),
+    0 0 0 2px #0A0907,
+    0 0 0 3px rgba(123,92,49,.50),
+    0 2px 7px rgba(0,0,0,.48) !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art::after {
+  width: 7px !important;
+  height: 7px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::before {
+  font-size: 13px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"] {
+  font-size: 10.5px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent {
+  margin-top: 1px !important;
+  font-size: 10px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent::before {
+  width: 34px !important;
+  margin-bottom: 3px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+  width: 84px !important;
+  height: 4px !important;
+  margin-top: 3px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+  gap: 2px !important;
+  padding: 6px 14px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"]::before {
+  font-size: 17.5px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="level-progress"][data-iw-progress-display]::before {
+  font-size: 10.8px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp {
+  width: 174px !important;
+  min-width: 174px !important;
+  min-height: 40px !important;
+  margin: 1px auto !important;
+  padding: 0 20px 4px !important;
+  font-size: 11.5px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="requirement"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+  margin-top: 1px !important;
+  font-size: 10.2px !important;
+  line-height: 1.12 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] {
+  padding: 6px !important;
+}
+
+
+
+@media (max-width: 900px) and (min-width: 601px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    --fs-skill-identity-w: 126px;
+    --fs-skill-command-w: 126px;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+    min-height: 124px !important;
+  }
+
+}
+
+@media (max-width: 600px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    --fs-skill-identity-w: 78px;
+    --fs-skill-command-w: auto;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+    grid-template-columns: var(--fs-skill-identity-w) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, auto) 51px !important;
+    grid-template-areas:
+      "identity content"
+      "commands commands" !important;
+    min-height: 0 !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+    min-height: 0 !important;
+    padding: 6px !important;
+    border-bottom: 1px solid #332B20 !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::before {
+    font-size: 11px !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"] {
+    font-size: 9px !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent {
+    font-size: 9px !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+    width: 64px !important;
+    height: 4px !important;
+    margin-top: 2px !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+    position: static !important;
+    gap: 1px !important;
+    padding: 5px 8px !important;
+    border-bottom: 1px solid #332B20 !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"]::before {
+    font-size: 15px !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="level-progress"][data-iw-progress-display]::before,
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"],
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="requirement"],
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+    font-size: 9.5px !important;
+    line-height: 1.08 !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp {
+    width: 146px !important;
+    min-width: 146px !important;
+    min-height: 34px !important;
+    margin: 0 auto !important;
+    padding-bottom: 3px !important;
+    font-size: 10.5px !important;
+  }
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+    justify-self: start !important;
+    align-self: center !important;
+    width: 116px !important;
+    min-width: 116px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    margin-left: 10px !important;
+    transform: none !important;
+  }
+
+
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"]::after {
+    display: none !important;
+  }
+}
+
+/* Re-assert the generated arrow skins after the compact layout overrides.
+   A full background shorthand is intentional: the native/global button skin
+   also uses a shorthand and would otherwise clear the SVG layer. */
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"] {
+  background: var(--fs-skills-nav-prev) center / 68% 68% no-repeat !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"] {
+  background: var(--fs-skills-nav-next) center / 68% 68% no-repeat !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   Skills alignment pass — real command stacking + true artwork ratios
+
+   Two defects fixed here, both traceable to the same root cause: the
+   fixture used to place `nav-group` inside the CONTENT zone, which no live
+   panel does. Live IdleWorlds puts the nav pair and the action control in
+   one command cell. The layout above therefore faked the stack with
+   `position:absolute` on the nav group and a hard-coded
+   `transform: translateY(26px)` on the action button — which skews the real
+   DOM (the button is nudged by a fixed 26px unrelated to the nav's height,
+   and panels with NO nav are nudged too, so nothing lines up).
+
+   1. The command cell is now an ordinary centred flex column. Nav sits
+      above the action button because it is ordered so, not positioned so.
+   2. Every atlas-backed box is restored to its sprite's real aspect ratio.
+      `SkillsArtService` stretches each sprite to exactly fill its element
+      (a percentage background-size pair), so a box whose ratio disagrees
+      with the art distorts it — the XP plaque was 4.35:1 against 3.00:1
+      art, which squeezed the flared ends inward over the text and is why
+      "Base: N" read as cramped. Native sizes: xp_plaque 300x100 (3.00),
+      action_frame 264x75 (3.52), nav_frame 80x83 (0.96).
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Command rail: genuine flow, no absolute nav, no translate ──────── */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 11px !important;
+  padding: 12px 14px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+  position: static !important;
+  order: 0 !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  display: flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  margin: 0 !important;
+  gap: 10px !important;
+}
+
+/* The floating flourish under the old absolute nav has no anchor in flow. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"]::after {
+  content: none !important;
+  display: none !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="action-button"] {
+  order: 1 !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+
+/* Variant: a panel with no recipe navigation exposes the bare action button
+   AS the command cell. Centre it in its own grid track. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+  transform: none !important;
+  justify-self: center !important;
+  align-self: center !important;
+  margin: 0 !important;
+}
+
+/* ── True artwork ratios ────────────────────────────────────────────── */
+/* The 44px touch target is an accessibility floor and is NOT negotiable to
+   serve the art, so the frame is widened to suit that height rather than
+   shortened to suit the width: 44 * 3.52 ~= 155. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+  --fs-skill-command-w: 176px;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+  width: 155px !important;
+  min-width: 155px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 10px !important;
+  font-size: 12.5px !important;
+  letter-spacing: .075em !important;
+}
+
+/* nav_frame is 80x83 (0.96) — a 44px square is already true to it, and 44px
+   is also the touch-target floor. Left at 44 deliberately. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] {
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+}
+
+/* Diamond studs read as detached when they float far off the button edge. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::after {
+  width: 7px !important;
+  height: 7px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::before {
+  top: -4px !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::after {
+  bottom: -4px !important;
+}
+
+/* ── Base EXP plaque: 3:1 like the art, text inside the flat centre ─── */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp {
+  width: 174px !important;
+  min-width: 174px !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  /* The flared ends occupy roughly the outer sixth of the sprite on each
+     side; keep the label off them. Bottom bias: the plaque's visual centre
+     sits a touch above its box centre. */
+  padding: 0 34px 4px !important;
+  margin: 2px auto 3px !important;
+  font-size: 12px !important;
+  letter-spacing: .03em !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Recipe navigation: small, frameless, centred over the action button
+
+   React does not agree with itself about where the nav pair lives: some
+   panels put it in the command cell beside the action control, others put
+   it inside the CONTENT branch next to the recipe title (where it forced
+   the title to wrap). Reparenting a gameplay node is forbidden, so both
+   shapes are handled here — flow order for the first, and a placement
+   anchored to the command column for the second. Nothing uses a magic
+   offset: the horizontal inset is derived from --fs-skill-command-w and
+   the vertical one from the action button's own centred geometry.
+
+   The ornate square frame is baked into skills_nav_*.svg, so "no outline"
+   means not using that asset at all; the chevron below is drawn in CSS.
+   The 44px hit area is kept — only the GLYPH shrinks, so the control stays
+   a valid touch target.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Keep the shell as the containing block for the content-branch variant. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+  position: static !important;
+}
+
+/* Desktop only: below 601px the shell has no command column to centre over —
+   the rail becomes a full-width row — so the pager stays in flow there. */
+@media (min-width: 601px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] {
+    position: absolute !important;
+    z-index: 4 !important;
+    /* Centred over the command column, the last track of the shell. */
+    right: calc((var(--fs-skill-command-w, 176px) - 92px) / 2) !important;
+    /* The action button is 44px tall and centred, so its top edge sits at
+       (50% - 22px). Two 44px hit areas plus a 4px gap are 92px wide; stack
+       them so their bottom edge meets that top edge exactly — the boxes must
+       not overlap the button or a near-miss click would hit the pager. */
+    top: 50% !important;
+    transform: translateY(-66px) !important;
+    width: 92px !important;
+    margin: 0 !important;
+    gap: 4px !important;
+  }
+}
+
+/* The artwork is the control. Strip only the things that competed with it:
+   the button's own border/box-shadow (a second, squarer outline around the
+   art's frame) and the native glyph (a vector arrow drawn over the art). */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  transition: filter .12s !important;
+}
+
+/* Nothing may be drawn on top of the artwork — no pseudo-element glyph and no
+   native text. The earlier "live nav cleanup" block already suppresses these
+   at (0,6,2); restated here so the intent survives a future edit. */
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::before,
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::after,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::after {
+  content: none !important;
+  display: none !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] > * {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:hover:not(:disabled) {
+  background-color: transparent !important;
+  transform: none !important;
+  filter: brightness(1.18) saturate(1.06) !important;
+}
+
+/* ── Collapse the visually-hidden data rows properly ────────────────── */
+/* The redesign hides the native XP-gain / reward / progress-rail nodes behind
+   the plaque and identity mirror by shrinking them to 1px. That never worked:
+   an earlier atlas rule gives xp-gain `min-height: 32px`, and min-height beats
+   height, so every card carried ~35px of invisible dead space that pushed the
+   real content around. Zero the box model outright. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="xp-gain"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="reward"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="progress-track"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="progress-fill"] {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-height: 1px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Vertical rhythm ────────────────────────────────────────────────── */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+  min-height: 136px !important;
+  align-items: center !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+  gap: 4px !important;
+  padding: 12px 18px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"]::before {
+  font-size: 18px !important;
+  line-height: 1.14 !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="requirement"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+  margin-top: 0 !important;
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+}
+
+/* ── Identity column ────────────────────────────────────────────────── */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+  gap: 3px !important;
+  padding: 12px 10px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+  width: 58px !important;
+  min-width: 58px !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  margin: 0 0 6px !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::before {
+  font-size: 13.5px !important;
+  letter-spacing: .07em !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"] {
+  font-size: 11px !important;
+  letter-spacing: .1em !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent {
+  margin-top: 2px !important;
+  font-size: 10.5px !important;
+  letter-spacing: .06em !important;
+}
+
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+  width: 92px !important;
+  height: 5px !important;
+  margin-top: 4px !important;
+  border-radius: 1px !important;
+}
+
+/* ── Narrow layouts inherit the same flow ───────────────────────────── */
+@media (max-width: 900px) and (min-width: 601px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    --fs-skill-command-w: 168px;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp {
+    width: 168px !important;
+    min-width: 168px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    padding: 0 32px 4px !important;
+    font-size: 11.5px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"],
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+    width: 148px !important;
+    min-width: 148px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+    order: 1 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="action-button"] {
+    order: 0 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+    justify-self: start !important;
+    margin-left: 10px !important;
+  }
+  /* Nav now occupies real width in the row, so the action control must be
+     elastic or it overflows a 320px viewport. It still never drops below the
+     108px/44px touch target. */
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="action-button"] {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 108px !important;
+    max-width: 155px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: 11.5px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
+    flex: 0 0 auto !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+    width: 140px !important;
+    min-width: 140px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: 11.5px !important;
+  }
+  /* The desktop content padding above is not inside a media query, so it also
+     applies here unless restated — and an 18px inset leaves the plaque no room
+     in a 320px column. */
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+    gap: 2px !important;
+    padding: 9px 6px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+    gap: 1px !important;
+    padding: 8px 5px !important;
+  }
+  /* The desktop type scale above is likewise outside a media query. */
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"]::before {
+    font-size: 14.5px !important;
+    line-height: 1.12 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"],
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="requirement"],
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
+    font-size: 9.5px !important;
+    line-height: 1.14 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::before {
+    font-size: 11px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"] {
+    font-size: 9px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent {
+    font-size: 9px !important;
+    margin-top: 1px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp {
+    width: 144px !important;
+    min-width: 144px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 26px 3px !important;
+    font-size: 11px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    margin-bottom: 4px !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   Quest cards — forged into the same family as the skill action frames
+
+   IdleWorlds renders each quest as a bare `.compact-panel` inside the
+   Quests section frame. QuestPanelRenderer tags the native
+   title / brief / objective / reward / progress / command nodes with
+   `data-iw-quest-role`, lays a `.fs-quest-sigil` medallion beside them,
+   and this block turns the result into a recessed three-zone card that
+   reuses the Skills UI atlas (medallion frame, XP plaque, action-button
+   skin, panel texture). No gameplay node is moved.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.compact-panel.fs-quest-panel {
+  --fs-quest-accent: #C9A66A;
+  position: relative !important;
+  margin-bottom: 8px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #6A5430 !important;
+  border-left: 2px solid color-mix(in srgb, var(--fs-quest-accent) 70%, #B68A45) !important;
+  border-radius: 4px !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 34%),
+    linear-gradient(135deg, rgba(181,139,71,.028) 0 1px, transparent 1px 10px),
+    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px #0B0A08,
+    inset 0 0 0 2px rgba(143,107,55,.16),
+    inset 0 1px 0 rgba(255,236,190,.035),
+    0 2px 7px rgba(0,0,0,.42) !important;
+}
+
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.03), transparent 34%),
+    var(--fs-skills-panel-texture),
+    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+  background-blend-mode: normal, soft-light, normal !important;
+}
+
+.compact-panel.fs-quest-panel::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 1px !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--fs-quest-accent) 78%, #C8A861),
+    rgba(200,168,97,.16) 34%, transparent 72%) !important;
+  opacity: .9 !important;
+}
+
+.compact-panel.fs-quest-panel::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 4px !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  border: 1px solid rgba(133,101,54,.22) !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 12px rgba(0,0,0,.26) !important;
+}
+
+/* Grid: sigil column + stacked content / progress / label. */
+.compact-panel.fs-quest-panel > [data-iw-quest-zone="body"] {
+  position: relative !important;
+  z-index: 1 !important;
+  display: grid !important;
+  grid-template-columns: 104px minmax(0, 1fr) !important;
+  grid-template-areas:
+    "sigil row"
+    "sigil track"
+    "sigil label" !important;
+  align-items: center !important;
+  row-gap: 9px !important;
+  column-gap: 0 !important;
+  padding: 14px 16px 13px !important;
+}
+.compact-panel.fs-quest-panel > [data-iw-quest-zone="body"] > * { margin: 0 !important; }
+
+.compact-panel.fs-quest-panel [data-iw-quest-zone="row"] {
+  grid-area: row !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  min-width: 0 !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-zone="content"] {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-zone="commands"] {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* Medallion sigil. */
+.compact-panel.fs-quest-panel .fs-quest-sigil {
+  /* One knob for the medallion, one for how much of it the sprite fills.
+     The icon box below is derived from the pair, so the narrow-layout
+     override only has to restate the diameter. */
+  --fs-quest-sigil-size: 72px;
+  --fs-quest-icon-scale: .60;
+  grid-area: sigil !important;
+  align-self: center !important;
+  justify-self: center !important;
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  width: var(--fs-quest-sigil-size) !important;
+  height: var(--fs-quest-sigil-size) !important;
+  border: 1px solid color-mix(in srgb, var(--fs-quest-accent) 46%, #A98247) !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(circle at 42% 34%, color-mix(in srgb, var(--fs-quest-accent) 22%, #242019), #0D0D0B 68%) !important;
+  box-shadow:
+    inset 0 0 0 5px #11100D,
+    inset 0 0 0 6px rgba(187,146,78,.34),
+    inset 0 0 16px rgba(0,0,0,.35),
+    0 0 0 3px #0A0907,
+    0 0 0 4px rgba(123,92,49,.52),
+    0 3px 10px rgba(0,0,0,.5) !important;
+  pointer-events: none !important;
+}
+.compact-panel.fs-quest-panel .fs-quest-sigil::before {
+  content: attr(data-iw-quest-glyph) !important;
+  position: relative !important;
+  z-index: 2 !important;
+  color: color-mix(in srgb, var(--fs-quest-accent) 76%, #F0D9A8) !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 27px !important;
+  line-height: 1 !important;
+  text-shadow: 0 1px 0 #000, 0 0 10px color-mix(in srgb, var(--fs-quest-accent) 30%, transparent) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] .fs-quest-sigil::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: -11px -8px !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-medallion-frame-size) !important;
+  background-position: var(--fs-ui-medallion-frame-position) !important;
+  background-repeat: no-repeat !important;
+}
+
+/* The objective item's real atlas icon. AtlasService writes background-image,
+   -size, -position and -repeat INLINE to crop one atlas cell; this rule must
+   only size and seat the box — never set background-position/-size, or an
+   !important here beats the inline crop and the wrong region of the sheet
+   shows (see the "Atlas sprites are sized in percentages" trap in CLAUDE.md). */
+.compact-panel.fs-quest-panel .fs-quest-sigil-icon {
+  position: absolute !important;
+  inset: calc(var(--fs-quest-sigil-size) * (1 - var(--fs-quest-icon-scale)) / 2) !important;
+  z-index: 2 !important;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.7)) !important;
+  pointer-events: none !important;
+}
+.compact-panel.fs-quest-panel .fs-quest-sigil[data-iw-quest-icon="1"]::before {
+  content: none !important;
+}
+.compact-panel.fs-quest-panel .fs-quest-sigil-pct {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: -17px !important;
+  transform: translateX(-50%) !important;
+  z-index: 3 !important;
+  padding: 1px 7px !important;
+  border: 1px solid color-mix(in srgb, var(--fs-quest-accent) 50%, #6B4F28) !important;
+  border-radius: 2px !important;
+  background: linear-gradient(180deg, #201A11, #100D09) !important;
+  color: #E7D6B4 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: .06em !important;
+  font-variant-numeric: tabular-nums !important;
+  white-space: nowrap !important;
+}
+
+/* Text hierarchy. */
+.compact-panel.fs-quest-panel [data-iw-quest-role="kicker"] {
+  margin-bottom: 1px !important;
+  color: color-mix(in srgb, var(--fs-quest-accent) 66%, #C7B38A) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="title"] {
+  color: #F2EBDD !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1.12 !important;
+  letter-spacing: .02em !important;
+  text-shadow: 0 1px 0 #000 !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="brief"] {
+  color: #C7C0B2 !important;
+  font-family: var(--iw-font-flavour, var(--iw-font-ui)) !important;
+  font-size: 11.5px !important;
+  font-style: italic !important;
+  line-height: 1.25 !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="objective"] {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+  margin-top: 2px !important;
+  color: #DAD2C1 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="objective"]::before {
+  content: "\25C6" !important;
+  color: color-mix(in srgb, var(--fs-quest-accent) 72%, #C9A66A) !important;
+  font-size: 8px !important;
+  transform: translateY(-1px) !important;
+}
+
+/* When the objective line is an item-tooltip trigger, give it a hover
+   affordance without turning it into a boxed control. */
+.compact-panel.fs-quest-panel [data-iw-quest-role="objective"][data-iw-tooltip-trigger] {
+  cursor: help !important;
+  border-radius: 2px !important;
+  transition: color .12s, background .12s !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="objective"][data-iw-tooltip-trigger]:hover,
+.compact-panel.fs-quest-panel [data-iw-quest-role="objective"][data-iw-tooltip-trigger]:focus-visible {
+  outline: none !important;
+  color: #F1E8D4 !important;
+  background: color-mix(in srgb, var(--fs-quest-accent) 14%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fs-quest-accent) 14%, transparent) !important;
+}
+
+/* ── Reward plaque: a 3-slice frame, so it fits ANY label length ──────
+   The reward label is the one plaque on the page whose text length is not
+   under the skin's control: "+1,875g • +810 combat XP" and
+   "+2,250g • +1944 tailoring XP" differ by ~30px, and a longer
+   discipline name or a six-figure payout will differ by more.
+
+   A single sprite window cannot serve that. `SkillsArtService` sizes every
+   atlas sprite with a PERCENTAGE background-size pair, which stretches the
+   cell to exactly fill its box -- so a content-width box silently distorts
+   the art. Measured, that is what shipped: the plaque was 168x30 minimum but
+   ~200x30 in practice (6.7:1) against 300x100 art (3.00:1), and since the
+   flared horns occupy the outer 19% of the sprite, stretching them 2.2x
+   horizontally dragged them inward over the text. Restoring the true 3:1
+   ratio is not an option here either -- at this label width it would demand
+   a ~90px-tall plaque.
+
+   So the plaque is 3-sliced instead: the horns are fixed-size, only the flat
+   centre stretches, and the label length stops mattering. Measured from the
+   art (build-tools, alpha profile of skills_xp_plaque_wide.webp, 300x100):
+
+     opaque bbox          0,7 300x71   -- 7px dead row on top, 22px below
+     horn / flat boundary x = 58 and x = 242 (column alpha is a flat 52%
+                          between them, i.e. no centre ornament to smear)
+
+   `border-image-width: 0 <cap> 0 <cap>` draws no top/bottom band, so the
+   MIDDLE row alone fills the box: source rows 7..77 (71px) map to the full
+   height. Keeping the horns undistorted therefore means
+   cap = 58 x height / 71, which is what --fs-plaque-cap computes. Change
+   --fs-plaque-h and everything else follows.
+
+   This is the standalone sheet, not the atlas cell: `border-image-slice`
+   slices the WHOLE image, so an atlas is unusable as a source.
+
+   The native text stays as the accessible copy (font-size: 0) and the
+   trimmed value is drawn by ::before, like the skill Base plaque. */
+.compact-panel.fs-quest-panel [data-iw-quest-role="reward"] {
+  --fs-plaque-h: 42px;
+  --fs-plaque-cap: calc(var(--fs-plaque-h) * 58 / 71);
+  align-self: flex-start !important;
+  display: grid !important;
+  place-items: center !important;
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+  height: var(--fs-plaque-h) !important;
+  min-height: var(--fs-plaque-h) !important;
+  margin-top: 4px !important;
+  /* Clear of the horns, plus a little air. */
+  padding: 0 calc(var(--fs-plaque-cap) + 7px) !important;
+  border: 0 solid transparent !important;
+  border-radius: 0 !important;
+  background: none !important;
+  border-image-source: url('../assets/skills_xp_plaque_wide.webp') !important;
+  border-image-slice: 7 58 22 58 fill !important;
+  border-image-width: 0 var(--fs-plaque-cap) 0 var(--fs-plaque-cap) !important;
+  border-image-outset: 0 !important;
+  border-image-repeat: stretch !important;
+  color: #F0D8A6 !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 0 !important;
+  text-shadow: 0 1px 1px #000 !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="reward"]::before {
+  content: attr(data-iw-quest-reward) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em !important;
+  font-variant-numeric: tabular-nums !important;
+  white-space: nowrap !important;
+}
+
+/* Progress rail. */
+.compact-panel.fs-quest-panel [data-iw-quest-role="progress-track"] {
+  grid-area: track !important;
+  width: 100% !important;
+  height: 5px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #3B3020 !important;
+  border-radius: 0 !important;
+  background: #060604 !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.9) !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="progress-fill"] {
+  height: 100% !important;
+  border-radius: 0 !important;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--fs-quest-accent) 92%, #D9B164),
+    color-mix(in srgb, var(--fs-quest-accent) 66%, #7C4A24)) !important;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--fs-quest-accent) 24%, transparent) !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="progress-label"] {
+  grid-area: label !important;
+  margin: 0 !important;
+  color: #A9A190 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* == Command rail: the artwork IS the control ==========================
+   Both controls carry an action_frame sprite, and once it is painted the
+   button's OWN plate has to go. The frame art tapers to transparent over the
+   outer ~28px of its 264px cell (measured column alpha: 1% at x=0, 94% by
+   x=28), so any border / gradient / box-shadow left underneath shows through
+   as a second, squarer rectangle around the art -- which is exactly the
+   "old button under the graphic" this rail used to draw. The base rules below
+   therefore keep that plate ONLY as the no-art fallback; every
+   [data-iw-skills-ui-ready="1"] rule strips it back to the sprite alone and
+   moves the drop shadow into `filter`, so the shadow follows the art's alpha
+   instead of the box.
+
+   Geometry: action_frame is 264x75 (3.52). A percentage background-size pair
+   stretches the cell to exactly fill the box, so the box has to hold that
+   ratio or the frame distorts. `aspect-ratio` keeps it at every rail width;
+   min-width 176 puts the resting size at 176x50, comfortably over the 44px
+   touch target.
+
+   Skip is the secondary action and takes the DESATURATED frame
+   (action_frame_disabled -- grey metal, no gold), which is a hierarchy cue,
+   not a state cue. Its real :disabled state stays distinct: rule 5 says the
+   skin may not repaint state away, so a disabled Skip additionally loses
+   saturation and opacity and takes not-allowed. */
+.compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"],
+.compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
+  aspect-ratio: 264 / 75 !important;
+  min-width: 176px !important;
+  min-height: 44px !important;
+  padding: 0 26px !important;
+  border-radius: 3px !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: .07em !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,.8) !important;
+  cursor: pointer !important;
+  transition: filter .12s, border-color .12s, color .12s !important;
+}
+
+/* Fallback plate -- drawn only while the atlas has not resolved. */
+.compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"] {
+  border: 1px solid color-mix(in srgb, var(--fs-quest-accent) 80%, #B58B4B) !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--fs-quest-accent) 80%, #6E4423),
+    color-mix(in srgb, var(--fs-quest-accent) 56%, #241610)) !important;
+  color: #FFF0D8 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -1px 0 rgba(0,0,0,.46),
+    0 2px 6px rgba(0,0,0,.32) !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
+  border: 1px solid #58482B !important;
+  background: linear-gradient(180deg, #242018, #17140F) !important;
+  color: #C9BFA6 !important;
+  letter-spacing: .06em !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+/* Art present: nothing but the sprite. */
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"],
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"] {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"] {
+  background-size: var(--fs-ui-action-idle-size) !important;
+  background-position: var(--fs-ui-action-idle-position) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"] {
+  background-size: var(--fs-ui-action-disabled-size) !important;
+  background-position: var(--fs-ui-action-disabled-position) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-quest-state="ready"] {
+  --fs-quest-accent: #B84A20;
+  box-shadow:
+    inset 0 0 0 1px #0B0A08,
+    inset 0 0 0 2px rgba(184,74,32,.22),
+    0 0 16px rgba(184,74,32,.16),
+    0 2px 7px rgba(0,0,0,.42) !important;
+}
+
+/* Hover / disabled. With the plate gone `border-color` has nothing to say,
+   so hover reads through the label and a bloom on the art itself. */
+.compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"]:hover:not(:disabled) {
+  filter: brightness(1.08) !important;
+  border-color: var(--iw-ember-hi, #E0894A) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:hover:not(:disabled) {
+  color: #FFF8E8 !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)) brightness(1.1) !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="skip"]:hover:not(:disabled) {
+  border-color: #7A6238 !important;
+  color: #F0E4C8 !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]:hover:not(:disabled) {
+  color: #F0E4C8 !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)) brightness(1.14) !important;
+}
+.compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"]:disabled,
+.compact-panel.fs-quest-panel [data-iw-quest-role="skip"]:disabled {
+  cursor: not-allowed !important;
+  filter: saturate(.4) brightness(.82) !important;
+  opacity: .9 !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:disabled {
+  color: #B9AE97 !important;
+  background-size: var(--fs-ui-action-disabled-size) !important;
+  background-position: var(--fs-ui-action-disabled-position) !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)) saturate(.4) brightness(.82) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]:disabled {
+  color: #8C8577 !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)) grayscale(1) brightness(.62) !important;
+  opacity: .6 !important;
+}
+
+/* Narrow layout: sigil moves inline above the content. */
+@media (max-width: 600px) {
+  .compact-panel.fs-quest-panel > [data-iw-quest-zone="body"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "sigil"
+      "row"
+      "track"
+      "label" !important;
+    row-gap: 8px !important;
+    padding: 12px 12px 11px !important;
+    justify-items: center !important;
+  }
+  .compact-panel.fs-quest-panel .fs-quest-sigil {
+    --fs-quest-sigil-size: 58px;
+    margin-bottom: 8px !important;
+  }
+  .compact-panel.fs-quest-panel .fs-quest-sigil::before { font-size: 22px !important; }
+  .compact-panel.fs-quest-panel [data-iw-quest-zone="row"] {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .compact-panel.fs-quest-panel [data-iw-quest-zone="commands"] {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+  /* aspect-ratio ties height to width here too, so the controls must be
+     capped: left to grow across a full-width row they would stand ~80px
+     tall. 176-200px keeps them on the frame's 3.52 ratio at 50-57px. */
+  .compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"],
+  .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
+    flex: 1 1 176px !important;
+    max-width: 200px !important;
+  }
+  /* The plaque is the widest thing in the column at this width; shrink the
+     label a touch so cap + text + cap still fits a 320px viewport. */
+  .compact-panel.fs-quest-panel [data-iw-quest-role="reward"] {
+    --fs-plaque-h: 38px;
+    justify-self: start !important;
+    max-width: 100% !important;
+  }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="reward"]::before {
+    font-size: 10.5px !important;
+  }
 }

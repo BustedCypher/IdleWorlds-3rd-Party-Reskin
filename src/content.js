@@ -19,7 +19,9 @@ import { initTooltipEngine, hideTooltip } from './modules/TooltipEngine.js';
 import { scanForItemNames, clearItemNameScan } from './modules/NameScanner.js';
 import { initInventoryRenderer, clearInventoryRenderer } from './modules/InventoryRenderer.js';
 import { initSkillPanelRenderer, clearSkillPanels } from './modules/SkillPanelRenderer.js';
+import { initQuestPanelRenderer, clearQuestPanels } from './modules/QuestPanelRenderer.js';
 import { initUIFoundation, clearUIFoundation } from './modules/UIFoundation.js';
+import { initHeaderRenderer, clearHeaderRenderer } from './modules/HeaderRenderer.js';
 import { paintBackground, clearBackgroundPaint } from './modules/BackgroundPainter.js';
 import {
   guard,
@@ -34,6 +36,7 @@ import tooltipCss from './styles/tooltip-engine.css';
 import inventoryCss from './styles/inventory.css';
 import skillPanelCss from './styles/skillpanel.css';
 import uiSystemCss from './styles/ui-system.css';
+import headerCss from './styles/header.css';
 
 const ENABLED_KEY = 'iw-skin-enabled';
 const VERSION = '1.6.0';
@@ -49,6 +52,10 @@ function injectPresentationStyles() {
   inject('tooltip-engine', tooltipCss);
   inject('inventory', inventoryCss);
   inject('skillpanel', skillPanelCss);
+  inject('header', headerCss);
+  // ui-system.css MUST be injected LAST (see CLAUDE.md): its generic control
+  // rule is the final say on shared button surfacing, and header.css's button
+  // roles opt out via that rule's :not() chain.
   inject('ui-system', uiSystemCss);
 }
 
@@ -71,7 +78,9 @@ function bindConsumersOnce() {
   guard('init:tooltip', initTooltipEngine);
   guard('init:inventory', initInventoryRenderer);
   guard('init:skill-panel', initSkillPanelRenderer);
+  guard('init:quest-panel', initQuestPanelRenderer);
   guard('init:ui-foundation', initUIFoundation);
+  guard('init:header', initHeaderRenderer);
 
   on('iw:dom-flush', e => {
     const roots = e.detail?.roots || [];
@@ -144,7 +153,9 @@ function teardown() {
   guard('teardown:name-scan', clearItemNameScan);
   guard('teardown:inventory', clearInventoryRenderer);
   guard('teardown:skill-panel', clearSkillPanels);
+  guard('teardown:quest-panel', clearQuestPanels);
   guard('teardown:ui-foundation', clearUIFoundation);
+  guard('teardown:header', clearHeaderRenderer);
   guard('teardown:background', clearBackgroundPaint);
   guard('teardown:styles', removeAllStyles);
 

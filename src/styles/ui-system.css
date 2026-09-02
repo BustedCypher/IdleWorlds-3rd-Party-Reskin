@@ -19,30 +19,104 @@
 }
 
 /* ── Major frames ───────────────────────────────────────────────────── */
-[data-iw-ui="section-frame"] {
+/* ══ Shared forged frame ═══════════════════════════════════════════════
+   ONE treatment for every panel the skin frames, so Inventory, Quests,
+   Market, Skill Actions and the rest read as the same object.
+
+   Previously each panel painted its own ground: ui-system drew a flat
+   --iw-ink-800, skillpanel drew the textured stack, and inventory drew the
+   header marble. Three grounds, three looks. This is now the only owner.
+
+   The corner filigree uses border-image so each corner renders at a FIXED
+   size no matter how tall the panel grows; the slice consumes the whole
+   sheet, so the edge and middle regions are empty by construction and only
+   the four corners paint. It sits at z-index 0 — behind panel content —
+   because a panel's own controls may reach into the corner, and ornament
+   losing to a button is the safe failure.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))) {
   position: relative !important;
-  border: 1px solid var(--iw-frame-edge) !important;
-  border-radius: 6px !important;
+  isolation: isolate !important;
+  border: 1px solid #6B4F28 !important;
+  border-radius: 4px !important;
+  /* Reserve room for the corner ornament: the game ships p-3.5 (14px), which
+     is shorter than the filigree, so without this it lands on the content. */
+  padding: var(--iw-frame-pad-y, 26px) var(--iw-frame-pad-x, 22px) !important;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.012), transparent 48px),
-    linear-gradient(90deg, rgba(110,80,35,.014), transparent 26%),
-    var(--iw-ink-800) !important;
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 32%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+  background-blend-mode: normal, soft-light, normal !important;
   box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,.48),
-    inset 0 1px 0 rgba(255,255,255,.014),
-    0 6px 18px rgba(0,0,0,.18) !important;
+    inset 0 0 0 1px rgba(0,0,0,.78),
+    inset 0 1px 0 rgba(226,164,72,.08),
+    0 5px 18px rgba(0,0,0,.24) !important;
 }
 
-[data-iw-ui="section-frame"]::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-  left: 14px;
-  right: 14px;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, var(--iw-gold-dim), rgba(157,132,88,.16) 34%, transparent 78%);
+/* Gold hairline across the head of the frame. */
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"])))::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  left: 12px !important;
+  right: 12px !important;
+  top: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, #9B7437 14%, #D09A4B 50%, #9B7437 86%, transparent) !important;
+  opacity: .78 !important;
+}
+
+/* Four mirrored corners from one 176x190 sheet. */
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"])))::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  border-style: solid !important;
+  border-width: 30px 28px !important;
+  border-color: transparent !important;
+  border-image: url('../assets/inventory/panel_corners.webp') 95 88 / 30px 28px / 0 stretch !important;
+}
+
+/* Panel content sits above both ornaments. */
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))) > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 900px) {
+  :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))) {
+    padding: var(--iw-frame-pad-mobile-y, var(--iw-frame-pad-y, 20px)) var(--iw-frame-pad-mobile-x, var(--iw-frame-pad-x, 16px)) !important;
+  }
+  :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"])))::after {
+    border-width: 24px 22px !important;
+    border-image-width: 24px 22px !important;
+  }
+}
+
+
+/* A framed element that CONTAINS another framed element is a layout column —
+   the two-column grid, or the wrapper holding Inventory above Quests — not a
+   panel. UIFoundation's heading walk and the skills section class both land on
+   these, which drew a second and third frame around the real ones. Panels are
+   the LEAF frames; columns carry nothing. */
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"])) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  isolation: auto !important;
+}
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))::before,
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  background: none !important;
 }
 
 [data-iw-ui="section-title"] {
@@ -50,6 +124,314 @@
   letter-spacing: .035em !important;
   color: var(--iw-text-hi) !important;
   text-shadow: 0 1px 0 #000 !important;
+}
+
+/* ── Activity surfaces ────────────────────────────────────────────────
+   Current Action, Action Log, and World Chat share the major forged frame,
+   but stay denser than inventory/quest content. React owns every node; these
+   rules paint semantic hooks applied by UIFoundation. */
+[data-iw-panel] {
+  --iw-frame-pad-y: 18px;
+  --iw-frame-pad-x: 20px;
+  --iw-frame-pad-mobile-y: 16px;
+  --iw-frame-pad-mobile-x: 14px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  font-family: var(--iw-font-ui) !important;
+  color: var(--iw-text) !important;
+}
+
+[data-iw-panel] *,
+[data-iw-panel] *::before,
+[data-iw-panel] *::after { box-sizing: border-box; }
+
+[data-iw-panel][data-iw-panel-header="split"] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+}
+[data-iw-panel][data-iw-panel-header="split"] > * { grid-column: 1 / -1; }
+[data-iw-panel][data-iw-panel-header="split"] > [data-iw-panel-part="header-title"] {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
+}
+[data-iw-panel][data-iw-panel-header="split"] > [data-iw-panel-part="header-tools"] {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 4px !important;
+}
+
+[data-iw-panel] [data-iw-ui="section-title"] {
+  margin: 0 !important;
+  font-size: clamp(17px, 1.8vw, 21px) !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+}
+
+[data-iw-panel-part="header"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+[data-iw-panel-part="header"] > * { min-width: 0; }
+:is([data-iw-panel-part="header"], [data-iw-panel-part="header-title"]) p {
+  margin: 4px 0 0 !important;
+  color: var(--iw-faint) !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+}
+
+:is([data-iw-panel-part="header"], [data-iw-panel-part="header-tools"]) button,
+[data-iw-panel-part="panel-control"] {
+  min-width: 30px !important;
+  min-height: 30px !important;
+  padding: 0 9px !important;
+  border: 1px solid #4B3D26 !important;
+  border-radius: 3px !important;
+  background: linear-gradient(180deg, #242018, #15130F) !important;
+  color: var(--iw-dim) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+  font-family: var(--iw-font-ui) !important;
+}
+
+:is([data-iw-panel-part="header"], [data-iw-panel-part="header-tools"]) button:hover,
+[data-iw-panel-part="panel-control"]:hover {
+  border-color: #806039 !important;
+  color: var(--iw-text-hi) !important;
+}
+
+[data-iw-panel-part="panel-control"] {
+  width: auto !important;
+  min-height: 24px !important;
+  margin-left: 8px !important;
+  padding: 0 7px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+
+@media (min-width: 601px) {
+  [data-iw-panel="action-log"] [data-iw-panel-part="header"] > :first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+}
+
+/* Current action */
+[data-iw-panel="current-action"] > div:not([data-iw-panel-part]),
+[data-iw-panel="current-action"] > strong {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--iw-text-hi) !important;
+}
+
+[data-iw-panel="current-action"] > p {
+  margin: -2px 0 2px !important;
+  color: var(--iw-faint) !important;
+  font-size: 11.5px !important;
+  line-height: 1.3 !important;
+}
+
+[data-iw-panel-part="progress"] {
+  position: relative !important;
+  width: 100% !important;
+  height: 10px !important;
+  min-height: 10px !important;
+  overflow: hidden !important;
+  border: 1px solid #342D22 !important;
+  border-radius: 999px !important;
+  background: #090A09 !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.9) !important;
+}
+
+[data-iw-panel-part="progress"] > * {
+  height: 100% !important;
+  min-height: 100% !important;
+  border-radius: inherit !important;
+  background: linear-gradient(90deg, #E5AE39 0%, #F28A42 52%, #D54B74 100%) !important;
+  box-shadow: 0 0 8px rgba(222,102,69,.28) !important;
+}
+
+[data-iw-panel-part="queue"] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 4px 10px !important;
+  min-width: 0 !important;
+  padding: 10px 12px !important;
+  border: 1px solid #463720 !important;
+  border-radius: 3px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.022), transparent 45%),
+    rgba(12,12,10,.76) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.34) !important;
+}
+
+[data-iw-panel-part="queue"] > :first-child {
+  grid-column: 1 !important;
+  color: var(--iw-faint) !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .16em !important;
+  text-transform: uppercase !important;
+}
+
+[data-iw-panel-part="queue"] > button {
+  grid-column: 2 !important;
+  grid-row: 1 / span 2 !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border: 1px solid #4B3D26 !important;
+  border-radius: 3px !important;
+  background: linear-gradient(180deg, #26221B, #15130F) !important;
+  color: var(--iw-dim) !important;
+}
+
+/* Dense feed language shared by log and chat. */
+[data-iw-panel-part="feed"] {
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  border: 1px solid #4A3820 !important;
+  border-radius: 3px !important;
+  background-color: #0B0C0A !important;
+  background-image: linear-gradient(180deg, rgba(255,255,255,.018), transparent 22%) !important;
+  box-shadow: inset 0 0 18px rgba(0,0,0,.24) !important;
+  scrollbar-color: #4A3820 #11110E !important;
+  scrollbar-width: thin !important;
+}
+
+[data-iw-panel="action-log"] [data-iw-panel-part="feed"] { max-height: 300px !important; }
+[data-iw-panel="world-chat"] [data-iw-panel-part="feed"] { max-height: min(46vh, 430px) !important; }
+
+[data-iw-panel-part="feed-row"] {
+  display: block !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 8px 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #29251D !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+}
+
+[data-iw-panel-part="feed-row"]:last-child { border-bottom: 0 !important; }
+[data-iw-panel-part="feed-row"] > * { margin: 0 !important; }
+[data-iw-panel-part="feed-row"] > * + * { margin-top: 3px !important; }
+[data-iw-panel-part="feed-row"] > :first-child {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+
+[data-iw-panel-part="feed-row"] time {
+  flex: 0 0 auto !important;
+  color: #6F6A60 !important;
+  font-size: 10px !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+[data-iw-panel="action-log"] [data-iw-panel-part="feed-row"] > :first-child > :first-child {
+  color: var(--iw-faint) !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .15em !important;
+  text-transform: uppercase !important;
+}
+
+[data-iw-panel="action-log"] [data-iw-panel-part="feed-row"] > :last-child {
+  color: #82BBD0 !important;
+  font-size: 11px !important;
+}
+
+[data-iw-panel="world-chat"] [data-iw-panel-part="feed-row"] strong {
+  color: #8CC8E0 !important;
+  font-weight: 700 !important;
+}
+
+[data-iw-panel="world-chat"] [data-iw-panel-part="feed-row"] b {
+  color: #D9D0BE !important;
+  font-weight: 700 !important;
+}
+
+[data-iw-panel-part="composer"] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 2px 0 0 !important;
+}
+
+[data-iw-panel-part="chat-input"] {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 42px !important;
+  padding: 0 13px !important;
+  border: 1px solid #403522 !important;
+  border-radius: 3px !important;
+  background: #080A09 !important;
+  color: var(--iw-text) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 13px !important;
+  box-shadow: inset 0 2px 7px rgba(0,0,0,.48) !important;
+}
+
+[data-iw-panel-part="chat-input"]::placeholder { color: #6F685A !important; }
+[data-iw-panel-part="chat-input"]:focus {
+  outline: 1px solid rgba(197,145,67,.5) !important;
+  outline-offset: 1px !important;
+  border-color: #8A6835 !important;
+}
+
+[data-iw-panel-part="send"] {
+  min-width: 104px !important;
+  height: 42px !important;
+  padding: 0 18px !important;
+  border: 1px solid #9B481F !important;
+  border-radius: 3px !important;
+  background: linear-gradient(180deg, #BC4D20, #7D2D10) !important;
+  color: #FFF0DA !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: .025em !important;
+  text-shadow: 0 1px 0 #3A1005 !important;
+  box-shadow: inset 0 1px 0 rgba(255,218,174,.14) !important;
+}
+
+[data-iw-panel-part="send"]:hover:not(:disabled) { filter: brightness(1.12); }
+
+@media (max-width: 600px) {
+  [data-iw-panel] {
+    gap: 8px !important;
+  }
+  [data-iw-panel] [data-iw-ui="section-title"] { font-size: 17px !important; }
+  [data-iw-panel-part="feed-row"] { padding: 8px 9px !important; font-size: 11.5px !important; }
+  [data-iw-panel-part="header"] { align-items: flex-start !important; }
+}
+
+@media (max-width: 430px) {
+  [data-iw-panel-part="composer"] { grid-template-columns: minmax(0, 1fr) !important; gap: 7px !important; }
+  [data-iw-panel-part="send"] { width: 100% !important; min-width: 0 !important; }
+  [data-iw-panel-part="feed-row"] > :first-child { flex-wrap: wrap !important; gap: 2px 8px !important; }
 }
 
 /* ── Main navigation rail ───────────────────────────────────────────── */
@@ -158,9 +540,16 @@
 /* ── Generic control language ───────────────────────────────────────── */
 
 /* Surface treatment is safe to apply globally: it changes how a control is
-   painted, never how much room it takes. */
-button:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),
-[role="button"]:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {
+   painted, never how much room it takes.
+
+   Every hook in the :not() chain is a control that paints its own art and must
+   opt out. Note that each added clause also raises this rule's specificity, so
+   the skill command buttons (nav-button / action-button) and the quest command
+   buttons (data-iw-quest-role turn-in / skip), whose skillpanel.css art rules
+   were tuned to clear the shorter chain, are excluded here too rather than
+   chased with an ever-higher `html …` override. */
+button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]),
+[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]) {
   border-color: var(--iw-line-hi) !important;
   background-image: linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,0,0,.09)) !important;
 }
@@ -183,8 +572,8 @@ button:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):
   min-height: 30px;
 }
 
-button:not(.iw-item-ref):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):disabled,
-[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {
+button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):disabled,
+[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]) {
   filter: saturate(.58) brightness(.84) !important;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.22) !important;
 }

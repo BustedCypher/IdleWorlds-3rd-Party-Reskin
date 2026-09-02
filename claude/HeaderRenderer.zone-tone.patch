@@ -1,0 +1,35 @@
+--- a/src/modules/HeaderRenderer.js
++++ b/src/modules/HeaderRenderer.js
+@@
+ function classifyAdjacent() {
+   const nav = document.querySelector('[data-iw-ui="main-nav"]');
+   if (nav) applyNavVars(nav);
+@@
+   const zone = document.querySelector('[data-iw-ui="zone-bar"]');
+   if (zone) {
+     setRole(zone, 'zone-shell');
+     applyZoneVars(zone);
++    // Give each zone action a stable tone hook. CSS can only reach these
++    // buttons positionally (:first-of-type / :last-of-type), which breaks the
++    // moment the game adds or reorders a control. The words are read here,
++    // once, and written as data — no DOM is mutated beyond the attribute.
++    zone.querySelectorAll('[data-iw-ui="zone-action"]').forEach(btn => {
++      const label = norm(btn.textContent).toLowerCase();
++      const tone = /^zones$/.test(label) ? 'zones'
++        : /^next\s+zone$/.test(label) ? 'next'
++        : /^previous\s+zone$/.test(label) ? 'prev'
++        : null;
++      if (tone) btn.setAttribute('data-iw-zone-action', tone);
++      else btn.removeAttribute('data-iw-zone-action');
++    });
+   }
+ }
+@@
+ export function clearHeaderRenderer() {
+   document.querySelectorAll(`[${ROLE}]`).forEach(el => {
+     el.removeAttribute(ROLE);
+     delete el.dataset.iwHeaderCard;
+   });
++  document.querySelectorAll('[data-iw-zone-action]')
++    .forEach(el => el.removeAttribute('data-iw-zone-action'));
+   document.querySelectorAll('.fs-header-crest').forEach(el => el.remove());

@@ -104,35 +104,49 @@ function lockedCopySignal(panel) {
 }
 
 function skillSignature(panel) {
-  const buttons = [...panel.querySelectorAll('button')]
-    .map(btn => normaliseSkillSignal(btn.textContent));
+  const buttonEls = [...panel.querySelectorAll('button')];
+  const buttons = buttonEls.map(btn => normaliseSkillSignal(btn.textContent));
   const identities = skillIdentitySignals(panel);
   const lockedCopy = lockedCopySignal(panel);
 
   // JSON preserves array boundaries and exact signal content without a
   // collision-prone delimiter/hash scheme. These strings are tiny compared
   // with the panel subtree scans detection would otherwise repeat.
-  return JSON.stringify([buttons, identities, lockedCopy]);
+  const sig = JSON.stringify([buttons, identities, lockedCopy]);
+  // Detection on a cache miss needs the same button/identity/locked-copy scans
+  // this signature just ran. Returning them alongside `sig` means a miss
+  // never repeats the subtree walks a second time (Audit S5).
+  return { sig, buttonEls, buttons, identities, lockedCopy };
 }
 
 function detectSkillTypeCached(panel) {
-  const sig = skillSignature(panel);
+  const computed = skillSignature(panel);
   const hit = skillTypeCache.get(panel);
-  if (hit && hit.sig === sig) return hit.type;
-  const type = detectSkillType(panel);
-  skillTypeCache.set(panel, { sig, type });
+  if (hit && hit.sig === computed.sig) return hit.type;
+  const type = detectSkillType(panel, computed);
+  skillTypeCache.set(panel, { sig: computed.sig, type });
   return type;
 }
 
-function detectSkillType(panel) {
+function detectSkillType(panel, precomputed) {
   // Positive identification only. .compact-panel is reused across quests,
   // bosses, village and other systems, so searching arbitrary panel body text
   // for words such as "craft" caused unrelated cards to inherit skill chrome.
-  const actionTexts = [...panel.querySelectorAll('button')]
-    .map(btn => normaliseSkillSignal(btn.textContent))
-    .filter(Boolean);
+  const { buttonEls, buttons, identities: labels, lockedCopy } = precomputed;
+  const actionTexts = buttons.filter(Boolean);
 
   const hasAction = (...names) => actionTexts.some(text => names.includes(text));
+
+  // Quest cards are also .compact-panel. They never expose a skill action verb;
+  // they offer a reward line plus a Turn In / Skip control. A quest such as
+  // "Tailoring Work Order" would otherwise trip the skill-identity fallback and
+  // fight QuestPanelRenderer for the same node, so reject it up front. This is
+  // an anchored probe of the reward line, not an arbitrary body-text search.
+  const hasTurnInOrSkip = actionTexts.some(text => /^turn in$/.test(text) || /^skip(?:\s*\(\d+\))?$/.test(text));
+  if (hasTurnInOrSkip &&
+      [...panel.querySelectorAll('p,div,span')].some(el => /^reward\s*:/i.test(el.textContent.trim()))) {
+    return 'unknown';
+  }
 
   // Specific verbs are authoritative. GATHER/HARVEST are deferred because
   // Spellcraft currently reuses those verbs for mana harvesting.
@@ -148,11 +162,10 @@ function detectSkillType(panel) {
   // CRAFT is now reused by Spellcrafting and Tailoring recipes, so unlike the
   // discipline-specific verbs above it cannot identify the skill by itself.
   // Prefer the visible identity label before falling back to Crafting.
-  const labels = skillIdentitySignals(panel);
   const identityType = skillTypeFromIdentity(labels);
-  const hasDisabledControl = [...panel.querySelectorAll('button')].some(btn =>
+  const hasDisabledControl = buttonEls.some(btn =>
     btn.disabled || btn.getAttribute('aria-disabled') === 'true');
-  if (hasDisabledControl && lockedCopySignal(panel)) return 'locked';
+  if (hasDisabledControl && lockedCopy) return 'locked';
   if (identityType) return identityType;
   if (hasAction('craft'))                     return 'crafting';
   if (hasAction('gather', 'harvest'))        return 'gathering';

@@ -1,4 +1,4 @@
-import { build } from 'esbuild';
+import { build, transform } from 'esbuild';
 import { access, mkdir, readFile, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,13 +41,55 @@ if (missing.length) {
 
 await mkdir(DIST, { recursive: true });
 
+/**
+ * Strip CSS block comments, quote-aware.
+ *
+ * The stylesheets are inlined into the bundle verbatim by the text loader, so
+ * every explanatory comment in src/styles ships to every player. They are worth
+ * keeping in source and worth nothing at runtime. A naive /\/\*[\s\S]*?\*\// would
+ * also eat a "/*" that appears inside a quoted string or a url(), so this walks
+ * the text and only removes comments found outside string context.
+ */
+function stripCssComments(css) {
+  let out = '';
+  let i = 0;
+  let quote = null;
+  while (i < css.length) {
+    const c = css[i];
+    if (quote) {
+      out += c;
+      if (c === '\\') { out += css[i + 1] ?? ''; i += 2; continue; }
+      if (c === quote) quote = null;
+      i += 1;
+      continue;
+    }
+    if (c === '"' || c === "'") { quote = c; out += c; i += 1; continue; }
+    if (c === '/' && css[i + 1] === '*') {
+      const end = css.indexOf('*/', i + 2);
+      if (end === -1) break;
+      i = end + 2;
+      continue;
+    }
+    out += c;
+    i += 1;
+  }
+  // collapse the blank lines the removals leave behind
+  return out.replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n');
+}
+
 const normalizedCssTextPlugin = {
   name: 'normalized-css-text',
   setup(buildApi) {
-    buildApi.onLoad({ filter: /\.css$/ }, async ({ path: cssPath }) => ({
-      contents: (await readFile(cssPath, 'utf8')).replace(/\r\n?/g, '\n'),
-      loader: 'text',
-    }));
+    buildApi.onLoad({ filter: /\.css$/ }, async ({ path: cssPath }) => {
+      const normalized = stripCssComments((await readFile(cssPath, 'utf8')).replace(/\r\n?/g, '\n'));
+      const { code } = await transform(normalized, {
+        loader: 'css',
+        minifyWhitespace: true,
+        charset: 'utf8',
+        target: ['chrome109'],
+      });
+      return { contents: code, loader: 'text' };
+    });
   },
 };
 const result = await build({
@@ -69,6 +111,14 @@ const output = await stat(OUTFILE);
 const sourceInputs = Object.keys(result.metafile.inputs)
   .filter(file => /\.(?:js|css)$/i.test(file)).length;
 console.log(`Built ${OUTFILE} (${output.size.toLocaleString()} bytes, ${sourceInputs} source modules)`);
+
+// Advisory only. The committed bundle is intentionally un-minified for
+// readability, so its size is not gated — but unusual growth should be loud.
+const BUNDLE_SOFT_BUDGET = 300_000;
+if (output.size >= BUNDLE_SOFT_BUDGET) {
+  console.warn(`WARNING - bundle is ${output.size.toLocaleString()} bytes, over the ` +
+    `${BUNDLE_SOFT_BUDGET.toLocaleString()}-byte soft budget. Not fatal; review the growth.`);
+}
 
 const staleBase = path.join(DIST, 'base.css');
 if (await exists(staleBase)) {

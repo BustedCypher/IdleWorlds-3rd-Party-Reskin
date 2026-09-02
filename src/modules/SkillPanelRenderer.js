@@ -144,28 +144,51 @@ function styleButton(btn) {
   // Role geometry is applied inline because IdleWorlds frequently writes its
   // own inline button dimensions during React updates.
   if (role === 'nav-button') {
-    setOwnedStyle(buttonStyleOwner, btn, 'width', '40px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '40px');
+    // The pager IS the skills_nav_*.svg artwork — a framed arrow. Three things
+    // must not fight it, and all three have to be set here because these are
+    // inline `!important` and outrank every stylesheet rule:
+    //   * the control's own border/box-shadow, which drew a second, squarer
+    //     outline around the artwork's frame;
+    //   * the native glyph, which rendered a vector arrow ON TOP of the drawn
+    //     one (hence transparent text at font-size 0);
+    //   * the classified-state gradient from BUTTON_STYLES, cleared by the
+    //     `background` shorthand before the artwork is applied.
+    // The 44px box is the touch target; the artwork is inset inside it.
+    setOwnedStyle(buttonStyleOwner, btn, 'width', '44px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '44px');
     setOwnedStyle(buttonStyleOwner, btn, 'height', '44px');
     setOwnedStyle(buttonStyleOwner, btn, 'min-height', '44px');
     setOwnedStyle(buttonStyleOwner, btn, 'padding', '0');
-    setOwnedStyle(buttonStyleOwner, btn, 'background', 'transparent');
+    setOwnedStyle(buttonStyleOwner, btn, 'background', 'none');
     const navImage = btn.dataset.iwNavDirection === 'prev' ? 'var(--fs-skills-nav-prev)' : 'var(--fs-skills-nav-next)';
     setOwnedStyle(buttonStyleOwner, btn, 'background-image', navImage);
-    setOwnedStyle(buttonStyleOwner, btn, 'background-size', '100% 100%');
+    setOwnedStyle(buttonStyleOwner, btn, 'background-size', `${NAV_ART_SCALE} ${NAV_ART_SCALE}`);
     setOwnedStyle(buttonStyleOwner, btn, 'background-position', 'center');
     setOwnedStyle(buttonStyleOwner, btn, 'background-repeat', 'no-repeat');
+    setOwnedStyle(buttonStyleOwner, btn, 'border', '0');
+    setOwnedStyle(buttonStyleOwner, btn, 'box-shadow', 'none');
+    setOwnedStyle(buttonStyleOwner, btn, 'color', 'transparent');
+    setOwnedStyle(buttonStyleOwner, btn, 'font-size', '0');
   } else if (role === 'action-button') {
-    setOwnedStyle(buttonStyleOwner, btn, 'width', '132px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '132px');
-    setOwnedStyle(buttonStyleOwner, btn, 'height', '48px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '48px');
-    setOwnedStyle(buttonStyleOwner, btn, 'padding', '0 14px');
+    // Keep in step with skillpanel.css: the action frame art is 264x75 (3.52),
+    // and 44px is the touch-target floor, so 155x44 is the undistorted size.
+    // These are inline `!important`, so a disagreement here silently overrides
+    // the stylesheet rather than losing to it.
+    setOwnedStyle(buttonStyleOwner, btn, 'width', '155px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '155px');
+    setOwnedStyle(buttonStyleOwner, btn, 'height', '44px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '44px');
+    setOwnedStyle(buttonStyleOwner, btn, 'padding', '0 12px');
   }
 
   if (btn.dataset.iwBtnState !== state) btn.dataset.iwBtnState = state;
   buttonStyleSnapshots.set(btn, { state, role, style: btn.getAttribute('style') || '' });
 }
+
+// How much of the 44px touch target the framed arrow artwork fills. The box
+// stays 44px for accessibility; only the graphic shrinks. Keep in step with the
+// nav background-size in skillpanel.css.
+const NAV_ART_SCALE = '68%';
 
 const LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?(?:\s*[-\u2013]\s*\d+(?:\.\d+)?%\s*[\u2022\u00b7]\s*[\d,]+\s+(?:xp\s+)?to\s+go|\s*[\u2022\u00b7]\s*[\d,]+\s*\/\s*[\d,]+\s*xp)$/i;
 const READOUT_STYLES = {
@@ -372,11 +395,22 @@ function isPresentationHidden(el) {
   } catch { return false; }
 }
 
+// annotateStructure() calls findBestText() 8+ times per panel per render,
+// each of which used to re-run this same full-panel sweep + getComputedStyle
+// sort from scratch. One call's worth of candidates never changes mid-call
+// (synchronous, no reentrancy), so memoize the last panel's result.
+let lastCandidatePanel = null;
+let lastCandidates = null;
+
 function textCandidates(panel) {
+  if (lastCandidatePanel === panel) return lastCandidates;
   const candidates = [...panel.querySelectorAll('h1,h2,h3,h4,div,span,p')]
     .filter(el => !el.closest('button, a'))
-    .filter(el => normText(el.textContent).length <= 130);
-  return candidates.sort((a, b) => Number(isPresentationHidden(a)) - Number(isPresentationHidden(b)));
+    .filter(el => normText(el.textContent).length <= 130)
+    .sort((a, b) => Number(isPresentationHidden(a)) - Number(isPresentationHidden(b)));
+  lastCandidatePanel = panel;
+  lastCandidates = candidates;
+  return candidates;
 }
 
 function findBestText(panel, predicate) {
@@ -407,7 +441,31 @@ function findProgress(panel) {
   return { track: null, fill: null };
 }
 
+/**
+ * Which element plays which structural role only needs rediscovery when
+ * something role-assignment actually reads could have changed: the skill
+ * type, gross child count, or a button's text/disabled/aria-label (unlock
+ * events, a relabelled command). Ticking VALUES inside an already-tagged
+ * element (XP amount, progress %, ingredient count) are excluded on purpose
+ * -- they are not structural, they are why this cache exists, and the CSS
+ * painting those roles reads the live DOM directly, not a value this
+ * function wrote. Mirrors the cheapSignature idiom InventoryRenderer already
+ * uses for the same class of problem.
+ */
+const structureSignatures = new WeakMap();
+
+function structureSignature(panel, type) {
+  const buttonState = [...panel.querySelectorAll('button')].map(btn => {
+    const disabled = (btn.disabled || btn.getAttribute('aria-disabled') === 'true') ? '1' : '0';
+    return `${disabled}:${normText(btn.textContent)}:${normText(btn.getAttribute('aria-label'))}`;
+  }).join('|');
+  return `${type} ${panel.childElementCount} ${buttonState}`;
+}
+
 function annotateStructure(panel, type, meta) {
+  const sig = structureSignature(panel, type);
+  if (structureSignatures.get(panel) === sig) return;
+
   clearStructureRoles(panel);
 
   const identityLabels = (meta.labels || [meta.label]).map(label => label.toLowerCase());
@@ -621,6 +679,8 @@ function annotateStructure(panel, type, meta) {
     });
     if (!unexpectedFlowChild) panel.dataset.iwSkillLayout = 'three-zone';
   }
+
+  structureSignatures.set(panel, sig);
 }
 
 function ensureSkillArtwork(panel, type) {
@@ -683,6 +743,18 @@ function progressPercent(panel) {
   return match ? `${match[1]}%` : '';
 }
 
+/**
+ * The identity column shows the completion figure as human copy, so it must be
+ * rounded: the native fill width is a raw float ("69.8192%") and printing it
+ * verbatim reads as noise. The progress BAR keeps the exact value — only this
+ * label is rounded.
+ */
+function displayPercent(value) {
+  const match = String(value || '').match(/^(\d+(?:\.\d+)?)%$/);
+  if (!match) return value || '';
+  return `${Number(Number(match[1]).toFixed(1))}%`;
+}
+
 function centralProgressText(text) {
   const value = normText(text);
   if (!value) return '';
@@ -738,7 +810,7 @@ function ensureSkillPresentation(panel, meta) {
         percent.setAttribute('aria-hidden', 'true');
         identityZone.appendChild(percent);
       }
-      percent.textContent = percentValue;
+      percent.textContent = displayPercent(percentValue);
     } else {
       percent?.remove();
     }
@@ -801,6 +873,7 @@ function clearPanelInlineTreatment(panel) {
 }
 
 function clearPanelChrome(panel) {
+  structureSignatures.delete(panel);
   clearPanelInlineTreatment(panel);
   SkillsArtService.clearPanel(panel);
   panel.querySelectorAll('.fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp').forEach(el => el.remove());
