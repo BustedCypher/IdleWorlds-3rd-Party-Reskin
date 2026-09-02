@@ -1,0 +1,4 @@
+﻿import { chromium } from 'playwright';
+const b=await chromium.connectOverCDP('http://127.0.0.1:9223'); const p=b.contexts()[0].pages()[0];
+const data=await p.evaluate(()=>{const n=s=>String(s||'').replace(/\s+/g,' ').trim(); const info=(e,d=0)=>{const r=e.getBoundingClientRect(),c=getComputedStyle(e); return {d,tag:e.tagName.toLowerCase(),cls:typeof e.className==='string'?e.className:'',txt:n(e.textContent).slice(0,110),rect:[+r.x.toFixed(1),+r.y.toFixed(1),+r.width.toFixed(1),+r.height.toFixed(1)],disp:c.display,grid:c.gridTemplateColumns,flex:c.flexDirection,children:[...e.children].map(ch=>info(ch,d+1))};}; return info(document.querySelector('header.panel'));});
+function print(x){console.log(' '.repeat(x.d*2)+`${x.tag} [${x.rect.join(',')}] ${x.disp} grid=${x.grid} flex=${x.flex} :: ${x.cls} :: ${x.txt}`); if(x.d<4) x.children.forEach(print)}; print(data); await b.close();

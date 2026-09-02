@@ -28,12 +28,19 @@ const ACTION_KIND_ATTR = 'data-fs-action-kind';
 const INVENTORY_ROOT_ATTR = 'data-iw-inventory-root';
 const INVENTORY_CONTROL_ATTR = 'data-iw-inventory-control';
 const INVENTORY_TITLE_ATTR = 'data-iw-inventory-title';
+const INVENTORY_FILTER_STATE_ATTR = 'data-iw-inventory-filter-state';
+const ROW_SELECTOR = '.compact-row, [class*="item-row"]';
 const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [role="button"], [tabindex]';
 const pendingEmptyRetries = new WeakSet();
 const displayStyleOwner = createInlineStyleOwner();
 
 /** row -> exact cheap change signature, see renderRow(). */
 const cheapSignatures = new WeakMap();
+/**
+ * row -> { sig, inContext, root }: the resolveInventoryContext() result,
+ * revalidated (not just signature-matched) before reuse -- see renderRow().
+ */
+const contextCache = new WeakMap();
 let listenerBound = false;
 
 function cheapSignature(row) {
@@ -139,53 +146,181 @@ function extractRowData(row) {
   return { name, qty: guessQuantity(texts), detailTexts: detailTexts(row, name) };
 }
 
+/**
+ * The panel heading is not necessarily a DIRECT child of the panel: IdleWorlds
+ * wraps the title and the tool buttons in a flex row, so the heading is a
+ * grandchild. The old `:scope >` lookup therefore matched nothing and this
+ * function returned null on the live DOM — which silently disabled
+ * classifyInventoryChrome() and left every chrome rule in inventory.css dead.
+ *
+ * Searching descendants is safe here because we walk UP from the row: the
+ * first ancestor that contains an "Inventory" heading is the nearest one,
+ * i.e. the panel — not some page-level container that also happens to
+ * contain it. Headings inside an item row are ignored.
+ */
+function headingIsInventory(el) {
+  return String(el.textContent || '').trim().toLowerCase() === 'inventory';
+}
+
 function findInventoryRoot(row) {
+  // aria-label wins outright when the game supplies one.
   let cur = row;
-  for (let depth = 0; cur && depth < 8; depth += 1, cur = cur.parentElement) {
+  for (let depth = 0; cur && depth < 10; depth += 1, cur = cur.parentElement) {
     const aria = String(cur.getAttribute?.('aria-label') || '').trim().toLowerCase();
     if (aria === 'inventory') return cur;
+  }
 
-    const headings = cur.querySelectorAll?.(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > [data-title]') || [];
-    for (const h of headings) {
-      if (String(h.textContent || '').trim().toLowerCase() === 'inventory') return cur;
+  // Otherwise: pair this row with an "Inventory" heading and return the panel
+  // they SHARE.
+  //
+  // Climbing until any ancestor merely CONTAINS such a heading is wrong, and a
+  // live capture proved it: rows outside Inventory climb past their own panel
+  // and land on `section.grid.gap-3.xl:hidden`, a container of seven sibling
+  // panels. Every chrome rule then applied to Quests, Skills and the rest —
+  // 14 tool buttons classified instead of 4. The page also carries a hidden
+  // `xl:hidden` duplicate of the whole column, so "the first heading found" is
+  // frequently the invisible copy.
+  //
+  // The correct root is the heading's OWN panel — the nearest ancestor of the
+  // heading that actually holds item rows — and only when that panel contains
+  // this row too. A row in another panel resolves to null, as it should.
+  const headings = [...document.querySelectorAll('h1, h2, h3, h4, [data-title]')]
+    .filter(h => !h.closest(ROW_SELECTOR) && headingIsInventory(h));
+
+  for (const heading of headings) {
+    let node = heading.parentElement;
+    for (let depth = 0; node && depth < 6; depth += 1, node = node.parentElement) {
+      if (!node.querySelector(ROW_SELECTOR)) continue;
+      // This heading's panel. If it owns our row we are done; if not, the row
+      // belongs to a different copy of the panel (the page ships a hidden
+      // xl:hidden duplicate) so try the next heading rather than giving up.
+      if (node.contains(row)) return node;
+      break;
     }
   }
   return null;
 }
 
-function isInventoryContext(row) {
+/**
+ * Resolves both membership and panel root in one pass. An equip-labeled row
+ * proves membership without needing the heading-paired root, but the root is
+ * still resolved unconditionally because classifyInventoryChrome() needs it
+ * either way -- callers must never invoke findInventoryRoot a second time to
+ * get what this already computed.
+ */
+function resolveInventoryContext(row) {
   const controls = [...row.querySelectorAll('button, [role="button"]')]
     .map(el => String(el.textContent || '').trim().toLowerCase())
     .filter(Boolean);
-  if (controls.some(t => /^(equip|equipped|unequip|list)$/.test(t))) return true;
-  return !!findInventoryRoot(row);
+  const equipShortcut = controls.some(t => /^(equip|equipped|unequip|list)$/.test(t));
+  const root = findInventoryRoot(row);
+  return { inContext: equipShortcut || !!root, root };
+}
+
+function isInventoryContext(row) {
+  return resolveInventoryContext(row).inContext;
+}
+
+/**
+ * The title flourish needs to span the whole panel and centre its ornament on a
+ * hairline. It cannot live on the heading's ::after: the heading sits two flex
+ * wrappers deep, so a pseudo there is stuck at the heading's own width and left
+ * edge. So the skin appends one decorative element of its own after the header
+ * row — additive, never reparenting anything the game owns, the same pattern
+ * HeaderRenderer uses for .fs-header-crest.
+ */
+function ensureInventoryRule(root, title) {
+  if (!root || !title) return;
+  let anchorChild = title;
+  while (anchorChild && anchorChild.parentElement !== root) anchorChild = anchorChild.parentElement;
+  if (!anchorChild) return;
+
+  let rule = root.querySelector(':scope > .fs-inv-rule');
+  if (!rule) {
+    rule = document.createElement('div');
+    rule.className = 'fs-inv-rule';
+    rule.setAttribute('aria-hidden', 'true');
+  }
+  if (anchorChild.nextElementSibling !== rule) anchorChild.after(rule);
 }
 
 function classifyInventoryChrome(root) {
   if (!root) return;
   root.setAttribute(INVENTORY_ROOT_ATTR, '1');
-  const titleCandidates = root.querySelectorAll(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > [data-title]');
+  const titleCandidates = root.querySelectorAll('h1, h2, h3, h4, [data-title]');
   for (const title of titleCandidates) {
-    if (String(title.textContent || '').trim().toLowerCase() === 'inventory') {
+    if (title.closest(ROW_SELECTOR)) continue;
+    if (headingIsInventory(title)) {
       title.setAttribute(INVENTORY_TITLE_ATTR, '1');
+      ensureInventoryRule(root, title);
     }
   }
 
-  const buttons = [...root.querySelectorAll('button, [role="button"]')];
+  // The tool buttons in the panel header are not all <button>: at least one is
+  // an anchor, which the old `button, [role="button"]` query missed entirely —
+  // so the icon role was never assigned and its chrome rule never applied.
+  const buttons = [...root.querySelectorAll('button, a, [role="button"]')];
   for (const button of buttons) {
     // Never classify controls inside individual item rows here; the ItemRow
     // action model owns those independently.
-    if (button.closest('.compact-row, [class*="item-row"]')) continue;
+    if (button.closest(ROW_SELECTOR)) continue;
     const text = String(button.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
     let role = '';
     if (/^(all|gear|materials|consumables|drops)$/.test(text)) role = 'filter';
     else if (/^(prev|previous|next)$/.test(text)) role = 'page';
-    else if (!text || text.length <= 2) role = 'icon';
+    // An icon control carries no label of its own and draws an <svg>. Both
+    // conditions are required: a bare text-free anchor is not a tool button.
+    else if ((!text || text.length <= 2) && button.querySelector('svg')) role = 'icon';
     if (role) button.setAttribute(INVENTORY_CONTROL_ATTR, role);
+
+    // Which filter is live is real information the game paints itself. If the
+    // skin repaints every filter identically that information is destroyed,
+    // so the active one is marked here and styled separately. Same derivation
+    // UIFoundation already uses for the main nav tabs.
+    if (role === 'filter') {
+      const cls = String(button.className || '');
+      const active =
+        button.getAttribute('aria-selected') === 'true' ||
+        button.getAttribute('aria-current') === 'page' ||
+        button.dataset?.state === 'active' ||
+        /(?:bg|text|border)-(?:orange|amber|primary|accent)|data-\[state=active\]/i.test(cls);
+      if (active) button.setAttribute(INVENTORY_FILTER_STATE_ATTR, 'active');
+      else button.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
+    }
+  }
+
+  // The tool row ends with a bare <svg class="lucide lucide-package … text-ember">
+  // that is NOT a control: `cursor: auto`, no role, no tabindex, no aria-label,
+  // no title, while all three real controls beside it carry pointer + label +
+  // title. It is therefore invisible to the button sweep above, which is why it
+  // rendered unframed and looked like a miss. It is not a miss — the game draws
+  // that distinction deliberately and the skin must not repaint it away (rule
+  // 5), so it is tagged as an ORNAMENT and styled as one, never framed.
+  //
+  // Scoped to the tool row itself rather than swept for across the panel: start
+  // from the controls already classified above and take only their own row's
+  // direct <svg> children. That is O(number of icon controls), cannot reach an
+  // item row, and cannot promote an <svg> that lives inside some other control.
+  const iconControls = [...root.querySelectorAll(`[${INVENTORY_CONTROL_ATTR}="icon"]`)];
+  const toolRows = new Set();
+  for (const control of iconControls) {
+    let node = control.parentElement;
+    for (let depth = 0; node && node !== root && depth < 3; depth += 1, node = node.parentElement) {
+      if (iconControls.filter(other => node.contains(other)).length >= 2) {
+        toolRows.add(node);
+        break;
+      }
+    }
+  }
+  for (const toolRow of toolRows) {
+    for (const child of toolRow.children) {
+      if (child.tagName.toLowerCase() !== 'svg') continue;
+      child.setAttribute(INVENTORY_CONTROL_ATTR, 'glyph');
+    }
   }
 
   for (const el of root.querySelectorAll('span, div, p')) {
-    if (el.closest('.compact-row, [class*="item-row"]')) continue;
+    if (el.closest(ROW_SELECTOR)) continue;
     const text = String(el.textContent || '').trim();
     if (/^\d+\s*\/\s*\d+$/.test(text)) el.setAttribute(INVENTORY_CONTROL_ATTR, 'page-count');
   }
@@ -355,7 +490,24 @@ function syncRowState(row, overlay) {
 function renderRow(row) {
   if (!row || !row.isConnected) return;
 
-  if (!isInventoryContext(row)) {
+  // Cheap pre-check before ANY expensive resolution, including the
+  // whole-document heading scan inside findInventoryRoot(). A cached root is
+  // only trusted after re-validating isConnected + containment -- the exact
+  // check findInventoryRoot itself uses to defeat the hidden xl:hidden
+  // duplicate-column trap -- so a stale entry can never resolve to the wrong
+  // panel; it just falls through to a fresh resolve like a cache miss would.
+  const cheapSig = cheapSignature(row);
+  const cachedContext = contextCache.get(row);
+  let inContext, root;
+  if (cachedContext && sameCheapSignature(cachedContext.sig, cheapSig) &&
+      (cachedContext.root === null || (cachedContext.root.isConnected && cachedContext.root.contains(row)))) {
+    ({ inContext, root } = cachedContext);
+  } else {
+    ({ inContext, root } = resolveInventoryContext(row));
+    contextCache.set(row, { sig: cheapSig, inContext, root });
+  }
+
+  if (!inContext) {
     if (row.querySelector(':scope > .fs-inv-row')) clearRenderedRow(row);
     return;
   }
@@ -368,14 +520,12 @@ function renderRow(row) {
   // textContent read plus child/revision fields is still much cheaper, but unlike
   // the old text-LENGTH signature it cannot miss an equal-length semantic
   // change such as x1 -> x2 or one item name being replaced by another.
-  const cheapSig = cheapSignature(row);
   if (existingOverlay && sameCheapSignature(cheapSignatures.get(row), cheapSig)) {
     hideOriginalChildren(row, existingOverlay);
     syncRowState(row, existingOverlay);
     return;
   }
 
-  const root = findInventoryRoot(row);
   classifyInventoryChrome(root);
 
   const data = extractRowData(row);
@@ -447,13 +597,18 @@ export function clearInventoryRenderer() {
     row => {
       if (row.querySelector(':scope > .fs-inv-row')) clearRenderedRow(row);
       cheapSignatures.delete(row);
+      contextCache.delete(row);
     });
   document.querySelectorAll(`[${INVENTORY_ROOT_ATTR}]`).forEach(el => {
     el.removeAttribute(INVENTORY_ROOT_ATTR);
   });
-  document.querySelectorAll(`[${INVENTORY_CONTROL_ATTR}], [${INVENTORY_TITLE_ATTR}]`).forEach(el => {
+  document.querySelectorAll('.fs-inv-rule').forEach(el => el.remove());
+  document.querySelectorAll(
+    `[${INVENTORY_CONTROL_ATTR}], [${INVENTORY_TITLE_ATTR}], [${INVENTORY_FILTER_STATE_ATTR}]`
+  ).forEach(el => {
     el.removeAttribute(INVENTORY_CONTROL_ATTR);
     el.removeAttribute(INVENTORY_TITLE_ATTR);
+    el.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
   });
   displayStyleOwner.restoreAll();
 }

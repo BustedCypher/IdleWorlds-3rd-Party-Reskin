@@ -1,0 +1,15 @@
+node_modules/
+
+# A real browser profile, created by the header live-audit tooling. It holds
+# "Login Data", "Web Data", "Secure Preferences" and a BraveWallet directory —
+# saved passwords, autofill and wallet state. It is 114 MB and this repo is
+# public. Never commit it.
+build-tools/header-live-profile/
+
+# Generated renders. `npm run fixtures` rewrites these on every run.
+build-tools/fixtures/
+
+# Scratch from measurement/render harnesses.
+build-tools/.tmp-*
+build-tools/_tmp-*
+build-tools/*.tmp.*

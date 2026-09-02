@@ -51,11 +51,14 @@ const SKIP_TAGS = new Set([
  * Containers whose text we never annotate.
  *
  * `.iw-item-ref` — already an explicit trigger.
+ * `[data-iw-tooltip-trigger]` — a whole element is already an item trigger
+ *   (inventory icon slot, quest objective line); prose-highlighting a word
+ *   inside it would stack two tooltip owners on the same region.
  * `.fs-inv-row` / `.fs-skill-header` / `.iw-tip` — skin-owned surfaces.
  * `[role="tooltip"]` — native tooltip surfaces should never recursively spawn
  * our own card while the game is measuring/positioning theirs.
  */
-const SKIP_CONTAINERS = '.iw-item-ref, .fs-inv-row, .fs-skill-header, .iw-tip, [role="tooltip"], input, textarea, select';
+const SKIP_CONTAINERS = '.iw-item-ref, [data-iw-tooltip-trigger], .fs-inv-row, .fs-skill-header, .iw-tip, [role="tooltip"], input, textarea, select';
 
 /* ── Trie ────────────────────────────────────────────────────────────── */
 

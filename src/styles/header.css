@@ -1,0 +1,739 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   IdleWorlds Fantasy Skin — Header, nav rail, announcement and zone bar
+
+   Binds to the roles HeaderRenderer.js and UIFoundation.js already write:
+     [data-iw-header] root layout identity-region profile brand profile-name
+                      profile-title profile-meta profile-online utilities
+                      utility-button status-grid status-card announcement
+                      zone-shell            + .fs-header-crest
+     [data-iw-ui]     main-nav-shell main-nav nav-tab (+ data-iw-state=active)
+                      zone-bar zone-action zone-title
+
+   ── Why the frame art is used the way it is ──────────────────────────────
+   Every ornate PNG in assets/header/ carries filigree drawn at a fixed pixel
+   size: header_frame is 2172x706 with a ~180x110 corner, status_frame is
+   841x166 with a circular medallion, nav_idle is 635x255.
+
+   `background-size: 100% 100%` makes that ornament scale with the element.
+   A 58px-tall status card renders a 166px ornament at 35% and the medallion
+   becomes an ellipse; a short-and-wide header renders the corner filigree
+   large enough to crowd the identity block; a 140x52 nav tab squeezes a
+   635x255 frame to 22% and the label lands outside the frame's inner area.
+
+   So the art is applied by one of two mechanisms, never by stretching:
+     - fixed-size masked windows for corner filigree (root, shell), so the
+       ornament is the SAME size at every panel dimension;
+     - direct paint only where the art's proportion is stable (crest, the
+       zone scene, the surface texture).
+   Small repeated frames — status cards, utility buttons, nav tabs, zone
+   buttons — are drawn as CSS corner brackets, which stay crisp at any size.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── §0  Local tokens ───────────────────────────────────────────────────── */
+
+[data-iw-header="root"],
+[data-iw-ui="main-nav"],
+[data-iw-header="announcement"],
+[data-iw-header="zone-shell"] {
+  --hd-bracket:     #C9A24D;
+  --hd-bracket-dim: #8A7038;
+  --hd-plate:       #0B0C0E;
+  --hd-rule:        #6B5527;
+  --hd-rule-soft:   #3A2F18;
+  --hd-teal:        #4FC7D8;
+  --hd-teal-dim:    #1E5C68;
+  --hd-gap: 8px;
+}
+
+/* ── §1  Corner-bracket plate ────────────────────────────────────────────
+   Eight 1px gradients, two arms per corner. --b is arm length, --i the inset.
+   Crisp at 40px or 400px, no image, one paint. */
+
+[data-iw-header="status-card"],
+[data-iw-header="utility-button"],
+[data-iw-ui="zone-action"] {
+  --b: 10px;
+  --i: 3px;
+  --bc: var(--hd-bracket-dim);
+  position: relative !important;
+  border: 1px solid var(--hd-rule-soft) !important;
+  border-radius: var(--iw-r-panel) !important;
+  background-color: var(--hd-plate) !important;
+  background-repeat: no-repeat !important;
+  background-image:
+    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
+    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
+    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
+    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)) !important;
+  background-size:
+    var(--b) 1px, 1px var(--b), var(--b) 1px, 1px var(--b),
+    var(--b) 1px, 1px var(--b), var(--b) 1px, 1px var(--b) !important;
+  background-position:
+    var(--i) var(--i), var(--i) var(--i),
+    calc(100% - var(--i)) var(--i), calc(100% - var(--i)) var(--i),
+    var(--i) calc(100% - var(--i)), var(--i) calc(100% - var(--i)),
+    calc(100% - var(--i)) calc(100% - var(--i)),
+    calc(100% - var(--i)) calc(100% - var(--i)) !important;
+  box-shadow: none !important;
+}
+
+/* ── §2  Header plate ───────────────────────────────────────────────────── */
+
+[data-iw-header="root"] {
+  position: relative !important;
+  isolation: isolate !important;
+  display: block !important;
+  min-height: 0 !important;
+  padding: 16px 20px !important;
+  border: 1px solid var(--hd-rule) !important;
+  border-radius: var(--iw-r-panel) !important;
+  overflow: hidden !important;
+  background-color: #0A0B0D !important;
+  background-image: var(--iw-header-surface) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  box-shadow: none !important;
+}
+[data-iw-header="root"] > * { position: relative; z-index: 1; }
+
+/* The SAME corner filigree every other framed surface uses — Inventory,
+   Quests, Skill Actions and the activity panels all draw
+   assets/inventory/panel_corners.webp through the identical border-image in
+   ui-system.css. The header is the one panel that did not, which is why its
+   frame never matched the rest of the page.
+
+   header_frame.webp cannot be used here, and the reason is in the ART, not the
+   CSS: measured, its corner motif is 107x107 square, it sits 21px from the top
+   of the sheet but 84px from the bottom, and its edge slices are 140px tall
+   with a 44px flourish mid-edge. In a ~195px-tall bar that gives a frame short
+   at the bottom and a flourish crushed 4.7x vertically; masking to the corners
+   instead severs the connecting rule.
+
+   panel_corners.webp has none of those problems: its slice consumes the whole
+   sheet, so the edge and middle regions are empty by construction and ONLY the
+   four corners paint, at a fixed size however wide the header grows. The rule
+   between them is the plate's own 1px border, exactly as on every other frame.
+   Keep the slice/width in step with ui-system.css. */
+[data-iw-header="root"]::after {
+  content: "";
+  position: absolute;
+  /* inset 0, not -1px: the plate sets overflow:hidden, which clips to the
+     padding box, so anything outside it is simply cut away. */
+  inset: 0;
+  /* Behind the content: the corners reach further in than the plate's 20px
+     padding, so on top they painted across the status tiles. Same trade the
+     shared section frame makes — ornament losing to a control is safe. */
+  z-index: 0;
+  pointer-events: none;
+  border-style: solid;
+  border-width: 30px 28px;
+  border-color: transparent;
+  border-image: url('../assets/inventory/panel_corners.webp') 95 88 / 30px 28px / 0 stretch;
+}
+
+[data-iw-header="layout"] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 38%) !important;
+  /* start, not center: the two columns are different heights (the crest sets
+     the left, the stat stack sets the right), and centring each one made the
+     utility rail's offset depend on whichever column happened to be taller —
+     it drifted every time a buff tile wrapped. Both pinned to the row top,
+     the rail and the first stat row line up by construction. */
+  align-items: start !important;
+  gap: 0 18px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+/* ── §3  Identity region ────────────────────────────────────────────────── */
+
+[data-iw-header="identity-region"] {
+  display: grid !important;
+  grid-template-columns: 158px minmax(0, 1fr) auto !important;
+  grid-template-areas: "crest profile utilities" !important;
+  align-items: center !important;
+  gap: 0 18px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+}
+
+.fs-header-crest {
+  grid-area: crest !important;
+  display: block !important;
+  width: 158px !important;
+  height: 160px !important;
+  background-image: var(--iw-header-crest) !important;
+  background-size: contain !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  filter: drop-shadow(0 0 20px rgba(70, 130, 200, 0.22));
+  pointer-events: none;
+}
+
+[data-iw-header="profile"] {
+  grid-area: profile !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+}
+
+[data-iw-header="brand"] {
+  margin: 0 0 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.24em !important;
+  text-transform: uppercase !important;
+  color: var(--iw-gold-dim) !important;
+}
+[data-iw-header="brand"]::before,
+[data-iw-header="brand"]::after {
+  content: "";
+  width: 26px; height: 1px;
+  background: linear-gradient(90deg, transparent, #6B5527);
+}
+[data-iw-header="brand"]::after { transform: scaleX(-1); }
+
+[data-iw-header="profile-name"] {
+  margin: 1px 0 3px !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: clamp(26px, 2.5vw, 38px) !important;
+  font-weight: 700 !important;
+  line-height: 1.04 !important;
+  letter-spacing: 0.005em !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  background: linear-gradient(96deg, #E3A93A 0%, #F0DDB0 30%, #FBF8F2 50%, #CFE2F4 74%, #7FB6E8 100%) !important;
+  -webkit-background-clip: text !important;
+          background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+}
+
+[data-iw-header="profile-title"] {
+  margin: 0 !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--iw-gold) !important;
+}
+
+[data-iw-header="profile-meta"] {
+  margin-top: 6px !important;
+  /* 15px overran the profile column by 2px at 1290px wide, which the ellipsis
+     then ate into the zone name. 14px clears it and still outranks the
+     secondary lines below. */
+  font-size: 14px !important;
+  line-height: 1.3 !important;
+  color: var(--iw-text) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* This role lands on a real <button> in the live DOM, so it arrives wearing
+   the game's (and ui-system.css's) control chrome. Strip it back to text —
+   the element stays a button and keeps its handler; only the paint changes. */
+[data-iw-header="profile-online"] {
+  margin-top: 3px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+  color: var(--iw-gold-dim) !important;
+}
+[data-iw-header="profile-online"]::before {
+  content: "";
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #38C8A8;
+  box-shadow: 0 0 8px rgba(56, 200, 168, 0.75);
+  flex: 0 0 auto;
+}
+
+/* ── §4  Utility buttons ────────────────────────────────────────────────── */
+
+/* The utility row and the status grid are two halves of one band across the top
+   of the header, so they must share a top edge and a control height. Previously
+   the buttons sat at 41-87 (start + 4px pad, 46px tall) while the first stat row
+   sat at 46-88 (the grid centres itself in the taller identity row) — visibly
+   out of step. Both are pinned to the top of the row now, at the same height. */
+[data-iw-header="utilities"] {
+  grid-area: utilities !important;
+  align-self: start !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-end !important;
+  gap: var(--hd-gap, 8px) !important;
+  padding: 0 !important;
+}
+
+[data-iw-header="utility-button"] {
+  --b: 9px;
+  --i: 3px;
+  width: 42px !important;
+  min-width: 42px !important;
+  /* Matches [data-iw-header="status-card"] min-height so the whole top band
+     lines up. */
+  height: 42px !important;
+  min-height: 42px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 3px !important;
+  /* The tiles read as forged plates; bare bracket ticks on a void made these
+     look unfinished beside them. Give them the same plate, then the brackets. */
+  background-color: #14161A !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 190, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.35) !important;
+  color: var(--iw-gold-dim) !important;
+  transition: color 120ms ease, border-color 120ms ease,
+    background-color 120ms ease, box-shadow 120ms ease;
+}
+[data-iw-header="utility-button"] svg { width: 20px !important; height: 20px !important; }
+[data-iw-header="utility-button"]:hover {
+  --bc: #F0CE7C;
+  color: var(--iw-gold) !important;
+  border-color: var(--hd-rule) !important;
+  background-color: #1C1F25 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 190, 0.09),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(201, 162, 77, 0.16) !important;
+}
+
+/* ── §4b  Purpose-made plate art ─────────────────────────────────────────
+   assets/header/utility_frame.webp is an octagonal gold plate with star bursts
+   at each corner — drawn for exactly this control. status tiles take
+   zone_button_idle.webp (1335x198), a long plate with gem caps.
+
+   THE SHEET IS NOT THE PLATE. utility_frame.webp is 208x197, but the plate
+   only occupies 180x176 of it, at offset 6,7 — there is a 22px dead column on
+   the right and a 14px dead row at the bottom. Measured, not assumed: the
+   opaque bbox is 6,7 180x176 and the gold rails sit at x 11-12/23-24 and
+   167-168/179-180, so the plate's centre is 95.5,94 against a sheet centre of
+   104,98.5.
+
+   That margin is why this control looked wrong. Any technique that maps the
+   WHOLE SHEET onto the button — `border-image` included, since it stretches
+   the sheet's edge slices, dead pixels and all — draws the plate off-centre
+   and undersized inside its own box. Rendered and measured at 10x, the old
+   `border-image … 50 fill / 11px` put a 35.5x37.1 plate in a 42x42 button with
+   1.5px of slack on the left against 5.0px on the right, and 1.7px against
+   3.2px vertically: the plate's centre landed at 19.25,20.25 while the icon,
+   centred on the BOX, sat at 21,21. Every glyph was 1.75px right and 0.75px
+   below the frame it was supposed to be inside, and the plates were unevenly
+   gapped because each one hugged the left of its slot.
+
+   So crop the dead margin in CSS and paint the plate directly. The button is a
+   fixed 42x42 at every breakpoint, so there is nothing for border-image's
+   stretch machinery to buy here, and a sprite window is what the rest of this
+   codebase already uses (AtlasService, the inventory tool buttons). Mapping
+   source rect 6,7 180x176 onto 42x42 gives scale 42/180 and 42/176, hence
+   background-size 208x0.2333 = 48.53 by 197x0.2386 = 47.01 and an origin of
+   -6x0.2333 = -1.4 by -7x0.2386 = -1.67. The plate's dark well is centred in
+   that crop to within half a source pixel, so a box-centred glyph is now also
+   plate-centred. The 2.3% anisotropy from squaring a 180x176 plate into 42x42
+   is well under the threshold where stretch reads as distortion — and it is
+   what makes the rail read as evenly spaced, because each plate now fills its
+   slot edge to edge.
+
+   status_frame.webp is deliberately NOT used here: its medallion sits ~35% in
+   from the left, which would either eat the tile's text column or smear when
+   the middle stretches. It suits a larger surface. */
+
+[data-iw-header="utility-button"] {
+  box-sizing: border-box !important;
+  /* No border: the plate is the background now, so the 42x42 content box and
+     `place-items: center` above put the glyph on the plate's own centre. */
+  border: 0 !important;
+  background:
+    url('../assets/header/utility_frame.webp') no-repeat -1.4px -1.67px /
+    48.53px 47.01px !important;
+  box-shadow: none !important;
+}
+[data-iw-header="utility-button"] svg { width: 18px !important; height: 18px !important; }
+
+/* §4's hover is specificity (0,3,1) and this rule's base is (0,2,1), so the
+   hover background-color and glow survived the plate and painted a dark SQUARE
+   behind an octagonal plate. Restate them here, after §4, and let the plate
+   itself carry the hover instead. */
+[data-iw-header="utility-button"]:hover {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  filter: brightness(1.18) saturate(1.06) !important;
+}
+[data-iw-header="utility-button"] { transition: color 120ms ease, filter 120ms ease; }
+
+[data-iw-header="status-card"] {
+  box-sizing: border-box !important;
+  border-style: solid !important;
+  border-width: 6px 18px !important;
+  border-color: transparent !important;
+  border-image: url('../assets/header/zone_button_idle.webp') 30 95 fill / 6px 18px / 0 stretch !important;
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* ── §5  Status tiles ───────────────────────────────────────────────────── */
+
+/* ── §5a  Vitals / timers split ──────────────────────────────────────────
+   Six equal boxes gave the eye nothing to hold on to, and the widest value
+   ("⚡ <player> boosted (3/4) · 1d 8h left") never fit one of them. The two
+   PERMANENT readouts — gold and the ATK/DEF/HP line — become tall plaques in
+   their own column; the four EXPIRING buffs stack beside them as compact rows,
+   which is also where the long strings get their width back.
+
+   React owns the card order and a gameplay node may not be reparented, so the
+   split is done with grid placement against HeaderRenderer's content-derived
+   `data-iw-header-stat`, never against DOM position — buff tiles come and go
+   as they expire, which reshuffles every index behind them. */
+[data-iw-header="status-grid"] [data-iw-header-stat="gold"] {
+  grid-area: 1 / 1 / 3 / 2 !important;
+}
+[data-iw-header="status-grid"] [data-iw-header-stat="combat"] {
+  grid-area: 3 / 1 / 5 / 2 !important;
+}
+/* Anything that is not a vital shares the buff column, so an unrecognised
+   tile still appears rather than being dropped out of the layout. */
+[data-iw-header="status-grid"] [data-iw-header-stat="timer"],
+[data-iw-header="status-grid"] [data-iw-header-stat="other"] {
+  grid-column: 2 !important;
+}
+
+/* Vitals carry the weight: bigger type, centred, more presence. */
+[data-iw-header="status-grid"] [data-iw-header-stat="gold"],
+[data-iw-header="status-grid"] [data-iw-header-stat="combat"] {
+  justify-content: center !important;
+  font-size: 15px !important;
+  letter-spacing: .01em !important;
+  color: #F7EBD2 !important;
+}
+[data-iw-header="status-grid"] [data-iw-header-stat="gold"] {
+  font-family: var(--iw-font-head) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+/* Buffs are secondary: smaller, quieter, and they get the room to stay on one
+   line. The countdown is the part that changes, so it keeps full contrast. */
+[data-iw-header="status-grid"] [data-iw-header-stat="timer"] {
+  min-height: 34px !important;
+  font-size: 12.5px !important;
+  color: #CFC5AE !important;
+}
+
+[data-iw-header="status-grid"] {
+  display: grid !important;
+  /* Vitals column, then the buff stack. Four rows: each vital spans two. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.04fr) !important;
+  grid-template-rows: repeat(4, auto) !important;
+  /* Top-aligned, not centred: the identity row is taller than this grid (the
+     crest sets its height), so centring pushed the first stat row 9px below the
+     utility buttons it should sit level with. */
+  align-content: start !important;
+  gap: var(--hd-gap, 8px) !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+
+[data-iw-header="status-card"] {
+  min-width: 0 !important;
+  min-height: 42px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  padding: 4px 6px !important;
+  text-align: left !important;
+  /* Cinzel is capitals-only: setting it here renders every tile as forced
+     small caps. The reference uses a serif WITH real lowercase. */
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.18 !important;
+  color: var(--iw-text-hi) !important;
+  /* A tile can carry another player's name ("⚡ Matthais64 boosted (3/4) · 1d
+     8h left" needed 267px inside a 225px box), so no font size guarantees a
+     single line. `nowrap` + `hidden` truncated that value mid-word; wrapping to
+     a second line inside the same 42px tile keeps the whole value readable. */
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  overflow: hidden !important;
+}
+[data-iw-header="status-card"] > * { min-width: 0; }
+
+/* ── §6  Navigation rail ────────────────────────────────────────────────── */
+
+[data-iw-ui="main-nav-shell"] {
+  margin-top: 8px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+[data-iw-ui="main-nav"] {
+  position: relative !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--hd-rule) !important;
+  border-radius: var(--iw-r-panel) !important;
+  background-color: transparent !important;
+  background-image: linear-gradient(180deg, #121317 0%, #0A0B0D 60%, #0D0E11 100%) !important;
+  box-shadow: none !important;
+}
+
+[data-iw-ui="nav-tab"] {
+  flex: 0 1 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 11px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 12px 26px !important;
+  border: 0 !important;
+  border-right: 1px solid var(--hd-rule-soft) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  color: var(--iw-dim) !important;
+  text-shadow: none !important;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+[data-iw-ui="nav-tab"]:hover {
+  color: var(--iw-text) !important;
+  background-color: rgba(255, 214, 140, 0.045) !important;
+}
+
+[data-iw-ui="nav-tab"][data-iw-state="active"] {
+  color: #FFE2AE !important;
+  border-left: 1px solid var(--hd-bracket) !important;
+  border-right: 1px solid var(--hd-bracket) !important;
+  background-image:
+    linear-gradient(180deg, rgba(255,176,64,0.38) 0%, rgba(158,82,20,0.26) 55%, rgba(74,36,8,0.32) 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,208,130,0.55),
+    inset 0 -1px 0 rgba(255,190,100,0.30),
+    0 0 18px rgba(255,150,40,0.16) !important;
+}
+[data-iw-ui="nav-tab"]:first-child { border-left: 0 !important; }
+
+/* ── §7  Announcement bar ───────────────────────────────────────────────── */
+
+[data-iw-header="announcement"] {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  height: 50px !important;
+  min-height: 0 !important;
+  margin: 10px 0 !important;
+  padding: 0 20px !important;
+  border: 1px solid var(--hd-teal-dim) !important;
+  border-radius: var(--iw-r-panel) !important;
+  background-color: transparent !important;
+  background-image:
+    linear-gradient(90deg, rgba(24,68,80,0.92) 0%, rgba(12,32,40,0.92) 38%, rgba(8,18,24,0.92) 100%) !important;
+  box-shadow: inset 0 0 26px rgba(40,150,175,0.10) !important;
+  font-size: 16px !important;
+  color: var(--iw-text) !important;
+}
+/* Four-point star, drawn rather than cropped out of a 2148px sheet — a fixed
+   background-position into that sheet breaks on any re-export. */
+[data-iw-header="announcement"]::before {
+  content: "" !important;
+  flex: 0 0 auto;
+  width: 22px; height: 22px;
+  background: radial-gradient(circle at 50% 50%, #DFF7FF 0%, #6FD8EC 38%, #2E8FA8 100%);
+  clip-path: polygon(50% 0%, 59% 41%, 100% 50%, 59% 59%, 50% 100%, 41% 59%, 0% 50%, 41% 41%);
+  filter: drop-shadow(0 0 7px rgba(90, 210, 235, 0.65));
+}
+
+/* ── §8  Zone bar ───────────────────────────────────────────────────────── */
+
+[data-iw-header="zone-shell"] {
+  position: relative !important;
+  isolation: isolate !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 16px !important;
+  min-height: 70px !important;
+  padding: 9px 14px !important;
+  border: 1px solid var(--hd-rule) !important;
+  border-radius: var(--iw-r-panel) !important;
+  overflow: hidden !important;
+  background-color: #08090B !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+[data-iw-header="zone-shell"] > * { position: relative; z-index: 1; }
+
+/* The moonlit scene sits behind the middle only and never under the text or
+   the buttons: two masks intersected, so it fades on all four edges. */
+[data-iw-header="zone-shell"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 34% 0 16%;
+  z-index: 0;
+  background-image: var(--iw-zone-scene);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.34;
+  pointer-events: none;
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0%, #000 26%, #000 68%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, #000 26%, #000 74%, transparent 100%);
+  -webkit-mask-composite: source-in;
+          mask-image:
+    linear-gradient(90deg, transparent 0%, #000 26%, #000 68%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, #000 26%, #000 74%, transparent 100%);
+          mask-composite: intersect;
+}
+
+[data-iw-ui="zone-title"] {
+  font-family: var(--iw-font-head) !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+  color: var(--iw-text-hi) !important;
+  text-shadow: none !important;
+}
+
+[data-iw-ui="zone-action"] {
+  --b: 10px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  min-height: 46px !important;
+  height: auto !important;
+  padding: 10px 20px !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  color: var(--iw-text) !important;
+  transition: filter 120ms ease;
+}
+[data-iw-ui="zone-action"]:hover { filter: brightness(1.18); }
+
+/* Tone. data-iw-zone-action is the robust hook (see the HeaderRenderer patch
+   shipped alongside this file); the :first/:last fallbacks keep the tones
+   correct if that patch is not applied. */
+[data-iw-ui="zone-action"][data-iw-zone-action="zones"],
+[data-iw-ui="zone-action"]:first-of-type {
+  --bc: var(--hd-teal);
+  color: #CFF2F8 !important;
+  border-color: var(--hd-teal-dim) !important;
+  background-color: #07171C !important;
+  box-shadow: inset 0 0 20px rgba(50,170,195,0.14) !important;
+}
+[data-iw-ui="zone-action"][data-iw-zone-action="next"],
+[data-iw-ui="zone-action"]:last-of-type {
+  --bc: #F2CE79;
+  color: #FFE9C4 !important;
+  border-color: #8A6A2C !important;
+  background-image:
+    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
+    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
+    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
+    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
+    linear-gradient(180deg, #6B4A16 0%, #91601C 46%, #3D280C 100%) !important;
+  background-size:
+    var(--b) 1px, 1px var(--b), var(--b) 1px, 1px var(--b),
+    var(--b) 1px, 1px var(--b), var(--b) 1px, 1px var(--b),
+    100% 100% !important;
+  background-position:
+    var(--i) var(--i), var(--i) var(--i),
+    calc(100% - var(--i)) var(--i), calc(100% - var(--i)) var(--i),
+    var(--i) calc(100% - var(--i)), var(--i) calc(100% - var(--i)),
+    calc(100% - var(--i)) calc(100% - var(--i)),
+    calc(100% - var(--i)) calc(100% - var(--i)),
+    0 0 !important;
+}
+
+/* ── §9  Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1180px) {
+  [data-iw-header="layout"] { grid-template-columns: minmax(0, 1fr) !important; gap: 12px !important; }
+  [data-iw-header="status-grid"] { margin-top: 2px !important; }
+}
+
+@media (max-width: 860px) {
+  [data-iw-header="root"] { padding: 14px !important; }
+  [data-iw-header="identity-region"] {
+    grid-template-columns: 108px minmax(0, 1fr) !important;
+    grid-template-areas: "crest profile" "utilities utilities" !important;
+    gap: 10px 14px !important;
+  }
+  .fs-header-crest { width: 108px !important; height: 116px !important; }
+  [data-iw-header="utilities"] { justify-content: flex-start !important; }
+  /* One column: the vitals/timers split needs two, so hand placement back to
+     auto-flow and drop the vitals' display size, which cannot fit a 320px tile
+     once the plate's gem caps take their 36px. */
+  [data-iw-header="status-grid"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto !important;
+  }
+  [data-iw-header="status-grid"] [data-iw-header-stat] {
+    grid-area: auto !important;
+    grid-column: auto !important;
+  }
+  [data-iw-header="status-grid"] [data-iw-header-stat="gold"],
+  [data-iw-header="status-grid"] [data-iw-header-stat="combat"] {
+    justify-content: flex-start !important;
+    font-size: 13px !important;
+  }
+  [data-iw-ui="nav-tab"] { padding: 11px 14px !important; font-size: 14px !important; gap: 8px !important; }
+  [data-iw-ui="zone-action"] { flex: 1 1 0 !important; padding: 10px 10px !important; font-size: 13px !important; }
+}
+
+@media (max-width: 560px) {
+  [data-iw-ui="main-nav"] { overflow-x: auto !important; scrollbar-width: none; }
+  [data-iw-ui="main-nav"]::-webkit-scrollbar { display: none; }
+  [data-iw-ui="nav-tab"] { flex: 0 0 auto !important; }
+}
+
+/* ── §10  Reduced motion ────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-iw-header="utility-button"],
+  [data-iw-ui="nav-tab"],
+  [data-iw-ui="zone-action"] { transition: none; }
+}

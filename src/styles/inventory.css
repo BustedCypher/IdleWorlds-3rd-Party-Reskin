@@ -4,11 +4,33 @@
    Inventory is the reference implementation for reusable RPG item rows.
    React-owned commands remain live DOM nodes; the Fantasy Skin owns the
    item presentation and semantic action treatment only.
+
+   ── Forged pass, 2026-08-25 ──────────────────────────────────────────
+   Ornament is spent where it appears ONCE per panel — the corner filigree,
+   the title flourish, the four tool buttons. Everything that repeats per
+   row stays plain: a flat socket carrying a rarity edge, and four flat
+   action weights. An ornate frame is memorable once and noisy five times.
+
+   Two hard constraints this file works around, both learned from source:
+
+     1. AtlasService writes background-image / -position / -size INLINE on
+        .fs-inv-icon, and appends .iw-icon-badge as a real child. So the
+        socket's rarity treatment is border + box-shadow only — never a
+        background layer, which inline style would win anyway — and
+        overflow stays visible so the enhancement sprite can overhang.
+
+     2. The action controls are React-owned siblings of the overlay inside
+        .compact-row, not children of .fs-inv-row. They are styled in place.
    ══════════════════════════════════════════════════════════════════════ */
 
 /* ── Inventory chrome ─────────────────────────────────────────────── */
+/* The panel ground, the gold hairline, the corner filigree and the padding
+   that clears them are NOT here. They live once, in ui-system.css, under the
+   shared forged-frame rule that also covers Quests, Market, Skill Actions and
+   every other named panel. Inventory only adds what is specific to it. */
 [data-iw-inventory-root="1"] {
   --fs-inv-command-w: 54px;
+  overflow: hidden !important;
 }
 
 [data-iw-inventory-title="1"] {
@@ -17,41 +39,203 @@
      computed-value time and the Inventory title silently inherited whatever
      the game was using. (Audit S3.1) */
   font-family: var(--iw-font-head) !important;
-  font-size: 16px !important;
+  font-size: 18px !important;
   font-weight: 700 !important;
-  letter-spacing: .045em !important;
+  letter-spacing: .13em !important;
   text-transform: uppercase !important;
-  color: var(--iw-text) !important;
+  color: var(--iw-text-hi) !important;
+  text-shadow: 0 0 16px rgba(216, 121, 31, .20) !important;
+}
+
+/* Title flourish — a centred ornament on a full-width hairline, matching the
+   concept. It lives on .fs-inv-rule, an element InventoryRenderer appends after
+   the header row, because the heading itself sits two flex wrappers deep and a
+   pseudo there can never span the panel.
+   The ornament is drawn at native proportion; stretching a centre ornament
+   smears it, which is what the first attempt did. */
+.fs-inv-rule {
+  position: relative;
+  height: 30px;
+  margin: 2px 0 10px;
+  pointer-events: none;
+}
+.fs-inv-rule::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--iw-line-hot) 14%,
+    var(--iw-line-hot) 86%,
+    transparent
+  );
+  opacity: .7;
+}
+.fs-inv-rule::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 186px;
+  height: 62px;
+  transform: translate(-50%, -50%);
+  background-image: url('../assets/skills_ui_atlas.webp');
+  background-repeat: no-repeat;
+  background-size: 730.41px 393.23px;
+  background-position: -210.63px -5.10px;
 }
 
 [data-iw-inventory-root="1"] [data-iw-inventory-control="filter"],
 [data-iw-inventory-root="1"] [data-iw-inventory-control="page"] {
-  min-height: 28px !important;
-  height: 28px !important;
+  min-height: 30px !important;
+  height: 30px !important;
   border-radius: 2px !important;
-  padding: 0 10px !important;
-  font-family: var(--iw-font-ui) !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  line-height: 26px !important;
-  letter-spacing: .015em !important;
+  border: 1px solid #2E2718 !important;
+  background: linear-gradient(180deg, #16140E, #0E0D09) !important;
+  padding: 0 14px !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  line-height: 28px !important;
+  letter-spacing: .09em !important;
+  text-transform: uppercase !important;
+  color: var(--iw-dim) !important;
 }
 
+/* No seam collapsing here: the game's filter container ships gap-1.5 (6px), so
+   the tabs are separate plates by its own layout, not a segmented control. A
+   -1px pull would be dead CSS against a 6px gap. */
+
+[data-iw-inventory-root="1"] [data-iw-inventory-control="filter"]:hover,
+[data-iw-inventory-root="1"] [data-iw-inventory-control="page"]:hover {
+  color: var(--iw-text) !important;
+  border-color: var(--iw-line-hot) !important;
+}
+
+/* Which filter is live is real information. Repainting all five identically
+   would delete it, so the active one keeps an ember treatment of its own —
+   the same one the main nav tabs use. */
+[data-iw-inventory-root="1"] [data-iw-inventory-control="filter"][data-iw-inventory-filter-state="active"] {
+  color: #FFEBC8 !important;
+  border-color: #C0913C !important;
+  background: linear-gradient(180deg, #8A5D1B, #B0761F 46%, #4C3210) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 216, 150, .55),
+    0 0 14px -2px rgba(216, 121, 31, .45) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .8) !important;
+}
+
+[data-iw-inventory-root="1"] [data-iw-inventory-control="page"]:disabled {
+  opacity: .45 !important;
+  color: var(--iw-faint) !important;
+}
+
+/* THE ROW HAS THREE CONTROLS AND ONE ORNAMENT, and the game says so itself.
+   Live DOM (claude/probe-inventory-toolrow.js):
+
+     <div class="flex items-center gap-2">           <- row, h=37
+       <div class="relative"><button …/></div>       <- Filter,    y=222 h=31
+       <button aria-label="Search inventory" …/>     <- Search,    y=225 h=31
+       <button aria-label="Equipment Window" …/>     <- Equipment, y=225 h=31
+       <svg class="lucide lucide-package … text-ember">  <- ornament, 16x16
+     </div>
+
+   The three buttons carry `cursor: pointer`, an aria-label and a title. The
+   package glyph is a BARE <svg> with `cursor: auto`, no role, no tabindex, no
+   aria-label and no title, and the game gives it none of the button chrome it
+   gives the other three. That is the game drawing a distinction, and
+   CLAUDE.md's rule 5 says the skin must not repaint it away: framing the glyph
+   would invent a click affordance the game does not offer. It stays unframed
+   and is only harmonised — see the `glyph` rule below. */
+
+/* The three real tool buttons keep the forged frame — they appear once, in the
+   corner, which is the one place a framed button still earns its keep.
+   `display: grid` + `place-items: center` is load-bearing TWICE; do not drop it
+   back to the browser's default button layout.
+
+   1. THE GLYPH. Tailwind preflight ships `svg { display: block }` on the live
+      page, so the icon is a BLOCK child of the button, not inline content — and
+      a block box with an explicit width gets no auto-centring, it sits flush
+      left. Measured against preflight: every glyph sat at dx = -7.5px, exactly
+      half its own 15px width, hard against the left edge of the 30px frame.
+      A button does not centre a block child for you; this does.
+
+   2. THE ROW. Only TWO of the three controls are direct flex children of the
+      row — Filter is wrapped in a bare `div.relative` (its dropdown anchor), so
+      it is never blockified and lays out in that wrapper's INLINE formatting
+      context. Measured live, the wrapper came out 37px around a 31px button
+      with the button flush to its top, and the row's `items-center` then
+      centred a 37px wrapper against 31px siblings: the 3px the funnel sat high
+      (y=222 against 225). Making the button itself block-level leaves the
+      wrapper no inline content to build a line box from, so it collapses to the
+      control's own height and all three land level.
+
+   This replaced a `:has(> …)` rule on the WRAPPERS that reached the same
+   blockification the long way round. Fixing the control itself is tighter (it
+   cannot match some other container in another layout) and it is the only one
+   of the two that also centres the glyph. */
 [data-iw-inventory-root="1"] [data-iw-inventory-control="icon"] {
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  min-height: 28px !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 30px !important;
+  height: 31px !important;
+  min-width: 30px !important;
+  min-height: 31px !important;
   padding: 0 !important;
-  border-radius: 2px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--iw-gold-dim) !important;
+  background-color: transparent !important;
+  /* `background` (shorthand) rather than background-image, so the game's
+     bg-white/5 colour and ui-system's gradient are both reset in one go
+     instead of layering underneath the atlas. */
+  background: url('../assets/skills_ui_atlas.webp') no-repeat !important;
+  background-image: url('../assets/skills_ui_atlas.webp') !important;
+  background-repeat: no-repeat !important;
+  background-size: 322.5px 173.63px !important;
+  background-position: -177.38px -2.25px !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+  flex: 0 0 auto !important;
+  overflow: visible !important;
+}
+[data-iw-inventory-root="1"] [data-iw-inventory-control="icon"] svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+[data-iw-inventory-root="1"] [data-iw-inventory-control="icon"]:hover {
+  color: #FFE2AE !important;
+  background-position: -209.63px -2.25px !important;
+}
+
+/* The package ornament. NOT framed, on purpose — see the row diagram above.
+   What it gets instead is size parity with the framed controls' own glyphs
+   (15px, against its native 16px) so the row reads as one rank, and a soft
+   ember bloom so it looks deliberate rather than like a control the skin
+   failed to reach. Its `text-ember` colour is deliberately NOT touched: ember
+   is live state elsewhere in this very panel — it is what marks the active
+   filter tab — so repainting this glyph to the skin's gold risks deleting a
+   meaning the game may be carrying here too. Colour stays the game's; only
+   geometry and bloom are the skin's. */
+[data-iw-inventory-root="1"] [data-iw-inventory-control="glyph"] {
+  width: 15px !important;
+  height: 15px !important;
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  filter: drop-shadow(0 0 5px rgba(216, 121, 31, .4)) !important;
 }
 
 [data-iw-inventory-root="1"] [data-iw-inventory-control="page-count"] {
-  color: var(--iw-faint) !important;
-  font-family: var(--iw-font-ui) !important;
-  font-size: 10px !important;
+  color: var(--iw-gold-dim) !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
   font-variant-numeric: tabular-nums;
-  letter-spacing: .08em;
+  letter-spacing: .14em;
 }
 
 /* ── Row shell ────────────────────────────────────────────────────── */
@@ -64,24 +248,40 @@
   padding: 0 !important;
   position: relative !important;
   overflow: hidden !important;
-  border: 1px solid var(--iw-line) !important;
-  border-radius: 3px !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.014), transparent 38%),
-    #12110E !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.014),
-    inset 0 -1px 0 rgba(0,0,0,.35) !important;
-  transition: border-color .12s, background-color .12s !important;
+  border: 0 !important;
+  border-top: 1px solid var(--iw-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: background-color .12s !important;
+}
+.compact-row:has(> .fs-inv-row):first-child,
+[class*="item-row"]:has(> .fs-inv-row):first-child {
+  border-top: 0 !important;
 }
 
+/* --fs-tier lives on .fs-inv-row, a CHILD of this shell, so the shell cannot
+   read it. The rarity-tinted hover is therefore painted by the overlay's own
+   ::after, which can. The shell only carries a neutral lift. */
 .compact-row:has(> .fs-inv-row):hover,
 [class*="item-row"]:has(> .fs-inv-row):hover {
-  border-color: #4B402B !important;
-  background:
-    linear-gradient(90deg, rgba(232,183,106,.025), transparent 32%),
-    #14120F !important;
+  background: rgba(255, 214, 140, .022) !important;
 }
+.fs-inv-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .12s;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--fs-tier) 11%, transparent),
+    transparent 46%
+  );
+}
+.compact-row:has(> .fs-inv-row):hover .fs-inv-row::after,
+[class*="item-row"]:has(> .fs-inv-row):hover .fs-inv-row::after { opacity: 1; }
 
 .fs-inv-row {
   --fs-tier: var(--iw-t-common);
@@ -94,8 +294,8 @@
   grid-template-columns: 52px minmax(0, 1fr) 38px;
   grid-template-areas: "icon body qty";
   align-items: center;
-  column-gap: 11px;
-  padding: 6px 8px 6px 13px;
+  column-gap: 12px;
+  padding: 7px 8px 7px 14px;
   position: relative;
   cursor: default;
 }
@@ -109,19 +309,28 @@
 .fs-inv-row.tier-legendary { --fs-tier: var(--iw-t-legendary); }
 .fs-inv-row.tier-mythic    { --fs-tier: var(--iw-t-mythic); }
 
+/* Rarity rail — the second of two rarity reads per row. */
 .fs-inv-row::before {
   content: "";
   position: absolute;
   left: 0;
   top: 8px;
   bottom: 8px;
-  width: 2px;
-  background: var(--fs-tier);
-  opacity: .82;
+  width: 3px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--fs-tier) 18%,
+    var(--fs-tier) 82%,
+    transparent
+  );
+  box-shadow: 0 0 8px color-mix(in srgb, var(--fs-tier) 42%, transparent);
   pointer-events: none;
 }
 
 /* ── Icon slot ────────────────────────────────────────────────────── */
+/* AtlasService owns background-image / -position / -size here, inline.
+   Rarity is therefore carried by the border and box-shadow only. */
 .fs-inv-icon {
   grid-area: icon;
   width: 52px;
@@ -131,11 +340,13 @@
   position: relative;
   background-repeat: no-repeat;
   background-color: #080806;
-  border: 1px solid #3A3020;
+  border: 1px solid color-mix(in srgb, var(--fs-tier) 52%, #3A3020);
   border-radius: 2px;
   box-shadow:
     inset 0 0 0 1px rgba(0,0,0,.62),
-    inset 0 0 14px rgba(0,0,0,.5);
+    inset 0 0 14px rgba(0,0,0,.6),
+    inset 0 6px 16px -8px color-mix(in srgb, var(--fs-tier) 55%, transparent),
+    0 0 8px -1px color-mix(in srgb, var(--fs-tier) 38%, transparent);
   image-rendering: auto;
   display: flex;
   align-items: center;
@@ -152,14 +363,18 @@
   border-color: var(--fs-tier);
   box-shadow:
     inset 0 0 0 1px rgba(0,0,0,.62),
-    inset 0 0 14px rgba(0,0,0,.5),
-    0 0 0 1px color-mix(in srgb, var(--fs-tier) 22%, transparent);
+    inset 0 0 14px rgba(0,0,0,.6),
+    inset 0 6px 16px -8px color-mix(in srgb, var(--fs-tier) 70%, transparent),
+    0 0 12px -1px color-mix(in srgb, var(--fs-tier) 60%, transparent);
 }
+/* Equipped is a state, and it lives on its own axis — a warm edge, never
+   the rarity channel, so the two signals cannot be confused. */
 .fs-inv-row.is-equipped .fs-inv-icon {
+  border-color: #8A6A2C;
   box-shadow:
     inset 0 0 0 1px rgba(0,0,0,.62),
-    inset 0 0 14px rgba(0,0,0,.5),
-    0 0 0 1px rgba(80,150,94,.18);
+    inset 0 0 14px rgba(0,0,0,.6),
+    0 0 9px -1px rgba(200,120,40,.34);
 }
 
 /* ── Identity / information rails ────────────────────────────────── */
@@ -177,21 +392,25 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
-  font-family: var(--iw-font-ui);
-  font-size: 13px;
+  font-family: var(--iw-font-head);
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.18;
-  letter-spacing: .005em;
+  line-height: 1.22;
+  letter-spacing: .012em;
   white-space: normal;
   overflow: hidden;
   overflow-wrap: anywhere;
   text-overflow: ellipsis;
+  color: var(--fs-tier);
   text-shadow: 0 1px 0 #000;
 }
 .fs-inv-name .fs-inv-sub {
   color: var(--iw-faint);
+  font-family: var(--iw-font-ui);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: .07em;
+  text-transform: uppercase;
 }
 .fs-inv-name-plain { color: var(--iw-text); }
 .fs-inv-name .iw-item-ref { color: inherit; }
@@ -204,21 +423,21 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0;
-  margin-top: 3px;
+  margin-top: 4px;
   min-height: 13px;
 }
 .fs-stat {
   position: relative;
   font-family: var(--iw-font-ui);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.25;
   font-weight: 600;
-  color: var(--iw-dim);
+  color: var(--iw-text);
   background: none;
   border: 0;
   border-radius: 0;
-  padding: 0 7px 0 0;
-  margin-right: 7px;
+  padding: 0 8px 0 0;
+  margin-right: 8px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -232,7 +451,7 @@
   background: #332C1E;
 }
 .fs-stat--pos  { color: var(--iw-good); }
-.fs-stat--tier { color: var(--iw-gold-dim); }
+.fs-stat--tier { color: var(--iw-dim); font-weight: 500; }
 
 /* Dynamic owned-item state. These lines deliberately look like equipment
    inscriptions, not application badges. */
@@ -244,10 +463,10 @@
   overflow: hidden;
   flex-wrap: wrap;
   align-items: center;
-  gap: 3px 12px;
+  gap: 3px 13px;
   margin-top: 3px;
   font-family: var(--iw-font-ui);
-  font-size: 9.5px;
+  font-size: 10.5px;
   line-height: 1.25;
 }
 
@@ -293,10 +512,10 @@
   min-width: 34px;
   padding-right: 2px;
   text-align: right;
-  font-family: var(--iw-font-ui);
-  font-size: 11px;
+  font-family: var(--iw-font-head);
+  font-size: 12px;
   font-weight: 700;
-  color: var(--iw-dim);
+  color: var(--iw-gold-dim);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -316,7 +535,7 @@
   align-self: center !important;
   position: relative;
   z-index: 2;
-  margin: 0 5px 0 0 !important;
+  margin: 0 6px 0 0 !important;
   min-width: 0 !important;
   max-width: none !important;
 }
@@ -324,19 +543,19 @@
 button[data-fs-preserved-action="control"],
 a[data-fs-preserved-action="control"],
 [role="button"][data-fs-preserved-action="control"] {
-  height: 28px !important;
-  min-height: 28px !important;
-  padding: 0 8px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 9px !important;
   border-radius: 2px !important;
   border: 1px solid var(--iw-line-hi) !important;
-  background: linear-gradient(180deg, #201D17, #15130F) !important;
+  background: linear-gradient(180deg, #17150F, #100F0B) !important;
   color: var(--iw-text) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 1px 0 #000 !important;
-  font-family: var(--iw-font-ui) !important;
-  font-size: 10px !important;
-  line-height: 26px !important;
-  font-weight: 700 !important;
-  letter-spacing: .025em !important;
+  box-shadow: none !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 11px !important;
+  line-height: 28px !important;
+  font-weight: 600 !important;
+  letter-spacing: .06em !important;
   text-transform: none !important;
   white-space: nowrap !important;
 }
@@ -345,42 +564,76 @@ a[data-fs-preserved-action="control"]:hover,
 [role="button"][data-fs-preserved-action="control"]:hover {
   border-color: var(--iw-gold-dim) !important;
   color: var(--iw-gold) !important;
-  background: linear-gradient(180deg, #29241A, #19160F) !important;
+  background: linear-gradient(180deg, #221E15, #16130E) !important;
 }
 
-[data-fs-action-kind="equipped"] {
-  width: 70px !important;
-  border-color: #315E3A !important;
-  background: linear-gradient(180deg, #193520, #102518) !important;
-  color: #A9D7AF !important;
+/* ── Action kinds ────────────────────────────────────────────────────
+   These MUST carry the element+attribute qualifier. The shared control
+   rule above is (0,1,1); a bare [data-fs-action-kind="…"] is (0,1,0), so
+   with both sides !important the base rule wins on specificity and every
+   kind computes to the same grey chip — which is exactly what the current
+   build ships. Qualifying to (0,2,1) is what makes these visible at all. */
+button[data-fs-preserved-action="control"][data-fs-action-kind="equipped"],
+a[data-fs-preserved-action="control"][data-fs-action-kind="equipped"],
+[role="button"][data-fs-preserved-action="control"][data-fs-action-kind="equipped"] {
+  width: 74px !important;
+  border-color: color-mix(in srgb, var(--iw-good) 44%, var(--iw-line-hi)) !important;
+  background: rgba(80,150,95,.09) !important;
+  color: var(--iw-good) !important;
 }
-[data-fs-action-kind="equip"] {
-  width: 48px !important;
-  border-color: #5A4728 !important;
-  color: #E1C48A !important;
+button[data-fs-preserved-action="control"][data-fs-action-kind="equip"],
+a[data-fs-preserved-action="control"][data-fs-action-kind="equip"],
+[role="button"][data-fs-preserved-action="control"][data-fs-action-kind="equip"] {
+  width: 54px !important;
+  border-color: #8A6A2C !important;
+  background: linear-gradient(180deg, #6B4A16, #91601C 46%, #3D280C) !important;
+  color: #FFE9C4 !important;
 }
-[data-fs-action-kind="set"] {
-  width: 72px !important;
-  color: #D1C06C !important;
+button[data-fs-preserved-action="control"][data-fs-action-kind="set"],
+a[data-fs-preserved-action="control"][data-fs-action-kind="set"],
+[role="button"][data-fs-preserved-action="control"][data-fs-action-kind="set"] {
+  width: 76px !important;
+  color: var(--iw-gold) !important;
   border-color: #514621 !important;
 }
-[data-fs-action-kind="secondary"] { width: 44px !important; }
-[data-fs-action-kind="icon"] {
-  width: 28px !important;
-  min-width: 28px !important;
+button[data-fs-preserved-action="control"][data-fs-action-kind="secondary"],
+a[data-fs-preserved-action="control"][data-fs-action-kind="secondary"],
+[role="button"][data-fs-preserved-action="control"][data-fs-action-kind="secondary"] {
+  width: 48px !important;
+  color: var(--iw-dim) !important;
+}
+button[data-fs-preserved-action="control"][data-fs-action-kind="icon"],
+a[data-fs-preserved-action="control"][data-fs-action-kind="icon"],
+[role="button"][data-fs-preserved-action="control"][data-fs-action-kind="icon"] {
+  width: 30px !important;
+  min-width: 30px !important;
   padding: 0 !important;
+  color: var(--iw-faint) !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   line-height: 1 !important;
 }
 
+/* Hover must not erase the state colour: it is the only thing telling you
+   the item is equipped. Re-assert each kind after the shared hover rule. */
+button[data-fs-preserved-action="control"][data-fs-action-kind="equipped"]:hover:not(:disabled) {
+  color: var(--iw-good) !important;
+  border-color: var(--iw-good) !important;
+  background: rgba(80,150,95,.16) !important;
+}
+button[data-fs-preserved-action="control"][data-fs-action-kind="equip"]:hover:not(:disabled) {
+  color: #FFF3DF !important;
+  border-color: #C08F3C !important;
+  background: linear-gradient(180deg, #7E571A, #A87021 46%, #4A310E) !important;
+}
+
 button[data-fs-preserved-action="control"]:disabled,
 [role="button"][data-fs-preserved-action="control"][aria-disabled="true"] {
-  opacity: .42 !important;
+  opacity: .45 !important;
   color: var(--iw-faint) !important;
   border-color: var(--iw-line) !important;
-  background: #12110E !important;
+  background: #101009 !important;
 }
 
 /* ── Responsive collapse ─────────────────────────────────────────── */
@@ -388,12 +641,15 @@ button[data-fs-preserved-action="control"]:disabled,
   .fs-inv-row {
     grid-template-columns: 46px minmax(0, 1fr) 34px;
     min-height: 56px;
-    padding-left: 10px;
-    column-gap: 9px;
+    padding-left: 11px;
+    column-gap: 10px;
   }
   .fs-inv-icon { width: 46px; height: 46px; min-width: 46px; min-height: 46px; }
   .fs-inv-stats .fs-stat:nth-child(n+6) { display: none; }
   .fs-inv-details { max-height: 26px; overflow: hidden; }
+  [data-iw-inventory-root="1"] { padding: 20px 16px !important; }
+  [data-iw-inventory-root="1"]::after { border-width: 24px 22px; border-image-width: 24px 22px; }
+  [data-iw-inventory-title="1"]::after { width: 150px; }
 }
 
 @media (max-width: 700px) {
@@ -417,7 +673,7 @@ button[data-fs-preserved-action="control"]:disabled,
     max-height: none;
     overflow: visible;
     gap: 2px 8px;
-    font-size: 9px;
+    font-size: 9.5px;
   }
   .fs-inv-detail,
   .fs-inv-requirement {
@@ -431,6 +687,13 @@ button[data-fs-preserved-action="control"]:disabled,
   button[data-fs-preserved-action="control"],
   a[data-fs-preserved-action="control"],
   [role="button"][data-fs-preserved-action="control"] {
-    padding-inline: 6px !important;
+    padding-inline: 7px !important;
   }
+  [data-iw-inventory-root="1"] { padding: 16px 12px !important; }
+  [data-iw-inventory-root="1"]::after { border-width: 20px 18px; border-image-width: 20px 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compact-row:has(> .fs-inv-row),
+  [class*="item-row"]:has(> .fs-inv-row) { transition: none !important; }
 }
