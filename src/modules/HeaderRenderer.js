@@ -7,6 +7,7 @@
 import { on } from './DOMWatcher.js';
 import { inject } from './StyleInjector.js';
 import { assetUrl, guard, raf } from './Runtime.js';
+import { zoneTheme } from './zoneThemes.js';
 import css from '../styles/header.css';
 
 const ROLE = 'data-iw-header';
@@ -30,14 +31,93 @@ const HEADER_ASSETS = {
 };
 
 const ASSET_VARS = [
-  '--iw-header-frame', '--iw-header-surface', '--iw-header-crest',
+  '--iw-header-frame', '--iw-header-surface', '--iw-header-surface-mobile', '--iw-header-crest',
   '--iw-header-divider', '--iw-utility-frame', '--iw-status-frame',
   '--iw-nav-rail', '--iw-nav-active', '--iw-nav-idle',
   '--iw-announcement-frame', '--iw-zone-frame', '--iw-zone-scene',
   '--iw-zone-button-active', '--iw-zone-button-idle', '--iw-zone-button-teal',
+  // Per-zone frame theme, set on <html> by applyZoneTheme(). The teardown loop
+  // below walks '*', which includes <html>, so listing them here clears them.
+  '--iw-zone-atlas', '--iw-corner-filigree',
 ];
 
 const norm = value => String(value || '').replace(/\s+/g, ' ').trim();
+
+// Per-zone header background. `applyZoneSurface()` points `--iw-header-surface`
+// at the wide strip `assets/header/zones/zone_<N>.webp` and
+// `--iw-header-surface-mobile` at the portrait crop `zone_<N>_mobile.webp` for
+// the zone the player is currently in; both fall back to `header_surface.webp`
+// for a zone with no dedicated file (or when the zone can't be read yet).
+// `header.css` paints the wide one normally and swaps to the mobile one inside
+// its `@media (max-width: 768px)` block. zone_1..34(_mobile) are the real
+// paintings imported by `npm run import:zone-headers[:mobile]`; `npm run
+// art:zones` only fills gaps in the desktop set with a procedural placeholder.
+// Bump MAX when art past 34 lands.
+const ZONE_SURFACE_DIR = 'assets/header/zones';
+const ZONE_SURFACE_MAX = 34;
+
+function currentZoneNumber() {
+  // UIFoundation tags the "🧭 Zone 19: <name>" label data-iw-ui="zone-title";
+  // fall back to a text scan in case that classifier has not run this flush.
+  let el = document.querySelector('[data-iw-ui="zone-title"]');
+  if (!el) {
+    el = [...document.querySelectorAll('div,span,p,strong')].find(n =>
+      /^zone\s*\d+\s*:/i.test(norm(n.textContent).replace(/^[^a-z0-9]+/i, '')));
+  }
+  if (!el) return null;
+  const m = norm(el.textContent).replace(/^[^a-z0-9]+/i, '').match(/^zone\s*(\d+)/i);
+  return m ? Number(m[1]) : null;
+}
+
+function zoneSurfaceUrl(zone, variant = '') {
+  const key = Number.isInteger(zone) && zone >= 1 && zone <= ZONE_SURFACE_MAX
+    ? `${ZONE_SURFACE_DIR}/zone_${zone}${variant}.webp`
+    : HEADER_ASSETS.headerSurface;
+  return `url("${assetUrl(key)}")`;
+}
+
+function applyZoneSurface(root) {
+  if (!root) return;
+  const zone = currentZoneNumber();
+  const key = zone == null ? 'fallback' : String(zone);
+  // Only touch the inline style when the zone actually changed — otherwise
+  // every dom-flush would rewrite it and feed the MutationObserver. The
+  // desktop/mobile choice between the two vars is left to `header.css` media
+  // queries, so a viewport change needs no JS here.
+  if (root.dataset.iwZone === key && root.style.getPropertyValue('--iw-header-surface')) return;
+  root.dataset.iwZone = key;
+  root.style.setProperty('--iw-header-surface', zoneSurfaceUrl(zone));
+  root.style.setProperty('--iw-header-surface-mobile', zoneSurfaceUrl(zone, '_mobile'));
+}
+
+// Per-zone frame chrome. `zone-theme-map.json` groups the 34 zones into nine
+// environment palettes (glacial, infernal, verdant, …); each has a recoloured
+// copy of the skills UI atlas + its own corner filigree sheet, geometry
+// identical to the base art. This points two page-level CSS variables at the
+// current zone's set:
+//   --iw-zone-atlas      → SkillsArtService's --fs-skills-ui-atlas + inventory.css
+//   --iw-corner-filigree → the shared border-image in ui-system/header/tooltip
+// base.css defines both as the un-themed defaults, so an unresolved zone (or a
+// zone with no theme) simply falls back there. The attribute + inline vars live
+// on <html>, which is OUTSIDE document.body and therefore not watched by the
+// single MutationObserver — writing here can never feed a flush.
+const THEME_ASSET_DIR = 'assets/skills-ui';
+
+function applyZoneTheme() {
+  const html = document.documentElement;
+  if (!html) return;
+  const theme = zoneTheme(currentZoneNumber());
+  const key = theme || 'default';
+  if (html.dataset.iwZoneTheme === key) return;
+  html.dataset.iwZoneTheme = key;
+  if (theme) {
+    html.style.setProperty('--iw-zone-atlas', `url("${assetUrl(`${THEME_ASSET_DIR}/theme_${theme}.webp`)}")`);
+    html.style.setProperty('--iw-corner-filigree', `url("${assetUrl(`${THEME_ASSET_DIR}/panel_corners_${theme}.webp`)}")`);
+  } else {
+    html.style.removeProperty('--iw-zone-atlas');
+    html.style.removeProperty('--iw-corner-filigree');
+  }
+}
 
 function setRole(el, role) {
   if (el && el.getAttribute(ROLE) !== role) el.setAttribute(ROLE, role);
@@ -52,7 +132,8 @@ function setAssetVar(el, name, key) {
 function applyHeaderVars(root) {
   setAssetVar(root, '--iw-header-frame', 'headerFrame');
   setAssetVar(root, '--iw-header-frame-bar', 'headerFrameBar');
-  setAssetVar(root, '--iw-header-surface', 'headerSurface');
+  // `--iw-header-surface` is set per-zone by applyZoneSurface(), not here.
+  // The zone bar keeps the static header_surface art (see applyZoneVars).
   setAssetVar(root, '--iw-header-crest', 'headerCrest');
   setAssetVar(root, '--iw-header-divider', 'headerDivider');  setAssetVar(root, '--iw-utility-frame', 'utilityFrame');
   setAssetVar(root, '--iw-status-frame', 'statusFrame');
@@ -70,7 +151,7 @@ function applyAnnouncementVars(el) {
 
 function applyZoneVars(el) {
   setAssetVar(el, '--iw-zone-frame', 'zoneFrame');
-  setAssetVar(el, '--iw-zone-scene', 'zoneScene');
+  setAssetVar(el, '--iw-zone-scene', 'headerSurface'); // swapped — see applyHeaderVars
   setAssetVar(el, '--iw-zone-button-active', 'zoneButtonActive');
   setAssetVar(el, '--iw-zone-button-idle', 'zoneButtonIdle');
   setAssetVar(el, '--iw-zone-button-teal', 'zoneButtonTeal');
@@ -195,6 +276,11 @@ function classifyProfile(layout) {
  */
 function statKind(text) {
   if (/\batk\s*\d+\b.*\bdef\s*\d+\b.*\bhp\s*\d+\b/i.test(text)) return 'combat';
+  // Server-wide boost: "⚡ <player> boosted (5/5) · 8d 11h left". Also carries a
+  // countdown, so it must be tested before `timer`. This tile gets the wide
+  // left plaque (see header.css §5a) where the player name + charge + timer fit
+  // on their own lines instead of truncating in a buff row.
+  if (/\bboosted\b/i.test(text)) return 'boost';
   // "17h 17m left", "1d 8h left", "(3/4) · 1d 19h left"
   if (/\b\d+\s*[dhm]\b[^]*\bleft\b/i.test(text)) return 'timer';
   // A bare amount, optionally behind a coin glyph.
@@ -221,21 +307,34 @@ function classifyStatus(layout, region) {
   }
   if (!grid) return null;
   setRole(grid, 'status-grid');
-  [...grid.children].forEach((card, index) => {
-    if (!card.matches('.stat-chip,button,div')) return;
-    setRole(card, 'status-card');
-    card.dataset.iwHeaderCard = String(index + 1);
-    const kind = statKind(norm(card.textContent));
-    if (card.dataset.iwHeaderStat !== kind) card.dataset.iwHeaderStat = kind;
-  });
+  tagStatusCards(grid);
   return grid;
 }
 
-// Nothing under the header resolves differently tick to tick -- the header
-// subtree's ROLES are stable once assigned; only the native text/values
-// inside them tick, which React repaints on its own. Cache the resolution
-// and skip the whole-document `<header>` scan + profile/utilities/status
-// sub-scans once it validates.
+// Tag each status card with its role, 1-based index, and content-derived KIND.
+// The kind is NOT frozen resolution: the game reuses the same card nodes and
+// only swaps their text as buffs start and expire (a timer tile can become the
+// server-boost tile, an "other" can become a timer), so this must re-run every
+// flush against the current text — otherwise `data-iw-header-stat` sticks at
+// whatever it was when the header first classified and the vitals/boost layout
+// in header.css keys off a stale value.
+function tagStatusCards(grid) {
+  [...grid.children].forEach((card, index) => {
+    if (!card.matches('.stat-chip,button,div')) return;
+    setRole(card, 'status-card');
+    const cardIndex = String(index + 1);
+    if (card.dataset.iwHeaderCard !== cardIndex) card.dataset.iwHeaderCard = cardIndex;
+    const kind = statKind(norm(card.textContent));
+    if (card.dataset.iwHeaderStat !== kind) card.dataset.iwHeaderStat = kind;
+  });
+}
+
+// The header subtree's ROLES are stable once assigned, so cache the resolution
+// and skip the whole-document `<header>` scan + profile/utilities sub-scans
+// once it validates. The one thing under the header that DOES change tick to
+// tick is a status card's content-derived KIND (buffs start and expire in the
+// same reused nodes), so `classifyHeader` still refreshes those every flush
+// via `tagStatusCards` even on the cached path.
 let headerResolution = null;
 
 function headerResolutionValid(entry) {
@@ -248,7 +347,11 @@ function headerResolutionValid(entry) {
 }
 
 function classifyHeader() {
-  if (headerResolution && headerResolutionValid(headerResolution)) return;
+  if (headerResolution && headerResolutionValid(headerResolution)) {
+    // Cached path: roles stay, but a card's KIND tracks its live text.
+    if (headerResolution.grid) tagStatusCards(headerResolution.grid);
+    return;
+  }
 
   const root = findLiveHeader();
   if (!root) { headerResolution = null; return; }
@@ -309,6 +412,8 @@ function classifyAdjacent() {
 function reconcile() {
   guard('header:root', classifyHeader);
   guard('header:adjacent', classifyAdjacent);
+  guard('header:zone-surface', () => applyZoneSurface(headerResolution?.root));
+  guard('header:zone-theme', applyZoneTheme);
 }
 
 function queueReconcile() {
@@ -322,10 +427,12 @@ function queueReconcile() {
 
 export function clearHeaderRenderer() {
   headerResolution = null;
+  delete document.documentElement.dataset.iwZoneTheme;
   document.querySelectorAll(`[${ROLE}]`).forEach(el => {
     el.removeAttribute(ROLE);
     delete el.dataset.iwHeaderCard;
     delete el.dataset.iwHeaderStat;
+    delete el.dataset.iwZone;
   });
   document.querySelectorAll('.fs-header-crest').forEach(el => el.remove());
   document.querySelectorAll('*').forEach(el => {

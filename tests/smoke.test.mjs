@@ -54,7 +54,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
         <div id="status-grid"><div>💰 515,686</div><div>🧪 XP +36/task · 22h 53m left</div><div>⚔ ATK 292 · DEF 252 · HP 477</div><div>⚔ No ATK potion active</div><div>🛡 No DEF potion active</div><div>⚡ BritishDemon boosted (1/12) · 9h 15m left</div></div>
       </header>
       <nav><button>Game</button><button>Market</button><button>Leaderboards</button>
-           <button>Village</button><button>Dungeon</button></nav>
+           <button>Village</button></nav>
       <div id="announcement">You will auto-attack Ancient Treant when it respawns.</div>
       <div id="zone-bar-panel">
         <div id="zone-bar-text">
@@ -126,6 +126,11 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
           <button aria-label="Equipment Window" title="Equipment Window"><svg id="ic-equip"></svg></button>
           <svg class="lucide lucide-package h-4 w-4 text-ember" id="pkg-ornament"></svg>
         </div>
+        <!-- Live wraps the rows in their own div (a sibling of the tool row /
+             filter tabs / pagers), which InventoryRenderer tags
+             data-iw-inventory-list for the inner frame. A flat fixture would
+             hide that classification. -->
+        <div class="space-y-1.5" id="inv-list">
         <div class="compact-row">
           <div><span>Iron Sword</span><span>Lv 3</span></div>
           <div><span>Tier 4 · Weapon</span></div>
@@ -139,6 +144,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
           <div><span>In loadout: Item Find</span><span>Cut Sunstone: +6% Item Find</span></div>
           <div><span>x1</span></div>
           <button>Equip</button><button>List</button>
+        </div>
         </div>
       </section>
       <div class="compact-panel" id="mine-live-panel">
@@ -164,6 +170,32 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
         <div><span>🧵</span><span>Tailor</span><span>LV 26</span></div>
         <div><span>🧵 Upgrade Moonsilk Silkbind Thread</span><button>Lv 26 - 21.0% • 13,450 to go</button><span>🔷 Moonsilk Silkbind Thread 0/3 • 🔴 Moonsteel Upgrade Orb 0/1</span><span>Requires Tailoring Lv 53 and Gathering Lv 49</span><span style="display:none">Base reward: +1008 tailoring XP/task</span><span>Base reward: +5638 tailoring XP/task</span></div>
         <div><div><button>‹</button><button>›</button></div><button id="tailor-action">Upgrade</button></div>
+      </div>
+      <div class="compact-panel" id="wood-panel">
+        <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
+          <div><p>🪓 Wood</p><p>LV 35</p></div>
+          <div><p>🪓 Chop Runic Oak</p><button>Lv 35 - 0.5% • 84,604 to go</button><p>35 XP</p><div role="progressbar"><div style="width:0.5%"></div></div><p>Needs level 29</p></div>
+          <button id="wood-action">Chop</button>
+        </div>
+      </div>
+      <div class="compact-panel" id="build-panel">
+        <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
+          <div><p>🏗️ Build</p><p>LV 29</p></div>
+          <div><p>🏗️ Craft Runite Building Parts</p><button>Lv 29 - 52.0% • 13,741 to go</button><p>📦 Runic Oak 473/16 • 🪨 Runite Ore 19318/8</p><div role="progressbar"><div style="width:52%"></div></div><p>Needs Construction Lv 29 + Woodcutting Lv 25</p><p>Base reward: +461 construction XP/task</p></div>
+          <div><div><button>‹</button><button>›</button></div><button id="build-action">Craft Parts</button></div>
+        </div>
+      </div>
+      <!-- Live Smithing, 2026-09 capture. The TITLE verb ("Craft") and the
+           BUTTON verb ("Forge") genuinely disagree, so neither the SKILL_META
+           test nor the button-derived test finds the title. Before the
+           structural last resort this panel lost action-title and therefore
+           data-iw-skill-layout entirely, and rendered as an unskinned card. -->
+      <div class="compact-panel" id="smith-craft-panel">
+        <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
+          <div><p>🛠️ Smith</p><p>LV 57</p></div>
+          <div><p>🛠️ Craft Voidiron Reinforcement Plate</p><button>Lv 57 - 77.2% • 1,413,049 to go</button><p>🧱 Voidiron Bar 0/20</p><div role="progressbar"><div style="width:77.2%"></div></div><p>Requires Smithing Lv 41 and Mining Lv 37</p><p>Base reward: +4471 smithing XP/task</p></div>
+          <div><div><button>‹</button><button>›</button></div><button id="smith-craft-action">Forge</button></div>
+        </div>
       </div>
       <div class="compact-panel" id="locked-panel">
         <div><span>🔒</span><span>Coming</span><span>Soon</span><p>LV —</p></div>
@@ -209,6 +241,22 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
               <div class="text-[11px] text-white/45">0% complete</div>
             </div>
           </div>
+        </div>
+      </div>
+      <div class="panel p-3.5" id="world-boss-panel"><div class="mb-2 flex items-center justify-between"><h2>World Bosses</h2><span>Shared world events</span></div>
+        <div class="space-y-2">
+          <div class="compact-panel p-2.5" id="boss-treant">
+            <div><p>🌍 Ancient Treant</p><p>Solo</p><p>Buff on kill: +4 XP/task for 1h</p><p>World boss participation</p><p>Respawns 8m left</p></div>
+            <button id="boss-treant-join">⏳ Prejoined</button>
+          </div>
+          <div class="compact-panel p-2.5" id="boss-behemoth">
+            <div><p>🌍 Abyssal Behemoth</p><p>Raid</p><p>Buff on kill: +8 XP/task for 2h</p><p>World boss participation</p><p>Respawns 1h 26m left</p></div>
+            <button>⏳ Prejoined</button>
+          </div>
+        </div>
+        <h3>Zone Control</h3>
+        <div class="compact-panel p-2.5" id="zone-control-card">
+          <div><p>🔴 Red Team controls Zone 8</p><p>Protected for 3h 44m</p><p>Last battle participants</p></div>
         </div>
       </div>
       <div id="unclassified-area"><div><span><em id="plain-item-text">Found an Iron Sword in the wilderness.</em></span></div></div>
@@ -344,8 +392,8 @@ check('no third-party network requests', thirdParty.length === 0, thirdParty.joi
 check('atlas assets fetched from the extension bundle',
   networkCalls.some(u => u.startsWith('chrome-extension://')),
   networkCalls.join(', '));
-check('all six runtime stylesheets mounted',
-  window.document.querySelectorAll('style[data-iw-style]').length === 6,
+check('all seven runtime stylesheets mounted',
+  window.document.querySelectorAll('style[data-iw-style]').length === 7,
   `${window.document.querySelectorAll('style[data-iw-style]').length} mounted`);
 check('base stylesheet is runtime-owned',
   !!window.document.querySelector('style[data-iw-style="base"]'));
@@ -370,6 +418,11 @@ console.log('\nsmoke: rendering');
 const row = window.document.querySelector('.compact-row');
 check('inventory row received an overlay', !!row.querySelector(':scope > .fs-inv-row'));
 check('inventory root was classified', !!window.document.querySelector('[data-iw-inventory-root]'));
+check('inventory row list wrapper is tagged for the inner frame',
+  window.document.getElementById('inv-list')?.getAttribute('data-iw-inventory-list') === '1' &&
+  // never the panel root itself, and never a wrapper holding the title/pager
+  window.document.querySelector('[data-iw-inventory-root]')?.getAttribute('data-iw-inventory-list') !== '1',
+  'list=' + window.document.getElementById('inv-list')?.getAttribute('data-iw-inventory-list'));
 
 // The tool row: three controls, one ornament. The game marks the ornament as
 // not-a-control (bare <svg>, no role/label/title, cursor auto) and the skin
@@ -424,6 +477,24 @@ check('background painter actively overrides native navy while enabled',
   inventorySection.style.getPropertyValue('background-color') !== 'rgb(15, 23, 42)',
   inventorySection.style.cssText);
 check('main nav classified', !!window.document.querySelector('[data-iw-ui="main-nav"]'));
+// The rail is matched tab-by-tab against a fixed label set, so ONE tab that
+// fails to match keeps its vanilla surfacing inside a rail the skin has
+// reframed -- which reads as "the rim skips that one button". Two ways in: a
+// decorated label (the leading/trailing glyph trap), and a tab that mounts
+// after the first classification (the resolution cache used to stay valid
+// forever once resolved, so a late tab was never picked up).
+const navRail = window.document.querySelector('[data-iw-ui="main-nav"]');
+check('every nav tab in the rail is classified',
+  [...navRail.querySelectorAll('button')].every(b => b.dataset.iwUi === 'nav-tab'),
+  [...navRail.querySelectorAll('button')].map(b => b.textContent + '=' + b.dataset.iwUi).join(' '));
+const lateTab = window.document.createElement('button');
+lateTab.id = 'late-nav-tab';
+lateTab.textContent = '⚔️ Dungeon 🔒';
+navRail.appendChild(lateTab);
+await waitFor(() => lateTab.dataset.iwUi === 'nav-tab', { timeout: 6000 }).catch(() => {});
+check('a decorated tab that mounts after boot is still classified',
+  lateTab.dataset.iwUi === 'nav-tab' && lateTab.dataset.iwTab === 'dungeon',
+  lateTab.dataset.iwUi + '/' + lateTab.dataset.iwTab);
 const currentActionPanel = window.document.getElementById('current-action-panel');
 const actionLogPanel = window.document.getElementById('action-log-panel');
 const worldChatPanel = window.document.getElementById('world-chat-panel');
@@ -465,6 +536,31 @@ check('top header receives the Option 1 semantic layout',
   window.document.getElementById('top-header')?.getAttribute('data-iw-header') === 'root' &&
   window.document.getElementById('profile-block')?.getAttribute('data-iw-header') === 'profile' &&
   window.document.getElementById('status-grid')?.getAttribute('data-iw-header') === 'status-grid');
+// Per-zone frame theme: the fixture sits in "Zone 19: Eternium Verge", which
+// zone-theme-map.json groups as `voidborn`. HeaderRenderer.applyZoneTheme()
+// must tag <html> and point both frame variables at that theme's assets.
+// Negative control: break the zoneThemes lookup or the resolver and the tag
+// falls back to "default" with no inline vars.
+{
+  const htmlEl = window.document.documentElement;
+  check('current zone resolves its frame theme onto <html>',
+    htmlEl.dataset.iwZoneTheme === 'voidborn',
+    'iwZoneTheme=' + (htmlEl.dataset.iwZoneTheme || 'unset'));
+  check('zone theme points the shared atlas + corner filigree variables at its assets',
+    /skills-ui\/theme_voidborn\.webp/.test(htmlEl.style.getPropertyValue('--iw-zone-atlas')) &&
+    /skills-ui\/panel_corners_voidborn\.webp/.test(htmlEl.style.getPropertyValue('--iw-corner-filigree')),
+    `atlas=${htmlEl.style.getPropertyValue('--iw-zone-atlas') || 'unset'} corner=${htmlEl.style.getPropertyValue('--iw-corner-filigree') || 'unset'}`);
+}
+// applyZoneSurface sets the wide strip AND the portrait mobile crop together;
+// header.css swaps between them by media query. Negative control: drop the
+// second setProperty and the mobile var is empty.
+{
+  const hdr = window.document.getElementById('top-header');
+  check('header carries both the wide and the mobile zone surface for zone 19',
+    /header\/zones\/zone_19\.webp/.test(hdr.style.getPropertyValue('--iw-header-surface')) &&
+    /header\/zones\/zone_19_mobile\.webp/.test(hdr.style.getPropertyValue('--iw-header-surface-mobile')),
+    `surface=${hdr.style.getPropertyValue('--iw-header-surface') || 'unset'} mobile=${hdr.style.getPropertyValue('--iw-header-surface-mobile') || 'unset'}`);
+}
 check('top header adds one skin-owned crest without replacing native profile text',
   window.document.querySelectorAll('#profile-block > .fs-header-crest').length === 1 &&
   window.document.getElementById('profile-block')?.textContent.includes('BustedCypher'));
@@ -481,6 +577,33 @@ check('header utility buttons are classified without replacing native controls',
     kinds[0] === 'gold' && kinds[2] === 'combat' &&
     cards.filter(el => el.dataset.iwHeaderStat === 'timer').length >= 1,
     kinds.join(','));
+  // The server-wide boost tile is its own kind (it also carries a countdown, so
+  // it must be caught before `timer`) — header.css hands it the lower-left
+  // plaque and moves ATK/DEF/HP into the buff column while it is up.
+  check('server boost tile is classified apart from plain buff timers',
+    kinds[5] === 'boost' && cards.filter(el => el.dataset.iwHeaderStat === 'boost').length === 1,
+    kinds.join(','));
+}
+// The game reuses the same card nodes and only swaps their text as buffs start
+// and expire, and the header resolution cache stays valid across that — so the
+// KIND must be re-derived every flush, not frozen at first classification.
+// (This is exactly why the first live attempt at the boost swap did nothing:
+// the card that gained the "boosted" text kept its stale `timer` kind.)
+{
+  const card = [...window.document.getElementById('status-grid').children][3];
+  // Mutate the existing text node in place, the way React repaints a value —
+  // replacing it via textContent would detach a game node and trip the
+  // lifecycle guard below.
+  const textNode = card.firstChild;
+  const original = textNode.nodeValue;
+  textNode.nodeValue = '⚡ Someone boosted (2/5) · 3h 12m left';
+  await waitFor(() => card.dataset.iwHeaderStat === 'boost', { timeout: 6000 }).catch(() => {});
+  check('a status card re-classifies when its text changes under a valid cache',
+    card.dataset.iwHeaderStat === 'boost', card.dataset.iwHeaderStat);
+  textNode.nodeValue = original;
+  await waitFor(() => card.dataset.iwHeaderStat === 'other', { timeout: 6000 }).catch(() => {});
+  check('and reverts when the buff text goes back',
+    card.dataset.iwHeaderStat === 'other', card.dataset.iwHeaderStat);
 }
 check('announcement strip is classified for layered header treatment',
   window.document.getElementById('announcement')?.getAttribute('data-iw-header') === 'announcement');
@@ -536,6 +659,27 @@ check('live XP wrapper is neutralised with the readout branch',
   jewelXpShell.style.getPropertyValue('background') === 'none' &&
   !/2px\s+solid/i.test(jewelXpShell.style.cssText),
   jewelXpShell?.getAttribute('style') || 'missing');
+const woodPanel = window.document.getElementById('wood-panel');
+const buildPanel = window.document.getElementById('build-panel');
+// Woodcutting and Construction shipped after the skin's skill table was
+// written, so both arrived unskinned: CHOP was an unknown verb and "Craft
+// Parts" is not the bare CRAFT the crafting branch matches.
+check('live Wood/Chop panel is identified as woodcutting and framed',
+  woodPanel.classList.contains('fs-skill--woodcutting') &&
+  woodPanel.dataset.iwSkillLayout === 'three-zone' &&
+  woodPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Chop' &&
+  woodPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Chop Runic Oak');
+check('live Build/Craft Parts panel is construction, not crafting',
+  buildPanel.classList.contains('fs-skill--construction') &&
+  !buildPanel.classList.contains('fs-skill--crafting') &&
+  buildPanel.dataset.iwSkillLayout === 'three-zone' &&
+  buildPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Craft Parts' &&
+  buildPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Craft Runite Building Parts');
+// The icon atlas has no free cell, so these two borrow an existing sprite
+// rather than falling through to the featureless `generic` slot.
+check('new skills still receive a medallion art host',
+  woodPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'woodcutting' &&
+  buildPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'construction');
 check('Spellcraft identity wins over ambiguous Craft action',
   spellPanel.classList.contains('fs-skill--spellcrafting') && !spellPanel.classList.contains('fs-skill--crafting') && spellPanel.dataset.iwSkillLayout === 'three-zone' &&
   spellPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Craft');
@@ -553,6 +697,28 @@ check('live Tailor Upgrade gets tailoring three-zone layout',
   tailorPanel.classList.contains('fs-skill--tailoring') && !tailorPanel.classList.contains('fs-skill--crafting') && tailorPanel.dataset.iwSkillLayout === 'three-zone',
   tailorPanel.className + ' layout=' + (tailorPanel.dataset.iwSkillLayout || 'none') + ' roles=' +
     [...tailorPanel.querySelectorAll('[data-iw-skill-role]')].map(el => el.getAttribute('data-iw-skill-role') + ':' + el.textContent.trim()).join(' | '));
+// A card whose title verb and button verb disagree. Revert EITHER half of the
+// fix (SKILL_META's smithing titleActions, or the structural last resort in
+// annotateStructure) and the surviving half still has to carry this; revert
+// both and the panel loses action-title, then data-iw-skill-layout, and the
+// whole card renders unskinned — no medallion, no chevrons, no studs.
+const smithCraftPanel = window.document.getElementById('smith-craft-panel');
+check('Smithing "Craft …" title under a "Forge" button still resolves',
+  smithCraftPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText ===
+    'Craft Voidiron Reinforcement Plate',
+  'title=' + (smithCraftPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText || 'MISSING'));
+check('a title/button verb mismatch does not cost the three-zone layout',
+  smithCraftPanel.classList.contains('fs-skill--smithing') &&
+  smithCraftPanel.dataset.iwSkillLayout === 'three-zone' &&
+  window.document.getElementById('smith-craft-action')?.getAttribute('data-iw-skill-role') === 'action-button',
+  smithCraftPanel.className + ' layout=' + (smithCraftPanel.dataset.iwSkillLayout || 'none'));
+// The live app titles this control "Click to cycle XP display" and gives it a
+// hover: class — it IS clickable. The readout strips its button chrome, but a
+// flat `cursor: default` across the branch deleted the affordance (rule 5).
+const xpCycleBtn = window.document.getElementById('mining-xp-absolute');
+check('clickable XP readout keeps a pointer affordance',
+  xpCycleBtn?.getAttribute('data-iw-readout') === '1' && xpCycleBtn.style.cursor === 'pointer',
+  'readout=' + xpCycleBtn?.getAttribute('data-iw-readout') + ' cursor=' + (xpCycleBtn?.style.cursor || 'unset'));
 check('coming-soon skill gets locked three-zone artwork',
   lockedPanel.classList.contains('fs-skill--locked') && lockedPanel.dataset.iwSkillLayout === 'three-zone' &&
   lockedPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'locked');
@@ -565,27 +731,25 @@ check('coming-soon copy is normalised without inventing EXP',
   !lockedPanel.querySelector('.fs-skill-base-exp'));
 check('live skill action buttons use deterministic width',
   ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '155px'));
-// The pager IS the framed skills_nav_*.svg artwork. styleButton() writes these
-// inline with `!important`, which outranks every stylesheet rule — so the
-// artwork, the absence of a competing button outline, and the hidden native
-// glyph all have to be asserted on the inline copy. Two regressions this
-// guards: a second squarer outline drawn around the art's own frame, and a
-// vector arrow rendered on top of the drawn one.
+// The pager dropped the skills_nav_*.svg frame (Curtis, 2026-09): the arrows
+// are now thin cool-toned plates flanking the action button, matched to its
+// 44px height, with the chevron drawn by skillpanel.css `::before`.
+// styleButton() writes the plate + thin geometry inline with `!important`, so
+// that is where they are asserted; the native glyph must stay suppressed so it
+// cannot render over the CSS chevron.
 {
   const navBtns = [...jewelPanel.querySelectorAll('[data-iw-skill-role="nav-button"]')];
   const inlineOf = btn => btn.getAttribute('style') || '';
-  const dirOf = btn => btn.dataset.iwNavDirection;
-  check('recipe pager paints the framed arrow artwork inline, per direction',
+  check('recipe pager arrows drop the old SVG frame for a plain plate',
     navBtns.length === 2 &&
-    navBtns.every(btn => btn.style.getPropertyValue('background-image') === `var(--fs-skills-nav-${dirOf(btn)})`),
-    navBtns.map(btn => `${dirOf(btn)}=${btn.style.getPropertyValue('background-image')}`).join(' || ') || 'no nav buttons');
-  check('recipe pager artwork is inset inside its 44px touch target',
-    navBtns.every(btn => btn.style.getPropertyValue('background-size') === '68% 68%') &&
-    navBtns.every(btn => btn.style.getPropertyValue('width') === '44px' && btn.style.getPropertyValue('height') === '44px'),
-    navBtns.map(btn => btn.style.getPropertyValue('background-size')).join(' || '));
-  check('recipe pager carries no competing outline and no overlaid glyph',
-    navBtns.every(btn => /^0(px)?$/.test(btn.style.getPropertyValue('border').trim())) &&
-    navBtns.every(btn => btn.style.getPropertyValue('box-shadow') === 'none') &&
+    navBtns.every(btn => !/fs-skills-nav|skills_nav_/.test(inlineOf(btn))) &&
+    navBtns.every(btn => /gradient/.test(btn.style.getPropertyValue('background') || btn.style.getPropertyValue('background-image'))),
+    navBtns.map(btn => btn.style.getPropertyValue('background') || btn.style.getPropertyValue('background-image')).join(' || ') || 'no nav buttons');
+  check('recipe pager arrows are thin and match the action button height',
+    navBtns.every(btn => btn.style.getPropertyValue('width') === '26px' && btn.style.getPropertyValue('height') === '44px'),
+    navBtns.map(btn => `${btn.style.getPropertyValue('width')}x${btn.style.getPropertyValue('height')}`).join(' || '));
+  check('recipe pager carries its own steel frame and no overlaid glyph',
+    navBtns.every(btn => /1px solid/.test(btn.style.getPropertyValue('border'))) &&
     navBtns.every(btn => btn.style.getPropertyValue('color') === 'transparent') &&
     navBtns.every(btn => /^0(px)?$/.test(btn.style.getPropertyValue('font-size').trim())),
     navBtns.map(inlineOf).join(' || '));
@@ -628,6 +792,22 @@ check('work order Skip control is classified and left native',
   [...questWorkOrder.querySelectorAll('button')].find(b => /skip/i.test(b.textContent))?.getAttribute('data-iw-quest-role') === 'skip');
 check('quest cards are not mistaken for skill panels',
   !questBounty.classList.contains('fs-skill-panel') && !questWorkOrder.classList.contains('fs-skill-panel'));
+
+/* ── World Boss cards ────────────────────────────────────────────────── */
+
+console.log('\nsmoke: world boss cards');
+const bossTreant = window.document.getElementById('boss-treant');
+const zoneControlCard = window.document.getElementById('zone-control-card');
+check('boss cards in the World Bosses panel are tagged for the card material',
+  bossTreant?.dataset.iwBoss === 'card' &&
+  window.document.getElementById('boss-behemoth')?.dataset.iwBoss === 'card');
+check('the Zone Control card in the same panel is tagged too',
+  zoneControlCard?.dataset.iwBoss === 'card');
+check('a compact-panel outside the boss panel is never tagged',
+  !questBounty.dataset.iwBoss && !window.document.getElementById('jewel-panel').dataset.iwBoss);
+check('boss cards are not mistaken for skill or quest panels',
+  !bossTreant.classList.contains('fs-skill-panel') && !bossTreant.classList.contains('fs-quest-panel') &&
+  bossTreant.getAttribute('data-fs-quest') === null);
 
 const bountyObjective = questBounty.querySelector('[data-iw-quest-role="objective"]');
 const workOrderObjective = questWorkOrder.querySelector('[data-iw-quest-role="objective"]');
@@ -829,6 +1009,42 @@ caretNode = null;
 window.document.body.dispatchEvent(new window.MouseEvent('mousemove', { bubbles: true, clientX: 300, clientY: 300 }));
 await waitFor(() => !tooltip.classList.contains('is-open'));
 
+/* ── Label drift on an activity panel ────────────────────────────────── */
+// IdleWorlds relabels surfaces, and a leading emoji has cost this skin a whole
+// surface more than once. Current Action is the ONE activity panel the game
+// gives a stable id (`#current-action-panel`, confirmed in the live app
+// bundle), so a drifted label must not lose it.
+//
+// The drift must be paired with CACHE INVALIDATION or this check cannot fail:
+// activityPanelResolutionValid() keys on the host's own data-iw-panel, so a
+// resolved panel keeps its tag forever and the label is never re-read. Clearing
+// that attribute is what React remounting the panel looks like from here.
+const caHeading = window.document.querySelector('#current-action-header h2');
+const caHost = window.document.getElementById('current-action-panel');
+// Drift EVERY "Current Action" label. The fixture carries a second, visible
+// no-queue variant that the live page does not, and leaving it readable means
+// the text pass still succeeds and tier 4 correctly stands down — the check
+// would then pass for the wrong reason.
+const caHeadingAlt = window.document.querySelector('#current-action-no-queue h2');
+caHeading.firstChild.nodeValue = '⚡ Current Activity';
+caHeadingAlt.firstChild.nodeValue = '⚡ Current Activity';
+delete caHost.dataset.iwPanel;
+delete window.document.getElementById('current-action-no-queue').dataset.iwPanel;
+// Neither of the above reaches the flush queue on its own: DOMWatcher excludes
+// pure characterData, and it must ignore the skin's own data-iw-* writes or it
+// would feed itself forever. Append a throwaway node so a real flush runs —
+// without this the classifier never re-executes and the check cannot fail.
+const caKick = window.document.createElement('div');
+window.document.querySelector('.app').appendChild(caKick);
+await settle(160);
+caKick.remove();
+check('relabelled Current Action is re-resolved via its stable id',
+  caHost?.dataset.iwPanel === 'current-action',
+  'heading=' + caHeading.textContent + ' iwPanel=' + (caHost?.dataset.iwPanel || 'none'));
+caHeading.firstChild.nodeValue = 'Current Action';
+caHeadingAlt.firstChild.nodeValue = 'Current Action';
+await settle(140);
+
 /* ── Equal-length reconciliation ─────────────────────────────────────── */
 
 console.log('\nsmoke: equal-length reconciliation');
@@ -862,11 +1078,12 @@ check('skill classification reconciles back to mining',
 
 console.log('\nsmoke: mutation burst');
 const section = window.document.querySelector('section[aria-label="Inventory"]');
+const invList = window.document.getElementById('inv-list');
 for (let i = 0; i < 120; i += 1) {
   const r = window.document.createElement('div');
   r.className = 'compact-row';
   r.innerHTML = `<div><span>Iron Sword</span></div><button>Equip</button>`;
-  section.appendChild(r);
+  invList.appendChild(r);
 }
 await waitFor(() => [...window.document.querySelectorAll('.compact-row')]
   .every(r => r.querySelector(':scope > .fs-inv-row')), { timeout: 8000 });
@@ -887,6 +1104,8 @@ window.chrome.storage.onChanged._emit({ 'iw-skin-enabled': { newValue: false } }
 await waitFor(() => window.document.querySelectorAll('.fs-inv-row').length === 0);
 
 check('overlays removed', window.document.querySelectorAll('.fs-inv-row').length === 0);
+check('inventory root + list-frame attributes removed',
+  window.document.querySelectorAll('[data-iw-inventory-root], [data-iw-inventory-list]').length === 0);
 check('ALL runtime stylesheets removed', window.document.querySelectorAll('style[data-iw-style]').length === 0);
 check('ui role attributes removed', window.document.querySelectorAll('[data-iw-ui]').length === 0);
 check('zone action tone hooks removed', window.document.querySelectorAll('[data-iw-zone-action]').length === 0);
@@ -894,6 +1113,17 @@ check('activity panel role attributes removed',
   window.document.querySelectorAll('[data-iw-panel], [data-iw-panel-part]').length === 0);
 check('header roles and decorative crest removed',
   window.document.querySelectorAll('[data-iw-header], .fs-header-crest').length === 0);
+check('header zone surface vars (wide + mobile) cleared on teardown',
+  !window.document.getElementById('top-header').style.getPropertyValue('--iw-header-surface') &&
+  !window.document.getElementById('top-header').style.getPropertyValue('--iw-header-surface-mobile'),
+  'surface=' + (window.document.getElementById('top-header').style.getPropertyValue('--iw-header-surface') || 'unset') +
+  ' mobile=' + (window.document.getElementById('top-header').style.getPropertyValue('--iw-header-surface-mobile') || 'unset'));
+check('per-zone frame theme cleared from <html> on teardown',
+  !window.document.documentElement.dataset.iwZoneTheme &&
+  !window.document.documentElement.style.getPropertyValue('--iw-zone-atlas') &&
+  !window.document.documentElement.style.getPropertyValue('--iw-corner-filigree'),
+  'iwZoneTheme=' + (window.document.documentElement.dataset.iwZoneTheme || 'unset') +
+  ' atlas=' + (window.document.documentElement.style.getPropertyValue('--iw-zone-atlas') || 'unset'));
 check('skill panel classes removed', window.document.querySelectorAll('.fs-skill-panel').length === 0);
 check('skill medallion artwork removed on teardown', window.document.querySelectorAll('.fs-skill-medallion-art').length === 0);
 check('skill presentation artifacts removed on teardown',
@@ -904,6 +1134,8 @@ check('quest chrome fully removed on teardown',
   questBounty.querySelector('button')?.isConnected === true &&
   !questBounty.querySelector('[data-iw-tooltip-trigger], [data-iw-item], [data-iw-item-name]') &&
   window.document.getElementById('quest-work-order').textContent.includes('Craft and turn in 1 Moonsilk Boots.'));
+check('boss card tagging removed on teardown',
+  window.document.querySelectorAll('[data-iw-boss]').length === 0);
 check('native Equip button survived teardown',
   [...window.document.querySelector('.compact-row').querySelectorAll('button')]
     .some(b => b.textContent.trim() === 'Equip'));
@@ -936,8 +1168,8 @@ check('skill presentation returns after re-enable', panel.classList.contains('fs
 check('quest presentation returns after re-enable',
   window.document.getElementById('quest-bounty')?.classList.contains('fs-quest-panel') &&
   window.document.getElementById('quest-work-order')?.getAttribute('data-iw-quest-state') === 'ready');
-check('exactly six stylesheets re-injected',
-  window.document.querySelectorAll('style[data-iw-style]').length === 6,
+check('exactly seven stylesheets re-injected',
+  window.document.querySelectorAll('style[data-iw-style]').length === 7,
   `${window.document.querySelectorAll('style[data-iw-style]').length} mounted`);
 check('base stylesheet re-injected', !!window.document.querySelector('style[data-iw-style="base"]'));
 check('tooltip surface was not duplicated', window.document.querySelectorAll('.iw-tip').length === 1);

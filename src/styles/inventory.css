@@ -33,6 +33,62 @@
   overflow: hidden !important;
 }
 
+/* Inner frame around the item list — the same relationship the Quests panel
+   has with its quest cards: an ornate outer section frame (corner filigree +
+   gold hairline, from ui-system.css) enclosing a recessed inner card that
+   carries the skill-card ground. InventoryRenderer tags the game's own row
+   wrapper (`div.space-y-1.5`, a sibling of the header / tabs / pagers) with
+   data-iw-inventory-list; nothing is reparented. Ground recipe is identical to
+   `.fs-quest-panel[data-iw-skills-ui-ready="1"]` and the shared forged frame:
+   texture over the themed --iw-th-ground gradient, soft-light blended. */
+[data-iw-inventory-root="1"] [data-iw-inventory-list="1"] {
+  position: relative !important;
+  isolation: isolate !important;
+  margin: 2px 0 4px !important;
+  padding: 7px 9px !important;
+  border: 1px solid var(--iw-th-edge) !important;
+  border-radius: 3px !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.03), transparent 34%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, soft-light, normal !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.7),
+    inset 0 1px 0 var(--iw-th-glow),
+    0 2px 7px rgba(0,0,0,.34) !important;
+}
+/* Themed hairline across the head of the inner frame — the shared frame's
+   ::before, scaled to a card. */
+[data-iw-inventory-root="1"] [data-iw-inventory-list="1"]::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  left: 10px !important;
+  right: 10px !important;
+  top: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, var(--iw-th-hairline) 16%, var(--iw-th-hairline-hi) 50%, var(--iw-th-hairline) 84%, transparent) !important;
+  opacity: .7 !important;
+}
+/* Recessed inner line, exactly like the quest card's inset border. */
+[data-iw-inventory-root="1"] [data-iw-inventory-list="1"]::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 3px !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  border: 1px solid color-mix(in srgb, var(--iw-th-edge) 55%, transparent) !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 12px rgba(0,0,0,.26) !important;
+}
+/* Rows sit above both ornaments. */
+[data-iw-inventory-root="1"] [data-iw-inventory-list="1"] > * {
+  position: relative;
+  z-index: 1;
+}
+
 [data-iw-inventory-title="1"] {
   /* --iw-font-display was never defined in base.css (only --iw-font-head,
      --iw-font-ui and --iw-font-flav), so this declaration was invalid at
@@ -83,7 +139,7 @@
   width: 186px;
   height: 62px;
   transform: translate(-50%, -50%);
-  background-image: url('../assets/skills_ui_atlas.webp');
+  background-image: var(--iw-zone-atlas);
   background-repeat: no-repeat;
   background-size: 730.41px 393.23px;
   background-position: -210.63px -5.10px;
@@ -91,16 +147,24 @@
 
 [data-iw-inventory-root="1"] [data-iw-inventory-control="filter"],
 [data-iw-inventory-root="1"] [data-iw-inventory-control="page"] {
-  min-height: 30px !important;
-  height: 30px !important;
+  min-height: 26px !important;
+  height: 26px !important;
+  /* Nudged down off the filigree divider. `top` rather than a margin so the
+     row's own layout height is unchanged — this is an optical offset, not a
+     re-flow of the game's grid. */
+  position: relative !important;
+  top: 3px !important;
   border-radius: 2px !important;
-  border: 1px solid #2E2718 !important;
-  background: linear-gradient(180deg, #16140E, #0E0D09) !important;
-  padding: 0 14px !important;
+  border: 1px solid #2A241A !important;
+  background: linear-gradient(180deg, #100E0A, #0A0907) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .035),
+    inset 0 -7px 10px -8px rgba(0, 0, 0, .95) !important;
+  padding: 0 11px !important;
   font-family: var(--iw-font-head) !important;
-  font-size: 11.5px !important;
+  font-size: 10.5px !important;
   font-weight: 600 !important;
-  line-height: 28px !important;
+  line-height: 24px !important;
   letter-spacing: .09em !important;
   text-transform: uppercase !important;
   color: var(--iw-dim) !important;
@@ -114,19 +178,32 @@
 [data-iw-inventory-root="1"] [data-iw-inventory-control="page"]:hover {
   color: var(--iw-text) !important;
   border-color: var(--iw-line-hot) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .05),
+    inset 0 0 10px -3px rgba(216, 121, 31, .35) !important;
+}
+
+[data-iw-inventory-root="1"] [data-iw-inventory-control="page"]:disabled:hover {
+  border-color: #2A241A !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .035),
+    inset 0 -7px 10px -8px rgba(0, 0, 0, .95) !important;
 }
 
 /* Which filter is live is real information. Repainting all five identically
    would delete it, so the active one keeps an ember treatment of its own —
    the same one the main nav tabs use. */
 [data-iw-inventory-root="1"] [data-iw-inventory-control="filter"][data-iw-inventory-filter-state="active"] {
-  color: #FFEBC8 !important;
-  border-color: #C0913C !important;
-  background: linear-gradient(180deg, #8A5D1B, #B0761F 46%, #4C3210) !important;
+  color: #F3E3C0 !important;
+  border-color: var(--iw-th-cta-hi) !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--iw-th-cta) 32%, #000),
+    color-mix(in srgb, var(--iw-th-cta) 12%, #000)) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 216, 150, .55),
-    0 0 14px -2px rgba(216, 121, 31, .45) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .8) !important;
+    inset 0 0 12px -2px color-mix(in srgb, var(--iw-th-cta-hi) 62%, transparent),
+    inset 0 1px 0 rgba(255, 216, 150, .18),
+    0 0 0 1px color-mix(in srgb, var(--iw-th-cta-hi) 20%, transparent) !important;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--iw-th-cta-hi) 48%, transparent) !important;
 }
 
 [data-iw-inventory-root="1"] [data-iw-inventory-control="page"]:disabled {
@@ -193,8 +270,8 @@
   /* `background` (shorthand) rather than background-image, so the game's
      bg-white/5 colour and ui-system's gradient are both reset in one go
      instead of layering underneath the atlas. */
-  background: url('../assets/skills_ui_atlas.webp') no-repeat !important;
-  background-image: url('../assets/skills_ui_atlas.webp') !important;
+  background: var(--iw-zone-atlas) no-repeat !important;
+  background-image: var(--iw-zone-atlas) !important;
   background-repeat: no-repeat !important;
   background-size: 322.5px 173.63px !important;
   background-position: -177.38px -2.25px !important;
@@ -276,7 +353,7 @@
   transition: opacity .12s;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--fs-tier) 11%, transparent),
+    color-mix(in srgb, var(--fs-frame) 11%, transparent),
     transparent 46%
   );
 }
@@ -284,7 +361,14 @@
 [class*="item-row"]:has(> .fs-inv-row):hover .fs-inv-row::after { opacity: 1; }
 
 .fs-inv-row {
-  --fs-tier: var(--iw-t-common);
+  /* Identity colour, keyed off the item's SUPER-TYPE (game `category`), not its
+     material tier. Set per `.fs-cat-*` below; drives the name text and, through
+     --fs-frame, every frame accent. Unresolved items keep this stone default. */
+  --fs-tier: #8C8578;
+  /* Frame accent (rail, icon border + glow, hover tint). Defaults to the
+     super-type colour; `.fs-inv-orb` overrides only this, leaving the name on
+     --fs-tier. */
+  --fs-frame: var(--fs-tier);
   order: 1;
   flex: 1 1 auto;
   min-width: 0;
@@ -303,13 +387,30 @@
 .fs-inv-row.has-requirements { min-height: 68px; }
 .fs-inv-row.has-details.has-requirements { min-height: 76px; }
 
-.fs-inv-row.tier-uncommon  { --fs-tier: var(--iw-t-uncommon); }
-.fs-inv-row.tier-rare      { --fs-tier: var(--iw-t-rare); }
-.fs-inv-row.tier-epic      { --fs-tier: var(--iw-t-epic); }
-.fs-inv-row.tier-legendary { --fs-tier: var(--iw-t-legendary); }
-.fs-inv-row.tier-mythic    { --fs-tier: var(--iw-t-mythic); }
+/* Super-type identity colours. Gear = forged steel-blue, Consumable = alchemy
+   green, Processed (refined materials) = worked silver, Resource (raw drops) =
+   earthen tan, Trade Good = merchant gold, Unknown = stone (the default above). */
+.fs-inv-row.fs-cat-gear       { --fs-tier: #6E9BC4; }
+.fs-inv-row.fs-cat-consumable { --fs-tier: #68B96A; }
+.fs-inv-row.fs-cat-processed  { --fs-tier: #A6AEB2; }
+.fs-inv-row.fs-cat-resource   { --fs-tier: #9E7B54; }
+.fs-inv-row.fs-cat-trade      { --fs-tier: #D4AD63; }
+.fs-inv-row.fs-cat-unknown    { --fs-tier: #8C8578; }
 
-/* Rarity rail — the second of two rarity reads per row. */
+/* Consumable subtypes. Parent green stays the fallback (Usable item, Cosmetic
+   Token). Potion = ruby draught, Enchant Scroll = arcane violet, XP Scroll /
+   Shard = insight teal, Supply Cache = mystery magenta. */
+.fs-inv-row.fs-cat-potion     { --fs-tier: #CE5C6E; }
+.fs-inv-row.fs-cat-enchant    { --fs-tier: #8E7BDB; }
+.fs-inv-row.fs-cat-xpscroll   { --fs-tier: #3FB2AC; }
+.fs-inv-row.fs-cat-cache      { --fs-tier: #B366C4; }
+
+/* Upgrade Orb: warm orange for the whole identity (name + frame), overriding
+   the Consumable green. --fs-frame inherits from --fs-tier. */
+.fs-inv-row.fs-inv-orb { --fs-tier: #E0913E; }
+
+/* Super-type rail — the second of the two identity reads per row (the icon
+   frame is the first). */
 .fs-inv-row::before {
   content: "";
   position: absolute;
@@ -320,17 +421,17 @@
   background: linear-gradient(
     180deg,
     transparent,
-    var(--fs-tier) 18%,
-    var(--fs-tier) 82%,
+    var(--fs-frame) 18%,
+    var(--fs-frame) 82%,
     transparent
   );
-  box-shadow: 0 0 8px color-mix(in srgb, var(--fs-tier) 42%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--fs-frame) 42%, transparent);
   pointer-events: none;
 }
 
 /* ── Icon slot ────────────────────────────────────────────────────── */
 /* AtlasService owns background-image / -position / -size here, inline.
-   Rarity is therefore carried by the border and box-shadow only. */
+   The super-type colour is therefore carried by the border and box-shadow. */
 .fs-inv-icon {
   grid-area: icon;
   width: 52px;
@@ -340,13 +441,13 @@
   position: relative;
   background-repeat: no-repeat;
   background-color: #080806;
-  border: 1px solid color-mix(in srgb, var(--fs-tier) 52%, #3A3020);
+  border: 1px solid color-mix(in srgb, var(--fs-frame) 52%, #3A3020);
   border-radius: 2px;
   box-shadow:
     inset 0 0 0 1px rgba(0,0,0,.62),
     inset 0 0 14px rgba(0,0,0,.6),
-    inset 0 6px 16px -8px color-mix(in srgb, var(--fs-tier) 55%, transparent),
-    0 0 8px -1px color-mix(in srgb, var(--fs-tier) 38%, transparent);
+    inset 0 6px 16px -8px color-mix(in srgb, var(--fs-frame) 55%, transparent),
+    0 0 8px -1px color-mix(in srgb, var(--fs-frame) 38%, transparent);
   image-rendering: auto;
   display: flex;
   align-items: center;
@@ -360,12 +461,12 @@
 }
 .fs-inv-icon:hover,
 .fs-inv-icon:focus-visible {
-  border-color: var(--fs-tier);
+  border-color: var(--fs-frame);
   box-shadow:
     inset 0 0 0 1px rgba(0,0,0,.62),
     inset 0 0 14px rgba(0,0,0,.6),
-    inset 0 6px 16px -8px color-mix(in srgb, var(--fs-tier) 70%, transparent),
-    0 0 12px -1px color-mix(in srgb, var(--fs-tier) 60%, transparent);
+    inset 0 6px 16px -8px color-mix(in srgb, var(--fs-frame) 70%, transparent),
+    0 0 12px -1px color-mix(in srgb, var(--fs-frame) 60%, transparent);
 }
 /* Equipped is a state, and it lives on its own axis — a warm edge, never
    the rarity channel, so the two signals cannot be confused. */
@@ -411,6 +512,14 @@
   font-weight: 500;
   letter-spacing: .07em;
   text-transform: uppercase;
+}
+.fs-inv-name .fs-inv-plus {
+  color: #C6A3E4;
+  font-family: var(--iw-font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  vertical-align: 1px;
 }
 .fs-inv-name-plain { color: var(--iw-text); }
 .fs-inv-name .iw-item-ref { color: inherit; }
@@ -585,8 +694,11 @@ button[data-fs-preserved-action="control"][data-fs-action-kind="equip"],
 a[data-fs-preserved-action="control"][data-fs-action-kind="equip"],
 [role="button"][data-fs-preserved-action="control"][data-fs-action-kind="equip"] {
   width: 54px !important;
-  border-color: #8A6A2C !important;
-  background: linear-gradient(180deg, #6B4A16, #91601C 46%, #3D280C) !important;
+  border-color: var(--iw-th-brass) !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--iw-th-edge) 60%, #000),
+    color-mix(in srgb, var(--iw-th-rule) 55%, #000) 46%,
+    #000) !important;
   color: #FFE9C4 !important;
 }
 button[data-fs-preserved-action="control"][data-fs-action-kind="set"],
@@ -594,7 +706,7 @@ a[data-fs-preserved-action="control"][data-fs-action-kind="set"],
 [role="button"][data-fs-preserved-action="control"][data-fs-action-kind="set"] {
   width: 76px !important;
   color: var(--iw-gold) !important;
-  border-color: #514621 !important;
+  border-color: var(--iw-th-edge) !important;
 }
 button[data-fs-preserved-action="control"][data-fs-action-kind="secondary"],
 a[data-fs-preserved-action="control"][data-fs-action-kind="secondary"],
@@ -624,8 +736,11 @@ button[data-fs-preserved-action="control"][data-fs-action-kind="equipped"]:hover
 }
 button[data-fs-preserved-action="control"][data-fs-action-kind="equip"]:hover:not(:disabled) {
   color: #FFF3DF !important;
-  border-color: #C08F3C !important;
-  background: linear-gradient(180deg, #7E571A, #A87021 46%, #4A310E) !important;
+  border-color: var(--iw-th-hairline-hi) !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--iw-th-rule) 62%, #000),
+    color-mix(in srgb, var(--iw-th-hairline) 60%, #000) 46%,
+    #000) !important;
 }
 
 button[data-fs-preserved-action="control"]:disabled,
@@ -637,7 +752,7 @@ button[data-fs-preserved-action="control"]:disabled,
 }
 
 /* ── Responsive collapse ─────────────────────────────────────────── */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .fs-inv-row {
     grid-template-columns: 46px minmax(0, 1fr) 34px;
     min-height: 56px;
@@ -652,7 +767,7 @@ button[data-fs-preserved-action="control"]:disabled,
   [data-iw-inventory-title="1"]::after { width: 150px; }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
   .compact-row:has(> .fs-inv-row),
   [class*="item-row"]:has(> .fs-inv-row) {
     flex-wrap: wrap !important;

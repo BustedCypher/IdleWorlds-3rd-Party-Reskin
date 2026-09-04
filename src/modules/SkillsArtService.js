@@ -25,6 +25,17 @@ const UI_TOKENS = {
   horizontal_separator: 'separator',
   separator_flourish: 'flourish',
 };
+/**
+ * The icon atlas is a fixed 6x2 sheet and every cell is spoken for, so skills
+ * IdleWorlds added after it was drawn borrow the closest existing sprite rather
+ * than falling through to the featureless `generic` slot. Accent colour, glyph
+ * and label still distinguish them; only the medallion art is shared.
+ */
+const ICON_ALIASES = {
+  woodcutting: 'gathering',
+  construction: 'crafting',
+};
+
 let loadPromise = null;
 let iconIndex = null;
 let uiIndex = null;
@@ -77,7 +88,12 @@ function setVar(panel, name, value) {
 function applyUiVariables(panel) {
   if (!panel || !uiIndex) return false;
   setVar(panel, '--fs-skills-panel-texture', `url("${assetUrl(TEXTURE_URL)}")`);
-  setVar(panel, '--fs-skills-ui-atlas', `url("${assetUrl(`assets/${uiIndex.atlas}`)}")`);
+  // Resolve through the page-level --iw-zone-atlas (HeaderRenderer points it at
+  // the current zone's recoloured atlas; base.css defines the un-themed
+  // fallback). Every theme atlas shares this sheet's 860x463 canvas and cell
+  // positions, so the sprite-window vars below are correct for all of them.
+  setVar(panel, '--fs-skills-ui-atlas',
+    `var(--iw-zone-atlas, url("${assetUrl(`assets/${uiIndex.atlas}`)}"))`);
   setVar(panel, '--fs-skills-nav-prev', `url("${assetUrl(NAV_PREV_URL)}")`);
   setVar(panel, '--fs-skills-nav-next', `url("${assetUrl(NAV_NEXT_URL)}")`);
 
@@ -132,7 +148,9 @@ export const SkillsArtService = {
     return !!iconIndex && !!uiIndex;
   },
   paintIcon(host, key) {
-    const entry = iconByKey.get(key) || iconByKey.get('generic');
+    const entry = iconByKey.get(key)
+      || iconByKey.get(ICON_ALIASES[key])
+      || iconByKey.get('generic');
     return paint(host, iconIndex, entry);
   },
 
@@ -145,6 +163,6 @@ export const SkillsArtService = {
   },
 
   iconEntry(key) {
-    return iconByKey.get(key) || null;
+    return iconByKey.get(key) || iconByKey.get(ICON_ALIASES[key]) || null;
   },
 };

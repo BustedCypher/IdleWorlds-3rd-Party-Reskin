@@ -81,16 +81,42 @@
   --iw-ink-700: #1E1B15;
   --iw-ink-600: #29251C;
 
+  /* ── Per-zone theme accents ───────────────────────────────────────────
+     Defaults here reproduce the stock "Ashen Iron" brass/ember exactly. The
+     nine :root[data-iw-zone-theme="…"] blocks further down re-point them per
+     environment; HeaderRenderer.applyZoneTheme() writes that attribute on
+     <html> from the player's current zone (same trigger as the atlas + corner
+     filigree swap). Every downstream rule reads a --iw-th-* token — directly,
+     or through the --iw-gold / --iw-ember aliases just below — so no rule has
+     to know which zone it is. Keep the alias block pointing at -th- tokens. */
+  --iw-th-accent:      #D4AD63;  /* bright ornament, hairline peak, focus ring */
+  --iw-th-accent-dim:  #9D8458;  /* muted accent, dim labels */
+  --iw-th-edge:        #6B4F28;  /* forged 1px frame border */
+  --iw-th-hairline:    #9B7437;  /* gold hairline shoulder */
+  --iw-th-hairline-hi: #D09A4B;  /* gold hairline peak */
+  --iw-th-bracket:     #C9A24D;  /* header corner brackets */
+  --iw-th-bracket-dim: #8A7038;
+  --iw-th-brass:       #8A6A2C;  /* brass icon tint */
+  --iw-th-rule:        #806337;  /* structural warm rule (== old --iw-line-hot) */
+  --iw-th-rule-soft:   #3A2F18;  /* faint header rule */
+  --iw-th-plate:       #0B0C0E;  /* darkest header-card plate */
+  --iw-th-cta:         #B64619;  /* primary action fill (== old --iw-ember) */
+  --iw-th-cta-hi:      #D15A22;  /* primary action hover / edge */
+  --iw-th-ground-a:    #171713;  /* framed-panel ground gradient, top */
+  --iw-th-ground-b:    #0D0E0C;  /* framed-panel ground gradient, bottom */
+  --iw-th-ground-wash: transparent;              /* additive per-zone tint over the ground */
+  --iw-th-glow:        rgba(226,164,72,.08);     /* inset top bloom on frames */
+
   /* Brass / iron edges */
   --iw-line:    #342D20;
   --iw-line-hi: #58482B;
-  --iw-line-hot:#806337;
+  --iw-line-hot: var(--iw-th-rule);
 
-  /* Accents */
-  --iw-gold:     #D4AD63;
-  --iw-gold-dim: #9D8458;
-  --iw-ember:    #B64619;
-  --iw-ember-hi: #D15A22;
+  /* Accents — aliases onto the themable -th- layer above. */
+  --iw-gold:     var(--iw-th-accent);
+  --iw-gold-dim: var(--iw-th-accent-dim);
+  --iw-ember:    var(--iw-th-cta);
+  --iw-ember-hi: var(--iw-th-cta-hi);
 
   /* Text */
   --iw-text:   #DDD6C6;
@@ -149,6 +175,129 @@
   --sidebar-accent:      var(--iw-ink-700) !important;
 }
 
+/* ── Per-zone frame theme ────────────────────────────────────────────────
+   The skin ships nine environment recolours of the skills UI atlas and its
+   corner filigree (assets/skills-ui/). HeaderRenderer.applyZoneTheme() maps the
+   player's current zone to one and overrides these two variables INLINE on
+   <html>. These declarations are the un-themed fallback: a zone that has not
+   classified yet, or one with no theme, resolves here.
+
+     --iw-zone-atlas      the sheet SkillsArtService's --fs-skills-ui-atlas and
+                          inventory.css read their sprite windows from
+     --iw-corner-filigree the border-image source ui-system.css, header.css and
+                          tooltip-engine.css all draw their four corners from
+
+   Keep every theme atlas at skills_ui_atlas.webp's 860x463 geometry or the
+   sprite-window audit and skills_ui_index.json stop describing it. */
+:root {
+  --iw-zone-atlas: url('../assets/skills_ui_atlas.webp');
+  --iw-corner-filigree: url('../assets/inventory/panel_corners.webp');
+}
+
+/* ── Per-zone accent palettes ───────────────────────────────────────────
+   Nine hand-tuned recolours of the --iw-th-* accent layer, one per
+   environment family (assets/skills-ui/zone-theme-map.json). Keyed on the
+   data-iw-zone-theme attribute HeaderRenderer already sets on <html> for the
+   atlas/filigree swap — no JS involved here, pure cascade. `:root[data-…]` is
+   (0,1,1), so these beat the (0,0,1) defaults; HeaderRenderer's inline vars on
+   <html> only touch --iw-zone-atlas / --iw-corner-filigree and never collide.
+
+   Rule of thumb per palette: -accent must clear ~4.5:1 on --iw-ink-900, -cta
+   must stay in the stock ember's lightness band so --primary-foreground still
+   reads on it, and -edge / -rule stay dark enough to be a frame, not a glow.
+   State colours (requirement red, quest/skill accents, tier, good/bad/info,
+   inventory categories, team colours) are deliberately NOT part of this layer. */
+
+:root[data-iw-zone-theme="glacial"] {
+  --iw-th-accent: #9FCBE6;  --iw-th-accent-dim: #7C9DB4;
+  --iw-th-edge: #45657D;    --iw-th-hairline: #6E96B4;  --iw-th-hairline-hi: #A7CFE6;
+  --iw-th-bracket: #A9CADE; --iw-th-bracket-dim: #6E8CA0;  --iw-th-brass: #5C7E96;
+  --iw-th-rule: #5E86A0;    --iw-th-rule-soft: #223540;
+  --iw-th-plate: #0A0E12;   --iw-th-cta: #356E9A;  --iw-th-cta-hi: #4E90BE;
+  --iw-th-ground-a: #14171A;  --iw-th-ground-b: #0B0D10;
+  --iw-th-ground-wash: rgba(126,164,192,.055);  --iw-th-glow: rgba(150,200,230,.10);
+}
+
+:root[data-iw-zone-theme="infernal"] {
+  --iw-th-accent: #E0762E;  --iw-th-accent-dim: #B5673A;
+  --iw-th-edge: #6A2A18;    --iw-th-hairline: #8A3B22;  --iw-th-hairline-hi: #D6702E;
+  --iw-th-bracket: #D2782E; --iw-th-bracket-dim: #8A4326;  --iw-th-brass: #7A3A1E;
+  --iw-th-rule: #7E3A22;    --iw-th-rule-soft: #2A1109;
+  --iw-th-plate: #0C0705;   --iw-th-cta: #B23A16;  --iw-th-cta-hi: #D0602A;
+  --iw-th-ground-a: #17110E;  --iw-th-ground-b: #0D0908;
+  --iw-th-ground-wash: rgba(200,80,30,.055);  --iw-th-glow: rgba(224,118,46,.11);
+}
+
+:root[data-iw-zone-theme="verdant"] {
+  --iw-th-accent: #82BE68;  --iw-th-accent-dim: #7C9463;
+  --iw-th-edge: #3B5A2E;    --iw-th-hairline: #5E7E44;  --iw-th-hairline-hi: #97C57A;
+  --iw-th-bracket: #8FBE6E; --iw-th-bracket-dim: #5E7E44;  --iw-th-brass: #4E6A2E;
+  --iw-th-rule: #5E7E44;    --iw-th-rule-soft: #202A16;
+  --iw-th-plate: #080B07;   --iw-th-cta: #4E7A30;  --iw-th-cta-hi: #6A9C42;
+  --iw-th-ground-a: #131711;  --iw-th-ground-b: #0A0D08;
+  --iw-th-ground-wash: rgba(126,176,94,.05);  --iw-th-glow: rgba(150,200,110,.09);
+}
+
+:root[data-iw-zone-theme="forged-metal"] {
+  --iw-th-accent: #A6BBCC;  --iw-th-accent-dim: #8593A2;
+  --iw-th-edge: #3E4A57;    --iw-th-hairline: #6E8092;  --iw-th-hairline-hi: #B7C5CF;
+  --iw-th-bracket: #A6B8C6; --iw-th-bracket-dim: #6E8092;  --iw-th-brass: #5A6675;
+  --iw-th-rule: #6E8092;    --iw-th-rule-soft: #232A31;
+  --iw-th-plate: #090B0E;   --iw-th-cta: #45607A;  --iw-th-cta-hi: #5E82A2;
+  --iw-th-ground-a: #14161A;  --iw-th-ground-b: #0B0D10;
+  --iw-th-ground-wash: rgba(150,175,200,.045);  --iw-th-glow: rgba(180,200,220,.08);
+}
+
+:root[data-iw-zone-theme="celestial"] {
+  --iw-th-accent: #E7C87A;  --iw-th-accent-dim: #B7A574;
+  --iw-th-edge: #5A5330;    --iw-th-hairline: #B99A55;  --iw-th-hairline-hi: #EBD08A;
+  --iw-th-bracket: #E2C170; --iw-th-bracket-dim: #9A8340;  --iw-th-brass: #7A6A38;
+  --iw-th-rule: #8F7A45;    --iw-th-rule-soft: #2A2718;
+  --iw-th-plate: #0A0B0E;   --iw-th-cta: #9A6E2E;  --iw-th-cta-hi: #C79A4A;
+  --iw-th-ground-a: #16150F;  --iw-th-ground-b: #0C0C0A;
+  --iw-th-ground-wash: rgba(200,180,110,.05);  --iw-th-glow: rgba(230,200,130,.10);
+}
+
+:root[data-iw-zone-theme="voidborn"] {
+  --iw-th-accent: #A97FD8;  --iw-th-accent-dim: #8C74A6;
+  --iw-th-edge: #46345C;    --iw-th-hairline: #6E4F92;  --iw-th-hairline-hi: #B48EDC;
+  --iw-th-bracket: #AE86D6; --iw-th-bracket-dim: #6E4F92;  --iw-th-brass: #573C6B;
+  --iw-th-rule: #6E4F92;    --iw-th-rule-soft: #251A33;
+  --iw-th-plate: #0A0710;   --iw-th-cta: #6A3CAA;  --iw-th-cta-hi: #8E63C8;
+  --iw-th-ground-a: #16121C;  --iw-th-ground-b: #0C0910;
+  --iw-th-ground-wash: rgba(150,110,210,.055);  --iw-th-glow: rgba(169,127,216,.10);
+}
+
+:root[data-iw-zone-theme="runic-arcane"] {
+  --iw-th-accent: #5CC6B4;  --iw-th-accent-dim: #6E9E96;
+  --iw-th-edge: #234C46;    --iw-th-hairline: #3E7E72;  --iw-th-hairline-hi: #72B7A9;
+  --iw-th-bracket: #5FC6B2; --iw-th-bracket-dim: #3E7E72;  --iw-th-brass: #2E5A52;
+  --iw-th-rule: #3E7E72;    --iw-th-rule-soft: #17302C;
+  --iw-th-plate: #070C0B;   --iw-th-cta: #26786A;  --iw-th-cta-hi: #3E9E8C;
+  --iw-th-ground-a: #101715;  --iw-th-ground-b: #080D0C;
+  --iw-th-ground-wash: rgba(90,200,180,.05);  --iw-th-glow: rgba(110,200,185,.09);
+}
+
+:root[data-iw-zone-theme="lunar-spectral"] {
+  --iw-th-accent: #9FA8D6;  --iw-th-accent-dim: #8489AC;
+  --iw-th-edge: #2C3150;    --iw-th-hairline: #5A5F86;  --iw-th-hairline-hi: #A6ADCD;
+  --iw-th-bracket: #A4ACD6; --iw-th-bracket-dim: #5A5F86;  --iw-th-brass: #45496B;
+  --iw-th-rule: #5A5F86;    --iw-th-rule-soft: #1E2033;
+  --iw-th-plate: #08090F;   --iw-th-cta: #4A4F8A;  --iw-th-cta-hi: #6E74AE;
+  --iw-th-ground-a: #14151C;  --iw-th-ground-b: #0A0B10;
+  --iw-th-ground-wash: rgba(150,155,210,.05);  --iw-th-glow: rgba(159,168,214,.09);
+}
+
+:root[data-iw-zone-theme="tempest-oceanic"] {
+  --iw-th-accent: #4FC7D8;  --iw-th-accent-dim: #5E9EA8;
+  --iw-th-edge: #123C48;    --iw-th-hairline: #2E6E7C;  --iw-th-hairline-hi: #6FC0CE;
+  --iw-th-bracket: #52C7D6; --iw-th-bracket-dim: #2E6E7C;  --iw-th-brass: #1E5C68;
+  --iw-th-rule: #2E6E7C;    --iw-th-rule-soft: #122A31;
+  --iw-th-plate: #060E11;   --iw-th-cta: #227483;  --iw-th-cta-hi: #3EA6B8;
+  --iw-th-ground-a: #0F171A;  --iw-th-ground-b: #070D0F;
+  --iw-th-ground-wash: rgba(80,190,210,.05);  --iw-th-glow: rgba(90,200,220,.10);
+}
+
 html,
 body {
   background-color: var(--iw-ink-900) !important;
@@ -203,8 +352,8 @@ h1, h2, h3 {
   border-radius: var(--iw-r-panel) !important;
 }
 
-button:not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {
+button:not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]) {
   border-radius: var(--iw-r-control) !important;
 }
 
@@ -231,8 +380,16 @@ textarea {
   font-family: var(--iw-font-ui) !important;
 }
 
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]) {
+/* The quest command buttons (data-iw-quest-role turn-in / skip) paint an
+   action_frame sprite and nothing else — skillpanel.css strips their plate to
+   `box-shadow: none` and moves the depth cue into `filter: drop-shadow()`. That
+   rule is specificity (0,4,0); this one is (0,4,1) via the `button` type, so
+   without the opt-out this `!important` hairline outlives the strip and reads as
+   a faint second frame just outside the sprite ("a sprite frame on a button
+   means the button's own plate must go"). The skill nav/action buttons are
+   safe unlisted only because styleButton() writes their plate inline. */
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]) {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.028),
     0 1px 0 rgba(0,0,0,.65) !important;
@@ -367,12 +524,12 @@ hr {
   color: var(--iw-gold);
 }
 .iw-btn--primary {
-  background: linear-gradient(180deg, #A94318, #742A0D);
-  border-color: #C05A28;
+  background: linear-gradient(180deg, var(--iw-th-cta), color-mix(in srgb, var(--iw-th-cta) 60%, #000));
+  border-color: var(--iw-th-cta-hi);
   color: #FFEAD1;
 }
 .iw-btn--primary:hover {
-  background: linear-gradient(180deg, #C04D1C, #87310E);
+  background: linear-gradient(180deg, var(--iw-th-cta-hi), color-mix(in srgb, var(--iw-th-cta) 66%, #000));
   border-color: var(--iw-ember-hi);
   color: #fff;
 }
@@ -405,7 +562,7 @@ hr {
   overflow:hidden;
   box-shadow: inset 0 1px 2px rgba(0,0,0,.75);
 }
-.iw-xp__fill  { height:100%; background:linear-gradient(90deg,#7B3515,var(--iw-ember)); transition:width .3s ease; }
+.iw-xp__fill  { height:100%; background:linear-gradient(90deg,color-mix(in srgb, var(--iw-th-cta) 55%, #000),var(--iw-ember)); transition:width .3s ease; }
 .iw-xp__fill--ready { background:linear-gradient(90deg,#2E6438,#4D9859); }
 
 /* ── Scrollbars ─────────────────────────────────────────────────────── */

@@ -23,6 +23,7 @@ import { initQuestPanelRenderer, clearQuestPanels } from './modules/QuestPanelRe
 import { initUIFoundation, clearUIFoundation } from './modules/UIFoundation.js';
 import { initHeaderRenderer, clearHeaderRenderer } from './modules/HeaderRenderer.js';
 import { paintBackground, clearBackgroundPaint } from './modules/BackgroundPainter.js';
+import { frameOverlays, clearOverlayFramer } from './modules/OverlayFramer.js';
 import {
   guard,
   guardEach,
@@ -37,6 +38,7 @@ import inventoryCss from './styles/inventory.css';
 import skillPanelCss from './styles/skillpanel.css';
 import uiSystemCss from './styles/ui-system.css';
 import headerCss from './styles/header.css';
+import overlayCss from './styles/overlay.css';
 
 const ENABLED_KEY = 'iw-skin-enabled';
 const VERSION = '1.6.0';
@@ -53,6 +55,7 @@ function injectPresentationStyles() {
   inject('inventory', inventoryCss);
   inject('skillpanel', skillPanelCss);
   inject('header', headerCss);
+  inject('overlay', overlayCss);
   // ui-system.css MUST be injected LAST (see CLAUDE.md): its generic control
   // rule is the final say on shared button surfacing, and header.css's button
   // roles opt out via that rule's :not() chain.
@@ -86,9 +89,12 @@ function bindConsumersOnce() {
     const roots = e.detail?.roots || [];
     if (!roots.length) {
       guard('paint:document', () => paintBackground());
-      return;
+    } else {
+      guardEach('paint:root', roots, root => paintBackground(root));
     }
-    guardEach('paint:root', roots, root => paintBackground(root));
+    // Overlays portal in anywhere and are few — always a whole-document
+    // reconcile, cheap by construction (see OverlayFramer.frameOverlays).
+    guard('frame:overlays', frameOverlays);
   });
 
   on('iw:name-scan-flush', e => {
@@ -157,6 +163,7 @@ function teardown() {
   guard('teardown:ui-foundation', clearUIFoundation);
   guard('teardown:header', clearHeaderRenderer);
   guard('teardown:background', clearBackgroundPaint);
+  guard('teardown:overlay', clearOverlayFramer);
   guard('teardown:styles', removeAllStyles);
 
   // From here until the next boot, any late async/data callbacks are inert.

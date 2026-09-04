@@ -1,0 +1,55 @@
+/* ============================================================================
+   overlay.css — generic pop-up / modal chrome
+
+   OverlayFramer.js tags the game's floating dialogs from structure (a
+   viewport-covering `position: fixed` layer that reads as a backdrop, plus its
+   content card) in the `data-iw-overlay` namespace. This sheet gives the card
+   the same forged frame every named panel wears and settles the backdrop.
+
+   Injected BEFORE ui-system.css, so the generic control rule there still has
+   the last word on any <button> inside the dialog — the dialog's own controls
+   are skinned exactly like every other button on the page, by design.
+
+   Scroll-safe by construction: many of these cards are their own scroll
+   container (`overflow-y: auto` + `max-h`). A `::before` / `::after` ornament
+   is a child box and would scroll away with the content, so the frame here is
+   drawn entirely on the card's own border box — `background` (default
+   `background-attachment` is pinned to the border box, not the content),
+   `box-shadow`, and a real `border-image`. No pseudo-elements.
+   ========================================================================= */
+
+[data-iw-overlay="scrim"] {
+  /* The game already ships a dark translucent fill + blur here; deepen it a
+     touch so it matches the skin's other smoked-glass chrome. Layout
+     (flex-centring, padding) is the game's — left alone. */
+  background: rgba(7, 7, 11, 0.72) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+}
+
+[data-iw-overlay="panel"] {
+  isolation: isolate !important;
+  border: 1px solid var(--iw-th-edge) !important;
+  /* Corners only — the sheet's slice consumes the whole image so its edges and
+     middle are empty; `border-image-width` (22/20) overpaints the slices that
+     far into the box even though the real border is 1px, so layout inset stays
+     1px and nothing scrolls. Source is per-zone (--iw-corner-filigree, set
+     inline on <html> by HeaderRenderer; base.css carries the un-themed
+     default). Same slice/geometry as ui-system.css and header.css. */
+  border-image: var(--iw-corner-filigree) 95 88 / 22px 20px / 0 stretch !important;
+  border-radius: var(--iw-r-panel, 3px) !important;
+  /* The shared forged ground: per-zone wash over the panel texture over the
+     themed gradient. Identical recipe to the section frame and the inventory
+     inner list. */
+  background:
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.025), transparent 32%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, normal, soft-light, normal !important;
+  background-attachment: scroll !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.78),
+    inset 0 1px 0 var(--iw-th-glow),
+    0 12px 40px rgba(0, 0, 0, 0.55) !important;
+}

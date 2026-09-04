@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "canvas": {
+    "width": 860,
+    "height": 463
+  },
+  "themes": {
+    "verdant": {
+      "file": "skills_ui_atlas_theme_verdant.webp",
+      "zones": [
+        1,
+        3,
+        34
+      ]
+    },
+    "forged-metal": {
+      "file": "skills_ui_atlas_theme_forged-metal.webp",
+      "zones": [
+        2,
+        5,
+        24
+      ]
+    },
+    "infernal": {
+      "file": "skills_ui_atlas_theme_infernal.webp",
+      "zones": [
+        4,
+        9,
+        13,
+        15,
+        16,
+        26,
+        29,
+        32
+      ]
+    },
+    "celestial": {
+      "file": "skills_ui_atlas_theme_celestial.webp",
+      "zones": [
+        6,
+        10,
+        12,
+        25
+      ]
+    },
+    "voidborn": {
+      "file": "skills_ui_atlas_theme_voidborn.webp",
+      "zones": [
+        7,
+        11,
+        19,
+        20,
+        30
+      ]
+    },
+    "runic-arcane": {
+      "file": "skills_ui_atlas_theme_runic-arcane.webp",
+      "zones": [
+        8,
+        18,
+        21,
+        28
+      ]
+    },
+    "lunar-spectral": {
+      "file": "skills_ui_atlas_theme_lunar-spectral.webp",
+      "zones": [
+        14,
+        23,
+        27
+      ]
+    },
+    "tempest-oceanic": {
+      "file": "skills_ui_atlas_theme_tempest-oceanic.webp",
+      "zones": [
+        17,
+        31
+      ]
+    },
+    "glacial": {
+      "file": "skills_ui_atlas_theme_glacial.webp",
+      "zones": [
+        22,
+        33
+      ]
+    }
+  },
+  "zones": {
+    "1": {
+      "name": "Greenwake Den",
+      "theme": "verdant"
+    },
+    "2": {
+      "name": "Ironfang Trail",
+      "theme": "forged-metal"
+    },
+    "3": {
+      "name": "Silverroot Hollow",
+      "theme": "verdant"
+    },
+    "4": {
+      "name": "Goldfire Pass",
+      "theme": "infernal"
+    },
+    "5": {
+      "name": "Mythril Bastion",
+      "theme": "forged-metal"
+    },
+    "6": {
+      "name": "Starsteel Frontier",
+      "theme": "celestial"
+    },
+    "7": {
+      "name": "Obsidian Depths",
+      "theme": "voidborn"
+    },
+    "8": {
+      "name": "Runic Barrens",
+      "theme": "runic-arcane"
+    },
+    "9": {
+      "name": "Dragonfall Ridge",
+      "theme": "infernal"
+    },
+    "10": {
+      "name": "Aether Spires",
+      "theme": "celestial"
+    },
+    "11": {
+      "name": "Voidiron Abyss",
+      "theme": "voidborn"
+    },
+    "12": {
+      "name": "Celestial Crown",
+      "theme": "celestial"
+    },
+    "13": {
+      "name": "Bloodstone Scar",
+      "theme": "infernal"
+    },
+    "14": {
+      "name": "Moonsteel Basin",
+      "theme": "lunar-spectral"
+    },
+    "15": {
+      "name": "Sunforge Expanse",
+      "theme": "infernal"
+    },
+    "16": {
+      "name": "Nethergate Chasm",
+      "theme": "infernal"
+    },
+    "17": {
+      "name": "Stormglass Reach",
+      "theme": "tempest-oceanic"
+    },
+    "18": {
+      "name": "Kingsfall Citadel",
+      "theme": "runic-arcane"
+    },
+    "19": {
+      "name": "Eternium Verge",
+      "theme": "voidborn"
+    },
+    "20": {
+      "name": "Astral Crucible",
+      "theme": "voidborn"
+    },
+    "21": {
+      "name": "Gravite Maw",
+      "theme": "runic-arcane"
+    },
+    "22": {
+      "name": "Frostiron Shelf",
+      "theme": "glacial"
+    },
+    "23": {
+      "name": "Dusksteel Strand",
+      "theme": "lunar-spectral"
+    },
+    "24": {
+      "name": "Titanium Wastes",
+      "theme": "forged-metal"
+    },
+    "25": {
+      "name": "Skysteel Pinnacle",
+      "theme": "celestial"
+    },
+    "26": {
+      "name": "Emberium Caldera",
+      "theme": "infernal"
+    },
+    "27": {
+      "name": "Soulsteel Necropolis",
+      "theme": "lunar-spectral"
+    },
+    "28": {
+      "name": "Chronite Spiral",
+      "theme": "runic-arcane"
+    },
+    "29": {
+      "name": "Worldforge Core",
+      "theme": "infernal"
+    },
+    "30": {
+      "name": "Voidglass Sanctum",
+      "theme": "voidborn"
+    },
+    "31": {
+      "name": "Thalassic Abyss",
+      "theme": "tempest-oceanic"
+    },
+    "32": {
+      "name": "Ashspire Ruins",
+      "theme": "infernal"
+    },
+    "33": {
+      "name": "Glacial Abyss",
+      "theme": "glacial"
+    },
+    "34": {
+      "name": "Primordial Spire",
+      "theme": "verdant"
+    }
+  }
+}

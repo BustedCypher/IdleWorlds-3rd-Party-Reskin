@@ -12,9 +12,19 @@
  *   iw:skill-panel        detail: { panel, skill, reason }
  *   iw:dom-flush          detail: { roots }
  *   iw:name-scan-flush    detail: { roots }
+ *
+ * A second, non-mutation source feeds the same flush pipeline: the game swaps
+ * which of its two duplicated layout columns is live at Tailwind's `xl`
+ * breakpoint (1280px) via pure CSS, which mutates NOTHING — no childList, no
+ * attribute, no characterData event ever fires for a plain viewport resize.
+ * Viewport.startLayoutWatch bumps a shared epoch on every breakpoint crossing
+ * and is wired below to run through the exact same discover()/flush path a
+ * mutation would, so every classifier's normal re-resolution machinery picks
+ * it up for free instead of needing a second event type.
  */
 
 import { guard, guardEach, raf } from './Runtime.js';
+import { startLayoutWatch, stopLayoutWatch } from './Viewport.js';
 
 const SEL_INV_ROW     = '.compact-row, [class*="item-row"]';
 const SEL_SKILL_PANEL = '.compact-panel';
@@ -67,6 +77,8 @@ const SKILL_IDENTITY_ALIASES = {
   jewelcrafting: ['jewel', 'jewelcrafting'],
   spellcrafting: ['spellcraft', 'spellcrafting'],
   tailoring: ['tailor', 'tailoring'],
+  woodcutting: ['wood', 'woodcutting'],
+  construction: ['build', 'construction'],
   crafting: ['crafting'],
   fishing: ['fishing'],
   locked: ['coming soon', 'upcoming skill'],
@@ -158,6 +170,10 @@ function detectSkillType(panel, precomputed) {
   if (hasAction('enchant'))                  return 'spellcrafting';
   if (hasAction('tailor', 'sew', 'weave'))   return 'tailoring';
   if (hasAction('fish'))                     return 'fishing';
+  if (hasAction('chop'))                     return 'woodcutting';
+  // Construction's control reads "Craft Parts", not a bare verb, so it is an
+  // exact match here and cannot be reached by the generic CRAFT test below.
+  if (hasAction('craft parts', 'build'))     return 'construction';
 
   // CRAFT is now reused by Spellcrafting and Tailoring recipes, so unlike the
   // discipline-specific verbs above it cannot identify the skill by itself.
@@ -179,6 +195,8 @@ function detectSkillType(panel, precomputed) {
   if (labels.some(t => /^alchemy(?:\s|$)|^brew(?:\s|$)/.test(t))) return 'alchemy';
   if (labels.some(t => /^(?:spellcraft|spellcrafting)(?:\s|$)|^enchant(?:\s|$)/.test(t))) return 'spellcrafting';
   if (labels.some(t => /^(?:tailor|tailoring)(?:\s|$)|^(?:tailor|sew|weave)(?:\s|$)/.test(t))) return 'tailoring';
+  if (labels.some(t => /^(?:wood|woodcutting)(?:\s|$)|^chop(?:\s|$)/.test(t))) return 'woodcutting';
+  if (labels.some(t => /^(?:build|construction)(?:\s|$)/.test(t))) return 'construction';
   if (labels.some(t => /^crafting(?:\s|$)/.test(t))) return 'crafting';
   if (labels.some(t => /^fishing(?:\s|$)|^fish(?:\s|$)/.test(t))) return 'fishing';
   return 'unknown';
@@ -383,6 +401,19 @@ export function startWatcher() {
   // Initial discovery happens only after all consumers have registered;
   // content.js intentionally starts this watcher last.
   discover(document.body, 'initial');
+
+  // A breakpoint crossing re-runs discover() on the whole document. This is
+  // deliberately heavier than a targeted queueContext() call: it is also how
+  // InventoryRenderer/SkillPanelRenderer (whose own resolution strategies are
+  // already viewport-correct by construction) get a fresh reconciliation pass
+  // for free, and it only fires on an actual Tailwind breakpoint crossing —
+  // not on every pixel of a drag-resize — so the cost is rare by design.
+  // Guarded like every other consumer here (Audit S3.7): a `matchMedia`
+  // change event is dispatched by the browser, not run through this module's
+  // own try/catch machinery, so an exception here would otherwise propagate
+  // out of our control.
+  guard('start:layout-watch', () =>
+    startLayoutWatch(() => guard('layout-change:discover', () => discover(document.body, 'layout-change'))));
 }
 
 /**
@@ -397,6 +428,7 @@ export function stopWatcher() {
     _observer.disconnect();
     _observer = null;
   }
+  guard('stop:layout-watch', stopLayoutWatch);
   _started = false;
   flushQueued = false;
   pendingInventory.clear();

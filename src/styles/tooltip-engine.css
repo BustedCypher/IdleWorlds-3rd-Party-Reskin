@@ -1,5 +1,26 @@
 /* ══════════════════════════════════════════════════════════════════════
    Tooltip engine — rich item-card treatment
+
+   The card is a FRAMED SURFACE, and it is framed the way every other framed
+   surface in the skin is (see ui-system.css, "Shared forged frame"): the same
+   forged ground (texture over the ink gradient, soft-light blended), the same
+   gold hairline across its head, the same four mirrored corners from
+   assets/inventory/panel_corners.webp, the same Cinzel headings and the same
+   2px control radius. Before this it drew its own flat plate, pill badges and
+   a bright white art frame, which is why it read as a different object.
+
+   Two things make the corner filigree work on a card this small:
+
+   1. It is drawn on the CARD's ground at z-index 0, with the three zones
+      (head / body / foot) above it at z-index 1 — the same ordering the
+      shared frame uses, where ornament losing to content is the safe
+      failure. The head and foot washes are therefore TRANSLUCENT rgba, not
+      the opaque plates they used to be: an opaque zone background would bury
+      the corners inside it and the card would look unframed again.
+   2. The corner is scaled to the card (--fs-tip-corner-*), not to a panel.
+      A card with the panels' 30x28 corners has the ornament eating a third
+      of its head; keep the slice at `95 88` (it consumes the whole sheet, so
+      only the four corners paint) and bring the border-width down with it.
    ══════════════════════════════════════════════════════════════════════ */
 
 .iw-item-ref {
@@ -34,126 +55,165 @@
 .iw-item-info { display: none; }
 
 .iw-tip {
+  /* One place for the card's scale. Everything below derives from these, so
+     the whole card can be tightened or loosened from five numbers. */
+  --fs-tip-w: 330px;
+  --fs-tip-pad-x: 12px;
+  --fs-tip-art: 64px;
+  --fs-tip-corner-h: 20px;
+  --fs-tip-corner-w: 18px;
+
   position: fixed;
   z-index: 99999;
-  width: 380px;
+  width: var(--fs-tip-w);
   max-width: calc(100vw - 20px);
   box-sizing: border-box;
+  /* The shared forged ground, identical to [data-iw-ui="section-frame"]. */
   background:
-    linear-gradient(180deg, rgba(255,255,255,.018), transparent 78px),
-    #151511;
-  border: 1px solid #57472C;
-  border-radius: 8px;
-  box-shadow: 0 18px 46px rgba(0,0,0,.82), inset 0 0 0 1px rgba(0,0,0,.58);
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 32%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%);
+  background-blend-mode: normal, normal, soft-light, normal;
+  border: 1px solid var(--iw-th-edge);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.78),
+    inset 0 1px 0 var(--iw-th-glow),
+    0 16px 40px rgba(0,0,0,.82);
   max-height: calc(100vh - 20px);
   max-height: calc(100dvh - 20px);
   flex-direction: column;
   overflow: hidden;
   overscroll-behavior: contain;
   font-family: var(--iw-font-ui);
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.38;
   color: var(--iw-text);
   opacity: 0;
   pointer-events: none;
   transition: none;
 }
+/* Gold hairline across the head of the frame — the shared frame's ::before. */
 .iw-tip::before {
   content: "";
   position: absolute;
   z-index: 2;
-  left: 0; right: 0; top: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--iw-gold), var(--iw-line-hot) 42%, transparent 92%);
+  left: 12px;
+  right: 12px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--iw-th-hairline) 14%, var(--iw-th-hairline-hi) 50%, var(--iw-th-hairline) 86%, transparent);
+  opacity: .78;
   pointer-events: none;
 }
+/* Four mirrored corners from one 176x190 sheet — the same asset, slice and
+   `stretch` the inventory panel, quest cards, skill actions, the activity
+   panels and the header all draw. Keep the slice in step with ui-system.css;
+   only the rendered size differs, because this surface is a card. */
+.iw-tip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-style: solid;
+  border-width: var(--fs-tip-corner-h) var(--fs-tip-corner-w);
+  border-color: transparent;
+  border-image: var(--iw-corner-filigree) 95 88 / var(--fs-tip-corner-h) var(--fs-tip-corner-w) / 0 stretch;
+}
+/* Card content sits above the ornament. */
+.iw-tip > * { position: relative; z-index: 1; }
+
 .iw-tip.is-open { opacity: 1; pointer-events: auto; }
 .iw-tip:focus-visible {
   outline: 2px solid var(--iw-gold);
   outline-offset: -3px;
 }
 
+/* ── Head: sprite slot, name, badges ─────────────────────────────────────
+   The art used to be a 100px box absolutely positioned in the top-right,
+   which forced `min-height: 116px` on the head and reserved 118px of
+   padding-right whether or not the title needed it — about 50px of dead
+   space under the badges on a short card, and it buried the top-right
+   corner ornament. It is a normal flex child now, in the inventory row's
+   own icon-then-name reading order, so the head is exactly as tall as its
+   content and the title block is WIDER than it was on the wider card. */
 .iw-tip-head {
   position: relative;
   flex: none;
-  flex: none;
-  flex: none;
   display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  min-height: 116px;
-  padding: 12px 118px 12px 13px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px var(--fs-tip-pad-x);
   box-sizing: border-box;
-  background: linear-gradient(90deg, #1D1B17, #14130F 76%);
+  background: linear-gradient(180deg, rgba(255,255,255,.030), rgba(0,0,0,.20));
   border-bottom: 1px solid #302A20;
 }
-.iw-tip-icon {
-  flex: none;
-  width: 24px;
-  padding-top: 2px;
-  font-size: 21px;
-  line-height: 1;
-  text-align: center;
-  filter: saturate(.85);
-}
-.iw-tip-title-block { flex: 1; min-width: 0; }
+.iw-tip-title-block { flex: 1 1 auto; min-width: 0; }
 .iw-tip-name {
-  font-family: var(--iw-font-ui);
-  font-size: 18px;
+  font-family: var(--iw-font-head);
+  font-size: 15px;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.18;
+  letter-spacing: .012em;
   word-break: break-word;
   text-shadow: 0 1px 0 #000;
 }
 
+/* The item slot, built like .fs-inv-icon: black ground, brass edge, 2px
+   radius, and overflow visible so the AtlasService enhancement badge can
+   overhang. AtlasService owns the background — never set one here. */
 .iw-tip-art {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 100px;
-  height: 100px;
+  flex: none;
+  width: var(--fs-tip-art);
+  height: var(--fs-tip-art);
   box-sizing: border-box;
   display: grid;
   place-items: center;
-  padding: 14px;
-  border: 1px solid rgba(240,232,214,.82);
-  border-radius: 12px;
-  background: #11110E;
-  box-shadow: inset 0 0 18px rgba(0,0,0,.62);
+  padding: 8px;
+  background-color: #080806;
+  border: 1px solid #4A3B22;
+  border-radius: var(--iw-r-slot, 2px);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.62),
+    inset 0 0 14px rgba(0,0,0,.6),
+    0 0 8px -2px rgba(212,173,99,.22);
   overflow: visible;
   pointer-events: none;
 }
-.iw-tip-art-host {
+.iw-tip-art-host,
+.iw-tip-art-fallback {
+  /* 8px padding + 1px border on each side. */
+  --fs-tip-art-inner: calc(var(--fs-tip-art) - 18px);
   position: relative;
   display: block;
-  width: 70px;
-  height: 70px;
-  min-width: 70px;
-  min-height: 70px;
-  max-width: 70px;
-  max-height: 70px;
+  width: var(--fs-tip-art-inner);
+  height: var(--fs-tip-art-inner);
+  min-width: var(--fs-tip-art-inner);
+  min-height: var(--fs-tip-art-inner);
+  max-width: var(--fs-tip-art-inner);
+  max-height: var(--fs-tip-art-inner);
   background-repeat: no-repeat;
 }
 .iw-tip-art-fallback {
   display: grid;
   place-items: center;
-  width: 70px;
-  height: 70px;
-  font-size: 34px;
+  font-size: 24px;
   opacity: .35;
 }
 .iw-tip-close {
   flex: none;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   padding: 0 !important;
   border: 1px solid #4A4031 !important;
-  border-radius: 4px !important;
-  background: rgba(12,11,9,.88) !important;
+  border-radius: var(--iw-r-control, 2px) !important;
+  background-color: rgba(12,11,9,.88) !important;
   color: #C8BFAE !important;
-  font: 700 18px/1 var(--iw-font-ui) !important;
+  font: 700 15px/1 var(--iw-font-ui) !important;
   cursor: pointer;
 }
 .iw-tip-close:hover,
@@ -163,68 +223,79 @@
   outline: 1px solid var(--iw-gold) !important;
 }
 
+/* Chips, not pills: round pills are not the house style (base.css). */
 .iw-tip-badges {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 5px;
-  margin-top: 8px;
+  gap: 4px;
+  margin-top: 6px;
 }
 .iw-tip-badge {
-  font-size: 10.5px;
-  font-weight: 650;
+  font-size: 9.5px;
+  font-weight: 600;
   line-height: 1.1;
-  letter-spacing: .01em;
+  letter-spacing: .02em;
   white-space: nowrap;
-  padding: 4px 7px;
-  border: 1px solid #343027;
-  border-radius: 999px;
-  background: #1B1A17;
+  padding: 3px 6px;
+  border: 1px solid #332C1E;
+  border-radius: var(--iw-r-control, 2px);
+  background: linear-gradient(180deg, #14130F, #0C0B09);
   color: #B9B2A3;
 }
 .iw-tip-badge.t {
   color: #AFC8F3;
-  border-color: rgba(91,155,213,.48);
+  border-color: rgba(91,155,213,.42);
 }
 .iw-tip-badge.req {
   color: #E6A05B;
-  border-color: rgba(217,138,58,.48);
+  border-color: rgba(217,138,58,.44);
 }
 
 .iw-tip-body {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 12px 13px 13px;
+  padding: 9px var(--fs-tip-pad-x) 10px;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
 }
 .iw-tip-sec {
-  margin-top: 12px;
-  padding-top: 10px;
+  margin-top: 9px;
+  padding-top: 8px;
   border-top: 1px solid #302A20;
 }
 .iw-tip-sec:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+/* The house eyebrow: Cinzel, tracked-out caps, dim gold — the treatment the
+   inventory pager and the skill kickers already use. */
 .iw-tip-sec-title {
-  font-family: var(--iw-font-ui);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .14em;
+  font-family: var(--iw-font-head);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .13em;
   text-transform: uppercase;
-  color: #969080;
-  margin-bottom: 7px;
+  color: var(--iw-gold-dim);
+  margin-bottom: 5px;
 }
 .iw-tip-effect {
   color: #C4BDAF;
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .iw-tip-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px 16px;
+  gap: 1px 14px;
+}
+/* A single stat block in a two-column grid strands its value in the middle of
+   the card with an empty column beside it — the "Base value 551g" case, which
+   is most trade goods and every raw material. Collapse to one column so the
+   value sits at the card's own right edge. The two-column default above is
+   deliberate for real stat sheets and is pinned by static-invariants. */
+.iw-tip-stats:not(:has(> :nth-child(2))) {
+  grid-template-columns: minmax(0, 1fr);
 }
 .iw-tip-stat-block { min-width: 0; }
 .iw-tip-stat {
@@ -233,8 +304,8 @@
   justify-content: space-between;
   align-items: baseline;
   gap: 8px;
-  font-size: 12.5px;
-  padding: 2px 0;
+  font-size: 11.5px;
+  padding: 1px 0;
 }
 .iw-tip-stat .k {
   min-width: 0;
@@ -243,6 +314,8 @@
 }
 .iw-tip-stat .v {
   flex: none;
+  font-family: var(--iw-font-head);
+  font-size: 11.5px;
   color: var(--iw-text-hi);
   font-weight: 700;
   text-align: right;
@@ -253,13 +326,13 @@
 .iw-tip-stat-note {
   margin-top: 1px;
   color: var(--iw-faint);
-  font-size: 9.5px;
+  font-size: 9px;
   line-height: 1.25;
 }
 
 .iw-tip-acq {
   position: relative;
-  padding: 2px 0 2px 11px;
+  padding: 1px 0 1px 9px;
 }
 .iw-tip-acq::before {
   content: "";
@@ -271,39 +344,39 @@
   background: #5878AC;
 }
 .iw-tip-acq-main {
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--iw-text-hi);
 }
 .iw-tip-acq-sub {
-  font-size: 12px;
+  font-size: 11px;
   color: #8F899C;
-  margin-top: 3px;
-  line-height: 1.4;
+  margin-top: 2px;
+  line-height: 1.35;
 }
 .iw-tip-acq.is-unknown .iw-tip-acq-main { color: var(--iw-faint); font-style: italic; }
 .iw-tip-flavour {
   font-family: var(--iw-font-flav);
   font-style: italic;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--iw-gold-dim);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .iw-tip-foot {
   flex: none;
-  min-height: 38px;
-  padding: 8px 13px;
+  min-height: 30px;
+  padding: 6px var(--fs-tip-pad-x);
   border-top: 1px solid #302A20;
-  background: #0C0B09;
+  background: rgba(0,0,0,.30);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 .iw-tip-foot:empty { display: none; }
 .iw-tip-link {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: .02em;
   color: #70A1EE;
@@ -317,7 +390,7 @@
 }
 .iw-tip-source {
   margin-left: auto;
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 700;
   letter-spacing: .04em;
   color: #B07846;
@@ -326,9 +399,12 @@
 .iw-tip-source.is-stale { color: #D58A52; }
 
 @media (max-width: 420px) {
-  .iw-tip { width: calc(100vw - 20px); }
+  .iw-tip {
+    --fs-tip-w: calc(100vw - 20px);
+    --fs-tip-pad-x: 11px;
+    --fs-tip-art: 56px;
+    --fs-tip-corner-h: 17px;
+    --fs-tip-corner-w: 15px;
+  }
   .iw-tip-stats { grid-template-columns: 1fr; }
-  .iw-tip-head { padding-right: 108px; }
-  .iw-tip-art { width: 90px; height: 90px; padding: 10px; }
-  .iw-tip-art-host, .iw-tip-art-fallback { width: 68px; height: 68px; min-width: 68px; min-height: 68px; }
 }

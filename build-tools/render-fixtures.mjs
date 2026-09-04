@@ -18,6 +18,7 @@ import { chromium } from 'playwright';
 import { readFile, writeFile, mkdir, readdir, access } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { THEME_NAMES } from '../src/modules/zoneThemes.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
@@ -157,6 +158,7 @@ const invRow = ({ sprite, badge, name, tier, level, stats, details, reqs, qty, e
 const SKILL_GLYPHS = {
   combat: '⚔', mining: '⛏', smithing: '⚒', gathering: '❧', alchemy: '⚗',
   jewelcrafting: '◆', spellcrafting: '✧', tailoring: '⋈', crafting: '✦', fishing: '⌁',
+  woodcutting: '⋔', construction: '⌂',
 };
 const SKILL_ART = {
   combat: skillSprite('combat'),
@@ -169,10 +171,15 @@ const SKILL_ART = {
   tailoring: skillSprite('tailoring'),
   crafting: skillSprite('crafting'),
   fishing: skillSprite('fishing'),
+  // No free atlas cell — these two borrow the nearest existing sprite, matching
+  // SkillsArtService.ICON_ALIASES.
+  woodcutting: skillSprite('gathering'),
+  construction: skillSprite('crafting'),
 };
 const SKILL_LEVELS = {
   combat: 42, mining: 42, smithing: 42, gathering: 42, alchemy: 42,
   jewelcrafting: 68, spellcrafting: 57, tailoring: 26, crafting: 42, fishing: 42,
+  woodcutting: 35, construction: 29,
 };
 
 // `navIn` models the two shapes React actually ships: some panels put the
@@ -183,26 +190,47 @@ const SKILL_LEVELS = {
 // outranks every stylesheet rule. A fixture that omits them renders a button the
 // live game never shows — which is exactly how the framed nav artwork survived a
 // "verified" pass. Mirror BUTTON_STYLES + the role geometry here.
-const navInline = dir => [
-  'width:44px', 'min-width:44px', 'height:44px', 'min-height:44px', 'padding:0',
-  'background:none', `background-image:var(--fs-skills-nav-${dir})`,
-  'background-size:68% 68%', 'background-position:center', 'background-repeat:no-repeat',
-  'border:0', 'box-shadow:none', 'color:transparent', 'font-size:0',
+// Per Curtis (2026-09) the pager and the action button are both the same
+// forged plate as the rest of the card — the inventory row's idle tab, with
+// the live control alone getting the ember plate. Mirror FORGE from
+// SkillPanelRenderer.js verbatim; all three copies move together.
+const FORGE = {
+  bg: 'linear-gradient(180deg, #100E0A, #0A0907)',
+  border: '1px solid #2A241A',
+  shadow: 'inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)',
+  liveBg: 'linear-gradient(180deg, #1B150B, #120E07)',
+  liveBorder: '1px solid #8A6B2E',
+  // The live button's glow is mixed from the inherited `--fs-skill-accent` so it
+  // carries discipline colour; ember `#D8791F` is the pre-classify fallback.
+  liveShadow: 'inset 0 0 12px -2px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 55%, transparent), ' +
+    'inset 0 1px 0 rgba(255, 216, 150, .18), ' +
+    '0 0 0 1px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 16%, transparent)',
+};
+
+const navInline = () => [
+  'width:26px', 'min-width:26px', 'height:44px', 'min-height:44px', 'padding:0',
+  `background:${FORGE.bg}`,
+  `border:${FORGE.border}`, 'border-radius:2px',
+  `box-shadow:${FORGE.shadow}`,
+  'color:transparent', 'font-size:0',
 ].map(d => `${d} !important`).join(';');
 
 const ACTION_INLINE = [
   "font-family:'Barlow',system-ui,sans-serif", 'font-weight:700',
-  'letter-spacing:0.06em', 'text-transform:uppercase', 'border-radius:2px',
-  'align-self:center', 'flex-shrink:0', 'cursor:pointer', 'box-shadow:none',
-  'background:linear-gradient(180deg,color-mix(in srgb,var(--fs-skill-accent) 74%,#593018),color-mix(in srgb,var(--fs-skill-accent) 48%,#25170F))',
-  'border:1px solid color-mix(in srgb,var(--fs-skill-accent) 72%,#8A6633)',
-  'color:#FFEAD1', 'font-size:12px',
+  'letter-spacing:0.09em', 'text-transform:uppercase', 'border-radius:2px',
+  'align-self:center', 'flex-shrink:0', 'cursor:pointer',
+  `box-shadow:${FORGE.liveShadow}`,
+  `background:${FORGE.liveBg}`,
+  `border:${FORGE.liveBorder}`,
+  'color:#F3E3C0',
+  'text-shadow:0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 48%, transparent)',
+  'font-size:12px',
   'width:155px', 'min-width:155px', 'height:44px', 'min-height:44px', 'padding:0 12px',
 ].map(d => `${d} !important`).join(';');
 
 const navMarkup = '<div data-iw-skill-role="nav-group">' +
-  `<button data-iw-skill-role="nav-button" data-iw-nav-direction="prev" style="${navInline('prev')}"><span>‹</span></button>` +
-  `<button data-iw-skill-role="nav-button" data-iw-nav-direction="next" style="${navInline('next')}"><span>›</span></button></div>`;
+  `<button data-iw-skill-role="nav-button" data-iw-nav-direction="prev" style="${navInline()}"><span>‹</span></button>` +
+  `<button data-iw-skill-role="nav-button" data-iw-nav-direction="next" style="${navInline()}"><span>›</span></button></div>`;
 
 const skillPanel = ({ type, label, title, pct, xp, reward, ingredients, requirement, detail, nav = true, navIn = 'commands' }) => {
   const glyph = SKILL_GLYPHS[type] || '✦';
@@ -273,12 +301,11 @@ const questCard = ({ accent, glyph, state = 'active', kicker, title, brief, obje
 const tooltipCard = ({ sprite, name, tier, badges, effect, stats, acqMain, acqSub, glyph = '&#x1F6E1;&#xFE0F;', source = 'cached data' }) => `
 <div class="iw-tip is-open" style="position:relative;display:flex;opacity:1;left:0;top:0;margin-bottom:14px;">
   <div class="iw-tip-head has-art has-gear-art">
-    <div class="iw-tip-icon" aria-hidden="true">${glyph}</div>
+    <div class="iw-tip-art iw-tip-gear-art" aria-hidden="true"><span class="iw-tip-art-host iw-tip-art-painted" style="${sprite}"></span></div>
     <div class="iw-tip-title-block">
       <div class="iw-tip-name tier-${tier}">${name}</div>
       <div class="iw-tip-badges">${badges.map((b, i) => `<span class="iw-tip-badge${i === 0 ? ' t' : ''}${b.startsWith('Requires') ? ' req' : ''}">${b}</span>`).join('')}</div>
     </div>
-    <div class="iw-tip-art iw-tip-gear-art" aria-hidden="true"><span class="iw-tip-art-host iw-tip-art-painted" style="${sprite}"></span></div>
   </div>
   <div class="iw-tip-body">
     ${effect ? `<div class="iw-tip-sec iw-tip-effect-sec"><div class="iw-tip-effect">${effect}</div></div>` : ''}
@@ -301,6 +328,9 @@ const tooltipCard = ({ sprite, name, tier, badges, effect, stats, acqMain, acqSu
 const HEADER_ASSET_VARS = [
   ['--iw-header-frame', 'header_frame.webp'],
   ['--iw-header-surface', 'header_surface.webp'],
+  // Distinct file so the mobile-swap media query in header.css can be verified
+  // by name below; HeaderRenderer sets this per zone alongside the wide strip.
+  ['--iw-header-surface-mobile', 'zones/zone_1_mobile.webp'],
   ['--iw-header-crest', 'header_crest.webp'],
   ['--iw-header-divider', 'header_divider.webp'],
   ['--iw-utility-frame', 'utility_frame.webp'],
@@ -330,6 +360,7 @@ const UTIL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 // the fixture has to derive it the same way or it renders the pre-split grid.
 const statKind = (text) => {
   if (/\batk\s*\d+\b.*\bdef\s*\d+\b.*\bhp\s*\d+\b/i.test(text)) return 'combat';
+  if (/\bboosted\b/i.test(text)) return 'boost';
   if (/\b\d+\s*[dhm]\b[^]*\bleft\b/i.test(text)) return 'timer';
   if (/^[^\w]*[\d,]+$/.test(text)) return 'gold';
   return 'other';
@@ -444,6 +475,22 @@ ${invRow({ sprite: gearSprite('Thalassic Shield'), name: 'Thalassic Shield', tie
 ${invRow({ sprite: gearSprite('Voidglass Leggings'), name: 'Voidglass Leggings', tier: 'legendary', level: null, stats: ['Tier 27 · Legs', 'DEF +140', 'HP +310'], details: [{ kind: 'set', text: 'Set bonus active' }, { kind: 'status', text: 'Not upgradable' }], setAction: true })}
 ${invRow({ sprite: gearSprite('Voidglass Boots'), name: 'Voidglass Boots', tier: 'mythic', level: '30', stats: ['Tier 33 · Feet', 'DEF +198', '2× gather 12%'], details: [{ kind: 'loadout', text: 'In loadout: Gathering' }], reqs: ['Requires Gathering Lv 80'] })}
 
+<div class="fx-h">Inventory panel — outer section frame enclosing the inner list frame</div>
+<div data-iw-inventory-root="1">
+  <div class="mb-2 flex items-center justify-between"><h2 data-iw-inventory-title="1">Inventory</h2></div>
+  <div class="fs-inv-rule"></div>
+  <div class="mb-2 flex items-center justify-between gap-3">
+    <button data-iw-inventory-control="page" disabled>Prev</button>
+    <span data-iw-inventory-control="page-count">1 / 48</span>
+    <button data-iw-inventory-control="page">Next</button>
+  </div>
+  <div class="space-y-1.5" data-iw-inventory-list="1">
+    ${invRow({ sprite: gearSprite('Mythril Sword'), name: 'Mythril Sword', tier: 'uncommon', level: '11', stats: ['Tier 9 · Weapon', 'ATK +64'], details: [{ kind: 'loadout', text: 'In loadout: Main' }], equipped: true })}
+    ${invRow({ sprite: itemSprite('copper_ore'), name: 'Astral Silk', tier: 'common', stats: ['Tier 20 · Raw material'], qty: '1' })}
+    ${invRow({ sprite: gearSprite('Voidglass Gloves'), name: 'Astralium Relic+3', tier: 'rare', level: null, stats: ['Tier 20 · Trinket', 'XP +35'], details: [{ kind: 'set', text: 'set bonus' }], reqs: ['Requires Lv 69 (any skill)'], setAction: true })}
+  </div>
+</div>
+
 <div class="fx-h">Inventory rows — item atlas (consumables / materials)</div>
 ${invRow({ sprite: itemSprite('copper_ore'), name: 'Copper Ore', tier: 'common', stats: ['Tier 1 · Raw material'], qty: '2,480' })}
 ${invRow({ sprite: itemSprite('iron_ore'), name: 'Iron Ore', tier: 'common', stats: ['Tier 3 · Raw material'], qty: '917' })}
@@ -463,6 +510,8 @@ ${skillPanel({ type: 'spellcrafting', label: 'Spellcraft', title: 'Harvest Moons
 ${skillPanel({ type: 'tailoring', label: 'Tailor', title: 'Upgrade Moonsilk Silkbind Thread', pct: 21, xp: '5638', ingredients: 'Moonsilk Silkbind Thread / Moonsteel Upgrade Orb', requirement: 'Requires Tailoring Lv 53 and Gathering Lv 49', navIn: 'content' })}
 ${skillPanel({ type: 'crafting', label: 'Crafting', title: 'Craft Upgrade Orb', pct: 33, xp: '190' })}
 ${skillPanel({ type: 'fishing', label: 'Fishing', title: 'Fish Abyssal Eel', pct: 67, xp: '220' })}
+${skillPanel({ type: 'woodcutting', label: 'Wood', title: 'Chop Runic Oak', pct: 0.5, xp: '35', requirement: 'Needs level 29', nav: false })}
+${skillPanel({ type: 'construction', label: 'Build', title: 'Craft Runite Building Parts', pct: 52, xp: '461', ingredients: 'Runic Oak 473/16 / Runite Ore 19318/8', requirement: 'Needs Construction Lv 29 + Woodcutting Lv 25' })}
 </div></div>
 
 <div class="fx-h">Quest cards — forged into the skill-frame family</div>
@@ -590,7 +639,7 @@ const browser = await chromium.launch({
   args: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'],
   ignoreDefaultArgs: ['--headless=old'],
 });
-const ctx = await browser.newContext({ viewport: { width: 1240, height: 1000 }, deviceScaleFactor: 2 });
+const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 }, deviceScaleFactor: 2 });
 const p = await ctx.newPage();
 
 const consoleIssues = [];
@@ -604,37 +653,83 @@ await p.waitForTimeout(400);
 await p.screenshot({ path: resolve(OUT, 'full.png'), fullPage: true });
 await p.locator('.fx-skill-grid').screenshot({ path: resolve(OUT, 'skills-panel.png') });
 await p.locator('.fx-quest-grid').screenshot({ path: resolve(OUT, 'quest-panel.png') });
+
+// Once the action_frame sprite is on a quest command button, that sprite is the
+// ONLY frame — skillpanel.css strips the plate to `box-shadow: none` and the
+// depth cue lives in `filter: drop-shadow()`. base.css's generic
+// `button { box-shadow: inset .., 0 1px 0 .. !important }` is (0,4,1) and used
+// to outlive that strip (the strip rule is (0,4,0)), leaving a hairline just
+// outside the art that read as a faint second frame. Needs base.css to carry
+// the `:not([data-iw-quest-role])` opt-out; revert it and this throws.
+const questButtonShadow = await p.evaluate(() => {
+  const btns = [...document.querySelectorAll(
+    '[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"], ' +
+    '[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]')];
+  return {
+    count: btns.length,
+    withStrayShadow: btns
+      .filter(b => getComputedStyle(b).boxShadow !== 'none')
+      .map(b => `${b.textContent.trim()}: ${getComputedStyle(b).boxShadow}`),
+  };
+});
+if (!questButtonShadow.count) {
+  throw new Error('no ready quest command buttons in the fixture — this check cannot fail, so it is broken');
+}
+if (questButtonShadow.withStrayShadow.length) {
+  throw new Error('quest command button keeps a plate box-shadow over its action_frame sprite ' +
+    '(a second frame): ' + JSON.stringify(questButtonShadow.withStrayShadow));
+}
+
+await p.locator('[data-iw-inventory-root="1"]').first().screenshot({ path: resolve(OUT, 'inventory-panel.png') });
 await p.locator('[data-iw-header="root"]').screenshot({ path: resolve(OUT, 'header.png') });
 
-// The header band is a DESKTOP composition; RESPONSIVE_WIDTHS below tops out at
-// 768, so auditing it there would never exercise the two-column layout this
-// checks. Audit it here, at the 1240 viewport the screenshot is taken in.
+// The header band is a DESKTOP composition; RESPONSIVE_WIDTHS below tops out
+// below 1280 (Tailwind's `xl`, where the game's own panel columns collapse to
+// one — see V1.6.0_MOBILE_LAYOUT_AUDIT.md), so auditing it there would never
+// exercise the two-column layout this checks. Audit it here, at the 1400
+// viewport the screenshot is taken in — the context viewport used to be 1240,
+// which is BELOW 1280 and so was already rendering header.css's single-column
+// treatment inside a fixture meant to show the desktop composition.
 const headerAudit = await p.evaluate(() => {
   const root = document.querySelector('[data-iw-header="root"]');
   const btns = [...root.querySelectorAll('[data-iw-header="utility-button"]')];
   const tiles = [...root.querySelectorAll('[data-iw-header="status-card"]')];
-  const b = btns[0].getBoundingClientRect();
   const t0 = tiles[0];
-  const t = t0.getBoundingClientRect();
   const after = getComputedStyle(root, '::after');
+  // The utility rail is now row 2 of the identity region: a strip directly
+  // beneath the smoked-glass frame, its buttons spread `space-between` so the
+  // first/last sit flush with the frame's left/right edges.
+  const region = root.querySelector('[data-iw-header="identity-region"]');
+  const rr = region.getBoundingClientRect();
+  const pr = root.querySelector('[data-iw-header="profile"]').getBoundingClientRect();
+  const first = btns[0].getBoundingClientRect();
+  const last = btns[btns.length - 1].getBoundingClientRect();
+  const railGaps = btns.slice(1).map((el, i) =>
+    +(el.getBoundingClientRect().left - btns[i].getBoundingClientRect().right).toFixed(1));
   return {
     utilityCount: btns.length,
     tileCount: tiles.length,
-    topDelta: +Math.abs(b.top - t.top).toFixed(1),
-    // Compare against the DECLARED control height, not the rendered box: a
-    // headless emoji fallback inflates some tiles' line boxes here, while the
-    // live capture shows every tile sitting at its 42px min-height.
-    heightDelta: +Math.abs(b.height - parseFloat(getComputedStyle(t0).minHeight)).toFixed(1),
+    // > 0: the rail sits below the profile block, not level with the status band.
+    railBelowFrame: +(first.top - pr.bottom).toFixed(1),
+    // ~0 (within the frame's ±8px bleed): first/last button flush with frame edges.
+    railLeftInset: +(first.left - rr.left).toFixed(1),
+    railRightInset: +(rr.right - last.right).toFixed(1),
+    // ~0: the four inter-button gaps are equal (evenly spaced).
+    railGapSpread: +(Math.max(...railGaps) - Math.min(...railGaps)).toFixed(1),
+    // The status tiles must stay COMPACT (Curtis, 2026-09: the old 42px tiles
+    // read too tall/wide against the zone art). Assert the declared min-height,
+    // not the rendered box — a headless emoji fallback inflates line boxes here
+    // while the live tiles sit at their min-height. The utility rail is no
+    // longer part of this band, so it is no longer the reference.
+    firstTileMinHeight: parseFloat(getComputedStyle(t0).minHeight),
     // Every tile must share one surface family: tile 1 is a <div> and the rest
     // are <button>, and the generic control rule used to repaint only the
     // buttons, so tile 1 alone kept the bracket plate.
     distinctTileBorders: [...new Set(tiles.map(el => getComputedStyle(el).borderTopColor))],
     distinctTileBg: [...new Set(tiles.map(el => getComputedStyle(el).backgroundImage.slice(0, 60)))].length,
-    // topDelta below is an OUTCOME check and cannot fail in this fixture: a
-    // headless emoji fallback inflates the tiles until the grid happens to fill
-    // the identity row, so centring costs ~0px here while it cost 9px live
-    // (grid 142 in a 160 row). Assert the contract that produced the fix too,
-    // which does fail when reverted.
+    // The status grid must still be top-aligned so its first tile sits level
+    // with the identity FRAME's top edge (the rail moved out from under this
+    // constraint, but the frame did not).
     gridAlignContent: getComputedStyle(root.querySelector('[data-iw-header="status-grid"]')).alignContent,
     // The header must draw the SAME corner filigree as every other framed
     // surface, so the page reads as one system.
@@ -645,14 +740,20 @@ const headerAudit = await p.evaluate(() => {
   };
 });
 console.log('\nheader band:', JSON.stringify(headerAudit));
-if (headerAudit.topDelta > 1) {
-  throw new Error(`header utility rail is ${headerAudit.topDelta}px out of line with the status band`);
+if (headerAudit.railBelowFrame < 2) {
+  throw new Error(`header utility rail should sit below the identity frame, not level with it (gap ${headerAudit.railBelowFrame}px)`);
 }
-if (headerAudit.heightDelta > 1) {
-  throw new Error(`header utility buttons and status tiles differ in height by ${headerAudit.heightDelta}px`);
+if (Math.abs(headerAudit.railLeftInset) > 10 || Math.abs(headerAudit.railRightInset) > 10) {
+  throw new Error(`header utility rail is not flush with the identity frame edges: left ${headerAudit.railLeftInset}px, right ${headerAudit.railRightInset}px`);
+}
+if (headerAudit.railGapSpread > 2) {
+  throw new Error(`header utility buttons are not evenly spaced across the frame: gap spread ${headerAudit.railGapSpread}px`);
+}
+if (headerAudit.firstTileMinHeight > 40 || headerAudit.firstTileMinHeight < 24) {
+  throw new Error(`header status tiles are not compact: first tile min-height ${headerAudit.firstTileMinHeight}px (want 24-40)`);
 }
 if (!/^(start|flex-start)$/.test(headerAudit.gridAlignContent)) {
-  throw new Error(`header status grid must be top-aligned to sit level with the utility rail, got align-content: ${headerAudit.gridAlignContent}`);
+  throw new Error(`header status grid must be top-aligned, got align-content: ${headerAudit.gridAlignContent}`);
 }
 if (!headerAudit.cornersPainted) throw new Error('header must use the shared panel_corners.webp filigree, like every other frame');
 if (!headerAudit.ornamentBehindContent) throw new Error('header frame ornament sits above the status tiles');
@@ -662,6 +763,26 @@ if (headerAudit.distinctTileBorders.length !== 1) {
 if (headerAudit.clipped.length) {
   throw new Error(`header status tiles truncate their values: ${JSON.stringify(headerAudit.clipped)}`);
 }
+/* Per-zone header art has two forms: the wide strip (--iw-header-surface) and
+   the portrait crop (--iw-header-surface-mobile), and header.css swaps to the
+   second inside `@media (max-width: 768px)`. Verify the swap by name at a phone
+   width, then restore the desktop viewport the ink checks below require.
+   Negative control: delete the @media block and the wide strip stays at 390px. */
+const headerSurfaceBy = async width => {
+  await p.setViewportSize({ width, height: 900 });
+  await p.waitForTimeout(40);
+  return p.evaluate(() => getComputedStyle(document.querySelector('[data-iw-header="root"]')).backgroundImage);
+};
+const surfaceNarrow = await headerSurfaceBy(390);
+const surfaceWide = await headerSurfaceBy(1400);
+await p.waitForTimeout(40);
+if (!/zone_1_mobile\.webp/.test(surfaceNarrow)) {
+  throw new Error(`header did not swap to the mobile zone surface at 390px: ${surfaceNarrow}`);
+}
+if (!/header_surface\.webp/.test(surfaceWide) || /zone_1_mobile\.webp/.test(surfaceWide)) {
+  throw new Error(`header did not restore the wide zone surface at 1400px: ${surfaceWide}`);
+}
+console.log('header surface swap: mobile <=768, wide >768  ok');
 /* Sprite-backed chrome is only aligned if the ART is concentric with the BOX,
    and no computed-style check can see that: the sheet's own dead margin lives
    inside the image. So measure the painted pixels. utility_frame.webp is
@@ -773,7 +894,16 @@ if (shortTooltipAudit.height > 341) throw new Error(`mobile tooltip exceeds shor
 if (!shortTooltipAudit.scrollable) throw new Error('mobile tooltip body must scroll when content exceeds the viewport');
 if (!shortTooltipAudit.closeVisible) throw new Error('mobile tooltip close control is not visible');
 
-const RESPONSIVE_WIDTHS = [320, 360, 390, 430, 600, 768];
+// 640/768/1024 are Tailwind's own sm/md/lg breakpoints, which every skin
+// stylesheet's own breakpoints were realigned to (see
+// V1.6.0_MOBILE_LAYOUT_AUDIT.md) — 640 replaces the old 600 (skillpanel/
+// ui-system/inventory's mobile edge), 768 replaces 700/800/780, 1024 replaces
+// 900/860. 900 stays in the sweep too: it used to BE a breakpoint and is now
+// interior to the 641-1024 tablet band, worth confirming nothing regressed
+// there. 1279 sits one pixel below 1280 (Tailwind's `xl`, where the game's own
+// panel columns collapse to one — header.css's own §9 breakpoint) so the
+// per-width header checks below exercise that edge too.
+const RESPONSIVE_WIDTHS = [320, 360, 390, 430, 640, 768, 900, 1024, 1279];
 const auditResponsive = async width => {
   await p.setViewportSize({ width, height: 844 });
   await p.waitForTimeout(60);
@@ -825,7 +955,7 @@ const auditResponsive = async width => {
         .map(el => ({ type: el.className, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth })),
       maxSkillHeight: Math.max(...panels.map(el => el.getBoundingClientRect().height)),
       medallionsVisible: medallions.length === panels.length && medallions.every(el => {
-        const minSize = viewportWidth <= 600 ? 38 : 50;
+        const minSize = viewportWidth <= 640 ? 38 : 44;
         const rect = el.getBoundingClientRect();
         return rect.width >= minSize && rect.height >= minSize;
       }),
@@ -836,31 +966,32 @@ const auditResponsive = async width => {
       identityLevelsVisible: identityLevels.length === panels.length && identityLevels.every(el => el.getBoundingClientRect().height > 0),
       actionButtonsSized: actionButtons.length === panels.length && actionButtons.every(el => {
         const rect = el.getBoundingClientRect();
-        return rect.width >= (viewportWidth <= 600 ? 108 : 124) && rect.height >= 44;
+        return rect.width >= (viewportWidth <= 640 ? 108 : 124) && rect.height >= 44;
       }),
       // Live IdleWorlds ships BOTH command shapes: panels with recipe
       // navigation wrap the nav pair and the action control in one cell, and
       // panels without it expose the bare action button as that cell. Count
       // against the panels that actually have nav, not against every panel.
       navPanelCount: navPanels.length,
+      // Thin flanking pager: 26px minor axis is below the suite's 44px target
+      // but clears WCAG 2.5.8 (24x24); the 44px height is still enforced.
       navButtonsAccessible: navPanels.length > 0 && navButtons.length === navPanels.length * 2 && navButtons.every(el => {
         const rect = el.getBoundingClientRect();
-        return rect.width >= 44 && rect.height >= 44 && getComputedStyle(el).display !== 'none';
+        return rect.width >= 24 && rect.height >= 44 && getComputedStyle(el).display !== 'none';
       }),
-      // The pager IS the framed arrow artwork. Verify it renders, that the
-      // control adds no outline of its own around that frame, and that nothing
-      // (pseudo-element or native glyph) is drawn over the top of it.
+      // The pager is now a thin steel plate with a CSS-drawn chevron. Verify the
+      // plate paints (its own border + a non-image background, NOT the old svg),
+      // the chevron `::before` renders, and the native glyph stays suppressed.
       navButtonsPainted: navButtons.length === navPanels.length * 2 && navButtons.every(el => {
         const cs = getComputedStyle(el);
         const before = getComputedStyle(el, '::before');
-        const after = getComputedStyle(el, '::after');
-        const artwork = /skills_nav_(?:prev|next)\.svg/.test(cs.backgroundImage);
-        const ownOutline = parseFloat(cs.borderTopWidth) > 0 || cs.boxShadow !== 'none';
-        const overlaid = before.content !== 'none' || after.content !== 'none' ||
-          cs.color !== 'rgba(0, 0, 0, 0)' || parseFloat(cs.fontSize) > 0;
-        return artwork && !ownOutline && !overlaid;
+        const noOldArt = !/skills_nav_(?:prev|next)\.svg/.test(cs.backgroundImage);
+        const plate = parseFloat(cs.borderTopWidth) > 0 && /gradient/.test(cs.backgroundImage);
+        const chevron = before.content !== 'none' &&
+          (parseFloat(before.borderRightWidth) > 0 || parseFloat(before.borderBottomWidth) > 0);
+        const glyphHidden = cs.color === 'rgba(0, 0, 0, 0)' && parseFloat(cs.fontSize) === 0;
+        return noOldArt && plate && chevron && glyphHidden;
       }),
-      navArtInset: navButtons.every(el => getComputedStyle(el).backgroundSize === '68% 68%'),
       // Header band: the utility rail and the first status row are two halves
       // of one line across the top of the plate, so their top edges and their
       // control heights must agree. They were 5px and 4px out respectively.
@@ -908,26 +1039,44 @@ const auditResponsive = async width => {
         return +(r.width / r.height).toFixed(2);
       }),
       navBackgrounds: [...new Set(navButtons.map(el => getComputedStyle(el).backgroundImage))],
-      basePlaquesFit: basePlaques.length === panels.length && basePlaques.every(el => el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().width >= (viewportWidth <= 600 ? 144 : 168)),
+      basePlaquesFit: basePlaques.length === panels.length && basePlaques.every(el => el.scrollWidth <= el.clientWidth + 1),
       sixDigitBaseFits: !!document.querySelector('.fs-skill-base-exp[data-iw-base-exp="123456"]') && document.querySelector('.fs-skill-base-exp[data-iw-base-exp="123456"]').scrollWidth <= document.querySelector('.fs-skill-base-exp[data-iw-base-exp="123456"]').clientWidth + 1,
-      // Desktop: whichever branch React put the pager in, it must end up
-      // centred directly above the action button and clear of its hit area.
-      navAboveAction: navPanels.length > 0 && navPanels.every(el => {
-        const nav = el.querySelector('[data-iw-skill-role="nav-group"]')?.getBoundingClientRect();
+      // Whichever branch React put the pager in, the two arrows must flank the
+      // action button — prev fully to its left, next fully to its right, all
+      // three vertically centred together and never overlapping the hit area.
+      // (nav-group can be `display: contents` in the command cell, so measure
+      // the individual arrow boxes, not the group.)
+      navFlanksAction: navPanels.length > 0 && navPanels.every(el => {
+        const prev = el.querySelector('[data-iw-nav-direction="prev"]')?.getBoundingClientRect();
+        const next = el.querySelector('[data-iw-nav-direction="next"]')?.getBoundingClientRect();
         const action = el.querySelector('[data-iw-skill-role="action-button"]')?.getBoundingClientRect();
-        return nav && action && nav.bottom <= action.top + 1 &&
-          Math.abs((nav.left + nav.width / 2) - (action.left + action.width / 2)) <= 2;
+        if (!prev || !next || !action) return false;
+        const mid = action.top + action.height / 2;
+        const centred = [prev, next].every(r => Math.abs((r.top + r.height / 2) - mid) <= 3);
+        if (centred && prev.right <= action.left + 1 && next.left >= action.right - 1) return true;
+        // Fallback: as long as the arrows never overlap the action hit area the
+        // rail is not "malformed". The flank test above is the intended shape at
+        // every width now (Curtis, 2026-09) but keep this so a future rail tweak
+        // fails loud only on a real overlap.
+        return [prev, next].every(r => r.bottom <= action.top + 1 || r.top >= action.bottom - 1 ||
+          r.right <= action.left + 1 || r.left >= action.right - 1);
       }),
-      // Mobile: the rail is a row and the content-branch pager stays in flow,
-      // so the only hard requirement is that it never overlaps the action.
-      navBesideAction: navPanels.length > 0 && navPanels.every(el => {
-        const nav = el.querySelector('[data-iw-skill-role="nav-group"]')?.getBoundingClientRect();
-        const action = el.querySelector('[data-iw-skill-role="action-button"]')?.getBoundingClientRect();
-        if (!nav || !action) return false;
-        return nav.bottom <= action.top + 1 || nav.top >= action.bottom - 1 ||
-          nav.right <= action.left + 1 || nav.left >= action.right - 1;
+      // The command band always occupies its OWN grid row — never shared with
+      // the content zone. Above 384px it sits beside the identity rail
+      // ("identity commands"); at or below it the band spans the card
+      // ("commands commands") because the renderer's inline 155px action button
+      // cannot fit beside any usable rail there. Either row shape is correct;
+      // sharing a row with content is not.
+      commandRailOwnRow: panels.every(el => /(?:identity|commands) commands/
+        .test(getComputedStyle(el.querySelector('[data-iw-skill-layout-shell="1"]') || el).gridTemplateAreas)),
+      // Curtis (2026-09): the icon + level info run to the base of the card.
+      // Only meaningful where the rail is full-height, i.e. above 430px.
+      identityReachesBase: panels.every(el => {
+        const shell = el.querySelector('[data-iw-skill-layout-shell="1"]');
+        const id = el.querySelector('[data-iw-skill-zone="identity"]');
+        if (!shell || !id) return false;
+        return Math.abs(shell.getBoundingClientRect().bottom - id.getBoundingClientRect().bottom) <= 1;
       }),
-      mobileControlRail: panels.every(el => getComputedStyle(el.querySelector('[data-iw-skill-layout-shell="1"]') || el).gridTemplateAreas.includes('commands commands')),
       commandsVisible: panels.every(el => {
         const cmd = el.querySelector('[data-iw-skill-zone="commands"]');
         return cmd && getComputedStyle(cmd).display !== 'none' && cmd.getBoundingClientRect().width > 0;
@@ -938,7 +1087,18 @@ const auditResponsive = async width => {
         activityWrapperRect.left < -1 || activityWrapperRect.right > viewportWidth + 1,
       activityFramesPainted: activityPanels.every(el => getComputedStyle(el).backgroundImage.includes('skills_panel_texture.webp')),
       activityMaxPaddingTop: Math.max(...activityPanels.map(el => parseFloat(getComputedStyle(el).paddingTop))),
-      activityFeedsInset: activityFeeds.length === 2 && activityFeeds.every(el => getComputedStyle(el).backgroundColor !== 'rgba(0, 0, 0, 0)'),
+      // Action Log's feed is deliberately transparent now (ui-system.css,
+      // Curtis 2026-09: the frame's own per-zone ground shows through instead
+      // of a second, duller copy of it painted on the feed box) — only World
+      // Chat still wants its own solid #0B0C0A fill. This check used to
+      // require BOTH to be solid; keep it a real check (not just "some
+      // background exists") by asserting each feed's OWN expected treatment
+      // rather than one rule for both.
+      activityFeedsInset: activityFeeds.length === 2 && activityFeeds.every(el => {
+        const bg = getComputedStyle(el).backgroundColor;
+        const panel = el.closest('[data-iw-panel]')?.dataset.iwPanel;
+        return panel === 'action-log' ? bg === 'rgba(0, 0, 0, 0)' : bg !== 'rgba(0, 0, 0, 0)';
+      }),
       activityRowsCompact: activityRows.length === 6 && activityRows.every(el => el.getBoundingClientRect().height <= 96),
       activityProgressHeight: activityProgress?.getBoundingClientRect().height || 0,
       composerGrid: composer ? getComputedStyle(composer).display === 'grid' : false,
@@ -952,36 +1112,33 @@ const auditResponsive = async width => {
   if (!audit.badgeVisible || !audit.badgeUsesGearAtlas || !audit.badgeOverhangs || !audit.badgeHostOverflowVisible) {
     throw new Error(`enhancement badge is clipped or not atlas-backed at ${width}px: ${JSON.stringify(audit)}`);
   }
-  if (width <= 700 && (!audit.setVisible || !audit.detailsVisible || !audit.requirementsVisible)) {
+  if (width <= 768 && (!audit.setVisible || !audit.detailsVisible || !audit.requirementsVisible)) {
     throw new Error(`mobile Inventory loses actions/details at ${width}px`);
   }
   if (width <= 430 && (audit.longNameLines < 1.5 || audit.longNameLines > 2.2)) {
     throw new Error(`long Inventory name must wrap to two lines at ${width}px, got ${audit.longNameLines.toFixed(2)}`);
   }
-  if (width > 430 && width <= 700 && (audit.longNameLines < 0.9 || audit.longNameLines > 2.2)) {
+  if (width > 430 && width <= 768 && (audit.longNameLines < 0.9 || audit.longNameLines > 2.2)) {
     throw new Error(`long Inventory name exceeded its two-line cap at ${width}px: ${audit.longNameLines.toFixed(2)}`);
   }
   if (!audit.skillCount || audit.skillOverflow) throw new Error(`skill panels overflow at ${width}px: ${JSON.stringify(audit.skillOverflowDetails)}`);
   if (!audit.medallionsVisible || !audit.medallionsPainted || !audit.identityLevelsVisible) {
     throw new Error(`skill identity card is incomplete at ${width}px: ${JSON.stringify(audit)}`);
   }
-  if (!audit.actionButtonsSized || (width <= 600 ? !audit.navBesideAction : !audit.navAboveAction)) {
+  if (!audit.actionButtonsSized || !audit.navFlanksAction) {
     throw new Error(`skill command rail is malformed at ${width}px: ${JSON.stringify(audit)}`);
   }
   if (!audit.bareActionCentred) {
     throw new Error(`nav-less skill panels do not centre their action button at ${width}px`);
   }
-  // xp_plaque art is 300x100. A box far off 3.00 stretches the sprite and
-  // crowds the label against the frame, which is what "Base: N" looked like.
-  const badRatio = audit.plaqueRatios.filter(r => r < 2.7 || r > 3.35);
-  if (badRatio.length) {
-    throw new Error(`Base: plaque distorts its 3:1 artwork at ${width}px: ratios ${JSON.stringify(audit.plaqueRatios)}`);
-  }
+  // The Base readout no longer carries the xp_plaque sprite (dropped for
+  // being too ornate — Curtis, 2026-09), so there is no fixed artwork ratio
+  // to hold any more. It is now an auto-sized text chip; `basePlaquesFit`
+  // below still guards that the value is never clipped.
   if (!audit.navButtonsAccessible) throw new Error(`skill tab arrows lose their touch targets at ${width}px`);
   if (!audit.navButtonsPainted) {
-    throw new Error(`recipe pager lost its artwork, or regained an outline/overlaid glyph at ${width}px: ${JSON.stringify(audit.navChevronDebug)}`);
+    throw new Error(`recipe pager lost its plate or chevron, or regained the native glyph at ${width}px: ${JSON.stringify(audit.navChevronDebug)}`);
   }
-  if (!audit.navArtInset) throw new Error(`recipe pager artwork is not inset in its touch target at ${width}px`);
   if (audit.header) {
     const h = audit.header;
     if (!h.cornersPainted) throw new Error(`header corner ornaments are missing at ${width}px`);
@@ -991,27 +1148,25 @@ const auditResponsive = async width => {
   if (!audit.basePlaquesFit || !audit.sixDigitBaseFits) {
     throw new Error(`Base: plaque cannot contain six digits at ${width}px: ${JSON.stringify(audit)}`);
   }
-  // Re-baselined with the alignment pass. The Base plaque now matches its 3:1
-  // artwork (it was squashed to 40px, which is what made the label unreadable),
-  // so the card is legitimately taller than the old 140/220 pins allowed. That
-  // growth was paid for in the same pass: the hidden xp-gain/reward/progress
-  // rows used to reserve ~35px of invisible space per card because an atlas
-  // `min-height` beat their `height: 1px`. Observed maxima are 187 desktop and
-  // 250 at 320px; these ceilings keep modest headroom over that.
-  // Below 601px the rail becomes a full-width row and the content-branch pager
-  // stays in flow, so those panels carry one extra 44px control row. The hit
-  // area is deliberately NOT shrunk to buy the space back — 44px is the touch
-  // target floor this suite already enforces.
-  const maxSkillHeight = width <= 600 ? 310 : 200;
+  // Per Curtis (2026-09) the command rail is ALWAYS its own full-width row
+  // beneath identity + content, at every width — see the "Command rail" block
+  // at the end of skillpanel.css. Every card therefore carries one extra
+  // ~56px control row that the old desktop three-column layout did not, so
+  // the desktop ceiling is raised to suit. The 44px touch target inside that
+  // row is NOT shrunk to buy space back — it is the floor this suite enforces.
+  const maxSkillHeight = width <= 640 ? 320 : 260;
   if (audit.maxSkillHeight > maxSkillHeight) {
     throw new Error(`skill cards are too tall at ${width}px: ${audit.maxSkillHeight}px (max ${maxSkillHeight}px)`);
   }
-  if (audit.mobileControlRail !== (width <= 600)) throw new Error(`skill breakpoint mismatch at ${width}px`);
+  if (!audit.commandRailOwnRow) throw new Error(`skill command band does not own its grid row at ${width}px`);
+  if (width > 384 && !audit.identityReachesBase) {
+    throw new Error(`skill identity rail does not reach the card base at ${width}px`);
+  }
   if (!audit.commandsVisible) throw new Error(`skill commands hidden at ${width}px`);
   if (audit.activityCount !== 3 || audit.activityOverflow || audit.activityViewportOverflow || !audit.activityFramesPainted) {
     throw new Error(`activity frames are incomplete or overflow at ${width}px: ${JSON.stringify(audit)}`);
   }
-  const maxActivityPadding = width <= 600 ? 16 : 18;
+  const maxActivityPadding = width <= 640 ? 16 : 18;
   if (audit.activityMaxPaddingTop > maxActivityPadding) {
     throw new Error(`activity frame padding is not compact at ${width}px: ${audit.activityMaxPaddingTop}px`);
   }
@@ -1031,7 +1186,7 @@ await p.screenshot({ path: resolve(OUT, 'mobile-responsive.png'), fullPage: true
 await p.locator('.fx-skill-grid').screenshot({ path: resolve(OUT, 'skills-mobile.png') });
 await p.locator('.fx-activity-panels').screenshot({ path: resolve(OUT, 'activity-panels-mobile.png') });
 
-await p.setViewportSize({ width: 1240, height: 1000 });
+await p.setViewportSize({ width: 1400, height: 1000 });
 
 /* ── Automated checks ───────────────────────────────────────────────────── */
 
@@ -1110,9 +1265,87 @@ for (const slot of report.iconSlots) {
   await writeFile(resolve(OUT, `icon-${pixelResults.length}.png`), png);
 }
 
+/* ── Per-zone accent themes ────────────────────────────────────────────────
+   base.css defines --iw-th-* per :root[data-iw-zone-theme]; HeaderRenderer
+   sets that attribute on <html> live. Cycle the nine palettes on this same
+   fixture page, prove each one actually re-points the tokens (not a silent
+   fall-through to the default), that accent-coloured text stays ≥3:1 on the
+   themed panel ground, and capture a montage. */
+const themeReport = await p.evaluate((themes) => {
+  const html = document.documentElement;
+  const probe = document.createElement('span');
+  probe.style.color = 'var(--iw-gold)';
+  probe.textContent = 'accent';
+  (document.querySelector('[data-iw-ui="section-frame"]') || document.body).appendChild(probe);
+
+  const lum = c => {
+    const [r, g, b] = c.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => {
+      v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => {
+    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+    return (x + 0.05) / (y + 0.05);
+  };
+
+  // All nine --iw-th-ground-a values sit in a tight #12–17 band; a fixed dark
+  // reference is enough for a ≥3:1 floor on accent text. getComputedStyle turns
+  // the token into rgb() for us via the probe's own resolved color.
+  const GROUND = 'rgb(20, 19, 16)';
+  const rows = [];
+  const seen = new Set();
+  for (const t of ['', ...themes]) {
+    if (t) html.setAttribute('data-iw-zone-theme', t); else html.removeAttribute('data-iw-zone-theme');
+    const cs = getComputedStyle(html);
+    const accent = cs.getPropertyValue('--iw-th-accent').trim();
+    const accentRGB = getComputedStyle(probe).color;
+    rows.push({
+      theme: t || 'default',
+      accent,
+      edge: cs.getPropertyValue('--iw-th-edge').trim(),
+      cta: cs.getPropertyValue('--iw-th-cta').trim(),
+      distinct: !seen.has(accent),
+      accentOnGround: Number(ratio(accentRGB, GROUND).toFixed(2)),
+    });
+    seen.add(accent);
+  }
+  html.removeAttribute('data-iw-zone-theme');
+  probe.remove();
+  return rows;
+}, THEME_NAMES);
+
+// Montage: one card screenshot per theme, stitched.
+const themeShots = [];
+for (const t of ['', ...THEME_NAMES]) {
+  await p.evaluate(name => {
+    if (name) document.documentElement.setAttribute('data-iw-zone-theme', name);
+    else document.documentElement.removeAttribute('data-iw-zone-theme');
+  }, t);
+  const card = p.locator('[data-iw-ui="section-frame"]').first();
+  themeShots.push({ t: t || 'default', png: await card.screenshot() });
+}
+await p.evaluate(() => document.documentElement.removeAttribute('data-iw-zone-theme'));
+{
+  const cells = themeShots.map(s =>
+    `<figure style="margin:0"><figcaption style="font:11px/1.6 monospace;color:#aaa;padding:2px 4px">${s.t}</figcaption>` +
+    `<img src="data:image/png;base64,${s.png.toString('base64')}" style="display:block;width:100%"></figure>`).join('');
+  const mp = await browser.newPage();
+  await mp.setContent(`<body style="margin:0;background:#000;display:grid;grid-template-columns:repeat(2,1fr);gap:3px">${cells}</body>`);
+  await mp.screenshot({ path: resolve(OUT, 'themes.png'), fullPage: true });
+  await mp.close();
+}
+
 await browser.close();
 
+const themeFail = themeReport.filter(r => r.theme !== 'default' && (!r.distinct || r.accentOnGround < 3));
+
 console.log('\n── Fixture report ──────────────────────────────────');
+console.log('per-zone accent themes (accent · edge · cta · accent-on-ground contrast):');
+for (const r of themeReport) {
+  const flag = r.theme === 'default' ? ' ' : !r.distinct ? '✗ not re-pointed' : r.accentOnGround < 3 ? '✗ low contrast' : '✓';
+  console.log(`  ${flag.padEnd(16)} ${r.theme.padEnd(16)} ${r.accent}  ${r.edge}  ${r.cta}  ${r.accentOnGround}`);
+}
 console.log('unresolved custom properties:', report.unresolvedVars.length ? report.unresolvedVars : 'none');
 console.log('icon slots with a background-image:', report.iconsPainted, '| without:', report.iconsBlank);
 console.log('fonts:');
@@ -1128,5 +1361,9 @@ if (consoleIssues.length) {
 } else {
   console.log('page issues: none');
 }
-console.log(`\nWrote ${resolve(OUT, 'full.png')}, ${resolve(OUT, 'skills-panel.png')} and ${pixelResults.length} icon crops`);
+console.log(`\nWrote ${resolve(OUT, 'full.png')}, ${resolve(OUT, 'skills-panel.png')}, ${resolve(OUT, 'themes.png')} and ${pixelResults.length} icon crops`);
 if (consoleIssues.length) throw new Error(`fixture page reported ${consoleIssues.length} resource or console issue(s)`);
+if (themeFail.length) {
+  throw new Error('per-zone theme(s) failed: ' +
+    themeFail.map(r => `${r.theme} (${!r.distinct ? 'not re-pointed' : `accent ${r.accentOnGround}:1`})`).join(', '));
+}

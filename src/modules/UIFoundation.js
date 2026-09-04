@@ -9,6 +9,7 @@
 import { on } from './DOMWatcher.js';
 import { inject } from './StyleInjector.js';
 import { guard, raf } from './Runtime.js';
+import { getLayoutEpoch, pickRendered, preferRendered } from './Viewport.js';
 import css from '../styles/ui-system.css';
 
 const NAV_LABELS = ['game', 'market', 'leaderboards', 'village', 'dungeon'];
@@ -48,6 +49,21 @@ function nearestButtonLabel(btn) {
  */
 function buttonLabelText(btn) {
   return nearestButtonLabel(btn).replace(/^[^a-z0-9]+/i, '').trim();
+}
+
+/**
+ * A nav tab's label with a leading OR trailing icon/badge run removed. The
+ * nav tab set is matched by exact label, so a single decorated tab
+ * ("Dungeon 🔒", "⚔️ Dungeon") drops out of the set while its siblings match:
+ * it keeps its vanilla surfacing inside a rail the skin has reframed, which
+ * reads as "the rim skips that one button". Same family as the zone bar's
+ * leading-glyph trap (CLAUDE.md).
+ */
+function navLabelText(btn) {
+  return nearestButtonLabel(btn)
+    .replace(/^[^a-z0-9]+/i, '')
+    .replace(/[^a-z0-9]+$/i, '')
+    .trim();
 }
 
 function commonAncestor(elements) {
@@ -110,23 +126,51 @@ function deriveTabActive(btn) {
 // Cache the former, always recompute the latter.
 let mainNavResolution = null;
 
+// Distinct nav labels present under `root`. Counting LABELS, not elements,
+// matters: a duplicate control for the same label would otherwise never equal
+// the deduped tab list and the cache would re-resolve (a whole-document scan)
+// on every single flush.
+function countNavTabsIn(root) {
+  if (!root) return 0;
+  const seen = new Set();
+  for (const btn of root.querySelectorAll('button, a, [role="tab"]')) {
+    const label = navLabelText(btn);
+    if (NAV_LABELS.includes(label)) seen.add(label);
+  }
+  return seen.size;
+}
+
 function mainNavResolutionValid(entry) {
-  return entry.track.isConnected && entry.track.dataset.iwUi === 'main-nav' &&
+  return entry.epoch === getLayoutEpoch() &&
+    entry.track.isConnected && entry.track.dataset.iwUi === 'main-nav' &&
     entry.tabs.every(btn => btn.isConnected && btn.dataset.iwUi === 'nav-tab') &&
     (entry.shell === entry.track ||
-      (entry.shell.isConnected && entry.shell.dataset.iwUi === 'main-nav-shell'));
+      (entry.shell.isConnected && entry.shell.dataset.iwUi === 'main-nav-shell')) &&
+    // A rail that GAINS a tab after the first classification (Dungeon unlocks,
+    // or the route mounts it late) used to stay cached forever: every check
+    // above passes while the new sibling never gets `nav-tab` and renders
+    // vanilla inside a skinned rail. Re-count the rail's own labelled controls
+    // -- bounded to the rail, not the document -- and re-resolve on a change.
+    countNavTabsIn(entry.track) === entry.tabs.length;
 }
 
 function resolveMainNav() {
   const buttons = [...document.querySelectorAll('button, a, [role="tab"]')];
+  // Collect every candidate per label rather than the first in document
+  // order: like the header, the main nav may be duplicated below Tailwind's
+  // `xl` breakpoint (HeaderRenderer.findLiveHeader/pickVisible already
+  // defend the header itself against exactly this), and "first in document
+  // order" would pin the wide-layout copy even once it is the hidden one.
   const byLabel = new Map();
   for (const btn of buttons) {
-    const label = nearestButtonLabel(btn);
-    if (NAV_LABELS.includes(label) && !byLabel.has(label)) byLabel.set(label, btn);
+    const label = navLabelText(btn);
+    if (!NAV_LABELS.includes(label)) continue;
+    if (!byLabel.has(label)) byLabel.set(label, []);
+    byLabel.get(label).push(btn);
   }
   if (byLabel.size < 4) return null;
 
-  const tabs = NAV_LABELS.map(label => byLabel.get(label)).filter(Boolean);
+  const tabs = NAV_LABELS.map(label => byLabel.has(label) ? pickRendered(byLabel.get(label)) : null).filter(Boolean);
   const track = commonAncestor(tabs);
   if (!track) return null;
   setRole(track, 'main-nav');
@@ -148,7 +192,7 @@ function resolveMainNav() {
   }
   if (shell !== track) setRole(shell, 'main-nav-shell');
 
-  return { tabs, track, shell };
+  return { tabs, track, shell, epoch: getLayoutEpoch() };
 }
 
 function applyMainNavState(tabs) {
@@ -156,7 +200,7 @@ function applyMainNavState(tabs) {
   const hasSemanticActive = semanticActive.some(Boolean);
   const route = `${location.pathname || ''} ${location.hash || ''}`.toLowerCase();
   const routeActive = tabs.map(btn => {
-    const label = nearestButtonLabel(btn);
+    const label = navLabelText(btn);
     if (label === 'game') return /(?:^|\/)(?:game)?\/?$/.test(location.pathname || '/') && !location.hash;
     return route.includes(label);
   });
@@ -167,7 +211,7 @@ function applyMainNavState(tabs) {
   tabs.forEach((btn, index) => {
     const wasActive = btn.dataset.iwState === 'active';
     setRole(btn, 'nav-tab');
-    btn.dataset.iwTab = nearestButtonLabel(btn);
+    btn.dataset.iwTab = navLabelText(btn);
     const active = hasSemanticActive
       ? semanticActive[index]
       : hasRouteActive
@@ -203,8 +247,38 @@ function zoneBarResolutionValid(entry) {
     entry.buttons.every(btn => btn.isConnected && btn.dataset.iwUi === 'zone-action');
 }
 
+/**
+ * Is there a zone bar in the document at all?
+ *
+ * The full resolve below sweeps `div,span,p,strong` — CLAUDE.md's own named
+ * ~65%-of-flush cost — so an empty resolution must NOT simply rescan every
+ * tick. This is the cheap gate: the same two controls the host walk keys on
+ * (`Zones` + `Next Zone`), matched with the same regexes, over `button` only.
+ */
+function zoneBarCandidatePresent() {
+  let zones = false;
+  let next = false;
+  for (const btn of document.querySelectorAll('button')) {
+    const text = nearestButtonLabel(btn);
+    if (/zones/.test(text)) zones = true;
+    if (/next\s+zone/.test(text)) next = true;
+    if (zones && next) return true;
+  }
+  return false;
+}
+
 function classifyZoneBar() {
-  if (zoneBarResolutions && zoneBarResolutions.every(zoneBarResolutionValid)) return;
+  // `[].every(valid)` is vacuously TRUE, so once this resolved to nothing — on
+  // any route without a zone bar, i.e. Market and Leaderboards — the cached
+  // early return fired forever and the bar was never re-classified on the way
+  // back to Game. That also silently strands HeaderRenderer.applyZoneSurface,
+  // which reads the zone number off `data-iw-ui="zone-title"` to pick the
+  // per-zone header artwork. An empty resolution is only trustworthy while the
+  // cheap probe agrees there is nothing to find.
+  if (zoneBarResolutions
+      && (zoneBarResolutions.length
+        ? zoneBarResolutions.every(zoneBarResolutionValid)
+        : !zoneBarCandidatePresent())) return;
 
   zoneBarResolutions = [];
   // The live label reads "🧭 Zone 19: Eternium Verge", so an anchored
@@ -258,11 +332,19 @@ function classifyZoneBar() {
 // read per ancestor level), and once a heading is paired with its frame that
 // pairing does not change tick to tick.
 let sectionFrameResolutions = null;
+// Headings the last resolve pass EXAMINED (not merely the ones it framed).
+let sectionFrameSeen = new Set();
 
-const SECTION_FRAME_NAMES = /^(inventory|market|leaderboards|quests|world bosses|village|salvaging|skill actions)$/i;
+const SECTION_FRAME_NAMES = /^(inventory|market|leaderboards|quests|world bosses|village|salvaging|skill actions|zone selector)$/i;
 
 function sectionFrameResolutionValid(entry) {
-  return entry.heading.isConnected && entry.frame.isConnected &&
+  // The epoch check is belt-and-suspenders here: sectionFrameHeadings() is
+  // itself viewport-aware (preferRendered, re-run fresh every classify call),
+  // so the coverage check below already catches a resize because the live
+  // heading set changes identity. Checking the epoch too means correctness
+  // does not quietly depend on that coverage shape staying node-keyed.
+  return entry.epoch === getLayoutEpoch() &&
+    entry.heading.isConnected && entry.frame.isConnected &&
     entry.frame.dataset.iwUi === 'section-frame' &&
     entry.heading.dataset.iwUi === 'section-title' &&
     entry.frame.contains(entry.heading) &&
@@ -273,8 +355,32 @@ function sectionFrameResolutionValid(entry) {
     (entry.frame.classList.contains('panel') || !entry.frame.querySelector('.panel'));
 }
 
+function sectionFrameHeadings() {
+  // The game ships this heading twice below Tailwind's `xl` breakpoint (the
+  // "hidden duplicate" trap in CLAUDE.md swaps which copy is live at 1280px)
+  // — `preferRendered` picks whichever copy is actually painting rather than
+  // assuming the wide-layout copy is always the mirror. Below 1280px it is
+  // NOT: see Viewport.js.
+  const matches = [...document.querySelectorAll('h1,h2,h3,h4')].filter(heading =>
+    SECTION_FRAME_NAMES.test(normText(heading.textContent)));
+  return preferRendered(matches);
+}
+
 function classifySectionFrames() {
-  if (sectionFrameResolutions && sectionFrameResolutions.every(sectionFrameResolutionValid)) return;
+  // Coverage as well as validity, for the same vacuous-`[].every()` reason as
+  // classifyMarket. This one is not route-shaped (every real route has at
+  // least one framed panel) but it IS race-shaped: a flush that lands after
+  // the route mounts and before its heading renders resolves to an empty
+  // array, which then validates forever and the panel is never framed at all.
+  //
+  // Coverage is tracked against the headings this pass EXAMINED, not the ones
+  // it managed to frame. Keying on resolved entries instead would make a
+  // heading the walk can never pair with a frame re-trigger the whole resolve
+  // -- the wildcard descendant count below -- on every single flush.
+  const headings = sectionFrameHeadings();
+  if (sectionFrameResolutions
+      && sectionFrameResolutions.every(sectionFrameResolutionValid)
+      && headings.every(heading => sectionFrameSeen.has(heading))) return;
 
   // Drop marks from the previous (possibly stale) resolution — the :has()
   // column rule only *hides* a mis-picked column, it does not un-mark it.
@@ -286,13 +392,8 @@ function classifySectionFrames() {
   }
 
   sectionFrameResolutions = [];
-  const headings = [...document.querySelectorAll('h1,h2,h3,h4')];
+  sectionFrameSeen = new Set(headings);
   for (const heading of headings) {
-    if (!SECTION_FRAME_NAMES.test(normText(heading.textContent))) continue;
-    // The xl:hidden mirror column carries a duplicate of every heading; never
-    // frame that copy (see the hidden-duplicate trap in CLAUDE.md).
-    if (heading.closest('[class~="xl:hidden"]')) continue;
-
     const ownPanel = heading.closest('.panel');
     let cur = heading.parentElement;
     let picked = null;
@@ -316,8 +417,181 @@ function classifySectionFrames() {
     if (picked) {
       setRole(picked, 'section-frame');
       setRole(heading, 'section-title');
-      sectionFrameResolutions.push({ heading, frame: picked });
+      sectionFrameResolutions.push({ heading, frame: picked, epoch: getLayoutEpoch() });
     }
+  }
+}
+
+/**
+ * World Boss cards.
+ *
+ * The boss list is a stack of the game's shared `.compact-panel` cards. Nothing
+ * else claims them - they expose no skill verb (DOMWatcher.detectSkillType
+ * returns 'unknown') and no Reward:/Turn In pair (QuestPanelRenderer rejects
+ * them) - so they kept the game's flat plate inside our forged frame. Tagging
+ * is scoped to the "World Bosses" panel, never `.compact-panel` at large, which
+ * quests, skills, village and shop all share.
+ *
+ * The role lives in its OWN attribute rather than `data-iw-ui`, the same way
+ * QuestPanelRenderer namespaces `data-iw-quest-role`: SkillPanelRenderer sees
+ * these cards on `iw:skill-panel`, reports 'unknown', and its clear path used
+ * to strip `data-iw-ui` off them on every flush - the card visibly flashed
+ * between the skinned and vanilla ground while the two writers fought over the
+ * one attribute.
+ *
+ * Resolution is cached like every other classifier here; only the card sweep
+ * (a small same-panel query) re-runs per tick, so a boss card that mounts late
+ * is still tagged.
+ */
+let bossPanelResolutions = null;
+let bossPanelSeen = new Set();
+
+function bossPanelResolutionValid(entry) {
+  return entry.epoch === getLayoutEpoch() &&
+    entry.heading.isConnected && entry.root.isConnected && entry.root.contains(entry.heading);
+}
+
+/** The panel that owns the boss list. The game's own `.panel` wrapper is
+ *  preferred - it also holds the Zone Control card below the boss stack - with
+ *  the resolved section frame as the fallback for variants without one. */
+function bossPanelRoot(heading) {
+  const panel = heading.closest('.panel');
+  if (panel) return panel;
+  const entry = (sectionFrameResolutions || []).find(e => e.heading === heading);
+  return entry ? entry.frame : null;
+}
+
+function tagBossCards(entry) {
+  for (const card of entry.root.querySelectorAll('.compact-panel')) {
+    // Tag the leaf card only, the same rule the panel frames follow.
+    if (card.querySelector('.compact-panel')) continue;
+    if (card.dataset.iwBoss !== 'card') card.dataset.iwBoss = 'card';
+  }
+}
+
+function untagBossCards(entry) {
+  for (const card of entry.root.querySelectorAll('[data-iw-boss]')) delete card.dataset.iwBoss;
+}
+
+function bossHeadings() {
+  // Same duplicate-column reasoning as sectionFrameHeadings() above.
+  const matches = [...document.querySelectorAll('h1,h2,h3,h4')].filter(heading =>
+    /^world bosses$/i.test(normText(heading.textContent)));
+  return preferRendered(matches);
+}
+
+function classifyBossCards() {
+  // Same vacuous-`[].every()` freeze as classifyMarket: World Bosses is a
+  // Game-route panel, so any visit to Market/Leaderboards resolves this to an
+  // empty array and the boss cards were never re-tagged on the way back.
+  const headings = bossHeadings();
+  if (bossPanelResolutions
+      && bossPanelResolutions.every(bossPanelResolutionValid)
+      && headings.every(heading => bossPanelSeen.has(heading))) {
+    bossPanelResolutions.forEach(tagBossCards);
+    return;
+  }
+  // Same reason classifySectionFrames/classifyActivityPanels drop their old
+  // marks: a resize that moves World Bosses to the other layout column would
+  // otherwise leave `data-iw-boss="card"` stuck on the now-hidden column's
+  // cards forever, since only isConnected is checked and a display:none
+  // ancestor stays connected.
+  if (bossPanelResolutions) bossPanelResolutions.forEach(untagBossCards);
+  bossPanelResolutions = [];
+  bossPanelSeen = new Set(headings);
+  for (const heading of headings) {
+    const root = bossPanelRoot(heading);
+    if (!root || bossPanelResolutions.some(e => e.root === root)) continue;
+    const entry = { heading, root, epoch: getLayoutEpoch() };
+    bossPanelResolutions.push(entry);
+    tagBossCards(entry);
+  }
+}
+
+/**
+ * Market.
+ *
+ * The Market page is a single `.panel` that classifySectionFrames already
+ * frames. Inside it the game stacks its shared `.compact-row` cards — buy
+ * listings, the player's own listings, empty slots — as individually rounded
+ * Tailwind plates that float against the forged frame instead of matching it.
+ * `.compact-row` is also worn by inventory rows and Action Log / World Chat
+ * feed rows, so this is scoped to its own `data-iw-market` namespace rather
+ * than styled through the shared class (the same reason World Boss cards got
+ * `data-iw-boss`).
+ *
+ * Which frame is the Market is cached; the leaf-card sweep re-runs per tick so
+ * a listing that mounts late is still tagged. Depends on classifySectionFrames
+ * having run first this flush to set `section-title` — it is called before this
+ * in queueClassify.
+ */
+let marketResolutions = null;
+let marketSeen = new Set();
+
+function marketResolutionValid(entry) {
+  return entry.frame.isConnected && entry.frame.dataset.iwMarket === 'root' &&
+    entry.title.isConnected && /^market$/i.test(normText(entry.title.textContent));
+}
+
+function tagMarketCards(entry) {
+  for (const row of entry.frame.querySelectorAll('.compact-row')) {
+    // Leaf cards only, and never an inventory row or a feed message row that
+    // wears the same class.
+    if (row.querySelector('.compact-row')) continue;
+    if (row.querySelector(':scope > .fs-inv-row')) continue;
+    if (row.closest('[data-iw-panel-part="feed"]')) continue;
+    if (row.dataset.iwMarket !== 'row') row.dataset.iwMarket = 'row';
+    // The row's name/detail area is a bare full-width text <button> (the item
+    // click target), which the shared control rule otherwise plates as a
+    // forged control -- the lighter rectangle inside each card. Tag it so it
+    // opts out of that rule (:not([data-iw-market])) and renders flat.
+    const nameBtn = row.querySelector('button.text-left, button[class*="flex-1"]');
+    if (nameBtn && nameBtn.dataset.iwMarket !== 'namebtn') nameBtn.dataset.iwMarket = 'namebtn';
+  }
+}
+
+function untagMarket(entry) {
+  if (entry.frame.dataset.iwMarket === 'root') delete entry.frame.dataset.iwMarket;
+  for (const el of entry.frame.querySelectorAll('[data-iw-market]')) delete el.dataset.iwMarket;
+}
+
+function marketTitles() {
+  return [...document.querySelectorAll('[data-iw-ui="section-title"]')]
+    .filter(title => /^market$/i.test(normText(title.textContent)));
+}
+
+function classifyMarket() {
+  // Coverage, not just validity. `[].every(valid)` is vacuously TRUE, so the
+  // bare validity guard froze this classifier the first time it ran on a route
+  // with no Market (i.e. every boot on the Game tab): the empty resolution
+  // stayed "valid" forever and navigating to /market never tagged a thing.
+  // classifySectionFrames still re-resolved -- its entries go DISCONNECTED on a
+  // route swap, which is invalidation the empty case never gets -- so the panel
+  // kept its forged frame while the rows inside reverted, which reads as "the
+  // CSS was forgotten" rather than "a classifier stopped running". Require that
+  // every Market title currently in the DOM is represented, the same shape
+  // classifyActivityPanels uses. See tests/route-swap-reclassify.test.mjs.
+  const titles = marketTitles();
+  if (marketResolutions
+      && marketResolutions.every(marketResolutionValid)
+      && titles.every(title => marketSeen.has(title))) {
+    marketResolutions.forEach(tagMarketCards);
+    return;
+  }
+  // Same reason classifySectionFrames/classifyBossCards drop their old marks
+  // before a fresh resolve: a resize while on the Market route can move the
+  // panel to the other layout column, and only isConnected is checked above,
+  // which a display:none ancestor still satisfies.
+  if (marketResolutions) marketResolutions.forEach(untagMarket);
+  marketResolutions = [];
+  marketSeen = new Set(titles);
+  for (const title of titles) {
+    const frame = title.closest('[data-iw-ui="section-frame"]');
+    if (!frame || marketResolutions.some(e => e.frame === frame)) continue;
+    if (frame.dataset.iwMarket !== 'root') frame.dataset.iwMarket = 'root';
+    const entry = { frame, title };
+    marketResolutions.push(entry);
+    tagMarketCards(entry);
   }
 }
 
@@ -364,9 +638,12 @@ function findActivityPanelHost(heading, panel) {
   // feed: Action Log glues "…XP/hr" onto "System…" (kills the rate regex) and
   // renders "View All" as a <span>, not a <button>. Every activity panel is the
   // game's own `.panel` primitive, and `heading` is already a positively
-  // matched panel label, so that ancestor is a safe fallback host.
+  // matched panel label, so that ancestor is a safe fallback host. `heading`
+  // itself was already picked from the rendered copy by
+  // activityPanelLabelNodes() (see Viewport.js), so its own `.panel` ancestor
+  // needs no separate duplicate-column check here.
   const panelEl = heading.closest?.('.panel');
-  if (panelEl && panelEl.contains(heading) && !panelEl.closest('[class~="xl:hidden"]')) return panelEl;
+  if (panelEl && panelEl.contains(heading)) return panelEl;
   return null;
 }
 
@@ -457,7 +734,15 @@ function classifyWorldChat(host) {
 let activityPanelResolutions = null;
 
 function activityPanelResolutionValid(entry) {
-  return entry.heading.isConnected && entry.host.isConnected &&
+  // Unlike sectionFrame/bossPanel above, this classifier's OWN coverage check
+  // (classifyActivityPanels below) is keyed by PANEL SLUG, not by label node
+  // identity — "is there still some resolution for 'current-action'" stays
+  // true even when the live label has moved to the other layout column. So
+  // the epoch check here is load-bearing, not defense-in-depth: without it a
+  // resize would leave every activity panel permanently bound to whichever
+  // column was live at first resolve.
+  return entry.epoch === getLayoutEpoch() &&
+    entry.heading.isConnected && entry.host.isConnected &&
     entry.host.dataset.iwUi === 'section-frame' &&
     entry.host.dataset.iwPanel === entry.panel &&
     entry.host.contains(entry.heading);
@@ -480,16 +765,19 @@ function runActivityPanel(entry) {
  *      bare direct text node alongside sibling controls — Action Log's title
  *      is a bare text node inside a `<button>` that also wraps a nested
  *      "view all" span, with the XP/hr readout as a sibling.
- * The xl:hidden mirror copy is excluded throughout.
+ * The game ships each of these labels twice below Tailwind's `xl` breakpoint
+ * (see CLAUDE.md's hidden-duplicate trap and Viewport.js); collectAndFilter()
+ * below keeps only the copy that is actually rendering, per label slug, so
+ * this works whichever column is currently live rather than assuming it is
+ * always the wide one.
  */
 function activityPanelLabelNodes() {
   const seen = new Set();
-  const out = [];
+  const collected = [];
   const push = (el, panel) => {
     if (!el || !panel || seen.has(el)) return;
-    if (el.closest('[class~="xl:hidden"]')) return;
     seen.add(el);
-    out.push({ node: el, panel });
+    collected.push({ node: el, panel });
   };
 
   for (const el of document.querySelectorAll('h1,h2,h3,h4,[role="heading"]')) {
@@ -499,7 +787,37 @@ function activityPanelLabelNodes() {
     if (el.childElementCount === 0) push(el, ACTIVITY_PANELS.get(normText(el.textContent).toLowerCase()));
   }
 
-  const have = new Set(out.map(o => o.panel));
+  // Tier 4, and the only one that does not read the label's TEXT.
+  //
+  // Reading the live app bundle (2026-09) turned up exactly one stable hook on
+  // this whole surface: the game renders Current Action as
+  // `<div id="current-action-panel" className="panel …">`. Everything else in
+  // IdleWorlds is anonymous Tailwind utilities, which is why every classifier
+  // in this file is a text heuristic and why a relabel keeps costing a whole
+  // surface — "🧭 Zone 19", "🌐 Zones" and "⚔️ Combat Lv" have each done it.
+  //
+  // So when the text passes above have NOT found Current Action, fall back to
+  // the id and take that panel's own first short leaf as the label node. This
+  // is deliberately last: when the label still reads "Current Action" nothing
+  // here runs, so the ordinary path is untouched. `getElementById` is O(1) but
+  // returns only the FIRST match in document order, which is exactly wrong if
+  // the id is duplicated across the two layout columns the way every other
+  // hook on this surface is (CLAUDE.md's hidden-duplicate trap) — it would
+  // pin the wide copy's id forever, even below 1280px. This only runs on the
+  // miss path, so the extra `querySelectorAll` here does not touch the flush
+  // budget.
+  const haveBeforeId = new Set(collected.map(o => o.panel));
+  if (!haveBeforeId.has('current-action')) {
+    const byId = pickRendered([...document.querySelectorAll('[id="current-action-panel"]')]);
+    if (byId) {
+      const label = [...byId.querySelectorAll('h1,h2,h3,h4,[role="heading"],p,span,div,strong,b')]
+        .find(el => el.childElementCount === 0 && normText(el.textContent).length > 0 &&
+          normText(el.textContent).length <= 40);
+      push(label || byId, 'current-action');
+    }
+  }
+
+  const have = new Set(collected.map(o => o.panel));
   if (have.size < ACTIVITY_PANELS.size) {
     for (const el of document.querySelectorAll('div,header,section,h2,h3,h4,span,p,button,a')) {
       if (seen.has(el)) continue;
@@ -509,6 +827,24 @@ function activityPanelLabelNodes() {
         if (panel && !have.has(panel)) { push(el, panel); break; }
       }
     }
+  }
+
+  // Below 1280px each slug can carry up to two candidates — one per layout
+  // column (see the file comment above). Keep only the one actually
+  // rendering, per slug, with the same tie-break every other classifier here
+  // uses (Viewport.preferRendered): filter to rendered when some ARE
+  // rendered, otherwise keep them all so a layout-less test DOM still
+  // resolves. classifyActivityPanels()'s own host-dedup below is unaffected
+  // either way.
+  const byPanel = new Map();
+  for (const entry of collected) {
+    if (!byPanel.has(entry.panel)) byPanel.set(entry.panel, []);
+    byPanel.get(entry.panel).push(entry);
+  }
+  const out = [];
+  for (const entries of byPanel.values()) {
+    const picked = new Set(preferRendered(entries.map(e => e.node)));
+    for (const entry of entries) if (picked.has(entry.node)) out.push(entry);
   }
   return out;
 }
@@ -524,6 +860,20 @@ function classifyActivityPanels() {
     return;
   }
 
+  // Drop marks from the previous (possibly stale) resolution — same reason
+  // classifySectionFrames does this. Without it, a resize that moves a panel
+  // from the wide host to the narrow one leaves the now-hidden wide host
+  // permanently wearing `data-iw-ui="section-frame"` / `data-iw-panel`, which
+  // is at best dead weight and at worst confuses a future :has()/coverage
+  // check that assumes those attributes mean "the live panel".
+  if (activityPanelResolutions) {
+    for (const e of activityPanelResolutions) {
+      if (e.host.dataset.iwUi === 'section-frame') delete e.host.dataset.iwUi;
+      if (e.heading.dataset.iwUi === 'section-title') delete e.heading.dataset.iwUi;
+      delete e.host.dataset.iwPanel;
+    }
+  }
+
   activityPanelResolutions = [];
   for (const { node: heading, panel } of labels) {
     const host = findActivityPanelHost(heading, panel);
@@ -534,7 +884,7 @@ function classifyActivityPanels() {
     setRole(host, 'section-frame');
     setRole(heading, 'section-title');
     setPanel(host, panel);
-    const entry = { heading, host, panel };
+    const entry = { heading, host, panel, epoch: getLayoutEpoch() };
     activityPanelResolutions.push(entry);
     runActivityPanel(entry);
   }
@@ -551,6 +901,8 @@ function queueClassify() {
     guard('ui:main-nav', classifyMainNav);
     guard('ui:zone-bar', classifyZoneBar);
     guard('ui:section-frames', classifySectionFrames);
+    guard('ui:boss-cards', classifyBossCards);
+    guard('ui:market', classifyMarket);
     guard('ui:activity-panels', classifyActivityPanels);
   });
 }
@@ -560,6 +912,11 @@ export function clearUIFoundation() {
   mainNavResolution = null;
   zoneBarResolutions = null;
   sectionFrameResolutions = null;
+  sectionFrameSeen = new Set();
+  bossPanelResolutions = null;
+  bossPanelSeen = new Set();
+  marketResolutions = null;
+  marketSeen = new Set();
   activityPanelResolutions = null;
   document.querySelectorAll('[data-iw-ui]').forEach(el => { delete el.dataset.iwUi; });
   document.querySelectorAll('[data-iw-tab]').forEach(el => { delete el.dataset.iwTab; });
@@ -568,6 +925,8 @@ export function clearUIFoundation() {
   document.querySelectorAll('[data-iw-panel-part]').forEach(el => { delete el.dataset.iwPanelPart; });
   document.querySelectorAll('[data-iw-panel-header]').forEach(el => { delete el.dataset.iwPanelHeader; });
   document.querySelectorAll('[data-iw-zone-action]').forEach(el => { delete el.dataset.iwZoneAction; });
+  document.querySelectorAll('[data-iw-boss]').forEach(el => { delete el.dataset.iwBoss; });
+  document.querySelectorAll('[data-iw-market]').forEach(el => { delete el.dataset.iwMarket; });
 }
 
 export function initUIFoundation() {

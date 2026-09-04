@@ -13,7 +13,7 @@ import { AtlasService } from './AtlasService.js';
 import { ItemDatabase } from './ItemDatabase.js';
 import { itemRef } from './TooltipEngine.js';
 import { inject } from './StyleInjector.js';
-import { tierClass, statChips } from './itemDisplay.js';
+import { categoryClass, statChips } from './itemDisplay.js';
 import { buildInventoryDetails, inventoryDetailSignature, resolveInventoryItemName } from './InventoryModel.js';
 import { guard, guardEach, raf } from './Runtime.js';
 import { createInlineStyleOwner } from './InlineStyleOwner.js';
@@ -28,6 +28,7 @@ const ACTION_KIND_ATTR = 'data-fs-action-kind';
 const INVENTORY_ROOT_ATTR = 'data-iw-inventory-root';
 const INVENTORY_CONTROL_ATTR = 'data-iw-inventory-control';
 const INVENTORY_TITLE_ATTR = 'data-iw-inventory-title';
+const INVENTORY_LIST_ATTR = 'data-iw-inventory-list';
 const INVENTORY_FILTER_STATE_ATTR = 'data-iw-inventory-filter-state';
 const ROW_SELECTOR = '.compact-row, [class*="item-row"]';
 const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [role="button"], [tabindex]';
@@ -75,16 +76,34 @@ function isInsideNativeControl(el, row) {
 }
 
 function leafTexts(row) {
-  return [...row.querySelectorAll('span, div, p')]
-    .filter(el => !el.closest('.fs-inv-row'))
-    .filter(el => !isInsideNativeControl(el, row))
-    .filter(el => el.childElementCount === 0)
-    .map(el => el.textContent.trim())
-    .filter(Boolean);
+  const seen = new Set();
+  const out = [];
+  for (const el of row.querySelectorAll('span, div, p')) {
+    if (el.closest('.fs-inv-row') || isInsideNativeControl(el, row)) continue;
+
+    // A strictly childless element is a leaf line as before. Additionally
+    // accept a "near-leaf": an element whose child elements are ALL themselves
+    // childless and which holds no interactive descendant. The game now renders
+    // an enhancement level as a nested <span> inside the item-name span
+    // (`Name<span>+3</span>`), which made the whole name invisible to a
+    // childless-only sweep and broke identity resolution for upgraded gear.
+    const nearLeaf = el.childElementCount > 0 &&
+      el.childElementCount <= 3 &&
+      el.textContent.trim().length <= 120 &&
+      !el.querySelector(INTERACTIVE_SELECTOR) &&
+      [...el.children].every(c => c.childElementCount === 0);
+    if (el.childElementCount !== 0 && !nearLeaf) continue;
+
+    const text = el.textContent.trim();
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    out.push(text);
+  }
+  return out;
 }
 
 function detailTexts(row, displayName = '') {
-  const interesting = /loadout|requires?|needs\b|upgrad|set bonus|sunstone|moonstone|gem(?:stone)?|socketed|cut\s+[a-z]|:\s*[+-]?\d/i;
+  const interesting = /loadout|requires?|needs\b|upgrad|set bonus|sunstone|moonstone|gem(?:stone)?|socketed|cut\s+[a-z]|:\s*[+-]?\d|🎲/i;
 
   // Capture both atomic leaf lines and compact wrappers used by the native
   // row when an icon is a separate child. Parent containers can concatenate
@@ -143,7 +162,19 @@ function guessQuantity(texts) {
 function extractRowData(row) {
   const texts = leafTexts(row);
   const name = resolveInventoryItemName(texts, name => ItemDatabase.getByName(name));
-  return { name, qty: guessQuantity(texts), detailTexts: detailTexts(row, name) };
+
+  // The game renders an enhancement level either flat inside the name
+  // ("Regal Silk Boots+3") or as a separate "+3" token / nested span. When the
+  // resolved identity does NOT already carry it (the cloak/orb upgrade system
+  // has no per-level item record), keep it so the icon badge and name pip can
+  // still show it.
+  let enhancement = null;
+  if (!/\+\s*\d+\s*$/.test(name)) {
+    const tok = texts.find(t => /^\+\s*[1-9]$/.test(t));
+    if (tok) enhancement = tok.replace(/\D/g, '');
+  }
+
+  return { name, qty: guessQuantity(texts), detailTexts: detailTexts(row, name), enhancement };
 }
 
 /**
@@ -324,6 +355,31 @@ function classifyInventoryChrome(root) {
     const text = String(el.textContent || '').trim();
     if (/^\d+\s*\/\s*\d+$/.test(text)) el.setAttribute(INVENTORY_CONTROL_ATTR, 'page-count');
   }
+
+  classifyRowList(root);
+}
+
+/**
+ * The game stacks the item rows in one wrapper of their own (`div.space-y-1.5`),
+ * a sibling of the header / filter tabs / pagers — not a shared parent. Tagging
+ * that wrapper lets inventory.css draw a recessed inner frame around just the
+ * list, the way each quest card is framed inside the Quests panel. This is
+ * additive: an attribute on a node the game already has, no reparenting.
+ */
+function classifyRowList(root) {
+  // Game rows only — the skin's own `.fs-inv-row` overlay lives inside each one
+  // and must not be mistaken for the list.
+  const rows = [...root.querySelectorAll(ROW_SELECTOR)];
+  const list = rows.length ? rows[0].parentElement : null;
+  const ok = list && list !== root && root.contains(list) &&
+    rows.every(r => r.parentElement === list) &&
+    // never the wrapper that also holds the title or a pager/filter control
+    !list.querySelector(`[${INVENTORY_TITLE_ATTR}], [${INVENTORY_CONTROL_ATTR}]`);
+
+  root.querySelectorAll(`[${INVENTORY_LIST_ATTR}]`).forEach(el => {
+    if (el !== list) el.removeAttribute(INVENTORY_LIST_ATTR);
+  });
+  if (ok) list.setAttribute(INVENTORY_LIST_ATTR, '1');
 }
 
 function splitLevel(name) {
@@ -408,6 +464,7 @@ function clearRenderedRow(row) {
 function rowSignature(data, item, detailModel) {
   return [
     item ? String(item.item_id ?? item.name) : data.name,
+    data.enhancement || '',
     data.qty || '',
     inventoryDetailSignature(detailModel),
     ItemDatabase.revision(),
@@ -450,7 +507,13 @@ function paintIcon(overlay, item, data) {
   configureIconTooltip(host, item, data);
 
   const fullName = item ? item.name : data.name;
-  const ref = item ? { id: item.item_id, name: fullName } : { name: fullName };
+  // When the identity resolved without a "+N" but the row carries one, hand the
+  // enhanced name to AtlasService so it strips the suffix for the sprite lookup
+  // AND paints the matching enhancement badge.
+  const iconName = data.enhancement && !/\+\s*\d+\s*$/.test(fullName)
+    ? `${fullName}+${data.enhancement}`
+    : fullName;
+  const ref = item ? { id: item.item_id, name: iconName } : { name: iconName };
 
   const apply = () => {
     if (!overlay.isConnected || !host.isConnected) return;
@@ -549,12 +612,18 @@ function renderRow(row) {
   if (existing) existing.remove();
   restoreOriginalChildren(row);
 
-  const tier = item ? tierClass(item) : 'tier-common';
+  const cat = item ? categoryClass(item) : 'fs-cat-unknown';
   const { base, level } = splitLevel(item ? item.name : data.name);
   const nameHTML = item
     ? itemRef(item, base)
     : `<span class="fs-inv-name-plain">${esc(base)}</span>`;
   const levelHTML = level ? ` <span class="fs-inv-sub">Lv ${esc(level)}</span>` : '';
+  // Enhancement pip for identities whose "+N" is not part of the record name
+  // (e.g. upgraded cloaks — items.json has no per-level entry). Boots-style
+  // items keep the "+N" in `base` and need no extra pip.
+  const plusHTML = data.enhancement && !/\+\s*\d+\s*$/.test(base)
+    ? ` <span class="fs-inv-plus">+${esc(data.enhancement)}</span>`
+    : '';
 
   const chips = item ? statChips(item, { max: 8 }) : [];
   const chipsHTML = chips.map(c => {
@@ -562,13 +631,17 @@ function renderRow(row) {
     return `<span class="fs-stat${mod}">${esc(c.text)}</span>`;
   }).join('');
 
+  // Upgrade Orb consumables get a warm-orange identity (name + frame) over the
+  // Consumable colour. See `.fs-inv-orb` in inventory.css.
+  const isOrb = /\bupgrade orb\b/i.test(String(item?.subcategory || ''));
+
   const dynamic = detailHTML(detailModel);
   const overlay = document.createElement('div');
-  overlay.className = `fs-inv-row ${tier}${dynamic.details ? ' has-details' : ''}${dynamic.requirements ? ' has-requirements' : ''}`;
+  overlay.className = `fs-inv-row ${cat}${isOrb ? ' fs-inv-orb' : ''}${dynamic.details ? ' has-details' : ''}${dynamic.requirements ? ' has-requirements' : ''}`;
   overlay.innerHTML = `
     <div class="fs-inv-icon"></div>
     <div class="fs-inv-body">
-      <div class="fs-inv-name ${tier}">${nameHTML}${levelHTML}</div>
+      <div class="fs-inv-name">${nameHTML}${plusHTML}${levelHTML}</div>
       ${chipsHTML ? `<div class="fs-inv-stats">${chipsHTML}</div>` : ''}
       ${dynamic.details}
       ${dynamic.requirements}
@@ -601,6 +674,9 @@ export function clearInventoryRenderer() {
     });
   document.querySelectorAll(`[${INVENTORY_ROOT_ATTR}]`).forEach(el => {
     el.removeAttribute(INVENTORY_ROOT_ATTR);
+  });
+  document.querySelectorAll(`[${INVENTORY_LIST_ATTR}]`).forEach(el => {
+    el.removeAttribute(INVENTORY_LIST_ATTR);
   });
   document.querySelectorAll('.fs-inv-rule').forEach(el => el.remove());
   document.querySelectorAll(

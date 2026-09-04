@@ -24,6 +24,17 @@ const SOCKET_EFFECT = /\b(?:cut\s+[a-z][a-z' -]*|sunstone|moonstone|gem(?:stone)
 const DYNAMIC_EFFECT = /:\s*[+-]?\d+(?:\.\d+)?(?:%|\b)/i;
 const SET_STATE = /\bset bonus\b/i;
 
+// The game's "upgrade roll" line, e.g. "🎲 +3 · +12 DEF · +3% 2x Gather Chance".
+// The leading "🎲 +N" is the roll COUNT (== the item's upgrade level, already
+// shown as the enhancement pip + icon badge) and is dropped globally; see the
+// dev note in CLAUDE.md. Everything AFTER that prefix is the accumulated rolled
+// stat bonus — per-instance values the static item record cannot know — and IS
+// kept, as a dynamic detail line. UPGRADE_ROLL_LINE just detects the line;
+// UPGRADE_ROLL_STATS also captures the stat remainder (empty for a fresh roll
+// with no bonus yet, in which case nothing is shown).
+const UPGRADE_ROLL_LINE  = /^\s*🎲\s*[+-]?\d/u;
+const UPGRADE_ROLL_STATS = /^\s*🎲\s*[+-]?\d+\s*[·•–—-]\s*(.+)$/u;
+
 export function normaliseInventoryText(value) {
   return String(value == null ? '' : value)
     .replace(/\s+/g, ' ')
@@ -89,16 +100,26 @@ export function resolveInventoryItemName(texts, getByName) {
   const source = (texts || []).map(t => String(t == null ? '' : t).trim()).filter(Boolean);
   const candidates = source.filter(t =>
     t.length > 2 && !/^\d[\d,]*$/.test(t) && !/^[x×]\s*\d/i.test(t) &&
-    !/^lv\.?\s*\d+$/i.test(t) && !/^\+\s*[1-4]$/.test(t) &&
+    !/^lv\.?\s*\d+$/i.test(t) && !/^\+\s*[1-9]$/.test(t) &&
     !/^(equip|equipped|unequip|use|drop|sell|list|lock|unlock|set bonus)$/i.test(t)
   );
-  const upgradeToken = source.find(t => /^\+\s*[1-4]$/.test(t));
+  const upgradeToken = source.find(t => /^\+\s*[1-9]$/.test(t));
   if (upgradeToken) {
     const suffix = '+' + upgradeToken.replace(/\D/g, '');
+    // Prefer an exact enhanced record. The candidate itself may already carry
+    // the "+N" (the game now nests it in the name span) so also try it bare.
     for (const base of candidates) {
-      for (const combined of [base + suffix, base + ' ' + suffix]) {
+      const bare = base.replace(/\s*\+\s*\d+\s*$/, '').trim();
+      for (const combined of [base + suffix, base + ' ' + suffix, bare + suffix, bare + ' ' + suffix]) {
         if (lookup(combined)) return combined;
       }
+    }
+    // No per-level record exists (the cloak / gear-orb upgrade system has no
+    // "+N" entries in items.json). Fall back to the un-suffixed identity so the
+    // row still resolves its record, icon and tooltip.
+    for (const base of candidates) {
+      const bare = base.replace(/\s*\+\s*\d+\s*$/, '').trim();
+      if (bare && bare !== base && lookup(bare)) return bare;
     }
   }
   for (const c of candidates) if (lookup(c)) return c;
@@ -132,11 +153,46 @@ export function buildInventoryDetails(rawTexts, item, displayName) {
   const requirements = [];
   const requirementKeys = new Set();
 
+  // Pull the rolled stat bonus off the "🎲 +N · <stats>" line before anything
+  // else. The "🎲 +N" roll count is discarded globally (see UPGRADE_ROLL_LINE /
+  // the dev note in CLAUDE.md); the stat remainder is a per-instance value the
+  // item record cannot supply, so it is kept as a dynamic detail.
+  const rolledStats = [];
+  const rolledKeys = new Set();
+  let rollLevel = null;
+  for (const raw of (rawTexts || [])) {
+    const s = String(raw == null ? '' : raw);
+    const lv = /^\s*🎲\s*\+?\s*(\d+)/u.exec(s);
+    if (lv) rollLevel = parseInt(lv[1], 10);
+    const m = UPGRADE_ROLL_STATS.exec(s);
+    if (!m) continue;
+    const text = m[1].replace(/\s+/g, ' ').trim();
+    const key = compareKey(text);
+    if (!text || rolledKeys.has(key)) continue;
+    rolledKeys.add(key);
+    rolledStats.push({ text, kind: 'effect', count: 1 });
+  }
+
+  // A cloak (and any future orb-upgrade item) carries a native "Not upgradable"
+  // line that means "no OLD-style tier-upgrade path" — but it CAN still be
+  // orb-upgraded up to +4. That line is therefore misleading and is dropped
+  // while the item is below +4; it is kept once maxed (genuinely can't be
+  // upgraded) and for every item that has no orb system at all. See the dev
+  // note in CLAUDE.md.
+  const ORB_MAX = 4;
+  const isOrbUpgradeable =
+    rollLevel !== null || /\bcloak\b/i.test(String(item?.subcategory || ''));
+  const suppressNotUpgradable =
+    isOrbUpgradeable && rollLevel !== ORB_MAX;
+  const NOT_UPGRADABLE = /\bnot\s+upgradable\b|\bcannot\s+be\s+upgraded\b/i;
+
   // Work shortest-to-longest and discard parent-wrapper aggregates whenever
   // they contain an already captured semantic child. This mirrors the live
   // React DOM, where a row wrapper's textContent may concatenate name, tier,
-  // loadout, stats, requirement and action labels into one giant string.
+  // loadout, stats, requirement and action labels into one giant string. The
+  // whole "🎲 …" line is dropped here — its stat half was already lifted above.
   const source = (rawTexts || [])
+    .filter(t => !UPGRADE_ROLL_LINE.test(String(t == null ? '' : t)))
     .map(normaliseInventoryText)
     .filter(Boolean)
     .sort((a, b) => a.length - b.length);
@@ -171,6 +227,8 @@ export function buildInventoryDetails(rawTexts, item, displayName) {
     // represents owned-item state the static database cannot know.
     if (isStableStatNoise(text)) continue;
 
+    if (suppressNotUpgradable && NOT_UPGRADABLE.test(text)) continue;
+
     const interesting = LOADOUT.test(text) || SOCKET_EFFECT.test(text) || DYNAMIC_EFFECT.test(text) || UPGRADE_STATE.test(text) || SET_STATE.test(text);
     if (!interesting) continue;
 
@@ -184,7 +242,8 @@ export function buildInventoryDetails(rawTexts, item, displayName) {
   }
 
   const order = { loadout: 0, socket: 1, effect: 2, set: 3, status: 4, detail: 5 };
-  const details = [...counts.values()].sort((a, b) => {
+  const extraRolled = rolledStats.filter(r => !counts.has(compareKey(r.text)));
+  const details = [...counts.values(), ...extraRolled].sort((a, b) => {
     const kindDiff = (order[a.kind] ?? 9) - (order[b.kind] ?? 9);
     return kindDiff || a.text.localeCompare(b.text);
   });
