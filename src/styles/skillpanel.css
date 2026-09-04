@@ -452,6 +452,13 @@
   text-transform: none !important;
 }
 
+/* Material rows can contain a mixture of met and unmet counts in one native
+   React text node. Custom Highlight paints only each completed entry without
+   inserting wrapper elements or taking ownership of the game's text. */
+::highlight(iw-skill-ingredient-met) {
+  color: #82B88A !important;
+}
+
 @media (max-width: 768px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
     grid-template-columns: 82px minmax(0, 1fr) 112px !important;

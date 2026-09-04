@@ -181,7 +181,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
       <div class="compact-panel" id="build-panel">
         <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
           <div><p>🏗️ Build</p><p>LV 29</p></div>
-          <div><p>🏗️ Craft Runite Building Parts</p><button>Lv 29 - 52.0% • 13,741 to go</button><p>📦 Runic Oak 473/16 • 🪨 Runite Ore 19318/8</p><div role="progressbar"><div style="width:52%"></div></div><p>Needs Construction Lv 29 + Woodcutting Lv 25</p><p>Base reward: +461 construction XP/task</p></div>
+          <div><p>🏗️ Craft Runite Building Parts</p><button>Lv 29 - 52.0% • 13,741 to go</button><p id="build-materials">📦 Runic Oak 473/16 • 🪨 Runite Ore 3/8 • 🧱 Silver Parts 12/12</p><div role="progressbar"><div style="width:52%"></div></div><p>Needs Construction Lv 29 + Woodcutting Lv 25</p><p>Base reward: +461 construction XP/task</p></div>
           <div><div><button>‹</button><button>›</button></div><button id="build-action">Craft Parts</button></div>
         </div>
       </div>
@@ -345,8 +345,13 @@ window.Range.prototype.getClientRects = function getClientRects() {
   return [{ left: 10, top: 10, right: 110, bottom: 30, width: 100, height: 20 }];
 };
 
-// jsdom has no CSS Custom Highlight API; NameScanner must degrade, not throw.
-// Deliberately left undefined.
+// jsdom has no CSS Custom Highlight API. This small standards-shaped in-memory
+// implementation lets the smoke test inspect the real ranges registered by the
+// renderers without mocking their parsing or state decisions.
+window.CSS = { highlights: new Map() };
+window.Highlight = class Highlight extends Set {
+  constructor(...ranges) { super(ranges); }
+};
 
 const skillAction = window.document.getElementById('skill-action');
 const nativeQty = window.document.getElementById('native-qty');
@@ -680,6 +685,34 @@ check('live Build/Craft Parts panel is construction, not crafting',
 check('new skills still receive a medallion art host',
   woodPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'woodcutting' &&
   buildPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'construction');
+const metMaterialText = () => [...(window.CSS.highlights.get('iw-skill-ingredient-met') || [])]
+  .filter(range => range.startContainer.parentElement?.closest('#build-materials'))
+  .map(range => range.toString().trim());
+check('skill material highlighting marks only entries whose owned count meets or exceeds the requirement',
+  JSON.stringify(metMaterialText()) === JSON.stringify([
+    '📦 Runic Oak 473/16',
+    '🧱 Silver Parts 12/12',
+  ]),
+  metMaterialText().join(' | ') || 'no completed material ranges');
+const metMaterialRule = (window.document.querySelector('style[data-iw-style="skillpanel"]')?.textContent || '')
+  .match(/::highlight\(iw-skill-ingredient-met\)\s*\{[^}]*color:\s*#([0-9a-f]{6})\s*!important/i);
+const metMaterialRgb = metMaterialRule?.[1]?.match(/../g).map(hex => Number.parseInt(hex, 16)) || [];
+check('completed skill materials have an injected green highlight treatment',
+  metMaterialRgb.length === 3 && metMaterialRgb[1] > metMaterialRgb[0] && metMaterialRgb[1] > metMaterialRgb[2],
+  metMaterialRule?.[0] || 'highlight color rule missing');
+
+const buildMaterialsText = window.document.getElementById('build-materials').firstChild;
+buildMaterialsText.nodeValue = '📦 Runic Oak 3/16 • 🪨 Runite Ore 8/8 • 🧱 Silver Parts 12/12';
+await waitFor(() => JSON.stringify(metMaterialText()) === JSON.stringify([
+  '🪨 Runite Ore 8/8',
+  '🧱 Silver Parts 12/12',
+]));
+check('skill material highlights reconcile when live owned counts cross the requirement',
+  JSON.stringify(metMaterialText()) === JSON.stringify([
+    '🪨 Runite Ore 8/8',
+    '🧱 Silver Parts 12/12',
+  ]),
+  metMaterialText().join(' | ') || 'no completed material ranges after count update');
 check('Spellcraft identity wins over ambiguous Craft action',
   spellPanel.classList.contains('fs-skill--spellcrafting') && !spellPanel.classList.contains('fs-skill--crafting') && spellPanel.dataset.iwSkillLayout === 'three-zone' &&
   spellPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Craft');
@@ -1128,6 +1161,8 @@ check('skill panel classes removed', window.document.querySelectorAll('.fs-skill
 check('skill medallion artwork removed on teardown', window.document.querySelectorAll('.fs-skill-medallion-art').length === 0);
 check('skill presentation artifacts removed on teardown',
   window.document.querySelectorAll('.fs-skill-identity-progress, .fs-skill-base-exp, [data-iw-clean-text]').length === 0);
+check('completed skill material highlights removed on teardown',
+  !window.CSS.highlights.has('iw-skill-ingredient-met'));
 check('quest chrome fully removed on teardown',
   window.document.querySelectorAll('.fs-quest-panel, .fs-quest-sigil, .fs-quest-sigil-icon, [data-iw-quest-role], [data-iw-quest-zone], [data-fs-quest]').length === 0 &&
   !questBounty.style.getPropertyValue('--fs-quest-accent') &&

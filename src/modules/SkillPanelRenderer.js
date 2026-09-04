@@ -17,9 +17,11 @@ const RENDERED_ATTR = 'data-fs-skill';
 const ROLE_ATTR = 'data-iw-skill-role';
 const ZONE_ATTR = 'data-iw-skill-zone';
 const SHELL_ATTR = 'data-iw-skill-layout-shell';
+const MET_INGREDIENT_HIGHLIGHT = 'iw-skill-ingredient-met';
 const buttonStyleSnapshots = new WeakMap();
 const readoutStyleSnapshots = new WeakMap();
 const ingredientStyleSnapshots = new WeakMap();
+const ingredientHighlightRanges = new Map();
 
 // Keep independent ownership domains. A live XP datum can itself be a button;
 // restoring stale ACTION chrome on that node must not also restore/remove the
@@ -395,6 +397,7 @@ function neutraliseReadouts(panel) {
 }
 
 const INGR_PATTERN = /^(?!.*\bxp\b).{0,80}\b\d+\s*\/\s*\d+\b/i;
+const INGR_COUNT_PATTERN = /([\d,]+)\s*\/\s*([\d,]+)/g;
 const INGR_STYLES = {
   'background': 'none',
   'background-color': 'transparent',
@@ -403,6 +406,85 @@ const INGR_STYLES = {
   'padding': '0',
   'box-shadow': 'none',
 };
+
+function supportsIngredientHighlights() {
+  return !!globalThis.CSS?.highlights && typeof globalThis.Highlight === 'function';
+}
+
+function pointAtTextOffset(root, targetOffset) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let offset = 0;
+  let node;
+  while ((node = walker.nextNode())) {
+    const end = offset + (node.nodeValue?.length || 0);
+    if (targetOffset <= end) return { node, offset: targetOffset - offset };
+    offset = end;
+  }
+  return null;
+}
+
+function completedIngredientRanges(root) {
+  const text = root.textContent || '';
+  const ranges = [];
+  INGR_COUNT_PATTERN.lastIndex = 0;
+
+  let match;
+  while ((match = INGR_COUNT_PATTERN.exec(text))) {
+    const owned = Number(match[1].replaceAll(',', ''));
+    const required = Number(match[2].replaceAll(',', ''));
+    if (!Number.isFinite(owned) || !Number.isFinite(required) || owned < required) continue;
+
+    const bulletStart = text.lastIndexOf('•', match.index - 1) + 1;
+    const lineStart = text.lastIndexOf('\n', match.index - 1) + 1;
+    let start = Math.max(bulletStart, lineStart);
+    let end = match.index + match[0].length;
+    while (start < end && /\s/.test(text[start])) start += 1;
+    while (end > start && /\s/.test(text[end - 1])) end -= 1;
+
+    const from = pointAtTextOffset(root, start);
+    const to = pointAtTextOffset(root, end);
+    if (!from || !to) continue;
+    const range = document.createRange();
+    try {
+      range.setStart(from.node, from.offset);
+      range.setEnd(to.node, to.offset);
+      ranges.push(range);
+    } catch { /* stale React text; the next reconciliation will rebuild it */ }
+  }
+  return ranges;
+}
+
+function rebuildIngredientHighlight() {
+  if (!supportsIngredientHighlights()) return;
+  const ranges = [];
+  for (const [panel, panelRanges] of [...ingredientHighlightRanges.entries()]) {
+    if (!panel.isConnected) {
+      ingredientHighlightRanges.delete(panel);
+      continue;
+    }
+    ranges.push(...panelRanges.filter(range => range.startContainer?.isConnected));
+  }
+  try {
+    if (ranges.length) globalThis.CSS.highlights.set(MET_INGREDIENT_HIGHLIGHT, new globalThis.Highlight(...ranges));
+    else globalThis.CSS.highlights.delete(MET_INGREDIENT_HIGHLIGHT);
+  } catch { /* Custom Highlight API unavailable or temporarily invalid */ }
+}
+
+function updateIngredientHighlights(panel) {
+  if (!supportsIngredientHighlights()) return;
+  const hosts = [...panel.querySelectorAll('[data-iw-ingr]')]
+    .filter(el => !el.parentElement?.closest?.('[data-iw-ingr]'));
+  ingredientHighlightRanges.set(panel, hosts.flatMap(completedIngredientRanges));
+  rebuildIngredientHighlight();
+}
+
+function clearIngredientHighlights(panel) {
+  if (panel) ingredientHighlightRanges.delete(panel);
+  else ingredientHighlightRanges.clear();
+  if (!supportsIngredientHighlights()) return;
+  if (panel) rebuildIngredientHighlight();
+  else globalThis.CSS.highlights.delete(MET_INGREDIENT_HIGHLIGHT);
+}
 
 function neutraliseIngredients(panel) {
   for (const el of panel.querySelectorAll('div, span, p')) {
@@ -430,6 +512,7 @@ function neutraliseIngredients(panel) {
       ingredientStyleSnapshots.set(target, target.getAttribute('style') || '');
     }
   }
+  updateIngredientHighlights(panel);
 }
 
 function setRole(el, role) {
@@ -1003,6 +1086,7 @@ function clearPanelInlineTreatment(panel) {
 
 function clearPanelChrome(panel) {
   structureSignatures.delete(panel);
+  clearIngredientHighlights(panel);
   clearPanelInlineTreatment(panel);
   SkillsArtService.clearPanel(panel);
   panel.querySelectorAll('.fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp').forEach(el => el.remove());
@@ -1066,6 +1150,7 @@ export function clearSkillPanels() {
   buttonStyleOwner.restoreAll();
   readoutStyleOwner.restoreAll();
   ingredientStyleOwner.restoreAll();
+  clearIngredientHighlights();
   document.querySelectorAll('[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]').forEach(el => {
     delete el.dataset.iwReadout;
     delete el.dataset.iwIngr;
