@@ -362,8 +362,20 @@
 [data-iw-header="utility-button"] {
   --b: 9px;
   --i: 3px;
-  width: 42px !important;
-  min-width: 42px !important;
+  /* Curtis (2026-09): flex-grow rather than a fixed 42px square, so the five
+     buttons fill the rail edge to edge with only the small GAP (var(--hd-gap))
+     between them, instead of small fixed squares with growing bare space
+     between them as `justify-content: space-between` (§4 above) spreads a
+     fixed total button width across the identity-region's `fit-content` row.
+     Only WIDTH flexes; height stays the fixed 42px that lines the row up
+     with [data-iw-header="status-card"]'s min-height. §9 restores the fixed
+     42px width specifically for the 861-1280px band, where the identity
+     region is stretched full-bar-width and flex-growing here would produce
+     oversized buttons rather than a tight cluster — that reasoning is
+     unchanged from before this pass; see the comment there. */
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
   /* Matches [data-iw-header="status-card"] min-height so the whole top band
      lines up. */
   height: 42px !important;
@@ -834,6 +846,13 @@
      it left and drop the frame-matching bleed. */
   [data-iw-header="identity-region"] { justify-self: stretch !important; width: auto !important; max-width: none !important; margin-left: 0 !important; }
   [data-iw-header="utilities"] { justify-content: flex-start !important; margin: 0 !important; }
+  /* The buttons themselves now flex-grow by default (§4 above) — restore the
+     original fixed 42px square specifically for this band, or growing them
+     across the now bar-wide identity-region would trade "absurd gaps" for
+     "absurdly wide buttons". Below 861px §9's OWN block re-enables flex-grow
+     again, deliberately, because that band's row is tight enough (~350px)
+     for it to look right — see the comment there. */
+  [data-iw-header="utility-button"] { width: 42px !important; min-width: 42px !important; flex: 0 0 auto !important; }
 }
 
 @media (max-width: 860px) {
@@ -855,9 +874,12 @@
      distribute — kept for the fallback where content is short enough that
      they don't fill the row. */
   [data-iw-header="utilities"] { justify-content: space-between !important; margin: 0 -8px !important; }
-  /* Fixed 42px squares left a wide bare gap after 5 of them in a full-width
-     mobile row. Flex-grow them evenly instead so they fill the row and the
-     GAP stays small (var(--hd-gap), unchanged) rather than the buttons. */
+  /* §4's flex-grow default was explicitly turned back into a fixed 42px
+     square for the 861-1280px band just above (its row is bar-wide there,
+     and growing across it would produce oversized buttons). Below 861px the
+     row is back to a tight ~350px, so re-enable the default's flex-grow —
+     small GAP (var(--hd-gap), unchanged), wide buttons, no bare space after
+     the last one. */
   [data-iw-header="utility-button"] {
     flex: 1 1 0 !important;
     width: auto !important;

@@ -649,31 +649,45 @@
   max-width: none !important;
 }
 
+/* The row action controls (Equipped / List / Use / Equip / set bonus / lock)
+   share ONE plate with the panel's filter tabs and pagers — same border,
+   ground, inner shadow, font metrics and uppercase treatment as the
+   `[data-iw-inventory-control="filter"]` rule above. Curtis: "they should all
+   match and have the same style." Width is content-driven (padding only, no
+   fixed `width`) exactly like the filter tabs, so a long label such as
+   "✦ set bonus" is never clipped. The per-kind blocks below then layer only a
+   state accent on top — the same relationship the active filter tab has with
+   its siblings. */
 button[data-fs-preserved-action="control"],
 a[data-fs-preserved-action="control"],
 [role="button"][data-fs-preserved-action="control"] {
-  height: 30px !important;
-  min-height: 30px !important;
-  padding: 0 9px !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 0 11px !important;
   border-radius: 2px !important;
-  border: 1px solid var(--iw-line-hi) !important;
-  background: linear-gradient(180deg, #17150F, #100F0B) !important;
-  color: var(--iw-text) !important;
-  box-shadow: none !important;
+  border: 1px solid #2A241A !important;
+  background: linear-gradient(180deg, #100E0A, #0A0907) !important;
+  color: var(--iw-dim) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .035),
+    inset 0 -7px 10px -8px rgba(0, 0, 0, .95) !important;
   font-family: var(--iw-font-head) !important;
-  font-size: 11px !important;
-  line-height: 28px !important;
+  font-size: 10.5px !important;
+  line-height: 24px !important;
   font-weight: 600 !important;
-  letter-spacing: .06em !important;
-  text-transform: none !important;
+  letter-spacing: .09em !important;
+  text-transform: uppercase !important;
   white-space: nowrap !important;
 }
 button[data-fs-preserved-action="control"]:hover:not(:disabled),
 a[data-fs-preserved-action="control"]:hover,
 [role="button"][data-fs-preserved-action="control"]:hover {
-  border-color: var(--iw-gold-dim) !important;
-  color: var(--iw-gold) !important;
-  background: linear-gradient(180deg, #221E15, #16130E) !important;
+  color: var(--iw-text) !important;
+  border-color: var(--iw-line-hot) !important;
+  background: linear-gradient(180deg, #100E0A, #0A0907) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .05),
+    inset 0 0 10px -3px rgba(216, 121, 31, .35) !important;
 }
 
 /* ── Action kinds ────────────────────────────────────────────────────
@@ -685,33 +699,23 @@ a[data-fs-preserved-action="control"]:hover,
 button[data-fs-preserved-action="control"][data-fs-action-kind="equipped"],
 a[data-fs-preserved-action="control"][data-fs-action-kind="equipped"],
 [role="button"][data-fs-preserved-action="control"][data-fs-action-kind="equipped"] {
-  width: 74px !important;
-  border-color: color-mix(in srgb, var(--iw-good) 44%, var(--iw-line-hi)) !important;
-  background: rgba(80,150,95,.09) !important;
+  border-color: color-mix(in srgb, var(--iw-good) 44%, #2A241A) !important;
   color: var(--iw-good) !important;
 }
 button[data-fs-preserved-action="control"][data-fs-action-kind="equip"],
 a[data-fs-preserved-action="control"][data-fs-action-kind="equip"],
 [role="button"][data-fs-preserved-action="control"][data-fs-action-kind="equip"] {
-  width: 54px !important;
   border-color: var(--iw-th-brass) !important;
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--iw-th-edge) 60%, #000),
-    color-mix(in srgb, var(--iw-th-rule) 55%, #000) 46%,
-    #000) !important;
   color: #FFE9C4 !important;
 }
 button[data-fs-preserved-action="control"][data-fs-action-kind="set"],
 a[data-fs-preserved-action="control"][data-fs-action-kind="set"],
 [role="button"][data-fs-preserved-action="control"][data-fs-action-kind="set"] {
-  width: 76px !important;
   color: var(--iw-gold) !important;
-  border-color: var(--iw-th-edge) !important;
 }
 button[data-fs-preserved-action="control"][data-fs-action-kind="secondary"],
 a[data-fs-preserved-action="control"][data-fs-action-kind="secondary"],
 [role="button"][data-fs-preserved-action="control"][data-fs-action-kind="secondary"] {
-  width: 48px !important;
   color: var(--iw-dim) !important;
 }
 button[data-fs-preserved-action="control"][data-fs-action-kind="icon"],
@@ -732,23 +736,18 @@ a[data-fs-preserved-action="control"][data-fs-action-kind="icon"],
 button[data-fs-preserved-action="control"][data-fs-action-kind="equipped"]:hover:not(:disabled) {
   color: var(--iw-good) !important;
   border-color: var(--iw-good) !important;
-  background: rgba(80,150,95,.16) !important;
 }
 button[data-fs-preserved-action="control"][data-fs-action-kind="equip"]:hover:not(:disabled) {
   color: #FFF3DF !important;
   border-color: var(--iw-th-hairline-hi) !important;
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--iw-th-rule) 62%, #000),
-    color-mix(in srgb, var(--iw-th-hairline) 60%, #000) 46%,
-    #000) !important;
 }
 
 button[data-fs-preserved-action="control"]:disabled,
 [role="button"][data-fs-preserved-action="control"][aria-disabled="true"] {
   opacity: .45 !important;
   color: var(--iw-faint) !important;
-  border-color: var(--iw-line) !important;
-  background: #101009 !important;
+  border-color: #2A241A !important;
+  background: linear-gradient(180deg, #100E0A, #0A0907) !important;
 }
 
 /* ── Responsive collapse ─────────────────────────────────────────── */
