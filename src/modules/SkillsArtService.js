@@ -88,7 +88,12 @@ function setVar(panel, name, value) {
 function applyUiVariables(panel) {
   if (!panel || !uiIndex) return false;
   setVar(panel, '--fs-skills-panel-texture', `url("${assetUrl(TEXTURE_URL)}")`);
-  setVar(panel, '--fs-skills-ui-atlas', `url("${assetUrl(`assets/${uiIndex.atlas}`)}")`);
+  // Resolve through the page-level --iw-zone-atlas (HeaderRenderer points it at
+  // the current zone's recoloured atlas; base.css defines the un-themed
+  // fallback). Every theme atlas shares this sheet's 860x463 canvas and cell
+  // positions, so the sprite-window vars below are correct for all of them.
+  setVar(panel, '--fs-skills-ui-atlas',
+    `var(--iw-zone-atlas, url("${assetUrl(`assets/${uiIndex.atlas}`)}"))`);
   setVar(panel, '--fs-skills-nav-prev', `url("${assetUrl(NAV_PREV_URL)}")`);
   setVar(panel, '--fs-skills-nav-next', `url("${assetUrl(NAV_NEXT_URL)}")`);
 

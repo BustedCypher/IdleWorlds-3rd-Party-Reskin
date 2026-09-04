@@ -19,6 +19,65 @@
 .fs-skill--fishing   { --fs-skill-accent: #478FA8; }
 .fs-skill--locked    { --fs-skill-accent: #6A6257; }
 
+/* ── The forged plate ───────────────────────────────────────────────────
+   Per Curtis (2026-09) every CONTROL inside a skill card wears the same
+   surface as the inventory filter / tool rail: a near-black plate under a
+   thin dark-gold rule, with ONE ember plate for the live control — exactly
+   the way the active filter tab is the only warm plate in the inventory row.
+   The values are lifted verbatim from `[data-iw-inventory-control="filter"]`
+   and its `[data-iw-inventory-filter-state="active"]` override in
+   `inventory.css`; if that row is ever re-toned, re-tone these with it.
+
+   This supersedes two earlier directions, both of which are now gone from the
+   card: the per-skill `--fs-skill-accent` fill on the action button (accent
+   still carries discipline identity on the card's left rail, title, medallion
+   and level underline, so nothing is lost by taking it off the button), and
+   the cool steel plate on the pager arrows.
+
+   `SkillPanelRenderer.styleButton()` writes these same declarations INLINE
+   with `!important`, which outranks every rule below — the copies here are the
+   pre-render fallback and the two must be kept in step. So must the mirror in
+   `build-tools/render-fixtures.mjs`, or the fixture renders a control the game
+   never shows. */
+.compact-panel.fs-skill-panel {
+  --fs-forge-bg: linear-gradient(180deg, #100E0A, #0A0907);
+  --fs-forge-line: #2A241A;
+  --fs-forge-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .035),
+    inset 0 -7px 10px -8px rgba(0, 0, 0, .95);
+  --fs-forge-ink: var(--iw-text, #DDD6C6);
+
+  --fs-forge-live-bg: linear-gradient(180deg, #1B150B, #120E07);
+  --fs-forge-live-line: var(--iw-th-brass);
+  /* Per Curtis (2026-09) the live action button's GLOW carries the discipline
+     colour, so the bloom, the 1px ring and the label glow are all mixed from
+     `--fs-skill-accent` (the ember `#D8791F` is only the pre-classify fallback).
+     The plate itself — bg + brass line — stays neutral-warm: one lit plate per
+     card, now lit in the skill's own hue. Keep in step with FORGE in
+     SkillPanelRenderer.js and render-fixtures.mjs. */
+  --fs-forge-live-tint: var(--fs-skill-accent, #D8791F);
+  --fs-forge-live-shadow:
+    inset 0 0 12px -2px color-mix(in srgb, var(--fs-forge-live-tint) 55%, transparent),
+    inset 0 1px 0 rgba(255, 216, 150, .18),
+    0 0 0 1px color-mix(in srgb, var(--fs-forge-live-tint) 16%, transparent);
+  --fs-forge-live-ink: #F3E3C0;
+  --fs-forge-live-glow: 0 0 8px color-mix(in srgb, var(--fs-forge-live-tint) 48%, transparent);
+
+  --fs-forge-hot-line: var(--iw-line-hot, #806337);
+  --fs-forge-hot-ink: var(--iw-text, #DDD6C6);
+
+  /* Pager chevron: a `--fs-chev-box` square with `--fs-chev-stroke` borders on
+     two adjacent edges, rotated 45deg. `--fs-chev-ink` is the derived shift
+     that puts the resulting ink bbox — not the box — on the button centre; see
+     the pager block at the end of this sheet for the derivation. */
+  --fs-chev-box: 6px;
+  --fs-chev-stroke: 2px;
+  --fs-chev-ink: calc((var(--fs-chev-box) - var(--fs-chev-stroke)) * 0.3535534);
+  --fs-forge-hot-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .05),
+    inset 0 0 10px -3px rgba(216, 121, 31, .35);
+}
+
 .compact-panel.fs-skill-panel {
   position: relative !important;
   min-height: 0 !important;
@@ -155,10 +214,17 @@
 
 [data-iw-skill-role="requirement"] {
   margin-top: 2px !important;
-  color: #D58282 !important;
+  /* Met requirement — muted, mirrors the game's own `text-white/45`. The red
+     is applied only for the unmet state (see the `data-iw-req-state` rule
+     below); SkillPanelRenderer derives that from the native line's class. */
+  color: #AAA291 !important;
   font-size: 10.8px !important;
   line-height: 1.15 !important;
   font-weight: 600 !important;
+}
+[data-iw-skill-role="requirement"][data-iw-req-state="unmet"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="requirement"][data-iw-req-state="unmet"] {
+  color: #D58282 !important;
 }
 
 [data-iw-skill-role="reward"] {
@@ -308,41 +374,45 @@
    Keep the two in sync with BUTTON_STYLES in SkillPanelRenderer.js. */
 .compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"],
 .compact-panel.fs-skill-panel button[data-iw-btn-state="primary"] {
-  background: linear-gradient(180deg, #A94318, #742A0D) !important;
-  border: 1px solid #C05A28 !important;
-  color: #FFEAD1 !important;
+  background: var(--fs-forge-live-bg) !important;
+  border: 1px solid var(--fs-forge-live-line) !important;
+  color: var(--fs-forge-live-ink) !important;
+  text-shadow: var(--fs-forge-live-glow) !important;
   font-family: var(--iw-font-ui) !important;
   font-size: 12px !important;
   font-weight: 700 !important;
-  letter-spacing: .06em !important;
+  letter-spacing: .09em !important;
   text-transform: uppercase !important;
 }
 
 .compact-panel.fs-skill-panel button[data-iw-skill-role="nav-button"],
 .compact-panel.fs-skill-panel button[data-iw-btn-state="secondary"],
 .compact-panel.fs-skill-panel button[data-iw-btn-state="icon"] {
-  background: linear-gradient(180deg, #242018, #17140F) !important;
-  border: 1px solid #58482B !important;
-  color: #DAD3C3 !important;
+  background: var(--fs-forge-bg) !important;
+  border: 1px solid var(--fs-forge-line) !important;
+  color: var(--fs-forge-ink) !important;
+  text-shadow: none !important;
   font-family: var(--iw-font-ui) !important;
   font-weight: 700 !important;
 }
 
 .compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"]:hover:not(:disabled) {
-  background: linear-gradient(180deg, #C04D1C, #87310E) !important;
-  border-color: var(--iw-ember-hi) !important;
+  border-color: var(--fs-forge-hot-line) !important;
+  box-shadow: var(--fs-forge-hot-shadow) !important;
 }
 
 .compact-panel.fs-skill-panel button[data-iw-btn-state="primary"] {
-  color: #FFE8CE !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 1px 0 #000 !important;
+  color: var(--fs-forge-live-ink) !important;
+  box-shadow: var(--fs-forge-live-shadow) !important;
 }
 
 .compact-panel.fs-skill-panel button[data-iw-btn-state="disabled"] {
-  opacity: .94 !important;
-  color: #8E8676 !important;
-  background: #15130F !important;
-  border-color: #3A3022 !important;
+  opacity: .7 !important;
+  color: var(--iw-faint, #666052) !important;
+  background: var(--fs-forge-bg) !important;
+  border-color: var(--fs-forge-line) !important;
+  box-shadow: var(--fs-forge-shadow) !important;
+  text-shadow: none !important;
   filter: none !important;
 }
 
@@ -382,12 +452,23 @@
   text-transform: none !important;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 768px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
     grid-template-columns: 82px minmax(0, 1fr) 112px !important;
     gap: 0 8px !important;
     padding-inline: 8px !important;
   }
+  /* DEAD, and would be WRONG if it ever fired — kept in place rather than
+     deleted (this project's convention for superseded rules, see the
+     `--fs-skills-nav-prev/next` note below), so read this before touching it.
+     styleButton() writes 155px inline with !important for action-button,
+     which always wins over any stylesheet width, so this 88px never applies.
+     It predates the touch-target/aspect-ratio pass ("True artwork ratios"
+     below) that fixed the button at 155x44 — 44 * the action_frame art's
+     3.52 ratio. If inline geometry is ever de-inlined (see
+     V1.6.0_MOBILE_LAYOUT_AUDIT.md §8), this rule reactivating would demand a
+     ~25px height at 88px width, well under the 44px touch-target floor — fix
+     it to the current ratio-derived width, don't just delete the block. */
   .compact-panel.fs-skill-panel button[data-iw-skill-role="action-button"] {
     width: 88px !important;
     min-width: 88px !important;
@@ -449,8 +530,8 @@
   min-height: 154px !important;
   padding: 0 !important;
   overflow: hidden !important;
-  border: 1px solid #554326 !important;
-  border-left: 2px solid color-mix(in srgb, var(--fs-skill-accent) 72%, #8B6C34) !important;
+  border: 1px solid var(--iw-th-edge) !important;
+  border-left: 2px solid color-mix(in srgb, var(--fs-skill-accent) 72%, var(--iw-th-edge)) !important;
   border-radius: 4px !important;
   background: linear-gradient(180deg, #151511 0%, #0F0F0D 100%) !important;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.54), 0 1px 0 rgba(255,255,255,.018) !important;
@@ -462,8 +543,8 @@
   width: 100% !important;
   height: 1px !important;
   background: linear-gradient(90deg,
-    color-mix(in srgb, var(--fs-skill-accent) 78%, #C8A861),
-    rgba(200,168,97,.16) 34%, transparent 72%) !important;
+    color-mix(in srgb, var(--fs-skill-accent) 78%, var(--iw-th-hairline-hi)),
+    color-mix(in srgb, var(--iw-th-accent) 16%, transparent) 34%, transparent 72%) !important;
   opacity: .9 !important;
 }
 
@@ -493,14 +574,14 @@
   min-height: 68px !important;
   margin: 0 0 6px !important;
   padding: 0 !important;
-  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 48%, #8C7448) !important;
+  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 48%, var(--iw-th-edge)) !important;
   border-radius: 50% !important;
   background:
     radial-gradient(circle at 42% 34%, color-mix(in srgb, var(--fs-skill-accent) 24%, #242019), #0D0D0B 68%) !important;
   color: color-mix(in srgb, var(--fs-skill-accent) 76%, #F0D9A8) !important;
   box-shadow:
     inset 0 0 0 5px #11100D,
-    inset 0 0 0 6px rgba(190,153,83,.32),
+    inset 0 0 0 6px color-mix(in srgb, var(--iw-th-brass) 44%, transparent),
     0 2px 8px rgba(0,0,0,.48) !important;
   font-size: 30px !important;
   line-height: 1 !important;
@@ -614,7 +695,7 @@
   margin: 9px 0 0 !important;
   padding-top: 8px !important;
   border-top: 1px solid #2C271E !important;
-  color: #D8847D !important;
+  color: #AAA291 !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="reward"] {
@@ -673,8 +754,8 @@
   min-width: 40px !important;
   height: 40px !important;
   min-height: 40px !important;
-  border-color: #665234 !important;
-  background: linear-gradient(180deg, #211E18, #14120F) !important;
+  border-color: var(--fs-forge-line) !important;
+  background: var(--fs-forge-bg) !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"] {
@@ -683,40 +764,34 @@
   height: 48px !important;
   min-height: 48px !important;
   padding: 0 12px !important;
-  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 72%, #8A6633) !important;
-  border-radius: 3px !important;
-  background:
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--fs-skill-accent) 74%, #593018),
-      color-mix(in srgb, var(--fs-skill-accent) 48%, #25170F)) !important;
-  color: #FFF0D8 !important;
+  border: 1px solid var(--fs-forge-live-line) !important;
+  border-radius: 2px !important;
+  background: var(--fs-forge-live-bg) !important;
+  color: var(--fs-forge-live-ink) !important;
   font-family: var(--iw-font-head) !important;
   font-size: 13px !important;
   font-weight: 700 !important;
-  letter-spacing: .07em !important;
+  letter-spacing: .09em !important;
   text-transform: uppercase !important;
-  text-shadow: 0 1px 0 rgba(0,0,0,.8) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.06),
-    inset 0 -1px 0 rgba(0,0,0,.48),
-    0 2px 5px rgba(0,0,0,.28) !important;
+  text-shadow: var(--fs-forge-live-glow) !important;
+  box-shadow: var(--fs-forge-live-shadow) !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]:hover:not(:disabled) {
-  background:
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--fs-skill-accent) 86%, #744020),
-      color-mix(in srgb, var(--fs-skill-accent) 58%, #2A190F)) !important;
-  border-color: color-mix(in srgb, var(--fs-skill-accent) 86%, #C49A55) !important;
-  filter: brightness(1.06) !important;
+  border-color: var(--iw-gold, #D4AD63) !important;
+  box-shadow:
+    inset 0 0 14px -2px color-mix(in srgb, var(--fs-forge-live-tint) 70%, transparent),
+    inset 0 1px 0 rgba(255, 216, 150, .24),
+    0 0 0 1px color-mix(in srgb, var(--fs-forge-live-tint) 22%, transparent) !important;
+  color: #FFF6E2 !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-btn-state="disabled"] {
-  filter: saturate(.45) brightness(.82) !important;
-  opacity: .9 !important;
+  filter: none !important;
+  opacity: .7 !important;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
     --fs-skill-identity-w: 154px;
     --fs-skill-command-w: 148px;
@@ -733,7 +808,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
     grid-template-columns: minmax(104px, 1fr) auto !important;
     grid-template-areas:
@@ -834,16 +909,9 @@
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"] {
-  background:
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--fs-skill-accent) 84%, #754522),
-      color-mix(in srgb, var(--fs-skill-accent) 62%, #2B1B10)) !important;
-  border-color: color-mix(in srgb, var(--fs-skill-accent) 88%, #B58B4B) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.10),
-    inset 0 -1px 0 rgba(0,0,0,.52),
-    0 2px 6px rgba(0,0,0,.32),
-    0 0 12px color-mix(in srgb, var(--fs-skill-accent) 16%, transparent) !important;
+  background: var(--fs-forge-live-bg) !important;
+  border-color: var(--fs-forge-live-line) !important;
+  box-shadow: var(--fs-forge-live-shadow) !important;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -851,16 +919,16 @@
    Real atlas art + metallic/recessed fantasy card chrome.
    ══════════════════════════════════════════════════════════════════════ */
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
-  border: 1px solid #6A5430 !important;
+  border: 1px solid var(--iw-th-edge) !important;
   border-left-width: 2px !important;
-  border-left-color: color-mix(in srgb, var(--fs-skill-accent) 70%, #B68A45) !important;
+  border-left-color: color-mix(in srgb, var(--fs-skill-accent) 70%, var(--iw-th-edge)) !important;
   background:
     radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 34%),
     linear-gradient(135deg, rgba(181,139,71,.028) 0 1px, transparent 1px 10px),
-    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
   box-shadow:
     inset 0 0 0 1px #0B0A08,
-    inset 0 0 0 2px rgba(143,107,55,.16),
+    inset 0 0 0 2px color-mix(in srgb, var(--iw-th-brass) 24%, transparent),
     inset 0 1px 0 rgba(255,236,190,.035),
     0 2px 7px rgba(0,0,0,.42) !important;
 }
@@ -871,7 +939,7 @@
   inset: 4px !important;
   z-index: 0 !important;
   pointer-events: none !important;
-  border: 1px solid rgba(133,101,54,.22) !important;
+  border: 1px solid color-mix(in srgb, var(--iw-th-edge) 62%, transparent) !important;
   border-radius: 2px !important;
   background: none !important;
   box-shadow: inset 0 0 12px rgba(0,0,0,.26) !important;
@@ -897,15 +965,15 @@
   height: 78px !important;
   min-height: 78px !important;
   margin: 0 0 8px !important;
-  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 45%, #A98247) !important;
+  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 45%, var(--iw-th-edge)) !important;
   border-radius: 50% !important;
   background-color: #0D0D0B !important;
   box-shadow:
     inset 0 0 0 5px #11100D,
-    inset 0 0 0 6px rgba(187,146,78,.36),
+    inset 0 0 0 6px color-mix(in srgb, var(--iw-th-brass) 50%, transparent),
     inset 0 0 18px rgba(0,0,0,.35),
     0 0 0 3px #0A0907,
-    0 0 0 4px rgba(123,92,49,.55),
+    0 0 0 4px color-mix(in srgb, var(--iw-th-brass) 55%, transparent),
     0 3px 10px rgba(0,0,0,.52) !important;
   pointer-events: none !important;
 }
@@ -922,7 +990,7 @@
   left: 50% !important;
   top: -6px !important;
   transform: translateX(-50%) rotate(45deg) !important;
-  border: 1px solid #846638 !important;
+  border: 1px solid var(--iw-th-edge) !important;
   background: #15120D !important;
   box-shadow: 0 0 0 2px #090806 !important;
 }
@@ -933,7 +1001,7 @@
   left: 50% !important;
   bottom: -6px !important;
   transform: translateX(-50%) rotate(45deg) !important;
-  border: 1px solid #846638 !important;
+  border: 1px solid var(--iw-th-edge) !important;
   background: #15120D !important;
   box-shadow: 0 0 0 2px #090806 !important;
 }
@@ -979,35 +1047,25 @@
 }
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"] {
   position: relative !important;
-  border: 1px solid #715A35 !important;
-  border-radius: 3px !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.025), transparent 38%),
-    linear-gradient(180deg, #211E17, #11100D) !important;
-  color: #E6D8C0 !important;
-  box-shadow:
-    inset 0 0 0 1px #0B0A08,
-    inset 0 1px 0 rgba(255,255,255,.04),
-    0 1px 3px rgba(0,0,0,.30) !important;
+  border: 1px solid var(--fs-forge-line) !important;
+  border-radius: 2px !important;
+  background: var(--fs-forge-bg) !important;
+  color: transparent !important;
+  box-shadow: var(--fs-forge-shadow) !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"]:hover:not(:disabled) {
-  border-color: #9A7842 !important;
-  background: linear-gradient(180deg, #2A251C, #15120E) !important;
-  color: #FFF0D5 !important;
+  border-color: var(--fs-forge-hot-line) !important;
+  background: var(--fs-forge-bg) !important;
+  box-shadow: var(--fs-forge-hot-shadow) !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"] {
   position: relative !important;
   overflow: visible !important;
   border-width: 1px !important;
-  border-radius: 3px !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,.46),
-    inset 0 1px 0 rgba(255,255,255,.10),
-    inset 0 -2px 0 rgba(0,0,0,.35),
-    0 2px 7px rgba(0,0,0,.40),
-    0 0 15px color-mix(in srgb, var(--fs-skill-accent) 13%, transparent) !important;
+  border-radius: 2px !important;
+  box-shadow: var(--fs-forge-live-shadow) !important;
 }
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::before,
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::after {
@@ -1018,7 +1076,7 @@
   height: 8px !important;
   transform: translateX(-50%) rotate(45deg) !important;
   pointer-events: none !important;
-  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 70%, #C49B58) !important;
+  border: 1px solid var(--fs-forge-live-line) !important;
   background: #17120D !important;
   box-shadow: 0 0 0 2px #090806 !important;
 }
@@ -1037,7 +1095,7 @@
   background: none !important;
   box-shadow: none !important;
 }
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
     width: 66px !important;
     min-width: 66px !important;
@@ -1046,7 +1104,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
     width: 54px !important;
     min-width: 54px !important;
@@ -1092,7 +1150,7 @@
   background:
     radial-gradient(circle at 18% 0%, rgba(255,255,255,.03), transparent 34%),
     var(--fs-skills-panel-texture),
-    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
   background-blend-mode: normal, soft-light, normal !important;
 }
 
@@ -1142,34 +1200,21 @@
   opacity: .72 !important;
 }
 
-.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"] {
-  background-image: var(--fs-skills-ui-atlas), linear-gradient(180deg, #211E17, #11100D) !important;
-  background-size: var(--fs-ui-nav-idle-size), 100% 100% !important;
-  background-position: var(--fs-ui-nav-idle-position), center !important;
-  background-repeat: no-repeat, no-repeat !important;
-}
-
-.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"]:hover:not(:disabled) {
-  background-image: var(--fs-skills-ui-atlas), linear-gradient(180deg, #2A251C, #15120E) !important;
-  background-size: var(--fs-ui-nav-active-size), 100% 100% !important;
-  background-position: var(--fs-ui-nav-active-position), center !important;
-  background-repeat: no-repeat, no-repeat !important;
-}
-
+/* The pager and the action button are PLATES, not sprites. The nav_frame and
+   action_frame cells of skills_ui_atlas.webp used to be painted here; they had
+   in fact stopped painting long before this, because the `background`
+   SHORTHAND styleButton() writes inline with `!important` resets
+   background-image and inline `!important` outranks every rule in this file.
+   Rather than leave two contradicting skins in the sheet, the sprite layers
+   are gone and the forged plate is the surface — CLAUDE.md's "a sprite frame
+   on a button means the button's own plate must go", run the other way. The
+   atlas cells themselves are untouched; the quest rail still draws
+   action_frame, and the medallion / xp-plaque / filigree cells are unaffected.
+   Reverting means restoring the sprite layers here AND dropping `background`
+   from BUTTON_STYLES, not one without the other. */
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"],
 .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"] {
-  background-image:
-    var(--fs-skills-ui-atlas),
-    linear-gradient(180deg, color-mix(in srgb, var(--fs-skill-accent) 84%, #754522), color-mix(in srgb, var(--fs-skill-accent) 62%, #2B1B10)) !important;
-  background-size: var(--fs-ui-action-idle-size), 100% 100% !important;
-  background-position: var(--fs-ui-action-idle-position), center !important;
-  background-repeat: no-repeat, no-repeat !important;
-}
-
-.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"][data-iw-btn-state="disabled"] {
-  background-image: var(--fs-skills-ui-atlas), linear-gradient(180deg, #2A261F, #171510) !important;
-  background-size: var(--fs-ui-action-disabled-size), 100% 100% !important;
-  background-position: var(--fs-ui-action-disabled-position), center !important;
-  background-repeat: no-repeat, no-repeat !important;
+  background-image: none !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] [data-iw-skill-role="xp-gain"] {
@@ -1186,7 +1231,7 @@
   text-shadow: 0 1px 1px #000 !important;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] [data-iw-skill-role="xp-gain"] {
     min-width: 84px !important;
     min-height: 30px !important;
@@ -1256,7 +1301,7 @@
   flex: 0 0 auto !important;
   width: auto !important;
 }
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
     grid-template-columns: minmax(104px, 1fr) auto !important;
     grid-template-areas:
@@ -1364,7 +1409,7 @@
   font-weight: 700 !important;
   letter-spacing: .04em !important;
   text-shadow: 0 1px 1px #000 !important;
-  border: 1px solid #6B4F28 !important;
+  border: 1px solid var(--iw-th-edge) !important;
   background: linear-gradient(180deg, #21170E, #100D09) !important;
 }
 .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] .fs-skill-base-exp {
@@ -1413,12 +1458,12 @@
    column, with its inset derived from --fs-skill-command-w). What broke the
    rail before was MAGIC OFFSETS — `top: 17px; right: 38px` plus a fixed
    `translateY(26px)` on the action button. Do not reintroduce those. */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
     width: 102px !important;
   }
 }
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
     position: static !important;
     padding: 16px 14px !important;
@@ -1496,7 +1541,7 @@
   width: 46px !important;
   height: 1px !important;
   margin: 0 auto 5px !important;
-  background: linear-gradient(90deg, transparent, #9B7437 28%, #D09A4B 50%, #9B7437 72%, transparent) !important;
+  background: linear-gradient(90deg, transparent, var(--iw-th-hairline) 28%, var(--iw-th-hairline-hi) 50%, var(--iw-th-hairline) 72%, transparent) !important;
   box-shadow: 0 1px 0 rgba(0,0,0,.75) !important;
 }
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
@@ -1578,16 +1623,16 @@
 }
 .fs-skills-section-frame[data-iw-skills-ui-ready="1"] {
   position: relative !important;
-  border: 1px solid #6B4F28 !important;
+  border: 1px solid var(--iw-th-edge) !important;
   border-radius: 4px !important;
   background:
     radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 32%),
     var(--fs-skills-panel-texture),
-    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
   background-blend-mode: normal, soft-light, normal !important;
   box-shadow:
     inset 0 0 0 1px rgba(0,0,0,.78),
-    inset 0 1px 0 rgba(226,164,72,.08),
+    inset 0 1px 0 var(--iw-th-glow),
     0 5px 18px rgba(0,0,0,.24) !important;
 }
 .fs-skills-section-frame[data-iw-skills-ui-ready="1"]::before {
@@ -1599,7 +1644,7 @@
   right: 12px !important;
   top: 0 !important;
   height: 1px !important;
-  background: linear-gradient(90deg, transparent, #9B7437 14%, #D09A4B 50%, #9B7437 86%, transparent) !important;
+  background: linear-gradient(90deg, transparent, var(--iw-th-hairline) 14%, var(--iw-th-hairline-hi) 50%, var(--iw-th-hairline) 86%, transparent) !important;
   opacity: .78 !important;
 }
 
@@ -1663,10 +1708,10 @@
   margin: 0 0 3px !important;
   box-shadow:
     inset 0 0 0 4px #11100D,
-    inset 0 0 0 5px rgba(187,146,78,.34),
+    inset 0 0 0 5px color-mix(in srgb, var(--iw-th-brass) 48%, transparent),
     inset 0 0 12px rgba(0,0,0,.35),
     0 0 0 2px #0A0907,
-    0 0 0 3px rgba(123,92,49,.50),
+    0 0 0 3px color-mix(in srgb, var(--iw-th-brass) 50%, transparent),
     0 2px 7px rgba(0,0,0,.48) !important;
 }
 
@@ -1736,7 +1781,7 @@
 
 
 
-@media (max-width: 900px) and (min-width: 601px) {
+@media (max-width: 1024px) and (min-width: 641px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
     --fs-skill-identity-w: 126px;
     --fs-skill-command-w: 126px;
@@ -1748,7 +1793,7 @@
 
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
     --fs-skill-identity-w: 78px;
     --fs-skill-command-w: auto;
@@ -1880,8 +1925,8 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 11px !important;
-  padding: 12px 14px !important;
+  gap: 8px !important;
+  padding: 8px 14px !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="nav-group"] {
@@ -1964,15 +2009,16 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
 
 /* ── Base EXP plaque: 3:1 like the art, text inside the flat centre ─── */
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp {
-  width: 174px !important;
-  min-width: 174px !important;
-  height: 58px !important;
-  min-height: 58px !important;
-  /* The flared ends occupy roughly the outer sixth of the sprite on each
-     side; keep the label off them. Bottom bias: the plaque's visual centre
-     sits a touch above its box centre. */
-  padding: 0 34px 4px !important;
-  margin: 2px auto 3px !important;
+  width: 150px !important;
+  min-width: 150px !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  /* 150x50 keeps the sprite's native 3:1 ratio. The flared ends occupy
+     roughly the outer sixth of the sprite on each side; keep the label off
+     them. Bottom bias: the plaque's visual centre sits a touch above its box
+     centre. */
+  padding: 0 28px 3px !important;
+  margin: 1px auto 2px !important;
   font-size: 12px !important;
   letter-spacing: .03em !important;
   font-variant-numeric: tabular-nums !important;
@@ -2001,25 +2047,11 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   position: static !important;
 }
 
-/* Desktop only: below 601px the shell has no command column to centre over —
-   the rail becomes a full-width row — so the pager stays in flow there. */
-@media (min-width: 601px) {
-  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] {
-    position: absolute !important;
-    z-index: 4 !important;
-    /* Centred over the command column, the last track of the shell. */
-    right: calc((var(--fs-skill-command-w, 176px) - 92px) / 2) !important;
-    /* The action button is 44px tall and centred, so its top edge sits at
-       (50% - 22px). Two 44px hit areas plus a 4px gap are 92px wide; stack
-       them so their bottom edge meets that top edge exactly — the boxes must
-       not overlap the button or a near-miss click would hit the pager. */
-    top: 50% !important;
-    transform: translateY(-66px) !important;
-    width: 92px !important;
-    margin: 0 !important;
-    gap: 4px !important;
-  }
-}
+/* Desktop-only content-branch pager placement moved to the "Recipe pager —
+   thin cool-toned arrows" block at the end of this file: it now lays the two
+   arrows ACROSS the full command column (`space-between`) so they flank the
+   centred action button instead of stacking above it. Below 641px the rail is
+   a full-width row and the pager stays in flow. */
 
 /* The artwork is the control. Strip only the things that competed with it:
    the button's own border/box-shadow (a second, squarer outline around the
@@ -2084,19 +2116,22 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
 }
 
 /* ── Vertical rhythm ────────────────────────────────────────────────── */
+/* Tightened per Curtis (2026-09): the card was reading far too tall. Every
+   value here is a straight reduction of the same rule that set the taller
+   rhythm — the composition, type hierarchy and art ratios are unchanged. */
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
-  min-height: 136px !important;
+  min-height: 104px !important;
   align-items: center !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
-  gap: 4px !important;
-  padding: 12px 18px !important;
+  gap: 3px !important;
+  padding: 8px 18px !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"]::before {
-  font-size: 18px !important;
-  line-height: 1.14 !important;
+  font-size: 16px !important;
+  line-height: 1.12 !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="ingredient"],
@@ -2104,21 +2139,21 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-detail"] {
   margin-top: 0 !important;
   font-size: 11px !important;
-  line-height: 1.3 !important;
+  line-height: 1.25 !important;
 }
 
 /* ── Identity column ────────────────────────────────────────────────── */
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
-  gap: 3px !important;
-  padding: 12px 10px !important;
+  gap: 2px !important;
+  padding: 8px 10px !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
-  width: 58px !important;
-  min-width: 58px !important;
-  height: 58px !important;
-  min-height: 58px !important;
-  margin: 0 0 6px !important;
+  width: 46px !important;
+  min-width: 46px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  margin: 0 0 4px !important;
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::before {
@@ -2140,21 +2175,21 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
   width: 92px !important;
   height: 5px !important;
-  margin-top: 4px !important;
+  margin-top: 3px !important;
   border-radius: 1px !important;
 }
 
 /* ── Narrow layouts inherit the same flow ───────────────────────────── */
-@media (max-width: 900px) and (min-width: 601px) {
+@media (max-width: 1024px) and (min-width: 641px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
     --fs-skill-command-w: 168px;
   }
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp {
-    width: 168px !important;
-    min-width: 168px !important;
-    height: 56px !important;
-    min-height: 56px !important;
-    padding: 0 32px 4px !important;
+    width: 144px !important;
+    min-width: 144px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 26px 3px !important;
     font-size: 11.5px !important;
   }
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"],
@@ -2166,7 +2201,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
     flex-direction: row !important;
     align-items: center !important;
@@ -2255,6 +2290,246 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   }
 }
 
+/* ── Base readout: simplified ──────────────────────────────────────────
+   The atlas "xp_plaque" sprite (heavy border + flared horns + centre stud)
+   read as too ornate for a single-line datum. Per Curtis (2026-09) the frame
+   artwork is dropped on every skill card and "Base: N" becomes a plain
+   recessed chip — a hairline border tinted by the skill accent, and nothing
+   else. `SkillsArtService` and the atlas asset are untouched; this only
+   neutralises the `background-image` the `[data-iw-skills-ui-ready]` rule
+   paints, and collapses the fixed 3:1 box (which only existed to keep that
+   sprite's aspect ratio) down to the content. Listed at both the layout and
+   the skills-ui-ready specificity so it wins over the sprite rule and every
+   sizing override above. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-base-exp,
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] .fs-skill-base-exp {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 3px auto 4px !important;
+  padding: 3px 13px 4px !important;
+  white-space: nowrap !important;
+  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 34%, #453A28) !important;
+  border-radius: 3px !important;
+  background-color: color-mix(in srgb, var(--fs-skill-accent) 7%, #13120E) !important;
+  background-image: none !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  color: #E6D7BC !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 1px 0 #000 !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   Recipe pager — thin cool-toned arrows flanking the action button
+
+   Per Curtis (2026-09) the ornate `skills_nav_*.svg` framed arrow is dropped.
+   The pager is now two thin steel plates, one on each side of the action
+   button, matched to its 44px height, in a colour that deliberately reads
+   apart from the warm accent action button. The whole command cluster is
+   centred in its zone (which spans the card height, so it centres in the
+   frame). Two React shapes, same result:
+
+     A) nav pair + action button in the command cell — `nav-group` becomes
+        `display: contents` so its two arrows join the command flex row as
+        real siblings, then flow order lays them prev / action / next. This
+        is presentation-only: no gameplay node is reparented.
+     B) nav pair in the CONTENT branch beside the recipe title — it stays
+        there and is positioned over the command column, its width pinned to
+        `--fs-skill-command-w` with `space-between`, so the two arrows land at
+        the column's edges, flanking the centred action button. The insets
+        are derived from the column width and the zone padding, not guessed.
+
+   `SkillPanelRenderer.styleButton()` writes the plate + thin geometry inline
+   with `!important`; keep NAV_BUTTON_W (26px) in step with the width here.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Command cell: one centred horizontal row. */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+}
+
+/* Widen the command track to hold arrow + gap + action + gap + arrow, with
+   enough slack that the content-branch pager (laid across the whole column)
+   clears the centred action button on both sides. */
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+  --fs-skill-command-w: 248px;
+}
+@media (max-width: 1024px) and (min-width: 641px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    --fs-skill-command-w: 240px;
+  }
+}
+
+/* Shape A: dissolve the group box so the arrows are flex items of the row. */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] [data-iw-skill-role="nav-group"] {
+  display: contents !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"] {
+  order: 0 !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="action-button"] {
+  order: 1 !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"] {
+  order: 2 !important;
+}
+
+/* Shape B: pager left in the content branch, laid across the command column. */
+@media (min-width: 641px) {
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] {
+    position: absolute !important;
+    z-index: 4 !important;
+    right: 0 !important;
+    top: 50% !important;
+    left: auto !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: var(--fs-skill-command-w, 236px) !important;
+    padding: 0 10px !important;
+    margin: 0 !important;
+    gap: 0 !important;
+  }
+}
+
+/* The pager plate. Geometry AND colour mirror the inline copy from
+   styleButton(), which is the one that actually wins; the chevron is a rotated
+   border corner so it needs no artwork. The plate is the inventory row's idle
+   tab (`--fs-forge-*`) — per Curtis (2026-09) these arrows are no longer the
+   cool-steel contrast they were, they are the same forged plate as everything
+   else on the page. */
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] {
+  display: grid !important;
+  place-items: center !important;
+  position: relative !important;
+  width: 26px !important;
+  min-width: 26px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border: 1px solid var(--fs-forge-line) !important;
+  border-radius: 2px !important;
+  background: var(--fs-forge-bg) !important;
+  background-image: none !important;
+  box-shadow: var(--fs-forge-shadow) !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  filter: none !important;
+  transition: border-color .12s, box-shadow .12s !important;
+}
+
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] > *,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] > * {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* ── The chevron, and why it is positioned ABSOLUTELY ──────────────────
+   `place-items: center` on the button does NOT centre this pseudo-element,
+   for the reason CLAUDE.md already records for the quest reward plaque: the
+   native `‹`/`›` glyph is still in the button (suppressed, not removed), so in
+   a GRID it is a second anonymous item on its own row, both auto rows stretch
+   to share the 44px, and the chevron ends up centred in the TOP row. Measured
+   in the fixture it sat 8.3px above the button's centre — which is exactly the
+   "chevron is not centred in the button" report. Taking the pseudo out of flow
+   is the fix that cannot be re-broken by whatever the game leaves in the
+   button; `place-items` is kept only for the (blockified) glyph child.
+
+   Then the ink. The box is a square with borders on two ADJACENT edges, so
+   its ink is an L hugging the far corner, not a centred mark: rotated 45deg
+   the ink bounding box is `(box + stroke)/sqrt2` across by `2*box/sqrt2` tall,
+   and its centre sits `(box - stroke)/(2*sqrt2)` along the pointing axis from
+   the box centre — 1.414px at 6px/2px. Vertically the bbox is symmetric, so
+   only the pointing axis needs the shift. `--fs-chev-ink` derives it; do not
+   round it to a whole pixel, and do not "tidy" it into the transform, because
+   both re-break the moment the box or stroke changes. `box-sizing` is declared
+   here rather than inherited: the live page ships Tailwind preflight
+   (border-box) and a harness that does not would put the ink 0.7px further
+   out, which is exactly the class of fixture lie this file keeps warning
+   about. `::after` is left disabled; only `::before` draws. */
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  box-sizing: border-box !important;
+  width: var(--fs-chev-box) !important;
+  height: var(--fs-chev-box) !important;
+  border: 0 solid var(--iw-gold-dim, #9D8458) !important;
+  border-right-width: var(--fs-chev-stroke) !important;
+  border-bottom-width: var(--fs-chev-stroke) !important;
+  background: none !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+  transition: border-color .12s !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"]::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"]::before {
+  transform: translate(-50%, -50%) translateX(var(--fs-chev-ink)) rotate(135deg) !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"]::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"]::before {
+  transform: translate(-50%, -50%) translateX(calc(-1 * var(--fs-chev-ink))) rotate(-45deg) !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::after,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::after {
+  content: none !important;
+  display: none !important;
+}
+
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:hover:not(:disabled),
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:hover:not(:disabled) {
+  border-color: var(--fs-forge-hot-line) !important;
+  box-shadow: var(--fs-forge-hot-shadow) !important;
+  filter: none !important;
+  transform: none !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:hover:not(:disabled)::before,
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:hover:not(:disabled)::before {
+  border-color: #FFE2AE !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:disabled {
+  opacity: .45 !important;
+}
+
+/* Below 641px the command rail is a full-width row; keep the arrows thin and
+   flanking there too. */
+@media (max-width: 640px) {
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
+    flex-direction: row !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"] {
+    order: 0 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="action-button"] {
+    order: 1 !important;
+  }
+  .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"] {
+    order: 2 !important;
+  }
+}
+
 
 /* ══════════════════════════════════════════════════════════════════════
    Quest cards — forged into the same family as the skill action frames
@@ -2274,16 +2549,16 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   margin-bottom: 8px !important;
   padding: 0 !important;
   overflow: hidden !important;
-  border: 1px solid #6A5430 !important;
-  border-left: 2px solid color-mix(in srgb, var(--fs-quest-accent) 70%, #B68A45) !important;
+  border: 1px solid var(--iw-th-edge) !important;
+  border-left: 2px solid color-mix(in srgb, var(--fs-quest-accent) 70%, var(--iw-th-edge)) !important;
   border-radius: 4px !important;
   background:
     radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 34%),
     linear-gradient(135deg, rgba(181,139,71,.028) 0 1px, transparent 1px 10px),
-    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
   box-shadow:
     inset 0 0 0 1px #0B0A08,
-    inset 0 0 0 2px rgba(143,107,55,.16),
+    inset 0 0 0 2px color-mix(in srgb, var(--iw-th-brass) 24%, transparent),
     inset 0 1px 0 rgba(255,236,190,.035),
     0 2px 7px rgba(0,0,0,.42) !important;
 }
@@ -2292,7 +2567,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   background:
     radial-gradient(circle at 18% 0%, rgba(255,255,255,.03), transparent 34%),
     var(--fs-skills-panel-texture),
-    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
   background-blend-mode: normal, soft-light, normal !important;
 }
 
@@ -2306,8 +2581,8 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   z-index: 2 !important;
   pointer-events: none !important;
   background: linear-gradient(90deg,
-    color-mix(in srgb, var(--fs-quest-accent) 78%, #C8A861),
-    rgba(200,168,97,.16) 34%, transparent 72%) !important;
+    color-mix(in srgb, var(--fs-quest-accent) 78%, var(--iw-th-hairline-hi)),
+    color-mix(in srgb, var(--iw-th-accent) 16%, transparent) 34%, transparent 72%) !important;
   opacity: .9 !important;
 }
 
@@ -2317,7 +2592,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   inset: 4px !important;
   z-index: 0 !important;
   pointer-events: none !important;
-  border: 1px solid rgba(133,101,54,.22) !important;
+  border: 1px solid color-mix(in srgb, var(--iw-th-edge) 62%, transparent) !important;
   border-radius: 2px !important;
   box-shadow: inset 0 0 12px rgba(0,0,0,.26) !important;
 }
@@ -2353,6 +2628,10 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   flex-direction: column !important;
   gap: 3px !important;
 }
+/* The live page zeroes <p> margins via Tailwind preflight; do it here too so
+   the column's rhythm is `gap` alone and never the UA's 1em, whether or not
+   the host reset reaches these nodes. */
+.compact-panel.fs-quest-panel [data-iw-quest-zone="content"] > * { margin: 0 !important; }
 .compact-panel.fs-quest-panel [data-iw-quest-zone="commands"] {
   flex: 0 0 auto !important;
   display: flex !important;
@@ -2377,16 +2656,16 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   place-items: center !important;
   width: var(--fs-quest-sigil-size) !important;
   height: var(--fs-quest-sigil-size) !important;
-  border: 1px solid color-mix(in srgb, var(--fs-quest-accent) 46%, #A98247) !important;
+  border: 1px solid color-mix(in srgb, var(--fs-quest-accent) 46%, var(--iw-th-edge)) !important;
   border-radius: 50% !important;
   background:
     radial-gradient(circle at 42% 34%, color-mix(in srgb, var(--fs-quest-accent) 22%, #242019), #0D0D0B 68%) !important;
   box-shadow:
     inset 0 0 0 5px #11100D,
-    inset 0 0 0 6px rgba(187,146,78,.34),
+    inset 0 0 0 6px color-mix(in srgb, var(--iw-th-brass) 48%, transparent),
     inset 0 0 16px rgba(0,0,0,.35),
     0 0 0 3px #0A0907,
-    0 0 0 4px rgba(123,92,49,.52),
+    0 0 0 4px color-mix(in srgb, var(--iw-th-brass) 52%, transparent),
     0 3px 10px rgba(0,0,0,.5) !important;
   pointer-events: none !important;
 }
@@ -2434,7 +2713,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   transform: translateX(-50%) !important;
   z-index: 3 !important;
   padding: 1px 7px !important;
-  border: 1px solid color-mix(in srgb, var(--fs-quest-accent) 50%, #6B4F28) !important;
+  border: 1px solid color-mix(in srgb, var(--fs-quest-accent) 50%, var(--iw-th-edge)) !important;
   border-radius: 2px !important;
   background: linear-gradient(180deg, #201A11, #100D09) !important;
   color: #E7D6B4 !important;
@@ -2765,51 +3044,467 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   opacity: .6 !important;
 }
 
-/* Narrow layout: sigil moves inline above the content. */
-@media (max-width: 600px) {
+/* ── Narrow layout: the LIVE card's format, wearing the skin's art ────────
+   Curtis (2026-09): match the vanilla Quests panel's layout on phones, not a
+   bespoke stack. The live card reads:
+
+     Title .....................................  [ Turn In ]
+     Brief ........................................ [ Skip ]
+     ◆ Objective  N/M
+     Reward: +g • +XP                    (full width)
+     ▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░    (full-width rail)
+     N% complete
+
+   So: the command buttons pin to the TOP-RIGHT of the content row, the text
+   lines that sit level with them clear them with padding, and the reward
+   plaque + progress rail run the full column width underneath. The forged
+   frame, the sigil medallion (slim left rail), the 3-slice reward plaque and
+   the action-frame button sprites all stay — just scaled to this rhythm.
+
+   `commands` is the LAST child of `row` in the DOM (no reparenting), so a
+   float can't rise beside the earlier text; absolute placement plus targeted
+   `padding-right` is what reproduces the wrap. */
+@media (max-width: 640px) {
   .compact-panel.fs-quest-panel > [data-iw-quest-zone="body"] {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: 56px minmax(0, 1fr) !important;
     grid-template-areas:
-      "sigil"
-      "row"
-      "track"
-      "label" !important;
-    row-gap: 8px !important;
-    padding: 12px 12px 11px !important;
-    justify-items: center !important;
+      "sigil row"
+      "sigil track"
+      "sigil label" !important;
+    align-items: center !important;
+    row-gap: 7px !important;
+    column-gap: 8px !important;
+    padding: 12px 12px 11px 8px !important;
   }
   .compact-panel.fs-quest-panel .fs-quest-sigil {
-    --fs-quest-sigil-size: 58px;
-    margin-bottom: 8px !important;
+    --fs-quest-sigil-size: 44px;
+    --fs-quest-icon-scale: .62;
+    margin-bottom: 3px !important;
   }
-  .compact-panel.fs-quest-panel .fs-quest-sigil::before { font-size: 22px !important; }
+  .compact-panel.fs-quest-panel .fs-quest-sigil::before { font-size: 16px !important; }
+  .compact-panel.fs-quest-panel .fs-quest-sigil-pct {
+    bottom: -14px !important;
+    padding: 0 4px !important;
+    font-size: 8.5px !important;
+  }
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] .fs-quest-sigil::after {
+    inset: -8px -6px !important;
+  }
+
   .compact-panel.fs-quest-panel [data-iw-quest-zone="row"] {
-    width: 100% !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 10px !important;
+    position: relative !important;
+    display: block !important;
   }
   .compact-panel.fs-quest-panel [data-iw-quest-zone="commands"] {
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 116px !important;
+    justify-content: flex-start !important;
+    gap: 5px !important;
   }
-  /* aspect-ratio ties height to width here too, so the controls must be
-     capped: left to grow across a full-width row they would stand ~80px
-     tall. 176-200px keeps them on the frame's 3.52 ratio at 50-57px. */
+  /* action_frame is 3.52:1 and can't drop to the vanilla button's ~88px
+     without distorting; 116x33 holds the ratio and matches the live card's
+     compact button height. WCAG 2.5.8 (24px) is cleared; the 44px target is
+     traded for live parity, as the skill pager already is at 26px. */
   .compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
-    flex: 1 1 176px !important;
-    max-width: 200px !important;
+    aspect-ratio: auto !important;
+    width: 116px !important;
+    min-width: 0 !important;
+    max-width: 116px !important;
+    height: 33px !important;
+    min-height: 0 !important;
+    padding: 0 6px !important;
+    font-size: 9.5px !important;
+    letter-spacing: .04em !important;
   }
-  /* The plaque is the widest thing in the column at this width; shrink the
-     label a touch so cap + text + cap still fits a 320px viewport. */
+
+  /* Only the lines level with the button block reserve room for it. */
+  .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"],
+  .compact-panel.fs-quest-panel [data-iw-quest-role="title"],
+  .compact-panel.fs-quest-panel [data-iw-quest-role="brief"],
+  .compact-panel.fs-quest-panel [data-iw-quest-role="objective"] {
+    padding-right: 124px !important;
+  }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"] { font-size: 8.5px !important; }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="title"] {
+    font-size: 13px !important;
+    line-height: 1.12 !important;
+  }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="brief"] { font-size: 10.5px !important; }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="objective"] { font-size: 10.5px !important; }
+
+  /* Reward plaque: full column width, below the button block. Two-button
+     (Skip) cards carry a taller command stack, so their reward drops an
+     extra notch — the way the live card seats its reward near the Skip
+     button's baseline. */
   .compact-panel.fs-quest-panel [data-iw-quest-role="reward"] {
-    --fs-plaque-h: 38px;
-    justify-self: start !important;
+    --fs-plaque-h: 29px;
+    align-self: flex-start !important;
     max-width: 100% !important;
+    margin-top: 4px !important;
+  }
+  .compact-panel.fs-quest-panel [data-iw-quest-zone="row"]:has([data-iw-quest-role="skip"]) [data-iw-quest-role="reward"] {
+    margin-top: 22px !important;
   }
   .compact-panel.fs-quest-panel [data-iw-quest-role="reward"]::before {
+    font-size: 9.5px !important;
+  }
+
+  .compact-panel.fs-quest-panel [data-iw-quest-role="progress-track"] { height: 4px !important; }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="progress-label"] {
+    margin-top: 1px !important;
+    font-size: 9px !important;
+  }
+}
+
+/* Sub-400px: tighten the rail, buttons and plaque another step. */
+@media (max-width: 400px) {
+  .compact-panel.fs-quest-panel > [data-iw-quest-zone="body"] {
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    column-gap: 7px !important;
+    padding-left: 7px !important;
+    padding-right: 10px !important;
+  }
+  .compact-panel.fs-quest-panel .fs-quest-sigil { --fs-quest-sigil-size: 40px; }
+  .compact-panel.fs-quest-panel .fs-quest-sigil::before { font-size: 15px !important; }
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] .fs-quest-sigil::after {
+    inset: -7px -5px !important;
+  }
+  .compact-panel.fs-quest-panel [data-iw-quest-zone="commands"] { width: 106px !important; }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"],
+  .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
+    width: 106px !important;
+    max-width: 106px !important;
+    height: 30px !important;
+    font-size: 9px !important;
+  }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"],
+  .compact-panel.fs-quest-panel [data-iw-quest-role="title"],
+  .compact-panel.fs-quest-panel [data-iw-quest-role="brief"],
+  .compact-panel.fs-quest-panel [data-iw-quest-role="objective"] {
+    padding-right: 114px !important;
+  }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="reward"] { --fs-plaque-h: 27px; }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="reward"]::before { font-size: 9px !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Skill card composition — full-height identity, right-hand command band
+   (Curtis, 2026-09)
+
+   Supersedes every earlier layout pass for the skill card's grid. The card
+   had grown ~15 override passes and eight contradicting
+   `@media (max-width: 640px)` blocks (lines 811, 1107, 1234, 1304, 1466,
+   1796, 2204, 2516) that disagreed on the grid areas, the command-row height
+   and the command flex direction. Below 640px that left the pager + action
+   button computing ~131px tall inside a fixed 51px grid track, sheared off by
+   the panel's `overflow: hidden`, while the bare-button variant was pinned
+   against the left edge of a full-width card. This block is last in the file
+   and matches those rules' specificity, so source order carries it.
+
+   Shape, at ALL widths:
+
+     ┌──────────┬──────────────────────┐
+     │ medallion│    action title      │   identity spans BOTH rows, so the
+     │  SKILL   │    Base: N  reqs     │   icon + level info reach the base
+     │  LV n    ├──────────────────────┤   of the card; the content block is
+     │  n%  ▓▓▁ │   ‹   ACTION   ›     │   centred in the flexible row above
+     └──────────┴──────────────────────┘   the fixed command band.
+
+   THE LOAD-BEARING PART is `--fs-skill-command-h`: the command row is a
+   FIXED track pinned to the card's bottom edge, and all three things that
+   must line up vertically — the flex command cell, the bare action button,
+   and the shape-B pager overlay — are centred on that one band. Make the row
+   `auto` again and the two pager shapes drift apart by however much the
+   button's own margin differs from the overlay's height, which is exactly
+   the ±3px `navFlanksAction` tolerance in render-fixtures.mjs.
+
+   Two React command shapes, presented identically:
+   A) pager pair inside the command cell — `nav-group` dissolves to
+      `display: contents` and its two arrows become flex siblings of the
+      row, ordered prev / action / next.
+   B) pager pair left in the CONTENT branch beside the recipe title (it may
+      not be reparented) — laid over the command band instead. Both of its
+      insets are DERIVED, never guessed: the span is `--fs-skill-command-w`
+      (arrow + gap + action + gap + arrow) and the horizontal centre is
+      `50% + identity-w/2`, i.e. the centre of the right-hand column, which
+      is where the action button itself centres.
+   ══════════════════════════════════════════════════════════════════════ */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+  /* Not a grid column any more — the width of the centred command CLUSTER
+     (arrow + gap + action + gap + arrow), which the shape-B pager spans. */
+  --fs-skill-command-w: 240px;
+  /* The fixed command band. See the note above before changing it. */
+  --fs-skill-command-h: 64px;
+  --fs-skill-identity-w: 150px;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+  display: grid !important;
+  grid-template-columns: var(--fs-skill-identity-w, 150px) minmax(0, 1fr) !important;
+  grid-template-rows: 1fr var(--fs-skill-command-h, 64px) !important;
+  grid-template-areas:
+    "identity content"
+    "identity commands" !important;
+  align-items: stretch !important;
+  /* Gives the identity column room to breathe when the content is short;
+     a taller card is driven by the content row, which is `1fr`. */
+  min-height: 156px !important;
+}
+
+/* ── Identity: one full-height column, contents centred ─────────────── */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+  grid-area: identity !important;
+  align-self: stretch !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 14px 12px !important;
+  border-right: 1px solid #332B20 !important;
+  border-bottom: 0 !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+  width: 56px !important;
+  min-width: 56px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  margin: 0 !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::before {
+  font-size: 14px !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"] {
+  font-size: 11px !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent {
+  margin-top: 0 !important;
+  font-size: 11.5px !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent::before {
+  width: 62px !important;
+  margin-bottom: 5px !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+  width: 108px !important;
+  max-width: 100% !important;
+  height: 7px !important;
+  margin-top: 4px !important;
+}
+
+/* ── Content: centred in the flexible row, right of the identity rail ── */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
+  grid-area: content !important;
+  align-self: center !important;
+  border-bottom: 1px solid #332B20 !important;
+}
+
+/* ── Command band ───────────────────────────────────────────────────── */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] {
+  grid-area: commands !important;
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 0 12px !important;
+  background: none !important;
+}
+/* Bare-button variant: the button itself is the cell — centre it on the band. */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-zone="commands"] {
+  justify-self: center !important;
+  align-self: center !important;
+  margin: 0 !important;
+}
+
+/* Shape A: pager in the command cell. */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] [data-iw-skill-role="nav-group"] {
+  display: contents !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"] {
+  order: 0 !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="action-button"] {
+  order: 1 !important;
+  /* Shrinkable, NOT `0 0 auto`: on a 320px phone the right-hand column has
+     only ~175px for arrow + action + arrow, and the mobile rule above lets the
+     button size between its 108px floor and 155px. Pinning it rigid overflows
+     the column, which `skillOverflow` in render-fixtures.mjs catches. */
+  flex: 0 1 auto !important;
+}
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"] {
+  order: 2 !important;
+}
+
+/* Shape B: pager left in the content branch, laid over the command band. */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] {
+  position: absolute !important;
+  left: calc(50% + var(--fs-skill-identity-w, 150px) / 2) !important;
+  right: auto !important;
+  bottom: 0 !important;
+  top: auto !important;
+  transform: translateX(-50%) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
+  width: var(--fs-skill-command-w, 240px) !important;
+  max-width: calc(100% - var(--fs-skill-identity-w, 150px)) !important;
+  height: var(--fs-skill-command-h, 64px) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 0 !important;
+  z-index: 4 !important;
+}
+
+/* ── Narrow widths: a bigger medallion, a tighter cluster ───────────────
+   The command cluster now lives in the right-hand column rather than
+   spanning the card, so it no longer has the identity column's width to
+   borrow. Both knobs move together: the identity rail narrows as the
+   viewport does so the cluster keeps clearing its 44px/108px floors. */
+@media (max-width: 640px) {
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    --fs-skill-identity-w: 116px;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+    min-height: 150px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+    padding: 12px 8px !important;
+    gap: 5px !important;
+  }
+  /* Per Curtis (2026-09): the phone medallion grows rather than shrinks now
+     that the identity rail runs the full height of the card. */
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+    width: 58px !important;
+    min-width: 58px !important;
+    height: 58px !important;
+    min-height: 58px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::before {
+    font-size: 12px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"] {
+    font-size: 10px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent {
     font-size: 10.5px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent::before {
+    width: 52px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+    width: 92px !important;
+    height: 6px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
+    gap: 8px !important;
+    padding: 0 8px !important;
+  }
+}
+
+/* ── Phone: the rail narrows so the band still clears the button ────────
+   THE CONSTRAINT, because it decides both breakpoints below. The action
+   button is 155px WIDE AND `min-width: 155px`, and both are written INLINE
+   with `!important` by `SkillPanelRenderer.styleButton()` — no rule in this
+   file can shrink it (CLAUDE.md, "Inline `!important` from a renderer
+   outranks every stylesheet rule"). So the flanked cluster is a hard
+   26 + gap + 155 + gap + 26 = 215px, and the right-hand column must clear
+   that plus its padding: ~223px. Measured in the fixture the card is about
+   (viewport − 81)px, so beside-the-rail needs `viewport ≥ 223 + rail + 81`.
+   A 78px rail therefore holds from ~382px up — which covers the 390px
+   phone — and a 116px rail from ~420px. Widen either rail and
+   `skillOverflow` fails at the next width down. */
+@media (max-width: 430px) {
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    --fs-skill-identity-w: 78px;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+    padding: 10px 4px !important;
+    gap: 4px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+    width: 56px !important;
+    min-width: 56px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity"]::before {
+    font-size: 10px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="identity-level"] {
+    font-size: 9px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent {
+    font-size: 9.5px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-percent::before {
+    width: 42px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+    width: 66px !important;
+    height: 6px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
+    gap: 4px !important;
+    padding: 0 4px !important;
+  }
+}
+
+/* ── Below ~382px the cluster cannot sit beside ANY usable rail ─────────
+   From the arithmetic above, a card narrower than ~295px leaves the
+   right-hand column under 223px however thin the rail gets. There the
+   command band spans BOTH columns again (the layout that shipped before
+   this pass) and identity keeps a row-1 cell instead of running to the
+   card's base. This block must stay AFTER the 430px one to win.
+
+   Do NOT "fix" this by loosening `actionButtonsSized` /
+   `navButtonsAccessible` in render-fixtures.mjs — the 44px height and the
+   155px frame are the touch target and the action_frame artwork ratio, not
+   slack. The real fix, if the fallback ever needs to go, is de-inlining the
+   button geometry in styleButton() so CSS can make it elastic; see
+   V1.6.0_MOBILE_LAYOUT_AUDIT.md §8. */
+@media (max-width: 384px) {
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] {
+    --fs-skill-identity-w: 84px;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] > [data-iw-skill-layout-shell="1"] {
+    grid-template-areas:
+      "identity content"
+      "commands commands" !important;
+    min-height: 0 !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
+    border-bottom: 1px solid #332B20 !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
+    width: 52px !important;
+    min-width: 52px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-identity-progress {
+    width: 70px !important;
+  }
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
+    gap: 6px !important;
+    padding: 0 6px !important;
+  }
+  /* Full-width band again, so the shape-B overlay re-centres on the card. */
+  html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] {
+    left: 50% !important;
+    max-width: 100% !important;
   }
 }

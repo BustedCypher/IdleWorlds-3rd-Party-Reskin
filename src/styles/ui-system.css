@@ -13,7 +13,7 @@
   --iw-space-5: 16px;
   --iw-control-h: 32px;
   --iw-control-h-lg: 36px;
-  --iw-frame-edge: #4B3D26;
+  --iw-frame-edge: var(--iw-th-edge);
   --iw-frame-inner: #19150F;
   --iw-steel: #26231D;
 }
@@ -38,19 +38,22 @@
 :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))) {
   position: relative !important;
   isolation: isolate !important;
-  border: 1px solid #6B4F28 !important;
+  border: 1px solid var(--iw-th-edge) !important;
   border-radius: 4px !important;
   /* Reserve room for the corner ornament: the game ships p-3.5 (14px), which
      is shorter than the filigree, so without this it lands on the content. */
   padding: var(--iw-frame-pad-y, 26px) var(--iw-frame-pad-x, 22px) !important;
+  /* The --iw-th-ground-wash layer is `transparent` un-themed (no-op) and a
+     faint per-zone tint otherwise — sits above the texture so it colours it. */
   background:
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
     radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 32%),
     url('../assets/skills_panel_texture.webp'),
-    linear-gradient(180deg, #171713 0%, #0D0E0C 100%) !important;
-  background-blend-mode: normal, soft-light, normal !important;
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, normal, soft-light, normal !important;
   box-shadow:
     inset 0 0 0 1px rgba(0,0,0,.78),
-    inset 0 1px 0 rgba(226,164,72,.08),
+    inset 0 1px 0 var(--iw-th-glow),
     0 5px 18px rgba(0,0,0,.24) !important;
 }
 
@@ -64,7 +67,7 @@
   right: 12px !important;
   top: 0 !important;
   height: 1px !important;
-  background: linear-gradient(90deg, transparent, #9B7437 14%, #D09A4B 50%, #9B7437 86%, transparent) !important;
+  background: linear-gradient(90deg, transparent, var(--iw-th-hairline) 14%, var(--iw-th-hairline-hi) 50%, var(--iw-th-hairline) 86%, transparent) !important;
   opacity: .78 !important;
 }
 
@@ -78,7 +81,10 @@
   border-style: solid !important;
   border-width: 30px 28px !important;
   border-color: transparent !important;
-  border-image: url('../assets/inventory/panel_corners.webp') 95 88 / 30px 28px / 0 stretch !important;
+  /* Source is per-zone: --iw-corner-filigree, set inline on <html> by
+     HeaderRenderer, base.css carries the un-themed default. Slice/width stay
+     fixed — every themed sheet is the same 176x190 crop-and-mirror. */
+  border-image: var(--iw-corner-filigree) 95 88 / 30px 28px / 0 stretch !important;
 }
 
 /* Panel content sits above both ornaments. */
@@ -87,7 +93,7 @@
   z-index: 1;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))) {
     padding: var(--iw-frame-pad-mobile-y, var(--iw-frame-pad-y, 20px)) var(--iw-frame-pad-mobile-x, var(--iw-frame-pad-x, 16px)) !important;
   }
@@ -195,7 +201,7 @@
   min-width: 30px !important;
   min-height: 30px !important;
   padding: 0 9px !important;
-  border: 1px solid #4B3D26 !important;
+  border: 1px solid var(--iw-th-edge) !important;
   border-radius: 3px !important;
   background: linear-gradient(180deg, #242018, #15130F) !important;
   color: var(--iw-dim) !important;
@@ -205,7 +211,7 @@
 
 :is([data-iw-panel-part="header"], [data-iw-panel-part="header-tools"]) button:hover,
 [data-iw-panel-part="panel-control"]:hover {
-  border-color: #806039 !important;
+  border-color: var(--iw-th-rule) !important;
   color: var(--iw-text-hi) !important;
 }
 
@@ -260,7 +266,7 @@
   color: var(--iw-gold) !important;
 }
 
-@media (min-width: 601px) {
+@media (min-width: 641px) {
   [data-iw-panel="action-log"] [data-iw-panel-part="header"] > :first-child {
     display: flex !important;
     align-items: center !important;
@@ -299,7 +305,7 @@
   height: 100% !important;
   min-height: 100% !important;
   border-radius: inherit !important;
-  background: linear-gradient(90deg, #E5AE39 0%, #F28A42 52%, #D54B74 100%) !important;
+  background: linear-gradient(90deg, var(--iw-th-hairline-hi) 0%, var(--iw-th-cta-hi) 52%, var(--iw-th-cta) 100%) !important;
   box-shadow: 0 0 8px rgba(222,102,69,.28) !important;
 }
 
@@ -335,7 +341,7 @@
   min-width: 32px !important;
   min-height: 32px !important;
   padding: 0 !important;
-  border: 1px solid #4B3D26 !important;
+  border: 1px solid var(--iw-th-edge) !important;
   border-radius: 3px !important;
   background: linear-gradient(180deg, #26221B, #15130F) !important;
   color: var(--iw-dim) !important;
@@ -356,22 +362,31 @@
 }
 
 [data-iw-panel="action-log"] [data-iw-panel-part="feed"] { max-height: 300px !important; }
-/* The log's ground is flat BLACK -- no gradient, no inset vignette, so the
-   rows read as text on the page itself rather than on a plate.
-   The generic feed above keeps its #0B0C0A + sheen for chat. Anything BETWEEN the
-   feed and its rows (the game ships translucent wrappers around the scroll
-   list) must not paint its own plate, or that ground is lifted right back up --
-   only containers are cleared, so a row's own state colour is untouched. */
-[data-iw-panel="action-log"] [data-iw-panel-part="feed"] {
-  background-color: #000 !important;
-  background-image: none !important;
-  box-shadow: none !important;
-}
-[data-iw-panel="action-log"] [data-iw-panel-part="feed"] *:has([data-iw-panel-part="feed-row"]) {
+[data-iw-panel="world-chat"] [data-iw-panel-part="feed"] { max-height: min(46vh, 430px) !important; }
+
+/* Anything BETWEEN the feed and its rows (the game ships translucent wrappers
+   around the scroll list, and chat's reads as a muddy brown over our dark
+   ground) must not paint its own plate, or the feed's ground is lifted right
+   back up -- only containers are cleared, so a row's own state colour is
+   untouched. Shared by log and chat. */
+[data-iw-panel-part="feed"] *:has([data-iw-panel-part="feed-row"]) {
   background: transparent !important;
   box-shadow: none !important;
 }
-[data-iw-panel="world-chat"] [data-iw-panel-part="feed"] { max-height: min(46vh, 430px) !important; }
+
+/* The log's ground is the FRAME's own ground, not a second copy of it.
+   `[data-iw-ui="section-frame"]` (top of this file) already paints the
+   textured, per-zone-themed ground on the panel itself -- the previous
+   attempt repainted that SAME recipe again on the feed box sitting on top
+   of it, which just stacked a duller, flatter copy over the frame's own
+   art and hid it (Curtis, 2026-09: "hidden behind the solid gradient
+   colour"). No fill here at all -- transparent lets the frame's ground
+   show straight through the feed opening. The generic feed above keeps
+   its #0B0C0A + sheen for chat -- only the log drops its own plate. */
+[data-iw-panel="action-log"] [data-iw-panel-part="feed"] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
 
 [data-iw-panel-part="feed-row"] {
   display: block !important;
@@ -416,6 +431,36 @@
   font-size: 11px !important;
 }
 
+/* The game's scroll box for chat / log is `.feed-panel`, painted
+   `var(--surface-bg)` -- which base.css sets to --iw-ink-700 (#1E1B15), a
+   warm tone that reads as an ugly brown band against the near-black forged
+   frame. This used to be the ONLY way to reach it below 1280px: UIFoundation's
+   `findActivityPanelHost`/`activityPanelLabelNodes` picked the hidden
+   `xl:hidden` mirror's copy of the panel host (see the hidden-duplicate trap
+   in CLAUDE.md and V1.6.0_MOBILE_LAYOUT_AUDIT.md), so `data-iw-panel` landed
+   on the wrong element and [data-iw-panel-part="feed"] never matched the
+   visible one. That resolution is now viewport-aware (Viewport.js), so this
+   rule is redundant with the [data-iw-panel-part="feed"] one above -- kept
+   as a belt-and-suspenders hook on the game's own class rather than removed,
+   since it costs nothing and does not depend on classifyFeed's marker search
+   succeeding. `.feed-line` is the row wrapper -- its own `bg-black/10` tint
+   is kept.
+   Action Log is EXCLUDED here on purpose: `.feed-panel` is the exact same
+   node `[data-iw-panel-part="feed"]` resolves to, both selectors are equal
+   specificity (0,2,0), and this rule sits LATER in the file -- so it was
+   silently overwriting the log's `background: transparent` (the fix that
+   lets the frame's own per-zone ground show through the feed opening) right
+   back to a flat fill. World Chat still wants its own flat #0B0C0A ground,
+   so only it keeps this hook. */
+[data-iw-panel="world-chat"] .feed-panel {
+  background: #0B0C0A !important;
+  border-color: #29251D !important;
+}
+[data-iw-panel="action-log"] .feed-panel {
+  background: transparent !important;
+  border-color: #29251D !important;
+}
+
 [data-iw-panel="world-chat"] [data-iw-panel-part="feed-row"] strong {
   color: #8CC8E0 !important;
   font-weight: 700 !important;
@@ -453,16 +498,16 @@
 [data-iw-panel-part="chat-input"]:focus {
   outline: 1px solid rgba(197,145,67,.5) !important;
   outline-offset: 1px !important;
-  border-color: #8A6835 !important;
+  border-color: var(--iw-th-brass) !important;
 }
 
 [data-iw-panel-part="send"] {
   min-width: 104px !important;
   height: 42px !important;
   padding: 0 18px !important;
-  border: 1px solid #9B481F !important;
+  border: 1px solid var(--iw-th-cta-hi) !important;
   border-radius: 3px !important;
-  background: linear-gradient(180deg, #BC4D20, #7D2D10) !important;
+  background: linear-gradient(180deg, var(--iw-th-cta-hi), color-mix(in srgb, var(--iw-th-cta) 62%, #000)) !important;
   color: #FFF0DA !important;
   font-family: var(--iw-font-head) !important;
   font-size: 13px !important;
@@ -474,7 +519,7 @@
 
 [data-iw-panel-part="send"]:hover:not(:disabled) { filter: brightness(1.12); }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   [data-iw-panel] {
     gap: 8px !important;
   }
@@ -550,7 +595,7 @@
   color: #FFE8CB !important;
   background:
     linear-gradient(180deg, rgba(255,255,255,.035), transparent 46%),
-    linear-gradient(180deg, #9D3C16, #67250C) !important;
+    linear-gradient(180deg, var(--iw-th-cta), color-mix(in srgb, var(--iw-th-cta) 52%, #000)) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,226,191,.13),
     inset 0 -2px 0 rgba(55,16,4,.58) !important;
@@ -603,8 +648,8 @@
    buttons (data-iw-quest-role turn-in / skip), whose skillpanel.css art rules
    were tuned to clear the shorter chain, are excluded here too rather than
    chased with an ever-higher `html …` override. */
-button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]),
-[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]) {
+button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]),
+[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]) {
   border-color: #2A241A !important;
   background-image: linear-gradient(180deg, rgba(255,255,255,.035), rgba(0,0,0,.28)) !important;
   box-shadow:
@@ -617,8 +662,8 @@ button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved
    `color`, because a button's own text colour is frequently live state (the
    ember active-filter tab, red/green market steppers) and repainting it here
    would delete that meaning (rule 5). */
-button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):hover,
-[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):hover {
+button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):hover,
+[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):hover {
   border-color: var(--iw-line-hot) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.055),
@@ -649,8 +694,8 @@ button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved
   min-height: 26px;
 }
 
-button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):disabled,
-[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]) {
+button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):disabled,
+[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]) {
   filter: saturate(.58) brightness(.84) !important;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.22) !important;
 }
@@ -664,7 +709,7 @@ input[placeholder*="Search" i] {
   box-shadow: inset 0 2px 6px rgba(0,0,0,.72) !important;
 }
 
-@media (max-width: 780px) {
+@media (max-width: 768px) {
   [data-iw-ui="main-nav"] { width: 100% !important; }
   [data-iw-ui="nav-tab"] {
     flex: 1 1 auto !important;
@@ -676,47 +721,140 @@ input[placeholder*="Search" i] {
 /* -- World Boss cards ---------------------------------------------------
    The boss list ships `.compact-panel` cards that carried the game's flat
    grey plate inside our forged frame, so the panel read as two unrelated
-   materials. Their ground is flat BLACK with the gold rim, no sprite texture
-   and no top sheen -- the card is a bordered opening onto the page, not a
-   raised plate. The frame
-   behind them already carries the texture, and repeating it per card made
-   the stack busy. No corner filigree either: that ornament marks a PANEL,
-   and repeating it would flatten the frame/contents distinction.
+   materials. Their ground now uses the SAME textured panel ground as the
+   Skills and Inventory section frames -- `skills_panel_texture.webp` at
+   `soft-light` over the `--iw-th-ground-a/-b` gradient, with the same
+   top-left radial sheen and per-zone `--iw-th-ground-wash` -- so the boss
+   stack reads as the same material as every other panel in the app (it was
+   flat BLACK, which stood out). `url('../assets/…')` is rewritten to
+   `chrome-extension://` by StyleInjector; keep that exact form.
+   No corner filigree: that ornament marks a PANEL, and repeating it per
+   card would flatten the frame/contents distinction.
    ---------------------------------------------------------------------- */
 [data-iw-boss="card"] {
   position: relative !important;
-  border: 1px solid #6A5430 !important;
+  border: 1px solid var(--iw-th-edge) !important;
   border-radius: 4px !important;
-  background: #000 !important;
+  background:
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 32%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, normal, soft-light, normal !important;
   box-shadow:
     inset 0 0 0 1px #0B0A08,
+    inset 0 0 0 2px rgba(143,107,55,.16),
+    inset 0 1px 0 rgba(255,236,190,.035),
     0 2px 7px rgba(0,0,0,.42) !important;
 }
 
-/* Gold hairline across the head of each card, dimmer than the panel frame's
-   so the frame still outranks the cards inside it. */
+/* Gold hairline across the head of each card -- same as the Quest frame's,
+   dimmer than the panel frame's so the frame still outranks the cards. */
 [data-iw-boss="card"]::before {
   content: "" !important;
   position: absolute !important;
-  z-index: 0 !important;
-  pointer-events: none !important;
-  left: 10px !important;
-  right: 10px !important;
+  left: 0 !important;
+  right: 0 !important;
   top: 0 !important;
   height: 1px !important;
-  background: linear-gradient(90deg, transparent, #9B7437 18%, #C08F45 50%, #9B7437 82%, transparent) !important;
-  opacity: .55 !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+  background: linear-gradient(90deg,
+    var(--iw-th-hairline-hi),
+    rgba(200,168,97,.16) 34%, transparent 72%) !important;
+  opacity: .9 !important;
 }
 
-/* A wrapper inside the card must not re-plate what the card just made black.
+/* Inset brass border a few px inside the edge -- the Quest frame's `::after`. */
+[data-iw-boss="card"]::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 4px !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  border: 1px solid rgba(133,101,54,.22) !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 12px rgba(0,0,0,.26) !important;
+}
+
+/* A wrapper inside the card must not re-plate what the card just made dark.
    Interactive nodes are exempt: the Prejoined button's fill is live state and
    flattening it would delete that meaning (rule 5). */
 [data-iw-boss="card"] > *:not(button):not(a):not([role="button"]) {
   background: transparent !important;
 }
 
+/* The card's "World boss participation" / "Last battle participants" lines are
+   real <button>s, but the game styles them as plain dotted-underline text
+   links (`underline decoration-dotted`, zero padding, no border). The generic
+   control language plated them anyway -- forged fill, 2px corners, bevel --
+   which is the grey box on the black ground. The generic rule now skips any
+   `decoration-dotted` button (it is the game's own "this is a text link, not a
+   plate" marker); this clears what base.css still contributes so they render
+   as the underlined text the game intends. */
+[data-iw-boss="card"] button[class*="decoration-dotted"] {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
 /* Card content sits above the hairline, the same lift the panel frames use. */
 [data-iw-boss="card"] > * {
   position: relative;
   z-index: 1;
+}
+
+/* ══ Market ═══════════════════════════════════════════════════════════
+   The Market page is a single framed `.panel` (classifySectionFrames gives it
+   the shared forged frame). Inside it the game stacks its shared `.compact-row`
+   cards — buy listings, the player's own listings, empty slots — as rounded
+   Tailwind plates (`border-radius: 1rem`, flat fill, no forged edge) that float
+   against that frame instead of matching the rest of the page. Square them and
+   give them the smoked-glass fill the rest of the app's chrome uses — a
+   translucent near-black over `backdrop-filter: blur`, framed by a forged
+   outline — rather than an opaque plate (Curtis, 2026-09; same treatment as
+   the header status/utility controls). The `background` shorthand deliberately
+   clears the game's `bg-white/5`-style tint. Scoped to the `data-iw-market`
+   namespace UIFoundation applies, because `.compact-row` is shared with
+   inventory rows and chat-feed rows. */
+[data-iw-market="row"] {
+  border-radius: var(--iw-r-panel) !important;
+  border: 1px solid var(--iw-line) !important;
+  /* Alpha is higher than the header chrome's ~.42 because the backdrop here is
+     the frame's warm `soft-light` texture + top-left radial, not per-zone sky —
+     a lighter tint let that warm cast bleed through the row. */
+  background: rgba(7, 7, 11, .66) !important;
+  backdrop-filter: blur(2px) !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .28) !important;
+  transition: border-color .12s, background-color .12s !important;
+}
+[data-iw-market="row"]:hover {
+  border-color: var(--iw-line-hi) !important;
+  background: rgba(12, 12, 17, .72) !important;
+}
+
+/* Empty listing slots read as recessed, not as lifted cards. The game already
+   drops them to `opacity-30`; keep them flatter and darker than a live row. */
+[data-iw-market="row"][class*="opacity-30"] {
+  background: rgba(4, 4, 7, .6) !important;
+  backdrop-filter: none !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .4) !important;
+}
+[data-iw-market="row"][class*="opacity-30"]:hover {
+  border-color: var(--iw-line) !important;
+  background: rgba(4, 4, 7, .6) !important;
+}
+
+/* The row's name/detail area is a full-width bare left-aligned `<button>` — the
+   game's click target for the item, not a plate. The shared control language
+   filled it with the forged bevel + `--iw-ink-750`, and THAT is the lighter
+   rectangle sitting inside every card. UIFoundation tags it `data-iw-market`
+   (which the generic control chain's `:not([data-iw-market])` now exempts, the
+   same way the World Boss text-links opt out); clear what base.css still
+   contributes so the row's own smoked-glass shows through. The real controls —
+   History, Reprice, Cancel — are not tagged and keep their plating. */
+[data-iw-market="namebtn"] {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }

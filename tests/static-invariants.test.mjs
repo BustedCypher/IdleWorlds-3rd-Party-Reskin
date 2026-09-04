@@ -151,7 +151,9 @@ assert.match(inventoryCSS, /\.fs-inv-body\s*\{[^}]*overflow:\s*hidden/s);
 assert.match(inventoryCSS, /\.fs-inv-detail[^}]*text-overflow:\s*ellipsis/s);
 assert.match(inventoryCSS, /\.fs-inv-name\s*\{[^}]*-webkit-line-clamp:\s*2[^}]*white-space:\s*normal/s,
   'Inventory names must wrap to at most two lines rather than reverting to single-line ellipsis');
-assert.match(inventoryCSS, /@media \(max-width: 700px\)[\s\S]*flex-wrap:\s*wrap\s*!important/,
+// 768px (Tailwind's `md`), not 700 — inventory.css's breakpoints were
+// realigned to Tailwind's own scale (see V1.6.0_MOBILE_LAYOUT_AUDIT.md).
+assert.match(inventoryCSS, /@media \(max-width: 768px\)[\s\S]*flex-wrap:\s*wrap\s*!important/,
   'mobile Inventory must wrap native actions instead of removing them');
 assert.doesNotMatch(inventoryCSS, /data-fs-action-kind=\\?"set\\?"[^}]*display:\s*none/s,
   'mobile Inventory must never hide the native Set action');
@@ -314,8 +316,22 @@ assert.match(ui, /setPanelPart\(titleBranch, 'header'\)/,
   'classifyPanelHeader must mark the title branch as the header, never fall back to the whole host');
 assert.match(ui, /heading\.closest\?\.\('\.panel'\)/,
   'findActivityPanelHost must fall back to the .panel ancestor when the structural matchers miss (Action Log: <span> View All + XP/hr glued to the feed)');
-assert.match(ui, /class~="xl:hidden"/,
-  'the xl:hidden mirror column must be excluded from frame + activity classification');
+// A bare `[class~="xl:hidden"]` string test used to gate frame + activity
+// classification, but that test is only correct ABOVE Tailwind's `xl`
+// breakpoint (1280px) — below it, the game's two duplicated layout columns
+// swap which copy is live, and the class-based test excludes the wrong one
+// (see V1.6.0_MOBILE_LAYOUT_AUDIT.md). It must NOT come back; the viewport-
+// aware replacement (Viewport.preferRendered/pickRendered, which checks
+// actual rendered state instead of a hardcoded class name) must be used
+// instead, everywhere frame/activity classification picks between candidates.
+assert.doesNotMatch(ui, /class~="xl:hidden"/,
+  'the viewport-blind xl:hidden class test must not return — use Viewport.preferRendered/pickRendered instead');
+assert.match(ui, /from '\.\/Viewport\.js'/,
+  'UIFoundation must resolve which layout column is live via Viewport.js, not a hardcoded class name');
+assert.match(ui, /preferRendered\(/,
+  'section-frame and boss-card heading discovery must prefer the rendered column (Viewport.preferRendered)');
+assert.match(ui, /getLayoutEpoch\(\)/,
+  'cached column-dependent resolutions (section frames, boss cards, activity panels, main nav) must invalidate on a layout-epoch bump, or a resize leaves them bound to whichever column was live at first resolve');
 assert.doesNotMatch(ui, /ENABLE_PLAYER_HUD_RELAYOUT|classifyPlayerHud|hud-player-name|iwHudLayout/,
   'disabled player-HUD relayout code must not remain as a dormant activation path');
 const uiCss = await read('src/styles/ui-system.css');
@@ -377,8 +393,9 @@ assert.doesNotMatch(atlas, /Number\(row\.row\)|Number\(row\.column\)/,
   'runtime atlas dimensions must not depend on optional row/column metadata');
 
 const vendor = await read('build-tools/vendor-assets.mjs');
-assert.match(vendor, /39bc876307c3183d160a5e2c5868d37b50c1660b/,
-  'sprite dependency must stay pinned to the immutable shared +4 atlas revision');
+assert.match(vendor, /eadbc0fe1eae549184dd740470b69fc76974a411/,
+  'sprite dependency must stay pinned to an immutable revision (v5.4 Woodcutting & ' +
+  'Construction item atlas; gear atlas/manifest byte-identical to the prior +4 pin)');
 
 /* â”€â”€ Build / manifest / test contract â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 

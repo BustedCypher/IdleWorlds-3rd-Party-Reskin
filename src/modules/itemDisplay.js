@@ -58,6 +58,40 @@ export function tierClass(item) {
   return (TIER_BANDS.find(b => t <= b.max) || TIER_BANDS[0]).cls;
 }
 
+// Frame / identity colour is keyed off the item's SUPER-TYPE (its game
+// `category`), not its material tier — tier is progression, not rarity, so a
+// "rare/epic" tint on it misled. The five game categories map 1:1; anything
+// unresolved falls back to a neutral stone. Colours live in inventory.css /
+// base.css as `.fs-cat-*`.
+const CATEGORY_CLASS = {
+  'equipment':   'fs-cat-gear',
+  'consumable':  'fs-cat-consumable',
+  'processed':   'fs-cat-processed',
+  'resource':    'fs-cat-resource',
+  'trade good':  'fs-cat-trade',
+};
+
+// Consumables split further by subtype — potions, scrolls, caches read very
+// differently and a single green flattened that. Subtypes not listed (Usable
+// item, Cosmetic Token, and Upgrade Orb — which gets its orange frame from the
+// separate `.fs-inv-orb` hook) fall back to the parent Consumable green.
+const CONSUMABLE_SUB_CLASS = {
+  'potion':         'fs-cat-potion',
+  'enchant scroll': 'fs-cat-enchant',
+  'xp scroll':      'fs-cat-xpscroll',
+  'xp shard':       'fs-cat-xpscroll',
+  'supply cache':   'fs-cat-cache',
+};
+
+export function categoryClass(item) {
+  const c = String((item && item.category) || '').trim().toLowerCase();
+  if (c === 'consumable') {
+    const sub = String((item && item.subcategory) || '').trim().toLowerCase();
+    return CONSUMABLE_SUB_CLASS[sub] || 'fs-cat-consumable';
+  }
+  return CATEGORY_CLASS[c] || 'fs-cat-unknown';
+}
+
 export function slotLabel(item) {
   const sub = String((item && item.subcategory) || '').trim();
   return sub.replace(/\s+slot$/i, '');

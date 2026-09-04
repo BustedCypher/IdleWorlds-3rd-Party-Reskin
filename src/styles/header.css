@@ -35,11 +35,11 @@
 [data-iw-ui="main-nav"],
 [data-iw-header="announcement"],
 [data-iw-header="zone-shell"] {
-  --hd-bracket:     #C9A24D;
-  --hd-bracket-dim: #8A7038;
-  --hd-plate:       #0B0C0E;
-  --hd-rule:        #6B5527;
-  --hd-rule-soft:   #3A2F18;
+  --hd-bracket:     var(--iw-th-bracket);
+  --hd-bracket-dim: var(--iw-th-bracket-dim);
+  --hd-plate:       var(--iw-th-plate);
+  --hd-rule:        var(--iw-th-edge);
+  --hd-rule-soft:   var(--iw-th-rule-soft);
   --hd-teal:        #4FC7D8;
   --hd-teal-dim:    #1E5C68;
   --hd-gap: 8px;
@@ -83,6 +83,18 @@
   position: relative !important;
   isolation: isolate !important;
   display: block !important;
+  /* Pin the bar to its parent's width so it never tracks its own content. The
+     header is a flex item of the page's `flex-col` container; without this it
+     can grow with its widest descendant, so a status tile that wraps 1->2
+     lines resized the whole bar. `width:100% + min/max-width` lock it to the
+     parent content box (the width the announcement and zone bars already sit
+     at); `contain: inline-size` is the hard guarantee that the header's WIDTH
+     may not be influenced by its contents at all — height still grows with a
+     2-line tile, width cannot. */
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  contain: layout inline-size !important;
   min-height: 0 !important;
   padding: 16px 20px !important;
   border: 1px solid var(--hd-rule) !important;
@@ -128,17 +140,23 @@
   border-style: solid;
   border-width: 30px 28px;
   border-color: transparent;
-  border-image: url('../assets/inventory/panel_corners.webp') 95 88 / 30px 28px / 0 stretch;
+  border-image: var(--iw-corner-filigree) 95 88 / 30px 28px / 0 stretch;
 }
 
 [data-iw-header="layout"] {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(380px, 38%) !important;
-  /* start, not center: the two columns are different heights (the crest sets
-     the left, the stat stack sets the right), and centring each one made the
-     utility rail's offset depend on whichever column happened to be taller —
-     it drifted every time a buff tile wrapped. Both pinned to the row top,
-     the rail and the first stat row line up by construction. */
+  width: 100% !important;
+  min-width: 0 !important;
+  /* Pure fr ratio, no px floor: `minmax(380px, 38%)` let the stat column's
+     size chase its content (a 1- vs 2-line buff tile), which rippled out to
+     the bar width. `minmax(0, Nfr)` splits the fixed layout width 62:38 with
+     a hard 0 minimum, so no tile content can widen a track. Below 1280px the
+     media query drops this to one column anyway. */
+  grid-template-columns: minmax(0, 62fr) minmax(0, 38fr) !important;
+  /* Default the columns to the row top so the status stack stays pinned there;
+     the identity region opts into `align-self: center` (§3) for its own equal
+     space above/below, now that its utility rail no longer has to line up with
+     the first stat row. */
   align-items: start !important;
   gap: 0 18px !important;
   min-height: 0 !important;
@@ -149,25 +167,76 @@
 
 [data-iw-header="identity-region"] {
   display: grid !important;
-  grid-template-columns: 158px minmax(0, 1fr) auto !important;
-  grid-template-areas: "crest profile utilities" !important;
+  isolation: isolate !important;
+  grid-template-columns: 104px minmax(0, 1fr) !important;
+  grid-template-areas:
+    "crest profile"
+    "utilities utilities" !important;
   align-items: center !important;
-  gap: 0 18px !important;
+  /* Hug the player info: `fit-content` sizes the region to its widest line
+     (name / title / meta), so the frame is as thin as the content allows and
+     the middle of the bar stays open for the per-zone art. `fit-content` still
+     resolves to a DEFINITE width, so the inner `minmax(0,1fr)` profile column
+     gets real space instead of collapsing to its 0 floor (which happens with a
+     bare `max-width` under `justify-self: start`). `max-width` only caps a
+     pathologically long name/zone, where the meta line then ellipsises.
+     The resolved width is also the span the utility rail (row 2) spreads
+     across. §9 hands this back to `auto` + stretch below 1280px. */
+  justify-self: start !important;
+  /* Centre the whole cluster (frame row + button rail) in the header's height
+     so the space above and below it is equal; the left margin gives it a
+     matching inset from the header's left edge. The right side is deliberately
+     left open for the zone art. */
+  align-self: center !important;
+  margin-left: 16px !important;
+  width: fit-content !important;
+  max-width: min(560px, 46vw) !important;
+  gap: 16px 14px !important;
   min-width: 0 !important;
   padding: 0 !important;
   background: none !important;
 }
 
+/* The same smoked-glass panel the buff tiles wear on the right
+   ([data-iw-header="status-card"], §4b) — translucent dark fill + blur, gold
+   outline + faint glow — drawn behind the crest + profile row ONLY. It is a
+   grid item on row 1 (never row 2), so the utility rail sits BELOW it, and it
+   is a pseudo with negative margins rather than padding on a flow box, so no
+   control is pushed off its baseline. The horizontal bleed matches the utility
+   rail's own negative margin (§4) so the rail's first/last button line up with
+   the frame's left/right edges. */
+[data-iw-header="identity-region"]::before {
+  content: "" !important;
+  grid-column: crest-start / profile-end !important;
+  grid-row: 1 / 2 !important;
+  /* The region is `align-items: center`, so an empty grid item collapses to
+     0 height — force it to fill the row, then bleed out via negative margin. */
+  align-self: stretch !important;
+  z-index: 0 !important;
+  margin: -8px -8px !important;
+  border: 1px solid rgba(201, 162, 77, 0.46) !important;
+  border-radius: 10px !important;
+  background: rgba(9, 8, 13, 0.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 190, 0.07),
+    0 0 0 1px rgba(0, 0, 0, 0.38),
+    0 0 8px rgba(201, 162, 77, 0.14) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+  pointer-events: none !important;
+}
+[data-iw-header="identity-region"] > * { position: relative !important; z-index: 1 !important; }
+
 .fs-header-crest {
   grid-area: crest !important;
   display: block !important;
-  width: 158px !important;
-  height: 160px !important;
+  width: 104px !important;
+  height: 106px !important;
   background-image: var(--iw-header-crest) !important;
   background-size: contain !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
-  filter: drop-shadow(0 0 20px rgba(70, 130, 200, 0.22));
+  filter: drop-shadow(0 0 14px rgba(70, 130, 200, 0.22));
   pointer-events: none;
 }
 
@@ -179,36 +248,36 @@
 }
 
 [data-iw-header="brand"] {
-  margin: 0 0 2px !important;
+  margin: 0 0 1px !important;
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
   font-family: var(--iw-font-head) !important;
-  font-size: 13px !important;
+  font-size: 11.5px !important;
   font-weight: 600 !important;
-  letter-spacing: 0.24em !important;
+  letter-spacing: 0.2em !important;
   text-transform: uppercase !important;
   color: var(--iw-gold-dim) !important;
 }
 [data-iw-header="brand"]::before,
 [data-iw-header="brand"]::after {
   content: "";
-  width: 26px; height: 1px;
-  background: linear-gradient(90deg, transparent, #6B5527);
+  width: 16px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--iw-th-edge));
 }
 [data-iw-header="brand"]::after { transform: scaleX(-1); }
 
 [data-iw-header="profile-name"] {
-  margin: 1px 0 3px !important;
+  margin: 0 0 2px !important;
   font-family: var(--iw-font-head) !important;
-  font-size: clamp(26px, 2.5vw, 38px) !important;
+  font-size: clamp(21px, 1.9vw, 29px) !important;
   font-weight: 700 !important;
   line-height: 1.04 !important;
   letter-spacing: 0.005em !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  background: linear-gradient(96deg, #E3A93A 0%, #F0DDB0 30%, #FBF8F2 50%, #CFE2F4 74%, #7FB6E8 100%) !important;
+  background: linear-gradient(96deg, var(--iw-th-hairline-hi) 0%, #F0DDB0 28%, #FBF8F2 50%, color-mix(in srgb, var(--iw-th-accent) 55%, #fff) 72%, var(--iw-th-accent) 100%) !important;
   -webkit-background-clip: text !important;
           background-clip: text !important;
   color: transparent !important;
@@ -219,7 +288,7 @@
 [data-iw-header="profile-title"] {
   margin: 0 !important;
   font-family: var(--iw-font-head) !important;
-  font-size: 15px !important;
+  font-size: 12.5px !important;
   font-weight: 600 !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
@@ -227,11 +296,10 @@
 }
 
 [data-iw-header="profile-meta"] {
-  margin-top: 6px !important;
-  /* 15px overran the profile column by 2px at 1290px wide, which the ellipsis
-     then ate into the zone name. 14px clears it and still outranks the
-     secondary lines below. */
-  font-size: 14px !important;
+  margin-top: 4px !important;
+  /* Kept a touch under the title/name so a long "Zone NN: <name>" ellipsises
+     inside the now content-width profile column rather than widening it. */
+  font-size: 12.5px !important;
   line-height: 1.3 !important;
   color: var(--iw-text) !important;
   white-space: nowrap !important;
@@ -243,7 +311,7 @@
    the game's (and ui-system.css's) control chrome. Strip it back to text —
    the element stays a button and keeps its handler; only the paint changes. */
 [data-iw-header="profile-online"] {
-  margin-top: 3px !important;
+  margin-top: 2px !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
@@ -257,7 +325,7 @@
   align-items: center !important;
   gap: 8px !important;
   font-family: var(--iw-font-head) !important;
-  font-size: 13px !important;
+  font-size: 11.5px !important;
   font-weight: 600 !important;
   letter-spacing: 0.09em !important;
   text-transform: uppercase !important;
@@ -265,7 +333,7 @@
 }
 [data-iw-header="profile-online"]::before {
   content: "";
-  width: 8px; height: 8px; border-radius: 50%;
+  width: 7px; height: 7px; border-radius: 50%;
   background: #38C8A8;
   box-shadow: 0 0 8px rgba(56, 200, 168, 0.75);
   flex: 0 0 auto;
@@ -273,18 +341,21 @@
 
 /* ── §4  Utility buttons ────────────────────────────────────────────────── */
 
-/* The utility row and the status grid are two halves of one band across the top
-   of the header, so they must share a top edge and a control height. Previously
-   the buttons sat at 41-87 (start + 4px pad, 46px tall) while the first stat row
-   sat at 46-88 (the grid centres itself in the taller identity row) — visibly
-   out of step. Both are pinned to the top of the row now, at the same height. */
+/* The five header utility buttons form a rail on row 2 of the identity region,
+   directly beneath the smoked-glass frame (§3). `space-between` spreads them
+   edge to edge across the frame's span; the -8px horizontal margin matches the
+   frame pseudo's own bleed so the first and last button sit flush with the
+   frame's left and right edges. `gap` is only a collision floor. Below 1280px
+   the frame stretches full-width and §9 drops this back to `flex-start`, where
+   an edge-to-edge spread would leave absurd gaps. */
 [data-iw-header="utilities"] {
   grid-area: utilities !important;
   align-self: start !important;
   display: flex !important;
   align-items: flex-start !important;
-  justify-content: flex-end !important;
+  justify-content: space-between !important;
   gap: var(--hd-gap, 8px) !important;
+  margin: 0 -8px !important;
   padding: 0 !important;
 }
 
@@ -314,7 +385,7 @@
 }
 [data-iw-header="utility-button"] svg { width: 20px !important; height: 20px !important; }
 [data-iw-header="utility-button"]:hover {
-  --bc: #F0CE7C;
+  --bc: color-mix(in srgb, var(--iw-th-bracket) 78%, #fff);
   color: var(--iw-gold) !important;
   border-color: var(--hd-rule) !important;
   background-color: #1C1F25 !important;
@@ -364,15 +435,22 @@
    from the left, which would either eat the tile's text column or smear when
    the middle stretches. It suits a larger surface. */
 
+/* Matched to the status tiles: the octagonal gold `utility_frame` plate is
+   dropped for the same smoked-glass panel — translucent fill + blur, gold
+   outline + faint glow, no corner flourishes (the `background` shorthand
+   clears §1's bracket gradients). (The sprite-crop note above is kept as
+   history in case the plate is ever wanted back.) */
 [data-iw-header="utility-button"] {
   box-sizing: border-box !important;
-  /* No border: the plate is the background now, so the 42x42 content box and
-     `place-items: center` above put the glyph on the plate's own centre. */
-  border: 0 !important;
-  background:
-    url('../assets/header/utility_frame.webp') no-repeat -1.4px -1.67px /
-    48.53px 47.01px !important;
-  box-shadow: none !important;
+  border: 1px solid rgba(201, 162, 77, 0.44) !important;
+  border-radius: 7px !important;
+  background: rgba(9, 8, 13, 0.40) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 190, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.38),
+    0 0 7px rgba(201, 162, 77, 0.13) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
 }
 [data-iw-header="utility-button"] svg { width: 18px !important; height: 18px !important; }
 
@@ -381,21 +459,33 @@
    behind an octagonal plate. Restate them here, after §4, and let the plate
    itself carry the hover instead. */
 [data-iw-header="utility-button"]:hover {
-  background-color: transparent !important;
-  box-shadow: none !important;
-  filter: brightness(1.18) saturate(1.06) !important;
+  background: rgba(22, 19, 28, 0.56) !important;
+  border-color: rgba(226, 190, 118, 0.62) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 190, 0.09),
+    0 0 9px rgba(201, 162, 77, 0.22) !important;
+  filter: brightness(1.08) !important;
 }
 [data-iw-header="utility-button"] { transition: color 120ms ease, filter 120ms ease; }
 
+/* Low-profile status tiles. The ornate marble `zone_button_idle` plate covered
+   most of the (now per-zone) header artwork and read as gaudy; these are a
+   quiet smoked-glass panel instead — translucent dark fill + blur so the
+   values stay legible over bright zone art without hiding it, framed by just a
+   gold outline + faint glow. The `background` shorthand deliberately clears
+   §1's corner-bracket gradients — no flourishes on these controls. */
 [data-iw-header="status-card"] {
   box-sizing: border-box !important;
-  border-style: solid !important;
-  border-width: 6px 18px !important;
-  border-color: transparent !important;
-  border-image: url('../assets/header/zone_button_idle.webp') 30 95 fill / 6px 18px / 0 stretch !important;
-  background: none !important;
-  background-image: none !important;
-  box-shadow: none !important;
+  border: 1px solid rgba(201, 162, 77, 0.46) !important;
+  border-image: none !important;
+  border-radius: 8px !important;
+  background: rgba(9, 8, 13, 0.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 190, 0.07),
+    0 0 0 1px rgba(0, 0, 0, 0.38),
+    0 0 8px rgba(201, 162, 77, 0.14) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
 }
 
 /* ── §5  Status tiles ───────────────────────────────────────────────────── */
@@ -414,9 +504,7 @@
 [data-iw-header="status-grid"] [data-iw-header-stat="gold"] {
   grid-area: 1 / 1 / 3 / 2 !important;
 }
-[data-iw-header="status-grid"] [data-iw-header-stat="combat"] {
-  grid-area: 3 / 1 / 5 / 2 !important;
-}
+
 /* Anything that is not a vital shares the buff column, so an unrecognised
    tile still appears rather than being dropped out of the layout. */
 [data-iw-header="status-grid"] [data-iw-header-stat="timer"],
@@ -424,14 +512,6 @@
   grid-column: 2 !important;
 }
 
-/* Vitals carry the weight: bigger type, centred, more presence. */
-[data-iw-header="status-grid"] [data-iw-header-stat="gold"],
-[data-iw-header="status-grid"] [data-iw-header-stat="combat"] {
-  justify-content: center !important;
-  font-size: 15px !important;
-  letter-spacing: .01em !important;
-  color: #F7EBD2 !important;
-}
 [data-iw-header="status-grid"] [data-iw-header-stat="gold"] {
   font-family: var(--iw-font-head) !important;
   font-variant-numeric: tabular-nums !important;
@@ -439,40 +519,91 @@
 /* Buffs are secondary: smaller, quieter, and they get the room to stay on one
    line. The countdown is the part that changes, so it keeps full contrast. */
 [data-iw-header="status-grid"] [data-iw-header-stat="timer"] {
-  min-height: 34px !important;
-  font-size: 12.5px !important;
+  min-height: 30px !important;
+  font-size: 11.5px !important;
   color: #CFC5AE !important;
+}
+
+/* ── Lower-left plaque occupant ─────────────────────────────────────────
+   Two-column band only — below 861px §9 hands the grid back to a single
+   auto-flow column and the plaque concept doesn't apply.
+
+   By default the permanent ATK/DEF/HP line fills the lower-left plaque. When a
+   server-wide boost is active, its tile ("⚡ <player> boosted (5/5) · 8d 11h
+   left") takes the plaque instead — per Curtis, that string lays out far more
+   neatly with the plaque's width and centred type than crammed into a buff row
+   — and ATK/DEF/HP drops into the buff column. `:has()` hands the plaque back
+   to ATK/DEF/HP the instant the boost expires, so it never goes empty. React
+   owns tile order and a gameplay node may not be reparented, so this is pure
+   grid placement against the content-derived `data-iw-header-stat`. */
+@media (min-width: 861px) {
+  [data-iw-header="status-grid"] [data-iw-header-stat="gold"],
+  [data-iw-header="status-grid"]:not(:has([data-iw-header-stat="boost"])) [data-iw-header-stat="combat"],
+  [data-iw-header="status-grid"]:has([data-iw-header-stat="boost"]) [data-iw-header-stat="boost"] {
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 12px !important;
+    letter-spacing: .01em !important;
+    color: #F7EBD2 !important;
+  }
+  [data-iw-header="status-grid"]:not(:has([data-iw-header-stat="boost"])) [data-iw-header-stat="combat"],
+  [data-iw-header="status-grid"]:has([data-iw-header-stat="boost"]) [data-iw-header-stat="boost"] {
+    grid-area: 3 / 1 / 5 / 2 !important;
+  }
+  /* The boost plaque: let the line breathe so the charge counter and countdown
+     have room, and keep the leading ⚡ + name off the frame. */
+  [data-iw-header="status-grid"]:has([data-iw-header-stat="boost"]) [data-iw-header-stat="boost"] {
+    padding: 5px 10px !important;
+    line-height: 1.3 !important;
+  }
+  /* ATK/DEF/HP as a buff row while the boost holds the plaque. */
+  [data-iw-header="status-grid"]:has([data-iw-header-stat="boost"]) [data-iw-header-stat="combat"] {
+    grid-area: auto !important;
+    grid-column: 2 !important;
+    min-height: 30px !important;
+    font-size: 11.5px !important;
+    color: #CFC5AE !important;
+  }
 }
 
 [data-iw-header="status-grid"] {
   display: grid !important;
   /* Vitals column, then the buff stack. Four rows: each vital spans two. */
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.04fr) !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
   grid-template-rows: repeat(4, auto) !important;
   /* Top-aligned, not centred: the identity row is taller than this grid (the
      crest sets its height), so centring pushed the first stat row 9px below the
      utility buttons it should sit level with. */
   align-content: start !important;
-  gap: var(--hd-gap, 8px) !important;
+  gap: 6px !important;
+  /* Minimum viable width at the right edge, NOT the whole 38fr track: a fixed
+     420px is just wide enough for the two single-line tiles ("ATK … DEF … HP …",
+     "XP …/task • … left") with the tile's own 8px inner padding as the margin.
+     The boost/name string is longer than any width and wraps to two lines by
+     design (see status-card `white-space: normal`). §9 hands this back to
+     full-width only below 861px, where the grid is a single column of tiles. */
+  justify-self: end !important;
+  width: 376px !important;
+  max-width: 100% !important;
   min-width: 0 !important;
   padding: 0 !important;
 }
 
 [data-iw-header="status-card"] {
   min-width: 0 !important;
-  min-height: 42px !important;
+  min-height: 36px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: 10px !important;
-  padding: 4px 6px !important;
+  gap: 8px !important;
+  padding: 3px 8px !important;
   text-align: left !important;
   /* Cinzel is capitals-only: setting it here renders every tile as forced
      small caps. The reference uses a serif WITH real lowercase. */
   font-family: Georgia, 'Times New Roman', serif !important;
-  font-size: 13.5px !important;
-  font-weight: 700 !important;
-  line-height: 1.18 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.16 !important;
   color: var(--iw-text-hi) !important;
   /* A tile can carry another player's name ("⚡ Matthais64 boosted (3/4) · 1d
      8h left" needed 267px inside a 225px box), so no font size guarantees a
@@ -577,9 +708,9 @@
   content: "" !important;
   flex: 0 0 auto;
   width: 22px; height: 22px;
-  background: radial-gradient(circle at 50% 50%, #DFF7FF 0%, #6FD8EC 38%, #2E8FA8 100%);
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--iw-th-accent) 25%, #fff) 0%, var(--iw-th-accent) 40%, color-mix(in srgb, var(--iw-th-accent) 55%, #000) 100%);
   clip-path: polygon(50% 0%, 59% 41%, 100% 50%, 59% 59%, 50% 100%, 41% 59%, 0% 50%, 41% 41%);
-  filter: drop-shadow(0 0 7px rgba(90, 210, 235, 0.65));
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--iw-th-accent) 60%, transparent));
 }
 
 /* ── §8  Zone bar ───────────────────────────────────────────────────────── */
@@ -664,35 +795,45 @@
   background-color: #07171C !important;
   box-shadow: inset 0 0 20px rgba(50,170,195,0.14) !important;
 }
+/* NEXT ZONE is the emphasised forward action. The old solid-gold fill put pale
+   text on pale amber and was unreadable; instead it borrows the Inventory
+   "active control" scheme — dark ember plate, warm border, parchment text,
+   inner ember glow — so it still reads as the primary control without the
+   contrast problem. */
 [data-iw-ui="zone-action"][data-iw-zone-action="next"],
 [data-iw-ui="zone-action"]:last-of-type {
-  --bc: #F2CE79;
-  color: #FFE9C4 !important;
-  border-color: #8A6A2C !important;
-  background-image:
-    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
-    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
-    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
-    linear-gradient(var(--bc), var(--bc)), linear-gradient(var(--bc), var(--bc)),
-    linear-gradient(180deg, #6B4A16 0%, #91601C 46%, #3D280C 100%) !important;
-  background-size:
-    var(--b) 1px, 1px var(--b), var(--b) 1px, 1px var(--b),
-    var(--b) 1px, 1px var(--b), var(--b) 1px, 1px var(--b),
-    100% 100% !important;
-  background-position:
-    var(--i) var(--i), var(--i) var(--i),
-    calc(100% - var(--i)) var(--i), calc(100% - var(--i)) var(--i),
-    var(--i) calc(100% - var(--i)), var(--i) calc(100% - var(--i)),
-    calc(100% - var(--i)) calc(100% - var(--i)),
-    calc(100% - var(--i)) calc(100% - var(--i)),
-    0 0 !important;
+  color: #F3E3C0 !important;
+  border: 1px solid var(--iw-th-cta-hi) !important;
+  background-color: var(--iw-th-plate) !important;
+  background-image: linear-gradient(180deg,
+    color-mix(in srgb, var(--iw-th-cta) 34%, #000),
+    color-mix(in srgb, var(--iw-th-cta) 14%, #000)) !important;
+  background-size: auto !important;
+  background-position: 0 0 !important;
+  box-shadow:
+    inset 0 0 14px -2px color-mix(in srgb, var(--iw-th-cta-hi) 60%, transparent),
+    inset 0 1px 0 rgba(255, 216, 150, .18),
+    0 0 0 1px color-mix(in srgb, var(--iw-th-cta-hi) 20%, transparent) !important;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--iw-th-cta-hi) 45%, transparent) !important;
 }
 
 /* ── §9  Responsive ─────────────────────────────────────────────────────── */
 
-@media (max-width: 1180px) {
+/* 1280px, not a hand-picked value: it is Tailwind's own `xl` breakpoint,
+   where the game's whole panel stack collapses from its two-column layout to
+   one column (see the hidden-duplicate trap in CLAUDE.md and
+   V1.6.0_MOBILE_LAYOUT_AUDIT.md). This used to be 1180px, which left a dead
+   band from 1181-1279px where the game had already gone single-column but
+   the header still ran its full two-column identity/status layout. */
+@media (max-width: 1280px) {
   [data-iw-header="layout"] { grid-template-columns: minmax(0, 1fr) !important; gap: 12px !important; }
   [data-iw-header="status-grid"] { margin-top: 2px !important; }
+  /* Single column now — let the framed identity block span it instead of
+     hugging one edge above a full-width status grid. The utility rail can't
+     spread edge to edge across a bar-wide frame without absurd gaps, so pack
+     it left and drop the frame-matching bleed. */
+  [data-iw-header="identity-region"] { justify-self: stretch !important; width: auto !important; max-width: none !important; margin-left: 0 !important; }
+  [data-iw-header="utilities"] { justify-content: flex-start !important; margin: 0 !important; }
 }
 
 @media (max-width: 860px) {
@@ -703,25 +844,68 @@
     gap: 10px 14px !important;
   }
   .fs-header-crest { width: 108px !important; height: 116px !important; }
-  [data-iw-header="utilities"] { justify-content: flex-start !important; }
-  /* One column: the vitals/timers split needs two, so hand placement back to
-     auto-flow and drop the vitals' display size, which cannot fit a 320px tile
-     once the plate's gem caps take their 36px. */
+  /* Curtis (2026-09): flush to the frame's edges, buttons wide with only a
+     slight gap — not clustered left with a bare gap on the right. Restore
+     §4's own bleed/spread rather than inventing a new one: the frame pseudo's
+     `margin: -8px -8px` (§3, [data-iw-header="identity-region"]::before) does
+     not change at this breakpoint — only the crest/profile column widths do —
+     so the SAME -8px bleed still lines the row's ends up with the frame's
+     edges. `justify-content` reverts to space-between too, though with the
+     buttons themselves now flex-growing (below) it has nothing left to
+     distribute — kept for the fallback where content is short enough that
+     they don't fill the row. */
+  [data-iw-header="utilities"] { justify-content: space-between !important; margin: 0 -8px !important; }
+  /* Fixed 42px squares left a wide bare gap after 5 of them in a full-width
+     mobile row. Flex-grow them evenly instead so they fill the row and the
+     GAP stays small (var(--hd-gap), unchanged) rather than the buttons. */
+  [data-iw-header="utility-button"] {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+  /* Two equal columns, plain auto-flow in DOM order — matches the live game's
+     own mobile header (Curtis, 2026-09: reference capture showed gold/XP,
+     ATK-DEF-HP/no-ATK-potion, no-DEF-potion/boost, two per row). The desktop
+     asymmetric split (gold + combat as tall plaques spanning two rows in
+     column 1, everything else stacked in column 2 — §5a above) is a
+     wide-band-only treatment; below 861px the tile-level reset just under
+     this rule already sets every tile's grid-area/grid-column back to `auto`,
+     so changing ONLY the grid's own column count is enough to turn the
+     six-tile stack into three two-up rows — nothing else needs to change.
+     Full-width again — a single stacked column of tiles has nothing to be
+     "minimum viable" against. */
   [data-iw-header="status-grid"] {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     grid-template-rows: auto !important;
+    width: auto !important;
+    justify-self: stretch !important;
   }
   [data-iw-header="status-grid"] [data-iw-header-stat] {
     grid-area: auto !important;
     grid-column: auto !important;
   }
   [data-iw-header="status-grid"] [data-iw-header-stat="gold"],
-  [data-iw-header="status-grid"] [data-iw-header-stat="combat"] {
+  [data-iw-header="status-grid"] [data-iw-header-stat="combat"],
+  [data-iw-header="status-grid"] [data-iw-header-stat="boost"] {
     justify-content: flex-start !important;
     font-size: 13px !important;
   }
   [data-iw-ui="nav-tab"] { padding: 11px 14px !important; font-size: 14px !important; gap: 8px !important; }
   [data-iw-ui="zone-action"] { flex: 1 1 0 !important; padding: 10px 10px !important; font-size: 13px !important; }
+}
+
+/* Below Tailwind's `md` the header is a tall stacked column, and the wide 4:1
+   zone strip `cover`s into it as a heavily-zoomed sliver. Swap to the portrait
+   crop authored for exactly this — `zone_<N>_mobile.webp`, 768x880, composed
+   with a readable central band. HeaderRenderer sets both vars together on every
+   zone change; the `var(…, fallback)` keeps a zone with no mobile art (or a
+   pre-classify flush) on the wide strip rather than dropping the image. A
+   non-matching @media block's background image is not fetched until it
+   matches, so desktop never downloads the mobile set. */
+@media (max-width: 768px) {
+  [data-iw-header="root"] {
+    background-image: var(--iw-header-surface-mobile, var(--iw-header-surface)) !important;
+  }
 }
 
 @media (max-width: 560px) {

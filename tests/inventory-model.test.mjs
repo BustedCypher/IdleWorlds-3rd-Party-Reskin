@@ -91,3 +91,66 @@ assert.equal(resolveInventoryItemName(['Wool Boots', '+4', 'x1'], lookupEnhanced
   'a separately rendered +4 badge must resolve the enhanced item before the base item');
 assert.equal(resolveInventoryItemName(['Wool Boots', 'x1'], lookupEnhanced), 'Wool Boots',
   'ordinary base items must still resolve normally');
+
+// Upgraded cloak: the game nests "+3" in the name span, so leafTexts yields the
+// combined "Name+3" plus a bare "+3", and items.json has NO per-level record.
+const cloakLookup = new Map([['fortunate regal cloak of the harvest',
+  { name: 'Fortunate Regal Cloak of the Harvest', item_id: 'cloak_tier_18_x' }]]);
+const lookupCloak = name => cloakLookup.get(String(name).toLowerCase()) || null;
+assert.equal(
+  resolveInventoryItemName(
+    ['Fortunate Regal Cloak of the Harvest+3', '+3', '📦 Tier 18 • Cloak',
+     'Not upgradable', 'Requires Lv 61 (any skill)', 'x1'],
+    lookupCloak,
+  ),
+  'Fortunate Regal Cloak of the Harvest',
+  'an upgraded item with no per-level record must fall back to its base identity',
+);
+
+// The "🎲 +N · <stats>" line: the "🎲 +N" roll count is dropped, but the rolled
+// stat bonus after it ("+12 DEF · +3% 2x Gather Chance") is kept as a detail.
+const cloakDetails = buildInventoryDetails([
+  '📦 Tier 18 • Cloak',
+  '🎲 +3 · +12 DEF · +3% 2x Gather Chance',
+  '+18% 2x gather chance • +18% item find',
+  'Not upgradable',
+  'Requires Lv 61 (any skill)',
+], { name: 'Fortunate Regal Cloak of the Harvest', tier: 18, subcategory: 'Cloak slot' },
+   'Fortunate Regal Cloak of the Harvest');
+assert.deepEqual(cloakDetails.requirements, ['Requires Lv 61 (any skill)']);
+assert.deepEqual(cloakDetails.details.map(d => [d.kind, d.text]), [
+  ['effect', '+12 DEF · +3% 2x Gather Chance'],
+], 'rolled stat bonus kept; roll count stripped; "Not upgradable" dropped below +4');
+assert.ok(
+  !cloakDetails.details.some(d => /🎲/.test(d.text)) &&
+  !cloakDetails.details.some(d => /^\+?3\b.*·/.test(d.text)),
+  'the roll-count prefix must not leak into any detail',
+);
+
+// A freshly upgraded item with no rolled bonus yet shows nothing extra, and the
+// misleading "Not upgradable" line is still suppressed (it can be orb-upgraded).
+const freshRoll = buildInventoryDetails(
+  ['📦 Tier 18 • Cloak', '🎲 +1', 'Not upgradable', 'Requires Lv 61 (any skill)'],
+  { name: 'Fortunate Regal Cloak of the Harvest', tier: 18, subcategory: 'Cloak slot' },
+  'Fortunate Regal Cloak of the Harvest');
+assert.deepEqual(freshRoll.details, [], 'a below-max cloak shows no "Not upgradable"');
+
+// At +4 the cloak is genuinely maxed, so the native "Not upgradable" stays.
+const maxedCloak = buildInventoryDetails(
+  ['📦 Tier 18 • Cloak', '🎲 +4 · +16 DEF · +4% 2x Gather Chance', 'Not upgradable', 'Requires Lv 61 (any skill)'],
+  { name: 'Fortunate Regal Cloak of the Harvest', tier: 18, subcategory: 'Cloak slot' },
+  'Fortunate Regal Cloak of the Harvest');
+assert.deepEqual(maxedCloak.details.map(d => [d.kind, d.text]), [
+  ['effect', '+16 DEF · +4% 2x Gather Chance'],
+  ['status', 'Not upgradable'],
+], 'a +4 cloak keeps "Not upgradable"');
+
+// A non-orb item (ring/amulet/trinket) that really cannot be upgraded keeps it.
+const ring = buildInventoryDetails(
+  ['Lapis Ring of Gathering', 'Tier 19 · Ring', 'Not upgradable', 'Requires Lv 65 (any skill)'],
+  { name: 'Lapis Ring of Gathering', tier: 19, subcategory: 'Ring' },
+  'Lapis Ring of Gathering');
+assert.deepEqual(ring.details.map(d => d.text), ['Not upgradable'],
+  'items with no orb system keep their genuine "Not upgradable" line');
+
+console.log('PASS upgraded-cloak identity + rolled-stat model');

@@ -17,11 +17,12 @@
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-// 2026-08-18: this immutable sprite revision restores the shared +4 gear
-// overlay in gear_icons_atlas.png / gear_icons_manifest.json. Keep the reskin
-// pinned rather than following mutable main, but do not remain pinned to the
-// older v4 manifest that only contained +1/+2/+3 overlays.
-const ASSET_REVISION = '39bc876307c3183d160a5e2c5868d37b50c1660b';
+// 2026-09-04: bumped for the v5.4 Woodcutting & Construction art pack —
+// item_icons_atlas.png grows 1280x4864 -> 1280x6144 and item_icons_index.csv
+// gains 102 rows (34 timber, 34 Building Parts, 34 buildings). The gear atlas
+// and manifest are byte-identical to the previous pin (39bc876), so this still
+// carries the shared +4 gear overlay; only the item atlas moved.
+const ASSET_REVISION = 'eadbc0fe1eae549184dd740470b69fc76974a411';
 const REPO_BASE =
   `https://raw.githubusercontent.com/BustedCypher/idleWorlds-game-sprites-BC/${ASSET_REVISION}/`;
 

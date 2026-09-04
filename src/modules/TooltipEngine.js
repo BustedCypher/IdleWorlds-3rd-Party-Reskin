@@ -204,12 +204,11 @@ function renderCard(item) {
   return {
     html: `
       <div class="iw-tip-head has-art ${isGear ? 'has-gear-art' : 'has-item-art'}">
-        <div class="iw-tip-icon" aria-hidden="true">${glyph}</div>
+        <div class="iw-tip-art ${artClass}" aria-hidden="true"><span class="iw-tip-art-fallback">${glyph}</span></div>
         <div class="iw-tip-title-block">
           <div class="iw-tip-name ${tier}">${esc(item.name)}</div>
           <div class="iw-tip-badges">${badges}</div>
         </div>
-        <div class="iw-tip-art ${artClass}" aria-hidden="true"><span class="iw-tip-art-fallback">${glyph}</span></div>
       </div>
       <div class="iw-tip-body">
         ${effectSec}

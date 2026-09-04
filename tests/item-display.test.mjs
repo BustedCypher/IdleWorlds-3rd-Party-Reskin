@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { deriveDisplayStats, statChips, statRows } from '../src/modules/itemDisplay.js';
+import { deriveDisplayStats, statChips, statRows, categoryClass } from '../src/modules/itemDisplay.js';
 
 const woolPlus4 = {
   name: 'Wool Boots+4', tier: 2, category: 'Equipment', subcategory: 'Boots',
@@ -62,5 +62,21 @@ assert.ok(statRows(copperOre).some(r => r.label.includes('Work order') && r.valu
 const rubyRing = { work_order_turn_in_gold: 20, work_order_turn_in_note: 'Jewelcrafting gem cost to craft (ring)' };
 assert.ok(!statRows(rubyRing).some(r => r.label.includes('Work order')),
   'Jewelcrafting gem costs must not be mislabeled as work-order value');
+
+// Row identity colour is keyed off super-type, with consumables split by subtype.
+assert.equal(categoryClass({ category: 'Equipment', subcategory: 'Cloak slot' }), 'fs-cat-gear');
+assert.equal(categoryClass({ category: 'Trade Good', subcategory: 'Trade good' }), 'fs-cat-trade');
+assert.equal(categoryClass({ category: 'Resource', subcategory: 'Raw material' }), 'fs-cat-resource');
+assert.equal(categoryClass({ category: 'Processed', subcategory: 'Crafting material' }), 'fs-cat-processed');
+assert.equal(categoryClass({ category: 'Consumable', subcategory: 'Potion' }), 'fs-cat-potion');
+assert.equal(categoryClass({ category: 'Consumable', subcategory: 'Enchant Scroll' }), 'fs-cat-enchant');
+assert.equal(categoryClass({ category: 'Consumable', subcategory: 'XP Scroll' }), 'fs-cat-xpscroll');
+assert.equal(categoryClass({ category: 'Consumable', subcategory: 'XP Shard' }), 'fs-cat-xpscroll');
+assert.equal(categoryClass({ category: 'Consumable', subcategory: 'Supply Cache' }), 'fs-cat-cache');
+assert.equal(categoryClass({ category: 'Consumable', subcategory: 'Upgrade Orb' }), 'fs-cat-consumable',
+  'Upgrade Orb resolves to the Consumable class; its orange identity comes from the .fs-inv-orb hook');
+assert.equal(categoryClass({ category: 'Consumable', subcategory: 'Usable item' }), 'fs-cat-consumable');
+assert.equal(categoryClass({ category: 'Consumable', subcategory: 'Cosmetic Token' }), 'fs-cat-consumable');
+assert.equal(categoryClass({}), 'fs-cat-unknown');
 
 console.log('PASS enhanced item display model');

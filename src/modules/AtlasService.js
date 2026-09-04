@@ -8,7 +8,7 @@
  *                  1118 icons, equipment only, name-keyed
  *
  *   Item atlas   — item_icons_atlas.png / item_icons_index.csv
- *                  1167 icons, consumables/resources/processed/trade
+ *                  1269 icons, consumables/resources/processed/trade
  *                  goods, item_id-keyed (authoritative — matches the
  *                  game API's item_id field exactly)
  *
@@ -105,7 +105,7 @@ class _AtlasService {
     this._itemRows     = null;
     this._itemById     = null;
     this._itemByName   = null;
-    this._itemDims     = { cols: 10, rows: 38, cell: 128 };
+    this._itemDims     = { cols: 10, rows: 48, cell: 128 };
 
     this._promise = null;
     this._nextRetryAt = 0;
@@ -246,7 +246,7 @@ class _AtlasService {
     const { headers, rows } = parseCSV(csvText);
     if (!rows.length) throw new Error('Item index contained no rows');
 
-    // Fail loudly on schema drift rather than painting 1167 identical sprites.
+    // Fail loudly on schema drift rather than painting 1269 identical sprites.
     const missing = REQUIRED_ITEM_COLUMNS.filter(col => !headers.includes(col));
     if (missing.length) {
       throw new Error(`Item index missing required column(s): ${missing.join(', ')}`);

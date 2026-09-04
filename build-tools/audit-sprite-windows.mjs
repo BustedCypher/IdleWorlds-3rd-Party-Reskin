@@ -2,7 +2,10 @@
  * audit-sprite-windows.mjs
  *
  * Every CSS-declared pixel window onto skills_ui_atlas.webp must land exactly
- * on a cell from skills_ui_index.json, at that cell's native size.
+ * on a cell from skills_ui_index.json, at that cell's native size. This covers
+ * the per-zone recolours too (assets/skills-ui/theme_<name>.webp, read through
+ * the --iw-zone-atlas variable): they share the base sheet's exact geometry, so
+ * one index describes them all.
  *
  * WHY THIS EXISTS
  * A pixel `background-size` does not merely resize a sprite — it MOVES THE
@@ -60,7 +63,11 @@ for (const name of SHEETS) {
     const size = decl(body, 'background-size');
     const pos = decl(body, 'background-position');
     if (!pos) continue;
-    const declaresAtlas = /skills_ui_atlas\.webp/.test(body);
+    // The literal base sheet, a themed recolour (theme_<name>.webp), OR the
+    // `--iw-zone-atlas` variable those windows now read through. Every themed
+    // atlas shares skills_ui_atlas.webp's 860x463 canvas and cell positions, so
+    // the same cell math in skills_ui_index.json applies to all of them.
+    const declaresAtlas = /skills_ui_atlas\.webp|skills-ui\/theme_[\w-]+\.webp|var\(\s*--iw-zone-atlas\b/.test(body);
     if (!declaresAtlas && !size) rules.push({ name, selector, body, pos, size: null, inherited: true });
     else if (declaresAtlas) rules.push({ name, selector, body, pos, size, inherited: false });
     if (declaresAtlas && size) scaleBySelector.set(baseKey(selector), size);

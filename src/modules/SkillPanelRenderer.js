@@ -32,7 +32,12 @@ let listenerBound = false;
 const SKILL_META = {
   combat:    { label: 'Combat',    labels: ['Combat'],             glyph: '⚔︎', actions: ['fight'] },
   mining:    { label: 'Mining',    labels: ['Mine', 'Mining'],     glyph: '⛏︎', actions: ['mine'] },
-  smithing:  { label: 'Smithing',  labels: ['Smith', 'Smithing'],  glyph: '⚒︎', actions: ['smelt', 'forge'] },
+  // `titleActions` carries 'craft' because Smithing's higher-tier recipes are
+  // titled "Craft <X> Plate" while the button still says FORGE — the title and
+  // button verbs genuinely differ. `actions` must NOT gain 'craft': it is the
+  // exact-match test for the command button, and widening it there would let a
+  // Crafting/Construction control answer for Smithing.
+  smithing:  { label: 'Smithing',  labels: ['Smith', 'Smithing'],  glyph: '⚒︎', actions: ['smelt', 'forge'], titleActions: ['smelt', 'forge', 'craft'] },
   gathering: { label: 'Gathering', labels: ['Gathering'],          glyph: '❧', actions: ['gather', 'harvest'] },
   alchemy:   { label: 'Alchemy',   labels: ['Alchemy'],            glyph: '⚗︎', actions: ['brew'] },
   jewelcrafting: { label: 'Jewelcrafting', labels: ['Jewel', 'Jewelcrafting'], glyph: '◆', actions: ['prospect', 'cut'] },
@@ -66,56 +71,107 @@ function classifyButton(btn) {
   return 'secondary';
 }
 
+/**
+ * The forged plate — one surface for every control in a skill card.
+ *
+ * Per Curtis (2026-09) these buttons wear the inventory filter/tool rail's
+ * plate: near-black under a thin dark-gold rule, with a single ember plate for
+ * the LIVE control, exactly the way the active filter tab is the only warm
+ * plate in the inventory row. Values are lifted verbatim from
+ * `[data-iw-inventory-control="filter"]` and its
+ * `[data-iw-inventory-filter-state="active"]` override in `inventory.css`.
+ *
+ * This supersedes the per-skill `--fs-skill-accent` *fill* on the action button
+ * and the cool steel plate on the pager arrows. The plate bg + brass line stay
+ * neutral-warm, but per Curtis (2026-09) the live button's GLOW — the inner
+ * bloom, the 1px ring and the label text-shadow — is now mixed from
+ * `--fs-skill-accent`, so each card's lit control glows in its own discipline
+ * hue (ember `#D8791F` is only the pre-classify fallback). See `FORGE.liveShadow`
+ * / `primary['text-shadow']` below and `--fs-forge-live-*` in skillpanel.css.
+ *
+ * These declarations are written INLINE with `!important`, so they outrank
+ * every rule in `skillpanel.css`; the `--fs-forge-*` mirror there is only the
+ * pre-render fallback, and `build-tools/render-fixtures.mjs` carries a third
+ * copy. All three have to move together or the fixture renders a control the
+ * game never shows.
+ */
+const FORGE = {
+  bg: 'linear-gradient(180deg, #100E0A, #0A0907)',
+  border: '1px solid #2A241A',
+  shadow: 'inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)',
+  liveBg: 'linear-gradient(180deg, #1B150B, #120E07)',
+  liveBorder: '1px solid #8A6B2E',
+  // Per Curtis (2026-09) the live button's glow carries the discipline colour:
+  // the bloom + 1px ring are mixed from the inherited `--fs-skill-accent`
+  // (ember `#D8791F` is the pre-classify fallback). The plate bg/border stay
+  // neutral-warm. Mirror of `--fs-forge-live-shadow` in skillpanel.css.
+  liveTint: 'var(--fs-skill-accent, #D8791F)',
+  liveShadow: 'inset 0 0 12px -2px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 55%, transparent), ' +
+    'inset 0 1px 0 rgba(255, 216, 150, .18), ' +
+    '0 0 0 1px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 16%, transparent)',
+};
+
+/* Every state map declares the SAME property set. styleButton() writes only the
+   properties of the state it is applying, so a key present in one state and
+   absent from another survives the transition as a stale declaration. */
 const BUTTON_STYLES = {
   base: {
     'font-family': "'Barlow', system-ui, sans-serif",
     'font-size': '12px',
     'font-weight': '700',
-    'letter-spacing': '0.06em',
+    // .09em is the inventory filter tab's tracking.
+    'letter-spacing': '0.09em',
     'text-transform': 'uppercase',
     'border-radius': '2px',
-    'transition': 'background .13s, border-color .13s, color .13s',
+    'transition': 'background .13s, border-color .13s, color .13s, box-shadow .13s',
     'align-self': 'center',
     'height': '32px',
     'min-height': '32px',
     'flex-shrink': '0',
   },
   primary: {
-    'background': 'linear-gradient(180deg, color-mix(in srgb, var(--fs-skill-accent) 74%, #593018), color-mix(in srgb, var(--fs-skill-accent) 48%, #25170F))',
-    'border': '1px solid color-mix(in srgb, var(--fs-skill-accent) 72%, #8A6633)',
-    'color': '#FFEAD1',
+    'background': FORGE.liveBg,
+    'border': FORGE.liveBorder,
+    'color': '#F3E3C0',
+    'text-shadow': '0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 48%, transparent)',
     'padding': '0 17px',
     'min-width': '96px',
     'cursor': 'pointer',
-    'box-shadow': 'none',
+    'box-shadow': FORGE.liveShadow,
   },
   secondary: {
-    'background': 'linear-gradient(180deg, #242018, #17140F)',
-    'border': '1px solid #58482B',
-    'color': '#DAD3C3',
+    'background': FORGE.bg,
+    'border': FORGE.border,
+    'color': 'var(--iw-text, #DDD6C6)',
+    'text-shadow': 'none',
     'padding': '0 13px',
     'min-width': '72px',
     'cursor': 'pointer',
-    'box-shadow': 'none',
+    'box-shadow': FORGE.shadow,
   },
+  // Unavailable reads as UNLIT, not as a differently-coloured plate: the ember
+  // treatment is what marks the live control, so withholding it is the signal.
+  // The dimming itself is left to skillpanel.css's `[data-iw-btn-state]` rule,
+  // which follows the attribute and so cannot go stale on a state change.
   disabled: {
-    'background': '#15130F',
-    'border': '1px solid #3A3022',
-    'color': '#8E8676',
+    'background': FORGE.bg,
+    'border': FORGE.border,
+    'color': 'var(--iw-faint, #666052)',
+    'text-shadow': 'none',
     'padding': '0 15px',
     'min-width': '96px',
     'cursor': 'not-allowed',
-    'box-shadow': 'none',
+    'box-shadow': FORGE.shadow,
   },
   icon: {
-    'background': 'linear-gradient(180deg, #242018, #17140F)',
-    'border': '1px solid #58482B',
-    'color': '#DAD3C3',
+    'background': FORGE.bg,
+    'border': FORGE.border,
+    'color': 'var(--iw-gold-dim, #9D8458)',
+    'text-shadow': 'none',
     'padding': '0',
-    'width': '30px',
     'min-width': '30px',
     'cursor': 'pointer',
-    'box-shadow': 'none',
+    'box-shadow': FORGE.shadow,
   },
 };
 
@@ -146,29 +202,29 @@ function styleButton(btn) {
   // Role geometry is applied inline because IdleWorlds frequently writes its
   // own inline button dimensions during React updates.
   if (role === 'nav-button') {
-    // The pager IS the skills_nav_*.svg artwork — a framed arrow. Three things
-    // must not fight it, and all three have to be set here because these are
-    // inline `!important` and outrank every stylesheet rule:
-    //   * the control's own border/box-shadow, which drew a second, squarer
-    //     outline around the artwork's frame;
-    //   * the native glyph, which rendered a vector arrow ON TOP of the drawn
-    //     one (hence transparent text at font-size 0);
-    //   * the classified-state gradient from BUTTON_STYLES, cleared by the
-    //     `background` shorthand before the artwork is applied.
-    // The 44px box is the touch target; the artwork is inset inside it.
-    setOwnedStyle(buttonStyleOwner, btn, 'width', '44px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '44px');
+    // Per Curtis (2026-09) the pager is the same forged plate as every other
+    // idle control on the card — the inventory row's own idle tab, not the
+    // cool-steel contrast it used to be. The chevron itself is drawn by
+    // skillpanel.css `::before` (a pseudo-element cannot be set inline). What
+    // still has to live here — these are inline `!important` and outrank
+    // every stylesheet rule:
+    //   * the thin box geometry (React rewrites inline button dims on update);
+    //   * the forged plate + its border, so the control has a real frame again;
+    //   * the native glyph suppressed (transparent text at font-size 0) so it
+    //     cannot render on top of the CSS chevron;
+    //   * the `background` shorthand, which also clears the old SVG art layer
+    //     and the classified-state gradient from BUTTON_STYLES.
+    // NAV_BUTTON_W is below the suite's usual 44px target on the minor axis
+    // only; height stays 44 and 26x44 clears WCAG 2.5.8 (24x24).
+    setOwnedStyle(buttonStyleOwner, btn, 'width', NAV_BUTTON_W);
+    setOwnedStyle(buttonStyleOwner, btn, 'min-width', NAV_BUTTON_W);
     setOwnedStyle(buttonStyleOwner, btn, 'height', '44px');
     setOwnedStyle(buttonStyleOwner, btn, 'min-height', '44px');
     setOwnedStyle(buttonStyleOwner, btn, 'padding', '0');
-    setOwnedStyle(buttonStyleOwner, btn, 'background', 'none');
-    const navImage = btn.dataset.iwNavDirection === 'prev' ? 'var(--fs-skills-nav-prev)' : 'var(--fs-skills-nav-next)';
-    setOwnedStyle(buttonStyleOwner, btn, 'background-image', navImage);
-    setOwnedStyle(buttonStyleOwner, btn, 'background-size', `${NAV_ART_SCALE} ${NAV_ART_SCALE}`);
-    setOwnedStyle(buttonStyleOwner, btn, 'background-position', 'center');
-    setOwnedStyle(buttonStyleOwner, btn, 'background-repeat', 'no-repeat');
-    setOwnedStyle(buttonStyleOwner, btn, 'border', '0');
-    setOwnedStyle(buttonStyleOwner, btn, 'box-shadow', 'none');
+    setOwnedStyle(buttonStyleOwner, btn, 'background', FORGE.bg);
+    setOwnedStyle(buttonStyleOwner, btn, 'border', FORGE.border);
+    setOwnedStyle(buttonStyleOwner, btn, 'border-radius', '2px');
+    setOwnedStyle(buttonStyleOwner, btn, 'box-shadow', FORGE.shadow);
     setOwnedStyle(buttonStyleOwner, btn, 'color', 'transparent');
     setOwnedStyle(buttonStyleOwner, btn, 'font-size', '0');
   } else if (role === 'action-button') {
@@ -187,10 +243,9 @@ function styleButton(btn) {
   buttonStyleSnapshots.set(btn, { state, role, style: btn.getAttribute('style') || '' });
 }
 
-// How much of the 44px touch target the framed arrow artwork fills. The box
-// stays 44px for accessibility; only the graphic shrinks. Keep in step with the
-// nav background-size in skillpanel.css.
-const NAV_ART_SCALE = '68%';
+// Thin flanking pager buttons. Width is the minor axis; height stays 44px.
+// Keep in step with the nav-button width in skillpanel.css.
+const NAV_BUTTON_W = '26px';
 
 const LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?(?:\s*[-\u2013]\s*\d+(?:\.\d+)?%\s*[\u2022\u00b7]\s*[\d,]+\s+(?:xp\s+)?to\s+go|\s*[\u2022\u00b7]\s*[\d,]+\s*\/\s*[\d,]+\s*xp)$/i;
 const READOUT_STYLES = {
@@ -208,8 +263,28 @@ const READOUT_STYLES = {
   'height': 'auto',
   'min-height': '0',
   'max-height': 'none',
-  'cursor': 'default',
 };
+
+/**
+ * The readout strips a datum of its button CHROME, but it must not strip the
+ * datum of its AFFORDANCE when the game means it to be clicked.
+ *
+ * The "Lv N - X% • … to go" node is a real `<button>`, and the live app gives
+ * it `title="Click to cycle XP display"` plus a `hover:text-white/70` class —
+ * it cycles the XP display format. Writing a flat `cursor: default` across the
+ * whole readout branch told the player that control does nothing, which is
+ * rule 5 ("never destroy state information") in its affordance form: the click
+ * still worked, but nothing on screen said so any more. Found by reading the
+ * live app bundle's own aria-label/title vocabulary, 2026-09.
+ *
+ * So: keep `default` for the inert wrapper nodes in the branch, and leave a
+ * genuine control pointing. Do not collapse this back into READOUT_STYLES.
+ */
+function readoutCursor(el) {
+  return el.matches?.('button, a, [role="button"], [tabindex]:not([tabindex="-1"])')
+    ? 'pointer'
+    : 'default';
+}
 
 function sameTextShellChain(el, panel) {
   if (!el) return [];
@@ -311,6 +386,7 @@ function neutraliseReadouts(panel) {
     for (const [prop, value] of Object.entries(READOUT_STYLES)) {
       setOwnedStyle(readoutStyleOwner, target, prop, value);
     }
+    setOwnedStyle(readoutStyleOwner, target, 'cursor', readoutCursor(target));
     setOwnedStyle(readoutStyleOwner, target, 'transform', 'none');
     setOwnedStyle(readoutStyleOwner, target, 'filter', 'none');
     setOwnedStyle(readoutStyleOwner, target, 'align-self', 'auto');
@@ -362,10 +438,11 @@ function setRole(el, role) {
 }
 
 function clearStructureRoles(panel) {
-  panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction]`).forEach(el => {
+  panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction], [data-iw-req-state]`).forEach(el => {
     el.removeAttribute(ROLE_ATTR);
     el.removeAttribute(ZONE_ATTR);
     el.removeAttribute(SHELL_ATTR);
+    el.removeAttribute('data-iw-req-state');
     delete el.dataset.iwNavDirection;
   });
   delete panel.dataset.iwSkillLayout;
@@ -581,6 +658,44 @@ function annotateStructure(panel, type, meta) {
     }
   }
 
+  // LAST RESORT, and the only one that does not depend on a verb at all.
+  //
+  // Both paths above assume the title STARTS with a verb the skin knows: the
+  // first from SKILL_META, the second derived from the action button's own
+  // label. IdleWorlds now ships a recipe where those two disagree — Smithing's
+  // "Craft Voidiron Reinforcement Plate" sits under a button that says "Forge",
+  // so the meta test misses ('craft' is not 'smelt'/'forge') and the derived
+  // test misses too (the title does not start with 'forge'). Live capture,
+  // 2026-09.
+  //
+  // A missed action-title is NOT a cosmetic loss, which is why this is worth a
+  // third pass. `action-title` is one of the three anchors `distinctZones`
+  // resolves the layout shell from, so losing it drops `data-iw-skill-layout`
+  // entirely and the whole card silently renders in the legacy shape — no
+  // medallion, no three-zone grid, no pager chevrons, no diamond studs, and
+  // the pager left wherever React put it instead of flanking the action
+  // button. One classifier miss, an entire card that looks unskinned.
+  //
+  // So anchor on STRUCTURE instead of vocabulary: in every live panel the
+  // title is the element immediately before the "Lv N - X% • … to go" readout
+  // inside the same branch. That holds for every skill in the capture and
+  // cannot be broken by a verb the skin has never heard of.
+  if (!actionTitle && levelProgressButton) {
+    const readoutShell = outerSameTextShell(levelProgressButton, panel);
+    const candidate = readoutShell?.previousElementSibling || null;
+    const candidateText = candidate ? normText(candidate.textContent) : '';
+    const usable = candidate && candidateText && candidateText.length <= 90 &&
+      !candidate.getAttribute(ROLE_ATTR) &&
+      !candidate.querySelector?.(`[${ROLE_ATTR}], button, a, input, select, textarea`) &&
+      !candidate.closest?.(`[${ROLE_ATTR}="identity"]`) &&
+      !candidate.closest?.('.iw-item-ref') &&
+      !LEVEL_PROGRESS_PATTERN.test(candidateText);
+    if (usable) {
+      actionTitle = candidate;
+      setRole(outerSameTextShell(candidate, panel), 'action-title');
+    }
+  }
+
   const navButtons = buttons.filter(btn => btn.getAttribute(ROLE_ATTR) === 'nav-button');
   navButtons.forEach((btn, index) => {
     const aria = normText(btn.getAttribute('aria-label')).toLowerCase();
@@ -603,7 +718,19 @@ function annotateStructure(panel, type, meta) {
   if (xpGain) setRole(outerSameTextShell(xpGain, panel), 'xp-gain');
 
   const requirement = findBestText(panel, text => /^(?:needs|requires)\b/i.test(text));
-  if (requirement) setRole(outerSameTextShell(requirement, panel), 'requirement');
+  if (requirement) {
+    const reqShell = outerSameTextShell(requirement, panel);
+    setRole(reqShell, 'requirement');
+    // The game already colours this line by state: a muted `text-white/xx`
+    // when the player MEETS the requirement, a warm/danger text class when
+    // they do not. The skin used to force it red unconditionally, which
+    // deleted that distinction (rule 5). Mirror the native state instead —
+    // red only when unmet, grey when met.
+    const reqClasses = `${requirement.className || ''} ${reqShell.className || ''}`;
+    const unmet = /\btext-(?:red|rose|orange|amber|yellow)-\d/.test(reqClasses) ||
+                  /\b(?:text-danger|text-warning)\b/.test(reqClasses);
+    reqShell.setAttribute('data-iw-req-state', unmet ? 'unmet' : 'met');
+  }
 
   const reward = findBestText(panel, text => /^base reward\s*:/i.test(text));
   if (reward) setRole(outerSameTextShell(reward, panel), 'reward');
