@@ -267,6 +267,11 @@
 }
 [data-iw-header="brand"]::after { transform: scaleX(-1); }
 
+/* Typography only. This used to paint a gold clip-text gradient built on
+   --iw-th-accent, which meant the player's name RECOLOURED with the zone theme
+   — the player's identity is not a function of where they are standing
+   (rule 5). The colour now belongs entirely to the game; see the button rule
+   below, which is where the name's text actually lives. */
 [data-iw-header="profile-name"] {
   margin: 0 0 2px !important;
   font-family: var(--iw-font-head) !important;
@@ -277,12 +282,34 @@
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  background: linear-gradient(96deg, var(--iw-th-hairline-hi) 0%, #F0DDB0 28%, #FBF8F2 50%, color-mix(in srgb, var(--iw-th-accent) 55%, #fff) 72%, var(--iw-th-accent) 100%) !important;
-  -webkit-background-clip: text !important;
-          background-clip: text !important;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: none !important;
+}
+
+/* The visible "BustedCypher" text is not the h1's own text node — the game
+   wraps it in a nested `<button title="View your profile">`, and it is THAT
+   button which carries the game's own colouring (its own clip-text gradient
+   or plain colour, whichever idleworlds actually serves — this is rule 5: the
+   player's display colour is not ours to repaint or fix to a token, since
+   that is exactly what made it drift with the zone theme before). So this
+   rule touches ONLY the button's box model / typography, and deliberately
+   never sets `color`, `background`/`background-image`, `background-clip` or
+   `-webkit-text-fill-color` — an earlier version used `all: unset` here,
+   which (being !important) wiped the game's own inline colouring right along
+   with the button chrome and left the name blank. `background-color`
+   (longhand, not the `background` shorthand) is safe: it clears the default
+   button fill without touching a `background-image` gradient the game may
+   have set. Still has to opt out of ui-system.css's generic button plate
+   (§ "Generic control language") — see that rule's :not() chain — because
+   THAT rule sets `background-image` with !important and would blot out a
+   native gradient exactly the way `all: unset` did. */
+[data-iw-header="profile-name"] button {
+  display: inline !important;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  font: inherit !important;
+  cursor: pointer !important;
 }
 
 [data-iw-header="profile-title"] {

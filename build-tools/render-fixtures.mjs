@@ -385,7 +385,7 @@ const headerBlock = () => `
       <span class="fs-header-crest" aria-hidden="true"></span>
       <div class="min-w-0 overflow-hidden" data-iw-header="profile">
         <p data-iw-header="brand">IdleWorlds</p>
-        <h1 class="header-player-name" data-iw-header="profile-name">BustedCypher</h1>
+        <h1 class="header-player-name" data-iw-header="profile-name"><button class="hover:underline" title="View your profile" style="background-image:linear-gradient(90deg,#8FD3FF,#93C5FD);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent">BustedCypher</button></h1>
         <p class="header-player-title" data-iw-header="profile-title">Craftbound Innovator</p>
         <p data-iw-header="profile-meta">⚔️ Combat Lv 62 • Zone 19: Eternium Verge</p>
         <button data-iw-header="profile-online">Players online: 141</button>
@@ -806,6 +806,72 @@ if (!/header_surface\.webp/.test(surfaceWide) || /zone_1_mobile\.webp/.test(surf
   throw new Error(`header did not restore the wide zone surface at 1400px: ${surfaceWide}`);
 }
 console.log('header surface swap: mobile <=768, wide >768  ok');
+/* The player's own display colour belongs to the game (rule 5). Removing the
+   skin's zone-tinted repaint of it took FOUR passes, because the repaint never
+   lived where it looked like it lived. The live shape is
+   `h1[data-iw-header="profile-name"] > button.hover:underline`, and the game
+   paints it with a clip-text gradient — a `background-image` shown through
+   transparent glyphs. Three separate rules of ours broke it, only one of them
+   in header.css:
+
+     base.css  h1, h2, h3               { color: … !important }  beat the h1.
+     base.css  button, [role="button"]  { color: var(--iw-text) } beat the
+       BUTTON — and did so despite being weak and non-important, because a
+       declaration on the element itself always beats an INHERITED value;
+       specificity never enters into it. That rule's own comment ("any colour
+       the game sets itself outranks this") is true only for a colour set ON
+       the button, which is why this went unseen for so long.
+     base.css  [class*="hover:underline"] { background: none !important } was
+       the one that BLANKED it: the `background` SHORTHAND resets every
+       longhand, so it took `background-image` and `background-clip` with it
+       and the glyphs had nothing left to paint through.
+
+   So assert the game's own paint survives all the way to rendered pixels.
+   Negative controls, each verified to fail: restore that shorthand (blank), or
+   drop either `:where()` exclusion in base.css (repainted warm). */
+const nameStyle = await p.evaluate(() => {
+  const btn = document.querySelector('[data-iw-header="profile-name"] button');
+  const cs = getComputedStyle(btn);
+  return { image: cs.backgroundImage, clip: cs.backgroundClip, fill: cs.webkitTextFillColor };
+});
+if (!/linear-gradient/.test(nameStyle.image) || nameStyle.clip !== 'text') {
+  throw new Error(
+    `the skin destroyed the player name's own clip-text paint: background-image ${nameStyle.image}, ` +
+    `background-clip ${nameStyle.clip}. Almost certainly a \`background: none/…\` SHORTHAND somewhere — ` +
+    `use the background-COLOUR longhand so the game's gradient survives.`);
+}
+/* Computed style alone cannot see whether the glyphs actually paint (this is the
+   "a check reporting zero is passing" family), so measure the ink too: it must
+   exist, and it must still be the game's blue rather than a warm skin token. */
+const nameInk = await (async () => {
+  const shot = (await p.locator('[data-iw-header="profile-name"]').screenshot()).toString('base64');
+  return p.evaluate(async (shot) => {
+    const img = await new Promise((res, rej) => {
+      const i = new Image(); i.onload = () => res(i); i.onerror = rej;
+      i.src = 'data:image/png;base64,' + shot;
+    });
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const cx = c.getContext('2d', { willReadFrequently: true });
+    cx.drawImage(img, 0, 0);
+    const d = cx.getImageData(0, 0, c.width, c.height).data;
+    let n = 0, r = 0, g = 0, b = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 40) continue;
+      if (d[i] + d[i + 1] + d[i + 2] > 150) { n++; r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+    }
+    return n ? { n, r: r / n, g: g / n, b: b / n } : { n: 0 };
+  }, shot);
+})();
+if (nameInk.n < 200) {
+  throw new Error(`the player name paints no glyphs (${nameInk.n} ink px) — the skin blanked it`);
+}
+if (nameInk.b <= nameInk.r) {
+  throw new Error(
+    `the player name is not the game's own colour any more: mean ink rgb(${[nameInk.r, nameInk.g, nameInk.b].map(Math.round)}) ` +
+    `is warm, so a skin token repainted it. The player's display colour is the game's (rule 5).`);
+}
+console.log(`player name keeps the game's own clip-text gradient (${nameInk.n} ink px, blue-dominant)  ok`);
 /* Sprite-backed chrome is only aligned if the ART is concentric with the BOX,
    and no computed-style check can see that: the sheet's own dead margin lives
    inside the image. So measure the painted pixels. utility_frame.webp is

@@ -353,10 +353,15 @@ body {
   background-attachment: fixed !important;
 }
 
-/* Major semantic text. Item names remain Barlow via their own selectors. */
+/* Major semantic text. Item names remain Barlow via their own selectors.
+   The player name is excluded from the COLOUR line only: that colour is the
+   game's own (rule 5), and this !important would otherwise beat it. Typography
+   still applies. `:where()` keeps the selector's specificity unchanged. */
 h1, h2, h3 {
   font-family: var(--iw-font-head) !important;
   letter-spacing: .025em;
+}
+h1:not(:where([data-iw-header="profile-name"])), h2, h3 {
   color: var(--iw-text-hi) !important;
 }
 
@@ -431,9 +436,19 @@ button:not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-s
    a cosmetic chat-name gradient — outranks this and still wins. It exists only
    to catch buttons the game leaves unpainted, which previously fell through to
    the user agent's light `buttonface` and rendered as a pale box with our dark
-   gradient laid over it. Found by build-tools/render-fixtures.mjs. */
-button,
-[role="button"] {
+   gradient laid over it. Found by build-tools/render-fixtures.mjs.
+
+   That "the game still wins" reasoning holds only for a colour the game sets
+   ON THE BUTTON. It is FALSE for one the game sets on an ANCESTOR and expects
+   to inherit, because a declaration targeting the element itself beats an
+   inherited value outright — specificity and importance never enter into it.
+   The player name is exactly that shape: the game colours the <h1> and the
+   text lives in a nested <button>, so this rule (not any header.css rule) was
+   what repainted it. The exclusion is wrapped in `:where()` so the selector
+   stays at its deliberate (0,0,1); a bare `:not()` would lift it to (0,1,1)
+   and start outranking the game's own `text-*` utilities on every button. */
+button:not(:where([data-iw-header="profile-name"] button)),
+[role="button"]:not(:where([data-iw-header="profile-name"] *)) {
   background-color: var(--iw-ink-750);
   color: var(--iw-text);
 }
@@ -447,7 +462,18 @@ button,
    as plain text rather than "a button minus its gradient". Colour is left
    alone -- it is the game's own per-player identity (rule 5). */
 [class*="hover:underline"] {
-  background: none !important;
+  /* `background-color`, NOT the `background` shorthand. The shorthand resets
+     EVERY background longhand, including `background-image` and
+     `background-clip` — and the game paints the header player name (a
+     `hover:underline` button, like these) with a clip-text gradient: a
+     `background-image` shown through transparent glyphs. The shorthand wiped
+     both and the name rendered BLANK, which reads as "the skin deleted the
+     text", not as a background rule overreaching. The plate this rule exists
+     to remove is only ever a background-COLOUR here (from the base `button`
+     rule above); ui-system.css's gradient plate already opts these out via the
+     `hover:underline` clause in its :not() chain. Measured: revert to the
+     shorthand and the name goes blank. */
+  background-color: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
   padding: 0 !important;
