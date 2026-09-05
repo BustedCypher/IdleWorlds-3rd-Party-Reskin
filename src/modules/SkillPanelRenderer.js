@@ -22,6 +22,7 @@ const buttonStyleSnapshots = new WeakMap();
 const readoutStyleSnapshots = new WeakMap();
 const ingredientStyleSnapshots = new WeakMap();
 const ingredientHighlightRanges = new Map();
+const ingredientLists = new Map();
 
 // Keep independent ownership domains. A live XP datum can itself be a button;
 // restoring stale ACTION chrome on that node must not also restore/remove the
@@ -99,10 +100,14 @@ function classifyButton(btn) {
  */
 const FORGE = {
   bg: 'linear-gradient(180deg, #100E0A, #0A0907)',
-  border: '1px solid #2A241A',
+  // Frame colours are written as var() so an INLINE declaration still follows
+  // the zone palette: the value resolves against the cascade on the element,
+  // so the per-zone <html> attribute reaches it the same way a stylesheet rule
+  // would. Mirrors --fs-forge-line / --fs-forge-live-line in skillpanel.css.
+  border: '1px solid var(--iw-th-edge-faint, #2A241A)',
   shadow: 'inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)',
   liveBg: 'linear-gradient(180deg, #1B150B, #120E07)',
-  liveBorder: '1px solid #8A6B2E',
+  liveBorder: '1px solid var(--iw-th-brass, #8A6B2E)',
   // Per Curtis (2026-09) the live button's glow carries the discipline colour:
   // the bloom + 1px ring are mixed from the inherited `--fs-skill-accent`
   // (ember `#D8791F` is the pre-classify fallback). The plate bg/border stay
@@ -454,6 +459,28 @@ function completedIngredientRanges(root) {
   return ranges;
 }
 
+function ingredientEntries(root) {
+  const text = root.textContent || '';
+  const entries = [];
+  INGR_COUNT_PATTERN.lastIndex = 0;
+
+  let match;
+  while ((match = INGR_COUNT_PATTERN.exec(text))) {
+    const owned = Number(match[1].replaceAll(',', ''));
+    const required = Number(match[2].replaceAll(',', ''));
+    if (!Number.isFinite(owned) || !Number.isFinite(required)) continue;
+
+    const bulletStart = text.lastIndexOf('•', match.index - 1) + 1;
+    const lineStart = text.lastIndexOf('\n', match.index - 1) + 1;
+    const start = Math.max(bulletStart, lineStart);
+    entries.push({
+      text: text.slice(start, match.index + match[0].length).trim(),
+      state: owned >= required ? 'met' : 'unmet',
+    });
+  }
+  return entries.filter(entry => entry.text);
+}
+
 function rebuildIngredientHighlight() {
   if (!supportsIngredientHighlights()) return;
   const ranges = [];
@@ -486,8 +513,76 @@ function clearIngredientHighlights(panel) {
   else globalThis.CSS.highlights.delete(MET_INGREDIENT_HIGHLIGHT);
 }
 
+function removeIngredientList(source, list) {
+  if (source?.isConnected) delete source.dataset.iwIngredientListSource;
+  list?.remove();
+  ingredientLists.delete(source);
+}
+
+function updateIngredientLists(panel) {
+  const sources = [...panel.querySelectorAll('[data-iw-ingr]')]
+    .filter(el => !el.parentElement?.closest?.('[data-iw-ingr]'));
+  const current = new Set(sources);
+
+  for (const [source, list] of [...ingredientLists.entries()]) {
+    if (!source.isConnected || (source.closest('.compact-panel') === panel && !current.has(source))) {
+      removeIngredientList(source, list);
+    }
+  }
+
+  for (const source of sources) {
+    const entries = ingredientEntries(source);
+    if (!entries.length) {
+      removeIngredientList(source, ingredientLists.get(source));
+      continue;
+    }
+
+    let list = ingredientLists.get(source);
+    if (!list?.isConnected) {
+      list = document.createElement('div');
+      list.className = 'fs-skill-ingredient-grid';
+      list.dataset.iwSkillIngredientList = '1';
+      list.setAttribute('role', 'list');
+      list.setAttribute('aria-label', 'Required materials');
+      ingredientLists.set(source, list);
+    }
+
+    const signature = entries.map(entry => `${entry.state}:${entry.text}`).join('\u001f');
+    if (list.dataset.iwIngredientSignature !== signature) {
+      const fragment = document.createDocumentFragment();
+      for (const entry of entries) {
+        const item = document.createElement('span');
+        item.className = 'fs-skill-ingredient-item';
+        item.dataset.iwIngredientState = entry.state;
+        item.setAttribute('role', 'listitem');
+        item.textContent = entry.text;
+        fragment.appendChild(item);
+      }
+      list.replaceChildren(fragment);
+      list.dataset.iwIngredientSignature = signature;
+    }
+
+    source.dataset.iwIngredientListSource = '1';
+    if (source.nextElementSibling !== list) source.after(list);
+  }
+}
+
+function clearIngredientLists(panel) {
+  for (const [source, list] of [...ingredientLists.entries()]) {
+    if (!panel || !source.isConnected || source.closest('.compact-panel') === panel) {
+      removeIngredientList(source, list);
+    }
+  }
+  const root = panel || document;
+  root.querySelectorAll('[data-iw-ingredient-list-source]').forEach(el => {
+    delete el.dataset.iwIngredientListSource;
+  });
+  root.querySelectorAll('[data-iw-skill-ingredient-list]').forEach(el => el.remove());
+}
+
 function neutraliseIngredients(panel) {
   for (const el of panel.querySelectorAll('div, span, p')) {
+    if (el.closest('[data-iw-skill-ingredient-list="1"]')) continue;
     if (el.tagName === 'BUTTON' || el.closest('button, a, [role="button"]')) continue;
     if (el.childElementCount > 3) continue;
     const text = normText(el.textContent);
@@ -513,6 +608,7 @@ function neutraliseIngredients(panel) {
     }
   }
   updateIngredientHighlights(panel);
+  updateIngredientLists(panel);
 }
 
 function setRole(el, role) {
@@ -1087,6 +1183,7 @@ function clearPanelInlineTreatment(panel) {
 function clearPanelChrome(panel) {
   structureSignatures.delete(panel);
   clearIngredientHighlights(panel);
+  clearIngredientLists(panel);
   clearPanelInlineTreatment(panel);
   SkillsArtService.clearPanel(panel);
   panel.querySelectorAll('.fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp').forEach(el => el.remove());
@@ -1151,6 +1248,7 @@ export function clearSkillPanels() {
   readoutStyleOwner.restoreAll();
   ingredientStyleOwner.restoreAll();
   clearIngredientHighlights();
+  clearIngredientLists();
   document.querySelectorAll('[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]').forEach(el => {
     delete el.dataset.iwReadout;
     delete el.dataset.iwIngr;

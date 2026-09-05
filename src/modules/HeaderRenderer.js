@@ -56,6 +56,16 @@ const norm = value => String(value || '').replace(/\s+/g, ' ').trim();
 const ZONE_SURFACE_DIR = 'assets/header/zones';
 const ZONE_SURFACE_MAX = 34;
 
+// The last zone actually read off the page. The "Zone N:" label lives in the
+// zone bar, which is GAME-ROUTE ONLY: open Market, Village, Leaderboards or
+// Dungeon and it unmounts, currentZoneNumber() went null, and both consumers
+// fell back to stock -- the header dropped its per-zone artwork for the generic
+// strip and applyZoneTheme() reset <html> to "default", so every page except
+// Game rendered un-themed. The player's zone is game state that does not change
+// because they opened a tab, so the last reading is still the right answer.
+// Cleared by clearHeaderRenderer() so the kill switch leaves nothing behind.
+let lastZoneNumber = null;
+
 function currentZoneNumber() {
   // UIFoundation tags the "🧭 Zone 19: <name>" label data-iw-ui="zone-title";
   // fall back to a text scan in case that classifier has not run this flush.
@@ -64,9 +74,9 @@ function currentZoneNumber() {
     el = [...document.querySelectorAll('div,span,p,strong')].find(n =>
       /^zone\s*\d+\s*:/i.test(norm(n.textContent).replace(/^[^a-z0-9]+/i, '')));
   }
-  if (!el) return null;
-  const m = norm(el.textContent).replace(/^[^a-z0-9]+/i, '').match(/^zone\s*(\d+)/i);
-  return m ? Number(m[1]) : null;
+  const m = el && norm(el.textContent).replace(/^[^a-z0-9]+/i, '').match(/^zone\s*(\d+)/i);
+  if (m) lastZoneNumber = Number(m[1]);
+  return lastZoneNumber;
 }
 
 function zoneSurfaceUrl(zone, variant = '') {
@@ -427,6 +437,7 @@ function queueReconcile() {
 
 export function clearHeaderRenderer() {
   headerResolution = null;
+  lastZoneNumber = null;
   delete document.documentElement.dataset.iwZoneTheme;
   document.querySelectorAll(`[${ROLE}]`).forEach(el => {
     el.removeAttribute(ROLE);

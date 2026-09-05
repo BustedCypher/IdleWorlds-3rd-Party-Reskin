@@ -335,34 +335,125 @@ let sectionFrameResolutions = null;
 // Headings the last resolve pass EXAMINED (not merely the ones it framed).
 let sectionFrameSeen = new Set();
 
+/**
+ * Heading copy that identifies a panel in a DOM variant that ships NO `.panel`
+ * wrapper. This used to be the only trigger, which made coverage a per-route
+ * chase: Village's three sub-panels, and everything on Market, Leaderboards and
+ * Dungeon below the top-level card, rendered bare because their headings were
+ * not in the list — and a name list cannot be completed from here, because the
+ * live app is anonymous Tailwind and only the user can read its copy. `.panel`
+ * (below) is the real trigger now; this is the fallback for headings with no
+ * `.panel` ancestor at all.
+ */
 const SECTION_FRAME_NAMES = /^(inventory|market|leaderboards|quests|world bosses|village|salvaging|skill actions|zone selector)$/i;
 
+/**
+ * Panels OverlayFramer owns. Its cards are their own scroll container, so it
+ * draws their frame on the border box alone and deliberately uses no
+ * pseudo-elements; the section-frame rule's ::before hairline and ::after
+ * filigree would scroll away with the content. A modal whose card is also a
+ * `.panel` would otherwise get both treatments.
+ *
+ * Checked in the validity guard as well as at resolve time: OverlayFramer runs
+ * on the same `iw:dom-flush`, so a modal that mounts mid-flush can be framed
+ * here once, before the scrim is tagged. Re-checking on validity is what
+ * releases it on the next flush instead of leaving it double-chromed forever.
+ */
+/**
+ * A `.panel` some OTHER owner already dresses. Framing these was a regression:
+ *
+ *  - `<header>`: `HeaderRenderer.applyZoneSurface()` paints the per-zone
+ *    artwork there. The section-frame rule's `background` is `!important` and
+ *    ui-system.css is injected LAST, so framing anything in the header replaces
+ *    that artwork with the forged ground — the zone art simply vanishes.
+ *  - `[data-iw-ui="zone-bar"]`: its own `::before` scene, same story.
+ *  - `[data-iw-panel]`: `classifyActivityPanels` sets `section-frame` on its own
+ *    hosts, and those hosts ARE `.panel`s (see findActivityPanelHost). Two
+ *    modules writing one attribute is the flash CLAUDE.md documents for the
+ *    boss cards — here it also means two stale-clear loops deleting each
+ *    other's mark. That classifier now runs BEFORE this one so the marker
+ *    exists when this test runs.
+ */
+function ownedElsewhere(el) {
+  return !!el.closest?.('header, [data-iw-ui="zone-bar"], [data-iw-panel]');
+}
+
+function inOverlay(el) {
+  if (el.closest?.('[data-iw-overlay="scrim"], [data-iw-overlay="panel"]')) return true;
+  // Structural fallback, NOT redundant with the tag above: OverlayFramer runs
+  // on the same `iw:dom-flush`, so on the tick a modal mounts its scrim may not
+  // be tagged yet. Keying only on the tag leaves a window where the card takes
+  // both treatments at once -- the two-writers-on-one-node flash CLAUDE.md
+  // documents for the boss cards. A `.panel` inside a fixed layer is a modal
+  // card by construction; no route panel lives in one. Same cheap prefilter
+  // OverlayFramer uses: a class-name probe confirmed by rendered state.
+  const layer = el.closest?.('[class*="fixed"]');
+  return !!layer && getComputedStyle(layer).position === 'fixed';
+}
+
+/** The panel's own heading — not one belonging to a panel nested inside it. */
+function panelHeading(panel) {
+  for (const h of panel.querySelectorAll('h1,h2,h3,h4')) {
+    if (h.closest('.panel') === panel) return h;
+  }
+  return null;
+}
+
 function sectionFrameResolutionValid(entry) {
-  // The epoch check is belt-and-suspenders here: sectionFrameHeadings() is
+  // The epoch check is belt-and-suspenders here: sectionFramePanels() is
   // itself viewport-aware (preferRendered, re-run fresh every classify call),
   // so the coverage check below already catches a resize because the live
-  // heading set changes identity. Checking the epoch too means correctness
+  // panel set changes identity. Checking the epoch too means correctness
   // does not quietly depend on that coverage shape staying node-keyed.
   return entry.epoch === getLayoutEpoch() &&
-    entry.heading.isConnected && entry.frame.isConnected &&
+    entry.frame.isConnected &&
     entry.frame.dataset.iwUi === 'section-frame' &&
-    entry.heading.dataset.iwUi === 'section-title' &&
-    entry.frame.contains(entry.heading) &&
-    // The game wraps every real panel in `.panel`. A resolution that is NOT a
-    // `.panel` yet CONTAINS one is a multi-panel layout column that was picked
-    // before the inner panel had content (the Quests race). Force a re-resolve
-    // so the tighter `.panel` frame wins now that it is populated.
+    !inOverlay(entry.frame) && !ownedElsewhere(entry.frame) &&
+    // A panel with no heading YET is legal (an async route paints the card
+    // before its title); re-resolve once one appears so it gets its
+    // section-title. Same race as the empty-Quests panel below.
+    (entry.heading
+      ? entry.heading.isConnected &&
+        entry.heading.dataset.iwUi === 'section-title' &&
+        entry.frame.contains(entry.heading)
+      : !panelHeading(entry.frame)) &&
+    // A resolution that is NOT a `.panel` yet CONTAINS one is a multi-panel
+    // layout column picked before the inner panel had content (the Quests
+    // race). Force a re-resolve so the tighter `.panel` frame wins.
     (entry.frame.classList.contains('panel') || !entry.frame.querySelector('.panel'));
 }
 
-function sectionFrameHeadings() {
-  // The game ships this heading twice below Tailwind's `xl` breakpoint (the
-  // "hidden duplicate" trap in CLAUDE.md swaps which copy is live at 1280px)
-  // — `preferRendered` picks whichever copy is actually painting rather than
-  // assuming the wide-layout copy is always the mirror. Below 1280px it is
-  // NOT: see Viewport.js.
+/**
+ * Every panel on every route.
+ *
+ * `.panel` is one of the four durable hooks the whole app ships (CLAUDE.md);
+ * it wraps each real panel and nothing else, so it identifies them without
+ * depending on heading copy that a rewording breaks silently. The leaf-vs-
+ * column split that used to need a heading walk is already handled downstream
+ * by ui-system.css's `:not(:has(...))` rule: a `.panel` nesting another is
+ * stripped bare as a layout column, the innermost one is framed.
+ *
+ * The game ships the whole stack twice below Tailwind's `xl` breakpoint (the
+ * "hidden duplicate" trap in CLAUDE.md swaps which copy is live at 1280px) —
+ * `preferRendered` picks whichever copy is actually painting rather than
+ * assuming the wide-layout copy is always the mirror. Below 1280px it is NOT:
+ * see Viewport.js.
+ */
+function sectionFramePanels() {
+  return preferRendered([...document.querySelectorAll('.panel')]
+    .filter(p => !inOverlay(p) && !ownedElsewhere(p)));
+}
+
+/**
+ * Name-matched headings that have NO `.panel` ancestor — the only ones the
+ * structural pass cannot see. Anchored tests are run against the label with a
+ * leading icon run stripped: the live app prefixes many of them ("🏗️ Village
+ * Add-ons"), the same trap that once cost the whole zone bar.
+ */
+function sectionFrameOrphanHeadings() {
   const matches = [...document.querySelectorAll('h1,h2,h3,h4')].filter(heading =>
-    SECTION_FRAME_NAMES.test(normText(heading.textContent)));
+    !heading.closest('.panel') && !inOverlay(heading) &&
+    SECTION_FRAME_NAMES.test(normText(heading.textContent).replace(/^[^a-z0-9]+/i, '')));
   return preferRendered(matches);
 }
 
@@ -373,27 +464,44 @@ function classifySectionFrames() {
   // the route mounts and before its heading renders resolves to an empty
   // array, which then validates forever and the panel is never framed at all.
   //
-  // Coverage is tracked against the headings this pass EXAMINED, not the ones
-  // it managed to frame. Keying on resolved entries instead would make a
-  // heading the walk can never pair with a frame re-trigger the whole resolve
-  // -- the wildcard descendant count below -- on every single flush.
-  const headings = sectionFrameHeadings();
+  // Coverage is tracked against the targets this pass EXAMINED, not the ones
+  // it managed to frame. Keying on resolved entries instead would make an
+  // orphan heading the walk can never pair with a frame re-trigger the whole
+  // resolve -- the wildcard descendant count below -- on every single flush.
+  const panels = sectionFramePanels();
+  const orphans = sectionFrameOrphanHeadings();
+  const targets = [...panels, ...orphans];
   if (sectionFrameResolutions
       && sectionFrameResolutions.every(sectionFrameResolutionValid)
-      && headings.every(heading => sectionFrameSeen.has(heading))) return;
+      && targets.every(target => sectionFrameSeen.has(target))) return;
 
   // Drop marks from the previous (possibly stale) resolution — the :has()
   // column rule only *hides* a mis-picked column, it does not un-mark it.
   if (sectionFrameResolutions) {
     for (const e of sectionFrameResolutions) {
+      // If another owner has claimed this node since (an activity panel that
+      // resolved late), the mark on it is THEIRS now. Deleting it here is what
+      // turns a hand-off into a one-flush flash.
+      if (ownedElsewhere(e.frame)) continue;
       if (e.frame.dataset.iwUi === 'section-frame') delete e.frame.dataset.iwUi;
-      if (e.heading.dataset.iwUi === 'section-title') delete e.heading.dataset.iwUi;
+      if (e.heading?.dataset.iwUi === 'section-title') delete e.heading.dataset.iwUi;
     }
   }
 
   sectionFrameResolutions = [];
-  sectionFrameSeen = new Set(headings);
-  for (const heading of headings) {
+  sectionFrameSeen = new Set(targets);
+
+  // The panel IS the frame. No walk, no size heuristic, no name.
+  for (const panel of panels) {
+    const heading = panelHeading(panel);
+    setRole(panel, 'section-frame');
+    if (heading) setRole(heading, 'section-title');
+    sectionFrameResolutions.push({ heading, frame: panel, epoch: getLayoutEpoch() });
+  }
+
+  // Fallback: a named heading with no `.panel` to anchor to still needs a frame
+  // resolved by walking up to a container that reads as a panel.
+  for (const heading of orphans) {
     const ownPanel = heading.closest('.panel');
     let cur = heading.parentElement;
     let picked = null;
@@ -603,6 +711,176 @@ function findCurrentActionProgress(root) {
   return fill?.parentElement || null;
 }
 
+/* ---------------------------------------------------------------------------
+ * Current Action progress smoothing
+ *
+ * Presentation only, and deliberately WITHOUT a second source of truth: the
+ * skin never computes or writes a progress value. The whole animation is the
+ * CSS transition on `[data-iw-panel-part="progress"] > *` (see ui-system.css
+ * for why a linear transition whose duration equals the update interval is an
+ * exact fix for the game's one-tick head start, not just a smoothing pass).
+ *
+ * All this code does is supply that transition with two facts CSS cannot
+ * observe:
+ *   1. how long a tick actually is, measured from the writes themselves —
+ *      guessing it wrong is what makes such a bar lag or stall, and the
+ *      interval is derived from the action's duration (housing tier and the
+ *      rest), which is the game's business, not ours;
+ *   2. which single update per action is the completion RESET rather than a
+ *      tick, so the bar snaps back instead of sliding backwards for a whole
+ *      tick over an action that has already restarted.
+ *
+ * Both are carried on `data-iw-*` attributes, which is what keeps this off the
+ * flush path: DOMWatcher's observer runs with
+ * `attributeFilter: ['class','style','disabled','aria-disabled']`, so these
+ * writes are invisible to it. An inline style (even a custom property) on the
+ * same node would queue an `attr:style` context on every action.
+ */
+
+// Below this the two widths are the same value re-written, not a tick.
+const PROGRESS_EPSILON = 0.05;
+
+// The measured tick is deliberately overshot before it becomes a transition
+// duration. A duration that matches the tick EXACTLY still stutters: real
+// per-tick timing jitters (live capture: a nominal 250ms tick actually landed
+// anywhere from 208-335ms), so an exact-match transition finishes early about
+// half the time and the bar sits dead-still for the remainder of that tick
+// before the next real update arrives. Overshooting means the transition is
+// almost always still in flight when that update lands, so the browser
+// smoothly RETARGETS it (continuous velocity change, no positional jump)
+// instead of the bar visibly pausing and then jumping. 12% is small enough
+// that the bar is never perceptibly slow, and it never compounds across
+// ticks: each real update snaps the target to the server's own value, so any
+// instant where the bar is fractionally behind is corrected at the very next
+// tick, not accumulated.
+const PROGRESS_LEAD_BIAS = 1.12;
+
+// A duration write is skipped below this threshold, so ordinary tick-to-tick
+// jitter around a stable rate doesn't churn the inline style (and the
+// self-triggered flush that comes with it -- see the note above
+// smoothActionProgress) every single update.
+const PROGRESS_DURATION_EPSILON_MS = 15;
+
+let progressSamples = new WeakMap();
+
+function nowMs() {
+  return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
+}
+
+/**
+ * The percentage the game is currently showing, from whichever of the two
+ * shapes findCurrentActionProgress() matched: an inline `width: N%` fill, or a
+ * semantic bar carrying aria-valuenow/max. Returns null when neither reads as
+ * a number, which is the normal state of a panel with no action running.
+ */
+function progressPercent(track) {
+  const fill = [...track.querySelectorAll('[style]')]
+    .find(el => /^\d+(?:\.\d+)?%$/.test(el.style.width || ''));
+  if (fill) return parseFloat(fill.style.width);
+  const now = parseFloat(track.getAttribute('aria-valuenow'));
+  const max = parseFloat(track.getAttribute('aria-valuemax'));
+  if (Number.isFinite(now) && Number.isFinite(max) && max > 0) return (now / max) * 100;
+  return null;
+}
+
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+/**
+ * Suppress the transition for exactly one update. The tag is dropped on the
+ * next frame rather than on the next flush: the next flush is a whole tick
+ * away, and leaving the transition off across it would un-smooth the first
+ * step of the new action.
+ */
+function markProgressReset(track) {
+  track.dataset.iwProgressReset = '1';
+  raf(() => {
+    if (track.dataset.iwProgressReset) delete track.dataset.iwProgressReset;
+  });
+}
+
+/**
+ * Commit a measured tick to the transition duration the CSS actually uses,
+ * as a CONTINUOUS inline custom property rather than a snap to one of a
+ * handful of discrete buckets. A bucketed value is either exactly right or
+ * off by up to a whole bucket step; a continuous one tracks the measured
+ * cadence directly, and — combined with PROGRESS_LEAD_BIAS above — is what
+ * keeps the tween from ever visibly stalling between ticks. `--iw-action-tick`
+ * in base.css is what still applies before this ever fires (pre-measurement,
+ * or a still-loading panel).
+ *
+ * Written inline (not as a `data-iw-*` attribute) so it IS visible to
+ * DOMWatcher's `attributeFilter: [...,'style',...]` and queues one extra
+ * `attr:style` flush on this node per committed change. That is an accepted,
+ * narrow cost, not an oversight: the write only happens when the duration has
+ * actually moved (PROGRESS_DURATION_EPSILON_MS), the re-entrant
+ * smoothActionProgress() call it triggers reads the SAME pct and returns
+ * immediately via the epsilon guard above, and every classifier this flush
+ * reaches is already on its cached fast path (the flush-path caching work
+ * elsewhere in this file) — it is one more cheap pass on a page already
+ * flushing about once per animation frame, not a new category of cost.
+ */
+function commitProgressDuration(track, state, ms) {
+  const durationMs = Math.min(4000, Math.max(60, ms)) * PROGRESS_LEAD_BIAS;
+  if (state.appliedDurationMs !== undefined &&
+      Math.abs(durationMs - state.appliedDurationMs) < PROGRESS_DURATION_EPSILON_MS) return;
+  track.style.setProperty('--iw-progress-duration', (durationMs / 1000).toFixed(3) + 's');
+  state.appliedDurationMs = durationMs;
+}
+
+function smoothActionProgress(track) {
+  if (!track) return;
+  const pct = progressPercent(track);
+  if (pct === null || !Number.isFinite(pct)) return;
+
+  const at = nowMs();
+  const state = progressSamples.get(track);
+  if (!state) {
+    progressSamples.set(track, { pct, at, deltas: [], afterReset: false });
+    return;
+  }
+  // A flush the width did not cause — most of them, on an idle game. Leaving
+  // `at` alone here is what makes the delta below an interval between WRITES
+  // rather than between flushes.
+  if (Math.abs(pct - state.pct) < PROGRESS_EPSILON) return;
+
+  if (pct < state.pct - PROGRESS_EPSILON) {
+    markProgressReset(track);
+    // A completion is not a tick: it says nothing about the interval, and
+    // timing it would poison the median with the action's whole duration.
+    // Live capture (claude/probe-action-progress.js) confirms the game's
+    // first tick of a new action consistently takes roughly DOUBLE the
+    // steady-state interval (measured: ~500ms vs a steady 250ms), so the
+    // NEXT delta -- from this reset write to the first write of the new
+    // action -- is equally unrepresentative and must not reach `deltas`
+    // either. `afterReset` flags exactly that one upcoming delta for
+    // exclusion below, while `state.at` still advances so the delta AFTER
+    // that one measures real wall-clock time again.
+    state.afterReset = true;
+  } else {
+    const delta = at - state.at;
+    // Discard anything outside the plausible range for an update interval: a
+    // sub-frame delta is two writes coalesced into one flush, a multi-second
+    // one is a resumed/unpaused action rather than a tick, and the delta
+    // spanning a completion is the anomalous post-reset gap described above,
+    // not a steady tick.
+    if (delta >= 60 && delta <= 4000 && !state.afterReset) {
+      state.deltas.push(delta);
+      if (state.deltas.length > 5) state.deltas.shift();
+      // Three samples before committing, so one janked frame during boot
+      // cannot pin the bar to the wrong duration for the rest of the session.
+      if (state.deltas.length >= 3) commitProgressDuration(track, state, median(state.deltas));
+    }
+    state.afterReset = false;
+  }
+
+  state.pct = pct;
+  state.at = at;
+}
+
 function hasPanelBodyOutsideHeading(candidate, heading) {
   const headingBranch = directChildUnder(heading, candidate);
   if (!headingBranch) return false;
@@ -691,7 +969,8 @@ function classifyFeed(host) {
 }
 
 function classifyCurrentAction(host) {
-  setPanelPart(findCurrentActionProgress(host), 'progress');
+  const track = setPanelPart(findCurrentActionProgress(host), 'progress');
+  smoothActionProgress(track);
   const queued = matchingLeaves(host, text => text === 'queued')[0];
   let cur = queued?.parentElement;
   for (let depth = 0; cur && cur !== host && depth < 3; depth += 1, cur = cur.parentElement) {
@@ -900,10 +1179,14 @@ function queueClassify() {
     // stop the zone bar and section frames from being classified. (Audit S3.7)
     guard('ui:main-nav', classifyMainNav);
     guard('ui:zone-bar', classifyZoneBar);
+    // Activity panels first: they own `section-frame` on their own hosts, which
+    // are `.panel`s, so classifySectionFrames has to see `data-iw-panel` already
+    // set to leave them alone. Boss cards stay AFTER section frames -- they read
+    // sectionFrameResolutions as their root fallback.
+    guard('ui:activity-panels', classifyActivityPanels);
     guard('ui:section-frames', classifySectionFrames);
     guard('ui:boss-cards', classifyBossCards);
     guard('ui:market', classifyMarket);
-    guard('ui:activity-panels', classifyActivityPanels);
   });
 }
 
@@ -918,6 +1201,13 @@ export function clearUIFoundation() {
   marketResolutions = null;
   marketSeen = new Set();
   activityPanelResolutions = null;
+  progressSamples = new WeakMap();
+  // The measured duration is the ONLY inline property this module ever
+  // writes, so it is removed directly rather than routed through
+  // InlineStyleOwner — there is no native value to restore underneath it.
+  document.querySelectorAll('[data-iw-panel-part="progress"]')
+    .forEach(el => { el.style.removeProperty('--iw-progress-duration'); });
+  document.querySelectorAll('[data-iw-progress-reset]').forEach(el => { delete el.dataset.iwProgressReset; });
   document.querySelectorAll('[data-iw-ui]').forEach(el => { delete el.dataset.iwUi; });
   document.querySelectorAll('[data-iw-tab]').forEach(el => { delete el.dataset.iwTab; });
   document.querySelectorAll('[data-iw-state]').forEach(el => { delete el.dataset.iwState; });

@@ -107,6 +107,15 @@
   --iw-th-ground-wash: transparent;              /* additive per-zone tint over the ground */
   --iw-th-glow:        rgba(226,164,72,.08);     /* inset top bloom on frames */
 
+  /* Inner frame scale. --iw-th-edge frames a PANEL; every box INSIDE one (the
+     feed, the queue, a progress track, a stat plate, a row divider) steps down
+     from it. These defaults are the stock values the sheets used to hardcode;
+     the derived block after the palettes re-points them off whichever
+     --iw-th-edge the zone resolved to. */
+  --iw-th-edge-mid:    #4A3820;  /* inner box frame: feed, queue, chat input */
+  --iw-th-edge-soft:   #332B20;  /* recessed plate, nav rail, column rule */
+  --iw-th-edge-faint:  #29251D;  /* hairline divider, control plate edge */
+
   /* Brass / iron edges */
   --iw-line:    #342D20;
   --iw-line-hi: #58482B;
@@ -148,6 +157,14 @@
   --iw-r-slot:    2px;
   --iw-r:         var(--iw-r-control);
   --iw-r-sm:      var(--iw-r-slot);
+
+  /* Assumed interval between the game's Current Action progress writes. It is
+     the transition duration that turns that staircase into a true 0->100%
+     linear ramp (see ui-system.css); UIFoundation measures the real interval
+     live and overrides it, continuously, via an inline --iw-progress-duration
+     once it has enough samples. Only the pre-measurement fallback lives
+     here. */
+  --iw-action-tick: 1s;
 
   /* Game theme tokens */
   --background:          var(--iw-ink-900) !important;
@@ -298,6 +315,30 @@
   --iw-th-ground-wash: rgba(80,190,210,.05);  --iw-th-glow: rgba(90,200,220,.10);
 }
 
+/* ── Derived inner frames ───────────────────────────────────────────────
+   The nine palettes above set --iw-th-edge and nothing else about frames.
+   Everything the skin draws INSIDE a panel steps down from that one value
+   here, so a palette added later inherits the whole scale for free and the
+   page never mixes a themed outer frame with brass-brown inner boxes.
+
+   Keyed on the bare attribute, not the nine names: (0,1,1) beats the (0,0,1)
+   stock defaults, and it cannot collide with the palette blocks (also (0,1,1))
+   because those never declare these tokens. Custom properties resolve lazily,
+   so `var(--iw-th-edge)` here reads whatever the palette won with regardless of
+   source order.
+
+   --iw-line / --iw-line-hi come along because base.css feeds them to the
+   game's OWN Tailwind border tokens (--border, --panel-border, --surface-bg's
+   partner --surface-border): re-pointing them is what carries the zone colour
+   into every game-drawn edge the skin never classified. */
+:root[data-iw-zone-theme] {
+  --iw-th-edge-mid:   color-mix(in srgb, var(--iw-th-edge) 66%, var(--iw-ink-850));
+  --iw-th-edge-soft:  color-mix(in srgb, var(--iw-th-edge) 42%, var(--iw-ink-850));
+  --iw-th-edge-faint: color-mix(in srgb, var(--iw-th-edge) 26%, var(--iw-ink-850));
+  --iw-line:          var(--iw-th-edge-soft);
+  --iw-line-hi:       color-mix(in srgb, var(--iw-th-edge) 84%, var(--iw-ink-850));
+}
+
 html,
 body {
   background-color: var(--iw-ink-900) !important;
@@ -321,23 +362,48 @@ h1, h2, h3 {
 
 /* ── Core surfaces ──────────────────────────────────────────────────── */
 
+/* `.compact-panel` is the game's shared card class -- skills, quests, bosses,
+   village, shop and every dialog-nested stat group (Character Stats, etc.)
+   all use it. Give every one of them the same textured ground as the
+   Skills/Inventory frames by default, so a newly-found surface doesn't need
+   its own hunt-and-reskin round trip. A surface that wants MORE than the
+   ground (skill/quest accent colours, the boss card's hairline) still owns
+   its own higher-specificity rule (`.compact-panel.fs-skill-panel`,
+   `.compact-panel.fs-quest-panel`, `[data-iw-boss="card"]`) and continues to
+   win over this. */
 .compact-panel,
 [class~="compact-panel"] {
+  border-color: var(--iw-th-edge) !important;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.018), transparent 48px),
-    var(--iw-ink-800) !important;
-  border-color: var(--iw-line) !important;
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.025), transparent 32%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, normal, soft-light, normal !important;
   color: var(--iw-text) !important;
   border-radius: var(--iw-r-panel) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.018),
-    inset 0 -1px 0 rgba(0,0,0,.42) !important;
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 var(--iw-th-glow) !important;
 }
 
+/* `.compact-row` is the shared card-row class -- leaderboard rows, chat feed
+   rows and (before InventoryRenderer's own shell rule wins by :has()
+   specificity) inventory rows all use it. Same reasoning as `.compact-panel`
+   above: default every one of them to the forged textured ground instead of
+   a flat plate, and let a surface that wants something else
+   (`.compact-row:has(> .fs-inv-row)` for inventory, `[data-iw-market="row"]`
+   for Market) keep winning via its own higher-specificity/later-injected
+   rule. */
 .compact-row,
 [class*="item-row"] {
-  background-color: var(--iw-ink-800) !important;
-  border-color: var(--iw-line) !important;
+  border-color: var(--iw-th-edge) !important;
+  background:
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.02), transparent 32%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, normal, soft-light, normal !important;
   color: var(--iw-text) !important;
 }
 
@@ -352,8 +418,8 @@ h1, h2, h3 {
   border-radius: var(--iw-r-panel) !important;
 }
 
-button:not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]) {
+button:not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]) {
   border-radius: var(--iw-r-control) !important;
 }
 
@@ -372,8 +438,24 @@ button,
   color: var(--iw-text);
 }
 
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]),
+/* A handful of controls (leaderboard player names so far) are Tailwind
+   `hover:underline` text links wearing a <button> tag, not real controls --
+   the game gives them no plate of their own, just colour + underline-on-hover.
+   Every generic control rule above already opts them out via the
+   `hover:underline` clause in its `:not()` chain; this closes the one
+   remaining gap, the unguarded base `button` rule two lines up, so they read
+   as plain text rather than "a button minus its gradient". Colour is left
+   alone -- it is the game's own per-player identity (rule 5). */
+[class*="hover:underline"] {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]),
 input,
 select,
 textarea {
@@ -388,21 +470,21 @@ textarea {
    a faint second frame just outside the sprite ("a sprite frame on a button
    means the button's own plate must go"). The skill nav/action buttons are
    safe unlisted only because styleButton() writes their plate inline. */
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]) {
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]) {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.028),
     0 1px 0 rgba(0,0,0,.65) !important;
   transition: color .12s ease, border-color .12s ease, background-color .12s ease, filter .12s ease !important;
 }
 
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):hover:not(:disabled),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):hover {
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):hover:not(:disabled),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):hover {
   filter: brightness(1.08);
 }
 
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):focus-visible,
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):focus-visible,
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):focus-visible,
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
@@ -431,7 +513,7 @@ textarea::placeholder {
    selected colour, but make the rail read like game tabs instead of pills. */
 nav button,
 nav [role="button"],
-header button:not([class*="chat-name-"]),
+header button:not([class*="chat-name-"]):not([class*="hover:underline"]),
 [class*="tab"] button {
   border-radius: var(--iw-r-control) !important;
   font-weight: 700 !important;
@@ -536,7 +618,7 @@ hr {
 .iw-btn--disabled,
 .iw-btn:disabled {
   background: #100F0C;
-  border-color: #282218;
+  border-color: var(--iw-th-edge-faint);
   color: var(--iw-faint);
   cursor: not-allowed;
   box-shadow: none;
@@ -557,7 +639,7 @@ hr {
 .iw-xp__track {
   height:4px;
   background:#080806;
-  border:1px solid #272117;
+  border:1px solid var(--iw-th-edge-faint);
   border-radius:0;
   overflow:hidden;
   box-shadow: inset 0 1px 2px rgba(0,0,0,.75);
@@ -579,8 +661,8 @@ hr {
 /* Padded rounded-full elements are almost always pills/tabs/status readouts,
    not true circular glyphs. Flatten them while preserving tiny round dots. */
 [class*="rounded-full"][class*="px-"],
-button[class*="rounded-full"]:not([class*="chat-name-"]),
-[role="button"][class*="rounded-full"]:not([class*="chat-name-"]) {
+button[class*="rounded-full"]:not([class*="chat-name-"]):not([class*="hover:underline"]),
+[role="button"][class*="rounded-full"]:not([class*="chat-name-"]):not([class*="hover:underline"]) {
   border-radius: var(--iw-r-control) !important;
 }
 

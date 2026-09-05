@@ -41,7 +41,7 @@
    never shows. */
 .compact-panel.fs-skill-panel {
   --fs-forge-bg: linear-gradient(180deg, #100E0A, #0A0907);
-  --fs-forge-line: #2A241A;
+  --fs-forge-line: var(--iw-th-edge-faint);
   --fs-forge-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .035),
     inset 0 -7px 10px -8px rgba(0, 0, 0, .95);
@@ -88,7 +88,7 @@
     linear-gradient(90deg, color-mix(in srgb, var(--fs-skill-accent) 4%, transparent), transparent 28%),
     linear-gradient(180deg, rgba(255,255,255,.010), transparent 34px),
     #12110E !important;
-  border: 1px solid #392F21 !important;
+  border: 1px solid var(--iw-th-edge-soft) !important;
   border-left: 2px solid var(--fs-skill-accent, var(--iw-line-hi)) !important;
   border-radius: 3px !important;
   box-shadow:
@@ -273,7 +273,7 @@
   max-height: 4px !important;
   margin-top: 5px !important;
   overflow: hidden !important;
-  border: 1px solid #29241B !important;
+  border: 1px solid var(--iw-th-edge-faint) !important;
   border-radius: 0 !important;
   background: #080806 !important;
   box-shadow: inset 0 1px 2px rgba(0,0,0,.80) !important;
@@ -564,7 +564,7 @@
   justify-content: center !important;
   gap: 5px !important;
   padding: 14px 14px 12px !important;
-  border-right: 1px solid #332B20 !important;
+  border-right: 1px solid var(--iw-th-edge-soft) !important;
   background:
     radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--fs-skill-accent) 10%, transparent), transparent 42%),
     linear-gradient(90deg, rgba(255,255,255,.012), rgba(0,0,0,.12)) !important;
@@ -671,7 +671,7 @@
   min-height: 5px !important;
   max-height: 5px !important;
   margin: 8px 0 0 !important;
-  border: 1px solid #2D281F !important;
+  border: 1px solid var(--iw-th-edge-faint) !important;
   background: #070706 !important;
   box-shadow: inset 0 1px 2px rgba(0,0,0,.82) !important;
 }
@@ -701,7 +701,7 @@
   grid-row: 5 !important;
   margin: 9px 0 0 !important;
   padding-top: 8px !important;
-  border-top: 1px solid #2C271E !important;
+  border-top: 1px solid var(--iw-th-edge-faint) !important;
   color: #AAA291 !important;
 }
 
@@ -710,8 +710,8 @@
   grid-row: 5 !important;
   margin: 9px 0 0 !important;
   padding: 8px 0 0 18px !important;
-  border-top: 1px solid #2C271E !important;
-  border-left: 1px solid #2C271E !important;
+  border-top: 1px solid var(--iw-th-edge-faint) !important;
+  border-left: 1px solid var(--iw-th-edge-faint) !important;
   color: #B7AF9F !important;
   font-size: 10.9px !important;
   line-height: 1.2 !important;
@@ -744,7 +744,7 @@
   justify-content: center !important;
   gap: 12px !important;
   padding: 16px 14px !important;
-  border-left: 1px solid #332B20 !important;
+  border-left: 1px solid var(--iw-th-edge-soft) !important;
   background: linear-gradient(90deg, rgba(0,0,0,.06), rgba(255,255,255,.012)) !important;
 }
 
@@ -826,14 +826,14 @@
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
     min-height: 114px !important;
     padding: 10px 12px !important;
-    border-right: 1px solid #332B20 !important;
-    border-bottom: 1px solid #332B20 !important;
+    border-right: 1px solid var(--iw-th-edge-soft) !important;
+    border-bottom: 1px solid var(--iw-th-edge-soft) !important;
   }
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] {
     min-height: 114px !important;
     padding: 10px 12px !important;
     border-left: 0 !important;
-    border-bottom: 1px solid #332B20 !important;
+    border-bottom: 1px solid var(--iw-th-edge-soft) !important;
   }
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
     padding: 13px 14px 12px !important;
@@ -1031,7 +1031,7 @@
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"] {
-  border-left: 1px solid #46371F !important;
+  border-left: 1px solid var(--iw-th-edge-mid) !important;
   background:
     linear-gradient(90deg, rgba(0,0,0,.22), rgba(255,255,255,.012) 55%, rgba(0,0,0,.11)),
     linear-gradient(180deg, #15140F, #0E0E0B) !important;
@@ -1046,7 +1046,7 @@
 }
 
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="progress-track"] {
-  border-color: #3B3020 !important;
+  border-color: var(--iw-th-edge-soft) !important;
   background: #060604 !important;
   box-shadow:
     inset 0 1px 3px rgba(0,0,0,.92),
@@ -1373,7 +1373,7 @@
   height: 6px !important;
   margin-top: 5px !important;
   overflow: hidden !important;
-  border: 1px solid #3B3020 !important;
+  border: 1px solid var(--iw-th-edge-soft) !important;
   background: #060604 !important;
   box-shadow: inset 0 1px 3px rgba(0,0,0,.92), 0 1px 0 rgba(144,109,57,.08) !important;
 }
@@ -1818,7 +1818,7 @@
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
     min-height: 0 !important;
     padding: 6px !important;
-    border-bottom: 1px solid #332B20 !important;
+    border-bottom: 1px solid var(--iw-th-edge-soft) !important;
   }
 
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
@@ -1851,7 +1851,7 @@
     position: static !important;
     gap: 1px !important;
     padding: 5px 8px !important;
-    border-bottom: 1px solid #332B20 !important;
+    border-bottom: 1px solid var(--iw-th-edge-soft) !important;
   }
 
   .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-role="action-title"]::before {
@@ -2320,7 +2320,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   margin: 3px auto 4px !important;
   padding: 3px 13px 4px !important;
   white-space: nowrap !important;
-  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 34%, #453A28) !important;
+  border: 1px solid color-mix(in srgb, var(--fs-skill-accent) 34%, var(--iw-th-edge-mid)) !important;
   border-radius: 3px !important;
   background-color: color-mix(in srgb, var(--fs-skill-accent) 7%, #13120E) !important;
   background-image: none !important;
@@ -2792,51 +2792,38 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--fs-quest-accent) 14%, transparent) !important;
 }
 
-/* ── Reward plaque: a 3-slice frame, so it fits ANY label length ──────
-   The reward label is the one plaque on the page whose text length is not
-   under the skin's control: "+1,875g • +810 combat XP" and
-   "+2,250g • +1944 tailoring XP" differ by ~30px, and a longer
-   discipline name or a six-figure payout will differ by more.
+/* ── Reward chip: a plain plate, not the ornate horned plaque ──────────
+   Curtis (2026-09): the 3-slice `skills_xp_plaque_wide.webp` frame (horns +
+   flared studs) read as gaudy against the rest of the quest card and was
+   dropped for a flat bordered chip — the same "carved slate" language the
+   sigil's percentage badge and the skill base-EXP readout already use
+   elsewhere on this page, just sized for this label. Still FLEX (not grid):
+   the native "Reward: ..." text stays in the node as the accessible copy at
+   font-size: 0, and a GRID gives that leftover text node its own row (see the
+   CLAUDE.md note on `place-items: center` + a text-node sibling); row-flex
+   keeps it a zero-width sibling instead. `--fs-plaque-h` stays the sizing
+   knob so the two responsive breakpoints below don't need to change.
+   The label length problem the old comment described is still real —
+   "+1,875g • +810 combat XP" vs "+2,250g • +1944 tailoring XP" differ by
+   ~30px — but a flat chip just stretches with `width: auto` + padding;
+   nothing here is sliced from a fixed-ratio sprite any more so there is no
+   distortion to guard against.
 
-   A single sprite window cannot serve that. `SkillsArtService` sizes every
-   atlas sprite with a PERCENTAGE background-size pair, which stretches the
-   cell to exactly fill its box -- so a content-width box silently distorts
-   the art. Measured, that is what shipped: the plaque was 168x30 minimum but
-   ~200x30 in practice (6.7:1) against 300x100 art (3.00:1), and since the
-   flared horns occupy the outer 19% of the sprite, stretching them 2.2x
-   horizontally dragged them inward over the text. Restoring the true 3:1
-   ratio is not an option here either -- at this label width it would demand
-   a ~90px-tall plaque.
-
-   So the plaque is 3-sliced instead: the horns are fixed-size, only the flat
-   centre stretches, and the label length stops mattering. Measured from the
-   art (build-tools, alpha profile of skills_xp_plaque_wide.webp, 300x100):
-
-     opaque bbox          0,7 300x71   -- 7px dead row on top, 22px below
-     horn / flat boundary x = 58 and x = 242 (column alpha is a flat 52%
-                          between them, i.e. no centre ornament to smear)
-
-   `border-image-width: 0 <cap> 0 <cap>` draws no top/bottom band, so the
-   MIDDLE row alone fills the box: source rows 7..77 (71px) map to the full
-   height. Keeping the horns undistorted therefore means
-   cap = 58 x height / 71, which is what --fs-plaque-cap computes. Change
-   --fs-plaque-h and everything else follows.
-
-   This is the standalone sheet, not the atlas cell: `border-image-slice`
-   slices the WHOLE image, so an atlas is unusable as a source.
-
-   The native text stays as the accessible copy (font-size: 0) and the
-   trimmed value is drawn by ::before, like the skill Base plaque. */
+   A flat chip sidesteps the whole distortion problem the old plaque had:
+   `SkillsArtService` sizes atlas sprites with a PERCENTAGE background-size
+   pair that stretches a cell to exactly fill its box, and `border-image`
+   stretches a fixed-ratio sheet's slices the same way — both need the box's
+   aspect ratio to match the art or it distorts. A plain border + gradient has
+   no aspect ratio to protect, so it can just grow with the label. */
 .compact-panel.fs-quest-panel [data-iw-quest-role="reward"] {
   --fs-plaque-h: 42px;
-  --fs-plaque-cap: calc(var(--fs-plaque-h) * 58 / 71);
   align-self: flex-start !important;
   /* FLEX, not grid. The native "Reward: ..." text stays in the node as the
      accessible copy at font-size: 0 -- and in a GRID that leftover text node
      becomes a second, anonymous grid item on its own row. Both rows then
-     stretch to share the plaque's height, so the label was pushed into the
+     stretch to share the chip's height, so the label was pushed into the
      top half: measured with a debug tint, its line box sat at 7.0..20.8 in a
-     42px plaque instead of centred. In a row-flex the same text node is a
+     42px-tall box instead of centred. In a row-flex the same text node is a
      zero-width sibling and centring works. */
   display: flex !important;
   align-items: center !important;
@@ -2846,33 +2833,13 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   height: var(--fs-plaque-h) !important;
   min-height: var(--fs-plaque-h) !important;
   margin-top: 4px !important;
-  /* Clear of the horns, plus a little air. The bottom bias optically centres
-     the label in the frame. It is set by GAP SYMMETRY -- the thing the eye
-     actually compares -- not by computing an "interior centre" and a "text
-     centre" and matching them:
-
-       gapTop = label's cap-top  -  inner edge of the frame's top rail
-       gapBot = inner edge of the bottom rail  -  label's baseline
-
-     Sweep the factor, render at deviceScaleFactor 8, diff against a blank
-     plaque to isolate ink, and read off the value where gapTop == gapBot.
-     Measured: .045 gives 0.00px at h=38 and -0.63px at h=42, and sits inside
-     the flat band at BOTH heights so device-pixel rounding cannot flip it.
-
-     Deriving it instead cost three wrong values (.07, .16, .10), each from a
-     defensible-looking model of where "the centre" is: rail-walking mis-read
-     the dipping top band, and the ink centroid is dragged low by the one
-     descender and the text-shadow. Both were self-consistent and both were
-     visibly wrong. Re-sweep if the font, font-size or --fs-plaque-h changes. */
-  padding: 0 calc(var(--fs-plaque-cap) + 7px) calc(var(--fs-plaque-h) * .045) !important;
-  border: 0 solid transparent !important;
-  border-radius: 0 !important;
-  background: none !important;
-  border-image-source: url('../assets/skills_xp_plaque_wide.webp') !important;
-  border-image-slice: 7 58 22 58 fill !important;
-  border-image-width: 0 var(--fs-plaque-cap) 0 var(--fs-plaque-cap) !important;
-  border-image-outset: 0 !important;
-  border-image-repeat: stretch !important;
+  padding: 0 14px !important;
+  border: 1px solid color-mix(in srgb, var(--fs-quest-accent) 42%, var(--iw-th-edge-soft)) !important;
+  border-radius: 3px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(0,0,0,.34)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    inset 0 -1px 0 rgba(0,0,0,.5) !important;
   color: #F0D8A6 !important;
   font-family: var(--iw-font-head) !important;
   font-size: 0 !important;
@@ -2895,7 +2862,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   height: 5px !important;
   margin: 0 !important;
   overflow: hidden !important;
-  border: 1px solid #3B3020 !important;
+  border: 1px solid var(--iw-th-edge-soft) !important;
   border-radius: 0 !important;
   background: #060604 !important;
   box-shadow: inset 0 1px 3px rgba(0,0,0,.9) !important;
@@ -2980,7 +2947,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
 }
 .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
   font-size: 11px !important;
-  border: 1px solid #58482B !important;
+  border: 1px solid var(--iw-line-hi) !important;
   background: linear-gradient(180deg, #242018, #17140F) !important;
   color: #C9BFA6 !important;
   letter-spacing: .06em !important;
@@ -3026,7 +2993,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)) brightness(1.1) !important;
 }
 .compact-panel.fs-quest-panel [data-iw-quest-role="skip"]:hover:not(:disabled) {
-  border-color: #7A6238 !important;
+  border-color: var(--iw-th-rule) !important;
   color: #F0E4C8 !important;
 }
 .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]:hover:not(:disabled) {
@@ -3270,7 +3237,7 @@ html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-s
   justify-content: center !important;
   gap: 6px !important;
   padding: 14px 12px !important;
-  border-right: 1px solid #332B20 !important;
+  border-right: 1px solid var(--iw-th-edge-soft) !important;
   border-bottom: 0 !important;
 }
 html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
@@ -3305,7 +3272,7 @@ html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-
 html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] {
   grid-area: content !important;
   align-self: center !important;
-  border-bottom: 1px solid #332B20 !important;
+  border-bottom: 1px solid var(--iw-th-edge-soft) !important;
 }
 
 /* ── Command band ───────────────────────────────────────────────────── */
@@ -3494,7 +3461,7 @@ html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-s
     min-height: 0 !important;
   }
   html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="identity"] {
-    border-bottom: 1px solid #332B20 !important;
+    border-bottom: 1px solid var(--iw-th-edge-soft) !important;
   }
   html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] .fs-skill-medallion-art {
     width: 52px !important;
@@ -3513,5 +3480,75 @@ html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-s
   html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] {
     left: 50% !important;
     max-width: 100% !important;
+  }
+}
+
+/* Material requirements — separated visual list (Curtis, 2026-09).
+   The native React row stays connected as the source of truth; the renderer
+   appends this reversible mirror so a flat text node can gain real columns.
+   Keyed on the list-source marker ALONE — on the live page the ROLE_ATTR
+   "ingredient" role lands on an inner `.iw-item-ref` host span, not on the
+   outer line `updateIngredientLists` actually marks as the source, so a
+   selector that required both on one element never matched live and the
+   native line stayed visible beside the generated grid. */
+html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-ingredient-list-source="1"] {
+  display: none !important;
+}
+
+html .compact-panel.fs-skill-panel .fs-skill-ingredient-grid {
+  order: 2 !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  justify-content: center !important;
+  gap: 4px 6px !important;
+  box-sizing: border-box !important;
+  width: min(100%, 680px) !important;
+  margin: 2px auto !important;
+  padding: 0 !important;
+  color: var(--iw-dim) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 10.5px !important;
+  line-height: 1.2 !important;
+  font-variant-numeric: tabular-nums !important;
+  text-align: center !important;
+}
+
+html .compact-panel.fs-skill-panel .fs-skill-ingredient-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  padding: 4px 7px !important;
+  overflow-wrap: anywhere !important;
+  color: var(--iw-dim) !important;
+  border: 1px solid rgba(121, 105, 78, .25) !important;
+  border-left: 2px solid rgba(121, 105, 78, .42) !important;
+  border-radius: 2px !important;
+  background: rgba(7, 7, 6, .34) !important;
+}
+
+html .compact-panel.fs-skill-panel .fs-skill-ingredient-item[data-iw-ingredient-state="met"] {
+  color: #82B88A !important;
+  border-left-color: rgba(130, 184, 138, .62) !important;
+}
+
+/* A lone requirement auto-places into grid column 1, so it sits flush left
+   under the two-column track instead of reading as its own centred plaque.
+   Span both columns and cap its width so it centres in the frame instead. */
+html .compact-panel.fs-skill-panel .fs-skill-ingredient-item:only-child {
+  grid-column: 1 / -1 !important;
+  box-sizing: border-box !important;
+  justify-self: center !important;
+  width: min(100%, 340px) !important;
+}
+
+@media (max-width: 430px) {
+  html .compact-panel.fs-skill-panel .fs-skill-ingredient-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 3px !important;
+    font-size: 9.5px !important;
+  }
+  html .compact-panel.fs-skill-panel .fs-skill-ingredient-item {
+    padding: 3px 5px !important;
   }
 }

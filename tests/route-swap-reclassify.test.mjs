@@ -48,7 +48,9 @@ function check(label, cond, detail = '') {
    resolveMainNav() clears its `byLabel.size < 4` floor. */
 const SHELL = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
   <div id="root">
-    <header id="top-header"><div><h1>BustedCypher</h1></div></header>
+    <header id="top-header"><div><h1>BustedCypher</h1>
+      <p>Combat Lv 62</p><p>Players online: 145</p><p>ATK 120 DEF 90 HP 500</p>
+    </div><div><button>1</button></div></header>
     <nav id="main-nav">
       <a>Game</a><a>Market</a><a>Leaderboards</a><a>Village</a><a>Dungeon</a>
     </nav>
@@ -88,6 +90,61 @@ const MARKET_ROUTE = `
         </div>
       </div>
     </div>
+  </div>
+  <div class="panel p-3.5" data-route="market-history">
+    <h2 class="text-sm font-semibold">📈 Your Recent Trades</h2>
+    <div class="py-2"><p>Sold Cotton Cloth x46</p><p>+322g</p></div>
+  </div>`;
+
+/* Village ships three separate panels, each with its own heading, rather than
+   one "Village" panel -- and two of the three lead with an emoji ("🏗️ Village
+   Add-ons", "🏦 Housing Bank") the way the zone bar's labels do. */
+const VILLAGE_ROUTE = `
+  <div class="panel p-3.5" data-route="village-addons">
+    <h2 class="text-sm font-semibold">🏗️ Village Add-ons</h2>
+    <p>4 slots available (1 per housing tier). Only one of each building type per village.</p>
+    <div class="compact-panel"><p>SLOT 1</p><p>Empty slot</p></div>
+  </div>
+  <div class="panel p-3.5" data-route="housing-bank">
+    <h2 class="text-sm font-semibold">🏦 Housing Bank</h2>
+    <p>Safe storage for your items. Stored items cannot be accidentally salvaged.</p>
+    <div class="compact-panel"><p>Astral Lens</p><button>Deposit</button></div>
+  </div>
+  <div class="panel p-3.5" data-route="village-npcs">
+    <h2 class="text-sm font-semibold">Village NPCs</h2>
+    <div class="compact-panel"><p>Grimsby the Fence</p></div>
+  </div>`;
+
+/* Sub-panels on the routes below Game. NONE of these headings is in
+   SECTION_FRAME_NAMES, and that is the point: the frame is triggered by the
+   game's own `.panel` primitive, so a route the skin has never been told about
+   is covered anyway. Two shapes that used to be impossible are included --
+   a panel with a leading icon in its heading, and one with NO heading at all.
+
+   `data-route="leaderboards"` also carries a nested `.panel`: the outer one
+   must come out as a stripped layout column and the inner one as the framed
+   leaf (ui-system.css's `:not(:has(...))` rule), which is the split the old
+   heading walk needed a size heuristic to guess at. */
+const LEADERBOARDS_ROUTE = `
+  <div class="panel" data-route="leaderboards-column">
+    <div class="panel p-3.5" data-route="leaderboards">
+      <h2 class="text-sm font-semibold">Leaderboards</h2>
+      <div class="compact-row"><p>1. BustedCypher</p><p>Combat 62</p></div>
+    </div>
+    <div class="panel p-3.5" data-route="top-gatherers">
+      <h2 class="text-sm font-semibold">🌾 Top Gatherers This Week</h2>
+      <div class="compact-row"><p>1. Thornwake</p><p>1,284,500</p></div>
+    </div>
+  </div>`;
+
+const DUNGEON_ROUTE = `
+  <div class="panel p-3.5" data-route="raid-dungeon">
+    <h2 class="text-sm font-semibold">⚔️ Raid Dungeon</h2>
+    <p>Party of 5. Leave Dungeon to abandon the run.</p>
+    <div class="compact-panel"><p>⏳ Prejoined</p></div>
+  </div>
+  <div class="panel p-3.5" data-route="dungeon-loot">
+    <div class="compact-row"><p>Voidglass Gloves</p><p>Tier 8</p></div>
   </div>`;
 
 const dom = new JSDOM(SHELL, { url: 'https://idleworlds.com/', runScripts: 'outside-only', pretendToBeVisual: true });
@@ -186,6 +243,105 @@ await waitFor(() => marketRows().length > 0 && taggedMarketRows().length === mar
 check('Market rows are tagged on a SECOND visit',
   marketRows().length === 2 && taggedMarketRows().length === 2,
   `${taggedMarketRows().length}/${marketRows().length} rows carry data-iw-market="row"`);
+
+/* -- Market -> Village --------------------------------------------------- */
+navigate(VILLAGE_ROUTE);
+
+const villagePanels = () => ['village-addons', 'housing-bank', 'village-npcs']
+  .map(route => doc.querySelector(`[data-route="${route}"]`));
+
+await waitFor(() => villagePanels().every(p => p?.dataset.iwUi === 'section-frame'));
+check('Village Add-ons, Housing Bank and Village NPCs are each framed as their own section',
+  villagePanels().every(p => p?.dataset.iwUi === 'section-frame'),
+  villagePanels().map(p => `${p?.dataset.route}=${p?.dataset.iwUi}`).join(' '));
+check('their headings (including the leading-icon ones) are tagged section-title',
+  villagePanels().every(p => p?.querySelector('h2')?.dataset.iwUi === 'section-title'));
+
+/* -- Panels the skin was never told the name of ------------------------- */
+/* Every check below uses a heading absent from SECTION_FRAME_NAMES. Negative
+   control: put the name list back in charge of the trigger (revert
+   sectionFramePanels() to the old sectionFrameHeadings()) and all of these
+   fail, because that is exactly the state the Village report came from. */
+const framed = route => doc.querySelector(`[data-route="${route}"]`)?.dataset.iwUi === 'section-frame';
+
+navigate(MARKET_ROUTE);
+await waitFor(() => framed('market-history'));
+check('Market: a sub-panel below the named top-level card is framed',
+  framed('market') && framed('market-history'),
+  `market=${framed('market')} history=${framed('market-history')}`);
+
+navigate(LEADERBOARDS_ROUTE);
+await waitFor(() => framed('top-gatherers'));
+check('Leaderboards: an unnamed sibling panel is framed',
+  framed('leaderboards') && framed('top-gatherers'),
+  `leaderboards=${framed('leaderboards')} top-gatherers=${framed('top-gatherers')}`);
+// The outer .panel wraps two others, so ui-system.css strips it as a layout
+// column. It is still MARKED -- the CSS, not the classifier, tells them apart
+// -- so assert the marking, which is what the nesting rule keys on.
+check('the wrapping column is marked too, for the leaf-vs-column CSS rule to strip',
+  framed('leaderboards-column'));
+
+navigate(DUNGEON_ROUTE);
+await waitFor(() => framed('raid-dungeon'));
+check('Dungeon: the route the skin reached nothing inside is framed',
+  framed('raid-dungeon'), `raid-dungeon=${framed('raid-dungeon')}`);
+check('a panel with NO heading is framed too (frame does not require a title)',
+  framed('dungeon-loot'), `dungeon-loot=${framed('dungeon-loot')}`);
+check('a panel with no heading gets no section-title',
+  doc.querySelector('[data-route="dungeon-loot"] [data-iw-ui="section-title"]') === null);
+
+/* -- A modal card stays OverlayFramer's ---------------------------------- */
+/* OverlayFramer draws on the border box only because these cards are their own
+   scroll container; the section-frame rule's ::before/::after would scroll away
+   with the content. Both treatments on one card is the bug. */
+navigate(`${DUNGEON_ROUTE}
+  <div class="fixed inset-0 z-50" style="position:fixed;background:rgba(0,0,0,.6)">
+    <div class="panel p-3.5" data-route="dungeon-modal">
+      <h2>Leave Dungeon</h2><p>Abandon the run? Progress in this dungeon is lost.</p>
+    </div>
+  </div>`);
+await waitFor(() => doc.querySelector('[data-route="dungeon-modal"]')?.dataset.iwOverlay === 'panel');
+// Asserted as "the section classifier keeps its hands off", not as "OverlayFramer
+// tagged it": jsdom lays nothing out, so OverlayFramer's own viewport-covering
+// backdrop test cannot fire here -- tests/overlay-framer.test.mjs pins that half
+// in a real browser. This half is the one that regressed: with the exclusion
+// keyed only on OverlayFramer's tag, the card came back section-framed.
+check('a modal card is left to OverlayFramer, never section-framed as well',
+  !framed('dungeon-modal'),
+  `section=${framed('dungeon-modal')}`);
+
+/* -- The zone survives leaving the Game route ---------------------------- */
+/* The "Zone N:" label lives in the zone bar, which only the Game route mounts.
+   Reading it fresh every flush meant every OTHER tab resolved zone=null: the
+   header dropped its per-zone artwork back to the generic strip and <html> lost
+   data-iw-zone-theme, so Market/Village/Leaderboards/Dungeon rendered un-themed
+   while Game looked right. Reported live: "removed the header graphics and
+   didn't actually theme the other pages".
+   Negative control: drop the lastZoneNumber cache in HeaderRenderer and both
+   checks below fail. */
+const html = doc.documentElement;
+const headerRoot = () => doc.querySelector('[data-iw-header="root"]');
+const zoneSurface = () => headerRoot()?.style.getPropertyValue('--iw-header-surface') || '';
+
+navigate(GAME_ROUTE);
+await waitFor(() => html.dataset.iwZoneTheme && html.dataset.iwZoneTheme !== 'default');
+const gameTheme = html.dataset.iwZoneTheme;
+const gameSurface = zoneSurface();
+check('baseline: the Game route resolves zone 19 to its palette and artwork',
+  gameTheme === 'voidborn' && /zone_19\.webp/.test(gameSurface),
+  `theme=${gameTheme} surface=${gameSurface}`);
+
+for (const [label, route] of [['Market', MARKET_ROUTE], ['Village', VILLAGE_ROUTE],
+                              ['Leaderboards', LEADERBOARDS_ROUTE], ['Dungeon', DUNGEON_ROUTE]]) {
+  navigate(route);
+  await settle(120);
+  check(`${label}: keeps the zone palette after the zone bar unmounts`,
+    html.dataset.iwZoneTheme === gameTheme,
+    `theme=${html.dataset.iwZoneTheme} (expected ${gameTheme})`);
+  check(`${label}: keeps the per-zone header artwork`,
+    zoneSurface() === gameSurface,
+    `surface=${zoneSurface()}`);
+}
 
 console.log(failures ? `\nFAIL — ${failures} check(s)` : '\nPASS route-swap reclassification');
 process.exit(failures ? 1 : 0);

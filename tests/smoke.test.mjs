@@ -26,6 +26,14 @@ const bundle = readFileSync(new URL('../dist/content.bundle.js', import.meta.url
 
 const settle = ms => new Promise(r => setTimeout(r, ms));
 
+// The measured tick is written inline as a continuous CSS duration string
+// ("0.280s"), not a snap to a discrete bucket — see
+// UIFoundation.commitProgressDuration. Returns NaN (falsy in every check
+// below) when nothing has been committed yet.
+function progressDurationSeconds(track) {
+  return parseFloat(track.style.getPropertyValue('--iw-progress-duration'));
+}
+
 async function waitFor(predicate, { timeout = 4000, step = 40 } = {}) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -531,6 +539,115 @@ check('activity panels classify ordinary empty and single-entry states',
   window.document.getElementById('action-log-empty')?.dataset.iwPanel === 'action-log' &&
   window.document.getElementById('action-log-empty-feed')?.dataset.iwPanelPart === 'feed' &&
   window.document.getElementById('world-chat-single-feed')?.dataset.iwPanelPart === 'feed');
+
+/* ── Current Action progress smoothing ───────────────────────────────── */
+
+console.log('\nsmoke: current action progress smoothing');
+// The animation itself is the CSS transition on the progress fill; the skin's
+// only job here is to tell that transition how long a tick is and which single
+// update per action is the completion RESET (see ui-system.css). Both are
+// carried on data-iw-* attributes precisely so they never re-enter the flush
+// queue — which is also why this test drives the fill's INLINE WIDTH: `style`
+// IS in DOMWatcher's attributeFilter, so a width write is a real flush trigger
+// exactly as React's own tick is, and nothing else here would produce one.
+const caTrack = window.document.getElementById('current-action-progress');
+const caFill = caTrack.firstElementChild;
+// Five writes, ALL forward from the fixture's own initial 48% (a write that
+// reads as a decrease is a completion reset, not a tick — see the live-capture
+// note above smoothActionProgress -- and would correctly get excluded from the
+// measurement, leaving too few samples to commit). Five writes give four
+// intervals, one more than the three smoothActionProgress() needs, so the
+// first (possibly reset-adjacent) one has slack to spare. ~250ms apart with a
+// PROGRESS_LEAD_BIAS of 1.12 baked in, so a correct measurement lands close to
+// 0.28s and not merely at "some plausible value" — a check that accepted any
+// committed number would pass for a hardcoded default.
+for (let step = 1; step <= 5; step += 1) {
+  caFill.style.width = `${48 + step * 4}%`;
+  await settle(250);
+}
+check('progress tick interval is measured, not assumed',
+  progressDurationSeconds(caTrack) > 0.2 && progressDurationSeconds(caTrack) < 0.5,
+  'duration=' + progressDurationSeconds(caTrack) + 's');
+
+// Completion: the width drops back to the start of the next repetition. Left
+// to the transition that would slide the bar backwards for a whole tick over
+// an action that has already restarted.
+caFill.style.width = '3%';
+await waitFor(() => caTrack.dataset.iwProgressReset === '1', { timeout: 1000, step: 16 });
+check('completion drop is tagged so the bar snaps instead of sliding back',
+  caTrack.dataset.iwProgressReset === '1');
+// ...and released again, or the first step of the NEW action is un-smoothed.
+await waitFor(() => caTrack.dataset.iwProgressReset === undefined, { timeout: 1000, step: 16 });
+check('reset tag is released on the next frame',
+  caTrack.dataset.iwProgressReset === undefined,
+  'reset=' + (caTrack.dataset.iwProgressReset || 'none'));
+
+// An ordinary forward tick must NOT be tagged as a reset — the negative
+// control for the check above.
+caFill.style.width = '9%';
+await settle(120);
+check('a forward tick is not tagged as a reset',
+  caTrack.dataset.iwProgressReset === undefined,
+  'reset=' + (caTrack.dataset.iwProgressReset || 'none'));
+
+// The gap between a completion's reset write and the FIRST write of the new
+// action is not a steady tick either: a live capture
+// (claude/probe-action-progress.js, real IdleWorlds session) measured that
+// gap at ~500ms against a steady 250ms tick, consistently, across every
+// completion. Left in the sample window, that ~2x-inflated delta is most
+// dangerous on exactly the actions where getting the duration right matters
+// most: a SHORT action (few ticks per cycle -- a fast, low-housing-tier
+// action) barely has enough steady deltas per cycle to outvote one polluted
+// sample in the 5-entry median window, so the wrong bucket can win at the one
+// moment it is most visible: right as the action resumes.
+//
+// Reproduced here on the fixture's OTHER Current Action panel (fresh
+// per-element state -- progressSamples is keyed by track element -- so this
+// is not muddied by the value the section above already committed) with a
+// steady ~1000ms tick and a ~2x (~2000ms) post-reset gap, the same ratio the
+// live capture measured. Real wall-clock intervals, scaled well above this
+// harness's own flush/rAF latency (tens to low hundreds of ms), so that
+// latency cannot be mistaken for the signal under test. Three cycles of
+// [reset, poison tick, steady tick] with a periodic sawtooth of widths (not a
+// monotonically growing one, so no later cycle's reset value can collide with
+// an earlier cycle's steady value and get silently swallowed by the
+// epsilon-equality guard). Worked out by hand (median of a 3/5-entry window
+// seeded with unfiltered poison deltas), the UNFIXED algorithm commits ~2.24s
+// (the poisoned ~2000ms tick, biased) immediately after the THIRD cycle's
+// poison tick lands -- before that cycle's own steady tick can correct it.
+// The fix never lets a poison delta reach the window at all, so at that same
+// checkpoint only 2 genuine steady samples exist (one short of the 3 needed
+// to commit anything), and the property is still whatever it was before this
+// loop started: unset.
+const naTrack = window.document.getElementById('current-action-no-queue-progress');
+const naFill = naTrack.firstElementChild;
+for (let cycle = 1; cycle <= 3; cycle += 1) {
+  naFill.style.width = '5%'; // drop below the previous cycle's steady value = reset
+  await waitFor(() => naTrack.dataset.iwProgressReset === '1', { timeout: 1000, step: 16 });
+  await waitFor(() => naTrack.dataset.iwProgressReset === undefined, { timeout: 1000, step: 16 });
+  await settle(2000); // the anomalous post-reset gap
+  naFill.style.width = '5.5%'; // poison tick
+  await settle(150);
+  if (cycle === 3) {
+    check('the anomalous post-reset gap does not pollute the tick measurement',
+      !(progressDurationSeconds(naTrack) > 1.6),
+      'duration=' + progressDurationSeconds(naTrack) + 's');
+  }
+  await settle(1000); // the steady gap
+  naFill.style.width = '6%'; // steady tick
+  await settle(150);
+}
+// A generous band, not a tight one: this harness's own event-loop jitter (the
+// same latency PROGRESS_LEAD_BIAS exists to absorb on a real page) can push a
+// single settle(1000) measurement well past the nominal value. The check that
+// actually distinguishes fixed from unfixed code is the one above, right
+// after the poison tick; this one only confirms the algorithm has moved
+// clearly AWAY from the poisoned ~2.24s and back toward a plausible steady
+// value, not that it hit one to three significant figures.
+check('the tick measurement recovers to the true steady interval',
+  progressDurationSeconds(naTrack) > 0.8 && progressDurationSeconds(naTrack) < 2.0,
+  'duration=' + progressDurationSeconds(naTrack) + 's');
+
 check('activity headers include metadata and even a single toolbar control',
   window.document.getElementById('world-chat-single-tool-header')?.dataset.iwPanelPart === 'header');
 check('split activity headers classify title and sibling toolbar without moving native nodes',
@@ -685,6 +802,34 @@ check('live Build/Craft Parts panel is construction, not crafting',
 check('new skills still receive a medallion art host',
   woodPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'woodcutting' &&
   buildPanel.querySelector('.fs-skill-medallion-art')?.dataset.iwSkillArt === 'construction');
+const buildMaterials = window.document.getElementById('build-materials');
+const buildMaterialList = () => buildPanel.querySelector('[data-iw-skill-ingredient-list="1"]');
+const buildMaterialItems = () => [...(buildMaterialList()?.querySelectorAll('[data-iw-ingredient-state]') || [])];
+check('skill material requirements render as one separated list item per resource',
+  JSON.stringify(buildMaterialItems().map(el => el.textContent.trim())) === JSON.stringify([
+    '📦 Runic Oak 473/16',
+    '🪨 Runite Ore 3/8',
+    '🧱 Silver Parts 12/12',
+  ]),
+  buildMaterialItems().map(el => el.textContent.trim()).join(' | ') || 'material list missing');
+check('skill material list carries independent complete/incomplete states',
+  buildMaterialItems().map(el => el.dataset.iwIngredientState).join(',') === 'met,unmet,met',
+  buildMaterialItems().map(el => el.dataset.iwIngredientState).join(',') || 'material states missing');
+check('skill material list preserves the connected native React text as its source',
+  buildMaterials.firstChild?.isConnected === true &&
+  buildMaterials.textContent.trim() === '📦 Runic Oak 473/16 • 🪨 Runite Ore 3/8 • 🧱 Silver Parts 12/12' &&
+  buildMaterials.dataset.iwIngredientListSource === '1');
+// Live IdleWorlds wraps each material name in its own `.iw-item-ref` span, so
+// ROLE_ATTR "ingredient" (set on the ref's own parent) lands on a DIFFERENT
+// node than the outer line `updateIngredientLists` marks as the list source.
+// This fixture never puts a `.iw-item-ref` inside #build-materials, so the
+// role attribute is genuinely absent here too — the hide rule must not
+// depend on it, or the native line stays visible beside the new grid exactly
+// like it does live. Regression for the "resources shown twice" report.
+check('native material row is hidden behind its generated list without relying on the ingredient role',
+  buildMaterials.getAttribute('data-iw-skill-role') !== 'ingredient' &&
+  window.getComputedStyle(buildMaterials).display === 'none',
+  `role=${buildMaterials.getAttribute('data-iw-skill-role')} display=${window.getComputedStyle(buildMaterials).display}`);
 const metMaterialText = () => [...(window.CSS.highlights.get('iw-skill-ingredient-met') || [])]
   .filter(range => range.startContainer.parentElement?.closest('#build-materials'))
   .map(range => range.toString().trim());
@@ -713,6 +858,12 @@ check('skill material highlights reconcile when live owned counts cross the requ
     '🧱 Silver Parts 12/12',
   ]),
   metMaterialText().join(' | ') || 'no completed material ranges after count update');
+await waitFor(() => buildMaterialItems().map(el => el.dataset.iwIngredientState).join(',') === 'unmet,met,met');
+check('skill material list reconciles live counts without duplicating the list',
+  buildPanel.querySelectorAll('[data-iw-skill-ingredient-list="1"]').length === 1 &&
+  buildMaterialItems().map(el => el.dataset.iwIngredientState).join(',') === 'unmet,met,met' &&
+  buildMaterialItems()[1]?.textContent.trim() === '🪨 Runite Ore 8/8',
+  `lists=${buildPanel.querySelectorAll('[data-iw-skill-ingredient-list="1"]').length} states=${buildMaterialItems().map(el => el.dataset.iwIngredientState).join(',')}`);
 check('Spellcraft identity wins over ambiguous Craft action',
   spellPanel.classList.contains('fs-skill--spellcrafting') && !spellPanel.classList.contains('fs-skill--crafting') && spellPanel.dataset.iwSkillLayout === 'three-zone' &&
   spellPanel.querySelector('[data-iw-skill-role="action-button"]')?.textContent.trim() === 'Craft');
@@ -1163,6 +1314,9 @@ check('skill presentation artifacts removed on teardown',
   window.document.querySelectorAll('.fs-skill-identity-progress, .fs-skill-base-exp, [data-iw-clean-text]').length === 0);
 check('completed skill material highlights removed on teardown',
   !window.CSS.highlights.has('iw-skill-ingredient-met'));
+check('skill material lists and native-source markers removed on teardown',
+  window.document.querySelectorAll('[data-iw-skill-ingredient-list], [data-iw-ingredient-list-source]').length === 0 &&
+  buildMaterials.firstChild?.isConnected === true);
 check('quest chrome fully removed on teardown',
   window.document.querySelectorAll('.fs-quest-panel, .fs-quest-sigil, .fs-quest-sigil-icon, [data-iw-quest-role], [data-iw-quest-zone], [data-fs-quest]').length === 0 &&
   !questBounty.style.getPropertyValue('--fs-quest-accent') &&
@@ -1171,6 +1325,10 @@ check('quest chrome fully removed on teardown',
   window.document.getElementById('quest-work-order').textContent.includes('Craft and turn in 1 Moonsilk Boots.'));
 check('boss card tagging removed on teardown',
   window.document.querySelectorAll('[data-iw-boss]').length === 0);
+check('progress smoothing attributes and inline duration removed on teardown',
+  window.document.querySelectorAll('[data-iw-progress-reset]').length === 0 &&
+  caTrack.style.getPropertyValue('--iw-progress-duration') === '' &&
+  naTrack.style.getPropertyValue('--iw-progress-duration') === '');
 check('native Equip button survived teardown',
   [...window.document.querySelector('.compact-row').querySelectorAll('button')]
     .some(b => b.textContent.trim() === 'Equip'));

@@ -38,10 +38,11 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   `url('../assets/…')` to `chrome-extension://` at runtime. Use that exact
   form in stylesheets or the asset will 404.
 - `src/modules/InlineStyleOwner.js` — reversible property-level inline styles
-- `src/modules/OverlayFramer.js` — generic pop-up / modal chrome. The per-surface
-  classifiers frame a panel by matching its heading against a fixed name set
-  (`SECTION_FRAME_NAMES`); every dialog outside that set (the "Players Online"
-  list, and every modal the game portals in) reached the page bare. Runs on
+- `src/modules/OverlayFramer.js` — generic pop-up / modal chrome. A portalled
+  dialog is not a route panel, so `classifySectionFrames` deliberately excludes
+  it (`inOverlay`) and this module owns it instead; before it existed, the
+  "Players Online" list and every modal the game portals in reached the page
+  bare. Runs on
   `iw:dom-flush`, detects from **rendered state** (a `position: fixed` layer that
   covers the viewport, carries a numeric z-index and reads as a backdrop — a
   blur or a translucent dark fill), and its content card (largest visible box,
@@ -158,19 +159,67 @@ directions across it, and a repeated round-trip; it is a real-browser
 (Playwright) test, not jsdom, because the bug and the fix both live in actual
 CSS layout that jsdom never renders.
 
-**Panels nest inside layout columns.** `UIFoundation`'s heading walk marks
-`data-iw-ui="section-frame"` on containers as well as panels. Frame the **leaf**
-only: `:is(…):not(:has(:is(…)))`, and strip anything that matched a column. See
-`tests/panel-frame-nesting.test.mjs`. The walk now **prefers the game's own
-`.panel` wrapper** as the frame — an async panel (Quests) that is empty at
-first classify used to fail the "substantial" heuristic and the walk fell
-through to the multi-panel layout column, which the `:has()` rule then stripped
-bare. `sectionFrameResolutionValid` re-resolves any frame that is not a
-`.panel` but contains one. `classifyActivityPanels` also matches a **non-heading
-leaf label** ("Action Log" is not an `<h1–4>`), and both classifiers resolve
-which mirror copy is live via `Viewport.preferRendered` — see the
-hidden-duplicate trap above for why that must be rendered-state, not a class
-name.
+**The section frame is triggered by `.panel`, NOT by heading copy.** This was
+an allow-list of names for a long time, and coverage was therefore a per-route
+chase: Village's three sub-panels ("Village Add-ons", "Housing Bank", "Village
+NPCs") rendered completely bare, and so did everything on Market, Leaderboards
+and Dungeon below the top-level card. **A name list cannot be completed from a
+session** — the live app is anonymous Tailwind, nobody here can read its copy,
+and each miss looks like a CSS bug rather than a classifier miss. `.panel` is
+one of the four durable hooks the whole app ships (see the no-stable-hooks note
+below), it wraps every real panel and nothing else, so `sectionFramePanels()`
+now frames it directly. `SECTION_FRAME_NAMES` survives only as the fallback for
+a named heading with **no `.panel` ancestor at all**; do not add names to it to
+fix a missing frame — if a panel is bare, find out why its `.panel` was not
+matched.
+
+Consequences worth knowing:
+
+- **A panel needs no heading.** `panelHeading()` returns null and the frame is
+  still applied; only `data-iw-ui="section-title"` is skipped. A panel that
+  gains its heading later (async route) re-resolves, because
+  `sectionFrameResolutionValid` re-checks `!panelHeading(frame)` for exactly
+  the null case.
+- **Framing every `.panel` swept up surfaces other owners already dress**, and
+  the section-frame `background` is `!important` in the LAST-injected sheet, so
+  it does not layer over their art — it replaces it. `ownedElsewhere()` excludes
+  three, all found the hard way: `<header>` (framing anything in there paints
+  the forged ground over `HeaderRenderer`'s per-zone artwork — reported live as
+  "removed the header graphics"), `[data-iw-ui="zone-bar"]` (its own `::before`
+  scene), and `[data-iw-panel]` — **`classifyActivityPanels` also writes
+  `section-frame`**, on hosts that ARE `.panel`s, so Current Action / Action Log
+  / World Chat suddenly had two writers on one attribute. That is the boss-card
+  flash again, in a nastier form: the two stale-clear loops delete each other's
+  mark. Fixed three ways, all needed — activity panels now run BEFORE section
+  frames in `discover()` so the marker exists to test; the exclusion is in the
+  validity guard so a late-resolving activity host is released; and the
+  stale-clear `continue`s on an owned node instead of stripping someone else's
+  mark.
+- **Modal cards must be excluded, and the tag alone is not enough.**
+  OverlayFramer owns those (it draws on the border box only because they are
+  their own scroll container). `inOverlay()` checks its
+  `data-iw-overlay` tags *and* falls back to "inside a `position: fixed`
+  layer", because OverlayFramer runs on the SAME `iw:dom-flush` — keying only
+  on the tag leaves a one-flush window where a card takes both treatments, the
+  two-writers-on-one-node flash the boss cards already taught us. The exclusion
+  is in the validity guard too, or a card framed during that window would stay
+  framed forever.
+- Nesting is unchanged and still CSS's job (below).
+
+**Panels nest inside layout columns.** The classifier marks
+`data-iw-ui="section-frame"` on containers as well as panels — a `.panel` that
+wraps other `.panel`s is a layout column. Frame the **leaf** only:
+`:is(…):not(:has(:is(…)))`, and strip anything that matched a column. See
+`tests/panel-frame-nesting.test.mjs`. Telling them apart is purely structural
+now, which is what let the heading walk's "substantial" size heuristic go: an
+async panel (Quests) that was empty at first classify used to fail it, and the
+walk fell through to the multi-panel column, which the `:has()` rule then
+stripped bare. `sectionFrameResolutionValid` still re-resolves any frame that
+is not a `.panel` but contains one, for the orphan-heading fallback path.
+`classifyActivityPanels` also matches a **non-heading leaf label** ("Action Log"
+is not an `<h1–4>`), and both classifiers resolve which mirror copy is live via
+`Viewport.preferRendered` — see the hidden-duplicate trap above for why that
+must be rendered-state, not a class name.
 
 **A card's TITLE verb and its BUTTON verb can disagree, and that costs the
 whole card.** Live Smithing (2026-09) renders "🛠️ Craft Voidiron Reinforcement
@@ -220,11 +269,15 @@ Leaderboards, Salvaging, Zone Control. NOT reached at all: **Equipment Window**
 equipped"`, `"Nothing equipped in this slot"`, and critically `"Upgrade vs
 equipped"` / `"Downgrade vs equipped"` — that comparison is STATE and rule 5
 applies the moment the skin touches it), **Mailbox**, **Notifications**,
-**Settings**, **Supporter Pack**, **Invite Friends**, **Profile**, and the
-**Dungeon** route's own panels (`"Leave Dungeon"`, `"⚔️ Raid Dungeon"`,
-`"⏳ Prejoined"`). `NAV_LABELS` includes `dungeon` so the tab is framed, but
-`SECTION_FRAME_NAMES` does not, so nothing inside that route is. The five
+**Settings**, **Supporter Pack**, **Invite Friends**, **Profile**. The five
 header utility buttons ARE skinned generically; the panels they open are not.
+**Update (frames):** every route's panels — Village's sub-panels, Market's,
+Leaderboards', and the **Dungeon** route (`"Leave Dungeon"`, `"⚔️ Raid
+Dungeon"`, `"⏳ Prejoined"`), which nothing inside used to reach — now get the
+forged frame, because the trigger moved from `SECTION_FRAME_NAMES` to the
+`.panel` primitive (see the section-frame note above). That is the outer chrome
+only: the CONTENTS of these panels are still un-classified, so anything above
+that wants row/control treatment still needs its own classifier.
 **Update:** any of these that renders as a real modal (a viewport-covering
 `fixed` backdrop wrapping a card) now gets the shared forged FRAME from
 `OverlayFramer` — the outer chrome only. Their contents are still
@@ -246,6 +299,99 @@ branch, which told the player that control does nothing — rule 5 in its
 affordance form (the click still worked; nothing on screen said so). `cursor` is
 now per-node via `readoutCursor()`: `pointer` for a real control in the branch,
 `default` for the inert wrappers. Do not fold it back into `READOUT_STYLES`.
+
+**The Current Action bar's one-tick head start is fixed by a TRANSITION, not by
+recomputing progress.** The game writes the fill's `width: N%` once per tick and
+the value it writes is the progress at the END of the tick that just started, so
+the bar renders a staircase whose first step is already a whole tick in ("it
+starts at 1s elapsed, not 0s"). A LINEAR transition on
+`[data-iw-panel-part="progress"] > *` whose duration EQUALS the tick does not
+merely soften that staircase, it cancels the offset exactly: at tick k the game
+sets `(k+1)/T`, the transition runs from the previous target `k/T` to `(k+1)/T`
+over one tick, so the width shown at time t is `k/T + (t-k)/T = t/T` — the true
+elapsed fraction at every instant. The skin therefore never computes or writes a
+progress value; the action's duration (housing tier and the rest) stays entirely
+the game's, which is also rule 5. Three things this depends on:
+
+- **The duration must be the real update interval.** Guess it long and the bar
+  lags every step; guess it short and it completes early and stalls. So
+  `UIFoundation.smoothActionProgress()` measures the interval between actual
+  width WRITES (median of five, ignoring flushes where the width did not
+  change) and writes it CONTINUOUSLY — as an inline `--iw-progress-duration`
+  custom property on the track, not a snap to one of a few fixed buckets — with
+  a `PROGRESS_LEAD_BIAS` (1.12x) baked in. The bias exists because a duration
+  that matches the measured tick EXACTLY still visibly stutters: real per-tick
+  timing jitters around its nominal value (live capture: a "250ms" tick
+  actually landed anywhere from 208-335ms), so an exact-match transition
+  finishes early roughly half the time and the bar sits dead-still for the
+  remainder before the next real update arrives. Overshooting slightly means
+  the transition is almost always still in flight when that update lands, so
+  the browser smoothly RETARGETS it — continuous velocity change, no
+  positional jump or pause — and it never compounds, because every real update
+  still snaps the target to the server's own value; any instant the bar is
+  fractionally behind self-corrects at the very next tick. `--iw-action-tick`
+  in `base.css` is only the pre-measurement fallback, used before a panel has
+  the 3 samples `commitProgressDuration()` needs. `claude/probe-action-progress.js`
+  is the read-only capture that reports the live tick, the step size, the
+  derived action duration and whether the head start is really one whole step.
+- **The completion reset is not a tick.** Once per action the width drops back
+  to the start of the next repetition; interpolating THAT slides the bar
+  backwards across a whole tick over an action already running.
+  `smoothActionProgress` tags the drop `data-iw-progress-reset` (released on the
+  next frame, not the next flush — a whole tick of suppression would un-smooth
+  the new action's first step) and the CSS snaps instead.
+- **The reset tag rides on `data-iw-*`; the duration deliberately does NOT.**
+  DOMWatcher observes with `attributeFilter:
+  ['class','style','disabled','aria-disabled']`, so a `data-iw-*` write is
+  invisible to it (that's why `data-iw-progress-reset` is one) but a `style`
+  write is not: `commitProgressDuration()` writing `--iw-progress-duration`
+  inline DOES queue an `attr:style` context on that node every time the
+  duration actually moves. That was a real reason the earlier bucketed design
+  avoided any inline write at all, and it is still true here — the difference
+  is what the induced re-entrant `smoothActionProgress()` call does: it reads
+  the SAME `pct` as before and returns immediately via the epsilon guard, so
+  the extra flush is bounded to one harmless pass through classifiers that are
+  already on their cached fast path (the flush-path caching work elsewhere in
+  this file), not a new category of cost or a loop. `PROGRESS_DURATION_EPSILON_MS`
+  (15ms) additionally skips the write on ordinary jitter around a stable rate,
+  so most ticks of a settled action cause no extra flush at all.
+
+`base.css` already carries a blanket `* { transition: none !important }` under
+`prefers-reduced-motion`, but `ui-system.css` is injected LAST and its selector
+is more specific, so the opt-out has to be restated there.
+
+**A completion's OWN first tick is a second anomaly the measurement must not
+learn from either.** `claude/probe-action-progress.js` against a real session
+(2026-09) confirmed the design above — steady tick and step size agreed with
+the derived action duration to within measurement noise, and the value written
+right after a reset really did sit ~one step above a linear back-extrapolation
+of the surrounding ticks. But it also turned up something the design didn't
+anticipate: the gap between the reset write and the FIRST write of the new
+action was consistently ~2x the steady tick (~500ms against a steady 250ms),
+across every single completion in the capture. `smoothActionProgress` used to
+compute that delta the same as any other and push it straight into the
+5-sample window feeding the bucket median — on a long action (many ticks per
+cycle) enough clean samples buried it, but on a SHORT action (a fast, low
+housing-tier action, few ticks per cycle) that one polluted sample can be half
+the window, and the median swings to the wrong bucket right as the action
+resumes — exactly the moment getting it right matters most. Worked out by hand
+(a 5-entry median seeded with the poisoned delta) and reproduced in
+`tests/smoke.test.mjs`: three cycles of [reset, poison tick, steady tick]
+flips the unfixed algorithm to the wrong bucket right after the third cycle's
+poison tick, before that cycle's own steady tick can correct it. The fix is
+`state.afterReset`: set on a reset, it excludes exactly the ONE delta that
+spans the reset (the delta AFTER that one is a real interval again, so
+`state.at` still advances through it). Note for anyone re-measuring this test:
+the fixture's OTHER Current Action panel (`current-action-no-queue-progress`)
+had to be used, not the first one, because the drift/relabel test earlier in
+this file deletes that first panel's `dataset.iwPanel` to simulate a React
+remount and — a known, separate limitation of `classifyActivityPanels`'s
+coverage tracking, which is keyed by panel SLUG rather than by host — never
+gets it back, since some OTHER host already satisfies the 'current-action'
+slug. Real wall-clock intervals in that test are scaled to ~1s/2s rather than
+the true 250ms/500ms, specifically so this harness's own flush/rAF latency
+(tens to low hundreds of ms, confirmed by a failed first attempt at this test)
+cannot be mistaken for the signal under test.
 
 **Adding a skill IdleWorlds ships later touches five places, and the icon
 atlas is full.** Woodcutting (`Wood` / CHOP) and Construction (`Build` /
@@ -316,6 +462,23 @@ is 34 — bump it when art past 34 lands. `tests/zone-headers.test.mjs` pins tha
 every zone 1..34 has BOTH files; `tests/smoke.test.mjs` pins both vars set +
 torn down; `render-fixtures.mjs` verifies the media-query swap by filename at
 390px vs 1400px.
+
+**The zone label is GAME-ROUTE ONLY, so the zone has to be REMEMBERED.** Both
+consumers — `applyZoneSurface` (header artwork) and `applyZoneTheme` (the whole
+`--iw-th-*` palette on `<html>`) — read it from the `data-iw-ui="zone-title"`
+label, which lives in the zone bar, which only the Game route mounts. Reading it
+fresh every flush therefore returned null the moment the player opened Market,
+Village, Leaderboards or Dungeon: the header fell back to the generic
+`header_surface.webp` and `<html>` was reset to `data-iw-zone-theme="default"`,
+so **every tab except Game rendered un-themed** while Game looked right — which
+reports as "the theme doesn't work on the other pages", not as a zone-resolution
+bug, and it hid behind the fact that the Game route always looked correct.
+`currentZoneNumber()` now keeps the last value it actually read
+(`lastZoneNumber`): the player's zone is game state and does not change because
+they opened a tab. `clearHeaderRenderer()` resets it, so the kill switch leaves
+nothing behind. Pinned across all four routes in
+`tests/route-swap-reclassify.test.mjs` — drop the cache and eight checks fail
+with `theme=default` plus the fallback surface.
 
 `zone_1..34.webp` (wide) and `zone_1..34_mobile.webp` (portrait) are the real
 hand-painted headers, imported from the sibling sprites repo
@@ -408,17 +571,63 @@ literal: every state / identity colour — requirement-unmet red `#D58282`,
 tier `--iw-t-*`, `--iw-good/bad/info`, the `.fs-cat-*` inventory category hues,
 `.fs-inv-row.is-equipped` brass (rule 5 — it's the equipped signal, and a
 themed blue would collide with the gear-category rail), `.iw-xp__fill--ready`
-green, `--hd-teal*` zone-control team colour, and the near-neutral structural
-darks (`#2A241A`, `#3A3225`, …) which read fine untinted. The ground gets a
+green, and `--hd-teal*` zone-control team colour. The ground gets a
 faint additive `--iw-th-ground-wash` layer (prepended to the `background:`
 shorthand; `transparent` un-themed = no-op).
+
+**The INNER frames are a derived scale, not nine more hand-picked rows.** The
+"near-neutral structural darks read fine untinted" call above was wrong at page
+scale: `--iw-th-edge` themed the panel's OUTER 1px frame while every box inside
+it — the feed, the queue, the progress track, tooltip section rules, the nav
+rail, the skill/inventory control plates — stayed brass-brown, so a glacial or
+voidborn zone rendered a blue panel full of brown boxes. `base.css` now carries
+a three-step scale under the accent layer, `--iw-th-edge-mid` (inner box frame)
+/ `-soft` (recessed plate, rail, column rule) / `-faint` (hairline divider,
+control plate edge), and ~45 literal hexes across the five injected sheets read
+it. Details that matter:
+
+- The nine palettes declare **only** `--iw-th-edge`; ONE
+  `:root[data-iw-zone-theme]` block (bare attribute, no name) derives the whole
+  scale from it with `color-mix(… , var(--iw-ink-850))`, so a palette added
+  later inherits the frames for free. Custom properties resolve lazily, so
+  source order against the palette blocks is irrelevant — both are `(0,1,1)`
+  and they never declare the same token.
+- The `:root` defaults are the exact stock hexes, so a zone that has not
+  classified yet still draws the brass frame it always did.
+- `--iw-line` / `--iw-line-hi` are re-pointed in that same block **on purpose**:
+  `base.css` feeds them to the game's own Tailwind tokens (`--border`,
+  `--panel-border`, `--surface-border`, `--sidebar-border`), so this is what
+  carries the zone colour into every edge the skin never classified.
+- `SkillPanelRenderer.FORGE` writes the skill control plate INLINE with
+  `!important`, which no stylesheet can override — its `border` / `liveBorder`
+  are therefore `var(--iw-th-edge-faint, …)` / `var(--iw-th-brass, …)` strings.
+  An inline `var()` still resolves against the cascade, so the `<html>` attribute
+  reaches it. The CSS mirror (`--fs-forge-line`) and the `render-fixtures.mjs`
+  copy must move with it — all three, as ever.
 
 Verification: `render-fixtures.mjs` now cycles all nine palettes on `<html>`,
 asserts each one actually re-points the tokens (not a silent fall-through) and
 that accent text keeps ≥3:1 on the ground, and writes `fixtures/themes.png`.
 `tests/zone-themes.test.mjs` pins that every theme has a `:root[data-…]` block
-defining the core tokens. `tests/smoke.test.mjs` still pins the `<html>`
-attribute + teardown from phase 1.
+defining the core tokens, plus the derived frame block. `tests/smoke.test.mjs`
+still pins the `<html>` attribute + teardown from phase 1.
+
+**Two check-shaped traps this layer produced, both the "a check that cannot
+fail" family:**
+
+- **A computed custom property is the un-evaluated token stream.** Reading
+  `getComputedStyle(html).getPropertyValue('--iw-th-edge-mid')` returns the
+  literal `color-mix(in srgb, #123C48 66%, #10100D)` TEXT, not a colour — an
+  unregistered custom property is not resolved at computed-value time. That
+  string differs per theme, so a distinctness check on it passes even when the
+  expression is malformed and paints nothing. `render-fixtures.mjs` therefore
+  paints the tokens onto a probe's four `border-*-color`s and reads those back,
+  which always resolve to a real colour.
+- **`/--iw-th-edge\b/` also matches `--iw-th-edge-soft`** — `-` is a word
+  boundary — so the "every derived token is a function of `--iw-th-edge`" count
+  stayed above its floor with a token pinned back to a literal, and the negative
+  control passed when it should have failed. The test matches
+  `/var\(--iw-th-edge\)/` exactly.
 
 Not themed: the standalone `skills_xp_plaque_wide.webp` (a `border-image`
 source — would need nine sliced sheets like the corner filigree) and

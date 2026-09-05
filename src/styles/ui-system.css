@@ -295,7 +295,7 @@
   height: 10px !important;
   min-height: 10px !important;
   overflow: hidden !important;
-  border: 1px solid #342D22 !important;
+  border: 1px solid var(--iw-th-edge-soft) !important;
   border-radius: 999px !important;
   background: #090A09 !important;
   box-shadow: inset 0 1px 3px rgba(0,0,0,.9) !important;
@@ -307,6 +307,42 @@
   border-radius: inherit !important;
   background: linear-gradient(90deg, var(--iw-th-hairline-hi) 0%, var(--iw-th-cta-hi) 52%, var(--iw-th-cta) 100%) !important;
   box-shadow: 0 0 8px rgba(222,102,69,.28) !important;
+  /* The game writes this fill's `width: N%` once per tick, and the value it
+     writes is the progress at the END of the tick that just started -- so a
+     bare render shows a staircase whose first step is already a whole tick in
+     ("it starts at 1s elapsed, not 0s").
+
+     A LINEAR transition whose duration equals the tick does not merely soften
+     that staircase, it cancels the offset exactly. At tick k the game sets
+     (k+1)/T and the transition runs from the previous target k/T to (k+1)/T
+     over one tick, so the width displayed at time t is k/T + (t-k)/T = t/T --
+     the true elapsed fraction, at every instant, with no JS driving it and no
+     second source of truth for a value that is the game's (rule 5).
+
+     `--iw-progress-duration` is UIFoundation.smoothActionProgress()'s live
+     measurement of the real update interval (continuous, not a snap to one
+     of a few fixed buckets -- see commitProgressDuration for why), with a
+     small deliberate overshoot baked in so the tween is still animating when
+     the next real update lands rather than pausing to wait for it. Until a
+     panel has measured enough ticks to commit one, `--iw-action-tick` (a
+     plain guessed default, in base.css) is what applies. */
+  transition: width var(--iw-progress-duration, var(--iw-action-tick, 1s)) linear !important;
+  will-change: width !important;
+}
+
+/* One update per action is NOT a tick: when the action completes the width
+   drops back to the start of the next repetition. Interpolating that would
+   slide the bar backwards across a whole tick while the new action is already
+   running. UIFoundation tags the drop and the bar snaps instead. */
+[data-iw-panel-part="progress"][data-iw-progress-reset] > * {
+  transition: none !important;
+}
+
+/* base.css already carries a blanket `* { transition: none !important }` here,
+   but this sheet is injected last and its selector is more specific, so the
+   opt-out has to be restated. */
+@media (prefers-reduced-motion: reduce) {
+  [data-iw-panel-part="progress"] > * { transition: none !important; }
 }
 
 [data-iw-panel-part="queue"] {
@@ -316,7 +352,7 @@
   gap: 4px 10px !important;
   min-width: 0 !important;
   padding: 10px 12px !important;
-  border: 1px solid #463720 !important;
+  border: 1px solid var(--iw-th-edge-mid) !important;
   border-radius: 3px !important;
   background:
     linear-gradient(180deg, rgba(255,255,255,.022), transparent 45%),
@@ -352,12 +388,12 @@
   min-width: 0 !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
-  border: 1px solid #4A3820 !important;
+  border: 1px solid var(--iw-th-edge-mid) !important;
   border-radius: 3px !important;
   background-color: #0B0C0A !important;
   background-image: linear-gradient(180deg, rgba(255,255,255,.018), transparent 22%) !important;
   box-shadow: inset 0 0 18px rgba(0,0,0,.24) !important;
-  scrollbar-color: #4A3820 #11110E !important;
+  scrollbar-color: var(--iw-th-edge-mid) #11110E !important;
   scrollbar-width: thin !important;
 }
 
@@ -394,7 +430,7 @@
   margin: 0 !important;
   padding: 8px 12px !important;
   border: 0 !important;
-  border-bottom: 1px solid #29251D !important;
+  border-bottom: 1px solid var(--iw-th-edge-faint) !important;
   border-radius: 0 !important;
   background: transparent !important;
   font-size: 12px !important;
@@ -454,11 +490,11 @@
    so only it keeps this hook. */
 [data-iw-panel="world-chat"] .feed-panel {
   background: #0B0C0A !important;
-  border-color: #29251D !important;
+  border-color: var(--iw-th-edge-faint) !important;
 }
 [data-iw-panel="action-log"] .feed-panel {
   background: transparent !important;
-  border-color: #29251D !important;
+  border-color: var(--iw-th-edge-faint) !important;
 }
 
 [data-iw-panel="world-chat"] [data-iw-panel-part="feed-row"] strong {
@@ -485,7 +521,7 @@
   min-width: 0 !important;
   height: 42px !important;
   padding: 0 13px !important;
-  border: 1px solid #403522 !important;
+  border: 1px solid var(--iw-th-edge-mid) !important;
   border-radius: 3px !important;
   background: #080A09 !important;
   color: var(--iw-text) !important;
@@ -554,7 +590,7 @@
   min-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  border: 1px solid #3A3225 !important;
+  border: 1px solid var(--iw-th-edge-soft) !important;
   border-radius: 3px !important;
   background: #11100D !important;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.52) !important;
@@ -568,7 +604,7 @@
   margin: 0 !important;
   padding: 0 16px !important;
   border: 0 !important;
-  border-right: 1px solid #3A3225 !important;
+  border-right: 1px solid var(--iw-th-edge-soft) !important;
   border-radius: 0 !important;
   background: linear-gradient(180deg, #211E18, #16140F) !important;
   color: #AAA291 !important;
@@ -648,9 +684,9 @@
    buttons (data-iw-quest-role turn-in / skip), whose skillpanel.css art rules
    were tuned to clear the shorter chain, are excluded here too rather than
    chased with an ever-higher `html …` override. */
-button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]),
-[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]) {
-  border-color: #2A241A !important;
+button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]),
+[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]) {
+  border-color: var(--iw-th-edge-faint) !important;
   background-image: linear-gradient(180deg, rgba(255,255,255,.035), rgba(0,0,0,.28)) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.045),
@@ -662,8 +698,8 @@ button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved
    `color`, because a button's own text colour is frequently live state (the
    ember active-filter tab, red/green market steppers) and repainting it here
    would delete that meaning (rule 5). */
-button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):hover,
-[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):hover {
+button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):hover,
+[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):hover {
   border-color: var(--iw-line-hot) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.055),
@@ -694,15 +730,15 @@ button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved
   min-height: 26px;
 }
 
-button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):disabled,
-[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([class*="chat-name-"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]) {
+button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):disabled,
+[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]) {
   filter: saturate(.58) brightness(.84) !important;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.22) !important;
 }
 
 input[type="search"],
 input[placeholder*="Search" i] {
-  border: 1px solid #30291E !important;
+  border: 1px solid var(--iw-th-edge-soft) !important;
   border-bottom-color: var(--iw-line-hi) !important;
   border-radius: 2px !important;
   background: linear-gradient(180deg, #080A0A, #0D0E0C) !important;

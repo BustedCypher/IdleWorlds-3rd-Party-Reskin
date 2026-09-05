@@ -87,5 +87,36 @@ for (const theme of used) {
   check(`palette "${theme}" defines the core --iw-th-* tokens`, missing.length === 0, `missing: ${missing.join(', ')}`);
 }
 
+// 7. The inner frame scale. The nine palettes above set --iw-th-edge and nothing
+//    else about frames; everything the skin draws INSIDE a panel (feed, queue,
+//    progress track, stat plate, row divider) steps down from it in ONE derived
+//    block keyed on the bare attribute, so a palette added later inherits the
+//    whole scale. Without it the page mixes a themed outer frame with
+//    brass-brown inner boxes in every zone -- and because the fallback values
+//    are real colours, nothing errors and nothing looks broken up close.
+//    Negative control: delete the block, or one token from it, and this fails.
+//    render-fixtures.mjs proves the derived values actually PAINT per theme
+//    (a computed custom property would report the un-evaluated color-mix text).
+const derived = baseCss.match(/:root\[data-iw-zone-theme\]\s*\{([^}]*)\}/);
+check('base.css derives the inner frame scale off --iw-th-edge for every theme', !!derived);
+if (derived) {
+  const DERIVED_TOKENS = ['--iw-th-edge-mid', '--iw-th-edge-soft', '--iw-th-edge-faint', '--iw-line', '--iw-line-hi'];
+  const missing = DERIVED_TOKENS.filter(tok => !derived[1].includes(tok + ':'));
+  check('the derived block re-points the whole inner frame scale', missing.length === 0,
+    `missing: ${missing.join(', ')}`);
+  // Match `var(--iw-th-edge)` exactly, not /--iw-th-edge\b/ -- the latter also
+  // matches --iw-th-edge-soft (the `-` is a word boundary), so the count stayed
+  // high enough to pass with a token pinned back to a literal. A check that
+  // cannot fail is not a check.
+  check('every derived frame token is a function of --iw-th-edge',
+    (derived[1].match(/var\(--iw-th-edge\)/g) || []).length >= 4,
+    'a token pinned to a literal would not follow the zone');
+}
+// The stock values stay in :root as the pre-classification fallback -- a zone
+// that has not resolved yet must still draw a frame, not `unset`.
+for (const tok of ['--iw-th-edge-mid', '--iw-th-edge-soft', '--iw-th-edge-faint']) {
+  check(`${tok} has an un-themed :root default`, new RegExp(`${tok}:\\s*#[0-9A-Fa-f]{6}`).test(baseCss));
+}
+
 console.log(fail === 0 ? '\nPASS' : `\nFAIL — ${fail} problem(s)`);
 process.exit(fail === 0 ? 0 : 1);

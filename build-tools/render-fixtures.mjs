@@ -196,10 +196,10 @@ const SKILL_LEVELS = {
 // SkillPanelRenderer.js verbatim; all three copies move together.
 const FORGE = {
   bg: 'linear-gradient(180deg, #100E0A, #0A0907)',
-  border: '1px solid #2A241A',
+  border: '1px solid var(--iw-th-edge-faint, #2A241A)',
   shadow: 'inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)',
   liveBg: 'linear-gradient(180deg, #1B150B, #120E07)',
-  liveBorder: '1px solid #8A6B2E',
+  liveBorder: '1px solid var(--iw-th-brass, #8A6B2E)',
   // The live button's glow is mixed from the inherited `--fs-skill-accent` so it
   // carries discipline colour; ember `#D8791F` is the pre-classify fallback.
   liveShadow: 'inset 0 0 12px -2px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 55%, transparent), ' +
@@ -242,6 +242,15 @@ const skillPanel = ({ type, label, title, pct, xp, reward, ingredients, requirem
     ? (String(rewardText).match(/[\d,]+/)?.[0]?.replaceAll(',', '') || String(xp).replaceAll(',', ''))
     : String(xp).replaceAll(',', '');
   const action = title.split(/\s+/)[0].toUpperCase();
+  const ingredientItems = !ingredients ? [] : (Array.isArray(ingredients)
+    ? ingredients
+    : [{ text: `${ingredients} 12/20`, state: 'unmet' }]);
+  const ingredientText = ingredientItems.map(item => item.text).join(' • ');
+  const ingredientMarkup = ingredientItems.length ? `
+      <div data-iw-skill-role="ingredient" data-iw-ingr="1" data-iw-ingredient-list-source="1">${ingredientText}</div>
+      <div class="fs-skill-ingredient-grid" data-iw-skill-ingredient-list="1" role="list" aria-label="Required materials">
+        ${ingredientItems.map(item => `<span class="fs-skill-ingredient-item" data-iw-ingredient-state="${item.state}" role="listitem">${item.text}</span>`).join('')}
+      </div>` : '';
   return `
 <div class="compact-panel fs-skill-panel fs-skill--${type}" data-iw-skill-layout="three-zone" data-iw-skills-ui-ready="1" style="margin-bottom:8px;${SKILL_UI_STYLE}">
   <div data-iw-skill-layout-shell="1">
@@ -257,7 +266,7 @@ const skillPanel = ({ type, label, title, pct, xp, reward, ingredients, requirem
       <div><div data-iw-skill-role="action-title" data-iw-clean-text="${title}">${title}</div><div data-iw-skill-role="level-progress" data-iw-progress-display="Lv ${level} • 12,480 XP to go">Lv ${level} - ${pct}% • 12,480 XP to go</div>${nav && navIn === 'content' ? navMarkup : ''}</div>
       <div data-iw-skill-role="xp-gain">+${xp} XP</div>
       <div data-iw-skill-role="progress-track"><div data-iw-skill-role="progress-fill" style="width:${pct}%"></div></div>
-      ${ingredients ? `<div data-iw-skill-role="ingredient"><span class="iw-item-ref">${ingredients}</span> 12/20</div>` : ''}
+      ${ingredientMarkup}
       <span class="fs-skill-base-exp" data-iw-base-exp="${baseExp}">Base: ${baseExp}</span>
       <div data-iw-skill-role="requirement">${requirementText}</div>
       <div data-iw-skill-role="reward">Base reward: ${rewardText}</div>
@@ -505,13 +514,27 @@ ${skillPanel({ type: 'smithing', label: 'Smithing', title: 'Forge Iron Sword', p
 ${skillPanel({ type: 'gathering', label: 'Gathering', title: 'Harvest Duskroot', pct: 45, xp: '150' })}
 ${skillPanel({ type: 'alchemy', label: 'Alchemy', title: 'Brew ATK Potion', pct: 12, xp: '260' })}
 </div><div>
-${skillPanel({ type: 'jewelcrafting', label: 'Jewel', title: 'Craft Moonstone Ring', pct: 16.6, xp: '1253', ingredients: 'Moonstone / Sapphire / Topaz', requirement: 'Requires Jewelcrafting Lv 53', detail: 'Missing materials — will queue (gather first)' })}
+${skillPanel({ type: 'jewelcrafting', label: 'Jewel', title: 'Craft Moonstone Ring', pct: 16.6, xp: '1253', ingredients: [
+  { text: '💎 Moonstone 1/1', state: 'met' },
+  { text: '💎 Sapphire 0/1', state: 'unmet' },
+  { text: '💎 Topaz 0/1', state: 'unmet' },
+], requirement: 'Requires Jewelcrafting Lv 53', detail: 'Missing materials — will queue (gather first)' })}
 ${skillPanel({ type: 'spellcrafting', label: 'Spellcraft', title: 'Harvest Moonsteel Mana', pct: 94.6, xp: '124', requirement: 'Requires Spellcraft Lv 53', detail: 'Gather Moonsteel Mana from the ether' })}
-${skillPanel({ type: 'tailoring', label: 'Tailor', title: 'Upgrade Moonsilk Silkbind Thread', pct: 21, xp: '5638', ingredients: 'Moonsilk Silkbind Thread / Moonsteel Upgrade Orb', requirement: 'Requires Tailoring Lv 53 and Gathering Lv 49', navIn: 'content' })}
+${skillPanel({ type: 'tailoring', label: 'Tailor', title: 'Upgrade Moonsilk Silkbind Thread', pct: 21, xp: '5638', ingredients: [
+  { text: '🔷 Moonsilk Silkbind Thread 0/3', state: 'unmet' },
+  { text: '🔴 Moonsteel Upgrade Orb 0/1', state: 'unmet' },
+], requirement: 'Requires Tailoring Lv 53 and Gathering Lv 49', navIn: 'content' })}
 ${skillPanel({ type: 'crafting', label: 'Crafting', title: 'Craft Upgrade Orb', pct: 33, xp: '190' })}
 ${skillPanel({ type: 'fishing', label: 'Fishing', title: 'Fish Abyssal Eel', pct: 67, xp: '220' })}
 ${skillPanel({ type: 'woodcutting', label: 'Wood', title: 'Chop Runic Oak', pct: 0.5, xp: '35', requirement: 'Needs level 29', nav: false })}
-${skillPanel({ type: 'construction', label: 'Build', title: 'Craft Runite Building Parts', pct: 52, xp: '461', ingredients: 'Runic Oak 473/16 / Runite Ore 19318/8', requirement: 'Needs Construction Lv 29 + Woodcutting Lv 25' })}
+${skillPanel({ type: 'construction', label: 'Build', title: 'Craft Runite Building Parts', pct: 52, xp: '461', ingredients: [
+  { text: '🧱 Voidiron Building Parts 2205/2200', state: 'met' },
+  { text: '🧱 Voidbark 14304/12100', state: 'met' },
+  { text: '🪨 Voidiron Ore 2545/6050', state: 'unmet' },
+  { text: '📦 Silver Building Parts 0/120', state: 'unmet' },
+  { text: '📦 Obsidian Building Parts 51/280', state: 'unmet' },
+  { text: '📦 Runite Building Parts 528/320', state: 'met' },
+], requirement: 'Needs Construction Lv 29 + Woodcutting Lv 25' })}
 </div></div>
 
 <div class="fx-h">Quest cards — forged into the skill-frame family</div>
@@ -916,6 +939,8 @@ const auditResponsive = async width => {
     const navPanels = panels.filter(el => el.querySelector('[data-iw-skill-role="nav-group"]'));
     const navButtons = panels.flatMap(el => [...el.querySelectorAll('[data-iw-skill-role="nav-button"]')]);
     const basePlaques = panels.map(el => el.querySelector('.fs-skill-base-exp')).filter(Boolean);
+    const ingredientGrids = panels.flatMap(el => [...el.querySelectorAll('.fs-skill-ingredient-grid')]);
+    const ingredientSources = panels.flatMap(el => [...el.querySelectorAll('[data-iw-ingredient-list-source="1"]')]);
     const activityPanels = [...document.querySelectorAll('.fx-activity-panels > [data-iw-panel]')];
     const activityWrapper = document.querySelector('.fx-activity-panels');
     const activityWrapperRect = activityWrapper?.getBoundingClientRect();
@@ -954,6 +979,9 @@ const auditResponsive = async width => {
         .filter(el => el.scrollWidth > el.clientWidth + 1)
         .map(el => ({ type: el.className, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth })),
       maxSkillHeight: Math.max(...panels.map(el => el.getBoundingClientRect().height)),
+      ingredientGridColumns: ingredientGrids.map(el => getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length),
+      ingredientSourcesHidden: ingredientSources.length === ingredientGrids.length &&
+        ingredientSources.every(el => getComputedStyle(el).display === 'none'),
       medallionsVisible: medallions.length === panels.length && medallions.every(el => {
         const minSize = viewportWidth <= 640 ? 38 : 44;
         const rect = el.getBoundingClientRect();
@@ -1122,6 +1150,13 @@ const auditResponsive = async width => {
     throw new Error(`long Inventory name exceeded its two-line cap at ${width}px: ${audit.longNameLines.toFixed(2)}`);
   }
   if (!audit.skillCount || audit.skillOverflow) throw new Error(`skill panels overflow at ${width}px: ${JSON.stringify(audit.skillOverflowDetails)}`);
+  const expectedIngredientColumns = width <= 430 ? 1 : 2;
+  if (!audit.ingredientGridColumns.length || audit.ingredientGridColumns.some(count => count !== expectedIngredientColumns)) {
+    throw new Error(`skill material grids use the wrong column count at ${width}px: expected ${expectedIngredientColumns}, got ${audit.ingredientGridColumns.join(',')}`);
+  }
+  if (!audit.ingredientSourcesHidden) {
+    throw new Error(`native skill material rows remain visible beside their generated lists at ${width}px`);
+  }
   if (!audit.medallionsVisible || !audit.medallionsPainted || !audit.identityLevelsVisible) {
     throw new Error(`skill identity card is incomplete at ${width}px: ${JSON.stringify(audit)}`);
   }
@@ -1154,7 +1189,10 @@ const auditResponsive = async width => {
   // ~56px control row that the old desktop three-column layout did not, so
   // the desktop ceiling is raised to suit. The 44px touch target inside that
   // row is NOT shrunk to buy space back — it is the floor this suite enforces.
-  const maxSkillHeight = width <= 640 ? 320 : 260;
+  // A six-resource recipe deliberately becomes six stacked cells at phone
+  // widths. That trades card height for readable, individually separated
+  // requirements; wider cards recover the space through the two-column grid.
+  const maxSkillHeight = width <= 430 ? 460 : width <= 640 ? 340 : 290;
   if (audit.maxSkillHeight > maxSkillHeight) {
     throw new Error(`skill cards are too tall at ${width}px: ${audit.maxSkillHeight}px (max ${maxSkillHeight}px)`);
   }
@@ -1278,6 +1316,25 @@ const themeReport = await p.evaluate((themes) => {
   probe.textContent = 'accent';
   (document.querySelector('[data-iw-ui="section-frame"]') || document.body).appendChild(probe);
 
+  /* The inner frame scale is derived with color-mix(), and an UNREGISTERED
+     custom property's computed value is the un-evaluated token stream — so
+     reading --iw-th-edge-mid off <html> would report the color-mix() source
+     text and "pass" even if the expression were malformed and painted nothing.
+     Paint it instead: a border-*-color always resolves to rgb(), so this reads
+     the colour the user actually sees. One probe carries all four. */
+  const frameProbe = document.createElement('span');
+  frameProbe.style.borderStyle = 'solid';
+  frameProbe.style.borderWidth = '1px';
+  frameProbe.style.borderTopColor = 'var(--iw-th-edge-mid)';
+  frameProbe.style.borderRightColor = 'var(--iw-th-edge-soft)';
+  frameProbe.style.borderBottomColor = 'var(--iw-th-edge-faint)';
+  frameProbe.style.borderLeftColor = 'var(--iw-line)';
+  document.body.appendChild(frameProbe);
+  const frames = () => {
+    const cs = getComputedStyle(frameProbe);
+    return [cs.borderTopColor, cs.borderRightColor, cs.borderBottomColor, cs.borderLeftColor].join(' ');
+  };
+
   const lum = c => {
     const [r, g, b] = c.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => {
       v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
@@ -1295,11 +1352,13 @@ const themeReport = await p.evaluate((themes) => {
   const GROUND = 'rgb(20, 19, 16)';
   const rows = [];
   const seen = new Set();
+  const seenFrames = new Set();
   for (const t of ['', ...themes]) {
     if (t) html.setAttribute('data-iw-zone-theme', t); else html.removeAttribute('data-iw-zone-theme');
     const cs = getComputedStyle(html);
     const accent = cs.getPropertyValue('--iw-th-accent').trim();
     const accentRGB = getComputedStyle(probe).color;
+    const frameSet = frames();
     rows.push({
       theme: t || 'default',
       accent,
@@ -1307,11 +1366,18 @@ const themeReport = await p.evaluate((themes) => {
       cta: cs.getPropertyValue('--iw-th-cta').trim(),
       distinct: !seen.has(accent),
       accentOnGround: Number(ratio(accentRGB, GROUND).toFixed(2)),
+      // The inner frames must move with the palette. A theme that reports the
+      // same painted quartet as another has fallen through to the stock
+      // brass-brown -- the exact failure the derived block exists to prevent.
+      frameMid: getComputedStyle(frameProbe).borderTopColor,
+      framesDistinct: !seenFrames.has(frameSet),
     });
     seen.add(accent);
+    seenFrames.add(frameSet);
   }
   html.removeAttribute('data-iw-zone-theme');
   probe.remove();
+  frameProbe.remove();
   return rows;
 }, THEME_NAMES);
 
@@ -1338,13 +1404,17 @@ await p.evaluate(() => document.documentElement.removeAttribute('data-iw-zone-th
 
 await browser.close();
 
-const themeFail = themeReport.filter(r => r.theme !== 'default' && (!r.distinct || r.accentOnGround < 3));
+const themeFail = themeReport.filter(r => r.theme !== 'default'
+  && (!r.distinct || !r.framesDistinct || r.accentOnGround < 3));
 
 console.log('\n── Fixture report ──────────────────────────────────');
-console.log('per-zone accent themes (accent · edge · cta · accent-on-ground contrast):');
+console.log('per-zone accent themes (accent · edge · cta · contrast · painted inner frame):');
 for (const r of themeReport) {
-  const flag = r.theme === 'default' ? ' ' : !r.distinct ? '✗ not re-pointed' : r.accentOnGround < 3 ? '✗ low contrast' : '✓';
-  console.log(`  ${flag.padEnd(16)} ${r.theme.padEnd(16)} ${r.accent}  ${r.edge}  ${r.cta}  ${r.accentOnGround}`);
+  const flag = r.theme === 'default' ? ' '
+    : !r.distinct ? '✗ not re-pointed'
+    : !r.framesDistinct ? '✗ frames not themed'
+    : r.accentOnGround < 3 ? '✗ low contrast' : '✓';
+  console.log(`  ${flag.padEnd(20)} ${r.theme.padEnd(16)} ${r.accent}  ${r.edge}  ${r.cta}  ${String(r.accentOnGround).padEnd(5)} ${r.frameMid}`);
 }
 console.log('unresolved custom properties:', report.unresolvedVars.length ? report.unresolvedVars : 'none');
 console.log('icon slots with a background-image:', report.iconsPainted, '| without:', report.iconsBlank);
