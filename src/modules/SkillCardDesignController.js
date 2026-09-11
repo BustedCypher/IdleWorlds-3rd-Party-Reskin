@@ -9,10 +9,24 @@ let bound = false, active = false, design = DEFAULT_SKILL_CARD_DESIGN;
 
 export const normalizeSkillCardDesign = value => designs.has(value) ? value : DEFAULT_SKILL_CARD_DESIGN;
 
+function setAttr(el, name, value) {
+  if (!el) return;
+  const next = String(value);
+  if (el.getAttribute(name) !== next) el.setAttribute(name, next);
+}
+function setData(el, key, value) {
+  if (!el) return;
+  const next = String(value);
+  if (el.dataset[key] !== next) el.dataset[key] = next;
+}
+function setText(el, value) {
+  if (el && el.textContent !== value) el.textContent = value;
+}
 function pressed(el, yes) {
   if (!el) return;
-  el.setAttribute('aria-pressed', yes ? 'true' : 'false');
-  el.setAttribute('aria-checked', yes ? 'true' : 'false');
+  const value = yes ? 'true' : 'false';
+  setAttr(el, 'aria-pressed', value);
+  setAttr(el, 'aria-checked', value);
 }
 function syncToggles(mode, root = document) {
   root.querySelectorAll?.('[data-iw-skill-design-toggle]').forEach(t => {
@@ -22,7 +36,9 @@ function syncToggles(mode, root = document) {
 }
 export function applySkillCardDesign(value, root = document.documentElement) {
   design = normalizeSkillCardDesign(value);
-  root?.setAttribute?.('data-iw-skill-card-design', design);
+  if (root?.getAttribute?.('data-iw-skill-card-design') !== design) {
+    root?.setAttribute?.('data-iw-skill-card-design', design);
+  }
   syncToggles(design, root?.ownerDocument || document);
   return design;
 }
@@ -67,13 +83,21 @@ function available(panel) {
   return tabs.filter(name => panel.querySelector(q[name]));
 }
 function markSections(panel) {
-  panel.querySelectorAll('[data-iw-skill-v2-section]').forEach(el => delete el.dataset.iwSkillV2Section);
+  const desired = new Map();
   for (const [name, selector] of [
     ['requirements','[data-iw-skill-role="requirement"]'],
     ['materials','[data-iw-skill-ingredient-list],.fs-skill-ingredient-grid'],
     ['details','[data-iw-skill-role="action-detail"]'],
     ['rewards','[data-iw-skill-role="reward"]'],
-  ]) panel.querySelectorAll(selector).forEach(el => el.dataset.iwSkillV2Section = name);
+  ]) panel.querySelectorAll(selector).forEach(el => desired.set(el, name));
+
+  panel.querySelectorAll('[data-iw-skill-v2-section]').forEach(el => {
+    const next = desired.get(el);
+    if (!next) delete el.dataset.iwSkillV2Section;
+    else if (el.dataset.iwSkillV2Section !== next) el.dataset.iwSkillV2Section = next;
+    desired.delete(el);
+  });
+  desired.forEach((name, el) => { el.dataset.iwSkillV2Section = name; });
 }
 function levelReadout(panel) {
   const zone = panel.querySelector('[data-iw-skill-zone="identity"]'); if (!zone) return;
@@ -81,15 +105,18 @@ function levelReadout(panel) {
   const pct = (panel.querySelector('.fs-skill-identity-percent')?.textContent || text).match(/(\d+(?:\.\d+)?)\s*%/);
   const lvl = text.match(/\bLv\s*([\d]+(?:\s*\+\s*\d+)?|-)/i);
   const value = pct ? Math.max(0, Math.min(100, Number(pct[1]))) : 0;
-  panel.style.setProperty('--iw-skill-v2-progress', `${Number.isFinite(value) ? value : 0}%`);
+  const progress = `${Number.isFinite(value) ? value : 0}%`;
+  if (panel.style.getPropertyValue('--iw-skill-v2-progress') !== progress) {
+    panel.style.setProperty('--iw-skill-v2-progress', progress);
+  }
   let out = zone.querySelector(':scope > [data-iw-skill-v2-level-readout]');
   if (!out) {
     out = document.createElement('span'); out.dataset.iwSkillV2LevelReadout = '1'; out.className = 'iw-skill-v2-level-readout';
     const a = document.createElement('span'); a.className = 'iw-skill-v2-level';
     const b = document.createElement('span'); b.className = 'iw-skill-v2-percent'; out.append(a,b); zone.append(out);
   }
-  out.children[0].textContent = lvl ? `Lv ${lvl[1].replace(/\s+/g,' ')}` : 'Lv —';
-  out.children[1].textContent = pct ? `${pct[1]}%` : '—';
+  setText(out.children[0], lvl ? `Lv ${lvl[1].replace(/\s+/g,' ')}` : 'Lv —');
+  setText(out.children[1], pct ? `${pct[1]}%` : '—');
 }
 function createControls(panel) {
   const c = document.createElement('div'); c.dataset.iwSkillV2Controls='1'; c.className='iw-skill-v2-controls';
@@ -99,24 +126,31 @@ function createControls(panel) {
 }
 function syncTabs(panel, controls) {
   const host = controls.querySelector('[data-iw-skill-v2-tabs]'), list = available(panel);
-  panel.dataset.iwSkillV2Tab = list.includes(panel.dataset.iwSkillV2Tab) ? panel.dataset.iwSkillV2Tab : (list.includes('requirements') ? 'requirements' : list[0] || 'requirements');
-  if (host.dataset.iwSkillV2TabSignature !== list.join('|')) {
+  const nextTab = list.includes(panel.dataset.iwSkillV2Tab) ? panel.dataset.iwSkillV2Tab : (list.includes('requirements') ? 'requirements' : list[0] || 'requirements');
+  setData(panel, 'iwSkillV2Tab', nextTab);
+  const signature = list.join('|');
+  if (host.dataset.iwSkillV2TabSignature !== signature) {
     host.replaceChildren(...list.map(name => {
       const el=document.createElement('span'); el.dataset.iwSkillV2TabButton=name; el.className='iw-skill-v2-tab'; el.setAttribute('role','tab'); el.setAttribute('tabindex','0'); el.textContent=name[0].toUpperCase()+name.slice(1); return el;
-    })); host.dataset.iwSkillV2TabSignature=list.join('|');
+    }));
+    host.dataset.iwSkillV2TabSignature=signature;
   }
-  host.querySelectorAll('[data-iw-skill-v2-tab-button]').forEach(el => el.setAttribute('aria-selected', el.dataset.iwSkillV2TabButton === panel.dataset.iwSkillV2Tab ? 'true':'false'));
-  host.hidden = !list.length;
+  host.querySelectorAll('[data-iw-skill-v2-tab-button]').forEach(el => setAttr(el, 'aria-selected', el.dataset.iwSkillV2TabButton === panel.dataset.iwSkillV2Tab ? 'true':'false'));
+  const shouldHide = !list.length;
+  if (host.hidden !== shouldHide) host.hidden = shouldHide;
 }
 function syncExpand(panel) {
   const el=panel.querySelector('[data-iw-skill-v2-expand]'); if(!el)return;
-  const yes=panel.dataset.iwSkillV2State==='expanded'; el.setAttribute('aria-checked',yes?'true':'false'); el.setAttribute('aria-expanded',yes?'true':'false'); el.dataset.iwSkillV2ExpandState=yes?'expanded':'collapsed';
+  const yes=panel.dataset.iwSkillV2State==='expanded';
+  setAttr(el, 'aria-checked', yes?'true':'false');
+  setAttr(el, 'aria-expanded', yes?'true':'false');
+  setData(el, 'iwSkillV2ExpandState', yes?'expanded':'collapsed');
 }
-export function setSkillCardExpanded(panel, expanded) { if(panel){panel.dataset.iwSkillV2State=expanded?'expanded':'collapsed';syncExpand(panel);} }
-export function setSkillCardTab(panel, tab) { if(!panel||!tabs.includes(tab)||!available(panel).includes(tab))return false; panel.dataset.iwSkillV2Tab=tab; const c=panel.querySelector('[data-iw-skill-v2-controls]'); if(c)syncTabs(panel,c); return true; }
+export function setSkillCardExpanded(panel, expanded) { if(panel){setData(panel,'iwSkillV2State',expanded?'expanded':'collapsed');syncExpand(panel);} }
+export function setSkillCardTab(panel, tab) { if(!panel||!tabs.includes(tab)||!available(panel).includes(tab))return false; setData(panel,'iwSkillV2Tab',tab); const c=panel.querySelector('[data-iw-skill-v2-controls]'); if(c)syncTabs(panel,c); return true; }
 export function enhanceSkillCardV2(panel, skillType) {
   if(!panel||!panel.isConnected||!skillType||skillType==='unknown')return null;
-  panel.dataset.iwSkillV2='1'; panel.dataset.iwSkillV2Type=skillType; if(!panel.dataset.iwSkillV2State)panel.dataset.iwSkillV2State='collapsed';
+  setData(panel,'iwSkillV2','1'); setData(panel,'iwSkillV2Type',skillType); if(!panel.dataset.iwSkillV2State)setData(panel,'iwSkillV2State','collapsed');
   markSections(panel); levelReadout(panel); let c=panel.querySelector(':scope > [data-iw-skill-v2-controls]'); if(!c)c=createControls(panel); syncTabs(panel,c); syncExpand(panel); return c;
 }
 export function clearSkillCardV2(panel) {
