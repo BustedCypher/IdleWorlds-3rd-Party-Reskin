@@ -1,5 +1,5 @@
 import { on } from './DOMWatcher.js';
-import { guard, isRuntimeActive, storageGet, storageSet, onStorageChanged } from './Runtime.js';
+import { guard, isRuntimeActive, storageGet, storageSet } from './Runtime.js';
 
 export const SKILL_CARD_DESIGN_KEY = 'iw-skill-card-design';
 export const DEFAULT_SKILL_CARD_DESIGN = 'new';
@@ -130,6 +130,6 @@ function activate(target) {
   if(target.closest?.('[data-iw-skill-v2-expand]'))return setSkillCardExpanded(panel,panel.dataset.iwSkillV2State!=='expanded');
   const tab=target.closest?.('[data-iw-skill-v2-tab-button]'); if(tab){setSkillCardExpanded(panel,true);setSkillCardTab(panel,tab.dataset.iwSkillV2TabButton);}
 }
-function bindOnce(){if(bound)return;bound=true;on('iw:skill-panel',e=>guard('skill-v2:panel',()=>reconcile(e.detail?.panel,e.detail?.skill)));document.addEventListener('click',e=>{if(active&&isRuntimeActive())guard('skill-v2:click',()=>activate(e.target));});document.addEventListener('keydown',e=>{if(!active||!isRuntimeActive()||!['Enter',' '].includes(e.key))return;const t=e.target?.closest?.('[data-iw-skill-design],[data-iw-skill-v2-expand],[data-iw-skill-v2-tab-button]');if(t){e.preventDefault();guard('skill-v2:key',()=>activate(t));}});onStorageChanged(SKILL_CARD_DESIGN_KEY,value=>{if(active&&isRuntimeActive())applySkillCardDesign(value);});}
+function bindOnce(){if(bound)return;bound=true;on('iw:skill-panel',e=>guard('skill-v2:panel',()=>reconcile(e.detail?.panel,e.detail?.skill)));document.addEventListener('click',e=>{if(active&&isRuntimeActive())guard('skill-v2:click',()=>activate(e.target));});document.addEventListener('keydown',e=>{if(!active||!isRuntimeActive()||!['Enter',' '].includes(e.key))return;const t=e.target?.closest?.('[data-iw-skill-design],[data-iw-skill-v2-expand],[data-iw-skill-v2-tab-button]');if(t){e.preventDefault();guard('skill-v2:key',()=>activate(t));}});}
 export function initSkillCardDesignController(){active=true;bindOnce();applySkillCardDesign(DEFAULT_SKILL_CARD_DESIGN);storageGet(SKILL_CARD_DESIGN_KEY).then(value=>{if(active&&isRuntimeActive())applySkillCardDesign(value===null?DEFAULT_SKILL_CARD_DESIGN:value);});}
 export function clearSkillCardDesignController(){active=false;document.documentElement?.removeAttribute('data-iw-skill-card-design');document.querySelectorAll('[data-iw-skill-design-toggle]').forEach(el=>el.remove());document.querySelectorAll('.compact-panel[data-iw-skill-v2]').forEach(clearSkillCardV2);}
