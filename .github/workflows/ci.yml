@@ -7,7 +7,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -19,10 +19,8 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Checkout feature branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -36,40 +34,9 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Repair progress timing smoke-test tolerance
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('tests/smoke.test.mjs')
-          text = path.read_text()
-          old = '''// first (possibly reset-adjacent) one has slack to spare. ~250ms apart with a
-          // PROGRESS_LEAD_BIAS of 1.12 baked in, so a correct measurement lands close to
-          // 0.28s and not merely at "some plausible value" — a check that accepted any
-          // committed number would pass for a hardcoded default.'''
-          new = '''// first (possibly reset-adjacent) one has slack to spare. The writes are
-          // nominally ~250ms apart, but a loaded CI runner can delay MutationObserver /
-          // timer processing substantially. Keep enough scheduling slack to reject the
-          // 1s unmeasured fallback without treating runner load as a product regression.'''
-          assertion_old = 'progressDurationSeconds(caTrack) > 0.2 && progressDurationSeconds(caTrack) < 0.5,'
-          assertion_new = 'progressDurationSeconds(caTrack) > 0.2 && progressDurationSeconds(caTrack) < 0.75,'
-          if old not in text or assertion_old not in text:
-              raise SystemExit('expected smoke-test text was not found')
-          path.write_text(text.replace(old, new, 1).replace(assertion_old, assertion_new, 1))
-          PY
-
       - name: Rebuild, syntax-check and run regression suites
         run: npm test
 
-      - name: Commit repaired smoke test and rebuilt bundle
+      - name: Verify committed production bundle is current
         shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tests/smoke.test.mjs dist/content.bundle.js
-          if git diff --cached --quiet; then
-            echo "Nothing to commit"
-            exit 0
-          fi
-          git commit -m "test: tolerate CI scheduling jitter in progress timing"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+        run: git diff --exit-code -- dist/content.bundle.js
