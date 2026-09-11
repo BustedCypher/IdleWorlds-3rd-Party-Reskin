@@ -41,6 +41,7 @@ import tooltipCss from './styles/tooltip-engine.css';
 import inventoryCss from './styles/inventory.css';
 import skillPanelCss from './styles/skillpanel.css';
 import skillCardV2Css from './styles/skillcard-v2.css';
+import skillCardV2RuntimeSafeCss from './styles/skillcard-v2-runtime-safe.css';
 import uiSystemCss from './styles/ui-system.css';
 import headerCss from './styles/header.css';
 import overlayCss from './styles/overlay.css';
@@ -60,7 +61,7 @@ function injectPresentationStyles() {
   inject('inventory', inventoryCss);
   // Keep V2 in the existing lifecycle-owned skillpanel sheet so the kill-switch
   // contract and the seven-stylesheet smoke invariant do not change.
-  inject('skillpanel', skillPanelCss + '\n' + skillCardV2Css);
+  inject('skillpanel', skillPanelCss + '\n' + skillCardV2Css + '\n' + skillCardV2RuntimeSafeCss);
   inject('header', headerCss);
   inject('overlay', overlayCss);
   // ui-system.css MUST be injected LAST (see CLAUDE.md): its generic control
