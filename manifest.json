@@ -29,8 +29,6 @@
         "assets/*",
         "assets/skills-ui/buttons/exact-v3/*/*.png",
         "assets/skills-ui/buttons/revised-v5/*.png",
-        "assets/skills-ui/buttons/compact-v1/*.png",
-        "assets/skills-ui/buttons/compact-quiet-v2/*.png",
         "assets/skills-ui/buttons/compact-ghost-v3/*.png"
       ],
       "matches": [
