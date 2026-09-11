@@ -1,0 +1,214 @@
+/* ── Panel arrangement ─────────────────────────────────────────────────────
+ *
+ * PanelOrder.js writes `data-iw-order="N"` on each panel and this sheet turns
+ * it into a flex/grid `order`. The attribute is the mechanism because it is
+ * invisible to DOMWatcher's `attributeFilter` — measured, 100 `data-iw-*`
+ * writes produce 0 mutation records where 100 inline-style writes produce 100 —
+ * so a settled arrangement costs nothing per flush.
+ *
+ * The rules are SCOPED through `[data-iw-order-container="1"] >` rather than
+ * written as a bare `[data-iw-order="N"]` table. The skin already declares
+ * around twenty `order:` rules INSIDE skill and inventory cards
+ * (skillpanel.css, inventory.css); an unscoped table would be a second writer
+ * on the same property in those subtrees.
+ */
+
+[data-iw-order-container="1"] > [data-iw-order="0"]  { order: 0  !important; }
+[data-iw-order-container="1"] > [data-iw-order="1"]  { order: 1  !important; }
+[data-iw-order-container="1"] > [data-iw-order="2"]  { order: 2  !important; }
+[data-iw-order-container="1"] > [data-iw-order="3"]  { order: 3  !important; }
+[data-iw-order-container="1"] > [data-iw-order="4"]  { order: 4  !important; }
+[data-iw-order-container="1"] > [data-iw-order="5"]  { order: 5  !important; }
+[data-iw-order-container="1"] > [data-iw-order="6"]  { order: 6  !important; }
+[data-iw-order-container="1"] > [data-iw-order="7"]  { order: 7  !important; }
+[data-iw-order-container="1"] > [data-iw-order="8"]  { order: 8  !important; }
+[data-iw-order-container="1"] > [data-iw-order="9"]  { order: 9  !important; }
+[data-iw-order-container="1"] > [data-iw-order="10"] { order: 10 !important; }
+[data-iw-order-container="1"] > [data-iw-order="11"] { order: 11 !important; }
+[data-iw-order-container="1"] > [data-iw-order="12"] { order: 12 !important; }
+[data-iw-order-container="1"] > [data-iw-order="13"] { order: 13 !important; }
+[data-iw-order-container="1"] > [data-iw-order="14"] { order: 14 !important; }
+[data-iw-order-container="1"] > [data-iw-order="15"] { order: 15 !important; }
+[data-iw-order-container="1"] > [data-iw-order="16"] { order: 16 !important; }
+[data-iw-order-container="1"] > [data-iw-order="17"] { order: 17 !important; }
+[data-iw-order-container="1"] > [data-iw-order="18"] { order: 18 !important; }
+[data-iw-order-container="1"] > [data-iw-order="19"] { order: 19 !important; }
+[data-iw-order-container="1"] > [data-iw-order="20"] { order: 20 !important; }
+[data-iw-order-container="1"] > [data-iw-order="21"] { order: 21 !important; }
+[data-iw-order-container="1"] > [data-iw-order="22"] { order: 22 !important; }
+[data-iw-order-container="1"] > [data-iw-order="23"] { order: 23 !important; }
+[data-iw-order-container="1"] > [data-iw-order="24"] { order: 24 !important; }
+[data-iw-order-container="1"] > [data-iw-order="25"] { order: 25 !important; }
+[data-iw-order-container="1"] > [data-iw-order="26"] { order: 26 !important; }
+[data-iw-order-container="1"] > [data-iw-order="27"] { order: 27 !important; }
+[data-iw-order-container="1"] > [data-iw-order="28"] { order: 28 !important; }
+[data-iw-order-container="1"] > [data-iw-order="29"] { order: 29 !important; }
+[data-iw-order-container="1"] > [data-iw-order="30"] { order: 30 !important; }
+[data-iw-order-container="1"] > [data-iw-order="31"] { order: 31 !important; }
+[data-iw-order-container="1"] > [data-iw-order="32"] { order: 32 !important; }
+[data-iw-order-container="1"] > [data-iw-order="33"] { order: 33 !important; }
+[data-iw-order-container="1"] > [data-iw-order="34"] { order: 34 !important; }
+[data-iw-order-container="1"] > [data-iw-order="35"] { order: 35 !important; }
+[data-iw-order-container="1"] > [data-iw-order="36"] { order: 36 !important; }
+[data-iw-order-container="1"] > [data-iw-order="37"] { order: 37 !important; }
+[data-iw-order-container="1"] > [data-iw-order="38"] { order: 38 !important; }
+[data-iw-order-container="1"] > [data-iw-order="39"] { order: 39 !important; }
+
+/* ── The mode ──────────────────────────────────────────────────────────────
+ *
+ * `data-iw-order-mode` lives on `<html>`, outside `document.body` and so
+ * outside the single observer's root: entering and leaving the mode produces no
+ * mutation record at all.
+ */
+
+/* The Reset control only exists while there is something to reset from. */
+[data-iw-nav-link="order-reset"] { display: none !important; }
+html[data-iw-order-mode="1"] [data-iw-nav-link="order-reset"] { display: inline-flex !important; }
+
+html[data-iw-order-mode="1"] [data-iw-nav-link="rearrange"] {
+  border-color: var(--iw-th-cta, #D8791F) !important;
+  color: var(--iw-th-cta, #D8791F) !important;
+}
+
+/* ── The grab surface ──────────────────────────────────────────────────────
+ *
+ * One `<button>` covering the whole panel. Out of flow on purpose: an IN-FLOW
+ * child larger than 2x2 makes SkillPanelRenderer's `unexpectedFlowChild` refuse
+ * the three-zone skill layout, which silently drops the medallion, the grid,
+ * the pager chevrons and the studs — a regression that reads as "the skin
+ * didn't reach this card".
+ *
+ * The host is already `position: relative` on any panel ui-system.css frames,
+ * but a panel that never classified is still `static`, and there the handle
+ * would size itself against the initial containing block instead of its own
+ * panel. The mode therefore positions the host, which is scoped to the mode and
+ * so cannot move an absolutely positioned descendant during normal play.
+ *
+ * This rule is ALSO what keeps the handle visible on a COLLAPSED panel, which
+ * is precisely when rearranging matters most: collapsible.css's fold rule hides
+ * `> *` at (0,4,0) `!important`, and this one is (0,4,1) `!important`. Owning it
+ * here rather than adding a `:not()` to the fold rule keeps one owner for the
+ * handle's appearance — a second, redundant opt-out over there would be a
+ * declaration no test could ever show doing anything.
+ *
+ * Specificity: the frame's own `> *` rule sets `position: relative; z-index: 1`
+ * at (0,4,0). Leading with `html` puts this at (0,4,1), and `!important` settles
+ * it regardless of injection order.
+ */
+html[data-iw-order-mode="1"] [data-iw-order-container="1"] > [data-iw-order] > [data-iw-order-handle] {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 5 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 2px dashed var(--iw-th-accent, #C9A24D) !important;
+  border-radius: var(--iw-r-panel, 6px) !important;
+  background: rgba(9, 8, 13, .55) !important;
+  box-shadow: none !important;
+  color: var(--iw-th-accent, #C9A24D) !important;
+  font-family: var(--iw-font-head, inherit) !important;
+  cursor: grab !important;
+  /* Without this the browser claims the gesture for scrolling and the drag
+   * never starts on a phone — and the narrow layout is a single tall column,
+   * which is exactly where dragging is most useful. `none` rather than
+   * `pan-y`: the drag's own autoscroll moves the page, so the browser's does
+   * not need to. */
+  touch-action: none !important;
+  /* The panel below stays readable through the scrim, which is what makes the
+   * arrangement legible while it is being changed. */
+  backdrop-filter: blur(1px);
+}
+
+/* ── While a drag is in flight ─────────────────────────────────────────────
+ *
+ * Both hooks are `data-iw-*`, so switching them on and off costs no mutation
+ * record. Nothing here follows the cursor: the panels themselves reflow, which
+ * is the feedback, and a cursor-following ghost would cost one inline-style
+ * write per frame plus a whole-document OverlayFramer sweep with it.
+ */
+
+html[data-iw-order-mode="1"] [data-iw-order-dragging="1"] > [data-iw-order] > [data-iw-order-handle] {
+  cursor: grabbing !important;
+}
+
+/* A panel the skin cannot name in storage. It has no grab surface at all, so
+ * the mode has to say why rather than leaving it looking like the others. */
+html[data-iw-order-mode="1"] [data-iw-order-fixed="1"] {
+  outline: 1px dashed var(--iw-th-edge-soft, #4B3D26) !important;
+  outline-offset: -2px !important;
+  opacity: .72 !important;
+}
+
+/* The panel being carried. It keeps its place in the flow — only its treatment
+ * changes — so no geometry is written and nothing reflows because of this. */
+html[data-iw-order-mode="1"] [data-iw-order-drag="source"] > [data-iw-order-handle] {
+  border-style: solid !important;
+  border-color: var(--iw-th-cta, #D8791F) !important;
+  background: rgba(9, 8, 13, .74) !important;
+  color: var(--iw-th-cta, #D8791F) !important;
+}
+
+html[data-iw-order-mode="1"] [data-iw-order-drag="source"] {
+  /* Applied to the PANEL, not to the handle, so the whole card reads as lifted.
+   * A transform creates a containing block for fixed descendants, which is why
+   * it is a filter and an opacity rather than a scale. */
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .55)) !important;
+  opacity: .92 !important;
+}
+
+html[data-iw-order-mode="1"] [data-iw-order-handle]:focus-visible {
+  outline: 2px solid var(--iw-th-cta, #D8791F) !important;
+  outline-offset: -4px !important;
+  background: rgba(9, 8, 13, .72) !important;
+}
+
+html[data-iw-order-mode="1"] [data-iw-order-handle] > [data-iw-order-chip] {
+  padding: 6px 12px;
+  border: 1px solid var(--iw-th-edge-mid, #4B3D26);
+  border-radius: var(--iw-r-control, 3px);
+  background: var(--iw-th-plate, rgba(13, 14, 12, .92));
+  font-size: 13px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #000;
+  /* A tall panel scrolls its own middle out of view, so the chip is pinned near
+   * the top where the panel's title already is. */
+  align-self: start;
+  margin-top: 10px;
+}
+
+/* The panel being rearranged must not also respond to a hover meant for the
+ * game underneath it. */
+html[data-iw-order-mode="1"] [data-iw-order-container="1"] > [data-iw-order] {
+  position: relative;
+  user-select: none;
+}
+
+/* Visually hidden, still announced. */
+[data-iw-order-live] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* base.css carries a blanket opt-out, but ui-system.css is injected LAST and
+   * its selectors are more specific, so the intent has to be restated here. */
+  html[data-iw-order-mode="1"] [data-iw-order-handle] {
+    backdrop-filter: none;
+    transition: none !important;
+  }
+  html[data-iw-order-mode="1"] [data-iw-order-drag="source"] {
+    filter: none !important;
+  }
+}

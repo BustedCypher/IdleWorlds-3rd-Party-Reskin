@@ -1,0 +1,128 @@
+/* Dedicated compact-ghost-v3 atlas. Native controls keep their layout, content and
+   semantics; three decorative layers crossfade behind them. Native pseudo
+   elements remain available for the selected-tab underline and Toolkit arrow. */
+[data-iw-compact-layer] { display: none; }
+
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-compact-button] {
+  --iw-compact-cap: 10px;
+  position: relative !important;
+  isolation: isolate !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+  transition: color 180ms ease-out !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-ui="nav-tab"] { --iw-compact-cap: 12px; }
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-panel-part="send"] { --iw-compact-cap: 14px; }
+
+/* Geometry is generated from compact-ghost-v3/index.json by preview-compact-buttons.mjs. */
+/* COMPACT_GEOMETRY */
+html[data-iw-compact-atlas="compact-ghost-v3"] {
+  --iw-compact-mid-size: 150% 326.6666666666667%;
+  --iw-compact-mid-x: 21.428571428571427%;
+  --iw-compact-cap-size: 1680% 326.6666666666667%;
+  --iw-compact-left-x: 1.2658227848101267%;
+  --iw-compact-right-x: 78.48101265822785%;
+  --iw-compact-icon-size: 560% 326.6666666666667%;
+  --iw-compact-icon-x: 98.55072463768116%;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-layer="idle"] { --iw-compact-y: 2.9411764705882355%; }
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-layer="hover"] { --iw-compact-y: 50%; }
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-layer="clicked"] { --iw-compact-y: 97.05882352941177%; }
+
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button] > [data-iw-compact-layer] {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 var(--iw-compact-cap) !important;
+  pointer-events: none !important;
+  background-image: var(--iw-compact-atlas) !important;
+  background-size: var(--iw-compact-mid-size) !important;
+  background-position: var(--iw-compact-mid-x) var(--iw-compact-y) !important;
+  background-repeat: no-repeat !important;
+  background-origin: content-box !important;
+  background-clip: content-box !important;
+  opacity: 1;
+  z-index: -3;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button] > [data-iw-compact-layer]::before,
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button] > [data-iw-compact-layer]::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: var(--iw-compact-cap) !important;
+  background-image: var(--iw-compact-atlas) !important;
+  background-size: var(--iw-compact-cap-size) !important;
+  background-position: var(--iw-compact-left-x) var(--iw-compact-y) !important;
+  background-repeat: no-repeat !important;
+  pointer-events: none !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button] > [data-iw-compact-layer]::before { left: 0 !important; }
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button] > [data-iw-compact-layer]::after {
+  right: 0 !important;
+  background-position: var(--iw-compact-right-x) var(--iw-compact-y) !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button="icon"] > [data-iw-compact-layer] {
+  padding: 0 !important;
+  background-size: var(--iw-compact-icon-size) !important;
+  background-position: var(--iw-compact-icon-x) var(--iw-compact-y) !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button="icon"] > [data-iw-compact-layer]::before,
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button="icon"] > [data-iw-compact-layer]::after { content: none !important; }
+
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button] > [data-iw-compact-layer="hover"] {
+  opacity: 0;
+  z-index: -2;
+  transition: opacity 180ms ease-out;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button] > [data-iw-compact-layer="clicked"] {
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 70ms ease-out;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button]:not(:disabled):not([aria-disabled="true"]):is(:hover,:focus-visible,:active) > [data-iw-compact-layer="hover"],
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button]:not(:disabled):not([aria-disabled="true"]):active > [data-iw-compact-layer="clicked"] { opacity: 1; }
+
+/* Keep selection legible even at rest. The main-nav underline is native skin
+   chrome and remains untouched; other selections get an inset accent. */
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button]:is([data-iw-inventory-filter-state="active"],[data-iw-compact-selected="true"],[data-fs-action-kind="equipped"]) {
+  box-shadow: inset 0 -2px var(--iw-th-accent, #5dbbd0) !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-fs-action-kind="equipped"] { box-shadow: inset 0 -2px var(--iw-good, #80b38a) !important; }
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button]:is([data-iw-inventory-filter-state="active"],[data-iw-compact-selected="true"]) > [data-iw-compact-layer] {
+  box-shadow: inset 0 -2px var(--iw-th-accent, #5dbbd0) !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-fs-action-kind="equipped"] > [data-iw-compact-layer] {
+  box-shadow: inset 0 -2px var(--iw-good, #80b38a) !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-compact-selected="true"] { color: var(--iw-text-hi, #fff0dc) !important; }
+/* The live active route label is a native child with its own dark utility
+   colour. Paint that existing child directly so it remains readable once the
+   atlas replaces the native bright active-tab fill. */
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-ui="nav-tab"][data-iw-state="active"],
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-ui="nav-tab"][data-iw-state="active"] :not([data-iw-compact-layer]) {
+  color: var(--iw-text-hi, #fff0dc) !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button]:focus-visible {
+  outline: 2px solid var(--iw-th-accent, #5dbbd0) !important;
+  outline-offset: 2px !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button]:is(:disabled,[aria-disabled="true"]) > [data-iw-compact-layer]:not([data-iw-compact-layer="idle"]) {
+  opacity: 0 !important;
+  transition: none !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button]:is(:disabled,[aria-disabled="true"]) { opacity: .45 !important; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button],
+  html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button] > [data-iw-compact-layer] { transition: none !important; }
+}
+

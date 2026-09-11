@@ -1,0 +1,668 @@
+{
+  "forged-metal": {
+    "chevron-prev-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-idle": {
+      "bounds": [
+        24,
+        25,
+        767,
+        215
+      ]
+    },
+    "chevron-next-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-hover": {
+      "bounds": [
+        24,
+        25,
+        767,
+        215
+      ]
+    },
+    "chevron-next-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-clicked": {
+      "bounds": [
+        24,
+        25,
+        767,
+        215
+      ]
+    },
+    "chevron-next-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    }
+  },
+  "infernal": {
+    "chevron-prev-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-idle": {
+      "bounds": [
+        18,
+        2,
+        771,
+        220
+      ]
+    },
+    "chevron-next-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-hover": {
+      "bounds": [
+        18,
+        2,
+        771,
+        220
+      ]
+    },
+    "chevron-next-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-clicked": {
+      "bounds": [
+        18,
+        2,
+        771,
+        220
+      ]
+    },
+    "chevron-next-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    }
+  },
+  "glacial": {
+    "chevron-prev-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-idle": {
+      "bounds": [
+        17,
+        7,
+        773,
+        210
+      ]
+    },
+    "chevron-next-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-hover": {
+      "bounds": [
+        17,
+        7,
+        773,
+        210
+      ]
+    },
+    "chevron-next-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-clicked": {
+      "bounds": [
+        17,
+        7,
+        773,
+        210
+      ]
+    },
+    "chevron-next-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    }
+  },
+  "celestial": {
+    "chevron-prev-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-idle": {
+      "bounds": [
+        19,
+        22,
+        772,
+        220
+      ]
+    },
+    "chevron-next-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-hover": {
+      "bounds": [
+        19,
+        22,
+        772,
+        220
+      ]
+    },
+    "chevron-next-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-clicked": {
+      "bounds": [
+        19,
+        22,
+        772,
+        220
+      ]
+    },
+    "chevron-next-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    }
+  },
+  "lunar-spectral": {
+    "chevron-prev-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-idle": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-hover": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-clicked": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    }
+  },
+  "runic-arcane": {
+    "chevron-prev-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-idle": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-hover": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-clicked": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    }
+  },
+  "tempest-oceanic": {
+    "chevron-prev-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-idle": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-hover": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-clicked": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    }
+  },
+  "verdant": {
+    "chevron-prev-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-idle": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-hover": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-clicked": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    }
+  },
+  "voidborn": {
+    "chevron-prev-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-idle": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-idle": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-hover": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-hover": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "chevron-prev-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    },
+    "action-clicked": {
+      "bounds": [
+        20,
+        12,
+        772,
+        213
+      ]
+    },
+    "chevron-next-clicked": {
+      "bounds": [
+        4,
+        4,
+        131,
+        221
+      ]
+    }
+  }
+}

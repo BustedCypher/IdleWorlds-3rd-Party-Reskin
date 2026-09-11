@@ -20,7 +20,7 @@ import { scanForItemNames, clearItemNameScan } from './modules/NameScanner.js';
 import { initInventoryRenderer, clearInventoryRenderer } from './modules/InventoryRenderer.js';
 import { initSkillPanelRenderer, clearSkillPanels } from './modules/SkillPanelRenderer.js';
 import { initQuestPanelRenderer, clearQuestPanels } from './modules/QuestPanelRenderer.js';
-import { initUIFoundation, clearUIFoundation } from './modules/UIFoundation.js';
+import { initUIFoundation, clearUIFoundation, injectUIFoundationStyles } from './modules/UIFoundation.js';
 import { initHeaderRenderer, clearHeaderRenderer } from './modules/HeaderRenderer.js';
 import { paintBackground, clearBackgroundPaint } from './modules/BackgroundPainter.js';
 import { frameOverlays, clearOverlayFramer } from './modules/OverlayFramer.js';
@@ -36,7 +36,6 @@ import baseCss from './styles/base.css';
 import tooltipCss from './styles/tooltip-engine.css';
 import inventoryCss from './styles/inventory.css';
 import skillPanelCss from './styles/skillpanel.css';
-import uiSystemCss from './styles/ui-system.css';
 import headerCss from './styles/header.css';
 import overlayCss from './styles/overlay.css';
 
@@ -59,7 +58,7 @@ function injectPresentationStyles() {
   // ui-system.css MUST be injected LAST (see CLAUDE.md): its generic control
   // rule is the final say on shared button surfacing, and header.css's button
   // roles opt out via that rule's :not() chain.
-  inject('ui-system', uiSystemCss);
+  injectUIFoundationStyles();
 }
 
 function scanRoots(roots) {

@@ -1,0 +1,81 @@
+/* The Construction calculator's five-plot composition, scoped to our own frame.
+ *
+ * Everything inside the scene is sized against the SCENE's own width, not the
+ * viewport. The scene lives in the dashboard's `minmax(320px,0.42fr)` panel
+ * column, so it is ~385px wide at a 1000px viewport and ~680px wide at 760px —
+ * a media query keyed on the viewport gets that exactly backwards, which is
+ * the wrong-column-width trap CLAUDE.md already records for the Village
+ * route's own cards. `container-type: inline-size` is safe on this box
+ * specifically: its inline size is `width:100%` capped by `max-width`, so
+ * nothing inside it was ever allowed to influence its width. */
+.iw-village-scene { min-width:0; width:100%; box-sizing:border-box; margin-top:12px; }
+.iw-village-scene * { box-sizing:border-box; }
+.iw-vs-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:15px; }
+.iw-vs-title { font-family:var(--iw-font-display, 'Cinzel', serif); color:#eee4cb; font-size:16px; font-weight:600; }
+.iw-vs-count { color:#c4b992; font-size:11px; }
+/* `width:100%` is load-bearing, not tidiness. The host carries
+ * `data-iw-ui="section-frame"`, which ui-system.css lays out as a column flex
+ * container, and an AUTO cross-axis margin cancels a flex item's stretch — so
+ * without an explicit width this box shrink-to-fits over children that are ALL
+ * out of flow, i.e. down to its own 1px border, and `overflow:hidden` clips the
+ * whole village away while every computed style still reads perfectly correct. */
+.iw-vs-scene { position:relative; width:100%; container-type:inline-size; container-name:iw-village; isolation:isolate; height:clamp(290px, 23vw, 320px); max-width:680px; margin:auto; overflow:hidden; border:1px solid #777e5155; border-radius:12px; background:linear-gradient(#0c160c2e,#0c160c4d),url('../assets/village/cobblestone.png') center/100% 100% no-repeat; box-shadow:inset 0 0 45px #09110966; }
+
+/* Captions ride OVER the base of their own sprite rather than stacking below
+ * it, and that is what pays for the bigger icons. At this height a caption in
+ * flow costs each plot ~45px on top of its art, and the top and bottom rows
+ * then meet in the same column: the arithmetic caps the icons at ~66px, i.e.
+ * SMALLER than they were at twice the height. Overlaid, a plot's footprint is
+ * exactly its art, so 130px fits with room to spare. The text is legible over
+ * the artwork because `.iw-vs-scene strong/.iw-vs-status` already carry a
+ * double text-shadow, and the isometric buildings put their plainest pixels
+ * (the base and its ground shadow) exactly where the caption lands. */
+/* The plot captions bleed 7px past their own box because a long building
+ * name needs it; the HOUSE caption does not, and must not — its box shares an
+ * edge with the top corner plots. */
+.iw-vs-plot > .iw-vs-name,
+.iw-vs-plot > .iw-vs-status { position:absolute; left:-7px; right:-7px; }
+.iw-vs-house > strong,
+.iw-vs-house > .iw-vs-status { position:absolute; left:0; right:0; }
+.iw-vs-plot > .iw-vs-name, .iw-vs-house > strong { bottom:15px; }
+.iw-vs-plot > .iw-vs-status, .iw-vs-house > .iw-vs-status { bottom:0; }
+
+/* The house is the only element measured from the TOP edge: it and the
+ * bottom-centre plot share the centre column, so anchoring both to the same
+ * edge is what keeps them apart at every height. Its art is a PERCENTAGE of
+ * the scene so the pair scale together — a fixed px house clears plot 5 at one
+ * height and sits on it at the next. tests/village-scene-layout.test.mjs pins
+ * that clearance at six widths; retune the height and this share together,
+ * never one alone. */
+.iw-vs-house { position:absolute; z-index:1; left:50%; top:0; width:40%; height:52%; transform:translateX(-50%); text-align:center; }
+.iw-vs-sprite { display:block; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 10px 10px #0006); }
+.iw-vs-house > .iw-vs-sprite, .iw-vs-house > .iw-vs-placeholder { width:min(240px,100%); height:100%; margin:0 auto; }
+.iw-vs-house > strong { font-size:14px; }
+.iw-vs-plot { position:absolute; z-index:2; width:27%; height:130px; text-align:center; }
+.iw-vs-plot[data-slot="1"] { left:1%; top:2%; }
+.iw-vs-plot[data-slot="2"] { right:1%; top:2%; }
+.iw-vs-plot[data-slot="3"] { left:3%; bottom:2%; }
+.iw-vs-plot[data-slot="4"] { right:3%; bottom:2%; }
+.iw-vs-plot[data-slot="5"] { left:50%; bottom:0; transform:translateX(-50%); }
+.iw-vs-plot > .iw-vs-sprite, .iw-vs-plot > .iw-vs-placeholder { width:100%; height:100%; }
+.iw-vs-name { font-size:11px; line-height:1.35; overflow-wrap:anywhere; }
+.iw-vs-status { font-size:10px; line-height:1.35; }
+.iw-vs-scene strong,.iw-vs-scene .iw-vs-status { color:#f3f0df; text-shadow:0 1px 3px #10170c,0 0 7px #10170c; }
+/* The glyph stands in for a building, so it centres in the art area ABOVE
+ * the overlaid caption rather than in the whole box — otherwise an empty
+ * plot's mark floats a caption's height higher than its neighbours' art. */
+.iw-vs-placeholder { display:grid; place-items:center; padding-bottom:30px; color:#e2dcbbc9; font-size:52px; text-shadow:0 3px 7px #10170c; }
+.iw-vs-house > .iw-vs-placeholder { font-size:64px; }
+.iw-vs-plot[data-plot-state="locked"] .iw-vs-placeholder { opacity:.55; }
+.iw-vs-note { margin:13px 0 0; color:#b9b2a0; font-size:11px; line-height:1.6; }
+/* A narrow SCENE, whatever the viewport happens to be doing: a 27% plot is
+ * only ~100px wide here, so a name like "Stormglass Chapel of Healing" wraps
+ * to three lines and the art has to give it the room. */
+@container iw-village (max-width: 470px) {
+  .iw-vs-plot { width:30%; height:104px; }
+  .iw-vs-name { font-size:10px; }
+  .iw-vs-status { font-size:9px; }
+  .iw-vs-house > .iw-vs-placeholder { font-size:52px; }
+}
+/* Frame padding is the FRAME's business, so this one stays viewport-keyed. */
+@media (max-width:480px) { .iw-village-scene { --iw-frame-pad-x:12px; } }

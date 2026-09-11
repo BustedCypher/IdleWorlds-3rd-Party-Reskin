@@ -41,7 +41,7 @@ const SKILL_META = {
   // exact-match test for the command button, and widening it there would let a
   // Crafting/Construction control answer for Smithing.
   smithing:  { label: 'Smithing',  labels: ['Smith', 'Smithing'],  glyph: '⚒︎', actions: ['smelt', 'forge'], titleActions: ['smelt', 'forge', 'craft'] },
-  gathering: { label: 'Gathering', labels: ['Gathering'],          glyph: '❧', actions: ['gather', 'harvest'] },
+  gathering: { label: 'Herbalism', labels: ['Herbalism', 'Herb', 'Gathering'], glyph: '❧', actions: ['gather', 'harvest'] },
   alchemy:   { label: 'Alchemy',   labels: ['Alchemy'],            glyph: '⚗︎', actions: ['brew'] },
   jewelcrafting: { label: 'Jewelcrafting', labels: ['Jewel', 'Jewelcrafting'], glyph: '◆', actions: ['prospect', 'cut'] },
   spellcrafting: { label: 'Spellcrafting', labels: ['Spellcraft', 'Spellcrafting'], glyph: '✧', actions: ['enchant', 'gather', 'harvest', 'craft'], titleActions: ['enchant', 'harvest', 'craft'], details: [/from the ether$/i] },
@@ -118,6 +118,48 @@ const FORGE = {
     '0 0 0 1px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 16%, transparent)',
 };
 
+/* The command button wears the QUEST rail's artwork (Curtis, 2026-09): one
+ * action-button skin across the site. These are the same `action_frame_idle` /
+ * `action_frame_disabled` cells of the Skills UI atlas that
+ * `.fs-quest-panel [data-iw-quest-role="turn-in"]` draws, and the same rule
+ * applies here as there — "a sprite frame on a button means the button's own
+ * plate must go": the art tapers to transparent over the outer ~28px of its
+ * 264px cell, so a border / gradient / box-shadow left underneath shows through
+ * as a second, squarer rectangle around it.
+ *
+ * These override the SAME keys the state map writes (`background` stays the
+ * SHORTHAND, so no longhand from the plate survives underneath and teardown's
+ * single `background` restore still clears everything), which is why the sprite
+ * lives here at all: styleButton()'s inline `!important` outranks every rule in
+ * skillpanel.css, so the sheet could not paint over it. What is deliberately
+ * left to CSS — because nothing inline contends for it — is the drop shadow,
+ * the hover bloom and the suppression of the plate's diamond studs.
+ *
+ * Only applied once the panel carries `data-iw-skills-ui-ready="1"`: without
+ * the atlas vars the shorthand is invalid at computed-value time and every
+ * longhand falls back to its initial value, which would strip the plate and
+ * leave a bare label. Mirrored in skillpanel.css (§ "Command button: the quest
+ * rail's artwork") and in build-tools/render-fixtures.mjs — all three move
+ * together, as with FORGE above.
+ */
+const ACTION_ART = {
+  idle: {
+    'background': 'var(--fs-button-background, transparent var(--fs-skills-ui-atlas) ' +
+      'var(--fs-ui-action-idle-position) / var(--fs-ui-action-idle-size) no-repeat)',
+    'border': '0',
+    'box-shadow': 'none',
+    'text-shadow': '0 1px 0 rgba(0, 0, 0, .85), ' +
+      '0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 42%, transparent)',
+  },
+  disabled: {
+    'background': 'var(--fs-button-background, transparent var(--fs-skills-ui-atlas) ' +
+      'var(--fs-ui-action-disabled-position) / var(--fs-ui-action-disabled-size) no-repeat)',
+    'border': '0',
+    'box-shadow': 'none',
+    'text-shadow': '0 1px 0 rgba(0, 0, 0, .85)',
+  },
+};
+
 /* Every state map declares the SAME property set. styleButton() writes only the
    properties of the state it is applying, so a key present in one state and
    absent from another survives the transition as a stale declaration. */
@@ -130,7 +172,7 @@ const BUTTON_STYLES = {
     'letter-spacing': '0.09em',
     'text-transform': 'uppercase',
     'border-radius': '2px',
-    'transition': 'background .13s, border-color .13s, color .13s, box-shadow .13s',
+    'transition': 'var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)',
     'align-self': 'center',
     'height': '32px',
     'min-height': '32px',
@@ -195,14 +237,22 @@ function styleButton(btn) {
   }
   const classifiedState = classifyButton(btn);
   const state = role === 'action-button' && classifiedState !== 'disabled' ? 'primary' : classifiedState;
+  // The atlas resolves asynchronously, so readiness can change while state,
+  // role and the style attribute all stay put — it has to be part of the
+  // snapshot key or the sprite would never reach a button that was already
+  // styled as a plate.
+  const art = role === 'action-button' && btn.closest('[data-iw-skills-ui-ready="1"]')
+    ? ACTION_ART[state === 'disabled' ? 'disabled' : 'idle']
+    : null;
   const currentStyle = btn.getAttribute('style') || '';
   const previous = buttonStyleSnapshots.get(btn);
-  if (previous && previous.state === state && previous.role === role && previous.style === currentStyle) return;
+  if (previous && previous.state === state && previous.role === role &&
+      previous.art === !!art && previous.style === currentStyle) return;
 
   for (const [prop, value] of Object.entries(BUTTON_STYLES.base)) {
     setOwnedStyle(buttonStyleOwner, btn, prop, value);
   }
-  for (const [prop, value] of Object.entries(BUTTON_STYLES[state])) {
+  for (const [prop, value] of Object.entries({ ...BUTTON_STYLES[state], ...art })) {
     setOwnedStyle(buttonStyleOwner, btn, prop, value);
   }
 
@@ -228,10 +278,10 @@ function styleButton(btn) {
     setOwnedStyle(buttonStyleOwner, btn, 'height', '44px');
     setOwnedStyle(buttonStyleOwner, btn, 'min-height', '44px');
     setOwnedStyle(buttonStyleOwner, btn, 'padding', '0');
-    setOwnedStyle(buttonStyleOwner, btn, 'background', FORGE.bg);
-    setOwnedStyle(buttonStyleOwner, btn, 'border', FORGE.border);
+    setOwnedStyle(buttonStyleOwner, btn, 'background', `var(--fs-button-background, ${FORGE.bg})`);
+    setOwnedStyle(buttonStyleOwner, btn, 'border', `var(--fs-button-border, ${FORGE.border})`);
     setOwnedStyle(buttonStyleOwner, btn, 'border-radius', '2px');
-    setOwnedStyle(buttonStyleOwner, btn, 'box-shadow', FORGE.shadow);
+    setOwnedStyle(buttonStyleOwner, btn, 'box-shadow', `var(--fs-button-shadow, ${FORGE.shadow})`);
     setOwnedStyle(buttonStyleOwner, btn, 'color', 'transparent');
     setOwnedStyle(buttonStyleOwner, btn, 'font-size', '0');
   } else if (role === 'action-button') {
@@ -247,7 +297,7 @@ function styleButton(btn) {
   }
 
   if (btn.dataset.iwBtnState !== state) btn.dataset.iwBtnState = state;
-  buttonStyleSnapshots.set(btn, { state, role, style: btn.getAttribute('style') || '' });
+  buttonStyleSnapshots.set(btn, { state, role, art: !!art, style: btn.getAttribute('style') || '' });
 }
 
 // Thin flanking pager buttons. Width is the minor axis; height stays 44px.
@@ -256,9 +306,14 @@ const NAV_BUTTON_W = '26px';
 
 const LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?(?:\s*[-\u2013]\s*\d+(?:\.\d+)?%\s*[\u2022\u00b7]\s*[\d,]+\s+(?:xp\s+)?to\s+go|\s*[\u2022\u00b7]\s*[\d,]+\s*\/\s*[\d,]+\s*xp)$/i;
 const READOUT_STYLES = {
+  // `background` is a SHORTHAND: it already resets background-color and
+  // background-image to their initial values. Listing those longhands here as
+  // well made every reconcile pass rewrite the declaration in two different
+  // serialisations (`none` then `none transparent`), so the style attribute
+  // genuinely CHANGED twice per pass — which DOMWatcher observes, which queues
+  // the panel again, which reconciles again. A quiet page drove ~120 flushes a
+  // second off nothing but this. Keep the shorthand alone.
   'background': 'none',
-  'background-color': 'transparent',
-  'background-image': 'none',
   'border': 'none',
   'border-radius': '0',
   'outline': 'none',
@@ -404,8 +459,9 @@ function neutraliseReadouts(panel) {
 const INGR_PATTERN = /^(?!.*\bxp\b).{0,80}\b\d+\s*\/\s*\d+\b/i;
 const INGR_COUNT_PATTERN = /([\d,]+)\s*\/\s*([\d,]+)/g;
 const INGR_STYLES = {
+  // Shorthand only — see READOUT_STYLES above for why the background-color
+  // longhand must not be listed alongside it.
   'background': 'none',
-  'background-color': 'transparent',
   'border': 'none',
   'border-radius': '0',
   'padding': '0',
@@ -712,10 +768,37 @@ function findProgress(panel) {
  */
 const structureSignatures = new WeakMap();
 
+/**
+ * Digits are live CONTENT, not structure.
+ *
+ * The "Lv N - X% • 4,120 to go" readout is a genuine <button> (see CLAUDE.md:
+ * it carries title="Click to cycle XP display"), so it lands in the button
+ * sweep below and its text changes on EVERY XP tick — several times a second
+ * on an active skill. That made structureSignature() change every tick, which
+ * made annotateStructure() re-run its entire structural walk every tick:
+ * clearStructureRoles, several findBestText passes, textCandidates sorted
+ * through getComputedStyle, and findProgress calling getBoundingClientRect
+ * (which forces layout). Measured with 12 panels ticking, annotateStructure
+ * was 343ms of a 479ms profile — 72% of everything the skin cost — and 109ms
+ * of that was forced layout, re-deriving roles that had not moved.
+ *
+ * Blanking digit runs keeps every signal the walk actually depends on: which
+ * buttons exist, their disabled state, and their non-numeric labels. A real
+ * structural change still moves the signature — Mine -> Fish, an action button
+ * appearing or being relabelled, a pager arriving. Only "the same control
+ * showing a different number" stops re-triggering it.
+ *
+ * Note the OPPOSITE failure mode this must not slide into: DOMWatcher's skill
+ * type cache once keyed on text LENGTH, so an equal-length change such as
+ * Mine -> Fish was invisible to it. Blanking digits is not that — every letter
+ * is still compared exactly.
+ */
+const structureText = value => normText(value).replace(/\d[\d,.]*/g, '#');
+
 function structureSignature(panel, type) {
   const buttonState = [...panel.querySelectorAll('button')].map(btn => {
     const disabled = (btn.disabled || btn.getAttribute('aria-disabled') === 'true') ? '1' : '0';
-    return `${disabled}:${normText(btn.textContent)}:${normText(btn.getAttribute('aria-label'))}`;
+    return `${disabled}:${structureText(btn.textContent)}:${structureText(btn.getAttribute('aria-label'))}`;
   }).join('|');
   return `${type} ${panel.childElementCount} ${buttonState}`;
 }
@@ -1091,6 +1174,24 @@ function ensureSkillActionsFrame(panel) {
   else SkillsArtService.ready().then(paint).catch(() => {});
 }
 
+/**
+ * Write `value` only when it differs.
+ *
+ * `textContent` is a REPLACE-ALL: it removes the existing text node and
+ * inserts a new one, so an assignment emits a childList mutation record even
+ * when the string is byte-identical. DOMWatcher queues the owning panel on a
+ * childList record, so an unconditional write here re-queues the very panel
+ * that is being rendered -- the skin drives itself at animation-frame rate
+ * forever. Same family as the shorthand/longhand style loop in CLAUDE.md, and
+ * the reason `WorldBossPanels.mark` already guards its setAttribute.
+ *
+ * A same-value `setProperty` emits nothing (measured, see CLAUDE.md), which is
+ * why the `fill.style.width` write below needs no guard. Text is not so kind.
+ */
+function setOwnText(el, value) {
+  if (el && el.textContent !== value) el.textContent = value;
+}
+
 function ensureSkillPresentation(panel, meta) {
   ensureSkillActionsFrame(panel);
 
@@ -1098,11 +1199,14 @@ function ensureSkillPresentation(panel, meta) {
   const title = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
   const levelProgress = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
   if (identity) {
-    const nativeIdentity = textWithoutLeadingGlyph(identity.textContent);
-    const aliases = meta.labels || [meta.label];
-    const alias = aliases.find(label => nativeIdentity.toLowerCase() === label.toLowerCase() ||
-      nativeIdentity.toLowerCase().startsWith(`${label.toLowerCase()} `));
-    identity.dataset.iwCleanText = alias || (identity.childElementCount ? meta.label : nativeIdentity) || meta.label;
+    // The card always shows the discipline's FULL name. The game abbreviates
+    // several of them in this slot ("Jewel", "Spellcraft", "Tailor", "Wood",
+    // "Build"), and matching the native abbreviation back out of `meta.labels`
+    // is what put those clipped words on the card. `meta.label` is the same
+    // string `data-fs-skill-label` already carries, so the two agree by
+    // construction. Detection still keys on `meta.labels`; only the display
+    // copy is canonical here.
+    identity.dataset.iwCleanText = meta.label;
   }
   if (title) title.dataset.iwCleanText = textWithoutLeadingGlyph(title.textContent);
   if (levelProgress) levelProgress.dataset.iwProgressDisplay = centralProgressText(levelProgress.textContent);
@@ -1118,7 +1222,7 @@ function ensureSkillPresentation(panel, meta) {
         percent.setAttribute('aria-hidden', 'true');
         identityZone.appendChild(percent);
       }
-      percent.textContent = displayPercent(percentValue);
+      setOwnText(percent, displayPercent(percentValue));
     } else {
       percent?.remove();
     }
@@ -1146,7 +1250,7 @@ function ensureSkillPresentation(panel, meta) {
         plaque.setAttribute('aria-hidden', 'true');
         contentZone.appendChild(plaque);
       }
-      plaque.textContent = `Base: ${amount}`;
+      setOwnText(plaque, `Base: ${amount}`);
       plaque.dataset.iwBaseExp = amount;
     } else {
       plaque?.remove();
@@ -1178,6 +1282,16 @@ function clearPanelInlineTreatment(panel) {
     readoutStyleSnapshots.delete(el);
     ingredientStyleSnapshots.delete(el);
   });
+}
+
+/**
+ * Has THIS module decorated `panel`? `applyPanelChrome` adds the class and
+ * `renderPanel` sets the attribute in the same synchronous block, so either
+ * one is a sufficient marker. A card that was a skill panel and has become
+ * something else still matches, so it is still torn down exactly once.
+ */
+function ownsPanel(panel) {
+  return panel.hasAttribute(RENDERED_ATTR) || panel.classList.contains('fs-skill-panel');
 }
 
 function clearPanelChrome(panel) {
@@ -1225,7 +1339,20 @@ function renderPanel(panel, skillType) {
   if (!panel || !panel.isConnected) return;
 
   if (!SKILL_META[skillType]) {
-    clearPanelChrome(panel);
+    // `.compact-panel` is the game's shared card class, so EVERY quest, boss,
+    // village and shop card arrives here as a non-skill. clearPanelChrome is a
+    // teardown: running it on a card this module never decorated is not just
+    // wasted work, it strips the art variables and appended nodes that another
+    // module owns on that same node -- QuestPanelRenderer re-applies them on
+    // the same flush, this deletes them again on the next, and the two writers
+    // drive each other forever (measured: ~400 apply/clear cycles per second
+    // from a single quest card on an otherwise frozen page).
+    //
+    // This is the boss-card flash from CLAUDE.md in its expensive form. That
+    // fix narrowed one `delete panel.dataset.iwUi`; every other line in
+    // clearPanelChrome was still unconditional. Gate the whole teardown on our
+    // own marker instead, which covers all of them at once.
+    if (ownsPanel(panel)) clearPanelChrome(panel);
     return;
   }
 

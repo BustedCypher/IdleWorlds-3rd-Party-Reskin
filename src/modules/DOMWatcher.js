@@ -72,7 +72,7 @@ const SKILL_IDENTITY_ALIASES = {
   combat: ['combat'],
   mining: ['mining'],
   smithing: ['smithing'],
-  gathering: ['gathering'],
+  gathering: ['gathering', 'herbalism', 'herb'],
   alchemy: ['alchemy'],
   jewelcrafting: ['jewel', 'jewelcrafting'],
   spellcrafting: ['spellcraft', 'spellcrafting'],
@@ -191,7 +191,7 @@ function detectSkillType(panel, precomputed) {
   if (labels.some(t => /^mining(?:\s|$)|^mine(?:\s|$)/.test(t))) return 'mining';
   if (labels.some(t => /^(?:jewel|jewelcrafting)(?:\s|$)|^prospect(?:\s|$)/.test(t))) return 'jewelcrafting';
   if (labels.some(t => /^smithing(?:\s|$)|^smelt(?:\s|$)/.test(t))) return 'smithing';
-  if (labels.some(t => /^gathering(?:\s|$)|^gather(?:\s|$)/.test(t))) return 'gathering';
+  if (labels.some(t => /^(?:gathering|herbalism|herb)(?:\s|$)|^gather(?:\s|$)/.test(t))) return 'gathering';
   if (labels.some(t => /^alchemy(?:\s|$)|^brew(?:\s|$)/.test(t))) return 'alchemy';
   if (labels.some(t => /^(?:spellcraft|spellcrafting)(?:\s|$)|^enchant(?:\s|$)/.test(t))) return 'spellcrafting';
   if (labels.some(t => /^(?:tailor|tailoring)(?:\s|$)|^(?:tailor|sew|weave)(?:\s|$)/.test(t))) return 'tailoring';
@@ -336,7 +336,13 @@ export function startWatcher() {
         // need repainting: any newly added subtree is queued for background
         // work by discover() below, and the container's own surface colour
         // cannot change just because a child arrived.
-        if (isElement(m.target)) queueContext(m.target, 'children', { background: false, names: false });
+        if (isElement(m.target)) queueContext(m.target, 'children', {
+          // A native text-only replacement can remove our decorative button
+          // layers. Notify the existing global reconciliation path for these
+          // controls even when no new element was mounted to discover below.
+          background: !!nearest(m.target, '[data-iw-compact-button]'),
+          names: false,
+        });
 
         for (const n of m.addedNodes) {
           if (isElement(n)) discover(n, 'mount');
@@ -395,7 +401,7 @@ export function startWatcher() {
     subtree: true,
     characterData: true,
     attributes: true,
-    attributeFilter: ['class', 'style', 'disabled', 'aria-disabled'],
+    attributeFilter: ['class', 'style', 'disabled', 'aria-disabled', 'aria-pressed', 'aria-selected', 'aria-current', 'data-state'],
   });
 
   // Initial discovery happens only after all consumers have registered;

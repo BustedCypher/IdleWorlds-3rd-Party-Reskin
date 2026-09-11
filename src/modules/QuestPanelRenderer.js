@@ -38,7 +38,7 @@ const DISCIPLINE_STYLE = [
   [/\bcombat\b/i,        { accent: '#B84A20', glyph: '⚔' }],
   [/\bmining\b/i,        { accent: '#84919B', glyph: '⛏' }],
   [/\bsmithing\b/i,      { accent: '#B28A2A', glyph: '⚒' }],
-  [/\bgathering\b/i,     { accent: '#579A5D', glyph: '❧' }],
+  [/\b(?:gathering|herbalism)\b/i, { accent: '#579A5D', glyph: '❧' }],
   [/\balchemy\b/i,       { accent: '#9271B2', glyph: '⚗' }],
   [/\bjewel(?:crafting)?\b/i,  { accent: '#4E9FB8', glyph: '◆' }],
   [/\bspell(?:crafting)?\b/i,  { accent: '#8B6FC3', glyph: '✧' }],
@@ -348,6 +348,39 @@ function ensureAtlas(card) {
   }
 }
 
+/**
+ * Publish the command block's rendered width as `--fs-quest-cmd-w` on the card.
+ *
+ * The turn-in button's label carries a live count ("Turn In All (38)"), so the
+ * button -- and with it the block -- is now as wide as its label rather than a
+ * fixed 116px. Below 640px skillpanel.css takes that block OUT OF FLOW (it is
+ * the last child in the DOM, so a float cannot lift it beside the earlier text
+ * the way the live card does), which means the text lines have to reserve room
+ * for it by hand. A hard-coded reserve was right only while the width was
+ * fixed; now the reserve has to track, or a long label runs under the title.
+ *
+ * A width of 0 is the hidden mirror column, not a real measurement (CLAUDE.md,
+ * "which copy is hidden SWAPS at 1280px"), so keep the last real value.
+ *
+ * This writes an inline custom property, which DOES queue an `attr:style`
+ * context on the card -- the same bounded re-entry `smoothActionProgress`
+ * accepts: the induced flush re-measures, reads the same width, and returns
+ * without writing.
+ */
+function measureCommandBlock(card) {
+  const host = card.querySelector(`[${ZONE_ATTR}="commands"]`);
+  if (!host) {
+    card.style.removeProperty('--fs-quest-cmd-w');
+    return;
+  }
+  const width = Math.round(host.getBoundingClientRect().width);
+  if (!width) return;
+  const next = `${width}px`;
+  if (card.style.getPropertyValue('--fs-quest-cmd-w') !== next) {
+    card.style.setProperty('--fs-quest-cmd-w', next);
+  }
+}
+
 function questState(card) {
   const { turnIn, skip } = questButtons(card);
   const ready = turnIn && !(turnIn.disabled || turnIn.getAttribute('aria-disabled') === 'true');
@@ -381,6 +414,7 @@ function renderCard(card) {
   ensureObjectiveTrigger(ref);
   ensureDecoration(card, style, ref);
   ensureAtlas(card);
+  measureCommandBlock(card);
 }
 
 function clearCard(card) {
@@ -394,6 +428,7 @@ function clearCard(card) {
   });
   card.classList.remove(PANEL_CLASS);
   card.style.removeProperty('--fs-quest-accent');
+  card.style.removeProperty('--fs-quest-cmd-w');
   card.removeAttribute(STATE_ATTR);
   card.removeAttribute(RENDERED_ATTR);
   delete card.dataset.iwQuestGlyph;

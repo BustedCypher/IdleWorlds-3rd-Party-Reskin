@@ -15,6 +15,7 @@ npm run build     # esbuild -> dist/content.bundle.js (strict; needs assets)
 npm test          # rebuild, syntax-check, regression suites, sprite-window audit
 npm run fixtures  # responsive visual fixture renders
 npm run audit:items   # validates against the live /items.json (not in CI)
+npm run import:village-art  # 34 building + 5 housing icons from the art-source repo
 ```
 
 `build-tools/audit-sprite-windows.mjs` (run by `npm test`) checks every pixel
@@ -72,6 +73,52 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   `data-iw-item*` (attributes only, no wrapper) so `TooltipEngine` shows the
   item card on hover. `NameScanner` skips `[data-iw-tooltip-trigger]` so it
   can't stack a second prose highlight on the same line.
+- `src/modules/VillagePanels.js` — the Village route's two illustrated panels.
+  `UIFoundation.classifyVillagePanels` resolves them from their headings
+  ("Village" for the Housing hero, "Village Add-ons" for the slot stack, both
+  with the leading icon run stripped) and hands each to `decorateVillagePanel`
+  every `iw:dom-flush`; roles live in their own `data-iw-village*` namespace
+  because every card here is the game's shared `.compact-panel` and so also
+  reaches `SkillPanelRenderer` as `skill: 'unknown'`. The art is the game's own
+  hand-painted isometric Construction/housing icons, imported by
+  `build-tools/import-village-art.mjs` into `assets/village/building_<tier>.webp`
+  / `house_<tier>.webp` plus the generated `src/modules/villageBuildings.js`
+  (DO NOT hand-edit; `tests/village-panels.test.mjs` pins it against
+  `assets/village/buildings.json` and checks every file exists). CSS lives at
+  the end of `ui-system.css`, and the controls opt out of the generic control
+  rule through its `:not([data-iw-village-role])` link.
+- `src/modules/VillageScene.js` — the skin's own **Village** frame on the
+  dashboard, below Skill Actions: the Construction planner's five-plot
+  composition (a house in the middle, four corner plots and one bottom-centre)
+  drawn from the game's own building art. It is the only surface here that
+  reads the game's API, because the village simply is not in the dashboard's
+  DOM — see the note below. Anchored by `findAnchor()` to the `.panel` holding
+  the `<h2>Skill Actions</h2>` and inserted with `target.after(frame)`, so
+  nothing is reparented (rule 2) and the panel that followed Actions still
+  follows the scene. Every node inside is the extension's own and is marked
+  `data-iw-village-scene-owned` — its OWN namespace, deliberately not
+  VillagePanels' `data-iw-village-owned`; see the collision note below.
+  `src/styles/village-scene.css` is concatenated into the `ui-system` injection
+  (no new sheet — the smoke test pins the count at 7).
+- `src/modules/CollapsibleFrames.js` — per-panel collapse on every parent
+  frame (Skills, Inventory, Quests, Village, World Bosses, Current Action,
+  Action Log, World Chat, Zone Control and the Village scene). The World Boss
+  "Possible Rewards" disclosure is a `<details>` because those nodes are the
+  skin's own; a route panel's contents are React's, so wrapping them would
+  reparent game nodes (rule 2). Here the skin instead APPENDS a small chevron
+  button into the panel's heading row and writes `data-iw-collapsed="1"` on the
+  card, and `src/styles/collapsible.css` (concatenated onto the `ui-system`
+  injection) hides `> *` except the heading row and the control. Choices persist
+  in one `chrome.storage` key, `iw-collapsed-frames`. See the traps below.
+- `src/modules/PanelOrder.js` — the player's own panel arrangement, remembered
+  in `chrome.storage` under `iw-panel-order`. Nothing moves in the DOM: the
+  module writes `data-iw-order="N"` on each panel and `src/styles/panel-order.css`
+  (concatenated onto the `ui-system` injection — the sheet count is pinned at 7
+  in three places) turns it into a flex/grid `order`. Rearranging is an explicit
+  MODE, flagged on `<html>` and entered from the skin's own nav item beside the
+  Toolkit link; only inside it does each panel gain an appended full-panel
+  `<button>` grab surface, which takes both arrow keys and a pointer drag. See
+  the traps below.
 - `src/styles/*.css` — injected in the order `content.js` boots them.
   **`ui-system.css` is injected LAST.**
 
@@ -91,6 +138,733 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
    even though it is "only CSS".
 
 ## Traps that have each cost a day
+
+**A style SHORTHAND and its own LONGHAND in the same inline-style map is a
+perpetual motion machine.** This is the single worst performance bug the
+project has had, and it presented as "the whole skin is laggy" with no trigger.
+`READOUT_STYLES` and `INGR_STYLES` each listed `'background': 'none'` together
+with `'background-color': 'transparent'`. Applied in order, the CSSOM
+serialises the declaration two different ways in turn:
+
+    setProperty('background', 'none')          -> style="background: none"
+    setProperty('background-color','transparent') -> style="background: none transparent"
+
+Writing the shorthand resets the longhand to initial and the attribute
+collapses back to `none`; writing the longhand expands it again. **Both are
+real attribute changes**, so both produce a mutation record — and `DOMWatcher`
+observes `attributeFilter` (EIGHT entries, see below), so
+each one queues the owning `.compact-panel` (via `queueContext`'s
+`nearest(el, SEL_SKILL_PANEL)`), which reconciles on the next frame, which
+writes again. The skin drove ITSELF at animation-frame rate forever.
+
+Measured with the page's own timers stopped — no game mutation at all — a
+12-panel fixture still produced **601 flushes, 7,212 skill reconciles and
+21,636 style writes per 5 seconds**, and held the main thread at 40%
+(1,600 nodes) to 92% (13,000 nodes) busy. Per tick: 100ms -> 3ms after the fix
+at small scale, 223ms -> 11ms at 13k nodes.
+
+What makes this class of bug invisible to every other suite here: the END
+STATE is correct. Computed `background-color`/`background-image` are identical
+either way (verified before/after: `rgba(0,0,0,0) | none`, and all 1,094
+skin-marked nodes classify byte-identically). Only the COST differs, so a test
+has to assert cost. `tests/flush-quiescence.test.mjs` does exactly that — it
+stops every mutation source and requires the skin to go silent — and its
+negative control is verified: put `background-color` back and it reports 480
+flushes instead of 0.
+
+Rules that follow:
+
+- **Never list a longhand of a shorthand you also set** in `READOUT_STYLES`,
+  `INGR_STYLES`, `BUTTON_STYLES`, `FORGE`, `ACTION_ART` or any future map.
+  `background` already resets `background-color`/`-image` to initial, so the
+  longhands were pure redundancy. (`border` + `border-radius` is fine —
+  `border-radius` is not a longhand of `border`.)
+- **Chrome does NOT emit a mutation record for a same-value `setProperty`**
+  (measured: 100 identical writes -> 0 records; 100 alternating -> 100). So a
+  style write is only a flush trigger when the value genuinely changes. That
+  cuts both ways: it is why a stable skin costs nothing, and why any oscillating
+  pair costs everything.
+- **`InlineStyleOwner.set()` has no no-op path.** Every call runs six CSSOM
+  reads plus an unconditional `setProperty`. That is what turns one
+  disagreeing declaration into a permanent loop rather than one wasted write.
+  If another oscillation is ever found, the durable fix is a
+  "value and priority already match" early return in `set()`; the map cleanup
+  above only removes the current trigger.
+- The diagnosis technique that found it, when a symptom is "generally slow":
+  **stop every source of mutation and count flushes.** A quiescent page that
+  keeps flushing is the skin driving itself, and the culprit is then one
+  `MutationObserver` with `attributeOldValue: true` away — diff the old and new
+  style attributes and print which (element, property) pairs keep changing.
+
+**The same machine ran twice more, and the quiescence test could not see
+either, because a COST test is only as good as the SHAPES on its page**
+(reported 2026-09 as "scrolling stutters"; the page was in fact never idle).
+Both are fixed in `SkillPanelRenderer.js`; both have verified negative controls
+in `tests/flush-quiescence.test.mjs`, whose fixture now carries the shapes.
+
+- **`renderPanel` tore down cards it had never decorated.** `.compact-panel` is
+  the game's shared class, so every quest, boss, village and shop card arrives
+  as a non-skill and got an unconditional `clearPanelChrome()`. That is a
+  TEARDOWN: it strips the ~30 atlas custom properties, `data-iw-skills-ui-ready`
+  and the appended nodes that **QuestPanelRenderer owns on the same node**,
+  which Quest re-applies on the same flush, which this deletes on the next.
+  Measured on a frozen page: **~400 apply/clear cycles a second from ONE quest
+  card**, 44,352 style-attribute writes in 1.2s. This is the boss-card flash
+  from the two-writers note below, in its expensive form — that fix narrowed a
+  single `delete panel.dataset.iwUi` and left every other line of the teardown
+  unconditional. The guard is now `if (ownsPanel(panel))`, which covers all of
+  them at once. The fixture had no quest card at all, so the test read silence.
+
+- **`textContent` is a REPLACE-ALL, so a same-value write is still a
+  mutation.** `ensureSkillPresentation` assigned `.textContent` unconditionally
+  on `.fs-skill-identity-percent` and `.fs-skill-base-exp`. Setting it removes
+  the existing text node and inserts a new one, so it emits a **childList**
+  record even when the string is byte-identical — measured: 2,376 writes in 3s,
+  `identical=true` for every one. DOMWatcher queues the owning panel on
+  childList, so the panel re-renders and writes again, forever. Use `setOwnText`
+  (compare, then write). Note the asymmetry that hid this: a same-value
+  `setProperty` emits NOTHING, which is why `fill.style.width` beside it is
+  free, and why the module's `data-iw-*` writes are invisible too.
+
+- **Counting `iw:dom-flush` alone cannot see this family.** A childList record
+  queues through `queueContext(..., { background: false })`, so `pendingBgRoots`
+  stays empty and **no `iw:dom-flush` is ever emitted**. Loop B ran at ~790
+  skill reconciles a second with the flush counter reading **zero**. The test
+  now also counts skill reconciles, inline-style writes and raw mutation
+  records, so a loop that drives none of the first three still trips the last.
+
+- **Why the fixture was blind, in detail** — both are the "a fixture that models
+  the wrong DOM shape lies exactly like a missing stylesheet" trap: its skill
+  card said `Base EXP: 1,387`, but `baseExpValue()` matches only the live
+  `Base reward: +N … XP`, so the plaque was never created; and its title carried
+  no VERB and its action button sat inside the content branch, so `action-title`
+  never resolved, `distinctZones` saw two zones rather than three, and the card
+  got no three-zone shell — so neither node under test existed. The test now
+  ASSERTS that the quest cards and the plaques are present, because a quiescence
+  check with nothing to be quiet about passes for the wrong reason.
+
+- **One smoke check was passing BECAUSE of the loop.** "a disabled action keeps
+  the desaturated frame" marked `#jewel-panel` and `#locked-panel` ready but
+  kicked a flush only on the jewel one. DOMWatcher queues the panel nearest a
+  mutation, so `#locked-panel` was never re-read — it was being re-rendered
+  anyway, many times a second, by the loop. With the loop gone the test has to
+  schedule the pass it depends on. Expect more of these: any check that relies
+  on "something will re-render eventually" was living on this.
+
+**The scrolling stall itself is NOT a performance bug, and the feeds keeping
+it is a deliberate decision (Curtis, 2026-09).** `ui-system.css` gives
+`[data-iw-panel-part="feed"]` `overflow-y: auto` with `max-height: 300px`
+(Action Log) and `min(46vh, 430px)` (World Chat). Those are real nested scroll
+containers in the middle of a ~28,000px document, so while the pointer is over
+one the wheel scrolls the FEED and the page does not move until it bottoms out.
+Measured per tick: the page advances 4 ticks, freezes for 7 while the log's
+`scrollTop` climbs 0→647, advances 4, freezes for 9 while chat climbs 0→867,
+then resumes — 16 of 30 ticks moved the page not at all. It is independent of
+frame rate (identical at 16/32/64/120ms between ticks), so it is not lag; it is
+standard nested-scroller behaviour, and it is why the report says "occasionally"
+— it depends entirely on where the cursor happens to sit. **Do not "fix" this
+by removing the caps**: it was offered and declined, because an uncapped
+100-message World Chat dominates the panel stack. Also ruled out by measurement,
+so do not re-investigate without new numbers: scroll anchoring (0px unattended
+drift over 3s, and `overflow-anchor: none` changes nothing), `preventDefault`
+(0 cancelled wheel events — the skin registers **no** wheel, touch or pointer
+listener at all), duplicate listeners (31 total, all intended), and
+`scroll-behavior: smooth` / `scroll-snap` (absent from the whole cascade).
+`background-attachment: fixed` on `<body>` IS real paint cost — it cannot be
+composited, so the viewport repaints every scroll frame (106 paints vs 21 over
+50 ticks, verified on a bare page with no skin: 4 → 40) — but it does not
+affect scroll distance, and the pinned vignette is deliberate (Curtis,
+2026-09). The harness that produced all of the above is
+`build-tools/.tmp-scroll/` (gitignored).
+
+**A cache key must not contain live CONTENT the cached work does not depend
+on.** Three separate classifiers here had the same defect, and it is the second
+most expensive family of bug this project has had after the flush loop above.
+The tell is always the same: an expensive resolution is correctly cached, and
+the cache never hits.
+
+- **`SkillPanelRenderer.structureSignature()` contained the ticking XP number.**
+  The "Lv N - X% • 4,120 to go" readout is a genuine `<button>`, so it landed in
+  the signature's `querySelectorAll('button')` sweep and its digits changed
+  several times a second on an active skill. `annotateStructure()` therefore
+  re-ran its entire structural walk every tick — `clearStructureRoles`, several
+  `findBestText` passes, `textCandidates` sorted through `getComputedStyle`, and
+  `findProgress` calling `getBoundingClientRect`, which forces layout. Measured
+  with 12 panels ticking: 343ms of a 479ms profile, 109ms of it forced layout,
+  all to re-derive roles that had not moved. Fixed by blanking digit runs
+  (`structureText`) — every letter is still compared exactly, so Mine -> Fish, a
+  relabel, an unlock or a new control all still invalidate. Do NOT weaken it
+  further; the opposite failure (DOMWatcher's old text-LENGTH key, which could
+  not see Mine -> Fish) is one line away.
+
+- **`UIFoundation.classifyActivityPanels()` ran its whole-document label sweep
+  BEFORE the cache check**, exactly like `findInventoryRoot` once did. Coverage
+  here is keyed by SLUG and `ACTIVITY_PANELS` holds three, so once every slug
+  has a valid entry the scan cannot produce anything the early return would not
+  discard. The fast path is therefore provably equivalent, and it removed 185ms
+  of a 386ms profile. While ANY slug is unresolved the full scan still runs —
+  that is the route-swap case and the empty-resolution freeze lives there.
+
+- **Four places each ran their own `h1,h2,h3,h4` sweep per classify pass**
+  (`sectionFrameOrphanHeadings`, `bossHeadings`, `villageHeadings`, plus
+  `panelHeading` re-querying per `.panel`, which walked the whole inventory
+  subtree once per panel). `queueClassify()` runs every classifier inside ONE
+  rAF callback and nothing any of them appends is a heading, so a single
+  per-pass `headingIndex()` is exactly equivalent. If a classifier ever starts
+  creating an `h1`-`h4`, this memo is where it breaks.
+
+**Two perf changes were tried, MEASURED, and rejected — do not re-add them
+without new numbers:**
+
+- **An `InlineStyleOwner.set()` no-op fast path** (skip the write when the same
+  request is already applied). It looks obviously right — `set()` costs six
+  CSSOM round-trips plus a `setProperty` — but measured across a quiescent
+  page, a 40-row re-render burst and 12 ticking skill panels it changed nothing
+  (`set` is ~3ms of a ~480ms profile once the flush loop is gone). It also does
+  NOT protect against the shorthand/longhand loop above: there each write
+  genuinely changes the serialisation, so the guard correctly declines to skip.
+  The protection for that is `tests/flush-quiescence.test.mjs`.
+- **Gating `OverlayFramer.frameOverlays()`'s candidate sweep on a DOMWatcher
+  "structure changed" epoch.** Its three attribute-SUBSTRING selectors cannot
+  use Chrome's indexes so each walks the whole document (48ms of a 225ms
+  profile at 13k nodes), but the gate bought only ~4% — an idle game streams
+  chat and log rows, so the epoch moves on most flushes anyway — in exchange
+  for making the module silently dependent on the observer having seen the
+  change that opened the overlay, and for breaking direct invocation (which
+  `tests/overlay-framer.test.mjs` caught immediately). A missed overlay is an
+  unframed modal. Make the SELECTOR cheaper instead, if it is ever worth it.
+
+**Panel-level chrome must not be classified once per ROW.**
+`InventoryRenderer.renderRow()` called `classifyInventoryChrome(root)` on its
+slow path, and that function sweeps the WHOLE panel — `button, a, [role=button]`,
+`h1..h4`, and `span, div, p` — then discarded every match inside an item row with
+a `closest()` walk. At a 600-row inventory that is ~1,200 buttons and ~4,800
+text nodes swept per row, i.e. **O(rows^2)**: measured at 1.15s of a 2.9s
+profile, the largest cost remaining after the loop above was fixed. Two fixes,
+both kept:
+
+- `classifyInventoryChromeOnce()` collapses the burst to one sweep per flush.
+  DOMWatcher emits every queued `iw:inventory-row` for a flush synchronously
+  from one task, so a `Set` drained on a `queueMicrotask` is exactly the right
+  scope — it still re-runs next flush, which the LIVE filter-active derivation
+  needs (rule 5: which tab is lit is the game's own state).
+- `notInRow()` appends `:not(.compact-row *):not([class*="item-row"] *)` so
+  Chrome's selector engine rejects row descendants itself, instead of matching
+  them and then running one `closest()` per node in JS.
+
+Do not move that call back inside the per-row path, and do not "simplify" the
+sweeps back to unscoped selectors plus a `closest()` filter.
+
+
+**The Village scene is the one surface that READS THE GAME'S API, and every
+line of that read is a contract with someone else's server.** The dashboard
+does not render the village at all — `sD.player.villageAddons` only reaches the
+DOM on the `/housing` route — so a Village frame on the main page has exactly
+two sources: the Village route's own markup while the player is standing on it,
+and `GET /api/player`. `VillageScene` uses both, DOM first. Four things about
+that read were each wrong once and each fails silently:
+
+- **`section` is not free-form.** The app passes its own route name and ships
+  exactly `dashboard`, `housing`, `market`, `leaderboards`, `dungeon`
+  (`"housing"===sk?gO:null` and friends in the bundle). The first version sent
+  `section=game`, which is not one of them. `sectionOf()` derives it from the
+  pathname and defaults to `dashboard`, which is where the anchor lives.
+  `scope=core` is what trims the payload to `{player, skills, notifications,
+  inventory, recentGains}`; `player.housing.tier` and
+  `player.villageAddons.{totalSlots,installed}` both live under it, and
+  `installed` rows carry `slot`, `itemKey` (`construction_building_tier_<N>`)
+  and `name`.
+- **The league header does NOT come for free.** The game runs two leagues off
+  one origin (`/ssf` prefix vs none) and picks between them by monkey-patching
+  `globalThis.fetch` to stamp `x-idleworlds-league`. A content script runs in an
+  ISOLATED world and never sees that patch, so a read from the skin has to set
+  the header itself (`leagueOf()`: `ssf` or `standard`) or an SSF player is
+  served their STANDARD village — right shape, plausible data, wrong character,
+  and no error anywhere.
+- **A tab swap must NOT drop the snapshot; a league swap must.** The first
+  version called `clearVillageScene()` on any `location` change, which threw
+  away the reading taken on the Village route at the exact moment the dashboard
+  needed it — so with the API unavailable the frame sat on "Loading your
+  village…" forever. Same family as the zone label `HeaderRenderer` has to
+  remember. The route branch now keeps the snapshot unless `leagueOf()`
+  changed, aborts in-flight reads, and pulls `nextRead` forward by at most
+  `ROUTE_REFRESH_MS` so tab-drumming cannot spam the server.
+- **The poll is a safety net, not the mechanism.** `readRenderedVillage()` runs
+  every flush and reads VillagePanels' own `data-iw-village="housing"` /
+  `"addons"` tags, so an install or a housing upgrade shows up on the very next
+  flush. `REFRESH_MS` is therefore 5 minutes (with a 30s `RETRY_MS` after a
+  failure, so a blip does not strand the frame on its error copy). And
+  `reconcileVillageScene()` is `async`, so `guard()` — which only catches
+  synchronously — cannot see its rejection: `UIFoundation` attaches a
+  `.catch(warnOnce)` on the promise.
+
+`tests/smoke.test.mjs` pins the read's URL, and its "no third-party network
+requests" filter now RESOLVES each URL against the document before judging it,
+because a relative same-origin path failed a raw string test.
+
+**A module's `clear*()` must not be able to delete another module's nodes, or
+the teardown check can never fail.** `VillageScene.own()` originally stamped
+`data-iw-village-owned` — VillagePanels' marker — and `clearUIFoundation` calls
+`clearVillagePanel(document.body)`, which sweeps `[data-iw-village-owned]`
+across the whole body. So the scene was torn down by the WRONG module: delete
+`clearVillageScene()` from `clearUIFoundation` entirely and the smoke test's
+teardown checks still passed. The marker is `data-iw-village-scene-owned` now,
+and reverting either half fails "appended village scene removed on teardown".
+This is the shared-attribute trap the boss cards taught, in its teardown form.
+
+**A box with `max-width` + `margin:auto` and only OUT-OF-FLOW children collapses
+to its own border inside a flex column.** `.iw-vs-scene` had no `width`. Its
+host wears `data-iw-panel`, and `ui-system.css` gives that
+`display:flex; flex-direction:column !important` — and an AUTO cross-axis
+margin CANCELS a flex item's stretch, so the box fell back to shrink-to-fit
+over five absolutely positioned plots and an absolutely positioned house, i.e.
+to 1-2px. `overflow:hidden` then clipped the entire village away while
+`getComputedStyle` reported a perfectly correct background, height, position
+and `background-image` the whole time — so it read as broken artwork, not as a
+collapsed box, which is the same lie the `setContent`/`file://` asset failure
+tells. `width:100%` is the fix and it is load-bearing.
+
+**The scene's responsive rules key on the SCENE, not the viewport.** It sits in
+the dashboard's `minmax(320px,0.42fr)` panel column, so it is ~385px wide at a
+1000px viewport and ~680px wide at 760px — a `@media` query gets that exactly
+backwards, the same wrong-column-width trap as the Village route's own cards.
+`.iw-vs-scene` is a `container-type: inline-size` container (safe here: its
+inline size is `width:100%` capped by `max-width`, so its contents never
+influenced it) and the narrow rules are `@container iw-village (max-width:470px)`.
+Only the frame's own padding stays viewport-keyed.
+
+**At half height the captions HAVE to leave the flow, and that is what pays
+for the bigger icons.** Curtis asked (2026-09) for the scene half as tall with
+larger building art, and those two are in direct conflict while a caption sits
+below its sprite: at H=290 a plot costs `sprite + ~45px`, the top and bottom
+rows then meet in the same column, and the arithmetic caps the icons at ~66px —
+SMALLER than they were at twice the height. Overlaid, a plot's footprint is
+exactly its art, so 130px fits (up from 100). Do not "tidy" the captions back
+into flow without redoing that arithmetic. They are legible over the art
+because `.iw-vs-scene strong/.iw-vs-status` already carry a double text-shadow
+and the isometric buildings put their plainest pixels — the base and its ground
+shadow — exactly where the caption lands. The same halving is why the HOUSE art
+went 190px to a 52% share: the home is not enlarged (Curtis excluded it), but
+it cannot stay at 190 in a 290px box that also holds a bottom-centre plot.
+
+**The house and the bottom-centre plot share the centre column**, so whether
+they collide depends on the scene's height at the current width, and nothing in
+the cascade says they overlap. The reported symptom was "Housing tier 5" drawn
+across the bottom-centre building's spire. Two things keep them apart and both
+are load-bearing: the house is anchored to the TOP edge (not centred), so the
+pair are measured from the same direction; and its height is a PERCENTAGE of
+the scene, so they scale together — a fixed-px house clears the plot at one
+height and sits on it at the next. Note also that a plot's width drives how far
+its NAME wraps, which grows the footprint as the scene NARROWS — the opposite
+of what `aspect-ratio` does, which is why that was tried and rejected. The
+house's box is 40% wide, not 44%, purely so its caption cannot touch the top
+corner plots' boxes. `tests/village-scene-layout.test.mjs` measures the real
+rects at six widths in a real browser; retune the scene height and the house's
+height share together, never one alone. Both of its negative controls are
+verified: drop `width:100%` and the scene measures 2px; take the house's height
+share to 75% and it overlaps plots 3 and 5.
+
+`tests/flush-quiescence.test.mjs`'s fixture carries a Skill Actions panel and
+stubs `/api/player` specifically so the scene MOUNTS there — it is the skin's
+own subtree, rewritten from a signature, so it is the shape most able to drive
+itself, and a quiescence check with nothing to be quiet about passes for the
+wrong reason.
+
+**An element the skin APPENDS into a game node changes what every other
+classifier reads there.** The collapse toggle lives inside the panel's heading
+row, and four structural tests in `UIFoundation` counted it as one of the
+game's own controls the moment it existed. The worst was
+`classifyPanelHeader`: a split header requires the title branch to hold NO
+button, so on the pass after the append the World Chat / Action Log headers
+stopped reading as split and lost their two-column header treatment — a
+regression whose cause is in a different module from its symptom. All four now
+carry `:not([data-iw-collapse])` (`classifyPanelHeader`'s split test,
+`hasPanelBodyOutsideHeading`, `panelHostMatches`'s action-log "view all" probe,
+`classifyActionLog`, and the Current Action queue walk), plus
+`InventoryRenderer`'s `NOT_IN_ROW` chain and `CompactButtons.kind()`. This is
+the `:not()`-opt-out rule the generic control rule already documents, applied
+to CLASSIFIERS rather than to CSS: when the skin adds a control to a shared
+node, every sweep that counts controls there has to be told about it.
+
+**The collapse target is the `.panel`, not the node wearing the frame mark.**
+`classifyActivityPanels` resolves its host structurally, and for the Action Log
+that host can be the heading ROW rather than the card: `panelHostMatches` walks
+up from the label and stops at the first ancestor that satisfies it, and
+`hasPanelBodyOutsideHeading` only discounts a sibling whose text is xp/hr and
+NOTHING else — so a header carrying both "832,170 XP/hr" and "52% win rate"
+passes. Collapsing that would hide the rate readouts and leave the feed
+standing. `collapseTarget()` therefore prefers `frame.closest('.panel')` (one
+of the four durable hooks), declining a `.panel` that wraps another because
+that is a layout column. Two frames can then resolve to one card, so the pass
+dedupes on the TARGET — without that the second visit appends a second toggle
+to the same box. (The `hasPanelBodyOutsideHeading` looseness is a real latent
+issue in its own right and is NOT fixed here; changing it would re-tune a
+matcher CLAUDE.md says was fitted against live captures.)
+
+**The control must centre on the heading ROW, which means living inside it.**
+Pinned to a fixed offset from the panel's top-right corner it floated above the
+title: measured across the nine panels, heading rows run 30px to 93px tall,
+because `--iw-frame-pad-y` is 18px on an activity panel and 26px elsewhere and
+the section title's own `clamp(17px,1.8vw,21px)` changes the row height again.
+So the toggle is appended to the head with `position: absolute; top: 50%`, and
+the head gets `position: relative` — the only element that knows where its own
+middle is. Being out of flow it is NOT a flex item, so the game's
+`justify-between` header still sees exactly the two children React wrote;
+appending it as a third IN-FLOW item would have pushed the game's own controls
+to the middle. The head also takes `padding-right: 30px` to reserve the gutter,
+which is what keeps the toggle off Action Log's "View All", World Chat's three
+icon tools, Zone Control's button pair, Current Action's cancel and the
+Inventory tool row — all of which sit at exactly that end of exactly that row.
+Centre it on the TITLE rather than the row and World Chat breaks, because that
+row carries a second line under its heading and the game centres its own icon
+tools on the row.
+
+**`VillageScene.render()` had to stop calling `replaceChildren()`.** The scene's
+frame is shared chrome now, so wiping every child deleted the collapse toggle
+on each village change and left the scene as the one panel on the page that
+could not be folded. It removes only its own `data-iw-village-scene-owned`
+children. The collapse pass's stale sweep is keyed on the TARGET rather than on
+whether this pass re-tagged the head, for the same reason: the rebuild drops
+`data-iw-collapse-head` until the next flush restores it, and keying on the
+button would have read that one-frame gap as "no longer a panel" and thrown
+away the player's collapsed state.
+
+**A collapsed panel is ONE bar, and getting there costs more than a height.**
+Reported from a live capture (Curtis, 2026-09) as "very inconsistent". Three
+things were making every panel fold differently, and all three had to go:
+
+- **The heading rows are not one line.** Skill Actions carries "Daily XP Boost:
+  … +20% XP" and "Resets in 03:50" under its title, World Chat carries
+  "Showing the latest 100 messages", Village carries "2 installed / 4 slots",
+  and the game's own header controls (Inventory's three tools, World Chat's
+  four icons, Skill Actions' I/II pager, Current Action's cancel) are 30-34px
+  tall. A collapsed panel therefore keeps ONLY the path to its title, marked in
+  JS by `markSpine()` because the title sits at a different depth in every
+  panel and hiding a WRAPPER hides the title inside it. Everything else in the
+  row folds away with the panel and comes straight back on expand.
+- **The frame's padding could not be overridden, so the TOKEN is re-pointed
+  instead.** `--iw-frame-pad-y` is 18px on an activity panel and 26px
+  elsewhere, which is the whole 16px height difference between the two
+  families; the padding declaration itself lives in the `:is(A,B,C):not(:has(
+  :is(A,B,C)))` frame rule at **(0,4,0) with `!important`**, so overriding it
+  needs a specificity war while setting `--iw-frame-pad-y: 7px` on the
+  collapsed frame needs none. Reach for the variable, not the property.
+- **The Action Log's title is a real `<button>`**, and `base.css`'s
+  `button:not(…)×4` font rule is **(0,4,1) with `!important`** — so that one
+  panel heading rendered in the UI face while every other used the display
+  face, in the EXPANDED state too. `ui-system.css` has always tried to correct
+  it at (0,3,0) and always lost. `:not([data-iw-ui="section-title"])` on the
+  base.css rule is what finally lets that intent land; the collapsed treatment
+  then only needs (0,2,0).
+
+`line-height` on the collapsed title is a fixed **px, not a ratio** — it is
+what makes every bar exactly as tall as every other.
+`tests/collapsible-frames.test.mjs` folds all nine panels at once and requires
+the set of heights AND the set of computed title treatments each to have
+exactly one member, which is the only shape of check that can see
+"inconsistent".
+
+**A collapsed bar wears ONE flourish, top left, and the filigree rule had to be
+handed over rather than overridden.** Curtis asked (2026-09) for the other
+three corners gone and the title moved clear of the survivor. Two things about
+that:
+
+- **`border-image` needs no second asset to drop three corners.** The sheet is
+  sliced at 50%, so each corner paints where two border SIDES meet and the
+  edges between them are empty by construction; `border-width: 15px 0 0 32px`
+  therefore leaves the top-left quadrant as the only corner with any area. It
+  also fixes the size problem on its own terms — at the full 34px slice, four
+  corners of a 34px bar overlap into an unreadable band.
+- **The first attempt at this was INERT and looked exactly like art that had
+  not changed.** `[data-iw-collapsed="1"]::after { border-width: … }` is
+  (0,1,0) against a (0,4,0) `!important` frame rule, so the collapsed bars kept
+  drawing all four corners and nothing said so. The fix is the `:not()` opt-out
+  the generic control rule already documents, applied to the filigree selector:
+  ui-system.css's `::after` now carries `:not([data-iw-collapsed="1"])` and
+  collapsible.css OWNS the collapsed ornament, redeclaring it whole. Its
+  negative control is verified — remove the opt-out and the check reports
+  `[34,32,34,32]` on every bar. There is a second check that an EXPANDED panel
+  still gets all four, because an opt-out on someone else's selector can strip
+  more than it was meant to.
+- **Do NOT shrink the surviving corner to fit.** The first attempt windowed it
+  at 32x15 to keep it inside a 34px bar; the source quadrant is 88x95 logical,
+  so that stretches the art to more than twice its width-for-height and the
+  flourish renders as a smear — reported live as "the corner filigree is
+  squashed somehow". With three corners gone there is nothing left to overlap,
+  and the native 32x34 fits the 40px the `::after` gets from its `inset: -3px`.
+  The check is tied to the EXPANDED corner's own ratio rather than to a number,
+  so it stays true if the art is ever re-cut.
+- The title's clearance is `padding-left` on the HEAD, not a smaller frame
+  padding, so the bar's left rule still lines up with every other panel.
+  Reverting it puts the title at 21px against a 32px flourish.
+
+**The collapse control had a SECOND owner, and only on three panels.**
+`:is([data-iw-panel-part="header"], [data-iw-panel-part="header-tools"]) button`
+in ui-system.css is (0,2,0) `!important` against collapsible.css's (0,1,0), so
+inside the three activity panels — the only frames whose head is tagged
+`header` — the toggle was resized to 30x30 and given that rule's own plate,
+while every other panel drew it at 22x22. Live capture (2026-09): the same
+control at two sizes down one column. It carries `:not([data-iw-collapse])`
+now. The related `--iw-frame-pad-x` split (20px on an activity panel, 22px on a
+section frame) is levelled on the collapsed frame through the token, the same
+way the vertical pair is, because it put the toggle at two different distances
+from the panel edge. `tests/collapsible-frames.test.mjs` asserts the control's
+box, its computed paint and its inset each collapse to ONE value across all
+nine panels — a uniformity check has to compare the set, not spot-check one.
+
+Cost: after the first pass the module writes nothing. The append is guarded by
+a `:scope >` probe, and `data-iw-*`, `aria-expanded` and `aria-label` are all
+outside DOMWatcher's `attributeFilter`, so a settled page produces no mutation
+records — `tests/flush-quiescence.test.mjs` mounts real toggles and asserts it.
+`tests/collapsible-frames.test.mjs` is the real-browser half (all nine panels,
+each with the live app's own header shape from the deployed bundle, plus the
+overlap and centring geometry); `tests/smoke.test.mjs` covers the click, the
+storage round trip and the kill-switch teardown. Both negative controls on the
+geometry are verified: drop the head's `padding-right` and the toggle covers a
+game control on two panels; drop `:not([data-iw-collapse-head])` from the fold
+rule and a collapsed panel loses its own title.
+
+**The dashboard's panel containers all honour CSS `order`, and this was
+MEASURED, not assumed.** Curtis ran `claude/probe-panel-layout.js` on the live
+page (2026-09-11, captures kept in `claude/captures/`). The probe's self-test
+moves a real panel and puts it back, at 1683px and at 1188px, and reported
+`order` working with no `display` shim in both. What the capture pins:
+
+- Every container that holds panels already computes to flex or grid. That was
+  the one thing that could have killed the feature — the app stacks things with
+  Tailwind `space-y-*` elsewhere, and `space-y-*` is MARGIN spacing on a BLOCK
+  container where `order` is silently inert, which reads exactly like a broken
+  CSS rule. `PanelOrder.honoursOrder()` still checks, because a future route
+  may not be flex.
+- The `.panel` IS the flex item in all 17 cases, so the attribute goes on the
+  panel, not on a wrapper. `itemFor()` still resolves it rather than assuming.
+- Wide (>=1280px) is TWO independent flex columns: left holds Skill Actions,
+  Current Action, Action Log, World Chat and the skin's own Village scene;
+  right holds Inventory, Quests, World Bosses. Narrow is ONE grid holding all
+  of them.
+
+**Cross-column drags are OUT, and the number is why.** `order` cannot reach
+across two sibling subtrees, and the usual fix — `display: contents` on both
+columns so the panels become items of the parent grid — makes them share that
+grid's ROW tracks. Computed against Curtis's own measured panel heights, the
+rows become `[1031, 202, 1039, 553]`: the page grows from 1,821px to 2,825px
+and gains **1,004px of dead whitespace**, because a 1,031px Skill Actions sits
+beside a 35px collapsed Inventory and the row stretches to the taller one. Two
+independent columns is what the game's layout is FOR. If cross-column is ever
+wanted, the cheap version is swapping the two columns wholesale — one `order`
+value on each column wrapper, which are themselves grid items.
+
+**A panel's identity key FLIPS as the skin classifies it, so `frameKey()` could
+not be reused.** Measured in the same capture: Current Action reports
+`panel:current-action` in the rendered copy and `title:current action` in the
+hidden mirror, and Action Log — which ships no heading at all, its label being
+a `<button>` — keys to `null` until `data-iw-panel` lands. For COLLAPSE that
+costs nothing (an unknown panel just stays expanded); for ORDER it means one
+panel owning two storage slots depending on timing. `PanelOrder.itemKey()`
+therefore prefers the GAME's own durable hooks in a fixed order: the element id
+(`#current-action-panel`), then a real `h1`-`h4`/`[role="heading"]` — pointedly
+NOT `[data-iw-ui="section-title"]`, which is the skin's mark, appears late, and
+on Action Log lands on a button — then `data-iw-panel`. A panel matching none
+returns null, and `arrange()` redistributes only the KEYED items across the
+slots THEY occupied, so an unkeyed panel keeps its place instead of being given
+a position it cannot hold.
+
+**Two failure modes here are both "the write landed and nothing applied it",
+and both are consequences of `data-iw-*` being invisible to the observer.**
+Neither produces an error, and the second silently discards the player's layout
+on every page load:
+
+- `moveItem()` persisted the preference and then threw in `describe()`, because
+  the keyboard handler passes an ELEMENT where the pass passes a `{el, key}`
+  row. Storage held the right arrangement and the page never repainted.
+- `loadPreferences()` resolves AFTER the first pass has run with an empty map,
+  and a resolved promise mutates nothing, so there may be no flush left to
+  apply on. The load now re-runs the pass itself. Same reason `setRearrangeMode`
+  calls it directly: the mode flag lives on `<html>`, outside `document.body`
+  and so outside the observer's only root.
+
+**MEASURED write costs under the LIVE `attributeFilter`** (real Chromium, 100
+writes each, counted with `takeRecords()`):
+
+    data-iw-*, changed or same value ........  0
+    aria-grabbed ...........................   0
+    a style write on <html> ................   0
+    inline style, changed value ............ 100
+    aria-pressed / data-state, SAME value .. 100
+    class add, even an existing class ...... 100
+    textContent, same value ................ 101
+
+Note the asymmetry: a same-value `setProperty` emits nothing, but a same-value
+`setAttribute` emits a record. The live filter is EIGHT entries, not the four
+this file used to claim in three places:
+`['class','style','disabled','aria-disabled','aria-pressed','aria-selected','aria-current','data-state']`
+(`DOMWatcher.js:404`). So `aria-pressed`, `aria-selected`, `aria-current` and
+`data-state` are flush triggers now — do not reach for any of them on a
+skin-owned control, and never toggle a class during a drag.
+
+**The drag moves the LAYOUT, not a ghost, and that is what makes it free.**
+There is deliberately no element following the cursor. A ghost repositioned at
+60fps is 60 changed inline-style writes a second, and each one emits a mutation
+record that queues a classify pass AND a whole-document `OverlayFramer` sweep —
+the sweep whose gating was already tried, measured and rejected. A drag here
+rewrites the same `data-iw-order` attributes the keyboard path writes, which
+cost nothing, so the panels reflow live under the pointer for free. Measured
+end to end in `tests/panel-order.test.mjs`: a complete press-move-drop writes
+**0 inline styles and 0 watched attributes**. The instrument's own sensitivity
+is asserted beside it, because a counter reporting zero because it is broken
+looks exactly like one reporting zero because there is nothing to see.
+
+Four things about that drag are load-bearing:
+
+- **The insertion index comes from geometry captured at drag START, never from
+  live rects.** Re-measuring per frame is a feedback loop in the literal sense:
+  the reflow this move causes changes the rects the next move reads, and the
+  panel oscillates between two slots. Item heights do not change when their
+  order does, so one `getBoundingClientRect` per item per drag stays true for
+  the whole drag and replaces one per frame.
+- **`setPointerCapture` removes the need for any document-level listener.**
+  While capture is held the events retarget to the handle, so the drag follows
+  the pointer off the panel and off the window without the skin adding a
+  `pointermove` listener to the document. The skin still registers no wheel,
+  touch or pointer listener anywhere outside rearrange mode.
+- **`touch-action: none` on the handle is required**, or the browser claims the
+  gesture for scrolling and a drag never starts on a phone — which is the
+  single-column narrow layout, where dragging is most useful. The drag's own
+  autoscroll (`EDGE_BAND`/`EDGE_SPEED`) replaces the browser's, and it is
+  needed: the dashboard column measures ~1,800px on a real account, so a drag
+  from bottom to top cannot be completed inside one viewport. That autoscroll
+  is `window.scrollBy`, which is unaffected by the nested-scroller stall this
+  file documents — that stall is WHEEL routing.
+- **`decoratePanelOrder` must skip the dragging container.** A drag holds a
+  PREVIEW that is not in preferences yet, so re-deriving that container's slots
+  on any flush the game happens to emit snaps the panel back to where it
+  started. `Escape` is the only way out of a captured-pointer drag and restores
+  the starting order; `clearPanelOrder` ends an in-flight drag before removing
+  the handle it is bound to.
+
+The lifted treatment on the dragged panel is `filter` + `opacity`, NOT a
+transform: a transform creates a containing block for fixed-position
+descendants, which would move anything the game positions that way inside the
+card. There is no FLIP animation for the reflow, and adding one would mean a
+per-frame inline transform on every sibling — the exact cost the whole design
+avoids.
+
+**EVERY direct child of a claimed container must get a slot, or the ones that
+do not will JUMP TO THE FRONT.** Reported live (Curtis, 2026-09) as "the new
+village tab seems to be excluded from the moveable frames" — and it was worse
+than exclusion. `discoverContainers` collected leaf `.panel`s only, but the
+skin's own Village scene is a bare `<section class="iw-village-scene">` with no
+`.panel` class (`VillageScene.js:211-215`), so it was never slotted and kept
+`order: 0`. Slot 0 is a REAL slot, so it tied with whichever panel the player
+put first and DOM order broke the tie — the scene was hoisted above Current
+Action in a column the player never touched. The pass now slots every direct
+child; only children that are or contain a frame get a grab surface.
+
+Two rules follow, and both are about not inventing a second answer to a
+question this codebase has already answered:
+
+- **Movable is the same set CollapsibleFrames folds** (`FRAME` — the
+  `section-frame` / `inventory-root` / `skills-section-frame` trio), plus the
+  `.panel` primitive. A player who can collapse a frame expects to move it, and
+  two different definitions of "a panel" is exactly how the Village scene fell
+  out. `.panel` is tested FIRST and on its own, because `data-iw-ui` arrives
+  only after the classifiers run and gating movability on it is the same
+  late-state trap that made the identity key flip.
+- **The page SHELL is told from a panel column by its own `<header>` child**,
+  not by the `data-iw-ui` marks on the nav rail and zone bar. The shell holds
+  `.panel`s too — the header, the nav rail and the zone bar all carry the class
+  — so it looks exactly like a column until those marks land, and a container
+  claimed in that window puts an order slot on the header. `:scope > header` is
+  there from the first paint. Both `tests/smoke.test.mjs` and
+  `tests/flush-quiescence.test.mjs` now model the live shape — chrome in the
+  shell, panels in a column of their own — because a fixture that puts its
+  panels directly in the shell makes the module correctly claim nothing, and
+  every check about it then passes for the wrong reason.
+
+**The drag preview and the committed result are the SAME function, or they
+disagree whenever an unkeyed sibling sits between two keyed ones.** `arrange()`
+puts unkeyed rows back at their own index, so applying a raw drag sequence
+showed one thing and settled to another on the next pass. Both paths now derive
+the key list and re-run `arrange()` over it (`applyArrangement`), so the preview
+IS the settled answer by construction. Worked example of the divergence:
+`[A, X, B]` with X unkeyed, drag B to the front — the raw sequence is
+`[B, A, X]`, but re-deriving gives `[B, X, A]`, because X holds index 1.
+
+**A panel the skin cannot NAME gets no grab surface at all.** Dragging one
+looked like it worked and then silently reverted: the preview writes the slot
+attributes directly, but `arrange()` redistributes only the KEYED items, so the
+next pass put it back. An affordance that appears to work and then undoes
+itself is worse than none, so an unkeyed panel is marked `data-iw-order-fixed`
+and drawn as pinned instead. Live, three panels per capture came back unkeyed,
+so this is not a hypothetical branch.
+
+**Container discovery keys on `parentElement`, so `display: contents` on a
+wrapper would break it** — the layout container and the DOM parent stop being
+the same element. The live page does NOT do this (both mirror copies hold their
+panels as direct children of the box that lays them out), so nothing here
+handles it, and a fixture that models it is modelling a page that does not
+exist. Worth knowing because `display: contents` IS used elsewhere in the skin,
+on the Village slot head row.
+
+**A same-value CLASS write is not free, the way a same-value style write is.**
+Found by the drag cost test, in `TooltipEngine.hide()`, which is shipped code
+unrelated to this feature: it called `classList.remove('is-open')`
+unconditionally, and a same-value `classList` write emits a mutation record
+(measured: 100 identical writes -> 100 records) where 100 identical
+`style.setProperty` calls emit none. `class` is in the observer's
+`attributeFilter`, so every time the pointer left a tooltip trigger with no
+tooltip open — most of them — that queued a flush. It is guarded now. The two
+`style` writes beside it were already no-ops by that same asymmetry, which is
+why only the class one showed up.
+
+**The appended grab handle needed TEN classifier exclusions, not the collapse
+toggle's one.** This is the "an element the skin APPENDS into a game node
+changes what every other classifier reads there" rule, and the list is longer
+because the handle is a direct child of the PANEL rather than of the heading
+row. `UIFoundation` now carries two constants — `SKIN_OWNED_CONTROL` and
+`GAME_CONTROL` — used by `hasPanelBodyOutsideHeading`, `panelHostMatches`'s
+action-log probe, `classifyPanelHeader`'s split test AND its `companion` walk,
+`classifyCurrentAction`'s queue walk, `classifyActionLog`, and — the one that
+would have bitten hardest — `classifyFeed`'s fallback, which takes the first
+direct child with no input and no heading and would have handed the handle the
+feed's `overflow-y:auto; max-height`. Plus `CompactButtons.kind()`,
+`InventoryRenderer.NOT_IN_ROW`, and `:not([data-iw-order-handle])` on five
+`base.css` chains and three `ui-system.css` ones. The handle is also
+`position: absolute`, which is what keeps it invisible to
+`SkillPanelRenderer.unexpectedFlowChild` — an in-flow child over 2x2 makes that
+refuse the three-zone skill layout outright.
+
+**A redundant opt-out is a declaration no test can show doing anything.** The
+first version added `:not([data-iw-order-handle])` to `collapsible.css`'s fold
+rule so a collapsed panel would keep its handle. The negative control then
+reported that removing it changed nothing — `panel-order.css`'s own
+`display: grid !important` at (0,4,1) already outranks the fold rule's (0,4,0).
+The opt-out was reverted and `panel-order.css` OWNS the handle's visibility
+outright, with the negative control breaking the thing that is actually
+load-bearing (that rule's `!important`). This is the same shape as the three
+DEAD declarations in `collapsible.css` found while measuring this: the collapse
+toggle's `border-radius: 3px` and its single inset `box-shadow` are both
+overridden by `base.css` generic button rules and have never painted, and
+`tests/collapsible-frames.test.mjs` cannot see it because it only asserts the
+nine toggles match EACH OTHER — and `base.css` wins uniformly on all nine.
+
+**Two harness traps this feature exposed, both of the "passes for the wrong
+reason" family:**
+
+- **`browser.newPage()` is `browser.newContext().newPage()`**, so every page
+  gets its own origin storage. A reload test built on it finds `localStorage`
+  empty and reports the MODULE as broken. `tests/panel-order.test.mjs` holds one
+  `context` for the whole run — and therefore has to clear storage through
+  `page.addInitScript`, BEFORE the bundle runs. Clearing it after `goto` is too
+  late: the module has already read the previous page's arrangement and applied
+  it, so the next test starts from a layout it did not set.
+- **A fixture whose columns are not really flex claims nothing**, and then every
+  teardown and quiescence check about this module passes vacuously. The
+  fixtures in `tests/smoke.test.mjs` and `tests/flush-quiescence.test.mjs` now
+  carry an explicit `display:flex` on the panel column AND assert the module
+  claimed it — verified: revert the style and "panels carry an arrangement slot"
+  reports `n=0`. `flush-quiescence` then shows 0 flushes, 0 reconciles, 0 style
+  writes and 0 mutation records with the order pass running on real panels.
 
 **`ui-system.css` wins.** It is injected last and its generic control rule is
 specificity `(0,4,1)` with `!important`:
@@ -263,8 +1037,10 @@ still succeeds and the check passes for the wrong reason.
 
 **The skin's surface coverage vs the game's, from the bundle's own aria-label /
 title vocabulary.** Covered: Skills, Quests, Inventory/Bag, header, main nav,
-zone bar, Current Action, Action Log, World Chat, World Boss, Market, Village,
-Leaderboards, Salvaging, Zone Control. NOT reached at all: **Equipment Window**
+zone bar, Current Action, Action Log, World Chat, World Boss, Market, Village
+(Housing hero + Add-on slots + the install picker, illustrated with the game's
+own building art — `VillagePanels`; plus the read-only Village scene the skin
+ADDS to the dashboard — `VillageScene`), Leaderboards, Salvaging, Zone Control. NOT reached at all: **Equipment Window**
 (`"Close equipment window"`, `"Open socket"`, `"Socketed"`, `"New slot — nothing
 equipped"`, `"Nothing equipped in this slot"`, and critically `"Upgrade vs
 equipped"` / `"Downgrade vs equipped"` — that comparison is STATE and rule 5
@@ -277,7 +1053,9 @@ Dungeon"`, `"⏳ Prejoined"`), which nothing inside used to reach — now get th
 forged frame, because the trigger moved from `SECTION_FRAME_NAMES` to the
 `.panel` primitive (see the section-frame note above). That is the outer chrome
 only: the CONTENTS of these panels are still un-classified, so anything above
-that wants row/control treatment still needs its own classifier.
+that wants row/control treatment still needs its own classifier — except
+Village's Housing and Add-ons panels, whose contents `VillagePanels` now owns.
+Village's "Housing Bank" and "Village NPCs" panels are still frame-only.
 **Update:** any of these that renders as a real modal (a viewport-covering
 `fixed` backdrop wrapping a card) now gets the shared forged FRAME from
 `OverlayFramer` — the outer chrome only. Their contents are still
@@ -341,8 +1119,8 @@ the game's, which is also rule 5. Three things this depends on:
   next frame, not the next flush — a whole tick of suppression would un-smooth
   the new action's first step) and the CSS snaps instead.
 - **The reset tag rides on `data-iw-*`; the duration deliberately does NOT.**
-  DOMWatcher observes with `attributeFilter:
-  ['class','style','disabled','aria-disabled']`, so a `data-iw-*` write is
+  DOMWatcher observes with the eight-entry `attributeFilter` below, so a
+  `data-iw-*` write is
   invisible to it (that's why `data-iw-progress-reset` is one) but a `style`
   write is not: `commitProgressDuration()` writing `--iw-progress-duration`
   inline DOES queue an `attr:style` context on that node every time the
@@ -411,6 +1189,42 @@ construction -> crafting) instead of letting `paintIcon` fall through to the
 featureless `generic` slot. Accent, glyph and label still separate them. If the
 atlas is ever redrawn wider, drop the alias and add real cells.
 
+**An element's own background paints BEFORE its negative-z children, so a
+`::before` ground at `z-index: -1` COVERS the element's background image.** The
+Village medallion wants two layers: a lit ground plot underneath and the
+building sprite on top. The obvious arrangement — sprite as the element's own
+`background-image` (the AtlasService division of labour), ground on a
+`::before { inset: 0; z-index: -1 }` — renders every plot EMPTY, and
+`getComputedStyle` reports a perfectly correct `background-image` the whole
+time, so it reads as a broken asset path rather than a paint-order bug.
+`isolation: isolate` does not help: it makes the element a stacking context,
+which is exactly what keeps the negative-z child above the element's own
+background. The fix is to swap them — the ELEMENT is the ground, the `::before`
+is the sprite — and a pseudo-element cannot be written to from JS, so
+`VillagePanels.ensureArt` sets a CUSTOM PROPERTY (`--iw-village-sprite`) that
+the sheet dereferences, the way `SkillsArtService` already sets
+`--fs-skills-panel-texture`. JS still owns the URL. `render-fixtures.mjs` reads
+`getComputedStyle(el, '::before').backgroundImage` and DECODES it, because the
+raw custom property is an un-evaluated token stream that looks fine either way
+(the same trap as the `--iw-th-edge-mid` `color-mix` string above).
+
+**A fixture that models the wrong COLUMN WIDTH lies like one that models the
+wrong DOM shape.** Village's first render put its two panels side by side at
+~900px each and the three-column slot card (art / copy / controls) looked
+right. Live, the route is
+`grid gap-3 xl:grid-cols-[minmax(320px,0.42fr)_minmax(0,0.58fr)]` and BOTH
+panels are stacked in the left column, so a slot card is ~340-900px depending
+on viewport — at the narrow end the fixed control column forced the building
+name to wrap and the effect list to three lines. Two lessons kept: the fixture
+now reproduces the 0.42fr column, and the card leaves the game's own head row
+as the flex box React wrote (`justify-between`) instead of flattening it with
+`display: contents`, so copy-vs-controls reflows the way the game intends.
+`display: contents` survives ONLY in the ≤760px block, where it is doing real
+work — promoting the head row's two children to grid items of the card so the
+controls take their own full-width row and the copy column keeps ~65% of the
+card instead of ~110px. `render-fixtures.mjs` measures that ratio at 390px;
+revert the rule and it throws.
+
 **`AtlasService` owns the item icon.** It writes `background-image`,
 `-position` and `-size` **inline** on `.fs-inv-icon` and appends
 `.iw-icon-badge` as a real child. Never set a background there from CSS; carry
@@ -434,7 +1248,7 @@ margin too, or the "hidden" node keeps pushing real content around.
 
 **One corner filigree for the whole page: `assets/inventory/panel_corners.webp`.**
 Inventory, Quests, Skill Actions, the activity panels AND the header all draw it
-through the same `border-image … 95 88 / 30px 28px / 0 stretch`. Its slice
+through the same `border-image … 95 88 / 34px 32px / 0 stretch`. Its slice
 consumes the whole sheet, so edges and middle are empty by construction and only
 the four corners paint, at a fixed size however large the panel grows. Before
 reaching for new artwork, check whether a frame already exists — the header was
@@ -505,13 +1319,15 @@ into nine environment palettes (`glacial`, `infernal`, `verdant`, `celestial`,
 `voidborn`, `runic-arcane`, `lunar-spectral`, `tempest-oceanic`, `forged-metal`)
 by `assets/skills-ui/zone-theme-map.json` (imported from the sibling repo).
 `npm run import:skill-themes` (`build-tools/import-skill-themes.mjs`) writes, per
-theme: `assets/skills-ui/theme_<name>.webp` (a straight recolour of
-`skills_ui_atlas.webp` — SAME 860x463 canvas and cell positions, so
+theme: `assets/skills-ui/theme_<name>.webp` (a high-density remaster with the
+SAME logical 860x463 canvas and cell positions as `skills_ui_atlas.webp`, so
 `skills_ui_index.json` and the sprite-window audit still describe it) and
 `assets/skills-ui/panel_corners_<name>.webp` (the corner_filigree cell baked
-into the same 176x190 crop-and-mirror sheet `make-panel-corners.mjs` produces,
+into the same logical 176x190 crop-and-mirror sheet `make-panel-corners.mjs` produces,
 because `border-image` slices a standalone image and cannot address an atlas
-cell). It also regenerates `src/modules/zoneThemes.js` — DO NOT hand-edit that
+cell). Physical dimensions are multiplied by the map's `pixelRatio` (currently
+2), while CSS continues to use the logical dimensions. It also regenerates
+`src/modules/zoneThemes.js` — DO NOT hand-edit that
 file; `tests/zone-themes.test.mjs` pins it against the JSON and checks every
 referenced asset exists.
 
@@ -533,11 +1349,11 @@ three inventory sprite windows in `inventory.css`) and `--iw-corner-filigree`
   the WHOLE declaration (slice, width, repeat) is dropped and the panel loses
   its corners, not just its colour. The `:root` block is the un-themed fallback
   and the only thing standing between "zone not classified yet" and no frame.
-- **Geometry is frozen at 860x463.** A theme atlas that isn't pixel-identical
+- **Logical geometry is frozen at 860x463.** A theme atlas that isn't pixel-identical
   in layout to `skills_ui_atlas.webp` silently repaints every sprite window
   onto the wrong region (CLAUDE.md, "Atlas sprites are sized in percentages").
-  The import tool hard-fails if a source atlas isn't `index.width x
-  index.height`.
+  The import tool hard-fails unless the source's physical dimensions equal
+  `index.width * pixelRatio` by `index.height * pixelRatio`.
 - **The sprite-window audit keys on the atlas.** `audit-sprite-windows.mjs`'s
   `declaresAtlas` regex was widened to also match `skills-ui/theme_<name>.webp`
   and `var(--iw-zone-atlas`; without that, switching `inventory.css` to the var
@@ -760,6 +1576,29 @@ the same line-height, preflight and `overflow` settings yields a 31px wrapper
 every time. So this one is verified by live measurement plus the invariant
 (wrapper height == control height), NOT by a local repro. Re-check it live.
 
+**A `gap` is applied on BOTH sides of an invisible flex item, so flattening a
+label's native text does not make it free.** The World Boss action button keeps
+the game's own copy ("Prejoin", "⏳ Prejoined") inside the control at
+`font-size: 0` for accessibility and draws the compact word with `::after` from
+`data-iw-boss-action-label`. That flattened text node is still a zero-width
+FLEX ITEM sitting between `::before` and `::after`, so the label's `gap: 5px`
+was spent twice on one side of nothing and moved the word 2.5px right of centre
+in every state. On top of that the "active" state drew a `⌛` `::before`,
+whose 16px advance pushed QUEUED a measured **12.9px** right: its ink ended at
+x=107.0 of the 132px control, which is exactly where the sprite's right
+flourish starts (the flat interior of `action_frame_idle` is only x 25..107 of
+the box), while the space to the left of the glyph sat empty. Reported as
+"the QUEUED text is off centre", which is precisely what it was. Fix: `gap: 0`,
+no in-flow ornament, and `margin-right: -.07em` on the `::after` to cancel the
+step `letter-spacing` adds after the LAST letter. State is not lost — the word
+itself is the cue (QUEUED vs PREJOIN), and `data-iw-boss-action-state` still
+tags the control. `tests/boss-action-label.test.mjs` pins it in a real browser
+by diffing the button against itself with only the `::after` colour cleared,
+which isolates the WORD's ink from the frame art (and so still measures the
+reported symptom if a future ornament returns out of flow); restore the gap and
+it reports +2.5px, restore the glyph +8.25px, both +12.9px. Note the diff is
+what makes the test independent of the atlas loading — see the next trap.
+
 **A render harness that cannot load its assets looks exactly like broken CSS.**
 `page.setContent()` gives the page an `about:blank` origin, and a `file://`
 subresource is blocked from it — silently. Every sprite renders as nothing while
@@ -794,6 +1633,44 @@ box. Keep the plate only as the pre-atlas fallback. (The recipe pager used to
 be the other example of "the artwork is the control"; it has since dropped its
 sprite for a plain CSS plate — see the inline-`!important` note below.)
 
+**The SKILL command button now wears that same quest artwork** (Curtis,
+2026-09): one action-button skin across the site. It is the identical
+`action_frame_idle` / `_disabled` cell, and every consequence above applies to
+it unchanged — the plate goes, the shadow moves into `filter`, the geometry
+holds 3.52 (155x44, 148x44 narrow). Three things are specific to this surface:
+
+- **The sprite is written INLINE, in `SkillPanelRenderer.ACTION_ART`**, not in
+  `skillpanel.css`, because `styleButton()`'s inline `!important` plate
+  outranks every rule in that sheet — which is exactly why the atlas cells
+  the sheet USED to declare here had quietly stopped painting years before
+  anyone noticed (the note that block carries). It overrides the same keys the
+  state map writes, and keeps `background` as the SHORTHAND so no plate
+  longhand survives underneath and teardown's single `background` restore
+  still clears everything. `skillpanel.css` owns only what nothing inline
+  contends for: the drop shadow, the hover bloom, the disabled dim.
+- **It is gated on `data-iw-skills-ui-ready`, which resolves ASYNCHRONOUSLY**,
+  so state, role and the style attribute can all be unchanged at the moment it
+  flips. Readiness is therefore part of `styleButton()`'s snapshot key; drop it
+  and the sprite never reaches a button that was already styled as a plate.
+  Without the gate the shorthand's `var()`s are invalid at computed-value time,
+  every longhand falls back to its initial value, and the button renders as a
+  bare label rather than falling back to the plate.
+- **The plate's diamond studs are suppressed** when the art is on (they are the
+  plate's ornament; the frame carries its own end flourishes). The stud rules
+  themselves are LEFT in place — `tests/static-invariants.test.mjs` pins their
+  presence, and a panel whose atlas never resolves still gets the studded
+  plate.
+
+Pinned in three places, and each has a verified negative control:
+`tests/smoke.test.mjs` (sprite present, plate gone, disabled takes the
+desaturated cell, readiness in the snapshot key) and `render-fixtures.mjs`
+(the skill button's computed sprite window must EQUAL the quest turn-in's —
+comparing the two is what makes the check about consistency rather than about
+one hard-coded cell; plus no plate, no studs, and the 3.52 ratio at every
+responsive width). Compare same-state buttons or the check is meaningless: a
+disabled quest turn-in draws the grey cell at x=57.4%, not the gold one at
+x=12.1%.
+
 Second time this bit the quest rail (2026-09): the strip rule
 `.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]`
 is `(0,4,0) !important`, but `base.css`'s generic
@@ -807,6 +1684,93 @@ the strip rule) — the skill nav/action buttons dodge the same hairline only
 because `styleButton()` writes their plate inline. Pinned in
 `render-fixtures.mjs` (ready quest button computed `box-shadow` must be
 `none`).
+
+**A control whose LABEL LENGTH is the GAME's can be sliced FROM THE ATLAS,
+with pseudo-elements — `border-image` is not the only three-slice.** The quest
+turn-in reads "Turn In" on one card and "Turn In All (38)" on the next, and the
+count is live. Its box was `aspect-ratio: 264/75` over `min-width: 148px` with a
+FIXED `padding: 0 20px`, while the frame's end flourishes are a FRACTION of the
+box (12.9% each side, measured: the interior runs x 34..228 of the 264px cell) —
+so past ~155px the horns walked inward over the label and the text ran out of
+the frame. Reported as "the turn in text doesn't fit because the number in
+brackets is dynamically scaled".
+
+`border-image` — the reward plaque's old fix — is unavailable here: a slice is
+measured from a standalone image's own four edges and cannot address a cell
+inside a sheet, and the frame is per-zone (nine themed atlases), so the
+standalone route would mean 20 new files. Multiple `background` LAYERS cannot
+do it either: `background-clip` only reaches border/padding/content box, so a
+layer cannot be confined to one end of the box. **Pseudo-elements can** — they
+are real boxes with their own clipping:
+
+    ::before   left end band, `--fs-action-cap` wide, at native scale
+    element    the flat middle band, stretched across the CONTENT box
+    ::after    right end band, same width, same scale
+
+`SkillsArtService` derives all of it from `skills_ui_index.json`
+(`bandGeometry()`, `ACTION_CAP_PX = 60` source px) and publishes
+`--fs-ui-action-{idle,disabled}-{cap-size,cap-l-position,cap-r-position,
+mid-size,mid-position}` plus `--fs-ui-action-cap-ratio` (60/75 = .8). The
+percentages are resolution independent, so the 2x themed recolours read them
+unchanged, and `audit-sprite-windows.mjs` skips percentage pairs by design, so
+this adds nothing for it to check. Four things are load-bearing and each is
+invisible when wrong:
+
+- **`background-origin/clip: content-box` AND `padding: 0 var(--fs-action-cap)`
+  are one mechanism, not two.** The padding IS the cap width, so the middle
+  band paints exactly between the two end boxes. Draw it across the whole
+  border box instead and it shows THROUGH the horns' transparent taper as a
+  dark rectangle sticking out past the frame — which reads as a stray box, not
+  as a clipping bug. Give the label extra breathing room by widening the
+  padding beyond the cap and you get the same artefact inverted: a transparent
+  notch where the band stops short of the cap. Extra room comes from a LARGER
+  slice, never from extra padding.
+- **`z-index: -1` on the caps, with the button a stacking context.** A
+  positioned pseudo-element paints ABOVE its host's inline content, so without
+  it the two end bands cover the ends of the label. At negative z they paint
+  above the host's own background and below its text — the mirror image of the
+  Village medallion trap below, where that same paint order is what breaks it.
+- **The cap BOX is `height x --fs-ui-action-cap-ratio`**, the same scale the
+  band's own window uses, so cap scale == middle scale == vertical scale at
+  every breakpoint. A fixed px cap distorts the ends on the next one.
+- **Every state re-aims BOTH ends with the middle.** A `:disabled` turn-in that
+  only swaps its own `background-position` renders grey in the centre with gold
+  horns still on it.
+
+Consequences for the geometry: **the height is the fixed axis and the width
+follows the label** (`aspect-ratio` is gone; 148x42 is still the resting size
+and still the art's undistorted 3.52). Two cards side by side therefore keep
+matching button heights, which growing on the ratio did not.
+
+And the narrow layout needs one more thing, in JS: below 640px `skillpanel.css`
+takes the command block OUT OF FLOW (it is the last child in the DOM, so a
+float cannot lift it beside the earlier text the way the live card does) and
+the text lines reserve room for it by hand. A hard-coded 124px reserve was
+right only while the block's width was fixed. `QuestPanelRenderer.
+measureCommandBlock()` now publishes the measured width as `--fs-quest-cmd-w`
+on the card and the reserve is `calc(var(--fs-quest-cmd-w, 116px) + 8px)`;
+without it a long label runs UNDER the title instead of pushing it. A width of
+0 is the hidden mirror column, not a measurement, so the last real value is
+kept. The inline write queues an `attr:style` context on the card — the same
+bounded re-entry `commitProgressDuration` accepts: the induced flush
+re-measures, reads the same width, and returns without writing.
+
+The **skill** command button and the **World Boss** action button draw the same
+two cells and are deliberately NOT sliced: their labels are fixed short verbs
+and their boxes are pinned (155x44 inline from `SkillPanelRenderer`, 132x38 in
+`ui-system.css`), so the whole-cell window is correct for them and slicing the
+skill one would mean repurposing the `::before`/`::after` its plate studs
+already own. If either ever gains a dynamic label, move it to this recipe.
+`build-tools/render-fixtures.mjs` no longer string-compares the two surfaces'
+computed windows (they are different techniques now); it reverses each
+percentage back into the source rect it addresses and checks THAT against
+`skills_ui_index.json` — which also catches a pair that agrees with itself on
+the wrong cell. `tests/quest-command-width.test.mjs` is the real-browser half
+(growth, fixed height, the reserve tracking); it serves the page over a routed
+http origin because `assetUrl()` falls back to a relative path outside the
+extension and a `file://` page cannot fetch it — without the atlas index the
+panel never gains `data-iw-skills-ui-ready`, the cap padding never applies, and
+the test would pass or fail for the wrong reason.
 
 **A plaque whose LABEL length is not yours to control needs 3 slices, not a
 sprite window.** Quest reward text ranges from "+1,875g • +810 combat XP" to
@@ -894,6 +1858,39 @@ out, both now covered by `tests/smoke.test.mjs` (revert either half and the
 whether every labelled tab is inside the element that draws the rim, the rim
 box against the union of the tab boxes, and each tab's computed paint.
 
+**The Toolkit link and the per-panel collapse toggle are the only controls the
+skin ADDS rather than decorates**, and
+it is deliberately not an exception to rule 1: rule 1 forbids changing what a
+GAME control does, and this is the skin's own element, appended (rule 2) as the
+nav track's last child by `UIFoundation.ensureToolkitLink`. Four things keep it
+out of the classifier's way, and each is load-bearing:
+
+- **It wears `data-iw-ui="nav-tab"`**, so the rail's plate, height and type come
+  from whichever nav rule is winning (`header.css`'s block and `ui-system.css`'s
+  disagree on padding and font-size; only injection order settles it). Copying
+  measurements into a private rule instead would drift the moment either block
+  moves. Only the SEPARATION is its own: `[data-iw-nav-link="toolkit"]`, placed
+  after the nav block in the last-injected sheet.
+- **`data-iw-nav-link` is its own namespace** and only this module writes it --
+  the give-a-new-role-on-a-shared-node-its-own-attribute rule.
+- **"toolkit" is deliberately absent from `NAV_LABELS`.** If it were in the set,
+  `countNavTabsIn` would count it, `mainNavResolutionValid` would see the rail
+  gain a tab from the skin's OWN append, and the cache would invalidate into a
+  whole-document re-resolve on every flush. It is also why `applyMainNavState`
+  never iterates it, so it can never be painted active.
+- **Every attribute is set before insertion**, so the append costs exactly one
+  mutation record on the flush that creates it and nothing after -- the
+  `querySelector(':scope > …')` guard is what keeps `tests/flush-quiescence`
+  at 0.
+
+`box-sizing: border-box` is not decoration: `nav-tab` sets an explicit `height`
+with `border: 0`, so this box's own 1px border made it 2px taller than its
+neighbours (measured in the fixture, `heightMatch` 2 -> 0). It opens in a new
+tab because the game is an idle game and navigating away in place costs the
+player the session they are watching. Pinned in `tests/smoke.test.mjs`
+(presence, exactly-once, never a route tab, href/target/rel, removal at
+teardown); all three checks have verified negative controls.
+
 **Anchored label regexes break on the game's leading icons.** IdleWorlds
 prefixes many labels with an emoji — `🧭 Zone 19: …`, `🌐 Zones`, `⚔️ Combat
 Lv 62`. `/^zone \d+:/` and `/^zones$/` therefore matched nothing, so the whole
@@ -929,7 +1926,9 @@ derived, never magic. Corollary: any geometry duplicated between
 `BUTTON_STYLES`/role blocks and `skillpanel.css` must be kept in step (the
 nav width `26px`, the action button `155×44`), because a disagreement silently
 resolves in the inline copy's favour. The fixture must carry the same inline
-styles or it renders a control the game never shows.
+styles or it renders a control the game never shows. Same reason `ACTION_ART`
+(the command button's quest-rail sprite, above) lives in `styleButton()` rather
+than in the sheet, and the fixture's `ACTION_INLINE` carries a third copy.
 
 **The skill "Requires …" line is coloured by state — grey when met, red when
 not.** The game already does this: its native line carries `text-white/45`

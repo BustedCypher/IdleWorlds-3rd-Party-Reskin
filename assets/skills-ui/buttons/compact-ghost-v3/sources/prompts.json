@@ -1,0 +1,18 @@
+{
+  "useCase": "precise-object-edit",
+  "assetType": "source sheet for a compact fantasy game UI button atlas",
+  "direction": "ghost metal",
+  "tool": "built-in image generation edit",
+  "sharedPrompt": "Edit the compact-quiet-v2 source sheet only. Preserve exactly the 1536x1024 canvas, pure white background, all six object placements, sizes, silhouettes, straight rails, spacing, and row order: wide text button left and square icon button right, with idle top, hover middle, pressed bottom. Add no text, icons, glyphs, labels, background shadows, or extra objects. Keep every centre near-black and clean for readable overlaid text. Convert Quiet Metal into understated embedded panel chrome: one extremely thin low-contrast metal hairline and a micro bevel. Remove luminous corner gems, bright corner wedges, multiple rails, reflective jewellery shine, bloom, cracks, filigree, and busy texture. Idle is near-black with a dark desaturated outline and nearly black corners. Hover uses the same geometry with one restrained theme-coloured inner keyline at about 40 percent of the previous brightness, no bloom, and dark corners. Pressed uses the same geometry with a slightly darker recessed centre, inner shadow, and four pin-sized dim corner glints. Preserve identical silhouette and dimensions across all states.",
+  "themes": {
+    "forged-metal": "nearly black gunmetal with faint oxidized red-brown",
+    "infernal": "matte blackened iron with faint ember-brown",
+    "glacial": "dark graphite cold steel with faint slate blue",
+    "celestial": "dark pewter and champagne-grey with faint muted navy",
+    "lunar-spectral": "charcoal moon-silver with faint muted indigo",
+    "runic-arcane": "dark aged bronze with faint oxidized teal and no glowing runes",
+    "tempest-oceanic": "dark marine steel with faint muted blue-grey and desaturated cyan",
+    "verdant": "dark aged bronze with faint muted forest patina",
+    "voidborn": "blackened silver with faint muted deep violet"
+  }
+}

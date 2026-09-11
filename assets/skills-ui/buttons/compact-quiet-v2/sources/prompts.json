@@ -1,0 +1,17 @@
+{
+  "useCase": "precise-object-edit",
+  "assetType": "production fantasy-game compact button sprite sheet",
+  "direction": "quiet metal",
+  "sharedPrompt": "Preserve the 1536x1024 six-sprite layout, pure white background, placements, clipped-corner silhouettes, straight rails, empty dark centres and idle/hover/clicked row order. Idle uses very dark matte metal, low saturation and low edge contrast with tiny dim corner accents. Hover adds one restrained coloured inner keyline and a modest metallic lift without bloom, electricity, flame, luminous cracks, sparkling highlights or rail-wide glow. Clicked uses darker recessed metal, a thin subdued keyline and slightly brighter corner points. Simplify to one primary metal rail plus a narrow inner bevel. Remove decorative cracks, repeated texture, gemstones, multiple luminous outlines and bright bands. Keep the central wells nearly black and calm for text.",
+  "themes": {
+    "forged-metal": "dark hammered iron with muted garnet and ember",
+    "infernal": "blackened iron with restrained dark bronze and ember orange",
+    "glacial": "cold dark steel with restrained ice blue",
+    "celestial": "dark pewter with restrained champagne gold and sapphire",
+    "lunar-spectral": "dark moon-silver with very muted indigo and periwinkle",
+    "runic-arcane": "aged dark bronze with restrained teal runic accents",
+    "tempest-oceanic": "dark marine steel with restrained cyan-blue accents",
+    "verdant": "aged dark bronze with restrained emerald patina",
+    "voidborn": "blackened silver with restrained amethyst-violet accents"
+  }
+}

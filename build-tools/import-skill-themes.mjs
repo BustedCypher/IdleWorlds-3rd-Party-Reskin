@@ -6,6 +6,7 @@
  *
  *   <source>/skills_ui_atlas_theme_<name>.webp  →  assets/skills-ui/theme_<name>.webp
  *   (corner_filigree cell, mirrored 2x2)        →  assets/skills-ui/panel_corners_<name>.webp
+ *   (separator_flourish, repaired at left tip)  →  assets/skills-ui/separator_flourish_<name>.webp
  *   <source>/zone-theme-map.json                →  assets/skills-ui/zone-theme-map.json  (provenance)
  *                                              →  src/modules/zoneThemes.js  (generated)
  *
@@ -13,19 +14,23 @@
  *   ../idleWorlds-game-sprites-BC/assets/skills-ui-atlas/families
  * (override with argv[2]).
  *
- * WHY THE TWO OUTPUTS PER THEME
- *   - theme_<name>.webp is a straight recolour: identical 860x463 canvas and
- *     sprite positions to skills_ui_atlas.webp, so skills_ui_index.json and the
- *     sprite-window audit stay valid — only the pixels change. SkillsArtService
- *     and inventory.css read it through the `--iw-zone-atlas` CSS variable.
+ * WHY THE DERIVED OUTPUTS PER THEME
+ *   - theme_<name>.webp retains the 860x463 LOGICAL canvas and sprite
+ *     positions from skills_ui_atlas.webp, but may carry a higher physical
+ *     pixel ratio declared by zone-theme-map.json. Percentage sprite windows
+ *     stay valid while high-DPI browsers receive sharper source pixels.
  *   - panel_corners_<name>.webp is the same crop-and-mirror make-panel-corners.mjs
  *     does for the base sheet: `border-image` slices from the edges of a
  *     standalone image and cannot address a region inside an atlas, so the four
- *     mirrored corners are baked into one 176x190 sheet here. ui-system.css,
+ *     mirrored corners are baked into one logical 176x190 sheet here. ui-system.css,
  *     header.css and tooltip-engine.css read it through `--iw-corner-filigree`.
+ *   - separator_flourish_<name>.webp isolates the title divider. The upstream
+ *     crystal is offset inside its cell and its left wing is malformed, so the
+ *     intact right half is recentered and mirrored to make a truly bilateral
+ *     ornament without changing the crystal's proportions.
  *
  * HeaderRenderer.applyZoneTheme() maps the current zone to a theme (see
- * src/modules/zoneThemes.js) and points both variables at these files.
+ * src/modules/zoneThemes.js) and points all three artwork variables at these files.
  *
  * This is a pure recolour + crop-and-mirror of art already produced upstream.
  * Re-run whenever the family atlases change.
@@ -47,13 +52,31 @@ const OUT_DIR = path.join(ROOT, 'assets', 'skills-ui');
 const INDEX = path.join(ROOT, 'assets', 'skills_ui_index.json');
 const MODULE_OUT = path.join(ROOT, 'src', 'modules', 'zoneThemes.js');
 
-// Lossy webp: the family atlases ship as ~180 KB lossless PNGs-in-webp; the base
-// skin atlas is a ~90 KB lossy webp. Match that so nine themes do not add 1.6 MB.
-const QUALITY = 0.9;
+// Canvas does not expose lossless WebP encoding. Theme atlases are copied byte
+// for byte from the upstream lossless source; only the derived corner sheet is
+// canvas-encoded, at maximum quality and the same high physical pixel ratio.
+const CORNER_QUALITY = 1;
 
 const index = JSON.parse(await readFile(INDEX, 'utf8'));
 const corner = index.entries.find(e => e.key === 'corner_filigree');
 if (!corner) throw new Error('corner_filigree missing from skills_ui_index.json');
+const separator = index.entries.find(e => e.key === 'separator_flourish');
+if (!separator) throw new Error('separator_flourish missing from skills_ui_index.json');
+// Each family illustration places its crystal at a different horizontal point
+// inside the shared atlas cell. Measure that axis per theme and pick the wing
+// whose outer tip is complete. Values are logical pixels and scale with the
+// source density. Lunar is the only family whose left wing is the intact one.
+const SEPARATOR_ART = Object.freeze({
+  celestial:          { axis: 109.5,  direction: 1 },
+  'forged-metal':     { axis: 105.5,  direction: 1 },
+  glacial:            { axis: 109.25, direction: 1 },
+  infernal:           { axis: 107.5,  direction: 1 },
+  'lunar-spectral':   { axis: 116,    direction: -1 },
+  'runic-arcane':     { axis: 110,    direction: 1 },
+  'tempest-oceanic':  { axis: 103.25, direction: 1 },
+  verdant:            { axis: 95.75,  direction: 1 },
+  voidborn:           { axis: 103.25, direction: 1 },
+});
 
 const themeFiles = (await readdir(SRC_DIR))
   .map(name => {
@@ -94,67 +117,126 @@ if (zoneCount < 1) {
   process.exit(1);
 }
 
+const pixelRatio = mapSource.pixelRatio;
+if (!Number.isInteger(pixelRatio) || pixelRatio < 1) {
+  console.error(`zone-theme-map.json pixelRatio must be a positive integer, got ${pixelRatio}`);
+  process.exit(1);
+}
+if (mapSource.canvas?.width !== index.width || mapSource.canvas?.height !== index.height) {
+  console.error('zone-theme-map.json logical canvas does not match skills_ui_index.json');
+  process.exit(1);
+}
+const physicalWidth = index.width * pixelRatio;
+const physicalHeight = index.height * pixelRatio;
+
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await mkdir(OUT_DIR, { recursive: true });
 
 let total = 0;
 for (const { theme, name } of themeFiles) {
+  const separatorSpec = SEPARATOR_ART[theme];
+  if (!separatorSpec) throw new Error(`separator geometry missing for theme "${theme}"`);
   const srcBytes = await readFile(path.join(SRC_DIR, name));
   const uri = `data:image/webp;base64,${srcBytes.toString('base64')}`;
 
-  const { atlasB64, cornersB64, width, height } = await page.evaluate(async ({ uri, c, quality }) => {
+  const { cornersB64, separatorB64, width, height } = await page.evaluate(async ({ uri, c, s, separatorSpec, pixelRatio, quality }) => {
     const img = new Image();
     img.src = uri;
     await img.decode();
 
-    // 1. Straight recolour: re-encode the atlas as-is, no geometry change.
-    const atlas = document.createElement('canvas');
-    atlas.width = img.naturalWidth;
-    atlas.height = img.naturalHeight;
-    atlas.getContext('2d').drawImage(img, 0, 0);
-
-    // 2. corner_filigree cell, baked into a 2x2 mirrored sheet — identical
-    //    recipe to make-panel-corners.mjs so the border-image slice is unchanged.
+    // corner_filigree cell, baked into a 2x2 mirrored sheet. Coordinates in
+    // skills_ui_index.json are logical; source and destination pixels scale by
+    // the declared physical density.
+    const source = {
+      x: c.x * pixelRatio,
+      y: c.y * pixelRatio,
+      width: c.width * pixelRatio,
+      height: c.height * pixelRatio,
+    };
     const corners = document.createElement('canvas');
-    corners.width = c.width * 2;
-    corners.height = c.height * 2;
+    corners.width = source.width * 2;
+    corners.height = source.height * 2;
     const cx = corners.getContext('2d');
-    cx.imageSmoothingEnabled = false;
     const put = (flipX, flipY, dx, dy) => {
       cx.save();
-      cx.translate(dx + (flipX ? c.width : 0), dy + (flipY ? c.height : 0));
+      cx.translate(dx + (flipX ? source.width : 0), dy + (flipY ? source.height : 0));
       cx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
-      cx.drawImage(img, c.x, c.y, c.width, c.height, 0, 0, c.width, c.height);
+      cx.drawImage(img, source.x, source.y, source.width, source.height,
+        0, 0, source.width, source.height);
       cx.restore();
     };
     put(false, false, 0, 0);
-    put(true, false, c.width, 0);
-    put(false, true, 0, c.height);
-    put(true, true, c.width, c.height);
+    put(true, false, source.width, 0);
+    put(false, true, 0, source.height);
+    put(true, true, source.width, source.height);
+
+    const separatorSource = {
+      x: s.x * pixelRatio,
+      y: s.y * pixelRatio,
+      width: s.width * pixelRatio,
+      height: s.height * pixelRatio,
+    };
+    const separator = document.createElement('canvas');
+    separator.width = separatorSource.width;
+    separator.height = separatorSource.height;
+    const sx = separator.getContext('2d');
+    sx.drawImage(img, separatorSource.x, separatorSource.y,
+      separatorSource.width, separatorSource.height,
+      0, 0, separatorSource.width, separatorSource.height);
+
+    // Build every column from the intact right half. The source crystal axis
+    // is offset inside the cell, so map that axis to the exact destination
+    // centre before reflecting. No original left-wing pixels survive.
+    const original = sx.getImageData(0, 0, separator.width, separator.height);
+    const rebuilt = sx.createImageData(separator.width, separator.height);
+    const sourceAxis = separatorSpec.axis * pixelRatio;
+    const destinationAxis = (separator.width - 1) / 2;
+    for (let x = 0; x < separator.width; x += 1) {
+      const sourceX = Math.round(
+        sourceAxis + separatorSpec.direction * Math.abs(x - destinationAxis)
+      );
+      // A source axis can sit far enough from the cell centre that the mirrored
+      // destination has more transparent margin than the chosen source side.
+      if (sourceX < 0 || sourceX >= separator.width) continue;
+      for (let y = 0; y < separator.height; y += 1) {
+        const dest = (y * separator.width + x) * 4;
+        const src = (y * separator.width + sourceX) * 4;
+        for (let channel = 0; channel < 4; channel += 1) {
+          rebuilt.data[dest + channel] = original.data[src + channel];
+        }
+      }
+    }
+    sx.putImageData(rebuilt, 0, 0);
 
     return {
-      atlasB64: atlas.toDataURL('image/webp', quality).split(',')[1],
-      cornersB64: corners.toDataURL('image/webp', 1).split(',')[1],
+      cornersB64: corners.toDataURL('image/webp', quality).split(',')[1],
+      separatorB64: separator.toDataURL('image/webp', quality).split(',')[1],
       width: img.naturalWidth,
       height: img.naturalHeight,
     };
-  }, { uri, c: corner, quality: QUALITY });
+  }, {
+    uri, c: corner, s: separator, separatorSpec,
+    pixelRatio, quality: CORNER_QUALITY,
+  });
 
-  if (width !== index.width || height !== index.height) {
-    console.error(`${name} is ${width}x${height}, not ${index.width}x${index.height} — ` +
-      `skills_ui_index.json would no longer describe it`);
+  if (width !== physicalWidth || height !== physicalHeight) {
+    console.error(`${name} is ${width}x${height}, not ${physicalWidth}x${physicalHeight} — ` +
+      `expected ${pixelRatio}x physical pixels for the ${index.width}x${index.height} logical atlas`);
     process.exit(1);
   }
 
-  const atlasBytes = Buffer.from(atlasB64, 'base64');
+  const atlasBytes = srcBytes;
   const cornersBytes = Buffer.from(cornersB64, 'base64');
-  total += atlasBytes.length + cornersBytes.length;
+  const separatorBytes = Buffer.from(separatorB64, 'base64');
+  total += atlasBytes.length + cornersBytes.length + separatorBytes.length;
   await writeFile(path.join(OUT_DIR, `theme_${theme}.webp`), atlasBytes);
   await writeFile(path.join(OUT_DIR, `panel_corners_${theme}.webp`), cornersBytes);
+  await writeFile(path.join(OUT_DIR, `separator_flourish_${theme}.webp`), separatorBytes);
   console.log(
     `theme_${theme}.webp  (${(atlasBytes.length / 1024).toFixed(0)} KB)   ` +
-    `panel_corners_${theme}.webp  (${(cornersBytes.length / 1024).toFixed(0)} KB)`
+    `panel_corners_${theme}.webp  (${(cornersBytes.length / 1024).toFixed(0)} KB)   ` +
+    `separator_flourish_${theme}.webp  (${(separatorBytes.length / 1024).toFixed(0)} KB)`
   );
 }
 
@@ -179,8 +261,8 @@ const module = `/**
  * Maps an IdleWorlds zone number to one of the nine environment frame themes.
  * Source of truth: assets/skills-ui/zone-theme-map.json (imported from the
  * sibling sprites repo). HeaderRenderer.applyZoneTheme() reads this to pick the
- * per-zone atlas + corner filigree; tests/zone-themes.test.mjs pins the two in
- * step and checks every referenced asset file exists.
+ * per-zone atlas, corner filigree and separator flourish; tests/zone-themes.test.mjs
+ * pins the generated map in step and checks every referenced asset file exists.
  */
 
 export const ZONE_THEMES = Object.freeze({
@@ -199,6 +281,6 @@ await writeFile(MODULE_OUT, module);
 
 console.log(
   `\nImported ${themeFiles.length} themes to ${path.relative(ROOT, OUT_DIR)}/ ` +
-  `(${(total / 1048576).toFixed(2)} MB total for ${themeFiles.length * 2} files)\n` +
+  `(${(total / 1048576).toFixed(2)} MB total for ${themeFiles.length * 3} files)\n` +
   `Wrote ${path.relative(ROOT, MODULE_OUT)} + zone-theme-map.json — ${zoneCount} zones mapped`
 );

@@ -31,12 +31,12 @@
   isolation: isolate !important;
   border: 1px solid var(--iw-th-edge) !important;
   /* Corners only — the sheet's slice consumes the whole image so its edges and
-     middle are empty; `border-image-width` (22/20) overpaints the slices that
+     middle are empty; `border-image-width` (25/23) overpaints the slices that
      far into the box even though the real border is 1px, so layout inset stays
      1px and nothing scrolls. Source is per-zone (--iw-corner-filigree, set
      inline on <html> by HeaderRenderer; base.css carries the un-themed
      default). Same slice/geometry as ui-system.css and header.css. */
-  border-image: var(--iw-corner-filigree) 95 88 / 22px 20px / 0 stretch !important;
+  border-image: var(--iw-corner-filigree) 50% / 25px 23px / 0 stretch !important;
   border-radius: var(--iw-r-panel, 3px) !important;
   /* The shared forged ground: per-zone wash over the panel texture over the
      themed gradient. Identical recipe to the section frame and the inventory

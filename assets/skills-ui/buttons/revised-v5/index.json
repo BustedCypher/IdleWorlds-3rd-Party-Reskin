@@ -1,0 +1,122 @@
+{
+  "version": 5,
+  "width": 1110,
+  "height": 723,
+  "themes": [
+    "forged-metal",
+    "infernal",
+    "glacial",
+    "celestial",
+    "lunar-spectral",
+    "runic-arcane",
+    "tempest-oceanic",
+    "verdant",
+    "voidborn"
+  ],
+  "states": [
+    "idle",
+    "hover",
+    "clicked"
+  ],
+  "entries": [
+    {
+      "key": "chevron-prev-idle",
+      "x": 12,
+      "y": 12,
+      "width": 135,
+      "height": 225,
+      "anchor": [
+        67.5,
+        112.5
+      ]
+    },
+    {
+      "key": "action-idle",
+      "x": 159,
+      "y": 12,
+      "width": 792,
+      "height": 225,
+      "anchor": [
+        396.0,
+        112.5
+      ]
+    },
+    {
+      "key": "chevron-next-idle",
+      "x": 963,
+      "y": 12,
+      "width": 135,
+      "height": 225,
+      "anchor": [
+        67.5,
+        112.5
+      ]
+    },
+    {
+      "key": "chevron-prev-hover",
+      "x": 12,
+      "y": 249,
+      "width": 135,
+      "height": 225,
+      "anchor": [
+        67.5,
+        112.5
+      ]
+    },
+    {
+      "key": "action-hover",
+      "x": 159,
+      "y": 249,
+      "width": 792,
+      "height": 225,
+      "anchor": [
+        396.0,
+        112.5
+      ]
+    },
+    {
+      "key": "chevron-next-hover",
+      "x": 963,
+      "y": 249,
+      "width": 135,
+      "height": 225,
+      "anchor": [
+        67.5,
+        112.5
+      ]
+    },
+    {
+      "key": "chevron-prev-clicked",
+      "x": 12,
+      "y": 486,
+      "width": 135,
+      "height": 225,
+      "anchor": [
+        67.5,
+        112.5
+      ]
+    },
+    {
+      "key": "action-clicked",
+      "x": 159,
+      "y": 486,
+      "width": 792,
+      "height": 225,
+      "anchor": [
+        396.0,
+        112.5
+      ]
+    },
+    {
+      "key": "chevron-next-clicked",
+      "x": 963,
+      "y": 486,
+      "width": 135,
+      "height": 225,
+      "anchor": [
+        67.5,
+        112.5
+      ]
+    }
+  ]
+}

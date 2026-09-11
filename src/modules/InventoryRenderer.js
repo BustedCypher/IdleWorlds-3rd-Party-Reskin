@@ -31,6 +31,17 @@ const INVENTORY_TITLE_ATTR = 'data-iw-inventory-title';
 const INVENTORY_LIST_ATTR = 'data-iw-inventory-list';
 const INVENTORY_FILTER_STATE_ATTR = 'data-iw-inventory-filter-state';
 const ROW_SELECTOR = '.compact-row, [class*="item-row"]';
+// Chrome resolves `:not(<complex selector>)` in the selector engine, so
+// appending this to a panel-chrome sweep rejects every item-row descendant
+// there instead of running one closest() walk per matched node in JS. At a
+// 600-row inventory the button sweep alone matched ~1,200 row controls and then
+// discarded all of them, one closest() at a time.
+// `[data-iw-collapse]` is the skin's OWN per-panel collapse toggle, appended
+// to the inventory frame by CollapsibleFrames. It is not a game control, and
+// tagging it `data-iw-inventory-control` would hand it the tool-row chrome and
+// a second owner for its appearance.
+const NOT_IN_ROW = ':not(.compact-row *):not([class*="item-row"] *):not([data-iw-collapse]):not([data-iw-order-handle])';
+const notInRow = sel => sel.split(',').map(s => s.trim() + NOT_IN_ROW).join(', ');
 const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [role="button"], [tabindex]';
 const pendingEmptyRetries = new WeakSet();
 const displayStyleOwner = createInlineStyleOwner();
@@ -275,12 +286,34 @@ function ensureInventoryRule(root, title) {
   if (anchorChild.nextElementSibling !== rule) anchorChild.after(rule);
 }
 
+/**
+ * classifyInventoryChrome() classifies the PANEL's chrome — its title, filter
+ * tabs, pagers and tool row. None of that depends on which row is being
+ * rendered, but renderRow() calls it on the slow path, so it used to run once
+ * per row: a whole-panel sweep repeated N times for N rows, i.e. O(rows^2).
+ * Measured on a 600-row inventory it was ~1.15s of a 2.9s profile, all of it
+ * re-deriving the same handful of attributes.
+ *
+ * DOMWatcher emits every queued `iw:inventory-row` for one flush synchronously
+ * from a single task, so a Set drained on a microtask collapses that whole
+ * burst to one sweep while still re-running on the NEXT flush — which the live
+ * filter-state derivation below needs, since which tab is active is state the
+ * game repaints and the skin must keep following (rule 5).
+ */
+const chromeSweptThisFlush = new Set();
+
+function classifyInventoryChromeOnce(root) {
+  if (!root || chromeSweptThisFlush.has(root)) return;
+  if (!chromeSweptThisFlush.size) queueMicrotask(() => chromeSweptThisFlush.clear());
+  chromeSweptThisFlush.add(root);
+  classifyInventoryChrome(root);
+}
+
 function classifyInventoryChrome(root) {
   if (!root) return;
   root.setAttribute(INVENTORY_ROOT_ATTR, '1');
-  const titleCandidates = root.querySelectorAll('h1, h2, h3, h4, [data-title]');
+  const titleCandidates = root.querySelectorAll(notInRow('h1, h2, h3, h4, [data-title]'));
   for (const title of titleCandidates) {
-    if (title.closest(ROW_SELECTOR)) continue;
     if (headingIsInventory(title)) {
       title.setAttribute(INVENTORY_TITLE_ATTR, '1');
       ensureInventoryRule(root, title);
@@ -290,11 +323,10 @@ function classifyInventoryChrome(root) {
   // The tool buttons in the panel header are not all <button>: at least one is
   // an anchor, which the old `button, [role="button"]` query missed entirely —
   // so the icon role was never assigned and its chrome rule never applied.
-  const buttons = [...root.querySelectorAll('button, a, [role="button"]')];
+  // Controls inside item rows are excluded by the selector itself; the ItemRow
+  // action model owns those independently.
+  const buttons = [...root.querySelectorAll(notInRow('button, a, [role="button"]'))];
   for (const button of buttons) {
-    // Never classify controls inside individual item rows here; the ItemRow
-    // action model owns those independently.
-    if (button.closest(ROW_SELECTOR)) continue;
     const text = String(button.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
     let role = '';
     if (/^(all|gear|materials|consumables|drops)$/.test(text)) role = 'filter';
@@ -350,8 +382,7 @@ function classifyInventoryChrome(root) {
     }
   }
 
-  for (const el of root.querySelectorAll('span, div, p')) {
-    if (el.closest(ROW_SELECTOR)) continue;
+  for (const el of root.querySelectorAll(notInRow('span, div, p'))) {
     const text = String(el.textContent || '').trim();
     if (/^\d+\s*\/\s*\d+$/.test(text)) el.setAttribute(INVENTORY_CONTROL_ATTR, 'page-count');
   }
@@ -589,7 +620,7 @@ function renderRow(row) {
     return;
   }
 
-  classifyInventoryChrome(root);
+  classifyInventoryChromeOnce(root);
 
   const data = extractRowData(row);
   if (!data.name) {
@@ -665,6 +696,8 @@ function reconcileAll() {
 
 /** Remove every skin-owned overlay and restore the native rows. Kill switch. */
 export function clearInventoryRenderer() {
+  // The flush-scoped sweep guard must not survive a kill-switch round trip.
+  chromeSweptThisFlush.clear();
   guardEach('inventory:teardown',
     document.querySelectorAll('.compact-row, [class*="item-row"]'),
     row => {

@@ -100,10 +100,27 @@ const MARKET_ROUTE = `
    one "Village" panel -- and two of the three lead with an emoji ("🏗️ Village
    Add-ons", "🏦 Housing Bank") the way the zone bar's labels do. */
 const VILLAGE_ROUTE = `
+  <div class="panel p-3.5" data-route="village-housing">
+    <h2 class="text-sm font-semibold">Village</h2>
+    <div class="compact-panel p-3">
+      <p class="text-sm font-semibold">🏠 Manor</p>
+      <p class="mt-1 text-xs">Current tier: 4 • Base actions take 6s</p>
+      <button class="button-primary">Upgrade Housing</button>
+    </div>
+  </div>
   <div class="panel p-3.5" data-route="village-addons">
     <h2 class="text-sm font-semibold">🏗️ Village Add-ons</h2>
     <p>4 slots available (1 per housing tier). Only one of each building type per village.</p>
-    <div class="compact-panel"><p>SLOT 1</p><p>Empty slot</p></div>
+    <div class="space-y-2">
+      <div class="compact-panel p-2.5"><div class="flex items-center justify-between gap-2">
+        <div class="min-w-0"><p>Slot 1</p><p>Voidiron Archive</p><p>+4 ATK • +2 smithing level</p></div>
+        <div class="flex shrink-0 flex-col gap-1"><button>Destroy</button><button>Uninstall (100k)</button></div>
+      </div></div>
+      <div class="compact-panel p-2.5"><div class="flex items-center justify-between gap-2">
+        <div class="min-w-0"><p>Slot 2</p><p>Empty slot</p></div>
+        <button class="button-primary">Install</button>
+      </div></div>
+    </div>
   </div>
   <div class="panel p-3.5" data-route="housing-bank">
     <h2 class="text-sm font-semibold">🏦 Housing Bank</h2>
@@ -247,15 +264,57 @@ check('Market rows are tagged on a SECOND visit',
 /* -- Market -> Village --------------------------------------------------- */
 navigate(VILLAGE_ROUTE);
 
-const villagePanels = () => ['village-addons', 'housing-bank', 'village-npcs']
+const villagePanels = () => ['village-housing', 'village-addons', 'housing-bank', 'village-npcs']
   .map(route => doc.querySelector(`[data-route="${route}"]`));
 
 await waitFor(() => villagePanels().every(p => p?.dataset.iwUi === 'section-frame'));
-check('Village Add-ons, Housing Bank and Village NPCs are each framed as their own section',
+check('Village, Village Add-ons, Housing Bank and Village NPCs are each framed as their own section',
   villagePanels().every(p => p?.dataset.iwUi === 'section-frame'),
   villagePanels().map(p => `${p?.dataset.route}=${p?.dataset.iwUi}`).join(' '));
 check('their headings (including the leading-icon ones) are tagged section-title',
   villagePanels().every(p => p?.querySelector('h2')?.dataset.iwUi === 'section-title'));
+
+/* -- Village: the illustrated slot + housing panels ----------------------- */
+/* Same vacuous-`[].every()` shape as Market above. classifyVillagePanels
+   resolves to an EMPTY array on Game/Market/Leaderboards, so the bare validity
+   guard would freeze it for the session and no amount of navigating to Village
+   would ever paint a building. Negative control: drop the
+   `headings.every(h => villageSeen.has(h))` coverage clause in UIFoundation and
+   the SECOND-visit check below fails while the first still passes. */
+const slotCards = () => [...(doc.querySelector('[data-route="village-addons"]')?.querySelectorAll('.compact-panel') || [])];
+// The sprite rides on --iw-village-sprite (a ::before paints it over the
+// medallion's own ground); see VillagePanels.ensureArt.
+const slotArt = i => slotCards()[i]?.querySelector('.iw-village-art');
+const sprite = el => el?.style.getPropertyValue('--iw-village-sprite') || '';
+const houseCard = () => doc.querySelector('[data-route="village-housing"] .compact-panel');
+
+await waitFor(() => slotCards()[0]?.dataset.iwVillageState === 'installed');
+check('Village Add-on slots are classified by occupancy',
+  slotCards()[0]?.dataset.iwVillageState === 'installed' &&
+  slotCards()[1]?.dataset.iwVillageState === 'vacant',
+  slotCards().map(c => c.dataset.iwVillageState).join(' '));
+check('the installed slot paints its own hand-painted building',
+  /building_11\.webp/.test(sprite(slotArt(0))),
+  sprite(slotArt(0)) || '(none)');
+check('the empty slot paints no building sprite',
+  slotArt(1) !== null && !sprite(slotArt(1)),
+  sprite(slotArt(1)) || '(none)');
+check('the housing hero resolves its tier from "Current tier: N"',
+  houseCard()?.dataset.iwVillageTier === '4' &&
+  /house_4\.webp/.test(sprite(houseCard()?.querySelector('.iw-village-art'))),
+  `tier=${houseCard()?.dataset.iwVillageTier}`);
+
+/* Leave the route and come back: this is the visit the frozen empty resolution
+   used to lose. */
+navigate(GAME_ROUTE);
+await waitFor(() => !doc.querySelector('[data-route="village-addons"]'));
+navigate(VILLAGE_ROUTE);
+await waitFor(() => slotCards()[0]?.dataset.iwVillageState === 'installed');
+check('Village panels are re-decorated on a SECOND visit',
+  slotCards()[0]?.dataset.iwVillageState === 'installed' &&
+  /building_11\.webp/.test(sprite(slotArt(0))) &&
+  houseCard()?.dataset.iwVillageTier === '4',
+  `state=${slotCards()[0]?.dataset.iwVillageState} tier=${houseCard()?.dataset.iwVillageTier}`);
 
 /* -- Panels the skin was never told the name of ------------------------- */
 /* Every check below uses a heading absent from SECTION_FRAME_NAMES. Negative

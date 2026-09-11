@@ -8,6 +8,7 @@ import { on } from './DOMWatcher.js';
 import { inject } from './StyleInjector.js';
 import { assetUrl, guard, raf } from './Runtime.js';
 import { zoneTheme } from './zoneThemes.js';
+import { SkillsArtService } from './SkillsArtService.js';
 import css from '../styles/header.css';
 
 const ROLE = 'data-iw-header';
@@ -38,7 +39,7 @@ const ASSET_VARS = [
   '--iw-zone-button-active', '--iw-zone-button-idle', '--iw-zone-button-teal',
   // Per-zone frame theme, set on <html> by applyZoneTheme(). The teardown loop
   // below walks '*', which includes <html>, so listing them here clears them.
-  '--iw-zone-atlas', '--iw-corner-filigree',
+  '--iw-zone-atlas', '--iw-corner-filigree', '--iw-zone-separator',
 ];
 
 const norm = value => String(value || '').replace(/\s+/g, ' ').trim();
@@ -102,12 +103,13 @@ function applyZoneSurface(root) {
 
 // Per-zone frame chrome. `zone-theme-map.json` groups the 34 zones into nine
 // environment palettes (glacial, infernal, verdant, …); each has a recoloured
-// copy of the skills UI atlas + its own corner filigree sheet, geometry
-// identical to the base art. This points two page-level CSS variables at the
+// copy of the skills UI atlas + its own corner filigree and separator sheets.
+// This points three page-level CSS variables at the
 // current zone's set:
 //   --iw-zone-atlas      → SkillsArtService's --fs-skills-ui-atlas + inventory.css
 //   --iw-corner-filigree → the shared border-image in ui-system/header/tooltip
-// base.css defines both as the un-themed defaults, so an unresolved zone (or a
+//   --iw-zone-separator  → inventory's repaired title divider
+// base.css defines all three as the un-themed defaults, so an unresolved zone (or a
 // zone with no theme) simply falls back there. The attribute + inline vars live
 // on <html>, which is OUTSIDE document.body and therefore not watched by the
 // single MutationObserver — writing here can never feed a flush.
@@ -118,14 +120,19 @@ function applyZoneTheme() {
   if (!html) return;
   const theme = zoneTheme(currentZoneNumber());
   const key = theme || 'default';
-  if (html.dataset.iwZoneTheme === key) return;
+  const buttonThemeReady = !theme || !!html.style.getPropertyValue('--iw-action-idle');
+  if (html.dataset.iwZoneTheme === key && buttonThemeReady) return;
   html.dataset.iwZoneTheme = key;
   if (theme) {
     html.style.setProperty('--iw-zone-atlas', `url("${assetUrl(`${THEME_ASSET_DIR}/theme_${theme}.webp`)}")`);
     html.style.setProperty('--iw-corner-filigree', `url("${assetUrl(`${THEME_ASSET_DIR}/panel_corners_${theme}.webp`)}")`);
+    html.style.setProperty('--iw-zone-separator', `url("${assetUrl(`${THEME_ASSET_DIR}/separator_flourish_${theme}.webp`)}")`);
+    SkillsArtService.applyThemeVariables(html, theme);
   } else {
     html.style.removeProperty('--iw-zone-atlas');
     html.style.removeProperty('--iw-corner-filigree');
+    html.style.removeProperty('--iw-zone-separator');
+    SkillsArtService.clearThemeVariables(html);
   }
 }
 
@@ -439,6 +446,7 @@ export function clearHeaderRenderer() {
   headerResolution = null;
   lastZoneNumber = null;
   delete document.documentElement.dataset.iwZoneTheme;
+  SkillsArtService.clearThemeVariables(document.documentElement);
   document.querySelectorAll(`[${ROLE}]`).forEach(el => {
     el.removeAttribute(ROLE);
     delete el.dataset.iwHeaderCard;

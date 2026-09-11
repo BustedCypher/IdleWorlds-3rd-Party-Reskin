@@ -4,8 +4,8 @@
  * Maps an IdleWorlds zone number to one of the nine environment frame themes.
  * Source of truth: assets/skills-ui/zone-theme-map.json (imported from the
  * sibling sprites repo). HeaderRenderer.applyZoneTheme() reads this to pick the
- * per-zone atlas + corner filigree; tests/zone-themes.test.mjs pins the two in
- * step and checks every referenced asset file exists.
+ * per-zone atlas, corner filigree and separator flourish; tests/zone-themes.test.mjs
+ * pins the generated map in step and checks every referenced asset file exists.
  */
 
 export const ZONE_THEMES = Object.freeze({

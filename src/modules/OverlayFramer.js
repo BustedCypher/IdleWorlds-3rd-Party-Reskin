@@ -153,6 +153,18 @@ export function frameOverlays() {
       }
     }
 
+    // NOTE (perf): this candidate sweep is three attribute-SUBSTRING selectors,
+    // none of which Chrome can index, so each walks every element in the
+    // document — measured at 48ms of a 225ms profile at 13k nodes. Gating it on
+    // a DOMWatcher "something structural changed" epoch was tried and REVERTED:
+    // it bought only ~4% (an idle game streams chat/log rows, so the epoch moves
+    // on most flushes anyway) in exchange for making this module silently
+    // dependent on the observer having seen the change that opened the overlay.
+    // A missed overlay is an unframed modal. If this ever needs to be cheaper,
+    // make the SELECTOR cheaper rather than skipping the sweep — but note that
+    // narrowing to indexed class tokens (`.fixed`, `.md\:fixed`, …) trades the
+    // substring's coverage for speed, which is the class-name classification
+    // CLAUDE.md warns about.
     const seen = new Set();
     const candidates = document.querySelectorAll(
       '[class*="fixed"],[style*="position: fixed"],[style*="position:fixed"]'

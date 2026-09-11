@@ -62,6 +62,13 @@ function findItem(ref) {
   return ItemDatabase.find(ref);
 }
 
+// Skin-owned reward tiles can supply a documented fallback while the live
+// item database loads. Weak keys release detached cards automatically.
+const tooltipItems = new WeakMap();
+export function registerTooltipItem(anchor, item) {
+  tooltipItems.set(anchor, item);
+}
+
 function categoryGlyph(item) {
   const category = String(item?.category || '').toLowerCase();
   const sub = String(item?.subcategory || '').toLowerCase();
@@ -333,7 +340,7 @@ function show(anchor, { keyboard = false } = {}) {
     : findItem({
         id: anchor.getAttribute('data-iw-item'),
         name: anchor.getAttribute('data-iw-item-name'),
-      });
+      }) || tooltipItems.get(anchor);
   if (!item) return;
 
   clearShowTimer();
@@ -370,7 +377,14 @@ function show(anchor, { keyboard = false } = {}) {
 function hide() {
   clearShowTimer();
   if (STATE.el) {
-    STATE.el.classList.remove('is-open');
+    // Guarded, because a same-value class write is NOT free the way a
+    // same-value `setProperty` is: measured in Chromium, 100 identical
+    // `classList` writes emit 100 mutation records while 100 identical
+    // `style.setProperty` calls emit none. `class` is in DOMWatcher's
+    // `attributeFilter`, so an unguarded remove here queued a flush every time
+    // the pointer left a trigger with no tooltip open — which is most of them.
+    // The two style writes below are already no-ops by that same asymmetry.
+    if (STATE.el.classList.contains('is-open')) STATE.el.classList.remove('is-open');
     // display:none is deliberate: hiding is immediate and cannot be defeated
     // by native/CSS opacity transitions or stale inline visibility state.
     STATE.el.style.display = 'none';

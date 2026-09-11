@@ -71,20 +71,41 @@
   opacity: .78 !important;
 }
 
-/* Four mirrored corners from one 176x190 sheet. */
-:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"])))::after {
+/* Four mirrored corners from one logical 176x190 sheet.
+   `:not([data-iw-collapsed="1"])` hands a COLLAPSED frame over to
+   collapsible.css, which draws the top-left corner alone. That is an opt-out
+   rather than an override because this selector is (0,4,0) with `!important`
+   on every declaration: a later rule cannot take just the two border-width
+   properties off it without matching that specificity, and an override that
+   quietly loses looks exactly like art that was never changed. */
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"])::after {
   content: "" !important;
   position: absolute !important;
-  inset: 0 !important;
+  /* -1px, not 0: an absolutely positioned child is laid out against the
+     PADDING box, so at `inset: 0` the ornament's own border box sat 1px inside
+     the frame's 1px outline and every corner read as floating just below and
+     inside the rule it is supposed to meet. -1px puts the two border boxes on
+     the same edge. The header uses `inset: 0` on purpose and must NOT follow —
+     its plate sets `overflow: hidden`, which would clip the extra pixel away.
+
+     The block axis needs MORE than that, because the art is not symmetric.
+     Measured on the top-left quadrant (95 logical rows): the left edge reaches
+     full alpha by logical x=2, but the top edge is a soft ramp that only gets
+     there at logical y=7 — so at a 34px slice the ink starts ~2.5px below the
+     ornament's own box and the corner reads as floating under the rule. -3px
+     top and bottom lands the solid ink on the outline; the extra pixels only
+     stretch the sheet's empty middle region, so nothing else moves. */
+  inset: -3px -1px !important;
   z-index: 0 !important;
   pointer-events: none !important;
   border-style: solid !important;
-  border-width: 30px 28px !important;
+  border-width: 34px 32px !important;
   border-color: transparent !important;
   /* Source is per-zone: --iw-corner-filigree, set inline on <html> by
-     HeaderRenderer, base.css carries the un-themed default. Slice/width stay
-     fixed — every themed sheet is the same 176x190 crop-and-mirror. */
-  border-image: var(--iw-corner-filigree) 95 88 / 30px 28px / 0 stretch !important;
+     HeaderRenderer, base.css carries the un-themed default. Divide the sheet
+     proportionally so both the 1x fallback and 2x themes select the same four
+     logical corners. */
+  border-image: var(--iw-corner-filigree) 50% / 34px 32px / 0 stretch !important;
 }
 
 /* Panel content sits above both ornaments. */
@@ -97,9 +118,9 @@
   :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))) {
     padding: var(--iw-frame-pad-mobile-y, var(--iw-frame-pad-y, 20px)) var(--iw-frame-pad-mobile-x, var(--iw-frame-pad-x, 16px)) !important;
   }
-  :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"])))::after {
-    border-width: 24px 22px !important;
-    border-image-width: 24px 22px !important;
+  :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"])::after {
+    border-width: 27px 25px !important;
+    border-image-width: 27px 25px !important;
   }
 }
 
@@ -196,7 +217,12 @@
   line-height: 1.25 !important;
 }
 
-:is([data-iw-panel-part="header"], [data-iw-panel-part="header-tools"]) button,
+/* `:not([data-iw-collapse])` — the skin's OWN per-panel collapse toggle is
+   appended into this header row, and this rule is (0,2,0) `!important` against
+   collapsible.css's (0,1,0), so it silently resized and re-plated the control
+   on the three activity panels while leaving it alone everywhere else. Live
+   capture (2026-09): the same button at 30x30 beside a 22x22. */
+:is([data-iw-panel-part="header"], [data-iw-panel-part="header-tools"]) button:not([data-iw-collapse]),
 [data-iw-panel-part="panel-control"] {
   min-width: 30px !important;
   min-height: 30px !important;
@@ -209,7 +235,7 @@
   font-family: var(--iw-font-ui) !important;
 }
 
-:is([data-iw-panel-part="header"], [data-iw-panel-part="header-tools"]) button:hover,
+:is([data-iw-panel-part="header"], [data-iw-panel-part="header-tools"]) button:not([data-iw-collapse]):hover,
 [data-iw-panel-part="panel-control"]:hover {
   border-color: var(--iw-th-rule) !important;
   color: var(--iw-text-hi) !important;
@@ -292,21 +318,47 @@
 [data-iw-panel-part="progress"] {
   position: relative !important;
   width: 100% !important;
-  height: 10px !important;
-  min-height: 10px !important;
+  height: 18px !important;
+  min-height: 18px !important;
   overflow: hidden !important;
-  border: 1px solid var(--iw-th-edge-soft) !important;
-  border-radius: 999px !important;
-  background: #090A09 !important;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,.9) !important;
+  border: 1px solid color-mix(in srgb, var(--iw-th-accent) 48%, var(--iw-th-edge)) !important;
+  border-radius: 2px !important;
+  background: linear-gradient(#080807, #14120e) !important;
+  box-shadow: inset 0 3px 8px #000d, 0 0 0 1px #000, 0 0 8px color-mix(in srgb, var(--iw-th-accent) 12%, transparent) !important;
+}
+
+[data-iw-panel-part="progress"]::before,
+[data-iw-panel-part="progress"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+[data-iw-panel-part="progress"]::before {
+  background: repeating-linear-gradient(90deg,
+    transparent 0 calc(10% - 1px),
+    rgba(0,0,0,.72) calc(10% - 1px) 10%);
+}
+
+[data-iw-panel-part="progress"]::after {
+  inset: 3px 5px auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.48), transparent);
 }
 
 [data-iw-panel-part="progress"] > * {
+  position: relative !important;
   height: 100% !important;
   min-height: 100% !important;
-  border-radius: inherit !important;
-  background: linear-gradient(90deg, var(--iw-th-hairline-hi) 0%, var(--iw-th-cta-hi) 52%, var(--iw-th-cta) 100%) !important;
-  box-shadow: 0 0 8px rgba(222,102,69,.28) !important;
+  overflow: hidden !important;
+  border-radius: 0 !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--iw-th-accent) 70%, #fff) 0%,
+    var(--iw-th-accent) 38%,
+    color-mix(in srgb, var(--iw-th-accent-dim) 76%, #17130d) 100%) !important;
+  box-shadow: 0 0 9px color-mix(in srgb, var(--iw-th-accent) 32%, transparent) !important;
   /* The game writes this fill's `width: N%` once per tick, and the value it
      writes is the progress at the END of the tick that just started -- so a
      bare render shows a staircase whose first step is already a whole tick in
@@ -330,6 +382,19 @@
   will-change: width !important;
 }
 
+[data-iw-panel-part="progress"] > *::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -40%;
+  width: 40%;
+  background: linear-gradient(100deg,
+    transparent,
+    color-mix(in srgb, var(--iw-th-accent) 64%, rgba(255,255,255,.82)),
+    transparent);
+  animation: iw-control-meter-current 5.7s ease-in-out -2s infinite;
+  pointer-events: none;
+}
+
 /* One update per action is NOT a tick: when the action completes the width
    drops back to the start of the next repetition. Interpolating that would
    slide the bar backwards across a whole tick while the new action is already
@@ -343,6 +408,7 @@
    opt-out has to be restated. */
 @media (prefers-reduced-motion: reduce) {
   [data-iw-panel-part="progress"] > * { transition: none !important; }
+  [data-iw-panel-part="progress"] > *::before { animation: none !important; }
 }
 
 [data-iw-panel-part="queue"] {
@@ -648,6 +714,46 @@
   box-shadow: 0 0 6px rgba(209,90,34,.28);
 }
 
+/* The skin's own outbound link (UIFoundation.ensureToolkitLink). It carries
+   `nav-tab` so the rail's plate, height and type come from whichever nav rule
+   is winning; this block adds ONLY what is specific to it -- the gap that
+   detaches it from the route tabs, the resets an <a> does not get from a
+   <button>, and the arrow that says it leaves the site. It sits after the nav
+   block in the last-injected sheet, so equal specificity resolves here.
+   The two flex items are the real "Toolkit" text node and the ::after arrow,
+   so `gap` is spent once between two VISIBLE things -- not the both-sides-of-
+   nothing trap the boss action label hit (CLAUDE.md). */
+[data-iw-nav-link="toolkit"] {
+  /* The route tabs get their height from `nav-tab` with `border: 0`; adding a
+     border here made this box 2px taller than its neighbours until the sizing
+     was pinned (measured in the fixture: heightMatch 2 -> 0). */
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  gap: 5px !important;
+  margin-left: 10px !important;
+  border: 1px solid var(--iw-th-edge-soft) !important;
+  border-radius: 3px !important;
+  color: var(--iw-th-accent) !important;
+  text-decoration: none !important;
+  cursor: pointer;
+}
+
+[data-iw-nav-link="toolkit"]::after {
+  content: "\2197";
+  font-size: .82em;
+  line-height: 1;
+  opacity: .68;
+}
+
+[data-iw-nav-link="toolkit"]:hover {
+  color: var(--iw-text-hi) !important;
+  border-color: var(--iw-th-brass) !important;
+  background: linear-gradient(180deg, #29241C, #1A1711) !important;
+}
+
 /* ── Zone command rail ──────────────────────────────────────────────── */
 [data-iw-ui="zone-bar"] {
   border-radius: 5px !important;
@@ -684,8 +790,8 @@
    buttons (data-iw-quest-role turn-in / skip), whose skillpanel.css art rules
    were tuned to clear the shorter chain, are excluded here too rather than
    chased with an ever-higher `html …` override. */
-button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-header="profile-name"] button),
-[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-header="profile-name"] button) {
+button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-header="profile-name"] button):not([data-iw-order-handle]),
+[role="button"]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-header="profile-name"] button):not([data-iw-order-handle]) {
   border-color: var(--iw-th-edge-faint) !important;
   background-image: linear-gradient(180deg, rgba(255,255,255,.035), rgba(0,0,0,.28)) !important;
   box-shadow:
@@ -698,8 +804,8 @@ button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved
    `color`, because a button's own text colour is frequently live state (the
    ember active-filter tab, red/green market steppers) and repainting it here
    would delete that meaning (rule 5). */
-button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):hover,
-[role="button"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):hover {
+button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]):hover,
+[role="button"]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]):hover {
   border-color: var(--iw-line-hot) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.055),
@@ -730,8 +836,8 @@ button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved
   min-height: 26px;
 }
 
-button:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):disabled,
-[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]) {
+button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]):disabled,
+[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]) {
   filter: saturate(.58) brightness(.84) !important;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.22) !important;
 }
@@ -751,6 +857,13 @@ input[placeholder*="Search" i] {
     flex: 1 1 auto !important;
     padding-inline: 9px !important;
     font-size: 10.5px !important;
+  }
+  /* The route tabs share the rail's width here; the appended link keeps its
+     own compact box. Restated inside the media block because that block is
+     LATER in this sheet and matches at equal specificity. */
+  [data-iw-nav-link="toolkit"] {
+    flex: 0 0 auto !important;
+    margin-left: 7px !important;
   }
 }
 
@@ -816,7 +929,7 @@ input[placeholder*="Search" i] {
 /* A wrapper inside the card must not re-plate what the card just made dark.
    Interactive nodes are exempt: the Prejoined button's fill is live state and
    flattening it would delete that meaning (rule 5). */
-[data-iw-boss="card"] > *:not(button):not(a):not([role="button"]) {
+[data-iw-boss="card"] > *:not(button):not(a):not([role="button"]):not([data-iw-boss-owned]) {
   background: transparent !important;
 }
 
@@ -838,6 +951,668 @@ input[placeholder*="Search" i] {
 [data-iw-boss="card"] > * {
   position: relative;
   z-index: 1;
+}
+
+/* Illustrated world encounters. Art is a four-cell generated atlas. */
+.iw-boss-notice {
+  margin: 0 0 10px !important;
+  padding: 7px 12px !important;
+  border-left: 2px solid #8da97b;
+  background: rgba(91,130,84,.08);
+  color: #bacbb0 !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+[data-iw-encounter] {
+  --iw-boss-accent: #91b780;
+  padding: 12px !important;
+  margin-bottom: 10px !important;
+  min-width: 0;
+}
+[data-iw-encounter]:not([data-iw-encounter="zone"]) {
+  display: grid !important;
+  grid-template-columns: 104px minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto auto;
+  column-gap: 14px;
+  row-gap: 8px;
+}
+[data-iw-encounter="abyssal_behemoth"] { --iw-boss-accent: #77bcd1; }
+[data-iw-encounter="world_eater"] { --iw-boss-accent: #b997df; }
+[data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="header"] {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 0;
+  padding-left: 0;
+  align-items: center !important;
+  gap: 10px !important;
+}
+[data-iw-encounter="zone"] > [data-iw-boss-role="header"] {
+  min-height: 0;
+  padding: 1px 2px 8px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--iw-boss-accent) 28%, transparent);
+}
+[data-iw-encounter="zone"] > [data-iw-boss-role="header"] > *:first-child:not([data-iw-boss-role="title"]) {
+  display: flex !important;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 4px 12px;
+}
+[data-iw-encounter] > .iw-boss-art {
+  position: absolute !important;
+  top: 12px; left: 12px;
+  width: 104px; height: 104px;
+  background-image: url('../assets/world-bosses/encounters.png') !important;
+  background-size: 200% 200% !important;
+  background-position: 0% 0% !important;
+  border: 1px solid color-mix(in srgb, var(--iw-boss-accent) 45%, #443622);
+  border-radius: 3px;
+  box-shadow: 0 5px 20px #0008, inset 0 0 12px #000a;
+  pointer-events: none;
+}
+[data-iw-encounter]:not([data-iw-encounter="zone"]) > .iw-boss-art {
+  position: relative !important;
+  inset: auto !important;
+  grid-column: 1;
+  grid-row: 1 / 4;
+}
+[data-iw-encounter="abyssal_behemoth"] > .iw-boss-art { background-position: 100% 0% !important; }
+[data-iw-encounter="world_eater"] > .iw-boss-art { background-position: 0% 100% !important; }
+[data-iw-encounter="zone"] > .iw-boss-art { display: none !important; }
+[data-iw-encounter] [data-iw-boss-role="title"] {
+  font-family: var(--iw-font-head) !important;
+  font-size: 17px !important;
+  line-height: 1.35 !important;
+  color: #f2e8d1 !important;
+  margin: 0 !important;
+}
+[data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="header"] > *:first-child {
+  display: grid !important;
+  grid-template-columns: max-content max-content;
+  grid-template-areas: "title difficulty" "buff buff";
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 7px;
+}
+[data-iw-encounter]:not([data-iw-encounter="zone"]) [data-iw-boss-role="title"] { grid-area: title; }
+[data-iw-encounter] [data-iw-boss-role="difficulty"] {
+  display: inline-block;
+  color: var(--iw-boss-accent) !important;
+  font-size: 10px !important;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--iw-boss-accent) 25%, transparent);
+  padding: 2px 6px !important;
+  margin: 0 !important;
+}
+[data-iw-encounter]:not([data-iw-encounter="zone"]) [data-iw-boss-role="difficulty"] { grid-area: difficulty; }
+[data-iw-encounter] [data-iw-boss-role="buff"] { color: #b7cfac !important; font-size: 12px !important; line-height: 1.3; }
+[data-iw-encounter]:not([data-iw-encounter="zone"]) [data-iw-boss-role="buff"] { grid-area: buff; }
+[data-iw-encounter] [data-iw-boss-role="timer"] { color: #aaa596 !important; font-size: 11px !important; font-variant-numeric: tabular-nums; }
+[data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="progress"] {
+  grid-column: 2;
+  grid-row: 2;
+  margin: 0 !important;
+}
+[data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="participation"] {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: center;
+  justify-self: start;
+  margin: 0 !important;
+}
+[data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="status"] {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: center;
+  justify-self: stretch;
+  margin: 0 !important;
+  padding-left: 155px;
+  gap: 8px !important;
+}
+[data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="details"] {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  margin: 0 !important;
+}
+[data-iw-encounter] [data-iw-boss-role="action"] {
+  flex: 0 0 auto !important;
+  width: 132px !important; min-width: 132px !important; max-width: 132px !important;
+  height: 38px !important; min-height: 38px !important;
+  padding: 0 12px !important;
+  font: 700 11px var(--iw-font-head) !important;
+  letter-spacing: .07em !important;
+  text-transform: uppercase !important;
+  color: #fff0d8 !important;
+  text-shadow: 0 1px 2px #000;
+  background: linear-gradient(#6e4423,#241610) !important;
+  border: 1px solid #b58b4b !important;
+}
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-art-ready] {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-action-idle-size) !important;
+  background-position: var(--fs-ui-action-idle-position) !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 2px 4px #0008);
+}
+[data-iw-encounter] [data-iw-boss-role="action"] { outline: 0 !important; }
+/* The compact label is drawn with ::after; the game's own text ("Prejoin",
+   "⏳ Prejoined") stays in the button as the accessible copy at font-size 0.
+   It is still a FLEX ITEM of zero width, though, which is why `gap` is 0 here:
+   a gap applies on BOTH sides of that invisible item, so the old 5px gap moved
+   the label 2.5px right of centre on its own -- and the "active" state added a
+   "⌛" ::before on top of that, which pushed QUEUED a measured 12.9px right,
+   hard against the frame's right flourish (the sprite's flat interior is only
+   x 25..107 of the 132px box) while the space left of the glyph sat empty.
+   That is the whole of the reported "QUEUED is off centre". State is still
+   carried by the word itself -- QUEUED vs PREJOIN -- so nothing is lost.
+   Pinned by tests/boss-action-label.test.mjs, which measures the WORD's ink
+   alone: restore the gap and it reports +2.5px, restore the glyph and it
+   reports +8.25px, both and it reports the +12.9px above. */
+[data-iw-encounter] [data-iw-boss-action-label] {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  color: transparent !important;
+  font-size: 0 !important;
+}
+[data-iw-encounter] [data-iw-boss-action-label]::after {
+  content: attr(data-iw-boss-action-label);
+  color: #fff0d8;
+  font: 700 11px var(--iw-font-head);
+  letter-spacing: .07em;
+  /* letter-spacing puts its step AFTER the last letter too, so the ink sits
+     half a step left of the box centre. Cancel exactly that much. */
+  margin-right: -.07em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px #000;
+}
+[data-iw-encounter] [data-iw-boss-role="action"]:hover:not(:disabled) { filter: brightness(1.18); }
+[data-iw-encounter] [data-iw-boss-role="action"]:disabled { opacity: .5 !important; filter: saturate(.3); cursor: not-allowed !important; }
+.iw-boss-rewards { margin-top: 2px; padding-top: 9px; border-top: 1px solid #a88d4c35; }
+[data-iw-encounter]:not([data-iw-encounter="zone"]) > .iw-boss-rewards { grid-column: 1 / -1; grid-row: 5; }
+[data-iw-encounter] .iw-boss-rewards-title { font: 600 10px var(--iw-font-head) !important; color: #cdbb94 !important; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 7px !important; }
+.iw-boss-reward-list { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; }
+[data-iw-encounter] summary.iw-boss-rewards-title { display: list-item; cursor: pointer; padding: 4px 0; }
+[data-iw-encounter] summary.iw-boss-rewards-title::marker { color: #cdbb94; }
+[data-iw-encounter] summary.iw-boss-rewards-title:focus-visible { outline: 2px solid #cdbb94; outline-offset: 3px; }
+[data-iw-encounter] .iw-boss-rewards:not([open]) > .iw-boss-reward-list { display: none; }
+[data-iw-encounter] .iw-boss-rewards:not([open]) > summary { margin-bottom: 0 !important; }
+[data-iw-encounter] button.iw-boss-reward {
+  display: flex !important; flex-direction: column; align-items: center;
+  width: auto !important; min-width: 44px !important; min-height: 70px !important;
+  padding: 5px 2px !important; gap: 3px;
+  background: transparent !important;
+  border: 1px solid transparent !important; border-radius: 2px !important;
+  box-shadow: none !important; color: #d3cbbb !important;
+  cursor: help !important;
+}
+[data-iw-encounter] button.iw-boss-reward:hover,
+[data-iw-encounter] button.iw-boss-reward:focus-visible { border-color: var(--iw-boss-accent) !important; background-color: #c4ac7018 !important; outline: 1px solid var(--iw-boss-accent); outline-offset: 1px; }
+.iw-boss-reward-icon { display: block; width: 34px; height: 34px; flex: 0 0 34px; }
+/* Small interaction cues; these do not introduce more idle loops. */
+@media (prefers-reduced-motion: no-preference) {
+  .iw-boss-reward-icon { transition: transform .24s cubic-bezier(.22,.61,.36,1); }
+  .iw-boss-reward:focus-visible .iw-boss-reward-icon { transform: translateY(-2px); }
+  .compact-panel.fs-quest-panel[data-iw-quest-state="ready"] .fs-quest-sigil-icon {
+    animation: iw-quest-ready-settle .85s cubic-bezier(.22,.61,.36,1) both;
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .iw-boss-reward:hover .iw-boss-reward-icon { transform: translateY(-2px); }
+}
+@keyframes iw-quest-ready-settle {
+  0% { transform: translateY(1px) scale(.97); }
+  42% { transform: translateY(-1px) scale(1.035); }
+  100% { transform: none; }
+}
+.iw-boss-reward-name { font: 500 9px/1.15 var(--iw-font-body, sans-serif) !important; text-align: center; white-space: normal; overflow-wrap: anywhere; }
+[data-iw-control="red"] { --iw-boss-accent: #df7777; border-color: #a85050 !important; }
+[data-iw-control="blue"] { --iw-boss-accent: #75b5eb; border-color: #507ca8 !important; }
+[data-iw-control="contested"] { --iw-boss-accent: #e6bc65; border-color: #ae8a43 !important; }
+
+/* Zone Control is a magical siege ward rather than another boss portrait.
+   Each state has a separately validated square crest so the crossed weapon
+   axes remain continuous and are never distorted by atlas cropping. */
+[data-iw-encounter="zone"] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  overflow: hidden;
+  padding: 14px !important;
+  background:
+    radial-gradient(circle at 13% 55%, color-mix(in srgb, var(--iw-boss-accent) 13%, transparent), transparent 27%),
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a), var(--iw-th-ground-b)) !important;
+}
+[data-iw-encounter="zone"] > [data-iw-boss-role="header"] {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+[data-iw-encounter="zone"] > [data-iw-boss-role="title"] {
+  letter-spacing: .015em;
+}
+.iw-control-dominion {
+  display: grid !important;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  grid-template-columns: 174px minmax(0, 1fr);
+  grid-template-areas:
+    "crest readout"
+    "crest meter"
+    "crest factions";
+  width: 100%;
+  column-gap: 18px;
+  row-gap: 7px;
+  min-height: 174px;
+  padding: 10px 4px 5px !important;
+}
+/* Keep all three layers resident so interrupted state changes still crossfade.
+   Every state uses the contested crest; captured variants change only the gem. */
+.iw-control-crest {
+  grid-area: crest;
+  position: relative;
+  align-self: center;
+  width: 174px;
+  aspect-ratio: 1;
+  isolation: isolate;
+  pointer-events: none;
+}
+.iw-control-crest::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -18%;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(var(--iw-control-aura, 230,188,101),.48) 0%,
+    rgba(var(--iw-control-aura, 230,188,101),.25) 28%,
+    rgba(var(--iw-control-aura, 230,188,101),.09) 49%,
+    transparent 72%);
+  opacity: 0;
+  transform: scale(.88);
+  animation: iw-control-captured-aura 7.4s ease-in-out infinite;
+  animation-play-state: paused;
+  transition: opacity 1.2s ease-out;
+  will-change: transform, opacity;
+}
+[data-iw-control="red"] .iw-control-crest { --iw-control-aura: 255, 48, 36; }
+[data-iw-control="blue"] .iw-control-crest { --iw-control-aura: 36, 142, 255; }
+[data-iw-control="red"] .iw-control-crest::before,
+[data-iw-control="blue"] .iw-control-crest::before {
+  opacity: .68;
+  animation-play-state: running;
+}
+.iw-control-crest-art {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  transition: opacity 1.2s cubic-bezier(.22,.61,.36,1);
+}
+.iw-control-crest-art { background-image: url('../assets/world-bosses/zone-control-contested-v3.png'); }
+.iw-control-crest-art-red { --iw-crystal-light: 255,48,36; }
+.iw-control-crest-art-blue { --iw-crystal-light: 36,142,255; }
+[data-iw-control="red"] .iw-control-crest-art-red,
+[data-iw-control="blue"] .iw-control-crest-art-blue,
+[data-iw-control="contested"] .iw-control-crest-art-contested { opacity: 1; }
+/* Captured states preserve the ward pixel-for-pixel and tint only the central
+   crystal. Color blending retains its facets, fractures and highlights. */
+.iw-control-crest-art:not(.iw-control-crest-art-contested)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 25%, 57% 31%, 61% 42%, 59% 51%, 63% 61%, 57% 68%, 51% 76%, 44% 68%, 39% 57%, 41% 47%, 39% 39%, 45% 30%);
+  background: rgb(var(--iw-crystal-light));
+  mix-blend-mode: color;
+  filter: saturate(1.35) brightness(1.15) drop-shadow(0 0 5px rgba(var(--iw-crystal-light),.72));
+  opacity: .72;
+  animation: iw-control-resting-light 7.7s ease-in-out infinite;
+  animation-play-state: paused;
+}
+[data-iw-control="red"] .iw-control-crest-art-red::after,
+[data-iw-control="blue"] .iw-control-crest-art-blue::after { animation-play-state: running; }
+
+/* Each fixed sword corridor clips its own travelling filament. Unequal paths,
+   durations and phase offsets prevent mirrored motion without a JS frame loop. */
+.iw-control-sword-energy,
+.iw-control-crystal-core,
+.iw-control-meter-currents {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .85s ease-out, visibility 0s .85s;
+}
+[data-iw-control="contested"] .iw-control-sword-energy,
+[data-iw-control="contested"] .iw-control-crystal-core,
+[data-iw-control="contested"] .iw-control-meter-currents {
+  opacity: .88;
+  visibility: visible;
+  transition-delay: 0s;
+}
+.iw-control-sword-energy {
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 130%;
+  height: 10px;
+  overflow: hidden;
+  mix-blend-mode: screen;
+  -webkit-mask: linear-gradient(90deg, transparent 7%, #000 16% 37%, transparent 45% 55%, #000 63% 84%, transparent 93%);
+  mask: linear-gradient(90deg, transparent 7%, #000 16% 37%, transparent 45% 55%, #000 63% 84%, transparent 93%);
+}
+.iw-control-sword-energy-red { transform: translate(-50%, -50%) rotate(45deg); --iw-energy-color: 255,70,42; }
+.iw-control-sword-energy-blue { transform: translate(-50%, -50%) rotate(-45deg); --iw-energy-color: 44,171,255; }
+.iw-control-sword-energy::before,
+.iw-control-sword-energy::after,
+.iw-control-impact {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 48%;
+  background:
+    radial-gradient(ellipse at 78% 50%, #fffcefff, rgba(255,245,207,.94) 7%, rgba(var(--iw-energy-color),.92) 22%, rgba(var(--iw-energy-color),.42) 48%, transparent 75%);
+  filter: drop-shadow(0 0 2px rgba(255,248,220,.9)) drop-shadow(0 0 5px rgba(var(--iw-energy-color),.8));
+  opacity: 0;
+}
+.iw-control-sword-energy-red::before { animation: iw-control-filament-red 7.3s cubic-bezier(.35,0,.45,1) -2.1s infinite; }
+.iw-control-sword-energy-blue::before { animation: iw-control-filament-blue 10.9s cubic-bezier(.3,0,.6,1) -5.3s infinite; }
+.iw-control-sword-energy-red::after { animation: iw-control-filament-blue 13.7s ease-in-out -8.4s infinite; }
+.iw-control-sword-energy-blue::after { animation: iw-control-filament-red 17.3s ease-in-out -1.6s infinite; }
+.iw-control-crystal-core {
+  z-index: 2;
+  inset: 26% 39% 25%;
+  overflow: hidden;
+  clip-path: polygon(50% 0, 77% 18%, 91% 67%, 50% 100%, 9% 67%, 23% 18%);
+  background: radial-gradient(ellipse at 45% 58%, #fff7b926, #e6a13918 48%, transparent 75%);
+  mix-blend-mode: screen;
+}
+/* Continuous overlapping light volumes drift inside the crystal silhouette.
+   Neither goes dark or switches abruptly; luminosity follows spatial motion. */
+.iw-control-crystal-core::before,
+.iw-control-crystal-core::after {
+  content: "";
+  position: absolute;
+  inset: -35% -55%;
+  background:
+    radial-gradient(ellipse at 30% 64%, #fff5ce99, #f5bc424d 22%, transparent 49%),
+    radial-gradient(ellipse at 74% 24%, #82cfff59, transparent 42%);
+  animation: iw-control-crystal-flow 8.3s cubic-bezier(.37,0,.63,1) -3.7s infinite;
+}
+.iw-control-crystal-core::after {
+  background: radial-gradient(ellipse at 68% 42%, #fff4cb88, #ff704233 27%, transparent 51%);
+  animation: iw-control-crystal-undertow 11.7s ease-in-out -7.2s infinite;
+}
+.iw-control-sword-energy::before,
+.iw-control-sword-energy::after,
+.iw-control-crystal-core::before,
+.iw-control-crystal-core::after { animation-play-state: paused; }
+[data-iw-control="contested"] .iw-control-sword-energy::before,
+[data-iw-control="contested"] .iw-control-sword-energy::after,
+[data-iw-control="contested"] .iw-control-crystal-core::before,
+[data-iw-control="contested"] .iw-control-crystal-core::after { animation-play-state: running; }
+.iw-control-readout {
+  grid-area: readout;
+  align-self: end;
+  min-width: 0;
+  padding-bottom: 2px;
+}
+.iw-control-kicker {
+  margin: 0 0 2px !important;
+  color: #93866f !important;
+  font: 600 9px/1.2 var(--iw-font-head) !important;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+}
+.iw-control-state {
+  margin: 0 !important;
+  color: #f3e4c7 !important;
+  font: 700 20px/1.2 var(--iw-font-head) !important;
+  letter-spacing: .035em;
+  text-shadow: 0 2px 5px #000, 0 0 12px color-mix(in srgb, var(--iw-boss-accent) 28%, transparent);
+}
+.iw-control-meter {
+  grid-area: meter;
+  align-self: center;
+  min-width: 0;
+}
+.iw-control-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+.iw-control-meter-label,
+.iw-control-meter-value {
+  color: #bdb39e;
+  font: 600 10px/1.2 var(--iw-font-body, sans-serif);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.iw-control-meter-value {
+  color: var(--iw-boss-accent);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.iw-control-meter-track {
+  position: relative;
+  height: 18px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--iw-boss-accent) 58%, #3b3023);
+  border-radius: 2px;
+  background: linear-gradient(#080807, #14120e) !important;
+  box-shadow: inset 0 3px 8px #000d, 0 0 0 1px #000, 0 0 9px color-mix(in srgb, var(--iw-boss-accent) 13%, transparent);
+}
+.iw-control-meter-track::before,
+.iw-control-meter-track::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.iw-control-meter-track::before {
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(0,0,0,.78) calc(10% - 1px) 10%);
+}
+.iw-control-meter-track::after {
+  inset: 3px 5px auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent);
+}
+.iw-control-meter-fill {
+  position: relative;
+  display: block;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #ff8b73, #b82d2d 47%, #5f1118) !important;
+  transition: width .6s ease;
+}
+.iw-control-meter-fill::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 0;
+  background: linear-gradient(180deg, #83d7ff, #297ac3 47%, #123a72);
+  transition: width .7s cubic-bezier(.22,.61,.36,1);
+}
+[data-iw-control="blue"] .iw-control-meter-fill::before { width: 100%; }
+[data-iw-control="contested"] .iw-control-meter-fill::before { width: calc(100% - var(--iw-control-split, 50%)); }
+.iw-control-meter-currents { inset: 0; }
+.iw-control-current-red,
+.iw-control-current-blue { position: absolute; top: 0; bottom: 0; overflow: hidden; }
+.iw-control-current-red { left: 0; width: var(--iw-control-split, 50%); }
+.iw-control-current-blue { right: 0; width: calc(100% - var(--iw-control-split, 50%)); }
+.iw-control-current-red::after,
+.iw-control-current-blue::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -40%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, #ffe7aa44, transparent);
+  animation: iw-control-meter-current 5.7s ease-in-out -2s infinite;
+  animation-play-state: paused;
+}
+.iw-control-current-blue::after { animation-duration: 8.1s; animation-delay: -5.6s; animation-direction: reverse; }
+[data-iw-control="contested"] .iw-control-current-red::after,
+[data-iw-control="contested"] .iw-control-current-blue::after { animation-play-state: running; }
+.iw-control-meter-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--iw-control-split, 50%);
+  width: 7px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, #f5d67caa, transparent);
+  opacity: 0;
+  transition: opacity .85s ease, left .7s ease;
+}
+[data-iw-control="contested"] .iw-control-meter-fill::after { opacity: .75; }
+.iw-control-factions {
+  grid-area: factions;
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(154,126,75,.2);
+}
+.iw-control-faction {
+  font: 600 9px/1.2 var(--iw-font-head);
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  opacity: .45;
+}
+.iw-control-faction-red { color: #ef7777; text-align: left; }
+.iw-control-faction-blue { color: #7abcf0; text-align: right; }
+.iw-control-versus { color: #a98e5c; font-size: 10px; }
+[data-iw-control="red"] .iw-control-faction-red,
+[data-iw-control="blue"] .iw-control-faction-blue,
+[data-iw-control="contested"] .iw-control-faction { opacity: 1; text-shadow: 0 0 7px currentColor; }
+@keyframes iw-control-resting-light {
+  0%, 100% { opacity: .62; filter: saturate(1.25) brightness(1.06) drop-shadow(0 0 3px rgba(var(--iw-crystal-light),.5)); }
+  46% { opacity: .84; filter: saturate(1.45) brightness(1.22) drop-shadow(0 0 7px rgba(var(--iw-crystal-light),.82)); }
+}
+@keyframes iw-control-captured-aura {
+  0%, 100% { transform: scale(.88); filter: brightness(.82); }
+  47% { transform: scale(1.06); filter: brightness(1.2); }
+}
+@keyframes iw-control-filament-red {
+  0%, 12% { opacity: 0; transform: translateX(-110%) scaleX(.6); }
+  24% { opacity: .82; transform: translateX(26%) scaleX(.9); }
+  36% { opacity: .28; transform: translateX(116%) scaleX(.5); }
+  49% { opacity: 1; transform: translateX(191%) scaleX(1.2); }
+  65%, 100% { opacity: 0; transform: translateX(320%) scaleX(.4); }
+}
+@keyframes iw-control-filament-blue {
+  0%, 21% { opacity: 0; transform: translateX(330%) scaleX(.5); }
+  34% { opacity: .74; transform: translateX(205%) scaleX(1.15); }
+  53% { opacity: 1; transform: translateX(117%) scaleX(.7); }
+  67% { opacity: .4; transform: translateX(29%) scaleX(1); }
+  81%, 100% { opacity: 0; transform: translateX(-110%) scaleX(.4); }
+}
+@keyframes iw-control-crystal-flow {
+  0%, 100% { transform: translate(-9%, 13%) rotate(-13deg) scale(.96); opacity: .66; }
+  29% { transform: translate(12%, 3%) rotate(8deg) scale(1.07); opacity: .82; }
+  64% { transform: translate(-2%, -14%) rotate(-5deg) scale(.98); opacity: .72; }
+}
+@keyframes iw-control-crystal-undertow {
+  0%, 100% { transform: translate(13%, -7%) rotate(11deg); opacity: .58; }
+  41% { transform: translate(-11%, 12%) rotate(-17deg); opacity: .79; }
+  73% { transform: translate(5%, 5%) rotate(4deg); opacity: .63; }
+}
+@keyframes iw-control-meter-current {
+  0%, 17% { transform: translateX(0); opacity: 0; }
+  39% { opacity: .65; }
+  76%, 100% { transform: translateX(350%); opacity: 0; }
+}
+[data-iw-encounter="zone"] > [data-iw-boss-role="control-hp"],
+[data-iw-encounter="zone"] > [data-iw-boss-role="control-progress"],
+[data-iw-encounter="zone"] [data-iw-boss-role="control-strength"] { display: none !important; }
+[data-iw-encounter="zone"] [data-iw-boss-role="timer"] {
+  display: inline-block;
+  margin: 0 !important;
+  color: #c4b897 !important;
+}
+[data-iw-encounter="zone"] [data-iw-boss-role="timer"]::before {
+  content: "✧ ";
+  color: var(--iw-boss-accent);
+}
+[data-iw-encounter="zone"] > [data-iw-boss-role="participation"] {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: end;
+  float: none !important;
+  margin: 5px 4px 0 12px !important;
+  color: #aaa18e !important;
+  font-size: 10px !important;
+}
+@media (max-width: 760px) {
+  [data-iw-encounter] { padding: 10px !important; }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) { grid-template-columns: 92px minmax(0, 1fr); column-gap: 10px; }
+  [data-iw-encounter] > .iw-boss-art { width: 92px; height: 92px; top: 10px; left: 10px; }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) > .iw-boss-art { inset: auto !important; }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="header"] { padding-left: 0; min-height: 0; flex-wrap: wrap; gap: 6px !important; }
+  [data-iw-encounter] [data-iw-boss-role="title"] { font-size: 16px !important; }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="status"] { grid-column: 1 / -1; grid-row: 4; padding-left: 0; }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="details"] { grid-row: 5; }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) > .iw-boss-rewards { grid-row: 6; }
+  [data-iw-encounter="zone"] { padding: 10px !important; }
+  .iw-control-dominion { grid-template-columns: 118px minmax(0, 1fr); column-gap: 10px; min-height: 118px; padding-inline: 0 !important; }
+  .iw-control-crest { width: 118px; }
+  .iw-control-crest::before { inset: -12%; }
+  [data-iw-control="red"] .iw-control-crest::before,
+  [data-iw-control="blue"] .iw-control-crest::before { opacity: .52; }
+  .iw-control-sword-energy { height: 7px; }
+  [data-iw-control="contested"] .iw-control-sword-energy-red,
+  [data-iw-control="contested"] .iw-control-sword-energy-blue { opacity: .6; }
+  [data-iw-control="contested"] .iw-control-crystal-core { opacity: .45; }
+  .iw-control-sword-energy::after,
+  .iw-control-crystal-core::after { display: none; animation: none; }
+  .iw-control-sword-energy-red::before { animation-duration: 10.3s; }
+  .iw-control-sword-energy-blue::before { animation-duration: 14.9s; }
+  .iw-control-crystal-core::before { animation-duration: 11.3s; }
+  .iw-control-state { font-size: 15px !important; }
+  .iw-control-meter-head { gap: 5px; }
+  .iw-control-meter-label, .iw-control-meter-value { font-size: 8px; letter-spacing: .045em; }
+  .iw-control-meter-track { height: 15px; }
+  .iw-control-factions { gap: 5px; }
+  .iw-control-faction { font-size: 7px; letter-spacing: .045em; }
+  .iw-boss-reward-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  [data-iw-encounter] button.iw-boss-reward { width: auto !important; min-height: 72px !important; }
+  .iw-boss-reward-name { font-size: 10px !important; }
+}
+@media (max-width: 380px) {
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) { grid-template-columns: 80px minmax(0, 1fr); }
+  [data-iw-encounter] > .iw-boss-art { width: 80px; height: 80px; }
+  [data-iw-encounter] [data-iw-boss-role="action"] { width: 120px !important; min-width: 120px !important; max-width: 120px !important; }
+  .iw-control-dominion { grid-template-columns: 88px minmax(0, 1fr); }
+  .iw-control-crest { width: 88px; }
+  .iw-control-state { font-size: 13px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iw-control-dominion *,
+  .iw-control-dominion *::before,
+  .iw-control-dominion *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .iw-control-impact { visibility: hidden !important; }
 }
 
 /* ══ Market ═══════════════════════════════════════════════════════════
@@ -893,4 +1668,489 @@ input[placeholder*="Search" i] {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
+}
+
+/* ══ Village ══════════════════════════════════════════════════════════
+   The Village route ships two `.panel`s that classifySectionFrames already
+   frames — the Housing hero and the Village Add-on slots — and until now the
+   contents of both rendered as the game's flat Tailwind stack inside that
+   frame: a slot card was three lines of grey text and two buttons, with no
+   picture of the thing it was about. The game HAS hand-painted isometric art
+   for all 34 add-on buildings and all 5 housing tiers, so the fix is to put it
+   on screen, not to invent ornament.
+
+   VillagePanels.js owns every `data-iw-village*` role and paints the sprite
+   INLINE on its own appended `.iw-village-art` layer (the AtlasService
+   division of labour — never set a background-image for these from here, and
+   never on a game node). Everything below is layout + material only.
+
+   Namespaced away from `data-iw-ui` on purpose: these cards are the game's
+   shared `.compact-panel`, so SkillPanelRenderer's clear path also visits
+   them, and two writers on one attribute is the World Boss card flash. */
+[data-iw-village] { --iw-village-accent: var(--iw-th-accent); }
+[data-iw-village="addons"] [data-iw-village-role="intro"] {
+  margin: 0 0 12px !important;
+  color: #a49c88 !important;
+  font-size: 11.5px !important;
+  line-height: 1.45 !important;
+}
+[data-iw-village="addons"] [data-iw-village-role="note"] {
+  margin: 10px 0 0 !important;
+  padding: 8px 11px !important;
+  border-left: 2px solid var(--iw-th-edge-mid);
+  background: rgba(0, 0, 0, .28);
+  color: #9a9280 !important;
+  font-family: var(--iw-font-flav) !important;
+  font-size: 12.5px !important;
+  font-style: italic;
+  line-height: 1.4 !important;
+}
+
+/* -- slot card ----------------------------------------------------------
+   TWO columns across the card: the appended art, then the game's own head row.
+   Nothing is reparented (rule 2) — the art is simply an appended sibling that
+   CSS places first.
+
+   An earlier pass made the head row `display: contents` to get a three-column
+   art / copy / controls grid, which looked right at the width the first fixture
+   used. It is the wrong width: the live route stacks both Village panels in the
+   LEFT column of `xl:grid-cols-[minmax(320px,0.42fr)_…]`, so a slot card is
+   ~440px, not ~900px, and at that size a fixed control column forced the
+   building name to wrap and the effect list to three lines. Leaving the head row
+   as the flex box the game wrote it as means copy-vs-controls reflows the way
+   the game already intends, and there is one less thing to break when React
+   changes the row's internals. */
+[data-iw-village="slot"] {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: var(--iw-village-art-w, 100px) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 13px;
+  row-gap: 10px;
+  padding: 12px !important;
+  border: 1px solid var(--iw-th-edge) !important;
+  border-radius: var(--iw-r-panel) !important;
+  background:
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    radial-gradient(120% 90% at 8% 0%, rgba(255, 236, 190, .05), transparent 46%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, normal, soft-light, normal !important;
+  box-shadow:
+    inset 0 0 0 1px #0B0A08,
+    inset 0 0 0 2px rgba(143, 107, 55, .14),
+    inset 0 1px 0 rgba(255, 236, 190, .035),
+    0 2px 7px rgba(0, 0, 0, .42) !important;
+}
+/* Gold hairline across the head of each card, dimmer than the panel frame's so
+   the frame still outranks the cards — the Quest/boss card recipe. */
+[data-iw-village="slot"]::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 0 auto !important;
+  height: 1px !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+  background: linear-gradient(90deg,
+    var(--iw-th-hairline-hi), rgba(200, 168, 97, .16) 34%, transparent 72%) !important;
+  opacity: .9 !important;
+}
+[data-iw-village="slot"] > * { position: relative; z-index: 1; }
+[data-iw-village="slot"] > [data-iw-village-role="head"] { grid-column: 2; min-width: 0; }
+/* A wrapper inside the card must not re-plate what the card just made dark. */
+[data-iw-village="slot"] [data-iw-village-role="copy"],
+[data-iw-village="slot"] [data-iw-village-role="actions"] {
+  background: transparent !important;
+  min-width: 0;
+}
+/* The install picker spans the full card width under the head row. */
+[data-iw-village="slot"] > [data-iw-village-role="picker"] {
+  grid-column: 1 / -1;
+  margin-top: 0 !important;
+  border-top: 1px solid var(--iw-th-edge-faint) !important;
+  padding-top: 11px !important;
+}
+
+/* -- the art medallion --------------------------------------------------
+   `contain`-style sizing keeps each building's own aspect ratio inside the box
+   (the import tool trimmed every source to its opaque bbox, so they all read at
+   the same optical weight). The ground under it is a lit plot, not a plate: a
+   warm pool at the base so the isometric building looks like it is standing on
+   ground rather than floating in a swatch. */
+[data-iw-village-art] {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  position: relative;
+  width: var(--iw-village-art-w, 100px);
+  height: var(--iw-village-art-w, 100px);
+  border: 1px solid color-mix(in srgb, var(--iw-village-accent) 34%, #2A2318);
+  border-radius: 2px;
+  /* The ELEMENT is the lit plot: a warm ground pool under a cold upper field,
+     because a flat tint reads as a swatch rather than as ground. */
+  background:
+    radial-gradient(66% 30% at 50% 84%,
+      color-mix(in srgb, var(--iw-village-accent) 26%, transparent), transparent 72%),
+    radial-gradient(120% 86% at 50% 6%, rgba(120, 140, 180, .10), transparent 64%),
+    linear-gradient(180deg, #0C0D11 0%, #07070A 100%);
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, .62), 0 3px 12px rgba(0, 0, 0, .45);
+  pointer-events: none;
+}
+/* The building itself, on ::before — NOT on the element.
+   An element's own background paints BEFORE its negative-z children, so a
+   ground drawn on `::before { z-index: -1 }` covers the sprite completely and
+   every medallion renders as an empty plot. Swapping them is the fix, and a
+   pseudo-element cannot be written to from JS, which is why VillagePanels sets
+   `--iw-village-sprite` instead of `background-image` (the SkillsArtService
+   idiom). `background-size: <pct> auto` keeps each source's own aspect ratio —
+   the percentage PAIR AtlasService uses would stretch it (CLAUDE.md). */
+[data-iw-village-art]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--iw-village-sprite, none);
+  background-repeat: no-repeat;
+  background-position: center 46%;
+  background-size: 88% auto;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .55));
+}
+/* A building the name map could not resolve still gets a plot and a surveyor's
+   mark rather than an empty box — see VillagePanels' note on why a rename
+   upstream is a miss, and why the miss is a distinct value, not silence. */
+[data-iw-village-art="generic"]::after,
+[data-iw-village="slot"][data-iw-village-state="vacant"] [data-iw-village-art]::after {
+  content: "";
+  position: absolute;
+  /* A surveyed FOOTPRINT sitting on the plot's ground line, not a centred X:
+     an X reads as an error state, a staked outline reads as land waiting for a
+     building. Squashed vertically and pushed low so it sits where a building's
+     base would. */
+  inset: 52% 24% 22%;
+  border: 1px dashed color-mix(in srgb, var(--iw-village-accent) 46%, transparent);
+  border-radius: 1px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--iw-village-accent) 12%, transparent), transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--iw-village-accent) 14%, transparent);
+}
+
+/* An unclaimed plot is cold and quiet; an installed one is lit. */
+[data-iw-village="slot"][data-iw-village-state="vacant"] {
+  --iw-village-accent: #6E7482;
+  opacity: .92;
+}
+[data-iw-village="slot"][data-iw-village-state="vacant"] [data-iw-village-art] {
+  border-style: dashed;
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, .58);
+}
+[data-iw-village="slot"][data-iw-village-state="installed"]:hover [data-iw-village-art] {
+  border-color: color-mix(in srgb, var(--iw-village-accent) 58%, #2A2318);
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, .5),
+    0 3px 16px rgba(0, 0, 0, .5),
+    0 0 0 1px color-mix(in srgb, var(--iw-village-accent) 18%, transparent);
+}
+
+/* -- slot copy --------------------------------------------------------- */
+[data-iw-village-role="index"] {
+  margin: 0 0 3px !important;
+  color: var(--iw-th-accent-dim) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .2em !important;
+  text-transform: uppercase;
+}
+[data-iw-village-role="name"] {
+  margin: 0 !important;
+  color: #EBDCB8 !important;
+  font-family: var(--iw-font-head) !important;
+  /* 15px, not 16: the card is ~340-900px wide depending on viewport (both
+     Village panels live in the route's 0.42fr column), and 16px Cinzel wrapped
+     a two-word building name at the narrow end. */
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  text-shadow: 0 1px 0 #000, 0 0 14px rgba(212, 173, 99, .12);
+}
+[data-iw-village-role="vacant"] {
+  margin: 0 !important;
+  color: #857F72 !important;
+  font-family: var(--iw-font-flav) !important;
+  font-size: 14px !important;
+  font-style: italic;
+}
+/* The effect list is the reason to keep a building — give it its own inscribed
+   strip instead of leaving it as a grey run-on line. The text is the game's,
+   untouched; only the plate around it is ours. */
+[data-iw-village-role="effects"] {
+  margin: 7px 0 0 !important;
+  padding: 5px 9px !important;
+  border-left: 2px solid color-mix(in srgb, var(--iw-village-accent) 52%, transparent);
+  border-radius: 0 2px 2px 0;
+  background: rgba(0, 0, 0, .3);
+  color: #B9C7A8 !important;
+  font-size: 11.5px !important;
+  line-height: 1.5 !important;
+}
+
+/* -- slot controls ------------------------------------------------------
+   These opt out of the generic control rule via its
+   `:not([data-iw-village-role])` link (CLAUDE.md: add to the chain, never
+   escalate specificity), so their whole surface is set here. */
+[data-iw-village-role="actions"] {
+  display: flex !important;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 6px !important;
+}
+[data-iw-village-role="action"] {
+  min-width: 92px;
+  padding: 7px 11px !important;
+  border: 1px solid var(--iw-th-edge-mid) !important;
+  border-radius: var(--iw-r-control) !important;
+  background: linear-gradient(180deg, #22211C 0%, #14140F 100%) !important;
+  color: #D6CBB0 !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255, 236, 190, .05), 0 1px 2px rgba(0, 0, 0, .45) !important;
+  transition: border-color .12s, background-color .12s, color .12s !important;
+}
+[data-iw-village-role="action"]:hover:not(:disabled) {
+  border-color: var(--iw-th-rule) !important;
+  color: #F0E6CC !important;
+}
+[data-iw-village-role="action"]:disabled { opacity: .45 !important; }
+/* Install and Upgrade Housing are the page's forward moves: ember CTA. Destroy
+   is destructive and is the only one given a danger edge on hover — the game
+   itself styles Destroy and Uninstall identically, so this ADDS a distinction
+   rather than deleting one it drew. */
+[data-iw-village-action="install"],
+[data-iw-village-action="upgrade"] {
+  border-color: var(--iw-th-cta-hi) !important;
+  background: linear-gradient(180deg, var(--iw-th-cta-hi) 0%, var(--iw-th-cta) 100%) !important;
+  color: #FFF2E2 !important;
+}
+[data-iw-village-action="install"]:hover:not(:disabled),
+[data-iw-village-action="upgrade"]:hover:not(:disabled) {
+  border-color: #E9743A !important;
+  color: #FFF !important;
+}
+[data-iw-village-action="destroy"]:hover:not(:disabled) {
+  border-color: #8E4038 !important;
+  color: #E6B4AC !important;
+}
+
+/* -- install picker -----------------------------------------------------
+   The one screen where the player compares buildings, so the art matters most
+   here. The icon rides on the option's NAME line as an inline block, which
+   leaves the button's own box, padding and hit area exactly as the game set
+   them. */
+[data-iw-village-role="picker"] { display: grid; gap: 7px; }
+[data-iw-village-role="option"] {
+  display: block !important;
+  width: 100% !important;
+  padding: 8px 10px !important;
+  border: 1px solid var(--iw-th-edge-soft) !important;
+  border-radius: var(--iw-r-control) !important;
+  background: rgba(9, 9, 12, .55) !important;
+  /* A <button> centres its text and takes the page control size; the game gives
+     this one `text-left` and an 11-12px stack, and losing that is what made the
+     picker read as a wall of centred headlines. */
+  text-align: left !important;
+  font-size: 11.5px !important;
+  transition: border-color .12s, background-color .12s !important;
+}
+[data-iw-village-role="option"] > p:not([data-iw-village-role]),
+[data-iw-village-role="option-owned"] > p:not([data-iw-village-role]) {
+  margin: 3px 0 0 43px !important;
+  color: #A7B79A !important;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+}
+[data-iw-village-role="option-owned"] > p:not([data-iw-village-role]) {
+  color: #8A8478 !important;
+  font-style: italic;
+}
+[data-iw-village-role="option"]:hover:not(:disabled) {
+  border-color: var(--iw-th-rule) !important;
+  background: rgba(18, 16, 12, .7) !important;
+}
+[data-iw-village-role="option-owned"] {
+  padding: 8px 10px !important;
+  border: 1px dashed var(--iw-th-edge-faint) !important;
+  border-radius: var(--iw-r-control) !important;
+  background: rgba(0, 0, 0, .3) !important;
+}
+[data-iw-village-role="option-name"] {
+  display: flex !important;
+  align-items: center;
+  gap: 9px;
+  margin: 0 !important;
+  color: #E3D6B6 !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+}
+[data-iw-village-role="option-name"] > span:not(.iw-village-option-art) {
+  color: var(--iw-th-accent-dim) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-size: 11px !important;
+}
+.iw-village-option-art {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--iw-th-edge-soft);
+  border-radius: 2px;
+  background-image: var(--iw-village-sprite, none);
+  background-repeat: no-repeat;
+  background-position: center 50%;
+  background-size: 84% auto;
+  background-color: #08080B;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, .6);
+}
+
+/* -- housing hero -------------------------------------------------------
+   Same grid trick, one box wider: this is the route's headline card and the
+   house art is the largest single illustration on the page. The card's own
+   children are flat <p>s, so they flow into the copy column rather than being
+   placed by role — every role is still tagged, and the two that carry meaning
+   (Next upgrade, Maximum tier reached) keep the game's own emerald/amber
+   colour, which is state (rule 5). */
+[data-iw-village="house"] {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: var(--iw-village-house-w, 132px) minmax(0, 1fr);
+  column-gap: 16px;
+  align-items: start;
+  padding: 14px !important;
+  border: 1px solid var(--iw-th-edge) !important;
+  border-radius: var(--iw-r-panel) !important;
+  background:
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    radial-gradient(90% 120% at 12% 0%, rgba(255, 236, 190, .06), transparent 52%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, normal, soft-light, normal !important;
+  box-shadow:
+    inset 0 0 0 1px #0B0A08,
+    inset 0 0 0 2px rgba(143, 107, 55, .16),
+    0 2px 9px rgba(0, 0, 0, .45) !important;
+}
+[data-iw-village="house"] > * { grid-column: 2; position: relative; z-index: 1; }
+[data-iw-village="house"] > [data-iw-village-art] {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  width: var(--iw-village-house-w, 132px);
+  height: var(--iw-village-house-w, 132px);
+}
+[data-iw-village-role="house-name"] {
+  margin: 0 0 2px !important;
+  color: #F0E1BC !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 19px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  text-shadow: 0 1px 0 #000, 0 0 16px rgba(212, 173, 99, .14);
+}
+[data-iw-village-role="house-tier"] {
+  margin: 0 !important;
+  color: var(--iw-th-accent-dim) !important;
+  font-size: 11px !important;
+  letter-spacing: .04em !important;
+}
+[data-iw-village-role="house-note"] {
+  color: #8E8878 !important;
+  font-family: var(--iw-font-flav) !important;
+  font-size: 12.5px !important;
+  font-style: italic;
+  line-height: 1.4 !important;
+}
+[data-iw-village-role="house-salvage"] { color: #C0B79F !important; font-size: 11.5px !important; }
+/* Every line in this card is one of the game's <p>s. Set the rhythm once here
+   rather than leaning on the Tailwind `mt-*` utilities the skin overrides. */
+[data-iw-village="house"] > p { margin: 6px 0 0 !important; }
+[data-iw-village="house"] > p:first-of-type { margin-top: 0 !important; }
+/* "Next upgrade: …" is the card's call to action and the game colours it
+   emerald — that colour is state and stays the game's (rule 5); only the size,
+   the plate and the rhythm are ours. */
+[data-iw-village-role="house-next"] {
+  margin-top: 9px !important;
+  padding: 6px 9px !important;
+  border-left: 2px solid color-mix(in srgb, var(--iw-th-cta-hi) 60%, transparent);
+  border-radius: 0 2px 2px 0;
+  background: rgba(0, 0, 0, .3);
+  font-size: 11.5px !important;
+  line-height: 1.45 !important;
+}
+[data-iw-village-role="house-max"] {
+  margin-top: 9px !important;
+  font-family: var(--iw-font-head) !important;
+  font-size: 12.5px !important;
+  letter-spacing: .04em !important;
+}
+[data-iw-village="house"] [data-iw-village-action="upgrade"] {
+  margin-top: 11px !important;
+  width: 100%;
+}
+/* A row of studs for the five housing tiers. Re-presents the "Current tier: N"
+   the game already prints — it adds a reading, it repaints nothing. */
+.iw-village-tiers {
+  grid-column: 1 !important;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 9px;
+}
+.iw-village-tier-pip {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--iw-th-edge-mid);
+  transform: rotate(45deg);
+}
+.iw-village-tier-pip[data-iw-village-pip="held"] {
+  border-color: var(--iw-th-accent);
+  background: linear-gradient(160deg, var(--iw-th-accent), var(--iw-th-brass));
+  box-shadow: 0 0 7px rgba(212, 173, 99, .35);
+}
+
+@media (max-width: 760px) {
+  [data-iw-village="slot"] {
+    --iw-village-art-w: 76px;
+    column-gap: 11px;
+    padding: 10px !important;
+  }
+  /* On a phone the head row's fixed control stack leaves the copy column ~110px
+     and the effect list breaks one word per line. Give the controls their own
+     full-width row instead: `display: contents` promotes the row's two children
+     to grid items of the CARD (nothing is reparented — rule 2), so copy sits
+     beside the art and the controls span underneath both. */
+  [data-iw-village="slot"] > [data-iw-village-role="head"] { display: contents !important; }
+  [data-iw-village="slot"] [data-iw-village-role="copy"] { grid-column: 2; grid-row: 1; }
+  [data-iw-village="slot"] [data-iw-village-role="actions"],
+  [data-iw-village="slot"] > [data-iw-village-role="head"] > [data-iw-village-role="action"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  [data-iw-village-role="actions"] { flex-direction: row !important; }
+  [data-iw-village-role="action"] { flex: 1 1 0; min-width: 0; padding: 8px 9px !important; }
+  [data-iw-village="slot"] > [data-iw-village-role="picker"] { grid-row: 3; }
+  [data-iw-village-role="name"] { font-size: 15px !important; }
+  [data-iw-village="house"] { --iw-village-house-w: 104px; padding: 11px !important; }
+  [data-iw-village-role="house-name"] { font-size: 17px !important; }
+}
+@media (max-width: 380px) {
+  [data-iw-village="slot"] { --iw-village-art-w: 64px; }
+  [data-iw-village="house"] {
+    --iw-village-house-w: 88px;
+    grid-template-columns: var(--iw-village-house-w) minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-iw-village-role="action"],
+  [data-iw-village-role="option"],
+  [data-iw-village-art] { transition: none !important; }
 }
