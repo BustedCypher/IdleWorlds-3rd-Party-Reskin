@@ -19,6 +19,10 @@ import { initTooltipEngine, hideTooltip } from './modules/TooltipEngine.js';
 import { scanForItemNames, clearItemNameScan } from './modules/NameScanner.js';
 import { initInventoryRenderer, clearInventoryRenderer } from './modules/InventoryRenderer.js';
 import { initSkillPanelRenderer, clearSkillPanels } from './modules/SkillPanelRenderer.js';
+import {
+  initSkillCardDesignController,
+  clearSkillCardDesignController,
+} from './modules/SkillCardDesignController.js';
 import { initQuestPanelRenderer, clearQuestPanels } from './modules/QuestPanelRenderer.js';
 import { initUIFoundation, clearUIFoundation, injectUIFoundationStyles } from './modules/UIFoundation.js';
 import { initHeaderRenderer, clearHeaderRenderer } from './modules/HeaderRenderer.js';
@@ -36,6 +40,8 @@ import baseCss from './styles/base.css';
 import tooltipCss from './styles/tooltip-engine.css';
 import inventoryCss from './styles/inventory.css';
 import skillPanelCss from './styles/skillpanel.css';
+import skillCardV2Css from './styles/skillcard-v2.css';
+import skillCardV2RuntimeSafeCss from './styles/skillcard-v2-runtime-safe.css';
 import headerCss from './styles/header.css';
 import overlayCss from './styles/overlay.css';
 
@@ -52,12 +58,13 @@ function injectPresentationStyles() {
   inject('base', baseCss);
   inject('tooltip-engine', tooltipCss);
   inject('inventory', inventoryCss);
-  inject('skillpanel', skillPanelCss);
+  // Keep V2 in the existing lifecycle-owned skillpanel sheet so the kill-switch
+  // contract and the seven-stylesheet smoke invariant do not change.
+  inject('skillpanel', skillPanelCss + '\n' + skillCardV2Css + '\n' + skillCardV2RuntimeSafeCss);
   inject('header', headerCss);
   inject('overlay', overlayCss);
-  // ui-system.css MUST be injected LAST (see CLAUDE.md): its generic control
-  // rule is the final say on shared button surfacing, and header.css's button
-  // roles opt out via that rule's :not() chain.
+  // ui-system.css MUST be injected LAST (see CLAUDE.md). UIFoundation now owns
+  // its lifecycle injection, including the compact/collapsible/panel-order layers.
   injectUIFoundationStyles();
 }
 
@@ -117,6 +124,11 @@ function boot() {
   // 2. Event consumers belong to the PAGE lifetime and are bound once.
   bindConsumersOnce();
 
+  // Skill-card design state is activation-owned, even though its delegated
+  // listeners are internally registered once. This lets teardown/re-enable
+  // restore the persisted New/Current choice without duplicating listeners.
+  guard('init:skill-card-design', initSkillCardDesignController);
+
   // 3. Start async services. Neither is allowed to poison itself forever
   // after a transient failure; renderers reconcile again on update events.
   AtlasService.ready().catch(err => {
@@ -157,6 +169,7 @@ function teardown() {
   guard('teardown:tooltip', () => hideTooltip());
   guard('teardown:name-scan', clearItemNameScan);
   guard('teardown:inventory', clearInventoryRenderer);
+  guard('teardown:skill-card-design', clearSkillCardDesignController);
   guard('teardown:skill-panel', clearSkillPanels);
   guard('teardown:quest-panel', clearQuestPanels);
   guard('teardown:ui-foundation', clearUIFoundation);
