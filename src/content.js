@@ -24,7 +24,7 @@ import {
   clearSkillCardDesignController,
 } from './modules/SkillCardDesignController.js';
 import { initQuestPanelRenderer, clearQuestPanels } from './modules/QuestPanelRenderer.js';
-import { initUIFoundation, clearUIFoundation } from './modules/UIFoundation.js';
+import { initUIFoundation, clearUIFoundation, injectUIFoundationStyles } from './modules/UIFoundation.js';
 import { initHeaderRenderer, clearHeaderRenderer } from './modules/HeaderRenderer.js';
 import { paintBackground, clearBackgroundPaint } from './modules/BackgroundPainter.js';
 import { frameOverlays, clearOverlayFramer } from './modules/OverlayFramer.js';
@@ -42,7 +42,6 @@ import inventoryCss from './styles/inventory.css';
 import skillPanelCss from './styles/skillpanel.css';
 import skillCardV2Css from './styles/skillcard-v2.css';
 import skillCardV2RuntimeSafeCss from './styles/skillcard-v2-runtime-safe.css';
-import uiSystemCss from './styles/ui-system.css';
 import headerCss from './styles/header.css';
 import overlayCss from './styles/overlay.css';
 
@@ -64,10 +63,9 @@ function injectPresentationStyles() {
   inject('skillpanel', skillPanelCss + '\n' + skillCardV2Css + '\n' + skillCardV2RuntimeSafeCss);
   inject('header', headerCss);
   inject('overlay', overlayCss);
-  // ui-system.css MUST be injected LAST (see CLAUDE.md): its generic control
-  // rule is the final say on shared button surfacing, and header.css's button
-  // roles opt out via that rule's :not() chain.
-  inject('ui-system', uiSystemCss);
+  // ui-system.css MUST be injected LAST (see CLAUDE.md). UIFoundation now owns
+  // its lifecycle injection, including the compact/collapsible/panel-order layers.
+  injectUIFoundationStyles();
 }
 
 function scanRoots(roots) {

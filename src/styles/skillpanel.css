@@ -1162,6 +1162,10 @@
 }
 
 .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] .fs-skill-medallion-art::before {
+  /* The atlas medallion is quest chrome. Skill identities already own a
+     discipline-coloured circular socket; painting the shared quest ring here
+     creates a second, floating ring when compact overrides resize the pseudo. */
+  display: none !important;
   inset: -11px -8px !important;
   width: auto !important;
   height: auto !important;
@@ -1189,7 +1193,8 @@
   width: 38px !important;
   height: 41px !important;
   pointer-events: none !important;
-  opacity: .42 !important;
+  opacity: .84 !important;
+  filter: brightness(1.12) saturate(1.08) drop-shadow(0 1px 2px rgba(0,0,0,.55)) !important;
   background-image: var(--fs-skills-ui-atlas) !important;
   background-size: var(--fs-ui-corner-size) !important;
   background-position: var(--fs-ui-corner-position) !important;
@@ -1207,20 +1212,20 @@
   opacity: .72 !important;
 }
 
-/* The pager and the action button are PLATES, not sprites. The nav_frame and
-   action_frame cells of skills_ui_atlas.webp used to be painted here; they had
-   in fact stopped painting long before this, because the `background`
-   SHORTHAND styleButton() writes inline with `!important` resets
-   background-image and inline `!important` outranks every rule in this file.
-   Rather than leave two contradicting skins in the sheet, the sprite layers
-   are gone and the forged plate is the surface — CLAUDE.md's "a sprite frame
-   on a button means the button's own plate must go", run the other way. The
-   atlas cells themselves are untouched; the quest rail still draws
-   action_frame, and the medallion / xp-plaque / filigree cells are unaffected.
-   Reverting means restoring the sprite layers here AND dropping `background`
-   from BUTTON_STYLES, not one without the other. */
-.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"],
-.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"] {
+/* The pager is a PLATE, not a sprite. The nav_frame cells of
+   skills_ui_atlas.webp used to be painted here; they had in fact stopped
+   painting long before that was noticed, because the `background` SHORTHAND
+   styleButton() writes inline with `!important` resets background-image and
+   inline `!important` outranks every rule in this file. Rather than leave two
+   contradicting skins in the sheet, the pager's sprite layer is gone and the
+   forged plate is its surface — CLAUDE.md's "a sprite frame on a button means
+   the button's own plate must go", run the other way. Any attempt to give the
+   pager its sprite back has to drop `background` from the nav-button branch of
+   styleButton() at the same time, or it silently does nothing.
+
+   The ACTION button went the other way in 2026-09 — see the sprite section
+   below — and that is why it is no longer listed here. */
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"] {
   background-image: none !important;
 }
 
@@ -2012,6 +2017,52 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
 }
 .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::after {
   bottom: -4px !important;
+}
+
+/* ══ Command button: the quest rail's artwork ═════════════════════
+   Per Curtis (2026-09) the skill command button wears the SAME frame the quest
+   rail does — one action-button skin across the site. The sprite itself is
+   written INLINE by SkillPanelRenderer's ACTION_ART, because styleButton()'s
+   inline `!important` plate outranks every rule in this file and no selector
+   here could paint over it; these rules own only what nothing inline contends
+   for. Keep the two in step, plus the fixture's copy.
+
+   The studs go with the plate. They are the plate's ornament — the art carries
+   its own end flourishes, and a diamond floating 4px off a frame that has
+   already tapered to transparent reads as a stray mark. The rules above are
+   left in place (this project keeps superseded rules rather than deleting them,
+   and `tests/static-invariants.test.mjs` pins their presence); the suppression
+   below is gated on the atlas being ready, so a panel that never resolves art
+   still gets the studded plate it always had.
+
+   Ratio: action_frame is 264x75 (3.52) and a percentage background-size pair
+   stretches the cell to exactly fill its box, so the button's geometry
+   ("True artwork ratios" above) is what keeps the frame undistorted — 155x44
+   and the 148x44 narrow variant. Do not change either without re-deriving from
+   3.52. */
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"] {
+  /* The shadow follows the art's alpha, not the box — the same move the quest
+     rail makes once its sprite is on. */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"]:hover:not(:disabled) {
+  /* With the plate gone `border-color` and `box-shadow` have nothing to say, so
+     hover reads as a bloom on the art itself. */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) brightness(1.1) !important;
+  color: #FFF6E2 !important;
+}
+/* Rule 5: the disabled frame is already the desaturated `action_frame_disabled`
+   cell, and the dimming stays on top of it so the state survives the reskin. */
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"][data-iw-btn-state="disabled"],
+.compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"][data-iw-btn-state="disabled"] {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) saturate(.4) brightness(.82) !important;
+}
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::before,
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-layout="three-zone"] button[data-iw-skill-role="action-button"]::after,
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"]::before,
+.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"]::after {
+  content: none !important;
+  display: none !important;
 }
 
 /* ── Base EXP plaque: 3:1 like the art, text inside the flat centre ─── */
@@ -2912,16 +2963,34 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
    saturation and opacity and takes not-allowed. */
 .compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"],
 .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
-  /* Both controls are the SAME size -- the rail would otherwise stretch them
-     to its widest child. Hierarchy is carried by the frame (gold vs grey),
-     not by scale. 148 x 42 holds the frame's 3.52 ratio; the 44px touch
-     target is met on the long axis and missed by 2px on the short one,
-     which is the trade the matching sizes buy. */
+  /* THE HEIGHT IS THE FIXED AXIS AND THE WIDTH FOLLOWS THE LABEL. This is the
+     one control on the page whose label length is the GAME's to choose: a work
+     order's turn-in reads "Turn In All (38)" and the count is live. The box
+     used to be `aspect-ratio: 264/75` over `min-width: 148px`, which grows in
+     BOTH axes -- so two cards side by side got different button heights -- and,
+     worse, it kept `padding: 0 20px` while the frame's end flourishes are a
+     FRACTION of the box (12.9% each side), so past ~155px the horns walked
+     inward over the label. That is the reported "TURN IN ALL (38) doesn't fit".
+     Now: height fixed, width auto over a 148px floor, and the art is sliced
+     (below) so only its flat middle stretches. 148 x 42 is still the resting
+     size and still the art's undistorted 3.52.
+
+     One knob per breakpoint. The cap is the width of the sprite's end band,
+     derived from the height by the SAME ratio the band's own window uses
+     (SkillsArtService, --fs-ui-action-cap-ratio), so the ends never distort.
+     The .8 fallback is 60/75 -- the pre-atlas value, so a panel whose art has
+     not resolved yet still reserves the right padding. */
+  --fs-action-h: 42px;
+  --fs-action-cap: calc(var(--fs-action-h) * var(--fs-ui-action-cap-ratio, .8));
   align-self: center !important;
-  aspect-ratio: 264 / 75 !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+  max-width: 100% !important;
   min-width: 148px !important;
-  min-height: 42px !important;
+  height: var(--fs-action-h) !important;
+  min-height: var(--fs-action-h) !important;
   padding: 0 20px !important;
+  white-space: nowrap !important;
   border-radius: 3px !important;
   font-family: var(--iw-font-head) !important;
   font-size: 12px !important;
@@ -2954,24 +3023,105 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
-/* Art present: nothing but the sprite. */
+/* Art present: nothing but the sprite -- in THREE bands, not one window.
+   ---------------------------------------------------------------------
+   A single percentage window stretches the whole 264x75 cell to fill the box,
+   so a button that grows with its label drags the end flourishes inward over
+   the text. This is `border-image`'s three-slice trick done with an ATLAS,
+   which border-image itself cannot address (its slices are measured from a
+   standalone image's own four edges):
+
+     ::before   the left end band, `--fs-action-cap` wide, at native scale
+     element    the flat middle band, stretched across the CONTENT box
+     ::after    the right end band, same width, same scale
+
+   Three things are load-bearing here and each is invisible when wrong:
+
+   * `background-origin/clip: content-box` PLUS `padding: 0 var(--fs-action-cap)`.
+     The padding IS the cap width, so the middle band paints exactly between
+     the two end boxes. Draw it across the whole border box instead and it
+     shows THROUGH the horns' transparent taper as a dark rectangle sticking
+     out past the frame -- which reads as a stray box, not as a clipping bug.
+     The same padding is what keeps the label off the flourishes.
+   * `z-index: -1` on the caps, with the button made a stacking context. A
+     positioned pseudo-element paints ABOVE its host's inline content, so
+     without this the two end bands cover the ends of the label. At negative z
+     they paint above the host's own background and below its text, which is
+     the order wanted -- the mirror image of the Village medallion trap in
+     CLAUDE.md, where that same paint order is what breaks it.
+   * The cap BOX is `var(--fs-action-cap)` = height x the band's own source
+     ratio, so cap scale == middle scale == vertical scale. Give the caps a
+     fixed px width and they distort at every other breakpoint. */
 .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"],
 .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"] {
+  position: relative !important;
+  isolation: isolate !important;
   border: 0 !important;
   border-radius: 0 !important;
+  padding: 0 var(--fs-action-cap) !important;
   background-color: transparent !important;
   background-image: var(--fs-skills-ui-atlas) !important;
   background-repeat: no-repeat !important;
+  background-origin: content-box !important;
+  background-clip: content-box !important;
   box-shadow: none !important;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)) !important;
 }
-.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"] {
-  background-size: var(--fs-ui-action-idle-size) !important;
-  background-position: var(--fs-ui-action-idle-position) !important;
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]::before,
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]::after,
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]::before,
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  z-index: -1 !important;
+  width: var(--fs-action-cap) !important;
+  background-repeat: no-repeat !important;
+  pointer-events: none !important;
 }
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]::before,
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]::before {
+  left: 0 !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]::after,
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]::after {
+  right: 0 !important;
+}
+
+/* Turn In takes the gold cell. */
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"] {
+  background-size: var(--fs-ui-action-idle-mid-size) !important;
+  background-position: var(--fs-ui-action-idle-mid-position) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]::before,
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]::after {
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-action-idle-cap-size) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]::before {
+  background-position: var(--fs-ui-action-idle-cap-l-position) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]::after {
+  background-position: var(--fs-ui-action-idle-cap-r-position) !important;
+}
+
+/* Skip is the secondary action and takes the DESATURATED cell -- hierarchy,
+   not state; see the note above the base rules. */
 .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"] {
-  background-size: var(--fs-ui-action-disabled-size) !important;
-  background-position: var(--fs-ui-action-disabled-position) !important;
+  background-size: var(--fs-ui-action-disabled-mid-size) !important;
+  background-position: var(--fs-ui-action-disabled-mid-position) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]::before,
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]::after {
+  background-image: var(--fs-skills-ui-atlas) !important;
+  background-size: var(--fs-ui-action-disabled-cap-size) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]::before {
+  background-position: var(--fs-ui-action-disabled-cap-l-position) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]::after {
+  background-position: var(--fs-ui-action-disabled-cap-r-position) !important;
 }
 .compact-panel.fs-quest-panel[data-iw-quest-state="ready"] {
   --fs-quest-accent: #B84A20;
@@ -3008,9 +3158,21 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
 }
 .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:disabled {
   color: #B9AE97 !important;
-  background-size: var(--fs-ui-action-disabled-size) !important;
-  background-position: var(--fs-ui-action-disabled-position) !important;
+  background-size: var(--fs-ui-action-disabled-mid-size) !important;
+  background-position: var(--fs-ui-action-disabled-mid-position) !important;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)) saturate(.4) brightness(.82) !important;
+}
+/* Re-aim BOTH end bands with the middle one, or a disabled turn-in renders
+   grey in the centre with the gold horns still on it. */
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:disabled::before,
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:disabled::after {
+  background-size: var(--fs-ui-action-disabled-cap-size) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:disabled::before {
+  background-position: var(--fs-ui-action-disabled-cap-l-position) !important;
+}
+.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:disabled::after {
+  background-position: var(--fs-ui-action-disabled-cap-r-position) !important;
 }
 .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]:disabled {
   color: #8C8577 !important;
@@ -3073,33 +3235,42 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
     position: absolute !important;
     top: 0 !important;
     right: 0 !important;
-    width: 116px !important;
+    /* Shrink to the widest button rather than pinning 116px: the turn-in
+       label carries a live count and the frame now grows with it (see the
+       command rail above). `max-content` cannot wrap the labels, and the
+       cap keeps a long one from eating the whole card. */
+    width: max-content !important;
+    max-width: 62% !important;
     justify-content: flex-start !important;
     gap: 5px !important;
   }
-  /* action_frame is 3.52:1 and can't drop to the vanilla button's ~88px
-     without distorting; 116x33 holds the ratio and matches the live card's
-     compact button height. WCAG 2.5.8 (24px) is cleared; the 44px target is
-     traded for live parity, as the skill pager already is at 26px. */
+  /* 116x33 is the RESTING size -- it matches the live card's compact button
+     height, clears WCAG 2.5.8 (24px), and trades the 44px target for live
+     parity as the skill pager already does at 26px. The height is the fixed
+     axis; a longer label widens the box and stretches only the frame's flat
+     middle band. */
   .compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
-    aspect-ratio: auto !important;
-    width: 116px !important;
-    min-width: 0 !important;
-    max-width: 116px !important;
-    height: 33px !important;
-    min-height: 0 !important;
+    --fs-action-h: 33px;
+    width: auto !important;
+    min-width: 116px !important;
+    max-width: 100% !important;
     padding: 0 6px !important;
     font-size: 9.5px !important;
     letter-spacing: .04em !important;
   }
 
-  /* Only the lines level with the button block reserve room for it. */
+  /* Only the lines level with the button block reserve room for it -- and the
+     reserve has to TRACK it, because the block is out of flow (absolute) and
+     its width is now the label's. QuestPanelRenderer measures the command
+     block and writes --fs-quest-cmd-w on the card; the fallback is the resting
+     116px, which is what this reserve was hard-coded to before. Without this
+     a long "Turn In All (38)" runs under the title instead of pushing it. */
   .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="title"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="brief"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="objective"] {
-    padding-right: 124px !important;
+    padding-right: calc(var(--fs-quest-cmd-w, 116px) + 8px) !important;
   }
   .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"] { font-size: 8.5px !important; }
   .compact-panel.fs-quest-panel [data-iw-quest-role="title"] {
@@ -3146,19 +3317,18 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] .fs-quest-sigil::after {
     inset: -7px -5px !important;
   }
-  .compact-panel.fs-quest-panel [data-iw-quest-zone="commands"] { width: 106px !important; }
+  .compact-panel.fs-quest-panel [data-iw-quest-zone="commands"] { max-width: 66% !important; }
   .compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {
-    width: 106px !important;
-    max-width: 106px !important;
-    height: 30px !important;
+    --fs-action-h: 30px;
+    min-width: 106px !important;
     font-size: 9px !important;
   }
   .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="title"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="brief"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="objective"] {
-    padding-right: 114px !important;
+    padding-right: calc(var(--fs-quest-cmd-w, 106px) + 8px) !important;
   }
   .compact-panel.fs-quest-panel [data-iw-quest-role="reward"] { --fs-plaque-h: 27px; }
   .compact-panel.fs-quest-panel [data-iw-quest-role="reward"]::before { font-size: 9px !important; }
@@ -3434,6 +3604,251 @@ html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-s
   html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-skill-zone="commands"]:not(button) {
     gap: 4px !important;
     padding: 0 4px !important;
+  }
+}
+
+/* ══ Exact themed button states ═══════════════════════════════════════
+   The state images in exact-v3 share one alpha mask and canvas per control,
+   so interaction changes only lighting. The renderer's inline background
+   reads --fs-button-background; changing this inherited custom property does
+   not touch layout or React's event ownership. */
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="action-button"] {
+  --fs-button-art: var(--iw-action-idle);
+  --fs-button-paint: var(--iw-action-idle-paint);
+  --fs-button-background: var(--fs-button-paint, transparent var(--fs-button-art) center / 100% 100% no-repeat);
+  background: var(--fs-button-background) !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="action-button"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-action-hover);
+  --fs-button-paint: var(--iw-action-hover-paint);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="action-button"]:active:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-action-clicked);
+  --fs-button-paint: var(--iw-action-clicked-paint);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) !important;
+  transform: none !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="action-button"]:is(:disabled, [aria-disabled="true"], [data-iw-btn-state="disabled"]) {
+  --fs-button-art: var(--iw-action-secondary-idle);
+  --fs-button-paint: var(--iw-action-secondary-idle-paint);
+}
+
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction] {
+  --fs-button-background: var(--fs-button-paint, transparent var(--fs-button-art) center / contain no-repeat);
+  background: var(--fs-button-background) !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"] {
+  --fs-button-art: var(--iw-chevron-prev-idle);
+  --fs-button-paint: var(--iw-chevron-prev-idle-paint);
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"] {
+  --fs-button-art: var(--iw-chevron-next-idle);
+  --fs-button-paint: var(--iw-chevron-next-idle-paint);
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-chevron-prev-hover);
+  --fs-button-paint: var(--iw-chevron-prev-hover-paint);
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-chevron-next-hover);
+  --fs-button-paint: var(--iw-chevron-next-hover-paint);
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"]:active:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-chevron-prev-clicked);
+  --fs-button-paint: var(--iw-chevron-prev-clicked-paint);
+  transform: none !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction="next"]:active:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-chevron-next-clicked);
+  --fs-button-paint: var(--iw-chevron-next-clicked-paint);
+  transform: none !important;
+}
+
+/* Quest command buttons do not receive SkillPanelRenderer's inline chrome, so
+   use the same state images directly and retire the old three-band atlas caps
+   for themed zones. Their aspect-ratio remains 264/75. */
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"],
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"] {
+  --fs-button-background: var(--fs-button-paint, transparent var(--fs-button-art) center / 100% 100% no-repeat);
+  background: var(--fs-button-background) !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"] {
+  --fs-button-art: var(--iw-action-idle);
+  --fs-button-paint: var(--iw-action-idle-paint);
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"] {
+  --fs-button-art: var(--iw-action-secondary-idle);
+  --fs-button-paint: var(--iw-action-secondary-idle-paint);
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-action-hover);
+  --fs-button-paint: var(--iw-action-hover-paint);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-action-secondary-hover);
+  --fs-button-paint: var(--iw-action-secondary-hover-paint);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:active:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-action-clicked);
+  --fs-button-paint: var(--iw-action-clicked-paint);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) !important;
+  transform: none !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] [data-iw-quest-role="skip"]:active:not(:disabled):not([aria-disabled="true"]) {
+  --fs-button-art: var(--iw-action-secondary-clicked);
+  --fs-button-paint: var(--iw-action-secondary-clicked-paint);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45)) !important;
+  transform: none !important;
+}
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"]
+  :is([data-iw-quest-role="turn-in"], [data-iw-quest-role="skip"])::before,
+html[data-iw-zone-theme]:not([data-iw-zone-theme="default"])
+  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"]
+  :is([data-iw-quest-role="turn-in"], [data-iw-quest-role="skip"])::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Dedicated revised atlases have their own frame and arrow ink. Keep sprite
+   coordinates fixed: the crossfade layers below animate opacity instead of
+   scrolling across atlas gutters and other controls. */
+html[data-iw-button-atlas="revised-v5"] .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button:is([data-iw-skill-role="action-button"], [data-iw-skill-role="nav-button"]),
+html[data-iw-button-atlas="revised-v5"] .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"]
+  :is([data-iw-quest-role="turn-in"], [data-iw-quest-role="skip"]) {
+  --fs-button-transition: color .12s;
+  transition: color .12s !important;
+  background-origin: border-box !important;
+  background-clip: border-box !important;
+}
+html[data-iw-button-atlas="revised-v5"] .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="action-button"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+html[data-iw-button-atlas="revised-v5"] .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction] {
+  --fs-button-border: 0;
+  --fs-button-shadow: none;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html[data-iw-button-atlas="revised-v5"] .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::before,
+html[data-iw-button-atlas="revised-v5"] .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"]
+  button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Crossfade registered sprites on separate layers. Never animate atlas
+   coordinates: opacity is the only artwork property that changes. All controls
+   are already positioned by their existing layout rules; isolation places these
+   layers above the idle background and below native text without moving nodes. */
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"]) {
+  --fs-motion-idle: var(--iw-action-idle-paint);
+  --fs-motion-hover: var(--iw-action-hover-paint);
+  --fs-motion-pressed: var(--iw-action-clicked-paint);
+  --fs-button-background: var(--fs-motion-idle) !important;
+  isolation: isolate !important;
+}
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"])[data-iw-nav-direction="prev"] {
+  --fs-motion-idle: var(--iw-chevron-prev-idle-paint);
+  --fs-motion-hover: var(--iw-chevron-prev-hover-paint);
+  --fs-motion-pressed: var(--iw-chevron-prev-clicked-paint);
+}
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"])[data-iw-nav-direction="next"] {
+  --fs-motion-idle: var(--iw-chevron-next-idle-paint);
+  --fs-motion-hover: var(--iw-chevron-next-hover-paint);
+  --fs-motion-pressed: var(--iw-chevron-next-clicked-paint);
+}
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"])[data-iw-quest-role="skip"] {
+  --fs-motion-idle: var(--iw-action-secondary-idle-paint);
+  --fs-motion-hover: var(--iw-action-secondary-hover-paint);
+  --fs-motion-pressed: var(--iw-action-secondary-clicked-paint);
+}
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"])::before,
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"])::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: none !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+  opacity: 0 !important;
+  transition: opacity 180ms ease-out !important;
+}
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"])::before {
+  background: var(--fs-motion-hover) !important;
+}
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"])::after {
+  background: var(--fs-motion-pressed) !important;
+  transition-duration: 70ms !important;
+}
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"]):not(:disabled):not([aria-disabled="true"]):not([data-iw-btn-state="disabled"]):is(:hover, :focus-visible, :active)::before,
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"]):not(:disabled):not([aria-disabled="true"]):not([data-iw-btn-state="disabled"]):active::after {
+  opacity: 1 !important;
+}
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"]):is(:disabled, [aria-disabled="true"], [data-iw-btn-state="disabled"])::before,
+html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"]):is(:disabled, [aria-disabled="true"], [data-iw-btn-state="disabled"])::after {
+  opacity: 0 !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"])::before,
+  html[data-iw-button-atlas="revised-v5"][data-iw-zone-theme] .compact-panel:is(.fs-skill-panel, .fs-quest-panel)[data-iw-skills-ui-ready="1"] :is(button[data-iw-skill-role="action-button"], button[data-iw-skill-role="nav-button"][data-iw-nav-direction], button[data-iw-quest-role="turn-in"], button[data-iw-quest-role="skip"])::after {
+    transition: none !important;
   }
 }
 

@@ -1,0 +1,240 @@
+{
+  "schema": "idleworlds-fantasy-skin.village-art/v1",
+  "imported_from": "idleworlds.construction-icons/v1",
+  "source_version": 2,
+  "source_audited_on": "2026-09-04",
+  "size": 256,
+  "buildings": [
+    {
+      "tier": 1,
+      "name": "Training Yard",
+      "key": "construction_building_tier_1",
+      "file": "village/building_1.webp"
+    },
+    {
+      "tier": 2,
+      "name": "Ironfang Palisade",
+      "key": "construction_building_tier_2",
+      "file": "village/building_2.webp"
+    },
+    {
+      "tier": 3,
+      "name": "Silverroot Infirmary",
+      "key": "construction_building_tier_3",
+      "file": "village/building_3.webp"
+    },
+    {
+      "tier": 4,
+      "name": "Goldfire Scriptorium",
+      "key": "construction_building_tier_4",
+      "file": "village/building_4.webp"
+    },
+    {
+      "tier": 5,
+      "name": "Mythril Countinghouse",
+      "key": "construction_building_tier_5",
+      "file": "village/building_5.webp"
+    },
+    {
+      "tier": 6,
+      "name": "Starsteel Trophy Hall",
+      "key": "construction_building_tier_6",
+      "file": "village/building_6.webp"
+    },
+    {
+      "tier": 7,
+      "name": "Obsidian Greenhouse",
+      "key": "construction_building_tier_7",
+      "file": "village/building_7.webp"
+    },
+    {
+      "tier": 8,
+      "name": "Runite War College",
+      "key": "construction_building_tier_8",
+      "file": "village/building_8.webp"
+    },
+    {
+      "tier": 9,
+      "name": "Dragonfall Rampart",
+      "key": "construction_building_tier_9",
+      "file": "village/building_9.webp"
+    },
+    {
+      "tier": 10,
+      "name": "Aether Sanatorium",
+      "key": "construction_building_tier_10",
+      "file": "village/building_10.webp"
+    },
+    {
+      "tier": 11,
+      "name": "Voidiron Archive",
+      "key": "construction_building_tier_11",
+      "file": "village/building_11.webp"
+    },
+    {
+      "tier": 12,
+      "name": "Celestial Exchange",
+      "key": "construction_building_tier_12",
+      "file": "village/building_12.webp"
+    },
+    {
+      "tier": 13,
+      "name": "Bloodstone Reliquary",
+      "key": "construction_building_tier_13",
+      "file": "village/building_13.webp"
+    },
+    {
+      "tier": 14,
+      "name": "Moonsteel Arboretum",
+      "key": "construction_building_tier_14",
+      "file": "village/building_14.webp"
+    },
+    {
+      "tier": 15,
+      "name": "Sunforge Arena",
+      "key": "construction_building_tier_15",
+      "file": "village/building_15.webp"
+    },
+    {
+      "tier": 16,
+      "name": "Nethergate Bastion",
+      "key": "construction_building_tier_16",
+      "file": "village/building_16.webp"
+    },
+    {
+      "tier": 17,
+      "name": "Stormglass Chapel of Healing",
+      "key": "construction_building_tier_17",
+      "file": "village/building_17.webp"
+    },
+    {
+      "tier": 18,
+      "name": "Kingsfall Grand Library",
+      "key": "construction_building_tier_18",
+      "file": "village/building_18.webp"
+    },
+    {
+      "tier": 19,
+      "name": "Eternium Treasury",
+      "key": "construction_building_tier_19",
+      "file": "village/building_19.webp"
+    },
+    {
+      "tier": 20,
+      "name": "Astral Museum",
+      "key": "construction_building_tier_20",
+      "file": "village/building_20.webp"
+    },
+    {
+      "tier": 21,
+      "name": "Gravite Botanical Dome",
+      "key": "construction_building_tier_21",
+      "file": "village/building_21.webp"
+    },
+    {
+      "tier": 22,
+      "name": "Frostiron Warfront Hall",
+      "key": "construction_building_tier_22",
+      "file": "village/building_22.webp"
+    },
+    {
+      "tier": 23,
+      "name": "Dusksteel Citadel Wall",
+      "key": "construction_building_tier_23",
+      "file": "village/building_23.webp"
+    },
+    {
+      "tier": 24,
+      "name": "Titanium Grand Infirmary",
+      "key": "construction_building_tier_24",
+      "file": "village/building_24.webp"
+    },
+    {
+      "tier": 25,
+      "name": "Skysteel Observatory",
+      "key": "construction_building_tier_25",
+      "file": "village/building_25.webp"
+    },
+    {
+      "tier": 26,
+      "name": "Emberium Mint",
+      "key": "construction_building_tier_26",
+      "file": "village/building_26.webp"
+    },
+    {
+      "tier": 27,
+      "name": "Soulsteel Vault of Relics",
+      "key": "construction_building_tier_27",
+      "file": "village/building_27.webp"
+    },
+    {
+      "tier": 28,
+      "name": "Chronite Greenhouse Spire",
+      "key": "construction_building_tier_28",
+      "file": "village/building_28.webp"
+    },
+    {
+      "tier": 29,
+      "name": "Worldforge Coliseum",
+      "key": "construction_building_tier_29",
+      "file": "village/building_29.webp"
+    },
+    {
+      "tier": 30,
+      "name": "Voidglass Bulwark",
+      "key": "construction_building_tier_30",
+      "file": "village/building_30.webp"
+    },
+    {
+      "tier": 31,
+      "name": "Thalassic Sanctum of Tides",
+      "key": "construction_building_tier_31",
+      "file": "village/building_31.webp"
+    },
+    {
+      "tier": 32,
+      "name": "Ashspire Hall of Records",
+      "key": "construction_building_tier_32",
+      "file": "village/building_32.webp"
+    },
+    {
+      "tier": 33,
+      "name": "Glacirite Royal Treasury",
+      "key": "construction_building_tier_33",
+      "file": "village/building_33.webp"
+    },
+    {
+      "tier": 34,
+      "name": "Primordial Wonder",
+      "key": "construction_building_tier_34",
+      "file": "village/building_34.webp"
+    }
+  ],
+  "houses": [
+    {
+      "tier": 1,
+      "name": "Camp",
+      "file": "village/house_1.webp"
+    },
+    {
+      "tier": 2,
+      "name": "Cottage",
+      "file": "village/house_2.webp"
+    },
+    {
+      "tier": 3,
+      "name": "Villa",
+      "file": "village/house_3.webp"
+    },
+    {
+      "tier": 4,
+      "name": "Manor",
+      "file": "village/house_4.webp"
+    },
+    {
+      "tier": 5,
+      "name": "Citadel",
+      "file": "village/house_5.webp"
+    }
+  ]
+}

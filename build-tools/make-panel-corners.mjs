@@ -1,8 +1,8 @@
 /**
  * make-panel-corners.mjs
  *
- * Produces assets/inventory/panel_corners.webp — the one derived asset the
- * forged inventory treatment needs.
+ * Produces the two standalone assets the forged inventory treatment needs:
+ * panel_corners.webp and the repaired separator_flourish.webp.
  *
  * WHY THIS EXISTS
  * The inventory panel draws `corner_filigree` (skills_ui_atlas.webp, at
@@ -34,10 +34,16 @@ const ATLAS = path.join(ROOT, 'assets', 'skills_ui_atlas.webp');
 const INDEX = path.join(ROOT, 'assets', 'skills_ui_index.json');
 const OUT_DIR = path.join(ROOT, 'assets', 'inventory');
 const OUT = path.join(OUT_DIR, 'panel_corners.webp');
+const SEPARATOR_OUT = path.join(OUT_DIR, 'separator_flourish.webp');
 
 const index = JSON.parse(await readFile(INDEX, 'utf8'));
 const corner = index.entries.find(e => e.key === 'corner_filigree');
 if (!corner) throw new Error('corner_filigree missing from skills_ui_index.json');
+const separator = index.entries.find(e => e.key === 'separator_flourish');
+if (!separator) throw new Error('separator_flourish missing from skills_ui_index.json');
+// The base ornament has different source art from the themed family sheets.
+// Its crystal axis is almost at the cell centre, measured in source pixels.
+const SEPARATOR_ART_AXIS = 108.5;
 
 const atlasDataUri =
   `data:image/webp;base64,${(await readFile(ATLAS)).toString('base64')}`;
@@ -45,7 +51,7 @@ const atlasDataUri =
 const browser = await chromium.launch();
 const page = await browser.newPage();
 
-const base64 = await page.evaluate(async ({ uri, c }) => {
+const derived = await page.evaluate(async ({ uri, c, s, separatorArtAxis }) => {
   const img = new Image();
   img.src = uri;
   await img.decode();
@@ -69,15 +75,45 @@ const base64 = await page.evaluate(async ({ uri, c }) => {
   put(false, true, 0, c.height);
   put(true, true, c.width, c.height);
 
-  return canvas.toDataURL('image/webp', 1).split(',')[1];
-}, { uri: atlasDataUri, c: corner });
+  const divider = document.createElement('canvas');
+  divider.width = s.width;
+  divider.height = s.height;
+  const dx = divider.getContext('2d');
+  dx.drawImage(img, s.x, s.y, s.width, s.height, 0, 0, s.width, s.height);
+  const original = dx.getImageData(0, 0, divider.width, divider.height);
+  const rebuilt = dx.createImageData(divider.width, divider.height);
+  const destinationAxis = (divider.width - 1) / 2;
+  for (let x = 0; x < divider.width; x += 1) {
+    const sourceX = Math.round(separatorArtAxis + Math.abs(x - destinationAxis));
+    if (sourceX < 0 || sourceX >= divider.width) continue;
+    for (let y = 0; y < divider.height; y += 1) {
+      const dest = (y * divider.width + x) * 4;
+      const src = (y * divider.width + sourceX) * 4;
+      for (let channel = 0; channel < 4; channel += 1) {
+        rebuilt.data[dest + channel] = original.data[src + channel];
+      }
+    }
+  }
+  dx.putImageData(rebuilt, 0, 0);
+
+  return {
+    corners: canvas.toDataURL('image/webp', 1).split(',')[1],
+    separator: divider.toDataURL('image/webp', 1).split(',')[1],
+  };
+}, { uri: atlasDataUri, c: corner, s: separator, separatorArtAxis: SEPARATOR_ART_AXIS });
 
 await browser.close();
 await mkdir(OUT_DIR, { recursive: true });
-const bytes = Buffer.from(base64, 'base64');
+const bytes = Buffer.from(derived.corners, 'base64');
+const separatorBytes = Buffer.from(derived.separator, 'base64');
 await writeFile(OUT, bytes);
+await writeFile(SEPARATOR_OUT, separatorBytes);
 
 console.log(
   `Wrote ${path.relative(ROOT, OUT)} ` +
   `(${corner.width * 2}x${corner.height * 2}, ${(bytes.length / 1024).toFixed(1)} KB)`
+);
+console.log(
+  `Wrote ${path.relative(ROOT, SEPARATOR_OUT)} ` +
+  `(${separator.width}x${separator.height}, ${(separatorBytes.length / 1024).toFixed(1)} KB)`
 );

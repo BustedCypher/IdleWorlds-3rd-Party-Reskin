@@ -152,10 +152,12 @@
   width: 186px;
   height: 62px;
   transform: translate(-50%, -50%);
-  background-image: var(--iw-zone-atlas);
+  /* The atlas cell itself has a vertically cut left tip. The standalone
+     derivative repairs that source edge and keeps the full ornament visible. */
+  background-image: var(--iw-zone-separator);
   background-repeat: no-repeat;
-  background-size: 730.41px 393.23px;
-  background-position: -210.63px -5.10px;
+  background-size: contain;
+  background-position: center;
 }
 
 [data-iw-inventory-root="1"] [data-iw-inventory-control="filter"],
@@ -775,7 +777,7 @@ button[data-fs-preserved-action="control"]:disabled,
   .fs-inv-stats .fs-stat:nth-child(n+6) { display: none; }
   .fs-inv-details { max-height: 26px; overflow: hidden; }
   [data-iw-inventory-root="1"] { padding: 20px 16px !important; }
-  [data-iw-inventory-root="1"]::after { border-width: 24px 22px; border-image-width: 24px 22px; }
+  [data-iw-inventory-root="1"]::after { border-width: 27px 25px; border-image-width: 27px 25px; }
   [data-iw-inventory-title="1"]::after { width: 150px; }
 }
 
@@ -817,7 +819,7 @@ button[data-fs-preserved-action="control"]:disabled,
     padding-inline: 7px !important;
   }
   [data-iw-inventory-root="1"] { padding: 16px 12px !important; }
-  [data-iw-inventory-root="1"]::after { border-width: 20px 18px; border-image-width: 20px 18px; }
+  [data-iw-inventory-root="1"]::after { border-width: 23px 21px; border-image-width: 23px 21px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

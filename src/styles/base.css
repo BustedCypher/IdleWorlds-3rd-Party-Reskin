@@ -194,8 +194,8 @@
 
 /* ── Per-zone frame theme ────────────────────────────────────────────────
    The skin ships nine environment recolours of the skills UI atlas and its
-   corner filigree (assets/skills-ui/). HeaderRenderer.applyZoneTheme() maps the
-   player's current zone to one and overrides these two variables INLINE on
+   corner filigree and repaired separator flourish (assets/skills-ui/).
+   HeaderRenderer.applyZoneTheme() maps the player's current zone to one and overrides these variables INLINE on
    <html>. These declarations are the un-themed fallback: a zone that has not
    classified yet, or one with no theme, resolves here.
 
@@ -203,21 +203,23 @@
                           inventory.css read their sprite windows from
      --iw-corner-filigree the border-image source ui-system.css, header.css and
                           tooltip-engine.css all draw their four corners from
+     --iw-zone-separator  inventory.css's title divider ornament
 
    Keep every theme atlas at skills_ui_atlas.webp's 860x463 geometry or the
    sprite-window audit and skills_ui_index.json stop describing it. */
 :root {
   --iw-zone-atlas: url('../assets/skills_ui_atlas.webp');
   --iw-corner-filigree: url('../assets/inventory/panel_corners.webp');
+  --iw-zone-separator: url('../assets/inventory/separator_flourish.webp');
 }
 
 /* ── Per-zone accent palettes ───────────────────────────────────────────
    Nine hand-tuned recolours of the --iw-th-* accent layer, one per
    environment family (assets/skills-ui/zone-theme-map.json). Keyed on the
    data-iw-zone-theme attribute HeaderRenderer already sets on <html> for the
-   atlas/filigree swap — no JS involved here, pure cascade. `:root[data-…]` is
+   atlas/filigree/separator swap — no JS involved here, pure cascade. `:root[data-…]` is
    (0,1,1), so these beat the (0,0,1) defaults; HeaderRenderer's inline vars on
-   <html> only touch --iw-zone-atlas / --iw-corner-filigree and never collide.
+   <html> only touch the three artwork variables and never collide.
 
    Rule of thumb per palette: -accent must clear ~4.5:1 on --iw-ink-900, -cta
    must stay in the stock ember's lightness band so --primary-foreground still
@@ -423,8 +425,8 @@ h1:not(:where([data-iw-header="profile-name"])), h2, h3 {
   border-radius: var(--iw-r-panel) !important;
 }
 
-button:not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]) {
+button:not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-order-handle]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-order-handle]) {
   border-radius: var(--iw-r-control) !important;
 }
 
@@ -480,8 +482,15 @@ button:not(:where([data-iw-header="profile-name"] button)),
   border-radius: 0 !important;
 }
 
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]),
+/* `:not([data-iw-ui="section-title"])` — the Action Log's panel title is a
+   real <button> (the game makes the label open the full log), so this rule was
+   painting one panel heading in the UI face while every other heading used the
+   display face. ui-system.css has always tried to correct that at (0,3,0) and
+   has always LOST to this (0,4,1) selector; the opt-out is what finally lets
+   it land. Visible in a live capture (2026-09) as "Action Log" in a different
+   font from its neighbours. */
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-ui="section-title"]):not([data-iw-order-handle]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-ui="section-title"]):not([data-iw-order-handle]),
 input,
 select,
 textarea {
@@ -496,21 +505,21 @@ textarea {
    a faint second frame just outside the sprite ("a sprite frame on a button
    means the button's own plate must go"). The skill nav/action buttons are
    safe unlisted only because styleButton() writes their plate inline. */
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]) {
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-order-handle]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-order-handle]) {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.028),
     0 1px 0 rgba(0,0,0,.65) !important;
   transition: color .12s ease, border-color .12s ease, background-color .12s ease, filter .12s ease !important;
 }
 
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):hover:not(:disabled),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):hover {
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-order-handle]):hover:not(:disabled),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-order-handle]):hover {
   filter: brightness(1.08);
 }
 
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):focus-visible,
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):focus-visible,
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-order-handle]):focus-visible,
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-order-handle]):focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {

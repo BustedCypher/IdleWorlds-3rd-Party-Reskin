@@ -7,9 +7,10 @@
  *   - src/modules/zoneThemes.js and its committed source of truth,
  *     assets/skills-ui/zone-theme-map.json, never drift apart (the module is
  *     generated from the JSON by build-tools/import-skill-themes.mjs)
- *   - every theme a zone points at has BOTH asset files on disk:
+ *   - every theme a zone points at has all three derived asset files on disk:
  *       assets/skills-ui/theme_<name>.webp       (the recoloured atlas)
  *       assets/skills-ui/panel_corners_<name>.webp (the border-image sheet)
+ *       assets/skills-ui/separator_flourish_<name>.webp (the repaired title divider)
  *   - THEME_NAMES is exactly the set of themes zones use
  *
  * Negative controls: delete either asset file, or edit one zone's theme in the
@@ -38,6 +39,28 @@ const exists = async rel => {
   try { await access(resolve(ROOT, rel)); return true; } catch { return false; }
 };
 
+const imageDimensions = async rel => {
+  const bytes = await readFile(resolve(ROOT, rel));
+  if (bytes.toString('ascii', 0, 4) !== 'RIFF' || bytes.toString('ascii', 8, 12) !== 'WEBP') {
+    throw new Error(`${rel} is not a WebP file`);
+  }
+  const chunk = bytes.toString('ascii', 12, 16);
+  if (chunk === 'VP8X') {
+    return [1 + bytes.readUIntLE(24, 3), 1 + bytes.readUIntLE(27, 3)];
+  }
+  if (chunk === 'VP8L') {
+    if (bytes[20] !== 0x2f) throw new Error(`${rel} has a malformed VP8L header`);
+    const bits = bytes.readUInt32LE(21);
+    return [1 + (bits & 0x3fff), 1 + ((bits >> 14) & 0x3fff)];
+  }
+  if (chunk === 'VP8 ') {
+    const marker = bytes.indexOf(Buffer.from([0x9d, 0x01, 0x2a]), 20);
+    if (marker < 0) throw new Error(`${rel} has a malformed VP8 frame header`);
+    return [bytes.readUInt16LE(marker + 3) & 0x3fff, bytes.readUInt16LE(marker + 5) & 0x3fff];
+  }
+  throw new Error(`${rel} uses unsupported WebP chunk ${chunk}`);
+};
+
 // 1. Full coverage 1..ZONE_MAX.
 const uncovered = [];
 for (let z = 1; z <= ZONE_MAX; z += 1) if (!zoneTheme(z)) uncovered.push(z);
@@ -56,11 +79,30 @@ check('zoneThemes.js matches assets/skills-ui/zone-theme-map.json', drift.length
 
 // 3. Every referenced theme has both asset files.
 const used = [...new Set(Object.values(ZONE_THEMES))].sort();
+check('theme map declares a 2x physical atlas density', map.pixelRatio === 2,
+  `pixelRatio=${map.pixelRatio ?? 'missing'}`);
 for (const theme of used) {
   const atlas = `assets/skills-ui/theme_${theme}.webp`;
   const corners = `assets/skills-ui/panel_corners_${theme}.webp`;
+  const separator = `assets/skills-ui/separator_flourish_${theme}.webp`;
   check(`theme "${theme}" atlas present`, await exists(atlas), atlas);
   check(`theme "${theme}" corner filigree present`, await exists(corners), corners);
+  check(`theme "${theme}" separator flourish present`, await exists(separator), separator);
+  if (await exists(atlas)) {
+    const dimensions = await imageDimensions(atlas);
+    check(`theme "${theme}" atlas is physically 2x`, dimensions[0] === 1720 && dimensions[1] === 926,
+      `${dimensions.join('x')}`);
+  }
+  if (await exists(corners)) {
+    const dimensions = await imageDimensions(corners);
+    check(`theme "${theme}" corner filigree is physically 2x`, dimensions[0] === 352 && dimensions[1] === 380,
+      `${dimensions.join('x')}`);
+  }
+  if (await exists(separator)) {
+    const dimensions = await imageDimensions(separator);
+    check(`theme "${theme}" separator flourish is physically 2x`, dimensions[0] === 438 && dimensions[1] === 146,
+      `${dimensions.join('x')}`);
+  }
 }
 
 // 4. THEME_NAMES is exactly the set zones use.
@@ -71,6 +113,7 @@ check('THEME_NAMES covers exactly the themes zones reference',
 // 5. The un-themed fallbacks the base.css :root block promises still exist.
 check('un-themed fallback atlas present', await exists('assets/skills_ui_atlas.webp'));
 check('un-themed fallback corner filigree present', await exists('assets/inventory/panel_corners.webp'));
+check('un-themed fallback separator flourish present', await exists('assets/inventory/separator_flourish.webp'));
 
 // 6. base.css carries an accent palette block per theme. Every downstream sheet
 //    reads --iw-th-* tokens; a missing block would silently fall through to the

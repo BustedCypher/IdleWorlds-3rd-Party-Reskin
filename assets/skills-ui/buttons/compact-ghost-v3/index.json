@@ -1,0 +1,67 @@
+{
+  "version": 3,
+  "style": "ghost-metal",
+  "width": 672,
+  "height": 392,
+  "themes": [
+    "forged-metal",
+    "infernal",
+    "glacial",
+    "celestial",
+    "lunar-spectral",
+    "runic-arcane",
+    "tempest-oceanic",
+    "verdant",
+    "voidborn"
+  ],
+  "states": [
+    "idle",
+    "hover",
+    "clicked"
+  ],
+  "textCapWidth": 40,
+  "entries": [
+    {
+      "key": "text-idle",
+      "x": 8,
+      "y": 8,
+      "width": 528,
+      "height": 120
+    },
+    {
+      "key": "icon-idle",
+      "x": 544,
+      "y": 8,
+      "width": 120,
+      "height": 120
+    },
+    {
+      "key": "text-hover",
+      "x": 8,
+      "y": 136,
+      "width": 528,
+      "height": 120
+    },
+    {
+      "key": "icon-hover",
+      "x": 544,
+      "y": 136,
+      "width": 120,
+      "height": 120
+    },
+    {
+      "key": "text-clicked",
+      "x": 8,
+      "y": 264,
+      "width": 528,
+      "height": 120
+    },
+    {
+      "key": "icon-clicked",
+      "x": 544,
+      "y": 264,
+      "width": 120,
+      "height": 120
+    }
+  ]
+}

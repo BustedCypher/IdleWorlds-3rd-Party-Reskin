@@ -19,8 +19,9 @@
       the corners inside it and the card would look unframed again.
    2. The corner is scaled to the card (--fs-tip-corner-*), not to a panel.
       A card with the panels' 30x28 corners has the ornament eating a third
-      of its head; keep the slice at `95 88` (it consumes the whole sheet, so
-      only the four corners paint) and bring the border-width down with it.
+      of its head; keep the slice at `50%` (it consumes the whole sheet at any
+      source density, so only the four corners paint) and bring the
+      border-width down with it.
    ══════════════════════════════════════════════════════════════════════ */
 
 .iw-item-ref {
@@ -120,7 +121,7 @@
   border-style: solid;
   border-width: var(--fs-tip-corner-h) var(--fs-tip-corner-w);
   border-color: transparent;
-  border-image: var(--iw-corner-filigree) 95 88 / var(--fs-tip-corner-h) var(--fs-tip-corner-w) / 0 stretch;
+  border-image: var(--iw-corner-filigree) 50% / var(--fs-tip-corner-h) var(--fs-tip-corner-w) / 0 stretch;
 }
 /* Card content sits above the ornament. */
 .iw-tip > * { position: relative; z-index: 1; }

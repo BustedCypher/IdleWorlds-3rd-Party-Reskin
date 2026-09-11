@@ -8,16 +8,45 @@
 
 import { on } from './DOMWatcher.js';
 import { inject } from './StyleInjector.js';
-import { guard, raf } from './Runtime.js';
+import { guard, raf, warnOnce } from './Runtime.js';
 import { getLayoutEpoch, pickRendered, preferRendered } from './Viewport.js';
+import { decorateWorldBossPanel, clearWorldBossPanel } from './WorldBossPanels.js';
+import { decorateVillagePanel, clearVillagePanel } from './VillagePanels.js';
+import { reconcileVillageScene, clearVillageScene } from './VillageScene.js';
+import { decorateCollapsibleFrames, clearCollapsibleFrames } from './CollapsibleFrames.js';
+import {
+  decoratePanelOrder, clearPanelOrder, setRearrangeMode, isRearrangeMode, resetPanelOrder,
+} from './PanelOrder.js';
 import css from '../styles/ui-system.css';
+import villageSceneCss from '../styles/village-scene.css';
+import collapsibleCss from '../styles/collapsible.css';
+import panelOrderCss from '../styles/panel-order.css';
+import compactCss from '../styles/compact-buttons.css';
+import { decorateCompactButtons, clearCompactButtons } from './CompactButtons.js';
 
 const NAV_LABELS = ['game', 'market', 'leaderboards', 'village', 'dungeon'];
+/**
+ * Controls the SKIN appended into a game node, and the game-control selector
+ * that excludes them.
+ *
+ * CLAUDE.md: "An element the skin APPENDS into a game node changes what every
+ * other classifier reads there." The collapse toggle proved it — on the pass
+ * after its append, World Chat and Action Log stopped reading as split headers
+ * and lost their two-column treatment, a regression whose cause was in a
+ * different module from its symptom. Every sweep below that counts controls in
+ * a panel has to be told about both of them.
+ */
+const SKIN_OWNED_CONTROL = '[data-iw-collapse], [data-iw-order-handle]';
+const GAME_CONTROL = 'button:not([data-iw-collapse]):not([data-iw-order-handle])';
 const ACTIVITY_PANELS = new Map([
   ['current action', 'current-action'],
   ['action log', 'action-log'],
   ['world chat', 'world-chat'],
 ]);
+// The distinct panel slugs, for the coverage fast path in
+// classifyActivityPanels(). Derived, so a fourth panel added above is picked
+// up here automatically rather than silently weakening that check.
+const ACTIVITY_PANEL_SLUGS = [...new Set(ACTIVITY_PANELS.values())];
 function normText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
@@ -224,13 +253,94 @@ function applyMainNavState(tabs) {
   });
 }
 
+/**
+ * The one control the skin ADDS rather than decorates: an outbound link to the
+ * companion site, sitting slightly apart from the route tabs. It is APPENDED as
+ * the track's last child (rule 2 -- appended, never reparented) and it wears
+ * `nav-tab` so the rail's own plate covers it for free, whichever sheet ends up
+ * winning that rule; `data-iw-nav-link` is its own namespace, written only here,
+ * so the separation styling and the teardown can key on it without contending
+ * with anyone else on one node.
+ *
+ * It cannot disturb the nav cache: `navLabelText` reads "toolkit", which is not
+ * in NAV_LABELS, so neither `resolveMainNav` nor `countNavTabsIn` sees it and
+ * `applyMainNavState` never iterates it (so it can never be marked active).
+ * Every attribute is set BEFORE insertion and nothing is written afterwards, so
+ * the append costs exactly one mutation record on the flush that creates it and
+ * the skin stays quiescent after (see the flush-quiescence trap in CLAUDE.md).
+ */
+const TOOLKIT_URL = 'https://idleworldstoolkit.com';
+
+function ensureToolkitLink(track) {
+  if (!track || track.querySelector(':scope > [data-iw-nav-link="toolkit"]')) return;
+  const link = document.createElement('a');
+  link.dataset.iwNavLink = 'toolkit';
+  link.dataset.iwUi = 'nav-tab';
+  link.href = TOOLKIT_URL;
+  // The game is an idle game running in this tab -- navigating away in place
+  // would cost the player the session they are watching.
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.title = 'IdleWorlds Toolkit (opens in a new tab)';
+  link.textContent = 'Toolkit';
+  track.append(link);
+}
+
+/**
+ * The skin's own Rearrange and Reset controls.
+ *
+ * Same shape and the same four reasons as ensureToolkitLink above: they wear
+ * `data-iw-ui="nav-tab"` so the rail's plate and metrics come from whichever
+ * nav rule is winning; `data-iw-nav-link` is this module's namespace and is
+ * already swept by clearUIFoundation; every attribute is set BEFORE insertion
+ * so the append costs one mutation record and nothing after; and neither label
+ * is in NAV_LABELS, so countNavTabsIn cannot see the skin's own appends and
+ * invalidate the nav cache into a whole-document re-resolve every flush.
+ *
+ * Reset is always present and hidden by CSS outside the mode, rather than
+ * created and destroyed with it — a `<button>` appended on a mode change would
+ * be one more childList record on a gesture that currently costs zero.
+ */
+function ensureOrderControls(track) {
+  if (!track || track.querySelector(':scope > [data-iw-nav-link="rearrange"]')) return;
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.dataset.iwNavLink = 'rearrange';
+  toggle.dataset.iwUi = 'nav-tab';
+  toggle.title = 'Rearrange panels (your layout is remembered)';
+  toggle.textContent = 'Rearrange';
+  toggle.addEventListener('click', event => {
+    event.preventDefault();
+    setRearrangeMode(!isRearrangeMode(document), document);
+  });
+
+  const reset = document.createElement('button');
+  reset.type = 'button';
+  reset.dataset.iwNavLink = 'order-reset';
+  reset.dataset.iwUi = 'nav-tab';
+  reset.title = 'Restore the game’s own panel order';
+  reset.textContent = 'Reset layout';
+  reset.addEventListener('click', event => {
+    event.preventDefault();
+    resetPanelOrder(document);
+  });
+
+  track.append(toggle);
+  track.append(reset);
+}
+
 function classifyMainNav() {
   if (mainNavResolution && mainNavResolutionValid(mainNavResolution)) {
     applyMainNavState(mainNavResolution.tabs);
+    ensureToolkitLink(mainNavResolution.track);
+    ensureOrderControls(mainNavResolution.track);
     return;
   }
   mainNavResolution = resolveMainNav();
-  if (mainNavResolution) applyMainNavState(mainNavResolution.tabs);
+  if (!mainNavResolution) return;
+  applyMainNavState(mainNavResolution.tabs);
+  ensureToolkitLink(mainNavResolution.track);
+  ensureOrderControls(mainNavResolution.track);
 }
 
 // Once a zone-bar host is resolved, WHICH element plays the role never
@@ -392,11 +502,49 @@ function inOverlay(el) {
 }
 
 /** The panel's own heading — not one belonging to a panel nested inside it. */
-function panelHeading(panel) {
-  for (const h of panel.querySelectorAll('h1,h2,h3,h4')) {
-    if (h.closest('.panel') === panel) return h;
+/**
+ * Per-pass heading index.
+ *
+ * Four separate places here each ran their OWN `h1,h2,h3,h4` sweep on every
+ * classify pass: sectionFrameOrphanHeadings(), bossHeadings(),
+ * villageHeadings() — all three document-wide — plus panelHeading(), which
+ * re-queried per `.panel` inside the section-frame loop and therefore walked
+ * the whole inventory subtree once per panel. Together ~68ms of a 225ms
+ * profile at 13k nodes, all of it re-deriving the identical list.
+ *
+ * queueClassify() runs every classifier inside ONE rAF callback, so the DOM
+ * cannot change between them, and nothing any of them appends is a heading
+ * (VillagePanels/WorldBossPanels only ever create div/span/section/p). One
+ * index per pass is therefore exactly equivalent to four sweeps, and it is
+ * rebuilt from scratch next pass — no staleness across flushes.
+ */
+let passToken = 0;
+let headingIndexToken = -1;
+let headingIndexValue = null;
+
+function beginClassifyPass() {
+  passToken += 1;
+}
+
+function headingIndex() {
+  if (headingIndexToken === passToken && headingIndexValue) return headingIndexValue;
+  const all = [...document.querySelectorAll('h1,h2,h3,h4')];
+  const firstByPanel = new Map();
+  const orphans = [];
+  for (const h of all) {
+    const panel = h.closest('.panel');
+    // Document order is preserved, so the first heading seen for a panel is
+    // the same one the old per-panel query returned.
+    if (panel) { if (!firstByPanel.has(panel)) firstByPanel.set(panel, h); }
+    else orphans.push(h);
   }
-  return null;
+  headingIndexValue = { all, firstByPanel, orphans };
+  headingIndexToken = passToken;
+  return headingIndexValue;
+}
+
+function panelHeading(panel) {
+  return headingIndex().firstByPanel.get(panel) || null;
 }
 
 function sectionFrameResolutionValid(entry) {
@@ -451,8 +599,10 @@ function sectionFramePanels() {
  * Add-ons"), the same trap that once cost the whole zone bar.
  */
 function sectionFrameOrphanHeadings() {
-  const matches = [...document.querySelectorAll('h1,h2,h3,h4')].filter(heading =>
-    !heading.closest('.panel') && !inOverlay(heading) &&
+  // headingIndex().orphans is exactly "no `.panel` ancestor", already computed
+  // for this pass.
+  const matches = headingIndex().orphans.filter(heading =>
+    !inOverlay(heading) &&
     SECTION_FRAME_NAMES.test(normText(heading.textContent).replace(/^[^a-z0-9]+/i, '')));
   return preferRendered(matches);
 }
@@ -575,15 +725,17 @@ function tagBossCards(entry) {
     if (card.querySelector('.compact-panel')) continue;
     if (card.dataset.iwBoss !== 'card') card.dataset.iwBoss = 'card';
   }
+  decorateWorldBossPanel(entry);
 }
 
 function untagBossCards(entry) {
+  clearWorldBossPanel(entry.root);
   for (const card of entry.root.querySelectorAll('[data-iw-boss]')) delete card.dataset.iwBoss;
 }
 
 function bossHeadings() {
   // Same duplicate-column reasoning as sectionFrameHeadings() above.
-  const matches = [...document.querySelectorAll('h1,h2,h3,h4')].filter(heading =>
+  const matches = headingIndex().all.filter(heading =>
     /^world bosses$/i.test(normText(heading.textContent)));
   return preferRendered(matches);
 }
@@ -700,6 +852,69 @@ function classifyMarket() {
     const entry = { frame, title };
     marketResolutions.push(entry);
     tagMarketCards(entry);
+  }
+}
+
+/**
+ * Village route: the Housing hero and the Village Add-on slots.
+ *
+ * Two panels, resolved from their own headings ("Village" and the icon-prefixed
+ * "Village Add-ons" -- the leading icon run is stripped before the anchored
+ * test, the zone bar's trap). Both are `.panel`s that classifySectionFrames
+ * already frames; this classifier only resolves WHICH panel is which and hands
+ * it to VillagePanels, which owns every `data-iw-village*` role inside.
+ *
+ * Cached and coverage-tracked exactly like classifyBossCards/classifyMarket:
+ * these panels exist only on the Village route, so the resolution is empty on
+ * every other one and `[].every(valid)` would otherwise freeze this classifier
+ * for the session (see the note on classifyMarket above). The per-card sweep
+ * inside decorateVillagePanel re-runs every flush behind its own signature
+ * guard, so a slot that installs or a picker that opens is still decorated.
+ */
+let villageResolutions = null;
+let villageSeen = new Set();
+
+function villageResolutionValid(entry) {
+  return entry.epoch === getLayoutEpoch() &&
+    entry.heading.isConnected && entry.root.isConnected && entry.root.contains(entry.heading);
+}
+
+function villageLabel(heading) {
+  return normText(heading.textContent).replace(/^[^a-z0-9]+/i, '');
+}
+
+function villageHeadings() {
+  // Same duplicate-column reasoning as sectionFrameHeadings(): below 1280px the
+  // live copy is the one Tailwind did NOT mark hidden, and a class test gets
+  // that backwards.
+  const matches = headingIndex().all.filter(heading => {
+    const text = villageLabel(heading);
+    return /^village$/i.test(text) || /^village add-?ons$/i.test(text);
+  });
+  return preferRendered(matches);
+}
+
+function classifyVillagePanels() {
+  const headings = villageHeadings();
+  if (villageResolutions
+      && villageResolutions.every(villageResolutionValid)
+      && headings.every(heading => villageSeen.has(heading))) {
+    villageResolutions.forEach(decorateVillagePanel);
+    return;
+  }
+  // Drop the old marks before re-resolving, for the same reason the boss and
+  // market classifiers do: a resize across 1280px moves these panels to the
+  // other layout column, and isConnected alone still holds for the hidden one.
+  if (villageResolutions) villageResolutions.forEach(entry => clearVillagePanel(entry.root));
+  villageResolutions = [];
+  villageSeen = new Set(headings);
+  for (const heading of headings) {
+    const root = heading.closest('.panel');
+    if (!root || villageResolutions.some(e => e.root === root)) continue;
+    const kind = /^village add-?ons$/i.test(villageLabel(heading)) ? 'addons' : 'housing';
+    const entry = { heading, root, kind, epoch: getLayoutEpoch() };
+    villageResolutions.push(entry);
+    decorateVillagePanel(entry);
   }
 }
 
@@ -886,6 +1101,7 @@ function hasPanelBodyOutsideHeading(candidate, heading) {
   if (!headingBranch) return false;
   return [...candidate.children].some(child => {
     if (child === headingBranch || child.matches?.('button,a,[role="button"]')) return false;
+    if (child.matches?.(SKIN_OWNED_CONTROL)) return false;
     return !/^\s*[\d,.]+\s*xp\s*\/\s*hr\s*$/i.test(normText(child.textContent));
   });
 }
@@ -895,7 +1111,7 @@ function panelHostMatches(candidate, panel, heading) {
     return !!findCurrentActionProgress(candidate);
   }
   if (panel === 'action-log') {
-    const hasControl = [...candidate.querySelectorAll('button,a')]
+    const hasControl = [...candidate.querySelectorAll(GAME_CONTROL + ',a')]
       .some(el => /^view\s+all$/i.test(normText(el.textContent)));
     const hasRate = /\b[\d,.]+\s*xp\s*\/\s*hr\b/i.test(normText(candidate.textContent));
     return (hasControl || hasRate) && hasPanelBodyOutsideHeading(candidate, heading);
@@ -928,9 +1144,16 @@ function findActivityPanelHost(heading, panel) {
 function classifyPanelHeader(host, heading) {
   const titleBranch = directChildUnder(heading, host);
   if (!titleBranch) return;
-  const companion = titleBranch.nextElementSibling;
+  let companion = titleBranch.nextElementSibling;
+  // Skip the skin's own appended controls: a panel whose only other child is
+  // the rearrange handle must still read exactly as it did before the append.
+  while (companion?.matches?.(SKIN_OWNED_CONTROL)) companion = companion.nextElementSibling;
+  // `:not([data-iw-collapse])` — the skin's OWN per-panel collapse toggle is
+  // appended INTO this row (CollapsibleFrames), and counting it as a control
+  // made a split header stop reading as split on the very next pass: the
+  // classifier saw a button in the title branch that the game never wrote.
   const split = titleBranch !== heading &&
-    !titleBranch.querySelector('button,a,[role="button"]') &&
+    !titleBranch.querySelector(GAME_CONTROL + ',a,[role="button"]:not([data-iw-collapse]):not([data-iw-order-handle])') &&
     companion &&
     !companion.querySelector('input,textarea,h1,h2,h3,h4,[role="heading"]') &&
     (companion.querySelector('button,a,[role="button"]') || /\bxp\s*\/\s*hr\b/i.test(normText(companion.textContent)));
@@ -958,6 +1181,10 @@ function classifyFeed(host) {
   if (!feed) {
     feed = [...host.children].find(child =>
       child.dataset.iwPanelPart !== 'header' &&
+      // Without this the skin's own full-panel rearrange handle — a direct
+      // child with no input and no heading — is the first thing this fallback
+      // finds, and it would be given the feed's `overflow-y:auto; max-height`.
+      !child.matches(SKIN_OWNED_CONTROL) &&
       !child.querySelector('input,textarea') &&
       !child.matches('form') &&
       !child.querySelector('h1,h2,h3,h4,[role="heading"]')) || null;
@@ -974,7 +1201,7 @@ function classifyCurrentAction(host) {
   const queued = matchingLeaves(host, text => text === 'queued')[0];
   let cur = queued?.parentElement;
   for (let depth = 0; cur && cur !== host && depth < 3; depth += 1, cur = cur.parentElement) {
-    if (cur.querySelector('button') && normText(cur.textContent).length > 6) {
+    if (cur.querySelector(GAME_CONTROL) && normText(cur.textContent).length > 6) {
       setPanelPart(cur, 'queue');
       break;
     }
@@ -982,7 +1209,7 @@ function classifyCurrentAction(host) {
 }
 
 function classifyActionLog(host) {
-  const control = [...host.querySelectorAll('button,a')]
+  const control = [...host.querySelectorAll(GAME_CONTROL + ',a')]
     .find(el => /^view\s+all$/i.test(normText(el.textContent)));
   setPanelPart(control, 'panel-control');
   classifyFeed(host);
@@ -1129,6 +1356,33 @@ function activityPanelLabelNodes() {
 }
 
 function classifyActivityPanels() {
+  // FAST PATH — provably equivalent to the coverage check below, and the reason
+  // this file stopped being the most expensive thing on the flush path.
+  //
+  // activityPanelLabelNodes() is a whole-document `p,span,div,strong,b` sweep
+  // (plus a second `div,header,section,…` pass whenever a slug is missing). It
+  // ran BEFORE the cache check on every single flush — the identical mistake
+  // CLAUDE.md records for InventoryRenderer.findInventoryRoot, and measured at
+  // 185ms of a 386ms profile at 13k nodes, i.e. about half of everything the
+  // skin still cost once the flush loop was fixed.
+  //
+  // It is skippable because coverage here is keyed by SLUG, not by host (a
+  // known limitation CLAUDE.md already documents), and ACTIVITY_PANELS holds
+  // exactly three of them. So once every slug has a valid entry, `wantSlugs`
+  // is necessarily a subset of what is already resolved, whatever the scan
+  // returns — the early return below would fire regardless. Scanning first only
+  // paid for the answer we already had.
+  //
+  // While ANY slug is still unresolved the scan must run in full: that is the
+  // route-swap case, and the empty-resolution freeze CLAUDE.md warns about
+  // lives exactly there.
+  if (activityPanelResolutions
+      && activityPanelResolutions.every(activityPanelResolutionValid)
+      && ACTIVITY_PANEL_SLUGS.every(slug => activityPanelResolutions.some(e => e.panel === slug))) {
+    activityPanelResolutions.forEach(runActivityPanel);
+    return;
+  }
+
   const labels = activityPanelLabelNodes();
   const wantSlugs = new Set(labels.map(l => l.panel));
 
@@ -1175,6 +1429,10 @@ function queueClassify() {
   queued = true;
   raf(() => {
     queued = false;
+    // Invalidate the per-pass memos (headingIndex) so this pass reads the DOM
+    // as it is NOW. Everything below runs synchronously inside this callback,
+    // which is what makes one shared index correct for all of them.
+    beginClassifyPass();
     // Each classifier is isolated: a throw inside classifyMainNav() must not
     // stop the zone bar and section frames from being classified. (Audit S3.7)
     guard('ui:main-nav', classifyMainNav);
@@ -1187,12 +1445,42 @@ function queueClassify() {
     guard('ui:section-frames', classifySectionFrames);
     guard('ui:boss-cards', classifyBossCards);
     guard('ui:market', classifyMarket);
+    guard('ui:village', classifyVillagePanels);
+    // `guard` only catches SYNCHRONOUSLY; this pass awaits a network read, so
+    // the rejection has to be caught on the promise or a failed read surfaces
+    // as an unhandled rejection in the game's own console.
+    guard('ui:village-scene', () => {
+      reconcileVillageScene().catch(err => warnOnce('ui:village-scene', err));
+    });
+    guard('ui:compact-buttons', decorateCompactButtons);
+    // LAST: it reads the marks every classifier above writes — which frames are
+    // leaves, which host is an activity panel, and where each title landed.
+    guard('ui:collapsible', () => decorateCollapsibleFrames(document));
+    // AFTER collapsible: the panel identity falls back to `data-iw-panel`
+    // for Action Log, which ships no heading of its own, so the order pass
+    // has to run once every classifier above has had its say.
+    guard('ui:panel-order', () => decoratePanelOrder(document));
   });
 }
 
 /** Remove every semantic role attribute this module applied. Kill switch. */
 export function clearUIFoundation() {
+  clearPanelOrder(document);
+  clearCollapsibleFrames(document);
+  clearVillageScene();
+  clearCompactButtons();
+  // Drop the per-pass memo with everything else, so a kill-switch round trip
+  // cannot hand the next activation a heading list from the previous one.
+  headingIndexToken = -1;
+  headingIndexValue = null;
+  clearWorldBossPanel(document);
+  clearVillagePanel(document.body);
+  villageResolutions = null;
+  villageSeen = new Set();
   mainNavResolution = null;
+  // The skin's own appended control: removed outright, not just stripped of
+  // its attributes, so the kill switch leaves the rail exactly as React wrote it.
+  document.querySelectorAll('[data-iw-nav-link]').forEach(el => { el.remove(); });
   zoneBarResolutions = null;
   sectionFrameResolutions = null;
   sectionFrameSeen = new Set();
@@ -1219,8 +1507,23 @@ export function clearUIFoundation() {
   document.querySelectorAll('[data-iw-market]').forEach(el => { delete el.dataset.iwMarket; });
 }
 
+// Both activation and standalone initialization must install the same complete
+// sheet. StyleInjector keeps the first sheet for an id and ignores later calls.
+export function injectUIFoundationStyles() {
+  inject('ui-system', css + '\n' + compactCss + '\n' + villageSceneCss + '\n' + collapsibleCss + '\n' + panelOrderCss);
+}
+
 export function initUIFoundation() {
-  inject('ui-system', css);
+  injectUIFoundationStyles();
   on('iw:dom-flush', queueClassify);
+  // Native title/button text ticks deliberately do not emit dom-flush.
+  // Reconcile only the already-resolved boss panel through the shared watcher.
+  on('iw:skill-panel', event => {
+    const panel = event.detail?.panel;
+    if (!panel) return;
+    const entry = (bossPanelResolutions || []).find(entry =>
+      bossPanelResolutionValid(entry) && entry.root.contains(panel));
+    if (entry) guard('ui:boss-state', () => decorateWorldBossPanel(entry));
+  });
   queueClassify();
 }

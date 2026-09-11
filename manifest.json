@@ -26,7 +26,10 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "assets/*"
+        "assets/*",
+        "assets/skills-ui/buttons/exact-v3/*/*.png",
+        "assets/skills-ui/buttons/revised-v5/*.png",
+        "assets/skills-ui/buttons/compact-ghost-v3/*.png"
       ],
       "matches": [
         "https://idleworlds.com/*",

@@ -1,0 +1,92 @@
+[
+  {
+    "item_id": "trader_token",
+    "name": "Trader's Token",
+    "category": "Trade Good",
+    "subcategory": "Trade good",
+    "tier": 0,
+    "effects_raw": "Trade Good",
+    "acquisition_type": "Unknown",
+    "acquisition_summary": ""
+  },
+  {
+    "item_id": "miners_gloves",
+    "name": "Miner's Gloves",
+    "category": "Equipment",
+    "subcategory": "Gloves slot",
+    "tier": 1,
+    "effects_raw": "DEF +1, Mining Level +4",
+    "acquisition_type": "BossDrop",
+    "acquisition_summary": "World Boss drop: Defeating Ancient Treant — 0.5% chance per participant"
+  },
+  {
+    "item_id": "herbalists_gloves",
+    "name": "Herbalist's Gloves",
+    "category": "Equipment",
+    "subcategory": "Gloves slot",
+    "tier": 1,
+    "effects_raw": "DEF +1, Gathering Level +4",
+    "acquisition_type": "BossDrop",
+    "acquisition_summary": "World Boss drop: Defeating Ancient Treant — 0.5% chance per participant"
+  },
+  {
+    "item_id": "blacksmiths_gloves",
+    "name": "Blacksmith's Gloves",
+    "category": "Equipment",
+    "subcategory": "Gloves slot",
+    "tier": 1,
+    "effects_raw": "DEF +1, Smithing Level +4",
+    "acquisition_type": "BossDrop",
+    "acquisition_summary": "World Boss drop: Defeating Ancient Treant — 0.5% chance per participant"
+  },
+  {
+    "item_id": "alchemists_gloves",
+    "name": "Alchemist's Gloves",
+    "category": "Equipment",
+    "subcategory": "Gloves slot",
+    "tier": 1,
+    "effects_raw": "DEF +1, Alchemy Level +4",
+    "acquisition_type": "BossDrop",
+    "acquisition_summary": "World Boss drop: Defeating Ancient Treant — 0.5% chance per participant"
+  },
+  {
+    "item_id": "jewelcrafters_gloves",
+    "name": "Jewelcrafter's Gloves",
+    "category": "Equipment",
+    "subcategory": "Gloves slot",
+    "tier": 1,
+    "effects_raw": "DEF +1, Jewelcrafting Level +4",
+    "acquisition_type": "BossDrop",
+    "acquisition_summary": "World Boss drop: Defeating Ancient Treant — 0.5% chance per participant"
+  },
+  {
+    "item_id": "spellcrafters_gloves",
+    "name": "Spellcrafter's Gloves",
+    "category": "Equipment",
+    "subcategory": "Gloves slot",
+    "tier": 1,
+    "effects_raw": "DEF +1, Spellcrafting Level +4",
+    "acquisition_type": "BossDrop",
+    "acquisition_summary": "World Boss drop: Defeating Ancient Treant — 0.5% chance per participant"
+  },
+  {
+    "item_id": "invisibility_ring",
+    "name": "Invisibility Ring",
+    "category": "Equipment",
+    "subcategory": "Ring slot",
+    "tier": 1,
+    "effects_raw": "Unlocks access to zones 1–29, +50% 2x gather chance",
+    "acquisition_type": "BossDrop",
+    "acquisition_summary": "World Boss drop: Defeating Abyssal Behemoth — 0.5% chance per participant"
+  },
+  {
+    "item_id": "worldbreaker",
+    "name": "Worldbreaker",
+    "category": "Equipment",
+    "subcategory": "Weapon slot",
+    "tier": 18,
+    "effects_raw": "ATK +120, Requires Combat Lv 61, XP +6/task",
+    "acquisition_type": "BossDrop",
+    "acquisition_summary": "World Boss drop: Defeating World Eater — 0.1% chance per participant"
+  }
+]

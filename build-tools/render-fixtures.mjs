@@ -115,6 +115,12 @@ const SKILL_UI_TOKENS = {
   action_frame_idle: 'action-idle', action_frame_disabled: 'action-disabled', corner_filigree: 'corner',
   xp_plaque: 'xp-plaque', horizontal_separator: 'separator', separator_flourish: 'flourish',
 };
+// Keep in step with SkillsArtService: the two action-frame cells carry three
+// extra windows each (left cap / flat middle / right cap) and one derived
+// ratio, and a fixture that emits only the whole-cell window renders a control
+// the extension never shows.
+const SLICED_UI_TOKENS = new Set(['action-idle', 'action-disabled']);
+const ACTION_CAP_PX = 60;
 const skillUiVars = [
   `--fs-skills-panel-texture:url('${fileUrl('assets/skills_panel_texture.webp')}')`,
   `--fs-skills-ui-atlas:url('${fileUrl('assets/skills_ui_atlas.webp')}')`,
@@ -128,6 +134,27 @@ for (const [key, token] of Object.entries(SKILL_UI_TOKENS)) {
   const yRange = Math.max(1, skillsUiIndex.height - entry.height);
   skillUiVars.push(`--fs-ui-${token}-size:${(skillsUiIndex.width / entry.width) * 100}% ${(skillsUiIndex.height / entry.height) * 100}%`);
   skillUiVars.push(`--fs-ui-${token}-position:${((entry.x / xRange) * 100).toFixed(6)}% ${((entry.y / yRange) * 100).toFixed(6)}%`);
+  if (!SLICED_UI_TOKENS.has(token)) continue;
+  // Mirror of SkillsArtService's bandGeometry(): the action frame is cut into
+  // three vertical bands so a button whose label length is the game's to
+  // choose can stretch the flat middle and leave the ends at native scale.
+  const cap = Math.min(ACTION_CAP_PX, Math.floor(entry.width / 2) - 1);
+  const band = (offset, width) => {
+    const range = Math.max(1, skillsUiIndex.width - width);
+    return {
+      size: `${(skillsUiIndex.width / width) * 100}% ${(skillsUiIndex.height / entry.height) * 100}%`,
+      position: `${(((entry.x + offset) / range) * 100).toFixed(6)}% ${((entry.y / yRange) * 100).toFixed(6)}%`,
+    };
+  };
+  const capLeft = band(0, cap);
+  const capRight = band(entry.width - cap, cap);
+  const mid = band(cap, entry.width - cap * 2);
+  skillUiVars.push(`--fs-ui-${token}-cap-size:${capLeft.size}`);
+  skillUiVars.push(`--fs-ui-${token}-cap-l-position:${capLeft.position}`);
+  skillUiVars.push(`--fs-ui-${token}-cap-r-position:${capRight.position}`);
+  skillUiVars.push(`--fs-ui-${token}-mid-size:${mid.size}`);
+  skillUiVars.push(`--fs-ui-${token}-mid-position:${mid.position}`);
+  skillUiVars.push(`--fs-ui-action-cap-ratio:${cap / entry.height}`);
 }
 const SKILL_UI_STYLE = skillUiVars.join(';');
 
@@ -215,15 +242,24 @@ const navInline = () => [
   'color:transparent', 'font-size:0',
 ].map(d => `${d} !important`).join(';');
 
+// Mirror of ACTION_ART.idle in SkillPanelRenderer: on a panel that has resolved
+// the atlas (every fixture panel carries data-iw-skills-ui-ready="1"), the
+// command button drops its plate for the quest rail's action_frame sprite, so
+// the background/border/box-shadow the plate wrote are replaced rather than
+// layered. A fixture still carrying the plate here would render a control the
+// game never shows — and would hide exactly the "second frame under the art"
+// regression the quest check below exists for.
 const ACTION_INLINE = [
   "font-family:'Barlow',system-ui,sans-serif", 'font-weight:700',
   'letter-spacing:0.09em', 'text-transform:uppercase', 'border-radius:2px',
   'align-self:center', 'flex-shrink:0', 'cursor:pointer',
-  `box-shadow:${FORGE.liveShadow}`,
-  `background:${FORGE.liveBg}`,
-  `border:${FORGE.liveBorder}`,
+  'box-shadow:none',
+  'background:transparent var(--fs-skills-ui-atlas) var(--fs-ui-action-idle-position) / ' +
+    'var(--fs-ui-action-idle-size) no-repeat',
+  'border:0',
   'color:#F3E3C0',
-  'text-shadow:0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 48%, transparent)',
+  'text-shadow:0 1px 0 rgba(0, 0, 0, .85), ' +
+    '0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 42%, transparent)',
   'font-size:12px',
   'width:155px', 'min-width:155px', 'height:44px', 'min-height:44px', 'padding:0 12px',
 ].map(d => `${d} !important`).join(';');
@@ -285,7 +321,7 @@ const skillPanel = ({ type, label, title, pct, xp, reward, ingredients, requirem
 // Quest cards after QuestPanelRenderer has tagged the native nodes: role
 // attributes + the skin-owned .fs-quest-sigil, laid out by the block appended
 // to skillpanel.css.
-const questCard = ({ accent, glyph, state = 'active', kicker, title, brief, objective, objIcon, objItem, reward, pct, turnInDisabled = true, skip }) => `
+const questCard = ({ accent, glyph, state = 'active', kicker, title, brief, objective, objIcon, objItem, reward, pct, turnInDisabled = true, skip, turnInLabel = 'Turn In' }) => `
 <div class="compact-panel p-2.5 fs-quest-panel" data-fs-quest="1" data-iw-quest-state="${state}" data-iw-skills-ui-ready="1" style="--fs-quest-accent:${accent};${SKILL_UI_STYLE}">
   <div class="space-y-2" data-iw-quest-zone="body">
     <span class="fs-quest-sigil" aria-hidden="true" data-iw-quest-glyph="${glyph}"${objIcon ? ' data-iw-quest-icon="1"' : ''}>${objIcon ? `<span class="fs-quest-sigil-icon" style="${objIcon}"></span>` : ''}<span class="fs-quest-sigil-pct">${pct}%</span></span>
@@ -298,7 +334,7 @@ const questCard = ({ accent, glyph, state = 'active', kicker, title, brief, obje
         <p data-iw-quest-role="reward" data-iw-quest-reward="${reward}">Reward: ${reward}</p>
       </div>
       <div class="flex shrink-0 flex-col gap-2" data-iw-quest-zone="commands">
-        <button data-iw-quest-role="turn-in"${turnInDisabled ? ' disabled' : ''}>Turn In</button>
+        <button data-iw-quest-role="turn-in"${turnInDisabled ? ' disabled' : ''}>${turnInLabel}</button>
         ${skip ? `<button data-iw-quest-role="skip">Skip (${skip})</button>` : ''}
       </div>
     </div>
@@ -306,6 +342,40 @@ const questCard = ({ accent, glyph, state = 'active', kicker, title, brief, obje
     <div class="text-[11px] text-white/45" data-iw-quest-role="progress-label" data-iw-quest-percent="${pct}">${pct}% complete</div>
   </div>
 </div>`;
+
+/* Village. Roles are exactly what VillagePanels writes on the live DOM, and the
+   art element carries the same INLINE background-image the module paints (the
+   sheet never sets one — see the AtlasService rule). The head row is present
+   because `display: contents` on it is the whole reason the appended art can
+   sit left of copy React owns. */
+const villageArt = file =>
+  `<div class="iw-village-art" data-iw-village-art="${file ? 'building' : 'generic'}" aria-hidden="true"` +
+  (file ? ` style="--iw-village-sprite:url('${fileUrl(`assets/village/${file}`)}')"` : '') + '></div>';
+
+const villageSlot = ({ n, name, file, effects }) => `
+<div class="compact-panel" data-iw-village="slot" data-iw-village-state="${name ? 'installed' : 'vacant'}">
+  <div data-iw-village-role="head" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <div data-iw-village-role="copy">
+      <p data-iw-village-role="index">Slot ${n}</p>
+      ${name
+    ? `<p data-iw-village-role="name">${name}</p><p data-iw-village-role="effects">${effects}</p>`
+    : '<p data-iw-village-role="vacant">Empty slot</p>'}
+    </div>
+    ${name
+    ? '<div data-iw-village-role="actions">' +
+      '<button data-iw-village-role="action" data-iw-village-action="destroy">Destroy</button>' +
+      '<button data-iw-village-role="action" data-iw-village-action="uninstall">Uninstall (100k)</button></div>'
+    : '<button data-iw-village-role="action" data-iw-village-action="install">Install</button>'}
+  </div>
+  ${villageArt(file)}
+</div>`;
+
+const villageOption = (name, file, effects) => `
+<button data-iw-village-role="option">
+  <p data-iw-village-role="option-name"><span class="iw-village-option-art" aria-hidden="true"` +
+  ` style="--iw-village-sprite:url('${fileUrl(`assets/village/${file}`)}')"></span>${name} <span>&#x00D7;2</span></p>
+  <p>${effects}</p>
+</button>`;
 
 const tooltipCard = ({ sprite, name, tier, badges, effect, stats, acqMain, acqSub, glyph = '&#x1F6E1;&#xFE0F;', source = 'cached data' }) => `
 <div class="iw-tip is-open" style="position:relative;display:flex;opacity:1;left:0;top:0;margin-bottom:14px;">
@@ -448,6 +518,10 @@ body { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .fx-h:first-child { margin-top: 0; }
 .fx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; align-items: start; }
 .fx-skill-grid { grid-template-columns: 1fr; }
+.fx-village { display: grid; grid-template-columns: minmax(320px, .42fr) minmax(0, .58fr); gap: 12px; align-items: start; }
+.fx-village-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.fx-village-rest { border: 1px dashed var(--iw-line); border-radius: 3px; min-height: 240px; display: grid; place-items: center; color: var(--iw-gold-dim); font: 11px var(--iw-font-ui); letter-spacing: .18em; text-transform: uppercase; }
+@media (max-width: 900px) { .fx-village { grid-template-columns: minmax(0, 1fr); } .fx-village-rest { display: none; } }
 .fx-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .fx-sw { width: 92px; }
 .fx-sw i { display: block; height: 34px; border: 1px solid var(--iw-line); border-radius: 2px; }
@@ -545,6 +619,7 @@ ${questCard({ accent: '#C9A66A', glyph: '❖', state: 'ready', title: 'Cache of 
 </div><div>
 ${questCard({ accent: '#A56E86', glyph: '⋈', state: 'ready', kicker: 'Tailoring Work Order', title: 'Craft and turn in 1 Moonsilk Boots.', objective: '🧵 Moonsilk Boots 0/1', objIcon: gearSprite('Moonsilk Boots'), objItem: 'Moonsilk Boots', reward: '+3,870g • +3240 tailoring XP', pct: 0, turnInDisabled: false, skip: 8 })}
 ${questCard({ accent: '#4E9FB8', glyph: '◆', state: 'active', kicker: 'Jewelcrafting Work Order', title: 'Cut and turn in 3 Star Sapphires.', objective: '💠 Star Sapphire 1/3', reward: '+2,410g • +1980 jewelcrafting XP', pct: 33, turnInDisabled: true, skip: 5 })}
+${questCard({ accent: '#5E8FB7', glyph: '✦', state: 'ready', kicker: 'Crafting Work Order', title: 'Hand in the batch.', objective: '💠 Ironwood Plank 38/38', reward: '+12,480g • +9720 crafting XP', pct: 100, turnInDisabled: false, turnInLabel: 'Turn In All (38)' })}
 </div></div>
 
 <div class="fx-h">Tooltip cards ? Toolkit-style rich equipment detail</div>
@@ -568,6 +643,7 @@ ${questCard({ accent: '#4E9FB8', glyph: '◆', state: 'active', kicker: 'Jewelcr
   <button data-iw-ui="nav-tab">Leaderboards</button>
   <button data-iw-ui="nav-tab">Village</button>
   <button data-iw-ui="nav-tab">Dungeon</button>
+  <a data-iw-ui="nav-tab" data-iw-nav-link="toolkit" href="https://idleworldstoolkit.com" target="_blank" rel="noopener noreferrer">Toolkit</a>
 </div>
 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
   <button class="iw-btn iw-btn--primary">Primary</button>
@@ -617,6 +693,56 @@ ${headerBlock()}
     </div>
     <form data-iw-panel-part="composer"><input data-iw-panel-part="chat-input" placeholder="Message world chat..."><button data-iw-panel-part="send" type="button">Send</button></form>
   </section>
+</div>
+
+<div class="fx-h">Village &mdash; housing hero, add-on slots and the install picker</div>
+<div class="fx-village">
+  <div class="fx-village-col">
+  <div data-iw-ui="section-frame" data-iw-village="housing" style="padding:14px">
+    <h2 data-iw-ui="section-title" style="margin:0 0 10px">Village</h2>
+    <div class="compact-panel" data-iw-village="house" data-iw-village-tier="4">
+      <p data-iw-village-role="house-name">&#x1F3E0; Manor</p>
+      <p data-iw-village-role="house-tier">Current tier: 4 &#x2022; Base actions take 6s</p>
+      <p data-iw-village-role="house-note">Longer crafts also speed up proportionally. A 3-minute gear craft gets 18 seconds faster per housing tier.</p>
+      <p data-iw-village-role="house-salvage">Salvage Material owned: 12,004</p>
+      <p data-iw-village-role="house-next" class="text-emerald-100">Next upgrade: Citadel &#x2022; 1,000,000,000g &#x2022; 100,000,000 salvage</p>
+      <button data-iw-village-role="action" data-iw-village-action="upgrade">Upgrade Housing</button>
+      <div class="iw-village-art" data-iw-village-art="house" aria-hidden="true" style="--iw-village-sprite:url('${fileUrl('assets/village/house_4.webp')}')"></div>
+      <div class="iw-village-tiers" aria-hidden="true">
+        <span class="iw-village-tier-pip" data-iw-village-pip="held"></span>
+        <span class="iw-village-tier-pip" data-iw-village-pip="held"></span>
+        <span class="iw-village-tier-pip" data-iw-village-pip="held"></span>
+        <span class="iw-village-tier-pip" data-iw-village-pip="held"></span>
+        <span class="iw-village-tier-pip" data-iw-village-pip="open"></span>
+      </div>
+    </div>
+  </div>
+  <div data-iw-ui="section-frame" data-iw-village="addons" style="padding:14px">
+    <h2 data-iw-ui="section-title" style="margin:0 0 8px">&#x1F3D7;&#xFE0F; Village Add-ons</h2>
+    <p data-iw-village-role="intro">4 slots available (1 per housing tier). Only one of each building type per village.</p>
+    <div style="display:grid;gap:8px">
+      ${villageSlot({ n: 1, name: 'Voidiron Archive', file: 'building_11.webp', effects: '+4 ATK &#x2022; +7 XP/task &#x2022; +8% Item Find &#x2022; +2 smithing level' })}
+      ${villageSlot({ n: 2, name: 'Celestial Exchange', file: 'building_12.webp', effects: '+7 XP/task &#x2022; +8% Gold Find &#x2022; +4% Double Gather &#x2022; +2 gathering level' })}
+      ${villageSlot({ n: 3 })}
+      <div class="compact-panel" data-iw-village="slot" data-iw-village-state="vacant">
+        <div data-iw-village-role="head" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div data-iw-village-role="copy">
+            <p data-iw-village-role="index">Slot 4</p>
+            <p data-iw-village-role="vacant">Empty slot</p>
+          </div>
+          <button data-iw-village-role="action" data-iw-village-action="cancel">Cancel</button>
+        </div>
+        ${villageArt(null)}
+        <div data-iw-village-role="picker">
+          ${villageOption('Sunforge Arena', 'building_15.webp', '+9 ATK &#x2022; +6 XP/task')}
+          ${villageOption('Skysteel Observatory', 'building_25.webp', '+11 XP/task &#x2022; +9% Item Find')}
+        </div>
+      </div>
+    </div>
+    <p data-iw-village-role="note">Assemble a building in the Construction skill panel first.</p>
+  </div>
+  </div>
+  <div class="fx-village-rest">the route's wide column</div>
 </div>
 
 <div class="fx-h">Section frame</div>
@@ -702,6 +828,205 @@ if (questButtonShadow.withStrayShadow.length) {
   throw new Error('quest command button keeps a plate box-shadow over its action_frame sprite ' +
     '(a second frame): ' + JSON.stringify(questButtonShadow.withStrayShadow));
 }
+
+// The skill command button and the quest rail wear the SAME artwork (Curtis,
+// 2026-09) -- but no longer through the same technique, so a string equality of
+// the two computed windows is not the check any more. The quest turn-in's label
+// carries a live count, so its frame is cut into three bands (left cap / flat
+// middle / right cap) and only the middle stretches; the skill button's label
+// is a fixed short verb, so it keeps the whole-cell window.
+//
+// What still has to hold is that every one of those windows resolves to the
+// SAME cell of the SAME sheet. So this reverses each computed percentage back
+// into the source rect it addresses and compares THAT against
+// skills_ui_index.json -- which is stronger than the old equality (it would
+// also have caught a pair that agreed with each other on the wrong cell) and,
+// like it, fails the moment either surface silently falls back to a plate.
+const ACTION_CELL = skillUiByKey.get('action_frame_idle');
+const commandFrame = await p.evaluate(({ atlasW, atlasH, cell, cap }) => {
+  const num = v => parseFloat(v);
+  // A percentage background-position maps the image's own p% point onto the
+  // box's p% point, so a window `bandW` source pixels wide sits at
+  //   sourceX = p% * (atlasW - bandW) / 100.
+  const window = (el, pseudo, bandW) => {
+    const cs = getComputedStyle(el, pseudo);
+    const [sx, sy] = cs.backgroundSize.split(/\s+/).map(num);
+    const [px, py] = cs.backgroundPosition.split(/\s+/).map(num);
+    if (!cs.backgroundImage || cs.backgroundImage === 'none') return null;
+    return {
+      image: cs.backgroundImage,
+      sourceX: +((px / 100) * (atlasW - bandW)).toFixed(2),
+      sourceY: +((py / 100) * (atlasH - cell.height)).toFixed(2),
+      scaleX: +(sx / 100 * bandW / atlasW).toFixed(4),
+      scaleY: +(sy / 100 * cell.height / atlasH).toFixed(4),
+    };
+  };
+  // Both sides must be in the SAME state or the comparison is meaningless: a
+  // disabled quest turn-in draws action_frame_DISABLED (the grey cell), not the
+  // gold idle one, and every skill button in the fixture is primary.
+  const quest = document.querySelector(
+    '[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:not(:disabled)');
+  const skills = [...document.querySelectorAll(
+    '.compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"] ' +
+    'button[data-iw-skill-role="action-button"]:not(:disabled)')];
+  const mid = cell.width - cap * 2;
+  return {
+    count: skills.length,
+    // key -> [window, expected source x, expected band width]
+    windows: quest ? {
+      'quest mid': [window(quest, null, mid), cell.x + cap],
+      'quest cap-left': [window(quest, '::before', cap), cell.x],
+      'quest cap-right': [window(quest, '::after', cap), cell.x + cell.width - cap],
+    } : null,
+    skillWindows: skills.map(el => [el.textContent.trim(), window(el, null, cell.width)]),
+    plated: skills.filter(el => {
+      const cs = getComputedStyle(el);
+      return cs.boxShadow !== 'none' || parseFloat(cs.borderTopWidth) > 0;
+    }).map(el => `${el.textContent.trim()}: ${getComputedStyle(el).boxShadow} / ${getComputedStyle(el).borderTopWidth}`),
+    // The plate's diamond studs are its ornament; the frame art carries its own.
+    studs: skills.filter(el => ['::before', '::after']
+      .some(pseudo => getComputedStyle(el, pseudo).content !== 'none')).length,
+    ratios: skills.map(el => {
+      const r = el.getBoundingClientRect();
+      return +(r.width / r.height).toFixed(2);
+    }),
+  };
+}, {
+  atlasW: skillsUiIndex.width, atlasH: skillsUiIndex.height,
+  cell: ACTION_CELL, cap: Math.min(ACTION_CAP_PX, Math.floor(ACTION_CELL.width / 2) - 1),
+});
+if (!commandFrame.count || !commandFrame.windows) {
+  throw new Error('no ready skill/quest command buttons in the fixture — this check cannot fail, so it is broken');
+}
+const frameFaults = [];
+for (const [name, [win, expectedX]] of Object.entries(commandFrame.windows)) {
+  if (!win) { frameFaults.push(`${name}: no background image (fell back to a plate?)`); continue; }
+  if (Math.abs(win.sourceX - expectedX) > 0.6 || Math.abs(win.sourceY - ACTION_CELL.y) > 0.6) {
+    frameFaults.push(`${name}: addresses source ${win.sourceX},${win.sourceY} — expected ${expectedX},${ACTION_CELL.y}`);
+  }
+}
+for (const [label, win] of commandFrame.skillWindows) {
+  if (!win) { frameFaults.push(`skill "${label}": no background image (fell back to a plate?)`); continue; }
+  if (Math.abs(win.sourceX - ACTION_CELL.x) > 0.6 || Math.abs(win.sourceY - ACTION_CELL.y) > 0.6) {
+    frameFaults.push(`skill "${label}": addresses source ${win.sourceX},${win.sourceY} — ` +
+      `expected the action_frame_idle cell at ${ACTION_CELL.x},${ACTION_CELL.y}`);
+  }
+  const questMid = commandFrame.windows['quest mid'][0];
+  if (questMid && win.image !== questMid.image) {
+    frameFaults.push(`skill "${label}" draws a different sheet from the quest rail: ${win.image} vs ${questMid.image}`);
+  }
+}
+if (frameFaults.length) {
+  throw new Error('command button artwork is not the quest rail action_frame: ' + JSON.stringify(frameFaults));
+}
+if (commandFrame.plated.length) {
+  throw new Error('skill command button keeps its plate under the action_frame sprite ' +
+    '(a second frame): ' + JSON.stringify(commandFrame.plated));
+}
+if (commandFrame.studs) {
+  throw new Error(`${commandFrame.studs} skill command buttons keep the plate's diamond studs over the frame art`);
+}
+if (commandFrame.ratios.some(r => Math.abs(r - 3.52) > 0.12)) {
+  throw new Error('skill command button distorts the 3.52 action_frame art: ' +
+    commandFrame.ratios.join(','));
+}
+
+/* THE LABEL LENGTH IS THE GAME'S, THE FRAME HAS TO FOLLOW IT.
+   A work order's turn-in reads "Turn In All (38)" and the count is live. The
+   old geometry pinned the box to the art's 3.52 ratio over a 148px floor and
+   kept a FIXED 20px of padding, while the frame's end flourishes are a
+   fraction of the box — so a long label ran out under the horns, which is what
+   Curtis reported. Two things are asserted, and reverting either half of the
+   fix breaks one of them:
+     * the frame grows sideways only — same height as the short-label button;
+     * the label's ink stays inside the CONTENT box, which is exactly the flat
+       middle band (padding == the cap width, by construction).
+   Measured with a Range over the real text node, so it is the painted line
+   box, not scrollWidth on a flex container. */
+const labelFit = await p.evaluate(() => {
+  const buttons = [...document.querySelectorAll(
+    '[data-iw-skills-ui-ready="1"] [data-iw-quest-role="turn-in"]:not(:disabled)')];
+  return buttons.map(btn => {
+    const cs = getComputedStyle(btn);
+    const box = btn.getBoundingClientRect();
+    const node = [...btn.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+    let text = null;
+    if (node) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const r = range.getBoundingClientRect();
+      text = { left: r.left, right: r.right, width: r.width };
+    }
+    return {
+      label: btn.textContent.trim(),
+      width: +box.width.toFixed(1),
+      height: +box.height.toFixed(1),
+      padLeft: parseFloat(cs.paddingLeft),
+      padRight: parseFloat(cs.paddingRight),
+      overflowLeft: text ? +(box.left + parseFloat(cs.paddingLeft) - text.left).toFixed(1) : null,
+      overflowRight: text ? +(text.right - (box.right - parseFloat(cs.paddingRight))).toFixed(1) : null,
+    };
+  });
+});
+const longLabel = labelFit.find(b => /\(\d+\)/.test(b.label));
+const shortLabel = labelFit.find(b => b !== longLabel);
+if (!longLabel || !shortLabel) {
+  throw new Error('the fixture has no long-label quest turn-in to compare — this check cannot fail, so it is broken');
+}
+if (labelFit.some(b => b.padLeft < 1 || b.padRight < 1)) {
+  throw new Error('a quest turn-in has no cap padding, so its label sits on the frame flourishes: ' +
+    JSON.stringify(labelFit));
+}
+if (labelFit.some(b => b.overflowLeft > 0.6 || b.overflowRight > 0.6)) {
+  throw new Error('a quest turn-in label runs out past the frame\'s flat interior: ' +
+    JSON.stringify(labelFit));
+}
+if (Math.abs(longLabel.height - shortLabel.height) > 0.6) {
+  throw new Error('a longer turn-in label changed the button HEIGHT — the frame must grow ' +
+    `sideways only: ${JSON.stringify({ longLabel, shortLabel })}`);
+}
+if (longLabel.width <= shortLabel.width + 1) {
+  throw new Error('a longer turn-in label did not widen its frame: ' +
+    JSON.stringify({ longLabel, shortLabel }));
+}
+
+await p.locator('.fx-village').screenshot({ path: resolve(OUT, 'village.png') });
+
+/* The Village art is the point of the surface, and a `background-image` that
+   404s still reports a perfectly correct computed style (CLAUDE.md, "a render
+   harness that cannot load its assets looks exactly like broken CSS"). So this
+   measures PAINT: decode each medallion's sprite in the page and require real
+   ink. It also checks the sprite is not stretched — the sources have their own
+   aspect ratios and `background-size: <pct> auto` must preserve them. */
+const villageAudit = await p.evaluate(async () => {
+  const out = [];
+  for (const el of document.querySelectorAll('.iw-village-art[data-iw-village-art="building"], .iw-village-art[data-iw-village-art="house"]')) {
+    // The sprite is on ::before, from --iw-village-sprite. Read the pseudo's
+    // COMPUTED background-image rather than the custom property's raw token
+    // stream, so this also proves the var actually resolved into a paint.
+    const url = /url\("?([^")]+)"?\)/.exec(getComputedStyle(el, '::before').backgroundImage)?.[1];
+    const box = el.getBoundingClientRect();
+    if (!url) { out.push({ url: null, box: [box.width, box.height] }); continue; }
+    const img = new Image();
+    img.src = url;
+    let ok = true;
+    try { await img.decode(); } catch { ok = false; }
+    out.push({ url: url.split('/').pop(), ok, natural: [img.naturalWidth, img.naturalHeight], box: [box.width, box.height] });
+  }
+  return out;
+});
+if (villageAudit.length !== 3) {
+  throw new Error(`expected 3 painted village medallions, measured ${villageAudit.length}`);
+}
+for (const entry of villageAudit) {
+  if (!entry.url || !entry.ok || !entry.natural[0]) {
+    throw new Error(`village sprite failed to load: ${JSON.stringify(entry)}`);
+  }
+  if (entry.natural[0] !== entry.natural[1]) {
+    throw new Error(`village sprite is not the square canvas the import tool writes: ${JSON.stringify(entry)}`);
+  }
+}
+console.log(`village medallions paint real art (${villageAudit.map(e => e.url).join(', ')})  ok`);
 
 await p.locator('[data-iw-inventory-root="1"]').first().screenshot({ path: resolve(OUT, 'inventory-panel.png') });
 await p.locator('[data-iw-header="root"]').screenshot({ path: resolve(OUT, 'header.png') });
@@ -1062,6 +1387,15 @@ const auditResponsive = async width => {
         const rect = el.getBoundingClientRect();
         return rect.width >= (viewportWidth <= 640 ? 108 : 124) && rect.height >= 44;
       }),
+      // The command button now carries the quest rail's action_frame sprite,
+      // and a percentage background-size stretches that cell to exactly fill
+      // its box — so the box has to hold the art's 264x75 (3.52) at EVERY
+      // width, not just the desktop one. This is the check that would catch a
+      // future elastic-width tweak silently squashing the frame on a phone.
+      actionFrameRatios: actionButtons.map(el => {
+        const rect = el.getBoundingClientRect();
+        return +(rect.width / rect.height).toFixed(2);
+      }),
       // Live IdleWorlds ships BOTH command shapes: panels with recipe
       // navigation wrap the nav pair and the action control in one cell, and
       // panels without it expose the bare action button as that cell. Count
@@ -1229,6 +1563,10 @@ const auditResponsive = async width => {
   if (!audit.actionButtonsSized || !audit.navFlanksAction) {
     throw new Error(`skill command rail is malformed at ${width}px: ${JSON.stringify(audit)}`);
   }
+  if (audit.actionFrameRatios.some(r => Math.abs(r - 3.52) > 0.12)) {
+    throw new Error(`skill command button distorts its 3.52 action_frame art at ${width}px: ` +
+      audit.actionFrameRatios.join(','));
+  }
   if (!audit.bareActionCentred) {
     throw new Error(`nav-less skill panels do not centre their action button at ${width}px`);
   }
@@ -1277,8 +1615,12 @@ const auditResponsive = async width => {
   if (!audit.activityFeedsInset || !audit.activityRowsCompact) {
     throw new Error(`activity feeds lost their compact inset treatment at ${width}px: ${JSON.stringify(audit)}`);
   }
-  if (audit.activityProgressHeight < 8 || audit.activityProgressHeight > 14) {
-    throw new Error(`current action progress is not compact at ${width}px: ${audit.activityProgressHeight}px`);
+  // Current Action intentionally shares Zone Control's detailed 18px meter:
+  // enough height for the framed edge, segment marks and traveling current.
+  // Keep a narrow tolerance so responsive overrides cannot collapse it back
+  // into the former plain rail or inflate it into a dominant UI element.
+  if (audit.activityProgressHeight < 16 || audit.activityProgressHeight > 18) {
+    throw new Error(`current action progress lost its detailed meter geometry at ${width}px: ${audit.activityProgressHeight}px`);
   }
   if (!audit.composerGrid || !audit.composerContained || (width <= 430 ? !audit.composerStacked : audit.composerStacked)) {
     throw new Error(`world chat composer is malformed at ${width}px: ${JSON.stringify(audit)}`);
@@ -1288,6 +1630,33 @@ for (const width of RESPONSIVE_WIDTHS) await auditResponsive(width);
 await p.setViewportSize({ width: 390, height: 844 });
 await p.screenshot({ path: resolve(OUT, 'mobile-responsive.png'), fullPage: true });
 await p.locator('.fx-skill-grid').screenshot({ path: resolve(OUT, 'skills-mobile.png') });
+await p.locator('[data-iw-village="addons"]').screenshot({ path: resolve(OUT, 'village-mobile.png') });
+
+/* On a phone the slot card's controls take their own full-width row, so the
+   copy column is the card's full inner width rather than the ~110px a fixed
+   control stack leaves it. Measure it: at 390px the effect list broke one word
+   per line before that rule, and nothing in a computed style says so. */
+const villageMobile = await p.evaluate(() => {
+  const card = document.querySelector('[data-iw-village="slot"][data-iw-village-state="installed"]');
+  const copy = card?.querySelector('[data-iw-village-role="copy"]');
+  const actions = card?.querySelector('[data-iw-village-role="actions"]');
+  if (!card || !copy || !actions) return null;
+  const c = card.getBoundingClientRect();
+  return {
+    copy: Math.round(copy.getBoundingClientRect().width),
+    card: Math.round(c.width),
+    actionsBelowCopy: actions.getBoundingClientRect().top >= copy.getBoundingClientRect().bottom - 1,
+    actionsFullWidth: actions.getBoundingClientRect().width >= c.width - 26,
+  };
+});
+if (!villageMobile) throw new Error('village slot card missing from the mobile pass');
+if (!villageMobile.actionsBelowCopy || !villageMobile.actionsFullWidth) {
+  throw new Error(`village controls did not take their own row at 390px: ${JSON.stringify(villageMobile)}`);
+}
+if (villageMobile.copy < villageMobile.card * 0.6) {
+  throw new Error(`village copy column is squeezed at 390px: ${JSON.stringify(villageMobile)}`);
+}
+console.log(`village slot copy keeps ${villageMobile.copy}px of a ${villageMobile.card}px card at 390px  ok`);
 await p.locator('.fx-activity-panels').screenshot({ path: resolve(OUT, 'activity-panels-mobile.png') });
 
 await p.setViewportSize({ width: 1400, height: 1000 });

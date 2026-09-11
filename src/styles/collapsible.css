@@ -1,0 +1,188 @@
+/* Per-panel collapse. CollapsibleFrames.js owns the button and the two
+ * attributes; this sheet does all the hiding, so no game node ever moves.
+ *
+ * It is concatenated onto ui-system.css, which is injected LAST, so these
+ * rules land after the frame chrome they sit on top of. */
+
+/* The control lives in the frame's own padding band, at the right end of the
+ * heading row, and the head reserves a gutter for it. That gutter is the whole
+ * reason the toggle can be absolutely positioned without landing on the
+ * game's own header controls — Action Log's "View All", World Chat's three
+ * icon tools and Zone Control's button pair all sit at exactly that end of
+ * exactly that row. Reserving space in the head is a presentation change to
+ * one element; appending the button INTO that row instead would have made it
+ * a third item of a `justify-between` flex box and moved the game's controls
+ * to the middle. */
+/* `relative` makes this row the toggle's containing block, which is the whole
+ * point: heading rows here measure anywhere from 30px to 93px tall depending on
+ * the frame family and its title's size, so only the row itself knows where its
+ * own middle is. Its own positioned descendants (the inventory filter's
+ * `div.relative` dropdown anchor, for one) are unaffected — they were already
+ * their own containing block. */
+[data-iw-collapse-head] { position: relative !important; padding-right: 30px !important; }
+
+[data-iw-collapse] {
+  position: absolute !important;
+  top: 50% !important;
+  right: 0 !important;
+  transform: translateY(-50%) !important;
+  z-index: 3 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1px solid var(--iw-th-edge-faint, #4B3D26) !important;
+  border-radius: 3px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.34)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05) !important;
+  color: var(--iw-th-accent, #C9A24D) !important;
+  cursor: pointer !important;
+  line-height: 0 !important;
+  -webkit-appearance: none !important;
+          appearance: none !important;
+}
+
+/* A rotated border corner, the same chevron the skill pager draws — no glyph,
+ * so it needs no font and cannot be picked up by a text-matching classifier. */
+[data-iw-collapse]::after {
+  content: "" !important;
+  width: 6px !important;
+  height: 6px !important;
+  border-right: 1.5px solid currentColor !important;
+  border-bottom: 1.5px solid currentColor !important;
+  /* Expanded points UP — "fold this away" — and collapsed points DOWN, the
+   * accordion convention: the chevron shows what the click will do, not what
+   * the panel is already doing. */
+  transform: translateY(1px) rotate(-135deg) !important;
+  transition: transform .16s ease !important;
+}
+[data-iw-collapse][aria-expanded="false"]::after {
+  transform: translateY(-2px) rotate(45deg) !important;
+}
+
+[data-iw-collapse]:hover {
+  border-color: var(--iw-th-brass, #8A6A2C) !important;
+  box-shadow: inset 0 0 9px -3px var(--iw-th-cta, #D8791F) !important;
+}
+[data-iw-collapse]:focus-visible {
+  outline: 2px solid var(--iw-th-accent, #C9A24D) !important;
+  outline-offset: 2px !important;
+}
+
+/* The fold itself: every direct child goes except the heading row and the
+ * control. `> *` and not a descendant sweep, so nothing inside the header is
+ * touched and the game keeps every node it painted there. */
+[data-iw-collapsed="1"] > *:not([data-iw-collapse]):not([data-iw-collapse-head]) {
+  display: none !important;
+}
+/* ── The collapsed bar ────────────────────────────────────────────────
+   Every panel folds to the SAME bar. Left alone they do not: measured on the
+   live page the heading rows run from one line to three (Skill Actions carries
+   "Daily XP Boost …" and "Resets in 03:50"; World Chat carries "Showing the
+   latest 100 messages"), the game's own header controls are 30-34px tall, and
+   the titles arrive in three different treatments — Cinzel at
+   `clamp(17px,1.8vw,21px)`, the Action Log's label in the button's own face,
+   and Inventory's uppercased variant. So a collapsed panel keeps ONE line: the
+   title, restyled to a single fixed treatment, plus the toggle.
+
+   Everything else in the row goes with the fold — the boost timer, the
+   installed-slots count, the XP/hr readout, and the game's own header controls
+   (Inventory's tools, World Chat's icons, Current Action's cancel). That is
+   the price of a uniform thin bar and it is entirely reversible: expanding the
+   panel brings all of it straight back. */
+/* Re-point the TOKEN rather than fight the padding declaration. The frame
+   rule in ui-system.css is `:is(A,B,C):not(:has(:is(A,B,C)))` — (0,4,0) with
+   !important — so overriding its `padding` needs a specificity war, while its
+   value comes from these two variables and setting those needs none. */
+[data-iw-collapsed="1"] {
+  --iw-frame-pad-y: 7px;
+  --iw-frame-pad-mobile-y: 7px;
+  /* The horizontal pair is levelled for the same reason: an activity panel
+     runs 20px and a section frame 22px, which put the toggle at two different
+     distances from the panel's edge down a column of folded bars. */
+  --iw-frame-pad-x: 22px;
+  --iw-frame-pad-mobile-x: 16px;
+}
+/* The surviving flourish reaches ~32px in from the frame's own left edge,
+ * which is 10px past the frame's `--iw-frame-pad-x` — so the title needs its
+ * own indent to sit clear of the artwork rather than up against it. This is
+ * padding on the HEAD, not a smaller frame padding, so the bar's left rule and
+ * the expanded panel's content stay on the same line as every other panel. */
+[data-iw-collapsed="1"] [data-iw-collapse-head] {
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 22px !important;
+  gap: 0 !important;
+}
+/* Keep the path to the title and the control; drop the rest of the row. The
+   path is marked in JS (CollapsibleFrames.markSpine) because the title sits at
+   a different depth in every panel, and hiding a WRAPPER would hide the title
+   inside it. */
+[data-iw-collapsed="1"] [data-iw-collapse-head] *:not([data-iw-collapse-spine]):not([data-iw-collapse]) {
+  display: none !important;
+}
+[data-iw-collapsed="1"] [data-iw-collapse-spine] {
+  display: block !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+/* The one treatment. `line-height` is a fixed px, not a ratio, because it is
+   what makes every collapsed bar exactly as tall as every other. */
+[data-iw-collapsed="1"] [data-iw-collapse-title] {
+  font-family: var(--iw-font-head, 'Cinzel', Georgia, serif) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+  letter-spacing: .08em !important;
+  text-transform: none !important;
+  text-align: left !important;
+  color: var(--iw-text-hi) !important;
+  text-shadow: 0 1px 0 #000 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* One flourish, top left.
+ *
+ * ui-system.css hands the collapsed state over here (its filigree selector
+ * carries `:not([data-iw-collapsed="1"])`), so this rule OWNS the ornament on
+ * a folded panel and redeclares it whole rather than trying to override two
+ * properties of a (0,4,0) `!important` rule from lower specificity.
+ *
+ * The corner filigree is one sheet sliced at 50%: each corner paints where two
+ * border sides meet, and the edges between them are empty by construction. So
+ * zeroing the RIGHT and BOTTOM widths leaves the top-left quadrant as the only
+ * corner with any area to paint in — no second asset, no second sheet. It also
+ * solves the size problem on its own terms: at the full 34px slice, four
+ * corners of a 34px-tall bar overlap into an unreadable band. */
+[data-iw-collapsed="1"]::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: -3px -1px !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  border-style: solid !important;
+  /* The slice keeps the art's NATIVE 32x34, not a squashed 32x15. The source
+     quadrant is 88x95 logical, so a 32x15 window stretches it to more than
+     twice its width-for-height and the flourish renders as a smear — visible
+     in a live capture as "the corner filigree is squashed somehow". With three
+     corners gone there is nothing left to overlap, so there is no reason to
+     shrink it: 34px fits the 40px the ::after box gets from `inset: -3px`. */
+  border-width: 34px 0 0 32px !important;
+  border-color: transparent !important;
+  border-image: var(--iw-corner-filigree) 50% / 34px 0 0 32px / 0 stretch !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-iw-collapse]::after { transition: none !important; }
+}

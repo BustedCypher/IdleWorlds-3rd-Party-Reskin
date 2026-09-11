@@ -4,6 +4,7 @@
     "width": 860,
     "height": 463
   },
+  "pixelRatio": 2,
   "themes": {
     "verdant": {
       "file": "skills_ui_atlas_theme_verdant.webp",

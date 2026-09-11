@@ -1,0 +1,945 @@
+{
+  "route": "/",
+  "viewport": {
+    "w": 1188,
+    "h": 1156
+  },
+  "breakpoint": {
+    "xlActive": false,
+    "note": "narrow side of 1280"
+  },
+  "counts": {
+    "leafPanels": 17,
+    "renderedLeafPanels": 10,
+    "unkeyedPanels": 3,
+    "containers": 3,
+    "containersHonouringOrder": 3
+  },
+  "groups": [
+    {
+      "container": {
+        "el": "div.mx-auto.flex.w-full.max-w-[1380px].flex-col.gap-3.overflow-x-hidden.px-2.py-3.sm:px-4",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 6,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "mx-auto",
+          "flex",
+          "w-full",
+          "max-w-[1380px]",
+          "flex-col",
+          "gap-3",
+          "overflow-x-hidden",
+          "px-2",
+          "py-3",
+          "sm:px-4",
+          "sm:py-5"
+        ]
+      },
+      "variant": "unclassified",
+      "renderedGroup": true,
+      "panels": [
+        {
+          "key": "title:bustedcypher",
+          "title": "BustedCypher",
+          "y": 20,
+          "itemEl": "header.panel.p-3.5.sm:p-4",
+          "order": "0"
+        },
+        {
+          "key": null,
+          "title": null,
+          "y": 399,
+          "itemEl": "div.panel.flex.flex-wrap.gap-2.p-2",
+          "order": "0"
+        },
+        {
+          "key": null,
+          "title": null,
+          "y": 546,
+          "itemEl": "div.panel.flex.flex-col.gap-2.p-3.text-xs.text-white/70.sm:flex-row.sm:items-center.sm:justify-between",
+          "order": "0"
+        }
+      ]
+    },
+    {
+      "container": {
+        "el": "section.grid.gap-3.xl:hidden",
+        "display": "grid",
+        "flexDirection": "row",
+        "gridTemplateColumns": "1149.83px",
+        "gridTemplateRows": "1077.52px 47.2064px 202.083px 35.2083px 35.2083px 35.2083px 1039.15px 432.633px",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 8,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "grid",
+          "gap-3",
+          "xl:hidden"
+        ]
+      },
+      "variant": "narrow (xl:hidden stack)",
+      "renderedGroup": true,
+      "panels": [
+        {
+          "key": "title:skill actions",
+          "title": "Skill Actions",
+          "y": 607,
+          "itemEl": "div.panel.p-3.5.fs-skills-section-frame",
+          "order": "0"
+        },
+        {
+          "key": "panel:current-action",
+          "title": "Current Action",
+          "y": 1755,
+          "itemEl": "div#current-action-panel.panel.scroll-mt-3.p-3.5.md:scroll-mt-4",
+          "order": "0"
+        },
+        {
+          "key": "panel:action-log",
+          "title": "Action Logview all",
+          "y": 1970,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        },
+        {
+          "key": "title:inventory",
+          "title": "Inventory",
+          "y": 2017,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        },
+        {
+          "key": "title:quests",
+          "title": "Quests",
+          "y": 2064,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        },
+        {
+          "key": "title:world bosses",
+          "title": "World Bosses",
+          "y": 2111,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        },
+        {
+          "key": "panel:world-chat",
+          "title": "World Chat",
+          "y": 3162,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        }
+      ]
+    },
+    {
+      "container": {
+        "el": "div.flex.min-w-0.flex-col.gap-3",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 4,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "flex",
+          "min-w-0",
+          "flex-col",
+          "gap-3"
+        ]
+      },
+      "variant": "wide (hidden xl:grid)",
+      "renderedGroup": false,
+      "panels": [
+        {
+          "key": "title:skill actions",
+          "title": "Skill Actions",
+          "y": 0,
+          "itemEl": "div.panel.p-3.5.fs-skills-section-frame",
+          "order": "0"
+        },
+        {
+          "key": "title:current action",
+          "title": "Current Action",
+          "y": 0,
+          "itemEl": "div#current-action-panel.panel.scroll-mt-3.p-3.5.md:scroll-mt-4",
+          "order": "0"
+        },
+        {
+          "key": null,
+          "title": null,
+          "y": 0,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        },
+        {
+          "key": "title:world chat",
+          "title": "World Chat",
+          "y": 0,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        },
+        {
+          "key": "title:inventory",
+          "title": "Inventory",
+          "y": 0,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        },
+        {
+          "key": "title:quests",
+          "title": "Quests",
+          "y": 0,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        },
+        {
+          "key": "title:world bosses",
+          "title": "World Bosses",
+          "y": 0,
+          "itemEl": "div.panel.p-3.5",
+          "order": "0"
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "key": "title:bustedcypher",
+      "title": "BustedCypher",
+      "el": "header.panel.p-3.5.sm:p-4",
+      "rendered": true,
+      "variant": "unclassified",
+      "rect": {
+        "x": 16,
+        "y": 20,
+        "w": 1150,
+        "h": 367
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "header.panel.p-3.5.sm:p-4",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.mx-auto.flex.w-full.max-w-[1380px].flex-col.gap-3.overflow-x-hidden.px-2.py-3.sm:px-4",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 6,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "mx-auto",
+          "flex",
+          "w-full",
+          "max-w-[1380px]",
+          "flex-col",
+          "gap-3",
+          "overflow-x-hidden",
+          "px-2",
+          "py-3",
+          "sm:px-4",
+          "sm:py-5"
+        ]
+      },
+      "skinAttrs": [
+        "iwHeader",
+        "iwZone"
+      ]
+    },
+    {
+      "key": null,
+      "title": null,
+      "el": "div.panel.flex.flex-wrap.gap-2.p-2",
+      "rendered": true,
+      "variant": "unclassified",
+      "rect": {
+        "x": 16,
+        "y": 399,
+        "w": 1150,
+        "h": 85
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.flex.flex-wrap.gap-2.p-2",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.mx-auto.flex.w-full.max-w-[1380px].flex-col.gap-3.overflow-x-hidden.px-2.py-3.sm:px-4",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 6,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "mx-auto",
+          "flex",
+          "w-full",
+          "max-w-[1380px]",
+          "flex-col",
+          "gap-3",
+          "overflow-x-hidden",
+          "px-2",
+          "py-3",
+          "sm:px-4",
+          "sm:py-5"
+        ]
+      },
+      "skinAttrs": [
+        "iwUi"
+      ]
+    },
+    {
+      "key": null,
+      "title": null,
+      "el": "div.panel.flex.flex-col.gap-2.p-3.text-xs.text-white/70.sm:flex-row.sm:items-center.sm:justify-between",
+      "rendered": true,
+      "variant": "unclassified",
+      "rect": {
+        "x": 16,
+        "y": 546,
+        "w": 1150,
+        "h": 49
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.flex.flex-col.gap-2.p-3.text-xs.text-white/70.sm:flex-row.sm:items-center.sm:justify-between",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.mx-auto.flex.w-full.max-w-[1380px].flex-col.gap-3.overflow-x-hidden.px-2.py-3.sm:px-4",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 6,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "mx-auto",
+          "flex",
+          "w-full",
+          "max-w-[1380px]",
+          "flex-col",
+          "gap-3",
+          "overflow-x-hidden",
+          "px-2",
+          "py-3",
+          "sm:px-4",
+          "sm:py-5"
+        ]
+      },
+      "skinAttrs": [
+        "iwUi",
+        "iwHeader"
+      ]
+    },
+    {
+      "key": "title:skill actions",
+      "title": "Skill Actions",
+      "el": "div.panel.p-3.5.fs-skills-section-frame",
+      "rendered": true,
+      "variant": "narrow (xl:hidden stack)",
+      "rect": {
+        "x": 16,
+        "y": 607,
+        "w": 1150,
+        "h": 1078
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5.fs-skills-section-frame",
+      "itemOrder": "0",
+      "container": {
+        "el": "section.grid.gap-3.xl:hidden",
+        "display": "grid",
+        "flexDirection": "row",
+        "gridTemplateColumns": "1149.83px",
+        "gridTemplateRows": "1077.52px 47.2064px 202.083px 35.2083px 35.2083px 35.2083px 1039.15px 432.633px",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 8,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "grid",
+          "gap-3",
+          "xl:hidden"
+        ]
+      },
+      "skinAttrs": [
+        "iwSkillsUiReady",
+        "iwUi"
+      ]
+    },
+    {
+      "key": "panel:current-action",
+      "title": "Current Action",
+      "el": "div#current-action-panel.panel.scroll-mt-3.p-3.5.md:scroll-mt-4",
+      "rendered": true,
+      "variant": "narrow (xl:hidden stack)",
+      "rect": {
+        "x": 16,
+        "y": 1755,
+        "w": 1150,
+        "h": 202
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div#current-action-panel.panel.scroll-mt-3.p-3.5.md:scroll-mt-4",
+      "itemOrder": "0",
+      "container": {
+        "el": "section.grid.gap-3.xl:hidden",
+        "display": "grid",
+        "flexDirection": "row",
+        "gridTemplateColumns": "1149.83px",
+        "gridTemplateRows": "1077.52px 47.2064px 202.083px 35.2083px 35.2083px 35.2083px 1039.15px 432.633px",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 8,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "grid",
+          "gap-3",
+          "xl:hidden"
+        ]
+      },
+      "skinAttrs": [
+        "iwUi",
+        "iwPanel"
+      ]
+    },
+    {
+      "key": "panel:action-log",
+      "title": "Action Logview all",
+      "el": "div.panel.p-3.5",
+      "rendered": true,
+      "variant": "narrow (xl:hidden stack)",
+      "rect": {
+        "x": 16,
+        "y": 1970,
+        "w": 1150,
+        "h": 35
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "section.grid.gap-3.xl:hidden",
+        "display": "grid",
+        "flexDirection": "row",
+        "gridTemplateColumns": "1149.83px",
+        "gridTemplateRows": "1077.52px 47.2064px 202.083px 35.2083px 35.2083px 35.2083px 1039.15px 432.633px",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 8,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "grid",
+          "gap-3",
+          "xl:hidden"
+        ]
+      },
+      "skinAttrs": [
+        "iwUi",
+        "iwPanel",
+        "iwCollapsed"
+      ]
+    },
+    {
+      "key": "title:inventory",
+      "title": "Inventory",
+      "el": "div.panel.p-3.5",
+      "rendered": true,
+      "variant": "narrow (xl:hidden stack)",
+      "rect": {
+        "x": 16,
+        "y": 2017,
+        "w": 1150,
+        "h": 35
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "section.grid.gap-3.xl:hidden",
+        "display": "grid",
+        "flexDirection": "row",
+        "gridTemplateColumns": "1149.83px",
+        "gridTemplateRows": "1077.52px 47.2064px 202.083px 35.2083px 35.2083px 35.2083px 1039.15px 432.633px",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 8,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "grid",
+          "gap-3",
+          "xl:hidden"
+        ]
+      },
+      "skinAttrs": [
+        "iwInventoryRoot",
+        "iwCollapsed",
+        "iwUi"
+      ]
+    },
+    {
+      "key": "title:quests",
+      "title": "Quests",
+      "el": "div.panel.p-3.5",
+      "rendered": true,
+      "variant": "narrow (xl:hidden stack)",
+      "rect": {
+        "x": 16,
+        "y": 2064,
+        "w": 1150,
+        "h": 35
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "section.grid.gap-3.xl:hidden",
+        "display": "grid",
+        "flexDirection": "row",
+        "gridTemplateColumns": "1149.83px",
+        "gridTemplateRows": "1077.52px 47.2064px 202.083px 35.2083px 35.2083px 35.2083px 1039.15px 432.633px",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 8,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "grid",
+          "gap-3",
+          "xl:hidden"
+        ]
+      },
+      "skinAttrs": [
+        "iwCollapsed",
+        "iwUi"
+      ]
+    },
+    {
+      "key": "title:world bosses",
+      "title": "World Bosses",
+      "el": "div.panel.p-3.5",
+      "rendered": true,
+      "variant": "narrow (xl:hidden stack)",
+      "rect": {
+        "x": 16,
+        "y": 2111,
+        "w": 1150,
+        "h": 1039
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "section.grid.gap-3.xl:hidden",
+        "display": "grid",
+        "flexDirection": "row",
+        "gridTemplateColumns": "1149.83px",
+        "gridTemplateRows": "1077.52px 47.2064px 202.083px 35.2083px 35.2083px 35.2083px 1039.15px 432.633px",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 8,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "grid",
+          "gap-3",
+          "xl:hidden"
+        ]
+      },
+      "skinAttrs": [
+        "iwUi"
+      ]
+    },
+    {
+      "key": "panel:world-chat",
+      "title": "World Chat",
+      "el": "div.panel.p-3.5",
+      "rendered": true,
+      "variant": "narrow (xl:hidden stack)",
+      "rect": {
+        "x": 16,
+        "y": 3162,
+        "w": 1150,
+        "h": 433
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "section.grid.gap-3.xl:hidden",
+        "display": "grid",
+        "flexDirection": "row",
+        "gridTemplateColumns": "1149.83px",
+        "gridTemplateRows": "1077.52px 47.2064px 202.083px 35.2083px 35.2083px 35.2083px 1039.15px 432.633px",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 8,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "grid",
+          "gap-3",
+          "xl:hidden"
+        ]
+      },
+      "skinAttrs": [
+        "iwUi",
+        "iwPanel"
+      ]
+    },
+    {
+      "key": "title:skill actions",
+      "title": "Skill Actions",
+      "el": "div.panel.p-3.5.fs-skills-section-frame",
+      "rendered": false,
+      "variant": "wide (hidden xl:grid)",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5.fs-skills-section-frame",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.flex.min-w-0.flex-col.gap-3",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 4,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "flex",
+          "min-w-0",
+          "flex-col",
+          "gap-3"
+        ]
+      },
+      "skinAttrs": [
+        "iwSkillsUiReady"
+      ]
+    },
+    {
+      "key": "title:current action",
+      "title": "Current Action",
+      "el": "div#current-action-panel.panel.scroll-mt-3.p-3.5.md:scroll-mt-4",
+      "rendered": false,
+      "variant": "wide (hidden xl:grid)",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div#current-action-panel.panel.scroll-mt-3.p-3.5.md:scroll-mt-4",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.flex.min-w-0.flex-col.gap-3",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 4,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "flex",
+          "min-w-0",
+          "flex-col",
+          "gap-3"
+        ]
+      },
+      "skinAttrs": []
+    },
+    {
+      "key": null,
+      "title": null,
+      "el": "div.panel.p-3.5",
+      "rendered": false,
+      "variant": "wide (hidden xl:grid)",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.flex.min-w-0.flex-col.gap-3",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 4,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "flex",
+          "min-w-0",
+          "flex-col",
+          "gap-3"
+        ]
+      },
+      "skinAttrs": []
+    },
+    {
+      "key": "title:world chat",
+      "title": "World Chat",
+      "el": "div.panel.p-3.5",
+      "rendered": false,
+      "variant": "wide (hidden xl:grid)",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.flex.min-w-0.flex-col.gap-3",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 4,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "flex",
+          "min-w-0",
+          "flex-col",
+          "gap-3"
+        ]
+      },
+      "skinAttrs": []
+    },
+    {
+      "key": "title:inventory",
+      "title": "Inventory",
+      "el": "div.panel.p-3.5",
+      "rendered": false,
+      "variant": "wide (hidden xl:grid)",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.flex.min-w-0.flex-col.gap-3",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 3,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "flex",
+          "min-w-0",
+          "flex-col",
+          "gap-3"
+        ]
+      },
+      "skinAttrs": [
+        "iwInventoryRoot",
+        "iwCollapsed"
+      ]
+    },
+    {
+      "key": "title:quests",
+      "title": "Quests",
+      "el": "div.panel.p-3.5",
+      "rendered": false,
+      "variant": "wide (hidden xl:grid)",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.flex.min-w-0.flex-col.gap-3",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 3,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "flex",
+          "min-w-0",
+          "flex-col",
+          "gap-3"
+        ]
+      },
+      "skinAttrs": []
+    },
+    {
+      "key": "title:world bosses",
+      "title": "World Bosses",
+      "el": "div.panel.p-3.5",
+      "rendered": false,
+      "variant": "wide (hidden xl:grid)",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      },
+      "isDirectChildOfContainer": true,
+      "itemEl": "div.panel.p-3.5",
+      "itemOrder": "0",
+      "container": {
+        "el": "div.flex.min-w-0.flex-col.gap-3",
+        "display": "flex",
+        "flexDirection": "column",
+        "gridTemplateColumns": "none",
+        "gridTemplateRows": "none",
+        "gridAutoFlow": "row",
+        "gap": "12px",
+        "alignItems": "normal",
+        "position": "static",
+        "childCount": 3,
+        "honoursOrder": true,
+        "spacedByMargins": false,
+        "needsDisplayFlexFirst": false,
+        "classes": [
+          "flex",
+          "min-w-0",
+          "flex-col",
+          "gap-3"
+        ]
+      },
+      "skinAttrs": []
+    }
+  ],
+  "selfTest": {
+    "ran": true,
+    "container": "section.grid.gap-3.xl:hidden",
+    "movedItem": "div.panel.p-3.5",
+    "before": {
+      "movedItemY": 3162,
+      "firstItemRect": {
+        "x": 16,
+        "y": 607,
+        "w": 1150,
+        "h": 1078
+      }
+    },
+    "orderAlone": {
+      "movedItemY": 607,
+      "moved": true
+    },
+    "restored": {
+      "movedItemY": 3162,
+      "backWhereItStarted": true
+    }
+  }
+}

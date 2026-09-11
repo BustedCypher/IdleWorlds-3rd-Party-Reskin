@@ -75,6 +75,10 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
           <button id="zone-next">Next Zone</button>
         </div>
       </div>
+      <!-- The panel COLUMN, a sibling of the header/nav/zone-bar chrome, the
+           way the live page lays it out. PanelOrder claims this and not the
+           shell, which it recognises by the shell's own header child. -->
+      <div class="iw-test-column" style="display:flex;flex-direction:column;gap:12px">
       <section id="current-action-panel">
         <header id="current-action-header"><h2>Current Action</h2><div><button id="cancel-current" aria-label="Cancel current action">×</button><span>3s</span></div></header>
         <div><span>⚒</span><strong>Prospect Moonsteel Ore</strong></div>
@@ -267,6 +271,35 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
           <div><p>🔴 Red Team controls Zone 8</p><p>Protected for 3h 44m</p><p>Last battle participants</p></div>
         </div>
       </div>
+      <!-- The dashboard's Skill Actions card. VillageScene anchors its own
+           frame directly after this panel, so the fixture needs it to exist at
+           all; the frame it appends is the skin's ONLY added surface here, and
+           rule 3 says the kill switch has to take it away again. -->
+      <div class="panel p-3.5" id="skill-actions-panel"><div class="mb-3 flex items-center justify-between"><h2>Skill Actions</h2></div>
+        <p>Pick a skill above to begin.</p>
+      </div>
+      <div class="panel p-3.5" id="village-housing-panel"><div class="mb-2 flex items-center justify-between"><h2>Village</h2></div>
+        <div class="compact-panel p-3" id="village-house">
+          <p>🏠 Manor</p>
+          <p>Current tier: 4 • Base actions take 6s</p>
+          <p>Salvage Material owned: 12,004</p>
+          <button id="village-upgrade">Upgrade Housing</button>
+        </div>
+      </div>
+      <div class="panel p-3.5" id="village-addons-panel"><div class="mb-2 flex items-center justify-between"><h2>🏗️ Village Add-ons</h2></div>
+        <p class="mb-3">4 slots available (1 per housing tier). Only one of each building type per village.</p>
+        <div class="space-y-2">
+          <div class="compact-panel p-2.5" id="village-slot-1"><div class="flex items-center justify-between gap-2">
+            <div class="min-w-0"><p>Slot 1</p><p>Voidiron Archive</p><p>+4 ATK • +2 smithing level</p></div>
+            <div class="flex shrink-0 flex-col gap-1"><button id="village-destroy">Destroy</button><button>Uninstall (100k)</button></div>
+          </div></div>
+          <div class="compact-panel p-2.5" id="village-slot-2"><div class="flex items-center justify-between gap-2">
+            <div class="min-w-0"><p>Slot 2</p><p>Empty slot</p></div>
+            <button class="button-primary">Install</button>
+          </div></div>
+        </div>
+      </div>
+      </div>
       <div id="unclassified-area"><div><span><em id="plain-item-text">Found an Iron Sword in the wilderness.</em></span></div></div>
       <button id="native-item-button"><span><strong id="button-item-text">Iron Sword</strong></span></button>
     </div>
@@ -400,8 +433,19 @@ check('bundle boots without throwing', !bootThrew, bootThrew?.message);
 
 await waitFor(() => documentReady());
 
-const thirdParty = networkCalls.filter(u => !/^chrome-extension:/.test(u) && !/^https:\/\/idleworlds\.com\//.test(u));
+/* "Third party" means another ORIGIN, so resolve first: VillageScene reads the
+   game's own `/api/player` with a RELATIVE path, and a string test on the raw
+   argument calls that off-site. Resolving against the document keeps the check
+   answering the question it is actually asking. */
+const thirdParty = networkCalls.filter(u => {
+  if (/^chrome-extension:/.test(u)) return false;
+  try { return new URL(u, window.location.href).origin !== 'https://idleworlds.com'; }
+  catch { return true; }
+});
 check('no third-party network requests', thirdParty.length === 0, thirdParty.join(', '));
+check('the village read goes to the game\'s own player endpoint',
+  networkCalls.some(u => /^\/api\/player\?section=dashboard&scope=core$/.test(u)),
+  networkCalls.filter(u => u.includes('/api/')).join(', ') || '(no api read)');
 check('atlas assets fetched from the extension bundle',
   networkCalls.some(u => u.startsWith('chrome-extension://')),
   networkCalls.join(', '));
@@ -482,8 +526,8 @@ check('identity completion label is rounded for reading, not printed raw',
   panel.querySelector('.fs-skill-identity-percent')?.textContent || 'missing');
 check('approved layout adds a Base: plaque from the live XP datum',
   panel.querySelector('.fs-skill-base-exp')?.textContent === 'Base: 8');
-check('approved layout stores emoji-free visible title and identity text',
-  panel.querySelector('[data-iw-skill-role="identity"]')?.dataset.iwCleanText === 'Mine' &&
+check('identity shows the full discipline name, not the abbreviated one',
+  panel.querySelector('[data-iw-skill-role="identity"]')?.dataset.iwCleanText === 'Mining' &&
   panel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Mine Copper Ore');
 check('skill renderer actively overrides native inline width while enabled', skillAction.style.width === '155px', skillAction.style.cssText);
 check('background painter actively overrides native navy while enabled',
@@ -500,6 +544,132 @@ const navRail = window.document.querySelector('[data-iw-ui="main-nav"]');
 check('every nav tab in the rail is classified',
   [...navRail.querySelectorAll('button')].every(b => b.dataset.iwUi === 'nav-tab'),
   [...navRail.querySelectorAll('button')].map(b => b.textContent + '=' + b.dataset.iwUi).join(' '));
+
+// The skin's own appended outbound link. It wears `nav-tab` for the rail's
+// plate but must never be mistaken for a ROUTE tab: `applyMainNavState` only
+// iterates the resolved five, so it can never take `data-iw-tab`/`-state`, and
+// "toolkit" is outside NAV_LABELS so `countNavTabsIn` does not count it -- if
+// it did, the resolution cache would invalidate on our OWN append and re-run a
+// whole-document scan every flush.
+const toolkitLinks = [...navRail.querySelectorAll('[data-iw-nav-link="toolkit"]')];
+/* Panel arrangement. Asserting the module actually CLAIMED this page is the
+   half that makes the teardown checks below capable of failing: a container it
+   never claimed leaves nothing to remove. */
+const orderedPanels = [...window.document.querySelectorAll('[data-iw-order]')];
+check('panels carry an arrangement slot',
+  orderedPanels.length >= 3 &&
+  orderedPanels.every(el => /^\d+$/.test(el.getAttribute('data-iw-order'))),
+  `n=${orderedPanels.length}`);
+/* Slots are unique WITHIN a container, not across the page: each claimed
+   container numbers its own children from zero. */
+const slotGroups = new Map();
+for (const el of orderedPanels) {
+  const parent = el.parentElement;
+  if (!slotGroups.has(parent)) slotGroups.set(parent, []);
+  slotGroups.get(parent).push(el.getAttribute('data-iw-order'));
+}
+check('the container holding them is marked, and the slots are unique within it',
+  // `[].every()` is vacuously TRUE, so the length test is what stops this
+  // passing on a page where the module claimed nothing at all.
+  orderedPanels.length >= 3 &&
+  orderedPanels.every(el => el.parentElement?.getAttribute('data-iw-order-container') === '1') &&
+  [...slotGroups.values()].every(slots => new Set(slots).size === slots.length),
+  [...slotGroups.values()].map(v => v.join('/')).join(' | '));
+check('rearrange and reset controls appended to the rail, exactly once each',
+  window.document.querySelectorAll('[data-iw-nav-link="rearrange"]').length === 1 &&
+  window.document.querySelectorAll('[data-iw-nav-link="order-reset"]').length === 1);
+/* The grab surface exists only inside the mode, so normal play carries no
+   extra control and no extra tab stop. */
+check('no grab handle during normal play',
+  window.document.querySelectorAll('[data-iw-order-handle]').length === 0);
+
+check('toolkit link appended to the rail, exactly once, and never a route tab',
+  toolkitLinks.length === 1 && toolkitLinks[0].parentElement === navRail &&
+  toolkitLinks[0].tagName === 'A' && toolkitLinks[0].dataset.iwUi === 'nav-tab' &&
+  !toolkitLinks[0].dataset.iwTab && !toolkitLinks[0].dataset.iwState,
+  `n=${toolkitLinks.length} tab=${toolkitLinks[0]?.dataset.iwTab} state=${toolkitLinks[0]?.dataset.iwState}`);
+/* Per-panel collapse. The toggle is the skin's own control on a game node, so
+   it has to be an APPEND that folds through CSS and nothing else: no game node
+   moves, and the heading row survives so a folded panel still says which panel
+   it is (rule 5). Storage is stubbed in this harness, which is what lets the
+   choice be checked for persistence at all. */
+{
+  const collapses = [...window.document.querySelectorAll('[data-iw-collapse]')];
+  const keyOf = button => {
+    // The toggle sits inside the heading ROW so it can centre on it; the frame
+    // it folds is that row's parent.
+    const frame = button.parentElement.parentElement;
+    if (frame.dataset.iwPanel) return `panel:${frame.dataset.iwPanel}`;
+    const title = frame.querySelector('[data-iw-ui="section-title"]')
+      || frame.querySelector('[role="heading"]') || frame.querySelector('h1,h2,h3,h4');
+    return `title:${String(title?.textContent || '').replace(/\s+/g, ' ').trim()
+      .replace(/^[^A-Za-z0-9]+/, '').toLowerCase()}`;
+  };
+  const keys = new Set(collapses.map(keyOf));
+  // Inventory is deliberately absent from this list: THIS fixture puts its
+  // "Inventory" heading OUTSIDE the panel (the shape that exercises the
+  // aria-label root resolution), while the live app keeps it inside the card's
+  // own header row beside the tool buttons. tests/collapsible-frames.test.mjs
+  // carries the live shape and covers it there.
+  check('every parent frame gets a collapse control',
+    ['title:quests', 'title:world bosses', 'panel:current-action',
+      'panel:action-log', 'panel:world-chat'].every(k => keys.has(k)),
+    [...keys].join(', ') || '(none)');
+  // Per FRAME, not per key: this fixture carries the page's mirror duplicates,
+  // and two copies of one panel legitimately share a key — collapsing a panel
+  // should fold both copies of it.
+  check('no frame gets two collapse controls',
+    collapses.every(el => el.parentElement.parentElement
+      .querySelectorAll('[data-iw-collapse]').length === 1),
+    `${collapses.length} controls`);
+  check('the control is a button the skin appended, never a reparented node',
+    collapses.every(el => el.tagName === 'BUTTON'
+      && el.parentElement.dataset.iwCollapseHead === '1'));
+
+  const quests = collapses.find(el => keyOf(el) === 'title:quests');
+  const questFrame = quests.parentElement.parentElement;
+  const questChildren = questFrame.children.length;
+  quests.click();
+  check('clicking folds that frame and nothing else',
+    questFrame.dataset.iwCollapsed === '1'
+    && collapses.filter(el => keyOf(el) !== 'title:quests')
+      .every(el => keyOf(el) && el.parentElement.parentElement.dataset.iwCollapsed !== '1'));
+  check('the folded frame keeps its heading row marked',
+    !!questFrame.querySelector(':scope > [data-iw-collapse-head]'));
+  check('the fold hides content through CSS only — every child is still there',
+    questFrame.children.length === questChildren, `${questChildren} before`);
+  check('the control reports the new state to assistive tech',
+    quests.getAttribute('aria-expanded') === 'false'
+    && /^Expand /.test(quests.getAttribute('aria-label') || ''),
+    quests.getAttribute('aria-label'));
+  check('the choice is written to extension-private storage',
+    storage.get('iw-collapsed-frames')?.['title:quests'] === true,
+    JSON.stringify(storage.get('iw-collapsed-frames') || null));
+  quests.click();
+  check('clicking again unfolds it', questFrame.dataset.iwCollapsed === undefined);
+  check('and the storage record is dropped with it',
+    storage.get('iw-collapsed-frames')?.['title:quests'] === undefined,
+    JSON.stringify(storage.get('iw-collapsed-frames') || null));
+}
+
+/* Rule 2's other append: the scene is the skin's OWN element, placed directly
+   after the Skill Actions panel and never reparenting anything the game
+   wrote. Without this the teardown check below could pass on a scene that was
+   never mounted in the first place. */
+{
+  const scene = window.document.querySelector('[data-iw-village-scene]');
+  check('village scene mounted directly below the Skill Actions panel',
+    !!scene && window.document.getElementById('skill-actions-panel')?.nextElementSibling === scene,
+    scene ? 'wrong position' : 'not mounted');
+  check('village scene keeps its own namespace and does not touch the panel',
+    !!scene && scene.dataset.iwVillageScene === '1'
+    && !window.document.getElementById('skill-actions-panel')?.hasAttribute('data-iw-village-scene'));
+}
+check('toolkit link points off-site and opens in a new tab',
+  toolkitLinks[0]?.getAttribute('href') === 'https://idleworldstoolkit.com' &&
+  toolkitLinks[0]?.getAttribute('target') === '_blank' &&
+  /noopener/.test(toolkitLinks[0]?.getAttribute('rel') || ''),
+  `${toolkitLinks[0]?.getAttribute('href')} ${toolkitLinks[0]?.getAttribute('target')} ${toolkitLinks[0]?.getAttribute('rel')}`);
 const lateTab = window.document.createElement('button');
 lateTab.id = 'late-nav-tab';
 lateTab.textContent = '⚔️ Dungeon 🔒';
@@ -660,7 +830,7 @@ check('top header receives the Option 1 semantic layout',
   window.document.getElementById('status-grid')?.getAttribute('data-iw-header') === 'status-grid');
 // Per-zone frame theme: the fixture sits in "Zone 19: Eternium Verge", which
 // zone-theme-map.json groups as `voidborn`. HeaderRenderer.applyZoneTheme()
-// must tag <html> and point both frame variables at that theme's assets.
+// must tag <html> and point all three artwork variables at that theme's assets.
 // Negative control: break the zoneThemes lookup or the resolver and the tag
 // falls back to "default" with no inline vars.
 {
@@ -668,10 +838,11 @@ check('top header receives the Option 1 semantic layout',
   check('current zone resolves its frame theme onto <html>',
     htmlEl.dataset.iwZoneTheme === 'voidborn',
     'iwZoneTheme=' + (htmlEl.dataset.iwZoneTheme || 'unset'));
-  check('zone theme points the shared atlas + corner filigree variables at its assets',
+  check('zone theme points the atlas, corners and separator at its assets',
     /skills-ui\/theme_voidborn\.webp/.test(htmlEl.style.getPropertyValue('--iw-zone-atlas')) &&
-    /skills-ui\/panel_corners_voidborn\.webp/.test(htmlEl.style.getPropertyValue('--iw-corner-filigree')),
-    `atlas=${htmlEl.style.getPropertyValue('--iw-zone-atlas') || 'unset'} corner=${htmlEl.style.getPropertyValue('--iw-corner-filigree') || 'unset'}`);
+    /skills-ui\/panel_corners_voidborn\.webp/.test(htmlEl.style.getPropertyValue('--iw-corner-filigree')) &&
+    /skills-ui\/separator_flourish_voidborn\.webp/.test(htmlEl.style.getPropertyValue('--iw-zone-separator')),
+    `atlas=${htmlEl.style.getPropertyValue('--iw-zone-atlas') || 'unset'} corner=${htmlEl.style.getPropertyValue('--iw-corner-filigree') || 'unset'} separator=${htmlEl.style.getPropertyValue('--iw-zone-separator') || 'unset'}`);
 }
 // applyZoneSurface sets the wide strip AND the portrait mobile crop together;
 // header.css swaps between them by media query. Negative control: drop the
@@ -915,6 +1086,68 @@ check('coming-soon copy is normalised without inventing EXP',
   !lockedPanel.querySelector('.fs-skill-base-exp'));
 check('live skill action buttons use deterministic width',
   ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '155px'));
+
+// ── The command button wears the QUEST rail's artwork ────────────────────
+// Curtis (2026-09): one action-button skin across the site. The sprite is the
+// `action_frame_idle` / `_disabled` cell of the Skills UI atlas, written inline
+// by ACTION_ART because styleButton()'s inline `!important` plate outranks
+// every rule in skillpanel.css.
+//
+// Three things are pinned here, and each is a way the feature silently
+// half-lands:
+//   * The plate has to GO, not layer — the art tapers to transparent over the
+//     outer ~28px of its cell, so a surviving border/box-shadow reads as a
+//     second, squarer frame around it (the quest rail's own history).
+//   * The DISABLED action takes the desaturated cell, not the gold one. That
+//     is rule 5: the reskin may not repaint the state away.
+//   * It is gated on the panel's `data-iw-skills-ui-ready`, which the atlas
+//     sets ASYNCHRONOUSLY — state, role and the style attribute can all be
+//     unchanged when it flips, so readiness is part of styleButton()'s
+//     snapshot key. Drop it from that key and this check hangs on the early
+//     return, because the buttons below were already styled as plates.
+// Note the flush kick: a `data-iw-*` write is invisible to DOMWatcher (its
+// attributeFilter excludes data-* so the watcher cannot see its own writes),
+// so marking the panels ready cannot itself schedule the pass that reads them.
+const jewelAction = window.document.getElementById('jewel-action');
+const lockedAction = window.document.getElementById('locked-action');
+for (const panel of [window.document.getElementById('jewel-panel'), lockedPanel]) {
+  panel.dataset.iwSkillsUiReady = '1';
+}
+// BOTH panels need the kick, not just the jewel one. DOMWatcher queues the
+// panel nearest the mutation, so a childList record inside #jewel-panel
+// re-renders that panel alone -- #locked-panel is never re-read and keeps the
+// plate it was styled with before the ready flag was set. This check used to
+// pass anyway, for the wrong reason: SkillPanelRenderer's unconditional
+// clearPanelChrome() on every non-skill .compact-panel kept the whole page in
+// a self-driving flush loop, so every skill panel was re-rendered many times a
+// second whether or not anything had queued it. With that loop fixed the test
+// has to schedule the pass it actually depends on.
+const flushKicks = [
+  window.document.getElementById('jewel-panel'),
+  lockedPanel,
+].map(panel => {
+  const kick = window.document.createElement('span');
+  panel.appendChild(kick);
+  return kick;
+});
+await waitFor(() => /--fs-ui-action-idle-position/.test(jewelAction.style.background) &&
+  /--fs-ui-action-disabled-position/.test(lockedAction.style.background), { timeout: 6000 })
+  .catch(() => {});
+for (const kick of flushKicks) kick.remove();
+check('an atlas-ready skill action button draws the quest action_frame sprite',
+  /--fs-ui-action-idle-position/.test(jewelAction.style.background) &&
+  /--fs-skills-ui-atlas/.test(jewelAction.style.background),
+  'background=' + jewelAction.style.background);
+check('the sprite replaces the forged plate rather than layering over it',
+  jewelAction.style.boxShadow === 'none' && /^0(px)?$/.test(jewelAction.style.border) &&
+  !/gradient/.test(jewelAction.style.background),
+  'border=' + jewelAction.style.border + ' shadow=' + jewelAction.style.boxShadow);
+check('a disabled action keeps the desaturated frame (rule 5)',
+  /--fs-ui-action-disabled-position/.test(lockedAction.style.background),
+  'background=' + lockedAction.style.background);
+for (const panel of [window.document.getElementById('jewel-panel'), lockedPanel]) {
+  delete panel.dataset.iwSkillsUiReady;
+}
 // The pager dropped the skills_nav_*.svg frame (Curtis, 2026-09): the arrows
 // are now thin cool-toned plates flanking the action button, matched to its
 // 44px height, with the chevron drawn by skillpanel.css `::before`.
@@ -992,6 +1225,31 @@ check('a compact-panel outside the boss panel is never tagged',
 check('boss cards are not mistaken for skill or quest panels',
   !bossTreant.classList.contains('fs-skill-panel') && !bossTreant.classList.contains('fs-quest-panel') &&
   bossTreant.getAttribute('data-fs-quest') === null);
+
+/* Village. The add-on slots and the housing card are `.compact-panel`s too, so
+   they reach SkillPanelRenderer as `skill: 'unknown'` on the same event — the
+   last check here is the two-writers-on-one-node guard the boss cards taught us
+   (CLAUDE.md), and the art checks are the whole point of the surface. */
+const villageSlot = window.document.getElementById('village-slot-1');
+const villageHouse = window.document.getElementById('village-house');
+// The sprite is a CUSTOM PROPERTY, not `background-image`: the medallion's own
+// background is the lit ground and the building is painted by a ::before on
+// top of it (see VillagePanels.ensureArt).
+const villageArt = el => el?.querySelector('.iw-village-art')?.style.getPropertyValue('--iw-village-sprite') || '';
+check('the Village Add-on slot carries its occupancy and its own hand-painted building',
+  villageSlot?.dataset.iwVillageState === 'installed' && /building_11\.webp/.test(villageArt(villageSlot)),
+  `${villageSlot?.dataset.iwVillageState} ${villageArt(villageSlot)}`);
+check('the empty slot reads as vacant and paints no building',
+  window.document.getElementById('village-slot-2')?.dataset.iwVillageState === 'vacant' &&
+  !villageArt(window.document.getElementById('village-slot-2')));
+check('the housing hero resolves its tier from the game\'s own "Current tier: N"',
+  villageHouse?.dataset.iwVillageTier === '4' && /house_4\.webp/.test(villageArt(villageHouse)) &&
+  villageHouse?.querySelectorAll('[data-iw-village-pip="held"]').length === 4,
+  `tier=${villageHouse?.dataset.iwVillageTier} art=${villageArt(villageHouse)}`);
+check('village cards are not mistaken for skill, quest or boss cards',
+  !villageSlot.classList.contains('fs-skill-panel') && !villageSlot.classList.contains('fs-quest-panel') &&
+  !villageSlot.dataset.iwBoss && villageSlot.dataset.iwUi === undefined,
+  `${villageSlot.className} boss=${villageSlot.dataset.iwBoss} ui=${villageSlot.dataset.iwUi}`);
 
 const bountyObjective = questBounty.querySelector('[data-iw-quest-role="objective"]');
 const workOrderObjective = questWorkOrder.querySelector('[data-iw-quest-role="objective"]');
@@ -1292,6 +1550,27 @@ check('inventory root + list-frame attributes removed',
   window.document.querySelectorAll('[data-iw-inventory-root], [data-iw-inventory-list]').length === 0);
 check('ALL runtime stylesheets removed', window.document.querySelectorAll('style[data-iw-style]').length === 0);
 check('ui role attributes removed', window.document.querySelectorAll('[data-iw-ui]').length === 0);
+check('appended toolkit link removed on teardown',
+  window.document.querySelectorAll('[data-iw-nav-link]').length === 0);
+/* The village scene is the skin's other whole-element append (rule 2), so
+   like the toolkit link it must be REMOVED, not merely stripped of its
+   attributes — and the Skill Actions panel it anchored to must be left with
+   the sibling that originally followed it. */
+check('appended village scene removed on teardown',
+  window.document.querySelectorAll('[data-iw-village-scene]').length === 0);
+check('collapse controls and their marks removed on teardown',
+  window.document.querySelectorAll('[data-iw-collapse], [data-iw-collapsed], [data-iw-collapse-head]').length === 0);
+/* The arrangement is presentation written onto GAME nodes, so every mark has to
+   come back off — and the live region is an appended element, so like the
+   toolkit link and the village scene it is removed outright. */
+check('panel arrangement marks and handles removed on teardown',
+  window.document.querySelectorAll(
+    '[data-iw-order], [data-iw-order-container], [data-iw-order-handle], [data-iw-order-live]').length === 0);
+check('rearrange mode flag cleared from the document element on teardown',
+  !window.document.documentElement.hasAttribute('data-iw-order-mode'));
+check('the panel that followed Skill Actions follows it again',
+  window.document.getElementById('skill-actions-panel')?.nextElementSibling?.id === 'village-housing-panel',
+  window.document.getElementById('skill-actions-panel')?.nextElementSibling?.id || '(none)');
 check('zone action tone hooks removed', window.document.querySelectorAll('[data-iw-zone-action]').length === 0);
 check('activity panel role attributes removed',
   window.document.querySelectorAll('[data-iw-panel], [data-iw-panel-part]').length === 0);
@@ -1305,7 +1584,8 @@ check('header zone surface vars (wide + mobile) cleared on teardown',
 check('per-zone frame theme cleared from <html> on teardown',
   !window.document.documentElement.dataset.iwZoneTheme &&
   !window.document.documentElement.style.getPropertyValue('--iw-zone-atlas') &&
-  !window.document.documentElement.style.getPropertyValue('--iw-corner-filigree'),
+  !window.document.documentElement.style.getPropertyValue('--iw-corner-filigree') &&
+  !window.document.documentElement.style.getPropertyValue('--iw-zone-separator'),
   'iwZoneTheme=' + (window.document.documentElement.dataset.iwZoneTheme || 'unset') +
   ' atlas=' + (window.document.documentElement.style.getPropertyValue('--iw-zone-atlas') || 'unset'));
 check('skill panel classes removed', window.document.querySelectorAll('.fs-skill-panel').length === 0);
@@ -1323,6 +1603,10 @@ check('quest chrome fully removed on teardown',
   questBounty.querySelector('button')?.isConnected === true &&
   !questBounty.querySelector('[data-iw-tooltip-trigger], [data-iw-item], [data-iw-item-name]') &&
   window.document.getElementById('quest-work-order').textContent.includes('Craft and turn in 1 Moonsilk Boots.'));
+check('village slot roles, art and housing hero removed on teardown',
+  window.document.querySelectorAll('[data-iw-village], [data-iw-village-role], [data-iw-village-state], [data-iw-village-art], [data-iw-village-tier], .iw-village-art, .iw-village-tiers').length === 0 &&
+  window.document.getElementById('village-slot-1').textContent.includes('Voidiron Archive') &&
+  window.document.getElementById('village-destroy').isConnected === true);
 check('boss card tagging removed on teardown',
   window.document.querySelectorAll('[data-iw-boss]').length === 0);
 check('progress smoothing attributes and inline duration removed on teardown',

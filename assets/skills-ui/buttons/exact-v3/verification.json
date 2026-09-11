@@ -1,0 +1,74 @@
+[
+    {
+        "theme":  "celestial",
+        "actionSize":  "264x75",
+        "actionIdle":  "original atlas pixels, excluding neighboring rail fragments in four primary cells, normalized to fill and center the cell",
+        "allStates":  "identical alpha and dimensions; pronounced RGB state changes verified",
+        "chevronSource":  "celestial/chevron-pressed.png",
+        "files":  12
+    },
+    {
+        "theme":  "forged-metal",
+        "actionSize":  "264x75",
+        "actionIdle":  "original atlas pixels, excluding neighboring rail fragments in four primary cells, normalized to fill and center the cell",
+        "allStates":  "identical alpha and dimensions; pronounced RGB state changes verified",
+        "chevronSource":  "forged-metal/chevron-idle.png",
+        "files":  12
+    },
+    {
+        "theme":  "glacial",
+        "actionSize":  "264x75",
+        "actionIdle":  "original atlas pixels, excluding neighboring rail fragments in four primary cells, normalized to fill and center the cell",
+        "allStates":  "identical alpha and dimensions; pronounced RGB state changes verified",
+        "chevronSource":  "glacial/chevron-idle.png",
+        "files":  12
+    },
+    {
+        "theme":  "infernal",
+        "actionSize":  "264x75",
+        "actionIdle":  "original atlas pixels, excluding neighboring rail fragments in four primary cells, normalized to fill and center the cell",
+        "allStates":  "identical alpha and dimensions; pronounced RGB state changes verified",
+        "chevronSource":  "infernal/chevron-idle.png",
+        "files":  12
+    },
+    {
+        "theme":  "lunar-spectral",
+        "actionSize":  "264x75",
+        "actionIdle":  "original atlas pixels, excluding neighboring rail fragments in four primary cells, normalized to fill and center the cell",
+        "allStates":  "identical alpha and dimensions; pronounced RGB state changes verified",
+        "chevronSource":  "lunar-spectral/chevron-idle.png",
+        "files":  12
+    },
+    {
+        "theme":  "runic-arcane",
+        "actionSize":  "264x75",
+        "actionIdle":  "original atlas pixels, excluding neighboring rail fragments in four primary cells, normalized to fill and center the cell",
+        "allStates":  "identical alpha and dimensions; pronounced RGB state changes verified",
+        "chevronSource":  "runic-arcane/chevron-idle.png",
+        "files":  12
+    },
+    {
+        "theme":  "tempest-oceanic",
+        "actionSize":  "264x75",
+        "actionIdle":  "original atlas pixels, excluding neighboring rail fragments in four primary cells, normalized to fill and center the cell",
+        "allStates":  "identical alpha and dimensions; pronounced RGB state changes verified",
+        "chevronSource":  "tempest-oceanic/chevron-hover.png",
+        "files":  12
+    },
+    {
+        "theme":  "verdant",
+        "actionSize":  "264x75",
+        "actionIdle":  "original atlas pixels, excluding neighboring rail fragments in four primary cells, normalized to fill and center the cell",
+        "allStates":  "identical alpha and dimensions; pronounced RGB state changes verified",
+        "chevronSource":  "verdant/chevron-idle.png",
+        "files":  12
+    },
+    {
+        "theme":  "voidborn",
+        "actionSize":  "264x75",
+        "actionIdle":  "original atlas pixels, excluding neighboring rail fragments in four primary cells, normalized to fill and center the cell",
+        "allStates":  "identical alpha and dimensions; pronounced RGB state changes verified",
+        "chevronSource":  "lunar-spectral/chevron-idle.png",
+        "files":  12
+    }
+]
