@@ -11,7 +11,7 @@
 .iw-village-scene { min-width:0; width:100%; box-sizing:border-box; margin-top:12px; }
 .iw-village-scene * { box-sizing:border-box; }
 .iw-vs-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:15px; }
-.iw-vs-title { font-family:var(--iw-font-display, 'Cinzel', serif); color:#eee4cb; font-size:16px; font-weight:600; }
+.iw-vs-title { font-family:var(--iw-font-display, 'Cinzel', serif); color:#eee4cb; font-size:var(--iw-frame-title-size, 18px); font-weight:600; }
 .iw-vs-count { color:#c4b992; font-size:11px; }
 /* `width:100%` is load-bearing, not tidiness. The host carries
  * `data-iw-ui="section-frame"`, which ui-system.css lays out as a column flex

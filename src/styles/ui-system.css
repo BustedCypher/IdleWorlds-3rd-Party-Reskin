@@ -13,6 +13,12 @@
   --iw-space-5: 16px;
   --iw-control-h: 32px;
   --iw-control-h-lg: 36px;
+  /* ONE size for every frame heading, taken from the Inventory title (Curtis,
+     2026-09). Before this they measured 18px (Inventory), 21px (the activity
+     panels' clamp), 16px (the Village scene) and whatever the game's h2 gave
+     the rest. inventory.css, village-scene.css and the collapsed bar all read
+     this rather than keeping their own literal. */
+  --iw-frame-title-size: 18px;
   --iw-frame-edge: var(--iw-th-edge);
   --iw-frame-inner: #19150F;
   --iw-steel: #26231D;
@@ -35,7 +41,7 @@
    losing to a button is the safe failure.
    ══════════════════════════════════════════════════════════════════════ */
 
-:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))) {
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-chrome="nav"]) {
   position: relative !important;
   isolation: isolate !important;
   border: 1px solid var(--iw-th-edge) !important;
@@ -58,7 +64,7 @@
 }
 
 /* Gold hairline across the head of the frame. */
-:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"])))::before {
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-chrome="nav"])::before {
   content: "" !important;
   position: absolute !important;
   z-index: 0 !important;
@@ -78,7 +84,20 @@
    on every declaration: a later rule cannot take just the two border-width
    properties off it without matching that specificity, and an override that
    quietly loses looks exactly like art that was never changed. */
-:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"])::after {
+/* The main-nav rail is a `.panel` too (CLAUDE.md), so it is NOT excluded by
+   `ownedElsewhere` and classifySectionFrames frames it just like Inventory or
+   Quests — which is why it carried the full 34x32 corner flourish and 26px
+   padding at rest. Compacted to one row of tabs, the rail wears NO corner
+   flourish (Curtis, 2026-09: a half-scale 17x16 corner was tried and was too
+   small to read). `:not(:has([data-iw-ui="nav-tab"]))` opts it out of this
+   rule the way collapsible.css opts a collapsed panel out: the rule is
+   (0,4,0) with `!important` on every declaration, so nothing later can take
+   one box off it. The hairline `::before` and the 1px frame still draw.
+   Keyed on the TABS, not on `main-nav`: the live page puts its tabs directly
+   in the `.panel`, so that one node is the track AND the frame, and it keeps
+   `section-frame` (UIFoundation.setNavRole). A `main-nav` key matched nothing
+   live while every fixture that wrapped the tabs in a <nav> passed. */
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"]):not(:has([data-iw-ui="nav-tab"]))::after {
   content: "" !important;
   position: absolute !important;
   /* -1px, not 0: an absolutely positioned child is laid out against the
@@ -115,13 +134,25 @@
 }
 
 @media (max-width: 1024px) {
-  :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))) {
+  :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-chrome="nav"]) {
     padding: var(--iw-frame-pad-mobile-y, var(--iw-frame-pad-y, 20px)) var(--iw-frame-pad-mobile-x, var(--iw-frame-pad-x, 16px)) !important;
   }
-  :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"])::after {
+  :is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"]):not(:has([data-iw-ui="nav-tab"]))::after {
     border-width: 27px 25px !important;
     border-image-width: 27px 25px !important;
   }
+}
+
+/* The rail's own frame: padding sized for one row of 32px tabs rather than a
+   paragraph of prose. Reached through the CUSTOM PROPERTY, not an override of
+   the padding declaration itself — `--iw-frame-pad-y`/`-x` need no
+   `!important` fight because the shared rule already reads them with
+   `var()`. */
+:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui="section-frame"], [data-iw-inventory-root="1"], .fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):has([data-iw-ui="nav-tab"]) {
+  --iw-frame-pad-y: 6px;
+  --iw-frame-pad-x: 16px;
+  --iw-frame-pad-mobile-y: 6px;
+  --iw-frame-pad-mobile-x: 12px;
 }
 
 
@@ -148,10 +179,29 @@
 
 [data-iw-ui="section-title"] {
   font-family: var(--iw-font-head) !important;
+  font-size: var(--iw-frame-title-size) !important;
   letter-spacing: .035em !important;
   color: var(--iw-text-hi) !important;
   text-shadow: 0 1px 0 #000 !important;
 }
+
+/* The Skill Actions "Daily XP Boost … +20% XP" line (UIFoundation
+   .classifyDailyBoost), framed with the same recipe as a MET requirement cell
+   on a skill card (skillcard-v2.css `.iw-skill-v2-body-row`): faint edge, green
+   left rail, green ink, a soft plate. Sized to its text, not the row. */
+[data-iw-skill-boost="1"] {
+  display: block !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  margin-block: 4px !important;
+  padding: 4px 9px !important;
+  border: 1px solid var(--iw-th-edge-faint) !important;
+  border-left: 2px solid #67ab83 !important;
+  border-radius: 3px !important;
+  background: color-mix(in srgb, var(--iw-th-edge-soft) 33%, transparent) !important;
+  color: #91cba4 !important;
+}
+[data-iw-skill-boost="1"] * { color: inherit !important; }
 
 /* ── Activity surfaces ────────────────────────────────────────────────
    Current Action, Action Log, and World Chat share the major forged frame,
@@ -195,7 +245,7 @@
 
 [data-iw-panel] [data-iw-ui="section-title"] {
   margin: 0 !important;
-  font-size: clamp(17px, 1.8vw, 21px) !important;
+  font-size: var(--iw-frame-title-size) !important;
   font-weight: 700 !important;
   line-height: 1.15 !important;
 }
@@ -625,7 +675,6 @@
   [data-iw-panel] {
     gap: 8px !important;
   }
-  [data-iw-panel] [data-iw-ui="section-title"] { font-size: 17px !important; }
   [data-iw-panel-part="feed-row"] { padding: 8px 9px !important; font-size: 11.5px !important; }
   [data-iw-panel-part="header"] { align-items: flex-start !important; }
 }
@@ -637,6 +686,12 @@
 }
 
 /* ── Main navigation rail ───────────────────────────────────────────── */
+/* `main-nav-shell` is a role assigned by classifyMainNav; live, the same
+   element is almost always ALSO a `.panel`, so classifySectionFrames (which
+   runs after, in `discover()`) re-tags it `section-frame` and this rule stops
+   matching — the shared-frame block above owns its padding and corners now.
+   Kept for the fallback shape (a shell that never gets `.panel`), and margin
+   is the one thing genuinely owned here regardless of which role wins. */
 [data-iw-ui="main-nav-shell"] {
   margin: 0 !important;
   padding: 0 !important;
@@ -755,10 +810,14 @@
 }
 
 /* ── Zone command rail ──────────────────────────────────────────────── */
+/* Kept in step with header.css §8's own numbers for the same properties —
+   this sheet is injected LAST, so a disagreement between the two resolves
+   here regardless of which one a future edit touches (CLAUDE.md's
+   geometry-duplication trap). */
 [data-iw-ui="zone-bar"] {
   border-radius: 5px !important;
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
   min-height: 0 !important;
 }
 
@@ -771,13 +830,166 @@
   background: linear-gradient(180deg, #242018, #17140F) !important;
   border: 1px solid var(--iw-line-hi) !important;
   color: var(--iw-text) !important;
-  height: 32px !important;
-  min-height: 32px !important;
+  height: auto !important;
+  min-height: 30px !important;
   min-width: 0 !important;
-  padding: 0 12px !important;
+  padding: 5px 13px !important;
   font-size: 11px !important;
   letter-spacing: .025em !important;
 }
+
+/* ── Header chrome merge (nav rail + announcement + zone bar) ────────────
+   Curtis (2026-09), from concept art: one framed box holding the zone
+   title/target row and the game's announcement on top, the nav tabs and the
+   zone action buttons on the bottom — instead of three separate ~40-50px
+   boxes stacked with the game's own 12px gap.
+
+   The three pieces are separate DOM siblings React owns (rule 2: no
+   reparenting), so the merge happens entirely on their shared PARENT
+   (HeaderChrome.js tags it `[data-iw-chrome="shell"]`) by turning it into a
+   grid and collapsing the zone bar with `display: contents` — its own two
+   branches (`zone-text`, `zone-actions`) become grid items of the SHELL, so
+   they can be placed independently of one another and of the nav/notice
+   nodes that precede them in DOM order. Nothing moves; only grid placement
+   changes what looks adjacent to what.
+
+   The nav rail keeps `data-iw-ui="section-frame"` (so `mainNavResolutionValid`
+   is untouched) but opts OUT of that shared recipe's paint via
+   `:not([data-iw-chrome="nav"])` on the rule itself, above — the documented
+   opt-out-on-someone-else's-selector shape, not a specificity escalation. */
+[data-iw-chrome="shell"] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 0 !important;
+  column-gap: 0 !important;
+}
+/* Restore the game's own 12px rhythm OUTSIDE the merged frame: below the
+   header, and below the frame's last row. `[data-iw-chrome="zone-bar"] ~ *`
+   still matches the zone bar's later real siblings even though it renders as
+   `display: contents` — a sibling combinator reads DOM order, not boxes. */
+[data-iw-chrome="shell"] > header { grid-row: 1; margin-bottom: 12px; }
+[data-iw-chrome="shell"] > * { grid-column: 1 / -1; }
+[data-iw-chrome="zone-bar"] ~ * { margin-top: 12px; }
+
+[data-iw-chrome="zone-bar"] { display: contents !important; }
+/* The per-zone moonlit scene assumed the bar was its own box; merged, a
+   `display: contents` element's pseudo-elements would become stray grid items
+   of the shell. The frame below replaces it. */
+[data-iw-chrome="zone-bar"]::before,
+[data-iw-chrome="zone-bar"]::after {
+  content: none !important;
+}
+
+/* ONE left inset for both rows, so the zone title's leading emoji starts on
+   the same vertical line as the first nav tab (Curtis, 2026-09). It has to be
+   `!important` AND (0,2,0): header.css's
+   `[data-iw-header="zone-shell"] > :has([data-iw-ui="zone-title"])` pins this
+   branch's margin to `0 !important` at (0,2,0), which is what left the title
+   14px left of the tabs. Matching it lets injection order (this sheet is
+   last) settle the tie. */
+[data-iw-chrome="shell"] { --iw-chrome-inset: 14px; }
+[data-iw-chrome="shell"] [data-iw-chrome="zone-text"] {
+  grid-row: 2;
+  grid-column: 1;
+  align-self: center;
+  margin: 6px 0 9px var(--iw-chrome-inset) !important;
+  padding: 0 !important;
+  min-width: 0;
+}
+[data-iw-chrome="notice"] {
+  grid-row: 2;
+  grid-column: 2;
+  align-self: center;
+  justify-self: end;
+  margin: 6px 14px 9px 20px;
+  max-width: 34rem;
+}
+/* The nav is still the game's `.panel`, which paints its own ground; opting
+   it out of the shared frame (above) removes only the SKIN's paint, so the
+   game's panel plate and padding would otherwise draw a second box inside
+   this frame. */
+[data-iw-chrome="nav"] {
+  grid-row: 3;
+  grid-column: 1;
+  align-self: center;
+  margin: 9px var(--iw-chrome-inset) 6px var(--iw-chrome-inset) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+[data-iw-chrome="zone-actions"] {
+  grid-row: 3;
+  grid-column: 2;
+  align-self: center;
+  justify-self: end;
+  margin: 9px 14px 6px 14px;
+}
+
+/* The frame itself: one border + the shared panel ground, spanning both
+   content rows, painted BELOW every real child because a grid container's
+   `::before` is first in paint order. No corner filigree — flat, per the
+   concept, and consistent with the bare nav rail it replaces. */
+[data-iw-chrome="shell"]::before {
+  content: "";
+  grid-row: 2 / 4;
+  grid-column: 1 / -1;
+  border: 1px solid var(--iw-th-edge);
+  border-radius: 4px;
+  background:
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.025), transparent 32%),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.78),
+    inset 0 1px 0 var(--iw-th-glow);
+}
+/* The divider between the two rows: a 1px grid item pinned to the top of
+   row 3. The 9px top margin on nav / zone-actions is what keeps their content
+   clear of it. */
+[data-iw-chrome="shell"]::after {
+  content: "";
+  grid-row: 3;
+  grid-column: 1 / -1;
+  align-self: start;
+  height: 1px;
+  background: var(--iw-th-edge-soft);
+}
+
+/* The same breakpoint header.css already uses for the zone bar. The shell
+   spans the page, so a VIEWPORT query is correct here (unlike the card and
+   scene container queries). */
+@media (max-width: 860px) {
+  [data-iw-chrome="shell"] { grid-template-columns: minmax(0, 1fr); }
+  [data-iw-chrome="shell"] [data-iw-chrome="zone-text"] { grid-row: 2; grid-column: 1; margin: 6px var(--iw-chrome-inset) 8px !important; }
+  [data-iw-chrome="notice"] { grid-row: 3; grid-column: 1; justify-self: start; max-width: none; margin: 0 14px 9px; }
+  [data-iw-chrome="nav"] { grid-row: 4; grid-column: 1; margin: 9px var(--iw-chrome-inset) 6px !important; }
+  [data-iw-chrome="zone-actions"] { grid-row: 5; grid-column: 1; justify-self: start; margin: 0 14px 8px; }
+  [data-iw-chrome="shell"]::before { grid-row: 2 / 6; }
+  [data-iw-chrome="shell"]::after { grid-row: 4; }
+}
+
+/* "who's here?" beside the zone title is a text link wearing a <button> tag
+   (UIFoundation.classifyZoneBar tags it `data-iw-zone-link`). It reads like
+   the game's other text links — the `hover:underline` recipe in base.css: no
+   plate, no border, no shadow, no padding, and the game's own colour and
+   underline left alone. The generic plate rules below and base.css's hairline
+   opt it out in their `:not()` chains; this rule only clears what those chains
+   do not cover: base.css's (0,0,1) fill and the UA button padding. header.css's
+   dim `zone-title ~ *` target rule opts it out by name. */
+[data-iw-zone-link] {
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  cursor: pointer;
+}
+/* Nested INSIDE the title the plate's padding was the only thing between the
+   two words; as the title's sibling the game's own flex gap spaces it. */
+[data-iw-ui="zone-title"] [data-iw-zone-link] { margin-left: 8px !important; }
 
 /* ── Generic control language ───────────────────────────────────────── */
 
@@ -790,8 +1002,8 @@
    buttons (data-iw-quest-role turn-in / skip), whose skillpanel.css art rules
    were tuned to clear the shorter chain, are excluded here too rather than
    chased with an ever-higher `html …` override. */
-button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-header="profile-name"] button):not([data-iw-order-handle]),
-[role="button"]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-header="profile-name"] button):not([data-iw-order-handle]) {
+button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-zone-link]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-header="profile-name"] button):not([data-iw-order-handle]),
+[role="button"]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-zone-link]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-header="profile-name"] button):not([data-iw-order-handle]) {
   border-color: var(--iw-th-edge-faint) !important;
   background-image: linear-gradient(180deg, rgba(255,255,255,.035), rgba(0,0,0,.28)) !important;
   box-shadow:
@@ -804,8 +1016,8 @@ button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):n
    `color`, because a button's own text colour is frequently live state (the
    ember active-filter tab, red/green market steppers) and repainting it here
    would delete that meaning (rule 5). */
-button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]):hover,
-[role="button"]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]):hover {
+button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-zone-link]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]):hover,
+[role="button"]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-zone-link]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]):hover {
   border-color: var(--iw-line-hot) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.055),
@@ -836,8 +1048,8 @@ button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):n
   min-height: 26px;
 }
 
-button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]):disabled,
-[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]) {
+button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([data-iw-ui="nav-tab"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-zone-link]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]):disabled,
+[role="button"][aria-disabled="true"]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action="control"]):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-skill-role="nav-button"]):not([data-iw-skill-role="action-button"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-ui="section-title"]):not([data-iw-header="utility-button"]):not([data-iw-header="status-card"]):not([data-iw-header="profile-online"]):not([data-iw-ui="zone-action"]):not([data-iw-zone-link]):not([data-iw-panel-part="header-tools"] button):not([data-iw-panel-part="panel-control"]):not([data-iw-panel-part="queue"] > button):not([data-iw-panel-part="send"]):not([class*="decoration-dotted"]):not([data-iw-market]):not([data-iw-order-handle]) {
   filter: saturate(.58) brightness(.84) !important;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.22) !important;
 }

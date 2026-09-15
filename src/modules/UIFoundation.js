@@ -9,11 +9,13 @@
 import { on } from './DOMWatcher.js';
 import { inject } from './StyleInjector.js';
 import { guard, raf, warnOnce } from './Runtime.js';
+import { sampleProgress, formatDuration } from './ProgressCadence.js';
 import { getLayoutEpoch, pickRendered, preferRendered } from './Viewport.js';
 import { decorateWorldBossPanel, clearWorldBossPanel } from './WorldBossPanels.js';
 import { decorateVillagePanel, clearVillagePanel } from './VillagePanels.js';
 import { reconcileVillageScene, clearVillageScene } from './VillageScene.js';
 import { decorateCollapsibleFrames, clearCollapsibleFrames } from './CollapsibleFrames.js';
+import { classifyHeaderChrome, clearHeaderChrome } from './HeaderChrome.js';
 import {
   decoratePanelOrder, clearPanelOrder, setRearrangeMode, isRearrangeMode, resetPanelOrder,
 } from './PanelOrder.js';
@@ -169,12 +171,26 @@ function countNavTabsIn(root) {
   return seen.size;
 }
 
+// The live page ships its tabs DIRECTLY inside a `.panel`, so the track IS a
+// framed panel and classifySectionFrames (which runs after this) tags it
+// `section-frame`. Both roles live on `data-iw-ui`, so demanding `main-nav`
+// here failed validation on every flush: this re-resolved (a whole-document
+// button sweep), wrote `main-nav` back, and section frames overwrote it again
+// -- measured at 20 role flips per 1.2s. The frame is the correct paint for
+// that node (it is what the player sees), so the track simply accepts it.
+const NAV_TRACK_ROLES = ['main-nav', 'section-frame'];
+
+function setNavRole(el, role) {
+  if (el?.dataset.iwUi === 'section-frame') return el;
+  return setRole(el, role);
+}
+
 function mainNavResolutionValid(entry) {
   return entry.epoch === getLayoutEpoch() &&
-    entry.track.isConnected && entry.track.dataset.iwUi === 'main-nav' &&
+    entry.track.isConnected && NAV_TRACK_ROLES.includes(entry.track.dataset.iwUi) &&
     entry.tabs.every(btn => btn.isConnected && btn.dataset.iwUi === 'nav-tab') &&
     (entry.shell === entry.track ||
-      (entry.shell.isConnected && entry.shell.dataset.iwUi === 'main-nav-shell')) &&
+      (entry.shell.isConnected && ['main-nav-shell', 'section-frame'].includes(entry.shell.dataset.iwUi))) &&
     // A rail that GAINS a tab after the first classification (Dungeon unlocks,
     // or the route mounts it late) used to stay cached forever: every check
     // above passes while the new sibling never gets `nav-tab` and renders
@@ -202,7 +218,7 @@ function resolveMainNav() {
   const tabs = NAV_LABELS.map(label => byLabel.has(label) ? pickRendered(byLabel.get(label)) : null).filter(Boolean);
   const track = commonAncestor(tabs);
   if (!track) return null;
-  setRole(track, 'main-nav');
+  setNavRole(track, 'main-nav');
 
   // IdleWorlds currently places the button track inside a much larger rounded
   // shell. Mark the outer same-content wrapper separately so we can flatten it
@@ -219,7 +235,7 @@ function resolveMainNav() {
     if (rect && rect.height > 110) break;
     shell = parent;
   }
-  if (shell !== track) setRole(shell, 'main-nav-shell');
+  if (shell !== track) setNavRole(shell, 'main-nav-shell');
 
   return { tabs, track, shell, epoch: getLayoutEpoch() };
 }
@@ -408,7 +424,7 @@ function classifyZoneBar() {
     for (let depth = 0; host && depth < 5; depth += 1, host = host.parentElement) {
       // Never climb past the zone bar into a page wrapper: once a candidate
       // also contains the header or the main nav it is layout, not the bar.
-      if (host.querySelector('header, [data-iw-ui="main-nav"]')) break;
+      if (host.querySelector('header, [data-iw-ui="main-nav"], [data-iw-ui="nav-tab"]')) break;
       const buttons = [...host.querySelectorAll('button')];
       const buttonText = buttons.map(nearestButtonLabel);
       if (buttonText.some(x => /zones/.test(x)) && buttonText.some(x => /next\s+zone/.test(x))) {
@@ -427,6 +443,15 @@ function classifyZoneBar() {
             if (btn.dataset.iwZoneAction !== tone) btn.dataset.iwZoneAction = tone;
             zoneButtons.push(btn);
           }
+        });
+        // Any other button in the bar that does not sit with the zone actions
+        // ("who's here?" beside the title) is a TEXT LINK wearing a <button>
+        // tag. Its own attribute namespace, so the zone-bar checks that it
+        // carries no `data-iw-ui` / `data-iw-zone-action` still hold.
+        buttons.forEach(btn => {
+          if (btn.dataset.iwUi === 'zone-action') return;
+          if (btn.parentElement?.querySelector(':scope > [data-iw-ui="zone-action"]')) return;
+          if (btn.dataset.iwZoneLink !== '1') btn.dataset.iwZoneLink = '1';
         });
         const title = sameTextShell(label, host, 2);
         setRole(title, 'zone-title');
@@ -952,35 +977,9 @@ function findCurrentActionProgress(root) {
  * same node would queue an `attr:style` context on every action.
  */
 
-// Below this the two widths are the same value re-written, not a tick.
-const PROGRESS_EPSILON = 0.05;
-
-// The measured tick is deliberately overshot before it becomes a transition
-// duration. A duration that matches the tick EXACTLY still stutters: real
-// per-tick timing jitters (live capture: a nominal 250ms tick actually landed
-// anywhere from 208-335ms), so an exact-match transition finishes early about
-// half the time and the bar sits dead-still for the remainder of that tick
-// before the next real update arrives. Overshooting means the transition is
-// almost always still in flight when that update lands, so the browser
-// smoothly RETARGETS it (continuous velocity change, no positional jump)
-// instead of the bar visibly pausing and then jumping. 12% is small enough
-// that the bar is never perceptibly slow, and it never compounds across
-// ticks: each real update snaps the target to the server's own value, so any
-// instant where the bar is fractionally behind is corrected at the very next
-// tick, not accumulated.
-const PROGRESS_LEAD_BIAS = 1.12;
-
-// A duration write is skipped below this threshold, so ordinary tick-to-tick
-// jitter around a stable rate doesn't churn the inline style (and the
-// self-triggered flush that comes with it -- see the note above
-// smoothActionProgress) every single update.
-const PROGRESS_DURATION_EPSILON_MS = 15;
-
+// The cadence measurement (tick length, completion reset, lead bias) lives in
+// ProgressCadence.js, shared with the skill card's action-button fill.
 let progressSamples = new WeakMap();
-
-function nowMs() {
-  return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
-}
 
 /**
  * The percentage the game is currently showing, from whichever of the two
@@ -998,12 +997,6 @@ function progressPercent(track) {
   return null;
 }
 
-function median(values) {
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = sorted.length >> 1;
-  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-
 /**
  * Suppress the transition for exactly one update. The tag is dropped on the
  * next frame rather than on the next flush: the next flush is a whole tick
@@ -1018,82 +1011,19 @@ function markProgressReset(track) {
 }
 
 /**
- * Commit a measured tick to the transition duration the CSS actually uses,
- * as a CONTINUOUS inline custom property rather than a snap to one of a
- * handful of discrete buckets. A bucketed value is either exactly right or
- * off by up to a whole bucket step; a continuous one tracks the measured
- * cadence directly, and — combined with PROGRESS_LEAD_BIAS above — is what
- * keeps the tween from ever visibly stalling between ticks. `--iw-action-tick`
- * in base.css is what still applies before this ever fires (pre-measurement,
- * or a still-loading panel).
- *
- * Written inline (not as a `data-iw-*` attribute) so it IS visible to
- * DOMWatcher's `attributeFilter: [...,'style',...]` and queues one extra
- * `attr:style` flush on this node per committed change. That is an accepted,
- * narrow cost, not an oversight: the write only happens when the duration has
- * actually moved (PROGRESS_DURATION_EPSILON_MS), the re-entrant
- * smoothActionProgress() call it triggers reads the SAME pct and returns
- * immediately via the epsilon guard above, and every classifier this flush
- * reaches is already on its cached fast path (the flush-path caching work
- * elsewhere in this file) — it is one more cheap pass on a page already
- * flushing about once per animation frame, not a new category of cost.
+ * The measured duration is written as a CONTINUOUS inline custom property
+ * rather than a snap to one of a handful of discrete buckets. Written inline
+ * (not as a `data-iw-*` attribute) so it IS visible to DOMWatcher's
+ * `attributeFilter` and queues one extra `attr:style` flush on this node per
+ * committed change. That is an accepted, narrow cost: the write only happens
+ * when the duration has actually moved (PROGRESS_DURATION_EPSILON_MS), and
+ * the re-entrant call it triggers reads the SAME pct and returns immediately.
  */
-function commitProgressDuration(track, state, ms) {
-  const durationMs = Math.min(4000, Math.max(60, ms)) * PROGRESS_LEAD_BIAS;
-  if (state.appliedDurationMs !== undefined &&
-      Math.abs(durationMs - state.appliedDurationMs) < PROGRESS_DURATION_EPSILON_MS) return;
-  track.style.setProperty('--iw-progress-duration', (durationMs / 1000).toFixed(3) + 's');
-  state.appliedDurationMs = durationMs;
-}
-
 function smoothActionProgress(track) {
   if (!track) return;
-  const pct = progressPercent(track);
-  if (pct === null || !Number.isFinite(pct)) return;
-
-  const at = nowMs();
-  const state = progressSamples.get(track);
-  if (!state) {
-    progressSamples.set(track, { pct, at, deltas: [], afterReset: false });
-    return;
-  }
-  // A flush the width did not cause — most of them, on an idle game. Leaving
-  // `at` alone here is what makes the delta below an interval between WRITES
-  // rather than between flushes.
-  if (Math.abs(pct - state.pct) < PROGRESS_EPSILON) return;
-
-  if (pct < state.pct - PROGRESS_EPSILON) {
-    markProgressReset(track);
-    // A completion is not a tick: it says nothing about the interval, and
-    // timing it would poison the median with the action's whole duration.
-    // Live capture (claude/probe-action-progress.js) confirms the game's
-    // first tick of a new action consistently takes roughly DOUBLE the
-    // steady-state interval (measured: ~500ms vs a steady 250ms), so the
-    // NEXT delta -- from this reset write to the first write of the new
-    // action -- is equally unrepresentative and must not reach `deltas`
-    // either. `afterReset` flags exactly that one upcoming delta for
-    // exclusion below, while `state.at` still advances so the delta AFTER
-    // that one measures real wall-clock time again.
-    state.afterReset = true;
-  } else {
-    const delta = at - state.at;
-    // Discard anything outside the plausible range for an update interval: a
-    // sub-frame delta is two writes coalesced into one flush, a multi-second
-    // one is a resumed/unpaused action rather than a tick, and the delta
-    // spanning a completion is the anomalous post-reset gap described above,
-    // not a steady tick.
-    if (delta >= 60 && delta <= 4000 && !state.afterReset) {
-      state.deltas.push(delta);
-      if (state.deltas.length > 5) state.deltas.shift();
-      // Three samples before committing, so one janked frame during boot
-      // cannot pin the bar to the wrong duration for the rest of the session.
-      if (state.deltas.length >= 3) commitProgressDuration(track, state, median(state.deltas));
-    }
-    state.afterReset = false;
-  }
-
-  state.pct = pct;
-  state.at = at;
+  const { reset, durationMs } = sampleProgress(progressSamples, track, progressPercent(track));
+  if (reset) markProgressReset(track);
+  if (durationMs !== null) track.style.setProperty('--iw-progress-duration', formatDuration(durationMs));
 }
 
 function hasPanelBodyOutsideHeading(candidate, heading) {
@@ -1423,6 +1353,54 @@ function classifyActivityPanels() {
   }
 }
 
+/**
+ * The Skill Actions panel's "Daily XP Boost: Jewelcrafting + Mining + … +20% XP"
+ * line, framed like a met requirement so the bonus reads at a glance (Curtis,
+ * 2026-09). Its own `data-iw-skill-boost` namespace, because the line lives in
+ * a heading row other classifiers already read.
+ *
+ * Only tagged while the copy names a real bonus (`+N% XP`): a line the game
+ * words differently for "no boost today" must not be painted as satisfied.
+ * Scanned within the frame's HEADING ROW only — the frame's direct child that
+ * holds its title — never the card stack beneath it.
+ */
+let dailyBoostNode = null;
+const DAILY_BOOST = /^daily\s+xp\s+boost\b.*\+\s*\d+(?:\.\d+)?\s*%\s*xp/i;
+
+function isDailyBoostText(el) {
+  return DAILY_BOOST.test(normText(el.textContent).replace(/^[^a-z0-9]+/i, ''));
+}
+
+function clearDailyBoost() {
+  document.querySelectorAll('[data-iw-skill-boost]').forEach(el => { delete el.dataset.iwSkillBoost; });
+  dailyBoostNode = null;
+}
+
+function classifyDailyBoost() {
+  // Settled fast path: the same node, still tagged, still wording a bonus.
+  if (dailyBoostNode?.isConnected && dailyBoostNode.dataset.iwSkillBoost === '1' &&
+      dailyBoostNode.closest('[data-iw-ui="section-frame"]') && isDailyBoostText(dailyBoostNode)) return;
+
+  let found = null;
+  for (const entry of sectionFrameResolutions || []) {
+    const { frame, heading } = entry;
+    if (!heading || !frame.isConnected) continue;
+    if (!/^(skill actions|actions)$/i.test(normText(heading.textContent).replace(/^[^a-z0-9]+/i, ''))) continue;
+    let row = heading;
+    while (row.parentElement && row.parentElement !== frame) row = row.parentElement;
+    if (row.parentElement !== frame) continue;
+    // Innermost element whose text is the boost line (a wrapper that also
+    // holds "Resets in …" still starts with the same words).
+    const matches = [...row.querySelectorAll('p, div, span')].filter(isDailyBoostText);
+    found = matches.find(el => !matches.some(other => other !== el && el.contains(other))) || null;
+    if (found) break;
+  }
+  if (found === dailyBoostNode && found) return;
+  if (dailyBoostNode && dailyBoostNode !== found) delete dailyBoostNode.dataset.iwSkillBoost;
+  dailyBoostNode = found;
+  if (found && found.dataset.iwSkillBoost !== '1') found.dataset.iwSkillBoost = '1';
+}
+
 let queued = false;
 function queueClassify() {
   if (queued) return;
@@ -1443,6 +1421,12 @@ function queueClassify() {
     // sectionFrameResolutions as their root fallback.
     guard('ui:activity-panels', classifyActivityPanels);
     guard('ui:section-frames', classifySectionFrames);
+    // Merges the nav rail / announcement / zone bar into one frame. Reads the
+    // nav-tab / zone-bar / zone-title / zone-action marks the two guards above
+    // just wrote, so it must run after both.
+    guard('ui:header-chrome', classifyHeaderChrome);
+    // Reads sectionFrameResolutions for the Skill Actions frame and its title.
+    guard('ui:daily-boost', classifyDailyBoost);
     guard('ui:boss-cards', classifyBossCards);
     guard('ui:market', classifyMarket);
     guard('ui:village', classifyVillagePanels);
@@ -1465,10 +1449,12 @@ function queueClassify() {
 
 /** Remove every semantic role attribute this module applied. Kill switch. */
 export function clearUIFoundation() {
+  clearHeaderChrome();
   clearPanelOrder(document);
   clearCollapsibleFrames(document);
   clearVillageScene();
   clearCompactButtons();
+  clearDailyBoost();
   // Drop the per-pass memo with everything else, so a kill-switch round trip
   // cannot hand the next activation a heading list from the previous one.
   headingIndexToken = -1;
@@ -1503,6 +1489,7 @@ export function clearUIFoundation() {
   document.querySelectorAll('[data-iw-panel-part]').forEach(el => { delete el.dataset.iwPanelPart; });
   document.querySelectorAll('[data-iw-panel-header]').forEach(el => { delete el.dataset.iwPanelHeader; });
   document.querySelectorAll('[data-iw-zone-action]').forEach(el => { delete el.dataset.iwZoneAction; });
+  document.querySelectorAll('[data-iw-zone-link]').forEach(el => { delete el.dataset.iwZoneLink; });
   document.querySelectorAll('[data-iw-boss]').forEach(el => { delete el.dataset.iwBoss; });
   document.querySelectorAll('[data-iw-market]').forEach(el => { delete el.dataset.iwMarket; });
 }

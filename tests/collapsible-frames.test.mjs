@@ -62,7 +62,7 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds
         <div id="ca-track"><div id="ca-fill" style="width:40%"></div></div>
       </section>
 
-      <div class="panel" id="skills"><div class="row"><h2>Skill Actions</h2><p id="skills-boost">Daily XP Boost</p></div>
+      <div class="panel" id="skills"><div class="row"><h2>Skill Actions</h2><div><p id="skills-boost">Daily XP Boost: Jewelcrafting + Mining + Woodcutting +20% XP</p><p id="skills-reset">Resets in 13:17</p></div></div>
         <div class="compact-panel" id="mine-panel">
           <div><p>&#9935; Mine</p><p>LV 2</p></div>
           <div><p>&#9935; Mine Copper Ore</p><button>Lv 2 - 10% &bull; 4,120 to go</button><p>Base reward: +8 mining XP/task</p></div>
@@ -258,6 +258,57 @@ check('no frame gets two toggles',
   `${survey0.length} toggles, ${new Set(survey0.map(r => r.key)).size} frames`);
 check('every toggle starts expanded',
   survey0.every(r => r.expanded === 'true' && !r.collapsed));
+
+/* -- Every EXPANDED heading is the Inventory heading's size ------------
+   Curtis (2026-09): the frame titles were four different sizes — Inventory's
+   own 18px, the activity panels' clamp(17px, 1.8vw, 21px), and whatever the
+   game's h2 gave the rest. Compared against Inventory's computed size rather
+   than a literal, so retuning Inventory retunes the check. */
+console.log('\nDaily XP boost');
+const boost = await page.evaluate(() => {
+  const el = document.getElementById('skills-boost');
+  const cs = el && getComputedStyle(el);
+  const reset = document.getElementById('skills-reset');
+  return el && { tagged: el.dataset.iwSkillBoost === '1', rail: cs.borderLeftColor, railW: cs.borderLeftWidth,
+    ink: cs.color, width: el.getBoundingClientRect().width,
+    // text + its own padding and borders: what a box that hugs its text measures
+    lines: (() => { const r = document.createRange(); r.selectNodeContents(el);
+      return new Set([...r.getClientRects()].map(q => Math.round(q.top))).size; })(),
+    parentWidth: el.parentElement.getBoundingClientRect().width,
+    hug: (() => { const r = document.createRange(); r.selectNodeContents(el);
+      return r.getBoundingClientRect().width + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
+        + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth); })(),
+    resetTagged: reset?.dataset.iwSkillBoost === '1' };
+});
+check('the daily boost line is tagged', boost?.tagged, JSON.stringify(boost));
+check('only the boost line, not the reset timer beside it', boost && !boost.resetTagged);
+check('it wears the met-requirement green rail and ink',
+  boost?.rail === 'rgb(103, 171, 131)' && boost.railW === '2px' && boost.ink === 'rgb(145, 203, 164)',
+  JSON.stringify(boost));
+// A block whose text WRAPS fills its available width (the widest line is
+// narrower than the box), so hugging is only measurable on one line.
+check('the frame hugs its text (one line) or fits its column (wrapped)',
+  boost && (boost.lines === 1 ? Math.abs(boost.width - boost.hug) <= 2 : boost.width <= boost.parentWidth + 0.5),
+  JSON.stringify(boost));
+
+console.log('\nOne heading size');
+const titleSizes = await page.evaluate(() => {
+  const norm = v => String(v || '').replace(/\s+/g, ' ').trim();
+  return [...document.querySelectorAll('[data-iw-collapse]')].map(button => {
+    const frame = button.parentElement.parentElement;
+    const t = frame.querySelector('[data-iw-inventory-title="1"]')
+      || frame.querySelector('[data-iw-ui="section-title"]')
+      || frame.querySelector('[role="heading"]') || frame.querySelector('h1,h2,h3,h4');
+    return { title: norm(t && t.textContent).slice(0, 24), size: t ? getComputedStyle(t).fontSize : null,
+      inventory: !!frame.querySelector('[data-iw-inventory-title="1"]') };
+  });
+});
+const invSize = titleSizes.find(r => r.inventory)?.size;
+check('the Inventory heading was found to compare against', !!invSize,
+  JSON.stringify(titleSizes));
+check('every frame heading is the Inventory heading size',
+  !!invSize && titleSizes.every(r => r.size === invSize),
+  titleSizes.map(r => `${r.title}=${r.size}`).join(' | '));
 
 console.log('\nThe control clears the game\'s own header controls');
 for (const row of survey0) {

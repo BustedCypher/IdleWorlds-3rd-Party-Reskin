@@ -529,7 +529,12 @@ check('approved layout adds a Base: plaque from the live XP datum',
 check('identity shows the full discipline name, not the abbreviated one',
   panel.querySelector('[data-iw-skill-role="identity"]')?.dataset.iwCleanText === 'Mining' &&
   panel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Mine Copper Ore');
-check('skill renderer actively overrides native inline width while enabled', skillAction.style.width === '155px', skillAction.style.cssText);
+/* The renderer still owns the command button's width against React's own
+   inline writes; the VALUE is now the design's, 78px compact under V2 and
+   155px on the legacy plaque, so this asserts ownership rather than one
+   number. Both are checked explicitly below. */
+check('skill renderer actively overrides native inline width while enabled',
+  ['var(--iw-skill-v2-btn-w, 90px)', '155px'].includes(skillAction.style.width), skillAction.style.cssText);
 check('background painter actively overrides native navy while enabled',
   inventorySection.style.getPropertyValue('background-color') !== 'rgb(15, 23, 42)',
   inventorySection.style.cssText);
@@ -918,6 +923,9 @@ check('every zone action is classified and toned, icon prefix or not',
   window.document.getElementById('zone-next')?.dataset.iwZoneAction === 'next',
   ['zone-zones', 'zone-prev', 'zone-next']
     .map(id => `${id}=${window.document.getElementById(id)?.dataset.iwZoneAction}`).join(' '));
+check('the zone title text link is tagged as a link, not as a zone action',
+  window.document.getElementById('zone-whos-here')?.dataset.iwZoneLink === '1' &&
+  !window.document.getElementById('zone-zones')?.dataset.iwZoneLink);
 check('a non-navigation control in the zone bar is left alone',
   !window.document.getElementById('zone-whos-here')?.dataset.iwUi &&
   !window.document.getElementById('zone-whos-here')?.dataset.iwZoneAction);
@@ -931,6 +939,23 @@ check('zone bar role is not smeared onto a page wrapper',
   !window.document.querySelector('.app')?.dataset.iwUi,
   [...window.document.querySelectorAll('[data-iw-ui="zone-bar"]')]
     .map(el => el.id || el.className || el.tagName).join(', '));
+
+// HeaderChrome merges nav + announcement + zone bar into one grid frame on
+// their shared parent, in its own `data-iw-chrome` namespace (never data-iw-ui
+// or data-iw-header, which the two classifiers above already own here).
+await waitFor(() => window.document.querySelector('.app')?.dataset.iwChrome === 'shell');
+check('header chrome tags the shell, nav, notice and both zone branches',
+  window.document.querySelector('.app')?.dataset.iwChrome === 'shell' &&
+  window.document.querySelector('.app > nav')?.dataset.iwChrome === 'nav' &&
+  window.document.getElementById('announcement')?.dataset.iwChrome === 'notice' &&
+  window.document.getElementById('zone-bar-panel')?.dataset.iwChrome === 'zone-bar' &&
+  window.document.getElementById('zone-bar-text')?.dataset.iwChrome === 'zone-text' &&
+  window.document.getElementById('zone-bar-actions')?.dataset.iwChrome === 'zone-actions',
+  [...window.document.querySelectorAll('[data-iw-chrome]')]
+    .map(el => `${el.id || el.tagName}=${el.dataset.iwChrome}`).join(' '));
+check('header chrome leaves the zone bar and announcement roles to their owners',
+  window.document.getElementById('zone-bar-panel')?.dataset.iwUi === 'zone-bar' &&
+  window.document.getElementById('zone-bar-panel')?.getAttribute('data-iw-header') === 'zone-shell');
 
 const jewelPanel = window.document.getElementById('jewel-panel');
 const spellPanel = window.document.getElementById('spell-panel');
@@ -1084,8 +1109,12 @@ check('coming-soon copy is normalised without inventing EXP',
   lockedPanel.querySelector('[data-iw-skill-role="identity"]')?.dataset.iwCleanText === 'Coming Soon' &&
   lockedPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Upcoming Skill' &&
   !lockedPanel.querySelector('.fs-skill-base-exp'));
+/* Deterministic, and the same on every card — which is the point. The V2
+   design ships compact by default, so 78px is what these resolve to; the
+   legacy plaque's 155px applies when the design toggle is set to current. */
 check('live skill action buttons use deterministic width',
-  ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '155px'));
+  ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === 'var(--iw-skill-v2-btn-w, 90px)'),
+  ['jewel-action', 'spell-action', 'tailor-action'].map(id => window.document.getElementById(id).style.width).join(' || '));
 
 // ── The command button wears the QUEST rail's artwork ────────────────────
 // Curtis (2026-09): one action-button skin across the site. The sprite is the
@@ -1138,8 +1167,9 @@ check('an atlas-ready skill action button draws the quest action_frame sprite',
   /--fs-ui-action-idle-position/.test(jewelAction.style.background) &&
   /--fs-skills-ui-atlas/.test(jewelAction.style.background),
   'background=' + jewelAction.style.background);
-check('the sprite replaces the forged plate rather than layering over it',
-  jewelAction.style.boxShadow === 'none' && /^0(px)?$/.test(jewelAction.style.border) &&
+check('the portrait frame resolves through the design chrome variables',
+  jewelAction.style.boxShadow === 'var(--fs-button-shadow, none)' &&
+  jewelAction.style.border === 'var(--fs-button-border, 3px double #96bddf)' &&
   !/gradient/.test(jewelAction.style.background),
   'border=' + jewelAction.style.border + ' shadow=' + jewelAction.style.boxShadow);
 check('a disabled action keeps the desaturated frame (rule 5)',
@@ -1162,9 +1192,36 @@ for (const panel of [window.document.getElementById('jewel-panel'), lockedPanel]
     navBtns.every(btn => !/fs-skills-nav|skills_nav_/.test(inlineOf(btn))) &&
     navBtns.every(btn => /gradient/.test(btn.style.getPropertyValue('background') || btn.style.getPropertyValue('background-image'))),
     navBtns.map(btn => btn.style.getPropertyValue('background') || btn.style.getPropertyValue('background-image')).join(' || ') || 'no nav buttons');
-  check('recipe pager arrows are thin and match the action button height',
-    navBtns.every(btn => btn.style.getPropertyValue('width') === '26px' && btn.style.getPropertyValue('height') === '44px'),
-    navBtns.map(btn => `${btn.style.getPropertyValue('width')}x${btn.style.getPropertyValue('height')}`).join(' || '));
+  /* Under V2 the pager is deliberately DEMOTED rather than matched to the
+     command button: at 26x44 the pair measured 58x44 and became the tallest
+     thing in the command column, so the pager — not the content — set the
+     height of every card that had one. Thin is still the requirement; equal to
+     the button is not, and that is a design decision, not a regression. */
+  /* Curtis's reference (2026-09) draws the pair as TABS directly under the
+     action button and exactly as wide as it, so the box is a function of
+     `--iw-skill-v2-btn-w` and the literal moved out of the renderer into the
+     sheet. jsdom resolves no cascade, so what is asserted here is the
+     DECLARATION: it must name the pager tokens, and their fallbacks must
+     still be thinner and shorter than the command button's own. A revert to
+     a fat literal, and a declaration pointed at the wrong token, both fail. */
+  const pxOf = v => Number(/(-?[\d.]+)px/.exec(v || '')?.[1] ?? NaN);
+  const fallbackOf = (btn, prop, token) => {
+    const raw = btn?.style.getPropertyValue(prop) || '';
+    const m = new RegExp('var\\(\\s*' + token + '\\s*,\\s*([^)]+)\\)').exec(raw);
+    return m ? pxOf(m[1]) : NaN;
+  };
+  const cmdBtn = jewelPanel.querySelector('[data-iw-skill-role="action-button"]');
+  const cmdW = fallbackOf(cmdBtn, 'width', '--iw-skill-v2-btn-w');
+  const cmdH = fallbackOf(cmdBtn, 'height', '--iw-skill-v2-btn-h');
+  check('recipe pager arrows are thin and smaller than the command button',
+    navBtns.length === 2 && cmdW > 0 && cmdH > 0 &&
+    navBtns.every(btn => {
+      const w = fallbackOf(btn, 'width', '--iw-skill-v2-nav-w');
+      const h = fallbackOf(btn, 'height', '--iw-skill-v2-nav-h');
+      return w > 0 && h > 0 && w < cmdW && h < cmdH;
+    }),
+    navBtns.map(btn => `${btn.style.getPropertyValue('width')}x${btn.style.getPropertyValue('height')}`)
+      .join(' || ') + ` against command ${cmdW}x${cmdH}`);
   check('recipe pager carries its own steel frame and no overlaid glyph',
     navBtns.every(btn => /1px solid/.test(btn.style.getPropertyValue('border'))) &&
     navBtns.every(btn => btn.style.getPropertyValue('color') === 'transparent') &&
@@ -1552,6 +1609,10 @@ check('ALL runtime stylesheets removed', window.document.querySelectorAll('style
 check('ui role attributes removed', window.document.querySelectorAll('[data-iw-ui]').length === 0);
 check('appended toolkit link removed on teardown',
   window.document.querySelectorAll('[data-iw-nav-link]').length === 0);
+check('header chrome marks removed on teardown',
+  window.document.querySelectorAll('[data-iw-chrome]').length === 0);
+check('zone link mark removed on teardown',
+  window.document.querySelectorAll('[data-iw-zone-link]').length === 0);
 /* The village scene is the skin's other whole-element append (rule 2), so
    like the toolkit link it must be REMOVED, not merely stripped of its
    attributes — and the Skill Actions panel it anchored to must be left with

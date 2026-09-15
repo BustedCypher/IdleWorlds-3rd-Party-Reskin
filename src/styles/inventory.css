@@ -95,7 +95,7 @@
      computed-value time and the Inventory title silently inherited whatever
      the game was using. (Audit S3.1) */
   font-family: var(--iw-font-head) !important;
-  font-size: 18px !important;
+  font-size: var(--iw-frame-title-size, 18px) !important;
   font-weight: 700 !important;
   letter-spacing: .13em !important;
   text-transform: uppercase !important;

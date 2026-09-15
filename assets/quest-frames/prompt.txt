@@ -1,0 +1,20 @@
+Use case: stylized-concept.
+Asset type: one cohesive concept comparison sheet for a dark fantasy game's circular quest-icon frames.
+Reference image: existing IdleWorlds nine-theme UI chrome matrix, used ONLY as palette/material/style reference, not an edit target. Generate a NEW comparison sheet.
+Primary request: redesign the circular decorative frame surrounding the quest item icon; create nine simple matching circular rings in a clean 3 by 3 grid. This is a design exploration board, not an atlas or complete interface.
+Canvas: square, uniform near-black charcoal #101113 background, generous spacing, no header, elegant small muted ivory uppercase labels beneath each ring.
+Each frame: exact front view, perfect circular opening, equal size and thickness across all nine. Ring outside diameter about 250px at 1536px square sheet size; large empty center approximately 78% of outside diameter, with center the same plain charcoal as background. Slim solid beveled metal rim, modest painterly game-UI texture, very restrained single color inlay, at most two tiny theme-specific details touching the rim. No central item, no icon, no jewels obstructing center. Strong legibility when reduced to a 40–72px game icon. Simpler and much less ornate than the reference's flourishes. Warm/cool worn metal highlights; crisp clean edges, restrained contrast. No sprawling filigree, no large crests, no wings, no giant spikes, no particle effects, no dramatic glow, no photoreal product scene, no perspective or cast shadow.
+Grid exact row-major labels and designs:
+Row 1:
+"VERDANT": aged bronze circle with moss-green narrow inlay and just two tiny leaf engravings.
+"FORGED METAL": dark iron circle, steel bevel, four small flush rivets and extremely subtle cool blue groove.
+"INFERNAL": blackened iron circle, fine ember-orange inset seam, two short restrained ember cracks.
+Row 2:
+"CELESTIAL": pale antique gold and silver circle, fine sapphire-blue inlay, one tiny four-point star engraving on upper rim.
+"VOIDBORN": dark gunmetal circle, fine violet seam, small angular bevel cuts.
+"RUNIC ARCANE": antique bronze circle, narrow turquoise seam, four simple tiny etched rune marks spaced around rim.
+Row 3:
+"LUNAR SPECTRAL": cool silver circle, subdued periwinkle seam, tiny crescent engraving on top rim.
+"TEMPEST OCEANIC": blue steel circle, fine cyan-teal inlay, two shallow wave engravings.
+"GLACIAL": pale icy steel circle, soft ice-blue inset line, three small angular frost facets confined to ring.
+All nine should unmistakably form one restrained and consistent circular frame family, with differences from materials, hues, and small motifs. Actual ring shapes must remain circular. The empty icon opening is the most important element. Labels exactly as specified, small, clean, consistently centered under rings. High-quality polished 2D fantasy game art.

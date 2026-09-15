@@ -147,7 +147,7 @@ button{background:none;font:inherit;color:inherit}body{margin:0;background:#0f17
 <header><div><h1>BustedCypher</h1><p>⚔ Combat Lv 62</p></div>
   <div><button>☆</button><button>✉</button><button>⚙</button></div>
   <div id="status-grid"><div id="gold-tile">💰 515,686</div><div>⚔ ATK 292 · DEF 252</div></div></header>
-<nav><button>Game</button><button>Market</button><button>Village</button></nav>
+<nav><button>Game</button><button>Market</button><button>Leaderboards</button><button>Village</button></nav>
 <div id="zone-bar-panel" class="panel"><div><p>🧭 Zone 19: Eternium Verge</p></div>
   <div><button>🌐 Zones</button><button>Next Zone</button></div></div>
 <div id="panel-column" style="display:flex;flex-direction:column;gap:12px">
@@ -288,6 +288,7 @@ const shapes = await page.evaluate(() => ({
   plots: document.querySelectorAll('[data-iw-village-scene] .iw-vs-plot').length,
   collapses: document.querySelectorAll('[data-iw-collapse]').length,
   ordered: document.querySelectorAll('[data-iw-order]').length,
+  chrome: document.querySelectorAll('[data-iw-chrome]').length,
 }));
 check('quest cards are classified, so loop A has a surface to run on',
   shapes.quests >= 2, `${shapes.quests} quest panels`);
@@ -310,6 +311,11 @@ check('collapse controls are mounted, so their pass has a surface too',
    zero above says nothing about it. */
 check('panels carry arrangement slots, so the order pass has a surface too',
   shapes.ordered >= 3, `${shapes.ordered} ordered panels`);
+/* HeaderChrome runs on every flush and writes six marks across the header
+   chrome. Merged here (shell, nav, zone bar and both of its branches — this
+   fixture ships no announcement), or the silence above says nothing about it. */
+check('the header chrome is merged, so its pass has a surface too',
+  shapes.chrome >= 5, `${shapes.chrome} chrome marks`);
 
 check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
 

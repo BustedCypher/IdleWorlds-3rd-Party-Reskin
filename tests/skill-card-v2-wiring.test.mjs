@@ -9,9 +9,12 @@ const checks = [
   ['content tears V2 controller down', /guard\(\s*['"]teardown:skill-card-design['"]\s*,\s*clearSkillCardDesignController\s*\)/.test(content)],
   ['V2 CSS is composed into lifecycle-owned skillpanel stylesheet', /skillCardV2Css/.test(content) && /skillPanelCss\s*\+/.test(content)],
   ['new design selector is explicit', /data-iw-skill-card-design=["']new["']/.test(css)],
-  ['collapsed and expanded states are styled', /data-iw-skill-v2-state=["']collapsed["']/.test(css) && /data-iw-skill-v2-state=["']expanded["']/.test(css)],
-  ['tab-selected sections are state driven', /data-iw-skill-v2-tab=["']materials["']/.test(css) && /data-iw-skill-v2-section=["']materials["']/.test(css)],
-  ['legacy mode hides only V2 controls', /data-iw-skill-card-design=["']current["'][\s\S]*iw-skill-v2-controls/.test(css)],
+  // Expansion and tab content are exercised by the browser tests. They no
+  // longer depend on un-clipping native source nodes with per-tab CSS rules.
+  /* The V2 card is the only design (Curtis, 2026-09): no switch, no "current" mode. */
+  ['the old/new design switch is gone from the sheet', !/iw-skill-design-toggle/.test(css)],
+  ['no rule targets a "current" design', !/data-iw-skill-card-design=["']current/.test(css)],
+  ['every discipline in the artwork has an action icon rule', ['combat','mining','smithing','gathering','alchemy','jewelcrafting','spellcrafting','tailoring','woodcutting','construction'].every(k => css.includes(`[data-iw-skill-v2-type="${k}"] .iw-skill-v2-action-glyph`) && fs.existsSync(new URL(`../assets/skills-ui/action-icons/${k}.svg`, import.meta.url)))],
 ];
 
 let fail = 0;

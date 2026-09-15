@@ -636,20 +636,43 @@ ${questCard({ accent: '#5E8FB7', glyph: '✦', state: 'ready', kicker: 'Crafting
   acqMain: 'Zone drop', acqSub: 'Rate 1/20000 &#x00B7; boosted by Item Find %' })}</div>
 </div>
 
-<div class="fx-h">Navigation rail &amp; controls</div>
-<div data-iw-ui="main-nav" style="margin-bottom:14px">
-  <button data-iw-ui="nav-tab" data-iw-state="active">Game</button>
-  <button data-iw-ui="nav-tab">Market</button>
-  <button data-iw-ui="nav-tab">Leaderboards</button>
-  <button data-iw-ui="nav-tab">Village</button>
-  <button data-iw-ui="nav-tab">Dungeon</button>
-  <a data-iw-ui="nav-tab" data-iw-nav-link="toolkit" href="https://idleworldstoolkit.com" target="_blank" rel="noopener noreferrer">Toolkit</a>
+<div class="fx-h">Navigation rail &amp; controls — the rail is a .panel too, so it wears
+  the same section-frame the other panels do (compacted padding, no corner
+  flourish). This is the STANDALONE rail; on the live page HeaderChrome merges
+  it with the zone bar into one frame, which tests/header-compact.test.mjs
+  measures on the real sibling shape.</div>
+<div class="panel fx-nav-frame" data-iw-ui="section-frame" style="margin-bottom:14px">
+  <div data-iw-ui="main-nav">
+    <button data-iw-ui="nav-tab" data-iw-state="active">Game</button>
+    <button data-iw-ui="nav-tab">Market</button>
+    <button data-iw-ui="nav-tab">Leaderboards</button>
+    <button data-iw-ui="nav-tab">Village</button>
+    <button data-iw-ui="nav-tab">Dungeon</button>
+    <a data-iw-ui="nav-tab" data-iw-nav-link="toolkit" href="https://idleworldstoolkit.com" target="_blank" rel="noopener noreferrer">Toolkit</a>
+  </div>
 </div>
+
+<div class="fx-h">Announcement strip</div>
+<div data-iw-header="announcement">You will auto-attack Ancient Treant when it respawns.</div>
+
+<div class="fx-h">Zone command rail — the live shape: a title+target branch and
+  an action-button branch, both direct children of the zone shell.</div>
+<div class="panel fx-zone-bar" data-iw-header="zone-shell" data-iw-ui="zone-bar" style="margin-bottom:14px">
+  <div>
+    <p data-iw-ui="zone-title">&#x1F9ED; Zone 19: Eternium Verge <button style="all:unset;cursor:pointer;text-decoration:underline">who's here?</button></p>
+    <p>Next zone target: ATK 287 / DEF 291 (or Lv 77 in any skill)</p>
+  </div>
+  <div>
+    <button data-iw-ui="zone-action" data-iw-zone-action="zones">&#x1F310; Zones</button>
+    <button data-iw-ui="zone-action" data-iw-zone-action="prev">Previous Zone</button>
+    <button data-iw-ui="zone-action" data-iw-zone-action="next">Next Zone</button>
+  </div>
+</div>
+
 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
   <button class="iw-btn iw-btn--primary">Primary</button>
   <button class="iw-btn">Secondary</button>
   <button class="iw-btn" disabled>Disabled</button>
-  <button data-iw-ui="zone-action">Next Zone</button>
   <input type="search" placeholder="Search items…" style="width:200px">
   <span data-iw-inventory-control="page-count">3 / 18</span>
 </div>
@@ -802,6 +825,40 @@ await p.waitForTimeout(400);
 await p.screenshot({ path: resolve(OUT, 'full.png'), fullPage: true });
 await p.locator('.fx-skill-grid').screenshot({ path: resolve(OUT, 'skills-panel.png') });
 await p.locator('.fx-quest-grid').screenshot({ path: resolve(OUT, 'quest-panel.png') });
+await p.locator('.fx-nav-frame').screenshot({ path: resolve(OUT, 'nav-frame.png') });
+await p.locator('.fx-zone-bar').screenshot({ path: resolve(OUT, 'zone-bar.png') });
+await p.locator('[data-iw-header="announcement"]').first().screenshot({ path: resolve(OUT, 'announcement.png') });
+
+const navZoneMetrics = await p.evaluate(() => {
+  const box = el => { const r = el.getBoundingClientRect();
+    return { w: +r.width.toFixed(1), h: +r.height.toFixed(1) }; };
+  const nav = document.querySelector('.fx-nav-frame');
+  const zone = document.querySelector('.fx-zone-bar');
+  const zoneTitleRow = zone?.querySelector('[data-iw-ui="zone-title"]')?.closest('div');
+  const zoneActions = zone?.querySelectorAll('[data-iw-ui="zone-action"]');
+  return {
+    navFrame: nav && box(nav),
+    zoneBar: zone && box(zone),
+    zoneShellChildTops: zone ? [...zone.children].map(c => +c.getBoundingClientRect().top.toFixed(1)) : null,
+    zoneTitleRowWraps: zoneTitleRow
+      ? [...zoneTitleRow.children].map(c => +c.getBoundingClientRect().top.toFixed(1))
+      : null,
+    zoneActionTops: zoneActions ? [...zoneActions].map(b => +b.getBoundingClientRect().top.toFixed(1)) : null,
+    zoneActionHeights: zoneActions ? [...zoneActions].map(b => box(b).h) : null,
+    zoneShellChildBoxes: zone ? [...zone.children].map(c => box(c)) : null,
+    zoneShellPadding: zone ? getComputedStyle(zone).padding : null,
+  };
+});
+console.log('nav + zone bar geometry:', JSON.stringify(navZoneMetrics));
+const announceMetrics = await p.evaluate(() => {
+  const el = document.querySelector('[data-iw-header="announcement"]');
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+  return { h: +r.height.toFixed(1), minHeight: cs.minHeight, height: cs.height, padding: cs.padding, margin: cs.margin, fontSize: cs.fontSize, lineHeight: cs.lineHeight };
+});
+console.log('announcement geometry:', JSON.stringify(announceMetrics));
+
 
 // Once the action_frame sprite is on a quest command button, that sprite is the
 // ONLY frame — skillpanel.css strips the plate to `box-shadow: none` and the

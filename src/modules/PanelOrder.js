@@ -143,7 +143,10 @@ function isReorderable(el) {
   if (el.hasAttribute('data-iw-header')) return false;
   if (el.dataset?.iwUi === 'zone-bar' || el.dataset?.iwUi === 'main-nav' ||
       el.dataset?.iwUi === 'main-nav-shell') return false;
-  if (el.querySelector('[data-iw-ui="main-nav"], [data-iw-ui="zone-bar"]')) return false;
+  // `nav-tab` too: when the tabs sit directly in a `.panel`, that panel is
+  // tagged `section-frame`, not `main-nav` (UIFoundation.setNavRole), so the
+  // role alone no longer identifies the rail.
+  if (el.querySelector('[data-iw-ui="main-nav"], [data-iw-ui="nav-tab"], [data-iw-ui="zone-bar"]')) return false;
   return true;
 }
 

@@ -1,0 +1,13 @@
+import { JSDOM } from 'jsdom';
+const d = new JSDOM('<div id="a" style="color:red"></div>');
+const el = d.window.document.getElementById('a');
+let n = 0;
+const o = new d.window.MutationObserver(l => { n += l.length; });
+o.observe(d.window.document.body, { attributes: true, subtree: true });
+for (let i = 0; i < 100; i++) el.style.setProperty('color', 'red');
+await new Promise(r => setTimeout(r, 50));
+console.log('jsdom: 100 SAME-value setProperty ->', n, 'records   (real Chromium: 0)');
+n = 0;
+for (let i = 0; i < 100; i++) el.style.setProperty('color', i % 2 ? 'red' : 'blue');
+await new Promise(r => setTimeout(r, 50));
+console.log('jsdom: 100 ALTERNATING setProperty ->', n, 'records   (real Chromium: 100)');

@@ -1,0 +1,70 @@
+{
+  "atlas": "approved-frames.png",
+  "width": 1254,
+  "height": 1254,
+  "entries": [
+    {
+      "theme": "verdant",
+      "x": 87.5,
+      "y": 35.5,
+      "width": 320,
+      "height": 320
+    },
+    {
+      "theme": "forged-metal",
+      "x": 463.5,
+      "y": 35,
+      "width": 320,
+      "height": 320
+    },
+    {
+      "theme": "infernal",
+      "x": 840.5,
+      "y": 36,
+      "width": 320,
+      "height": 320
+    },
+    {
+      "theme": "celestial",
+      "x": 85,
+      "y": 424,
+      "width": 320,
+      "height": 320
+    },
+    {
+      "theme": "voidborn",
+      "x": 464,
+      "y": 425,
+      "width": 320,
+      "height": 320
+    },
+    {
+      "theme": "runic-arcane",
+      "x": 841.5,
+      "y": 425.5,
+      "width": 320,
+      "height": 320
+    },
+    {
+      "theme": "lunar-spectral",
+      "x": 87,
+      "y": 810.5,
+      "width": 320,
+      "height": 320
+    },
+    {
+      "theme": "tempest-oceanic",
+      "x": 464,
+      "y": 810.5,
+      "width": 320,
+      "height": 320
+    },
+    {
+      "theme": "glacial",
+      "x": 839.5,
+      "y": 811.5,
+      "width": 320,
+      "height": 320
+    }
+  ]
+}

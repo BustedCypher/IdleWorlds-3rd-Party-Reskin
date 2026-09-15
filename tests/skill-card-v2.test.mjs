@@ -1,14 +1,4 @@
 import { JSDOM } from 'jsdom';
-import {
-  DEFAULT_SKILL_CARD_DESIGN,
-  normalizeSkillCardDesign,
-  applySkillCardDesign,
-  ensureSkillCardDesignToggle,
-  enhanceSkillCardV2,
-  setSkillCardExpanded,
-  setSkillCardTab,
-  clearSkillCardV2,
-} from '../src/modules/SkillCardDesignController.js';
 
 function installDom(html = '') {
   const dom = new JSDOM(`<body>${html}</body>`, { url: 'https://idleworlds.com/' });
@@ -21,35 +11,33 @@ function installDom(html = '') {
   return dom;
 }
 
+/* The controller reads `document` at call time, so a DOM must exist before the
+   module's functions run - but not before it is imported. */
+installDom();
+const {
+  enhanceSkillCardV2,
+  clearSkillCardV2,
+  initSkillCardDesignController,
+  clearSkillCardDesignController,
+} = await import('../src/modules/SkillCardDesignController.js');
+
 const cases = [];
 function check(label, condition, detail = '') {
   cases.push({ label, ok: !!condition, detail });
 }
 
-// Default / normalisation contract: this branch is intentionally NEW-first.
+/* The V2 card is the ONLY design (Curtis, 2026-09): no old/new switch, no
+   stored preference. The root attribute every V2 rule keys on is still set. */
 {
-  const dom = installDom();
-  check('default design is new', DEFAULT_SKILL_CARD_DESIGN === 'new', DEFAULT_SKILL_CARD_DESIGN);
-  check('unknown stored value falls back to new', normalizeSkillCardDesign('wat') === 'new');
-  check('current stored value is preserved', normalizeSkillCardDesign('current') === 'current');
-  applySkillCardDesign(undefined, dom.window.document.documentElement);
-  check('apply without value marks root as new', dom.window.document.documentElement.dataset.iwSkillCardDesign === 'new');
+  installDom('<section id="frame"><h2>Skill Actions</h2><div data-iw-skill-design-toggle="1">stale</div></section>');
+  initSkillCardDesignController();
+  check('the root is marked new on init', document.documentElement.getAttribute('data-iw-skill-card-design') === 'new');
+  check('a toggle mounted by an older build is removed on init', !document.querySelector('[data-iw-skill-design-toggle]'));
+  clearSkillCardDesignController();
+  check('teardown removes the root mark', !document.documentElement.hasAttribute('data-iw-skill-card-design'));
 }
 
-// Toggle is skin-owned, reversible, and exposes pressed state without touching game controls.
-{
-  installDom('<section id="frame"><h2>Skill Actions</h2></section>');
-  const frame = document.querySelector('#frame');
-  const toggle = ensureSkillCardDesignToggle(frame, 'new');
-  check('toggle appended once', !!toggle && frame.querySelectorAll('[data-iw-skill-design-toggle]').length === 1);
-  check('new button pressed', toggle.querySelector('[data-iw-skill-design="new"]')?.getAttribute('aria-pressed') === 'true');
-  check('current button unpressed', toggle.querySelector('[data-iw-skill-design="current"]')?.getAttribute('aria-pressed') === 'false');
-  ensureSkillCardDesignToggle(frame, 'current');
-  check('toggle remains singleton after reconcile', frame.querySelectorAll('[data-iw-skill-design-toggle]').length === 1);
-  check('current button updates pressed state', toggle.querySelector('[data-iw-skill-design="current"]')?.getAttribute('aria-pressed') === 'true');
-}
-
-// A dense construction card gets presentation controls derived from roles already
+// A dense construction card gets presentation derived from roles already
 // assigned by SkillPanelRenderer. Native gameplay nodes stay in place.
 {
   installDom(`
@@ -60,6 +48,7 @@ function check(label, condition, detail = '') {
         <button data-iw-skill-role="level-progress">Lv 56 - 12.6% • 4,000 XP to go</button>
         <p data-iw-skill-role="requirement">Needs Construction Lv 53 + Woodcutting Lv 49</p>
         <div data-iw-skill-ingredient-list="1" role="list"><span role="listitem">Moonsteel Ore 3 / 9800</span></div>
+        <p>Found in the Bloodoak Grove</p>
         <p data-iw-skill-role="action-detail">Missing materials — will queue</p>
         <p data-iw-skill-role="reward">Base Reward: 252</p>
       </div>
@@ -72,26 +61,46 @@ function check(label, condition, detail = '') {
   const title = panel.querySelector('[data-iw-skill-role="action-title"]');
   const titleParent = title.parentElement;
 
-  const controls = enhanceSkillCardV2(panel, 'construction');
+  enhanceSkillCardV2(panel, 'construction');
   check('card is marked as V2-ready', panel.dataset.iwSkillV2 === '1');
-  check('V2 starts collapsed', panel.dataset.iwSkillV2State === 'collapsed');
-  check('requirements is initial tab when present', panel.dataset.iwSkillV2Tab === 'requirements');
-  check('requirements tab exists', !!controls.querySelector('[data-iw-skill-v2-tab-button="requirements"]'));
-  check('materials tab exists', !!controls.querySelector('[data-iw-skill-v2-tab-button="materials"]'));
-  check('details tab exists', !!controls.querySelector('[data-iw-skill-v2-tab-button="details"]'));
-  check('rewards tab exists', !!controls.querySelector('[data-iw-skill-v2-tab-button="rewards"]'));
+  check('the card carries its discipline, which picks its action icon', panel.dataset.iwSkillV2Type === 'construction');
+  check('the action glyph is appended to the command zone, not the button',
+    panel.querySelector('[data-iw-skill-zone="commands"] > [data-iw-skill-v2-action-glyph]')
+      && !action.querySelector('[data-iw-skill-v2-action-glyph]'));
+  check('the glyph writes no inline style - the sheet picks the icon',
+    !panel.querySelector('[data-iw-skill-v2-action-glyph]').getAttribute('style'));
+
+  /* No tabs at all: Materials and Sources are the frame's default content, and
+     Requirements, Queue and Rewards are not shown as tabs either. */
+  check('no tab strip and no tab buttons',
+    !panel.querySelector('[data-iw-skill-v2-tabs], [data-iw-skill-v2-tab-button]'));
+  const bodyText = () => panel.querySelector('[data-iw-skill-v2-body]')?.textContent || '';
+  check('the frame shows the materials', /Moonsteel Ore 3 \/ 9800/.test(bodyText()), bodyText());
+  check('the frame shows the source line after the materials',
+    bodyText().indexOf('Bloodoak Grove') > bodyText().indexOf('Moonsteel Ore'), bodyText());
+  check('the frame shows neither the queue status nor the reward',
+    !/will queue|Base Reward/.test(bodyText()), bodyText());
+  check('the requirement line is still marked, so the game copy stays clipped',
+    panel.querySelector('[data-iw-skill-role="requirement"]')?.dataset.iwSkillV2Section === 'requirements');
+
+  check('a requirement with no unmet state shows no note or foot row',
+    !panel.querySelector('[data-iw-skill-v2-req-note], [data-iw-skill-v2-controls]'));
+  panel.querySelector('[data-iw-skill-role="requirement"]').dataset.iwReqState = 'unmet';
+  enhanceSkillCardV2(panel, 'construction');
+  check('an unmet requirement shows its line on the foot row',
+    panel.querySelector('[data-iw-skill-v2-controls] > [data-iw-skill-v2-req-note]')?.textContent === 'Needs Construction Lv 53 + Woodcutting Lv 49');
+  panel.querySelector('[data-iw-skill-role="requirement"]').dataset.iwReqState = 'met';
+  enhanceSkillCardV2(panel, 'construction');
+  check('the note and its row go away once the requirement is met',
+    !panel.querySelector('[data-iw-skill-v2-req-note], [data-iw-skill-v2-controls]'));
+
   check('native action button is not reparented', action.parentElement === actionParent);
   check('native title is not reparented', title.parentElement === titleParent);
 
-  setSkillCardExpanded(panel, true);
-  check('expand changes state only', panel.dataset.iwSkillV2State === 'expanded');
-  setSkillCardTab(panel, 'materials');
-  check('tab switch updates active tab', panel.dataset.iwSkillV2Tab === 'materials');
-  check('materials button pressed after switch', controls.querySelector('[data-iw-skill-v2-tab-button="materials"]')?.getAttribute('aria-selected') === 'true');
-
   clearSkillCardV2(panel);
   check('teardown removes V2 marker', !panel.hasAttribute('data-iw-skill-v2'));
-  check('teardown removes owned controls', !panel.querySelector('[data-iw-skill-v2-controls]'));
+  check('teardown removes the frame and the glyph',
+    !panel.querySelector('[data-iw-skill-v2-body], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-controls]'));
   check('teardown leaves native action button connected', panel.contains(action));
 }
 

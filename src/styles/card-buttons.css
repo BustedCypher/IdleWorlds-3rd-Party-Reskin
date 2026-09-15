@@ -1,0 +1,55 @@
+/* Square action artwork for the V2 cards. Keep the existing native controls,
+   content and cadence. Specificity includes the theme so legacy/unthemed cards
+   keep their existing treatment. Border width remains part of label geometry. */
+html[data-iw-zone-theme][data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"] {
+  --fs-motion-idle: var(--iw-card-action-idle) !important;
+  --fs-motion-hover: var(--iw-card-action-hover) !important;
+  --fs-motion-pressed: var(--iw-card-action-clicked) !important;
+  --fs-button-background: var(--iw-card-action-idle) !important;
+  --fs-button-border: var(--iw-skill-v2-btn-border) solid transparent !important;
+  --fs-button-shadow: none !important;
+  background-origin: padding-box !important;
+  background-clip: padding-box !important;
+  border-radius: 2px !important;
+  filter: none !important;
+  transition: none !important;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000 !important;
+}
+html[data-iw-zone-theme][data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"]::before,
+html[data-iw-zone-theme][data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"]::after {
+  inset: 0 !important;
+  border-radius: 2px !important;
+}
+/* Clip the native percentage fill INSIDE the graphic rail. Width and cadence
+   stay game-owned. At 100%, the right inset also protects the far frame. */
+html[data-iw-zone-theme][data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"] > span[style*="width"] {
+  clip-path: inset(5px max(0px, calc(100% - var(--iw-skill-v2-btn-w) + 2 * var(--iw-skill-v2-btn-border) + 5px)) 5px 5px round 2px) !important;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--iw-th-accent) 48%, #090c16), color-mix(in srgb, var(--iw-th-accent) 68%, #090c16)) !important;
+  box-shadow: inset -2px 0 0 color-mix(in srgb, var(--iw-th-accent) 25%, #fff), inset 0 1px 0 #ffffff24 !important;
+  animation: none !important;
+}
+html[data-iw-zone-theme][data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="action-button"]:is(:disabled,[aria-disabled="true"],[data-iw-btn-state="disabled"]) {
+  filter: grayscale(.9) !important;
+  opacity: .6 !important;
+}
+/* The existing directional glyph remains in ::before. A navigation plate's
+   entire background switches state; its foreground never changes geometry. */
+html[data-iw-zone-theme][data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] {
+  --fs-button-background: var(--iw-card-nav-idle) !important;
+  --fs-button-border: 1px solid transparent !important;
+  --fs-button-shadow: none !important;
+  background-origin: border-box !important;
+  border-radius: 0 !important;
+  clip-path: polygon(8% 0,92% 0,100% 14%,100% 86%,92% 100%,8% 100%,0 86%,0 14%);
+  filter: none !important;
+}
+html[data-iw-zone-theme][data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:not(:disabled):not([aria-disabled="true"]):not([data-iw-btn-state="disabled"]):is(:hover,:focus-visible) {
+  --fs-button-background: var(--iw-card-nav-hover) !important;
+}
+html[data-iw-zone-theme][data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:not(:disabled):not([aria-disabled="true"]):not([data-iw-btn-state="disabled"]):active {
+  --fs-button-background: var(--iw-card-nav-clicked) !important;
+}
+html[data-iw-zone-theme][data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:focus-visible {
+  outline: 2px solid var(--iw-th-accent) !important;
+  outline-offset: -3px !important;
+}
