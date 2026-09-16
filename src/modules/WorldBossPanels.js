@@ -43,6 +43,9 @@ const impactAnimations = new WeakMap();
 const impactCleanup = new WeakMap();
 const norm = value => String(value || '').replace(/\s+/g, ' ').trim();
 function mark(el, key, value) { if (el && el.getAttribute(key) !== value) el.setAttribute(key, value); }
+// A same-value textContent write still replaces the text node, and inside a
+// .compact-panel that childList record re-queues this decorator: compare first.
+function setText(el, value) { if (el && el.textContent !== value) el.textContent = value; }
 function owned(tag, className, text) {
   const el = document.createElement(tag);
   el.className = className;
@@ -206,9 +209,9 @@ function updateDominion(card, team) {
   mark(hp, 'data-iw-boss-role', 'control-hp');
   mark(progress.track, 'data-iw-boss-role', 'control-progress');
   panel.querySelector('.iw-control-crest').dataset.iwControlCrest = team;
-  panel.querySelector('.iw-control-state').textContent = state;
-  panel.querySelector('.iw-control-meter-label').textContent = strengths ? 'Ward Strength' : 'Ward Integrity';
-  panel.querySelector('.iw-control-meter-value').textContent = value;
+  setText(panel.querySelector('.iw-control-state'), state);
+  setText(panel.querySelector('.iw-control-meter-label'), strengths ? 'Ward Strength' : 'Ward Integrity');
+  setText(panel.querySelector('.iw-control-meter-value'), value);
   const meter = panel.querySelector('.iw-control-meter');
   const fill = panel.querySelector('.iw-control-meter-fill');
   if (strengths) {

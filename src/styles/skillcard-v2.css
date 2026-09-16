@@ -15,33 +15,37 @@
    selector is intentional: this design must outrank the later ui-system sheet.
    Keep geometry here; the renderer's inline dimensions resolve these tokens. */
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] {
-  /* The hero group is 20% smaller than the first V2 build (Curtis, 2026-09);
-     the discipline name under it keeps its size. */
-  --iw-skill-v2-icon: 51px;
-  --iw-skill-v2-ring-gap: 9px;
-  --iw-skill-v2-ring-weight: 6px;
+  /* The hero group is compact enough to breathe inside its ornamental frame
+     (Curtis, 2026-09); the discipline name under it keeps its size. */
+  --iw-skill-v2-icon: 43px;
+  --iw-skill-v2-ring-gap: 7px;
+  --iw-skill-v2-ring-weight: 4px;
   --iw-skill-v2-identity-w: 144px;
   --iw-skill-v2-command-w: 96px;
   --iw-skill-v2-gutter: 20px;
   --iw-skill-v2-rail-bottom: 6px;
   --iw-skill-v2-cmd-buffer: 8px;
-  /* The action button's icon and label are ONE group centred on the button.
-     The label's line box is 12px at line-height 1.15; the border is 3px. The
-     padding puts the label's content box exactly under the icon, so the group
-     is centred by construction rather than by a tuned offset. */
-  --iw-skill-v2-glyph: 32px;
-  --iw-skill-v2-glyph-gap: 2px;
+  /* The action label, framed button and pager are one centred command stack.
+     The icon scales from the button's current dimensions and always preserves
+     a safe inset outside its box; the SVGs add their own 4% ink padding. */
   --iw-skill-v2-label-h: 12px;
+  --iw-skill-v2-action-label-gap: 4px;
+  --iw-skill-v2-glyph-safe-inset: 14px;
   /* The label's CEILING. SkillCardDesignController.fitActionLabel measures
      each label once and writes a smaller size inline on the card whenever the
      text would not fit on one line inside the buffer. */
-  --iw-skill-v2-btn-font: 9.5px;
+  --iw-skill-v2-action-label-font: 9.5px;
+  /* The game-owned label remains in the real button for its accessible name,
+     but occupies no visual layout; the aria-hidden mirror above is painted. */
+  --iw-skill-v2-btn-font: 0px;
   --iw-skill-v2-label-buffer: 4px;
   --iw-skill-v2-btn-tracking: .02em;
   --iw-skill-v2-btn-border: 3px;
-  --iw-skill-v2-glyph-inset: calc((var(--iw-skill-v2-btn-h) - var(--iw-skill-v2-glyph) - var(--iw-skill-v2-glyph-gap) - var(--iw-skill-v2-label-h)) / 2);
-  --iw-skill-v2-btn-pad: calc(var(--iw-skill-v2-glyph-inset) + var(--iw-skill-v2-glyph) + var(--iw-skill-v2-glyph-gap) - var(--iw-skill-v2-btn-border)) var(--iw-skill-v2-label-buffer) calc(var(--iw-skill-v2-glyph-inset) - var(--iw-skill-v2-btn-border));
-  --iw-skill-v2-cmd-stack: var(--iw-skill-v2-btn-h);
+  --iw-skill-v2-btn-offset: calc(var(--iw-skill-v2-label-h) + var(--iw-skill-v2-action-label-gap));
+  --iw-skill-v2-glyph: max(16px, min(calc(var(--iw-skill-v2-btn-w) - var(--iw-skill-v2-glyph-safe-inset) - var(--iw-skill-v2-glyph-safe-inset)), calc(var(--iw-skill-v2-btn-h) - var(--iw-skill-v2-glyph-safe-inset) - var(--iw-skill-v2-glyph-safe-inset))));
+  --iw-skill-v2-glyph-inset: calc(var(--iw-skill-v2-btn-offset) + (var(--iw-skill-v2-btn-h) - var(--iw-skill-v2-glyph)) / 2);
+  --iw-skill-v2-btn-pad: 0;
+  --iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h));
   /* 30% smaller in BOTH axes. Width alone would leave the command column
      needing btn-h + buffer + nav-h + 24px = 148px, which is exactly what held
      every card at 148-152px however small the hero became. */
@@ -136,16 +140,16 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-level-readout {
   position: relative !important; z-index: 3 !important; order: 2 !important;
   display: flex !important; flex-direction: column !important; align-items: center !important;
-  width: max-content !important; min-width: 50px !important; max-width: 100% !important;
-  margin: -2px 0 0 !important; padding: 2px 6px 4px !important;
-  border: 1px solid var(--iw-th-hairline) !important; border-radius: 4px 4px 14px 14px !important;
+  width: max-content !important; min-width: 44px !important; max-width: 100% !important;
+  margin: -2px 0 0 !important; padding: 1px 5px 3px !important;
+  border: 1px solid var(--iw-th-hairline) !important; border-radius: 4px 4px 11px 11px !important;
   background: linear-gradient(var(--iw-th-ground-a), var(--iw-th-plate)) !important;
   box-shadow: inset 0 0 0 2px var(--iw-th-edge-soft), 0 2px 4px #0009 !important;
   color: #f0f1e9 !important; font-family: var(--iw-font-ui, sans-serif) !important;
   line-height: 1.12 !important; font-variant-numeric: tabular-nums !important; pointer-events: none !important;
 }
-html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-level { font-size: 14px !important; font-weight: 700 !important; }
-html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-percent { font-size: 10.5px !important; color: #bbcedc !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-level { font-size: 12px !important; font-weight: 700 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-percent { font-size: 9px !important; color: #bbcedc !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="identity"] {
   order: 3 !important; width: 100% !important; min-width: 0 !important;
   margin: 6px 0 0 !important; overflow: visible !important; text-align: center !important;
@@ -239,10 +243,10 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
    spans all three shell rows, and the content zone is static, so a pager there
    resolves against the card. */
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] {
-  --iw-skill-v2-cmd-stack: var(--iw-skill-v2-btn-h);
+  --iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h));
 }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:has([data-iw-skill-role="nav-group"]) {
-  --iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-h) + var(--iw-skill-v2-cmd-buffer) + var(--iw-skill-v2-nav-h));
+  --iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h) + var(--iw-skill-v2-cmd-buffer) + var(--iw-skill-v2-nav-h));
 }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="commands"] {
   grid-area: commands !important; display: block !important;
@@ -260,14 +264,15 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
   --fs-motion-pressed: linear-gradient(color-mix(in srgb, var(--iw-th-plate) 88%, transparent), color-mix(in srgb, var(--iw-th-cta) 72%, transparent)), url('../assets/skills_panel_texture.webp') center / cover !important;
   --fs-button-border: var(--iw-skill-v2-btn-border) double var(--iw-th-hairline-hi) !important;
   --fs-button-shadow: inset 0 0 0 2px var(--iw-th-plate), inset 0 0 0 3px var(--iw-th-accent-dim), inset 0 0 16px color-mix(in srgb, var(--iw-th-accent) 42%, transparent), 0 0 0 2px var(--iw-th-plate), 0 0 0 3px var(--iw-th-edge-mid), 0 0 12px color-mix(in srgb, var(--iw-th-accent) 26%, transparent) !important;
-  position: absolute !important; top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2) !important;
+  position: absolute !important; top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-offset)) !important;
   left: calc(50% - var(--iw-skill-v2-btn-w) / 2) !important; right: auto !important; bottom: auto !important;
   margin: 0 !important; border-radius: 9px !important;
-  outline: none !important; color: #e9f5ff !important; overflow: hidden !important;
+  outline: none !important; color: transparent !important; overflow: hidden !important;
   font-size: 12px !important; line-height: var(--iw-skill-v2-label-h) !important; letter-spacing: .04em !important;
-  white-space: nowrap !important;
+  white-space: nowrap !important; text-shadow: none !important;
   filter: none !important; transition: filter .15s ease !important;
 }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"] > :not([style*="width"]) { opacity: 0 !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"]:hover { filter: brightness(1.2) drop-shadow(0 0 5px color-mix(in srgb, var(--iw-th-accent) 55%, transparent)) !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"]:active { filter: brightness(.85) !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"]:focus-visible { outline: 2px solid var(--iw-th-accent) !important; outline-offset: 5px !important; }
@@ -317,13 +322,46 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
    whole grid, so the button measured from the command column while the icon,
    with no area, measured from the entire card and landed in its middle. The
    icon takes the same area. */
-html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"] > .iw-skill-v2-action-glyph,
-html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:has(> [data-iw-skill-layout-shell="1"])) > .iw-skill-v2-action-glyph { grid-area: commands !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"] > :is(.iw-skill-v2-action-glyph,.iw-skill-v2-action-label),
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:has(> [data-iw-skill-layout-shell="1"])) > :is(.iw-skill-v2-action-glyph,.iw-skill-v2-action-label) { grid-area: commands !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-action-label {
+  display: block !important; position: absolute !important; z-index: 3 !important;
+  top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2) !important;
+  left: calc(50% - var(--iw-skill-v2-btn-w) / 2) !important;
+  width: var(--iw-skill-v2-btn-w) !important; height: var(--iw-skill-v2-label-h) !important;
+  margin: 0 !important; padding: 0 var(--iw-skill-v2-label-buffer) !important;
+  color: #f3e3c0 !important; font: 700 var(--iw-skill-v2-action-label-font)/var(--iw-skill-v2-label-h) var(--iw-font-ui, sans-serif) !important;
+  letter-spacing: var(--iw-skill-v2-btn-tracking) !important; text-align: center !important;
+  white-space: nowrap !important; overflow: visible !important; pointer-events: none !important;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000c !important;
+}
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-action-glyph {
   display: block !important; position: absolute !important; z-index: 2 !important;
   top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-glyph-inset)) !important; left: 50% !important; transform: translateX(-50%) !important;
   width: var(--iw-skill-v2-glyph) !important; height: var(--iw-skill-v2-glyph) !important; background: none center / contain no-repeat !important;
   pointer-events: none !important; filter: drop-shadow(0 2px 3px #000a) !important;
+}
+/* A condition-adjusted action that STARTS above 11 seconds uses the existing
+   skin-owned glyph as its countdown readout. The game's label stays in the
+   button (and therefore keeps its handler and accessible name), but becomes
+   visually transparent while the mirrored Current Action time is shown. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] button[data-iw-skill-role="action-button"] {
+  color: transparent !important; text-shadow: none !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] button[data-iw-skill-role="action-button"] > :not([style*="width"]) {
+  opacity: 0 !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] .iw-skill-v2-action-label { opacity: 0 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] .iw-skill-v2-action-glyph[data-iw-skill-v2-action-timer] {
+  display: grid !important; place-items: center !important; z-index: 3 !important;
+  top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-offset)) !important;
+  left: calc(50% - var(--iw-skill-v2-btn-w) / 2) !important;
+  width: var(--iw-skill-v2-btn-w) !important; height: var(--iw-skill-v2-btn-h) !important;
+  transform: none !important; background: none !important;
+  color: #f3fbff !important; font: 700 15px/1 var(--iw-font-ui, sans-serif) !important;
+  letter-spacing: .02em !important; font-variant-numeric: tabular-nums !important;
+  text-shadow: 0 1px 2px #000, 0 0 6px color-mix(in srgb, var(--iw-th-accent) 65%, transparent) !important;
+  filter: none !important;
 }
 /* One icon per discipline, drawn by Curtis and imported from his EPS by
    build-tools/import-action-icons.mjs - never re-drawn by hand. Picked by the
@@ -345,7 +383,7 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
 /* React can ship the pager in either branch. Keep the actual buttons and their
    handlers; place both copies a fixed buffer below the button. */
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone] [data-iw-skill-role="nav-group"] {
-  position: absolute !important; top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-h) + var(--iw-skill-v2-cmd-buffer)) !important; bottom: auto !important; left: auto !important;
+  position: absolute !important; top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h) + var(--iw-skill-v2-cmd-buffer)) !important; bottom: auto !important; left: auto !important;
   right: 0 !important; transform: none !important; z-index: 4 !important;
   display: flex !important; align-items: stretch !important; justify-content: center !important; gap: 4px !important;
   width: var(--iw-skill-v2-command-w) !important; max-width: none !important; min-width: 0 !important;
@@ -414,7 +452,7 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
    forced stack cost a single-material card a whole line (+12px) for nothing.
    The tick moves onto the COUNT, because the count is what it is about. */
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-kind="material"] { flex-flow: row wrap !important; align-items: baseline !important; align-content: center !important; gap: 0 6px !important; padding: 4px 7px !important; }
-html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-name { display: block !important; max-width: 100% !important; font-size: .9em !important; line-height: 1.2 !important; opacity: .92 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-name { display: block !important; max-width: 100% !important; font-size: max(10px, .9em) !important; line-height: 1.2 !important; opacity: .92 !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-count { display: block !important; font-weight: 600 !important; line-height: 1.2 !important; font-variant-numeric: tabular-nums !important; white-space: nowrap !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-state="met"] .iw-skill-v2-body-count::before { content: "\2713\00a0" !important; color: #67ab83 !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row:not([data-iw-skill-v2-body-kind="material"]) { grid-column: 1 / -1 !important; }
@@ -431,25 +469,70 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
   html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="identity"]::before { font-size: 9px !important; letter-spacing: 0 !important; }
   html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="action-title"]::before { font-size: 16px !important; }
 }
-@container iw-skill-card (max-width: 390px) {
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"] { grid-template-columns: 106px minmax(0, 1fr) !important; grid-template-rows: repeat(4, auto) !important; grid-template-areas: "identity content" "commands commands" "tabs tabs" "body body" !important; }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="commands"] { min-height: 146px !important; border-top: 1px solid var(--iw-th-edge-soft) !important; border-left: 0 !important; }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] { position: static !important; order: 8 !important; align-self: flex-end !important; }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="commands"] [data-iw-skill-role="nav-group"] { right: calc(50% - var(--iw-skill-v2-command-w) / 2) !important; }
+/* Phone cards (mobile audit, 2026-09). The block this replaced still stacked
+   the card for the retired tabbed design: a 146px command row spanning the
+   card, a 0px tab row, and the command group and content-branch arrows still
+   placed from the CARD's middle, so the arrows landed on the title, the button
+   floated in an empty band and a bare button sat on the requirement note.
+   The card keeps its three columns, narrower, as one top band; the info frame
+   and the note become full-width rows under it. Everything the command group
+   is placed from resolves against that band:
+   - the commands zone spans only row 1 and is already position: relative;
+   - a bare button is a grid item of the (relative) shell, placed against its
+     grid area, which is row 1;
+   - the content zone becomes position: relative, so a content-branch pager
+     resolves against row 1 too, and reaches one command column to its right.
+   Row 1's floor is the command group plus a margin, as the desktop shell's
+   min-height was. */
+@container iw-skill-card (max-width: 480px) {
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"] {
+    --iw-skill-v2-identity-w: 92px; --iw-skill-v2-command-w: 76px;
+    grid-template-rows: minmax(calc(var(--iw-skill-v2-cmd-stack) + 20px), auto) auto auto !important;
+    grid-template-areas: "identity content commands" "body body body" "tabs tabs tabs" !important;
+    min-height: 0 !important;
+  }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] {
+    position: relative !important; grid-template-columns: minmax(0, 1fr) !important;
+    padding: 10px var(--iw-skill-v2-gutter) !important;
+  }
+  /* The chip goes UNDER the name: beside it, a 150px column left the title
+     under 50px and wrapped it to four lines. */
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > .fs-skill-base-exp { grid-column: 1 !important; grid-row: 2 !important; margin-top: 6px !important; }
+  /* grid-column: auto is load-bearing. The zone is a GRID, and an absolutely
+     positioned grid child that keeps the zone's `> *` placement (1 / -1) is
+     placed against those grid LINES - the padding-inset box - so `right` was
+     measured from 10px inside the zone and the pair sat one gutter left of
+     the command column. Auto placement uses the padding edge. */
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] { grid-column: auto !important; right: calc(-1 * var(--iw-skill-v2-command-w)) !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="action-title"]::before { font-size: 15px !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body { margin: 8px var(--iw-skill-v2-gutter) !important; }
 }
 @media (prefers-reduced-motion: reduce) { html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] * { transition: none !important; } }
 
 /* Identity wrappers remain React-owned; contents lets the retained name join
    the same badge stack while only the obsolete readouts are hidden. */
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="identity"] *:has([data-iw-skill-role="identity"]) { display: contents !important; }
-/* The oldest game layout puts zones directly on the card. Its children can
-   query their card even though the card cannot query its own inline size. */
-@container iw-skill-card (max-width: 390px) {
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-zone="identity"] { grid-area: auto !important; grid-column: 1 !important; grid-row: 1 !important; }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-zone="content"] { grid-area: auto !important; grid-column: 2 / -1 !important; grid-row: 1 !important; }
+/* Touch screens (mobile audit, 2026-09): the recipe arrows were 30x22, under
+   WCAG 2.2's 24px minimum target. They cannot borrow an invisible hit area the
+   way the collapse toggle does, because each arrow clips its own paint
+   (`overflow: hidden` plus a polygon `clip-path`), and a clip-path clips hit
+   testing too. So the arrows really are taller; the token also feeds
+   --iw-skill-v2-cmd-stack, so the button-to-arrow buffer, the group's centring
+   and the band's floor all follow. */
+@media (pointer: coarse) {
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] { --iw-skill-v2-nav-h: 26px; }
+}
+
+/* The oldest game layout puts zones directly on the card, which is then the
+   grid AND the container, so no token or template can change here. Its
+   children can still query their card: they take the same band-then-rows
+   order through explicit lines inside the card's five-row template (rows 1
+   and 5 are its empty 1fr spacers), keeping the card's own column widths. */
+@container iw-skill-card (max-width: 480px) {
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-zone="identity"] { grid-area: auto !important; grid-column: 1 !important; grid-row: 2 !important; min-height: calc(var(--iw-skill-v2-cmd-stack) + 20px) !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-zone="content"] { grid-area: auto !important; grid-column: 2 !important; grid-row: 2 !important; }
   html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-zone="commands"],
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > .iw-skill-v2-action-glyph { grid-area: auto !important; grid-column: 1 / -1 !important; grid-row: 2 !important; }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > .iw-skill-v2-controls { grid-area: auto !important; grid-column: 1 / -1 !important; grid-row: 3 !important; }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > .iw-skill-v2-body { grid-area: auto !important; grid-column: 1 / -1 !important; grid-row: 4 !important; }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="commands"] [data-iw-skill-role="nav-group"] { right: calc(50% - var(--iw-skill-v2-command-w) / 2) !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > :is(.iw-skill-v2-action-glyph,.iw-skill-v2-action-label) { grid-area: auto !important; grid-column: 3 !important; grid-row: 2 !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > .iw-skill-v2-body { grid-area: auto !important; grid-column: 1 / -1 !important; grid-row: 3 !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > .iw-skill-v2-controls { grid-area: auto !important; grid-column: 1 / -1 !important; grid-row: 4 !important; }
 }

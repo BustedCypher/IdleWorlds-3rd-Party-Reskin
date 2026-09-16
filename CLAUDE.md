@@ -21,6 +21,7 @@ npm run fixtures  # responsive visual fixture renders
 npm run audit:items   # validates against the live /items.json (not in CI)
 npm run import:village-art  # 34 building + 5 housing icons from the art-source repo
 npm run import:action-icons -- "<Vector Action button Icons.eps>"  # V2 action-button icons
+node claude/audit-mobile.mjs --widths 360,390,430,768  # phone/tablet audit -> tmp/mobile-audit/ (docs/traps/mobile.md)
 ```
 
 `build-tools/audit-sprite-windows.mjs` (run by `npm test`) checks every pixel
@@ -119,6 +120,27 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   [docs/traps/village.md](docs/traps/village.md).
   `src/styles/village-scene.css` is concatenated into the `ui-system` injection
   (no new sheet — the smoke test pins the count at 7).
+- `src/modules/VillageLedger.js` — the **ledger** beside that scene: the home
+  and every installed building as a collapsible heading over its benefits, then
+  an **Overall stats** block that sums the INSTALLED BUILDINGS ONLY. The scene
+  knows identity (tier, slot, `itemKey`, name); the numbers come from
+  items.json, because every add-on is an item
+  (`construction_building_tier_<N>`) — so the join is
+  `ItemDatabase.find({ id })` on the key the snapshot already carries and the
+  derivation is the shared `deriveDisplayStats()`. Housing is NOT an item, so
+  the home shows its slot count plus whatever the Village route printed on its
+  tier line ("Base actions take 6s"), captured verbatim by
+  `VillageScene.readHousingPerks` — and nothing else, rather than a guess.
+  It builds no DOM of its own name: `own()` is passed in by VillageScene, so
+  every node is `data-iw-village-scene-owned` and that module's teardown
+  reaches it. Two levels of disclosure share one mechanism (`wire()`): each
+  entry, and the whole **Buildings** list, which folds to leave the heading,
+  Overall stats and the plot scene standing — so `.iw-vs-totals` is a sibling
+  of `.iw-vs-ledger-list`, not a child of it. Both use the module's own
+  `data-iw-vs-toggle` / `data-iw-vs-open` namespace so CollapsibleFrames'
+  document-wide `[data-iw-collapse]` sweep can never adopt them, and choices
+  persist in `iw-village-ledger`. Scene and ledger wrap rather than squeeze —
+  see [docs/traps/village.md](docs/traps/village.md).
 - `src/modules/CollapsibleFrames.js` — per-panel collapse on every parent
   frame (Skills, Inventory, Quests, Village, World Bosses, Current Action,
   Action Log, World Chat, Zone Control and the Village scene). The World Boss
@@ -134,15 +156,14 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   the zone bar into ONE framed box (see [docs/traps/header-chrome.md](docs/traps/header-chrome.md)).
   Its own `data-iw-chrome` namespace; runs in `queueClassify` right after
   section frames.
-- `src/modules/PanelOrder.js` — the player's own panel arrangement, remembered
-  in `chrome.storage` under `iw-panel-order`. Nothing moves in the DOM: the
-  module writes `data-iw-order="N"` on each panel and `src/styles/panel-order.css`
-  (concatenated onto the `ui-system` injection — the sheet count is pinned at 7
-  in three places) turns it into a flex/grid `order`. Rearranging is an explicit
-  MODE, flagged on `<html>` and entered from the skin's own nav item beside the
-  Toolkit link; only inside it does each panel gain an appended full-panel
-  `<button>` grab surface, which takes both arrow keys and a pointer drag. See
-  [docs/traps/panel-order.md](docs/traps/panel-order.md).
+- The **Toolkit link** is the skin's own `<a>` (`UIFoundation.ensureToolkitLink`),
+  appended to the nav rail and hidden by CSS below 768px (Curtis, 2026-09-16:
+  the phone bar read as too crowded); see [docs/traps/mobile.md](docs/traps/mobile.md).
+- The **Rearrange feature (PanelOrder) was removed on 2026-09-15.** Its
+  `:not([data-iw-order-handle])` exclusions are deliberately LEFT in the
+  `base.css` and `ui-system.css` selector chains: each `:not()` carries
+  specificity other rules may be tuned against. They match nothing now.
+  [docs/traps/panel-order.md](docs/traps/panel-order.md) is kept for its lessons.
 - `src/styles/*.css` — injected in the order `content.js` boots them.
   **`ui-system.css` is injected LAST.**
 
@@ -185,6 +206,12 @@ here. Add a line to this list only when a lesson applies across surfaces.
 - Atlas sprites use percentage `background-size`/`-position`. Never override
   them with px, and keep the box at the art's aspect ratio.
   [sprites-and-buttons](docs/traps/sprites-and-buttons.md)
+- Two items the skin places in ONE grid cell paint in DOM order, so the later
+  one swallows the earlier one's clicks even across padding that looks empty —
+  and a breakpoint that unstacks them turns that into "works on mobile, dead on
+  desktop". Make the passive one `pointer-events: none` (children `auto`) and
+  lift the interactive one. A grid item honours `z-index` while still
+  `position: static`. [classification](docs/traps/classification.md)
 
 **Mutation cost** ([performance](docs/traps/performance.md))
 
@@ -201,6 +228,9 @@ here. Add a line to this list only when a lesson applies across surfaces.
 - A cached classifier with an EMPTY resolution never re-runs, because
   `[].every()` is true; validate coverage too. A cache key must not include
   live content, such as ticking digits, that the cached work does not depend on.
+- Nor button `disabled` state: the game disables every button during any
+  request, and a strip-then-rederive pass that reads layout makes Chrome's
+  scroll anchoring jump the window.
 
 **Ownership**
 
@@ -213,7 +243,7 @@ here. Add a line to this list only when a lesson applies across surfaces.
   classifier sweep that reads that node (`:not([data-iw-…])` or a `closest()`
   guard), and so must skin-owned text that repeats game copy.
   [collapsible-frames](docs/traps/collapsible-frames.md),
-  [panel-order](docs/traps/panel-order.md),
+  [panel-order](docs/traps/panel-order.md) (retired feature),
   [skill-card-v2](docs/traps/skill-card-v2.md)
 
 **Detecting the live page** ([classification](docs/traps/classification.md))
@@ -229,6 +259,12 @@ here. Add a line to this list only when a lesson applies across surfaces.
   ([header-chrome](docs/traps/header-chrome.md)).
 - Met/unmet, equipped, team colour and the active tab are game STATE (rule 5).
   Read them from the game's own classes; never repaint them uniformly.
+- `textContent` joins descendants with NO separator — no newline, no space — so
+  sibling elements read as one unbroken string. Never slice a flattened blob on
+  `\n`, and never assume the game's own separator (its material lines use an
+  emoji per item, not `•`). Anchor on the previous match and on the element
+  boundary, which are always there
+  ([skill-card-v2](docs/traps/skill-card-v2.md)).
 
 **Tests** ([test-harness](docs/traps/test-harness.md))
 
@@ -245,7 +281,7 @@ here. Add a line to this list only when a lesson applies across surfaces.
 | [classification.md](docs/traps/classification.md) | `ui-system.css` precedence, two writers on one node, hidden duplicate column, stable hooks, coverage map, adding a new skill |
 | [panel-frames.md](docs/traps/panel-frames.md) | `.panel` section frames, nesting, heading size token, Daily XP Boost |
 | [collapsible-frames.md](docs/traps/collapsible-frames.md) | collapse toggle placement, one-bar collapsed state, filigree hand-over |
-| [panel-order.md](docs/traps/panel-order.md) | CSS `order` rearranging, identity keys, zero-cost drag, handle exclusions |
+| [panel-order.md](docs/traps/panel-order.md) | RETIRED Rearrange feature, kept for its lessons (write costs, drag, exclusions) |
 | [skill-card-v2.md](docs/traps/skill-card-v2.md) | the skill card: current design first, retired designs last |
 | [village.md](docs/traps/village.md) | `/api/player` read, scene layout, sprite paint order |
 | [current-action-progress.md](docs/traps/current-action-progress.md) | progress-bar transition and tick measurement |
@@ -254,6 +290,7 @@ here. Add a line to this list only when a lesson applies across surfaces.
 | [header-chrome.md](docs/traps/header-chrome.md) | glass plates, nav rail, Toolkit link, merged header frame |
 | [inventory.md](docs/traps/inventory.md) | list frame, tool row, row colour, upgrade-roll line |
 | [test-harness.md](docs/traps/test-harness.md) | fixture and render-harness traps |
+| [mobile.md](docs/traps/mobile.md) | the mobile audit harness, single-row menus, the phone Toolkit slot, phone-width fixes |
 
 Bundle size is a **soft budget of 300,000 bytes**, not a hard gate: both
 `build-tools/build.mjs` and `static-invariants` only `console.warn` past it —

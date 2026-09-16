@@ -13,7 +13,7 @@ function loadoutPair(el) {
 function kind(el) {
   // The skin's own per-panel collapse toggle paints itself in
   // collapsible.css; it is not one of the game's controls to re-skin.
-  if (el.matches('[data-iw-collapse], [data-iw-order-handle]')) return '';
+  if (el.matches('[data-iw-collapse]')) return '';
   if (el.matches('[data-fs-preserved-action="control"]')) {
     return el.dataset.fsActionKind === 'icon' ? 'icon' : 'text';
   }

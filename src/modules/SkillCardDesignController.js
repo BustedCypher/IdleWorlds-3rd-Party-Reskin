@@ -1,7 +1,7 @@
 import { on } from './DOMWatcher.js';
 import { guard, isRuntimeActive, raf } from './Runtime.js';
 import { sampleProgress, formatDuration } from './ProgressCadence.js';
-import { getLayoutEpoch } from './Viewport.js';
+import { getLayoutEpoch, pickRendered } from './Viewport.js';
 
 /* The V2 skill card is the ONLY skill card design (Curtis, 2026-09). The
    old/new toggle at the top of Skill Actions is gone, and so is the stored
@@ -129,26 +129,51 @@ function ensureActionGlyph(panel) {
   const ACTION = '[data-iw-skill-role="action-button"]';
   const btn = zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
   const host = btn?.parentElement;
-  if (!host) return;
+  if (!host) return null;
   panel.querySelectorAll('[data-iw-skill-v2-action-glyph]').forEach(el => {
     if (el.parentElement !== host) el.remove();
   });
-  if (host.querySelector(':scope > [data-iw-skill-v2-action-glyph]')) return;
+  const existing = host.querySelector(':scope > [data-iw-skill-v2-action-glyph]');
+  if (existing) return existing;
   const glyph = document.createElement('span');
   glyph.dataset.iwSkillV2ActionGlyph = '1';
   glyph.className = 'iw-skill-v2-action-glyph';
   glyph.setAttribute('aria-hidden', 'true');
   host.appendChild(glyph);
+  return glyph;
 }
 
-/* The action label always fits on ONE line inside the button's buffer
+/* The visible action label sits above the framed control as part of the same
+   centred command stack. Keep the game's real text inside its native button
+   for semantics and event ownership; this aria-hidden mirror is presentation
+   only and follows any React text change without reparenting the control. */
+function ensureActionLabel(panel) {
+  const btn = actionButtonOf(panel);
+  const host = btn?.parentElement;
+  if (!host) return null;
+  panel.querySelectorAll('[data-iw-skill-v2-action-label]').forEach(el => {
+    if (el.parentElement !== host) el.remove();
+  });
+  let label = host.querySelector(':scope > [data-iw-skill-v2-action-label]');
+  if (!label) {
+    label = document.createElement('span');
+    label.dataset.iwSkillV2ActionLabel = '1';
+    label.className = 'iw-skill-v2-action-label';
+    label.setAttribute('aria-hidden', 'true');
+    host.appendChild(label);
+  }
+  setText(label, (btn.textContent || '').replace(/\s+/g, ' ').trim());
+  return label;
+}
+
+/* The mirrored action label always fits on ONE line above the button frame
    (Curtis, 2026-09: "CRAFT PARTS" wrapped). The labels are the game's, so no
    stylesheet can size them - CSS has no idea how long a word is. The label is
-   measured once per distinct text and layout with a Range over the button's
-   own text, and the size that fits is written as `--iw-skill-v2-btn-font` on
-   the CARD, where the renderer's inline `var(--iw-skill-v2-btn-font, 12px)`
-   picks it up. Width is linear in font size (the tracking is in em), so one
-   measurement at whatever size is current gives the exact answer.
+   measured once per distinct text and layout with a Range over the visual
+   mirror, and the size that fits is written as
+   `--iw-skill-v2-action-label-font` on the card. Width is linear in font size
+   (the tracking is in em), so one measurement at whatever size is current
+   gives the exact answer.
 
    Cost: the key lives on `data-iw-*`, which DOMWatcher does not observe, and
    the inline write only happens when the size changes - a same-value
@@ -160,15 +185,11 @@ const LABEL_CEILING_PX = 9.5;
 /* A technical guard only: the brief is one line ALWAYS, so the label shrinks as
    far as it must. Live verbs are short - "CRAFT PARTS" is the longest seen. */
 const LABEL_FLOOR_PX = 4;
-/* The horizontal extent of the button's TEXT only. A Range over the whole
-   button also returns the border box of every element inside it, and the live
-   button holds the game's activity fill - `<span class="absolute inset-0"
-   style="width:N%">` beside the label's own span. While a skill is starting
-   that fill is 100% wide, so a whole-button Range read the label as the full
-   button and shrank it; the key does not change when the activity does, so the
-   wrong size then stuck. */
-function labelTextBox(btn) {
-  const walker = document.createTreeWalker(btn, NodeFilter.SHOW_TEXT);
+/* The horizontal extent of the visual mirror's text only. Using text ranges
+   keeps this safe if the mirror later gains decorative children, and avoids
+   reviving the old whole-button measurement bug caused by the activity fill. */
+function labelTextBox(label) {
+  const walker = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
   const range = document.createRange();
   let left = Infinity, right = -Infinity;
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
@@ -217,11 +238,57 @@ function actionButtonOf(panel) {
   return zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
 }
 
+/* The game's Current Action readout already owns the condition-adjusted
+   duration. Mirror that value instead of starting a second clock: housing,
+   boosts and any future modifiers therefore stay the game's decision. */
+const LONG_ACTION_SECONDS = 11;
+function durationSeconds(value) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const clock = /^(?:(\d+):)?(\d+):([0-5]\d)$/.exec(text);
+  if (clock) return Number(clock[1] || 0) * 3600 + Number(clock[2]) * 60 + Number(clock[3]);
+  const shortClock = /^(\d+):([0-5]\d)$/.exec(text);
+  if (shortClock) return Number(shortClock[1]) * 60 + Number(shortClock[2]);
+  const units = /^(?:(\d+)\s*h(?:ours?)?\s*)?(?:(\d+)\s*m(?:in(?:utes?)?)?\s*)?(?:(\d+)\s*s(?:ec(?:onds?)?)?)?$/.exec(text);
+  if (!units || !units.slice(1).some(Boolean)) return null;
+  return Number(units[1] || 0) * 3600 + Number(units[2] || 0) * 60 + Number(units[3] || 0);
+}
+function currentActionRemaining() {
+  const hosts = [...document.querySelectorAll('[data-iw-panel="current-action"], [id="current-action-panel"]')];
+  const host = pickRendered(hosts);
+  if (!host) return null;
+  for (const el of host.querySelectorAll('time,span,p,strong,div')) {
+    if (el.childElementCount || el.closest('[data-iw-panel-part="progress"]')) continue;
+    const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+    const seconds = durationSeconds(text);
+    if (seconds !== null) return { text, seconds };
+  }
+  return null;
+}
+function clearLongActionTimer(panel, glyph = panel.querySelector('[data-iw-skill-v2-action-glyph]')) {
+  if (glyph?.hasAttribute('data-iw-skill-v2-action-timer')) {
+    glyph.removeAttribute('data-iw-skill-v2-action-timer');
+    setText(glyph, '');
+  }
+  delete panel.dataset.iwSkillV2LongAction;
+}
+function syncLongActionTimer(panel, glyph) {
+  const running = !!actionButtonOf(panel)?.querySelector(FILL);
+  if (!running) return clearLongActionTimer(panel, glyph);
+  const remaining = currentActionRemaining();
+  const startedLong = panel.dataset.iwSkillV2LongAction === '1';
+  if (!startedLong && !(remaining?.seconds > LONG_ACTION_SECONDS)) return clearLongActionTimer(panel, glyph);
+  if (!remaining || !glyph) return;
+  setData(panel, 'iwSkillV2LongAction', '1');
+  if (!glyph.hasAttribute('data-iw-skill-v2-action-timer')) glyph.setAttribute('data-iw-skill-v2-action-timer', '1');
+  setText(glyph, remaining.text);
+}
+
 function fitActionLabel(panel) {
   const zone = panel.querySelector('[data-iw-skill-zone="commands"]');
   const ACTION = '[data-iw-skill-role="action-button"]';
   const btn = zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
   if (!btn) return;
+  const visual = panel.querySelector('[data-iw-skill-v2-action-label]');
   const label = (btn.textContent || '').replace(/\s+/g, ' ').trim();
   /* The button's INLINE width is in the key too: on a card's first pass the
      renderer sizes the button before this module marks the card V2, so the
@@ -239,10 +306,10 @@ function fitActionLabel(panel) {
   const key = `${label}|${panel.dataset.iwSkillLayout || ''}|${btn.style.getPropertyValue('width')}|${getLayoutEpoch()}`;
   if (!label || panel.dataset.iwSkillV2LabelFit === key) return;
   panel.dataset.iwSkillV2LabelFit = key;
-  const text = labelTextBox(btn);
+  const text = labelTextBox(visual || btn);
   if (!text || !(text.width > 0)) return;
-  const cs = getComputedStyle(btn);
-  const room = btn.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const cs = getComputedStyle(visual || btn);
+  const room = (visual || btn).clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const current = parseFloat(cs.fontSize);
   if (!(room > 0) || !(current > 0)) return;
   /* The trailing letter-spacing after the last glyph is part of the range but
@@ -251,7 +318,7 @@ function fitActionLabel(panel) {
   const width = text.width - tracking;
   const fit = Math.floor(current * (room / width) * 10) / 10;
   const size = `${Math.max(LABEL_FLOOR_PX, Math.min(LABEL_CEILING_PX, fit))}px`;
-  if (panel.style.getPropertyValue('--iw-skill-v2-btn-font') !== size) panel.style.setProperty('--iw-skill-v2-btn-font', size);
+  if (panel.style.getPropertyValue('--iw-skill-v2-action-label-font') !== size) panel.style.setProperty('--iw-skill-v2-action-label-font', size);
 }
 
 /* The info frame and the foot row are ROWS OF THE SHELL: the game's own grid
@@ -386,9 +453,11 @@ export function enhanceSkillCardV2(panel, skillType) {
   setData(panel, 'iwSkillV2State', 'expanded');
   markSections(panel);
   levelReadout(panel);
-  ensureActionGlyph(panel);
+  const glyph = ensureActionGlyph(panel);
+  ensureActionLabel(panel);
   fitActionLabel(panel);
   smoothActionFill(panel);
+  syncLongActionTimer(panel, glyph);
   removeRetiredNodes(panel);
   const row = syncRequirementNote(panel);
   ensureDetailBody(panel);
@@ -396,13 +465,15 @@ export function enhanceSkillCardV2(panel, skillType) {
 }
 export function clearSkillCardV2(panel) {
   if (!panel) return;
-  panel.querySelectorAll('[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]')
+  panel.querySelectorAll('[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]')
     .forEach(el => el.remove());
   panel.querySelectorAll('[data-iw-skill-v2-section]').forEach(el => delete el.dataset.iwSkillV2Section);
   panel.style.removeProperty('--iw-skill-v2-progress');
   panel.style.removeProperty('--iw-skill-v2-btn-font');
+  panel.style.removeProperty('--iw-skill-v2-action-label-font');
   panel.style.removeProperty('--iw-skill-v2-fill-duration');
   delete panel.dataset.iwSkillV2FillReset;
+  delete panel.dataset.iwSkillV2LongAction;
   fillSamples.delete(panel);
   delete panel.dataset.iwSkillV2LabelFit;
   delete panel.dataset.iwSkillV2; delete panel.dataset.iwSkillV2Type; delete panel.dataset.iwSkillV2State; delete panel.dataset.iwSkillV2Tab;

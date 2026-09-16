@@ -69,6 +69,13 @@ function check(label, condition, detail = '') {
       && !action.querySelector('[data-iw-skill-v2-action-glyph]'));
   check('the glyph writes no inline style - the sheet picks the icon',
     !panel.querySelector('[data-iw-skill-v2-action-glyph]').getAttribute('style'));
+  check('the visual action label is a sibling above the native button',
+    panel.querySelector('[data-iw-skill-zone="commands"] > [data-iw-skill-v2-action-label]')?.textContent === 'Build'
+      && !action.querySelector('[data-iw-skill-v2-action-label]'));
+  action.textContent = 'Assemble';
+  enhanceSkillCardV2(panel, 'construction');
+  check('the visual action label follows the game-owned button text',
+    panel.querySelector('[data-iw-skill-v2-action-label]')?.textContent === 'Assemble');
 
   /* No tabs at all: Materials and Sources are the frame's default content, and
      Requirements, Queue and Rewards are not shown as tabs either. */
@@ -99,8 +106,8 @@ function check(label, condition, detail = '') {
 
   clearSkillCardV2(panel);
   check('teardown removes V2 marker', !panel.hasAttribute('data-iw-skill-v2'));
-  check('teardown removes the frame and the glyph',
-    !panel.querySelector('[data-iw-skill-v2-body], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-controls]'));
+  check('teardown removes the frame, glyph and visual action label',
+    !panel.querySelector('[data-iw-skill-v2-body], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-action-label], [data-iw-skill-v2-controls]'));
   check('teardown leaves native action button connected', panel.contains(action));
 }
 

@@ -36,8 +36,8 @@ function norm(text) {
   return (text || '').replace(/\s+/g, ' ').trim();
 }
 
-/** The shell must be the page's own top-level column, not a nested one — the
- * same `:scope > header` test PanelOrder already uses to avoid claiming a
+/** The shell must be the page's own top-level column, not a nested one: a
+ * `:scope > header` child is there from the first paint, and it cannot match a
  * panel column that merely happens to hold a `<header>` somewhere inside it. */
 function looksLikeShell(el) {
   return !!el && el.querySelector(':scope > header');

@@ -534,21 +534,80 @@ function pointAtTextOffset(root, targetOffset) {
   return null;
 }
 
+/**
+ * Offsets into `root.textContent` at which a NEW element's own text begins.
+ *
+ * `textContent` concatenates every descendant text node with no separator of
+ * any kind — no newline, no space — so a run of sibling elements reads as one
+ * unbroken string. These offsets put the element boundaries back, which is the
+ * only anchor that survives a card whose materials are separate nodes.
+ */
+function elementTextStarts(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const starts = [];
+  let offset = 0;
+  let lastParent = null;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.parentElement !== lastParent) {
+      starts.push(offset);
+      lastParent = node.parentElement;
+    }
+    offset += node.nodeValue?.length || 0;
+  }
+  return starts;
+}
+
+/**
+ * Where the material that owns the count at `matchIndex` STARTS.
+ *
+ * The anchors used to be `•` and `\n` alone, which is only ever right for the
+ * one shape every fixture in this repo carried: all the materials on one line,
+ * inside ONE text node, separated by bullets. Neither anchor is reliable live.
+ * docs/traps quotes the game's own lines with an EMOJI per material instead
+ * ("📦 Bloodstone Building Parts 298/2600", "💠 Night Claw 22/100"), and
+ * `textContent` never inserts a newline between elements, so a card that ships
+ * its materials as separate nodes has no `\n` anywhere in the string either.
+ * Both cases make `lastIndexOf` return -1 and every entry start at offset 0, so
+ * each cell held the whole run-up to its own count and the last one held the
+ * card's copy run together with no separators — which is what the columns of
+ * repeated text in Curtis's 2026-09-16 capture are made of, wrapped mid-number
+ * by the body row's `overflow-wrap: anywhere`.
+ *
+ * Two anchors that are ALWAYS present fix it: the end of the previous count,
+ * so entries can never overlap, and the element boundary, so a material in its
+ * own node is its own entry. Both are floors, so the bullet and the newline
+ * still win wherever the game does provide them.
+ */
+function entryStart(text, starts, matchIndex, previousEnd) {
+  const bulletStart = text.lastIndexOf('•', matchIndex - 1) + 1;
+  const lineStart = text.lastIndexOf('\n', matchIndex - 1) + 1;
+  let elementStart = 0;
+  for (const offset of starts) {
+    if (offset > matchIndex) break;
+    elementStart = offset;
+  }
+  return Math.max(bulletStart, lineStart, elementStart, previousEnd);
+}
+
 function completedIngredientRanges(root) {
   const text = root.textContent || '';
+  const elementStarts = elementTextStarts(root);
   const ranges = [];
   INGR_COUNT_PATTERN.lastIndex = 0;
 
   let match;
+  let previousEnd = 0;
   while ((match = INGR_COUNT_PATTERN.exec(text))) {
+    const matchEnd = match.index + match[0].length;
+    const start0 = entryStart(text, elementStarts, match.index, previousEnd);
+    previousEnd = matchEnd;
+
     const owned = Number(match[1].replaceAll(',', ''));
     const required = Number(match[2].replaceAll(',', ''));
     if (!Number.isFinite(owned) || !Number.isFinite(required) || owned < required) continue;
 
-    const bulletStart = text.lastIndexOf('•', match.index - 1) + 1;
-    const lineStart = text.lastIndexOf('\n', match.index - 1) + 1;
-    let start = Math.max(bulletStart, lineStart);
-    let end = match.index + match[0].length;
+    let start = start0;
+    let end = matchEnd;
     while (start < end && /\s/.test(text[start])) start += 1;
     while (end > start && /\s/.test(text[end - 1])) end -= 1;
 
@@ -567,20 +626,23 @@ function completedIngredientRanges(root) {
 
 function ingredientEntries(root) {
   const text = root.textContent || '';
+  const elementStarts = elementTextStarts(root);
   const entries = [];
   INGR_COUNT_PATTERN.lastIndex = 0;
 
   let match;
+  let previousEnd = 0;
   while ((match = INGR_COUNT_PATTERN.exec(text))) {
+    const matchEnd = match.index + match[0].length;
+    const start = entryStart(text, elementStarts, match.index, previousEnd);
+    previousEnd = matchEnd;
+
     const owned = Number(match[1].replaceAll(',', ''));
     const required = Number(match[2].replaceAll(',', ''));
     if (!Number.isFinite(owned) || !Number.isFinite(required)) continue;
 
-    const bulletStart = text.lastIndexOf('•', match.index - 1) + 1;
-    const lineStart = text.lastIndexOf('\n', match.index - 1) + 1;
-    const start = Math.max(bulletStart, lineStart);
     entries.push({
-      text: text.slice(start, match.index + match[0].length).trim(),
+      text: text.slice(start, matchEnd).trim(),
       state: owned >= required ? 'met' : 'unmet',
     });
   }
@@ -851,7 +913,8 @@ const structureSignatures = new WeakMap();
  * of that was forced layout, re-deriving roles that had not moved.
  *
  * Blanking digit runs keeps every signal the walk actually depends on: which
- * buttons exist, their disabled state, and their non-numeric labels. A real
+ * buttons exist, their non-numeric labels, and - on a locked card only - their
+ * disabled state. A real
  * structural change still moves the signature — Mine -> Fish, an action button
  * appearing or being relabelled, a pager arriving. Only "the same control
  * showing a different number" stops re-triggering it.
@@ -864,8 +927,18 @@ const structureSignatures = new WeakMap();
 const structureText = value => normText(value).replace(/\d[\d,.]*/g, '#');
 
 function structureSignature(panel, type) {
+  // `disabled` decides a role ONLY for a locked card (its action button is
+  // "the disabled one"). Everywhere else it is button STATE, which styleButton
+  // repaints on every pass. Keeping it in the key made the game's busy toggle -
+  // every action button on the page disabled while a request is in flight, then
+  // re-enabled - strip and re-derive every role on every card, and the
+  // re-derivation reads layout of the stripped card: Chrome scroll-anchored on
+  // that transient layout and jumped the window ~17px per toggle (live,
+  // 2026-09-16, "clicking Prejoin scrolls the page up").
+  // tests/flush-quiescence.test.mjs "Busy toggle" pins it.
+  const keyDisabled = type === 'locked';
   const buttonState = [...panel.querySelectorAll('button')].map(btn => {
-    const disabled = (btn.disabled || btn.getAttribute('aria-disabled') === 'true') ? '1' : '0';
+    const disabled = keyDisabled && (btn.disabled || btn.getAttribute('aria-disabled') === 'true') ? '1' : '0';
     return `${disabled}:${structureText(btn.textContent)}:${structureText(btn.getAttribute('aria-label'))}`;
   }).join('|');
   return `${type} ${panel.childElementCount} ${buttonState}`;
@@ -1149,7 +1222,7 @@ function annotateStructure(panel, type, meta) {
       // removed: reported live (Curtis, 2026-09) as Smithing and Alchemy
       // rendering in the old theme. Excluded by NAME, like the rows above,
       // never by its computed style - that style is downstream of this answer.
-      if (el.matches?.('[data-iw-skill-v2-action-glyph]')) return false;
+      if (el.matches?.('[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label]')) return false;
       try {
         const cs = getComputedStyle(el);
         if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position === 'absolute' || cs.position === 'fixed') return false;

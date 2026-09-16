@@ -287,7 +287,6 @@ const shapes = await page.evaluate(() => ({
   percents: document.querySelectorAll('.fs-skill-identity-percent').length,
   plots: document.querySelectorAll('[data-iw-village-scene] .iw-vs-plot').length,
   collapses: document.querySelectorAll('[data-iw-collapse]').length,
-  ordered: document.querySelectorAll('[data-iw-order]').length,
   chrome: document.querySelectorAll('[data-iw-chrome]').length,
 }));
 check('quest cards are classified, so loop A has a surface to run on',
@@ -305,17 +304,48 @@ check('the village scene is mounted, so its reconcile has a surface too',
    would again be silence about nothing. */
 check('collapse controls are mounted, so their pass has a surface too',
   shapes.collapses >= 3, `${shapes.collapses} controls`);
-/* PanelOrder also runs on every flush and writes an attribute on a GAME node.
-   That write is invisible to the observer by design, which is exactly the claim
-   this file has to keep honest — so the panels have to be claimed here, or the
-   zero above says nothing about it. */
-check('panels carry arrangement slots, so the order pass has a surface too',
-  shapes.ordered >= 3, `${shapes.ordered} ordered panels`);
 /* HeaderChrome runs on every flush and writes six marks across the header
    chrome. Merged here (shell, nav, zone bar and both of its branches — this
    fixture ships no announcement), or the silence above says nothing about it. */
 check('the header chrome is merged, so its pass has a surface too',
   shapes.chrome >= 5, `${shapes.chrome} chrome marks`);
+
+/* Phase C: the game's BUSY toggle. While any request is in flight (Prejoin,
+   Turn In, Equip...) IdleWorlds sets `disabled` on every action button on the
+   page, then clears it. Both renderers used to fold `disabled` into the
+   signature that gates annotateStructure(), so each toggle stripped every role
+   off every skill and quest card and re-derived them in one flush - with
+   getBoundingClientRect / getComputedStyle reads in between, i.e. a forced
+   layout of the UNDECORATED cards. Chrome applies scroll anchoring on that
+   layout and never fully compensates, so the window jumped ~17px up on each
+   half of the toggle (live, 2026-09-16: "clicking Prejoin scrolls the page").
+   A disabled flip decides no role, so it must cost no role writes; the
+   button's disabled PLATE is styleButton's job and must still update. */
+console.log('\nBusy toggle — every button disabled, then re-enabled');
+const busy = await page.evaluate(async () => {
+  const ROLE_ATTRS = ['data-iw-skill-role', 'data-iw-skill-zone', 'data-iw-skill-layout',
+    'data-iw-skill-layout-shell', 'data-iw-quest-role', 'data-iw-quest-zone'];
+  const records = [];
+  const obs = new MutationObserver(list => { records.push(...list); });
+  obs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ROLE_ATTRS });
+  const settle = () => new Promise(r => setTimeout(r, 600));
+  const buttons = [...document.querySelectorAll('button')];
+  const fight = [...document.querySelectorAll('[data-iw-skill-role="action-button"]')].find(b => b.textContent.trim() === 'Fight');
+  buttons.forEach(b => { b.disabled = true; });
+  await settle();
+  const stateWhileBusy = fight?.dataset.iwBtnState;
+  buttons.forEach(b => { b.disabled = false; });
+  await settle();
+  obs.disconnect();
+  return { roleWrites: records.length, sample: records.slice(0, 3).map(r => `${r.attributeName}@${r.target.className}`),
+    stateWhileBusy, stateAfter: fight?.dataset.iwBtnState };
+});
+console.log(`  observed: ${busy.roleWrites} role-attribute writes; Fight plate ${busy.stateWhileBusy} -> ${busy.stateAfter}`);
+check('a disabled toggle does not strip and rebuild card roles', busy.roleWrites === 0,
+  `${busy.roleWrites} role writes, e.g. ${busy.sample.join(', ')}`);
+check('the action button still repaints as disabled while busy', busy.stateWhileBusy === 'disabled',
+  `state while busy: ${busy.stateWhileBusy}`);
+check('and returns to its idle plate afterwards', busy.stateAfter === 'primary', `state after: ${busy.stateAfter}`);
 
 check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
 

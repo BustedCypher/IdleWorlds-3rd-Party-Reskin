@@ -3254,7 +3254,9 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   .compact-panel.fs-quest-panel .fs-quest-sigil-pct {
     bottom: -14px !important;
     padding: 0 4px !important;
-    font-size: 8.5px !important;
+    /* 9.5px, not 8.5px: a floor for phone legibility (mobile audit, 2026-09).
+       "100%" still fits the 44px sigil with room to spare. */
+    font-size: 9.5px !important;
   }
   .compact-panel.fs-quest-panel .fs-quest-sigil::after {
     inset: -2px !important;
@@ -3305,7 +3307,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   .compact-panel.fs-quest-panel [data-iw-quest-role="objective"] {
     padding-right: calc(var(--fs-quest-cmd-w, 116px) + 8px) !important;
   }
-  .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"] { font-size: 8.5px !important; }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"] { font-size: 9.5px !important; }
   .compact-panel.fs-quest-panel [data-iw-quest-role="title"] {
     font-size: 13px !important;
     line-height: 1.12 !important;
@@ -3333,7 +3335,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   .compact-panel.fs-quest-panel [data-iw-quest-role="progress-track"] { height: 4px !important; }
   .compact-panel.fs-quest-panel [data-iw-quest-role="progress-label"] {
     margin-top: 1px !important;
-    font-size: 9px !important;
+    font-size: 10px !important;
   }
 }
 

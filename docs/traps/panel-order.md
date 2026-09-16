@@ -1,4 +1,15 @@
-# Panel order (rearrange mode)
+# Panel order (rearrange mode) - RETIRED
+
+**Removed on 2026-09-15 (Curtis: deprecated).** `PanelOrder.js`,
+`panel-order.css`, `tests/panel-order.test.mjs` and the Rearrange/Reset nav
+controls are gone, and `tests/smoke.test.mjs` asserts nothing the feature wrote
+is on the page. What remains on purpose: the `:not([data-iw-order-handle])`
+exclusions in `base.css` and `ui-system.css` selector chains, which match
+nothing but carry specificity that later rules may be tuned against. A player
+who had an arrangement still has an inert `iw-panel-order` key in
+`chrome.storage`; nothing reads it. The notes below describe the feature as it
+was and are kept for their lessons (write costs, zero-cost drag, classifier
+exclusions, harness traps).
 
 `PanelOrder.js`: CSS `order` on live-measured flex/grid columns, identity keys, the zero-cost drag, and its harness traps.
 

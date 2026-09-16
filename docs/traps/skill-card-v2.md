@@ -30,6 +30,47 @@ still describe the code:
 
 ## 1. Current design (newest pass)
 
+**The phone card is one top band plus full-width rows (mobile audit,
+2026-09-15).** Under a 480px card (`@container iw-skill-card (max-width:
+480px)`, i.e. every phone) the three columns narrow to 92px hero / name / 76px
+commands and form ONE top band; the BASE chip goes under the name, and the info
+frame and the requirement note become full-width rows beneath the band. The
+block it replaced (`max-width: 390px`) still stacked the card for the retired
+tabbed design, and `claude/audit-mobile.mjs` measured what that did at a 390px
+viewport: the content-branch arrows landed on the title (y 72-94 against a
+title spanning 34-89), the button floated in a 146px command row, a bare button
+sat on the requirement note, and cards were 270-315px against 124-179px now.
+
+- **Everything the command group is placed from has to be the BAND, not the
+  card.** The commands zone spans only row 1 (and is already relative); a bare
+  button is a grid item of the relative shell, so it is placed against its grid
+  area, row 1; and the content zone becomes `position: relative` so a
+  content-branch pager resolves against row 1 too, reaching one command column
+  to its right. Row 1's floor is `cmd-stack + 20px` in the row template.
+- **`grid-column: auto` on the content-branch pager is load-bearing.** The
+  content zone is a grid, and an absolutely positioned grid CHILD that keeps
+  the zone's `> * { grid-column: 1 / -1 }` is placed against those grid lines -
+  the padding-inset box - so `right` was measured from one gutter inside the
+  zone and the pair sat 10px left of the command column. Auto placement uses
+  the padding edge. Found by listing every matching rule's insets rather than
+  guessing; the computed `left` read 150px because a positioned box reports its
+  USED inset.
+- **The no-shell shape keeps its desktop column widths.** There the card is both
+  the grid and the container, so neither a token nor a template can change from
+  a container query; its children take the same band-then-rows order through
+  explicit grid lines, and the title column is only ~58px at a 390px viewport.
+  The live chunk ships the shell, so this is defensive; do not "fix" it with a
+  viewport unit.
+
+`tests/skill-card-system.test.mjs` checks the band at 440px (frame is a
+full-width row under it, BASE under the name, button and arrows right of the
+name column), the group centred on the HERO COLUMN at every width (the hero
+spans the whole card on a wide card, so that is the card's middle there), and
+column shedding at 330px, the only width where a full-width frame runs out of
+room for three cells. Controls verified: disable the phone block and the frame
+and BASE checks fail; drop `grid-column: auto` and the arrows read 336 against a
+346 column; put `repeat(3, 1fr)` back and the 330px cells read 82px.
+
 **The card has ONE state now, and removing the collapse chevron is what let the
 info frame exist (Curtis, 2026-09, from an edited reference).** Four changes
 were asked for together — an info frame in the centre of each card whose
@@ -81,16 +122,18 @@ state to lay out. What each cost:
 
 - **The command GROUP is centred on the card, and every part of it is out of
   flow** (Curtis, 2026-09, reported twice: "the arrow buttons are being hidden
-  underneath the action button"). The button, its glyph and the recipe arrows
-  are placed from ONE anchor, the command column's vertical centre, with
+  underneath the action button"). The mirrored action label, button, glyph and
+  recipe arrows are placed from ONE anchor, the command column's vertical
+  centre, with 4px between label and button and
   `--iw-skill-v2-cmd-buffer` (8px) between button and arrows:
 
-      button  top: calc(50% - stack / 2)
-      glyph   top: calc(50% - stack / 2 + 14px)
-      arrows  top: calc(50% - stack / 2 + btn-h + buffer)
+      label   top: calc(50% - stack / 2)
+      button  top: calc(50% - stack / 2 + label-h + label-gap)
+      glyph   top: calc(button-top + (btn-h - glyph-size) / 2)
+      arrows  top: calc(button-top + btn-h + buffer)
 
-  where `--iw-skill-v2-cmd-stack` is `btn-h + buffer + nav-h` on a card that
-  `:has()` a pager and just `btn-h` on one that does not. Three earlier
+  where `--iw-skill-v2-cmd-stack` includes `label-h + label-gap + btn-h`, plus
+  `buffer + nav-h` on a card that `:has()` a pager. Three earlier
   versions each broke on the live card in a way no fixture reproduced: an
   offset measured down from the button, then arrows anchored to the card's
   foot, both left the BUTTON in flex flow, and live it sat ~14px lower than in
@@ -111,9 +154,10 @@ state to lay out. What each cost:
     rule, so it had never done anything; cards were 152px only because the hero
     column happens to be that tall.
 
-  `tests/skill-card-system.test.mjs` runs the group checks at 1100, at the
-  live width (745) and at 440: buffer between 6 and 10px, group centre within
-  1.5px of the card's, glyph inside its button. Controls verified: arrows
+  `tests/skill-card-system.test.mjs` runs the group checks at 1100, the live
+  width (745), 440 and 330: buffer between 6 and 10px, label 3-5px above the
+  frame, group centre within 1.5px of the hero band's, and glyph centred inside
+  its button. Controls verified: arrows
   back at the foot read a ~15px buffer and ~3px off centre; the button back in
   flow reads ~21px and ~6px.
 
@@ -143,7 +187,8 @@ state to lay out. What each cost:
     instead, a card at its floor drew a one-material frame ~94px tall. The
     spacers also centre a title-only card, which made the separate
     `grid-row: 1 / -1` rule for that case redundant, so it was removed. The
-    stacked narrow layout sets its own `repeat(4, auto)` rows.
+    phone card sets its own `band auto auto` rows (see the phone card note at
+    the top of this section).
   - The system fixture carries an unmet requirement (Construction's
     `text-red-400` line), a met one (Tailoring) and a source line
     (Construction), so the frame's section order is tested. Controls verified:
@@ -177,21 +222,27 @@ state to lay out. What each cost:
   below). Controls verified: point Jewelcrafting at the leaf and "is its own
   discipline's" fails; move `tailoring.svg` away and "decodes" fails.
 
-- **The action button is zone-themed, its icon and label are centred as one
-  group, and the chevrons are centred on their plates** (Curtis, 2026-09).
+  The glyph box is no longer a fixed 32px. It is the smaller of the current
+  button width and height after subtracting a 14px safe inset on every side
+  (with a 16px floor), then centred in the button. The SVGs' own 4% viewBox
+  padding adds ink clearance inside that box. The system test enlarges a real
+  button from 64x66 to 80x82 and requires the glyph to grow while all four
+  margins remain at least 14px; this covers the tall Combat sword that touched
+  the inner frame.
+
+- **The action button is zone-themed, its label is above its frame, and the
+  chevrons are centred on their plates** (Curtis, 2026-09).
   Three things, each measured with `claude/probe-skill-cards.mjs --ink`,
   which screenshots every arrow with and without its `::before` at DPR 4 and
   diffs the two to find the chevron's real ink, because a pseudo-element has
   no rect. `--zone N` renders the fixture in any zone's theme.
 
-  - **Icon and label.** The renderer's compact padding is a token now,
-    `var(--iw-skill-v2-btn-pad, 44px 4px 8px)`, derived in the sheet from
-    `--iw-skill-v2-glyph`, `-glyph-gap`, `-label-h` and the 3px border, so the label's content
-    box sits exactly under the icon and the pair is centred on the button by
-    construction. The glyph's top uses the same `--iw-skill-v2-glyph-inset`.
-    Measured before: the group 6px high with the label touching the icon.
-    A discipline with no icon gets `--iw-skill-v2-btn-pad: 0 4px` and no glyph,
-    so its label is centred alone instead of sitting under an empty 44px band.
+  - **Icon and label.** The game-owned label remains inside the native button
+    for its accessible name and handlers, but uses a 0px visual font. An
+    aria-hidden skin mirror follows its text and paints 4px above the frame.
+    The button is therefore icon-only, with the dynamically sized glyph centred
+    in both axes. The mirror, frame and pager belong to the one command-stack
+    calculation above; no React node is reparented.
   - **Zone theme.** The action button's fill (`--fs-motion-idle/-hover/-pressed`
     from `--iw-th-cta`/`-cta-hi`/`-plate`), its double border
     (`--iw-th-hairline-hi`), rings (`--iw-th-accent-dim`, `--iw-th-edge-mid`)
@@ -228,22 +279,30 @@ state to lay out. What each cost:
   too tall"). Measured: a simple card 152px -> 126.6px, Construction 196px ->
   159-217px depending on width.
 
-  - **The hero group is 20% smaller** - `--iw-skill-v2-icon` 64 -> 51,
-    `-ring-gap` 11 -> 9, `-ring-weight` 7 -> 6, the level readout's type
-    17/13 -> 14/10.5 with its padding and radius scaled to match, and the
-    identity column's padding 16/10 -> 13/8. The discipline name under it
-    keeps its size, as asked, which is also why the identity column stays
-    144px wide: "SPELLCRAFTING" needs ~129px.
+  - **The hero group is smaller and has breathing room inside its frame** -
+    the first compact pass moved `--iw-skill-v2-icon` 64 -> 51,
+    `-ring-gap` 11 -> 9 and `-ring-weight` 7 -> 6. A subtle 47 / 8 / 5 fit
+    pass still read nearly unchanged in the live UI because the complete ring
+    only lost 6px and the plaque did not change; the corrected values are
+    43 / 7 / 4. The 7px token produces 6px of visible clearance after the
+    portrait border, while keeping the complete ring within 56px. The level
+    readout is now 12/9 (down from 17/13 originally),
+    with a 44px floor, tighter padding and an 11px lower radius. The visual
+    fixture includes a `Lv 54+2` value because bonus levels are the plaque's
+    widest live shape. The discipline name keeps its size, and the identity
+    column stays 144px wide: "SPELLCRAFTING" needs ~129px. The card height did
+    not need to increase; reducing the medallion and plaque adds space where
+    the crowding occurred.
   - **The action button is 30% smaller in BOTH axes (58x66, was 82x94)**, the
     command column 124 -> 96px, the arrows 27px each so the pair still equals
     the button. Width was what was asked for; height had to follow, because
     the command column needs `btn-h + buffer + nav-h + 24px`, which at 94px
     is 148px - exactly the height every card was stuck at, so shrinking the
-    hero alone moved nothing. The label's type is a token now too
-    (`--iw-skill-v2-btn-font` 9.5px, `-btn-tracking` .02em, 1px side padding),
-    written inline by `compactCommandButton` because the base button map
-    writes 12px at .09em inline: at 12px "ASSEMBLE" and "PROSPECT" clip in a
-    58px button, and at 10px/.03em "ASSEMBLE" still overflowed by 2px.
+    hero alone moved nothing. The action text now lives in a visual mirror
+    above the frame. Its type is fitted through
+    `--iw-skill-v2-action-label-font` (9.5px ceiling, .02em tracking), while
+    the native button text remains intact at `--iw-skill-v2-btn-font: 0px` so
+    it does not occupy visual space behind the glyph.
   - **The card's own frames follow the zone.** `--iw-skill-v2-edge` and
     `-edge-soft` point at `--iw-th-edge-mid`/`-soft`, so the card border and
     column dividers move with them; the card ground, its inset rings and top
@@ -266,13 +325,13 @@ state to lay out. What each cost:
   4px `--iw-skill-v2-label-buffer` each side and `white-space: nowrap`.
 
   Labels are the game's, so no stylesheet can size them. `fitActionLabel`
-  measures each label once with a Range over the button's text and writes the
-  size that fits (ceiling 9.5px, a 4px technical floor) as
-  `--iw-skill-v2-btn-font` on the CARD, which the renderer's inline
-  `var(--iw-skill-v2-btn-font, 12px)` resolves; width is linear in size because
-  the tracking is in em, so one measurement is exact. "CRAFT PARTS" fits at
-  7.7px; every other live verb stays at 9.5px. The line box is
-  `--iw-skill-v2-label-h`, so a smaller label stays centred under the icon.
+  measures each aria-hidden visual mirror once and writes the size that fits
+  (ceiling 9.5px, a 4px technical floor) as
+  `--iw-skill-v2-action-label-font` on the card; width is linear in size because
+  the tracking is in em, so one measurement is exact. At the current 64px
+  width every fixture verb, including "CRAFT PARTS", retains the 9.5px ceiling.
+  The native button's `--iw-skill-v2-btn-font` is 0px so its preserved text
+  takes no visual space behind the icon.
   Three things about the cache key `label | layout | inline width | layout
   epoch`, each learned by measurement:
 
@@ -375,14 +434,12 @@ state to lay out. What each cost:
     switching `transition` to none cancels a running transition to its end
     value. Samples are keyed by card, so stopping and restarting a skill on
     the same card keeps its measured tick.
-  - **`fitActionLabel` had to stop measuring the whole button.** A Range over
-    an element returns the border box of every element inside it, so the
-    starting card's 100% span read as a label the full width of the button
-    and shrank it to 8.2px - and the key does not change when activity starts,
-    so that size stuck. `labelTextBox()` unions the rects of the button's TEXT
-    nodes only. The probe and the system test's own label measurements had
-    the same flaw (the probe reported the icon-label gap as -39px) and were
-    fixed the same way.
+  - **`fitActionLabel` measures the visual mirror, not the whole button.** A
+    Range over the native button also sees the game's activity-fill element;
+    during startup that fill is 100% wide, so the old measurement shrank the
+    text to 8.2px and cached the wrong result. `labelTextBox()` now unions only
+    the mirror's text rects. The probe and system test use the same text-only
+    measurement.
 
   `tests/skill-card-system.test.mjs` runs Woodcutting at 40% and Spellcrafting
   starting. It isolates the fill's paint by screenshotting each button with
@@ -399,7 +456,25 @@ state to lay out. What each cost:
   every chevron reads -7.5px; drop the fill rule and the band reads a mean of
   7 / 6.4; put the fill at `z-index: 20` and the ink p90 reads 134; force
   `width: 100%` and the running card reads 100% against its inline 40%;
-  measure the whole button again and Spellcrafting's "GATHER" drops to 8.2px.
+  measure the native button instead of the visual mirror and Spellcrafting's
+  "GATHER" drops to 8.2px.
+
+- **Actions that start above 11 seconds replace the button glyph and label
+  with the game's own remaining-time readout until completion** (Curtis,
+  2026-09). `SkillCardDesignController` reads the rendered Current Action
+  panel rather than starting a second clock, so condition-adjusted actions
+  (including 180-second actions) stay authoritative. Crossing below 11 seconds
+  does not restore the label: the card keeps `data-iw-skill-v2-long-action`
+  until the native action fill disappears, while a repeated action simply
+  jumps back to its new full duration. The existing skin-owned action-glyph
+  span becomes the timer instead of appending another shell child; this keeps
+  `SkillPanelRenderer.unexpectedFlowChild`'s glyph exclusion sufficient and
+  avoids changing the button text that feeds `structureSignature`. The native
+  label remains in place and keeps the game's handler/accessibility semantics;
+  CSS hides the external visual mirror while the timer is active.
+  `tests/skill-action-countdown.test.mjs`
+  pins the 11-second boundary, 180s start, persistence through 10s, completion,
+  teardown and the rendered replacement styling.
 
 - **The command zone can BE the action button - and that, not a wrapper, was
   the live shape.** Reported (Curtis, 2026-09) first as every icon ~12px high,
@@ -420,7 +495,7 @@ state to lay out. What each cost:
     GRID ITEM is placed against its grid AREA, so the button measured from the
     command column while an icon with no area measured from the whole card and
     landed in its middle (dx -478 on the test page). A shell-child icon takes
-    `grid-area: commands` (and the stacked layout's row 2).
+    `grid-area: commands` (row 1, the top band, on a phone card).
   - The bare button inherits command-zone styling that costs it ~2px of label
     room, so at the narrow 54px width "ASSEMBLE" clipped. The narrow layout
     keeps the 58px button; only the column narrows.
@@ -512,7 +587,8 @@ state to lay out. What each cost:
     when a cell would drop under 96px — no breakpoint and no knowledge of the
     card. `auto-fit` also collapses empty tracks, so one or two materials still
     fill the frame. A plain `repeat(3, 1fr)` looks equivalent and is not: it
-    crushes cells to ~49px at a 440px viewport and puts a lone material in a
+    crushes cells under the floor on a narrow frame (82px at a 330px
+    viewport since the phone card made the frame full width) and puts a lone material in a
     third-width cell.
 
   `ensureDetailBody` splits a material line into a name span and a count span
@@ -528,7 +604,8 @@ state to lay out. What each cost:
 
   Three controls are verified: restore the 260px floor and Construction reports
   two columns of three at 1100 and one column live; use `repeat(3, 1fr)` and the
-  440px cells measure 49px; force a column stack and a single-material card
+  narrowest cells measure under 96px (49px at 440 before the phone card; the
+  check now runs at 330px, 82px); force a column stack and a single-material card
   measures ~10px taller than a prose card. Note the system test has to SELECT
   Construction's Materials tab before auditing: Construction ships a
   requirement, so it opens on Requirements, and a grid check against a frame
@@ -1013,3 +1090,67 @@ stack wants the BASE chip on its own row under the title, and a chip given
 chip is an inline child OF the chip, not a sibling flex item, so it cannot
 break the line at all. One real zero-height item can, and the controller
 appends one (`data-iw-skill-v2-break`).
+
+## Where a material line is CUT (the repeated-copy card)
+
+**`textContent` never inserts a separator between elements, and the live
+material line is not bullet-separated.** Curtis reported (2026-09-16) a card
+that rendered its own copy run together — `Needs level 73Base: 220Gather…` —
+repeated down three columns and wrapped mid-number. Three columns and a
+mid-number wrap are `.iw-skill-v2-body`'s `repeat(auto-fit, …)` grid and
+`.iw-skill-v2-body-row`'s `overflow-wrap: anywhere`, which places the defect in
+the text those cells are BUILT from, not in the sheet that lays them out.
+
+`ingredientEntries` (and `completedIngredientRanges`, which anchors the met
+highlight identically) sliced each cell from the last `•` or `\n` before its
+own count:
+
+    const bulletStart = text.lastIndexOf('•', match.index - 1) + 1;
+    const lineStart   = text.lastIndexOf('\n', match.index - 1) + 1;
+    const start       = Math.max(bulletStart, lineStart);
+
+Every fixture in this repo carried the one shape those anchors work on: all the
+materials on one line, inside ONE text node, bullet-separated. Neither anchor
+is reliable live.
+
+- The lines this very file quotes from the live game use an **emoji per
+  material** — `📦 Bloodstone Building Parts 298/2600`, `💠 Night Claw 22/100`
+  — not `•`.
+- `textContent` concatenates descendants with **no separator of any kind**, so
+  a card whose materials are separate `<p>`/`<span>` nodes has no `\n` anywhere
+  in the string either.
+
+With neither present both `lastIndexOf` calls return -1, `start` is 0, and
+every cell holds the whole run-up to its own count — the last one holding the
+source's entire copy. Measured on the emoji line: cell 3 was 89 characters
+against the material's own 28.
+
+The fix adds two anchors that are ALWAYS there — the end of the PREVIOUS count,
+so cells can never overlap, and the offset at which the enclosing element's own
+text begins (`elementTextStarts`). Both are floors in the same `Math.max`, so a
+bullet or a newline still wins wherever the game does provide one.
+
+**The negative control is the whole lesson**: revert `entryStart` to
+`Math.max(bulletStart, lineStart)` and `tests/ingredient-entries.test.mjs`
+fails on the emoji, split-`<p>` and split-`<span>` shapes while the bullet
+shape keeps passing. A fixture that models one separator style cannot see a
+separator bug, which is why this survived every suite here for as long as it
+did — the same family as "a fixture that omits a stylesheet will lie to you".
+
+**The invariant worth keeping past this instance.** The skin writes text it read
+from a game node in three places, and each is safe only while its SOURCE is not
+an ancestor of its TARGET:
+
+| writer | reads | writes into |
+| --- | --- | --- |
+| `SkillPanelRenderer.updateIngredientLists` | `[data-iw-ingr]` | `[data-iw-skill-ingredient-list]`, placed with `source.after()` |
+| `SkillCardDesignController.ensureDetailBody` | `[data-iw-skill-v2-section]` | `[data-iw-skill-v2-body]` on the shell |
+| `SkillCardDesignController.syncRequirementNote` | the requirement section | `[data-iw-skill-v2-req-note]` in the foot row |
+
+Nothing in the code enforces containment; it holds today only because each
+target lands as a SIBLING of its source. Violate it and the target's own text
+is fed back into its input on every flush, which concatenates the previous pass
+forever — the unbounded version of the same symptom. The last block of
+`tests/ingredient-entries.test.mjs` asserts it directly, and
+`claude/probe-text-runaway.mjs` checks it in a real browser across sixteen card
+shapes (`--churn` re-renders the card from React's side mid-run).

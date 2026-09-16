@@ -4,7 +4,7 @@
  * IdleWorlds ships its whole panel stack TWICE: a wide `hidden xl:grid`
  * two-column section and a narrow `xl:hidden` single-column section, and
  * Tailwind swaps which one is actually rendering at its `xl` breakpoint
- * (1280px) — see claude/probe-panel-order.js, which confirmed this live, and
+ * (1280px) — see claude/captures/iw-panel-layout-root-*.json, which confirmed this live, and
  * V1.6.0_MOBILE_LAYOUT_AUDIT.md.
  *
  * UIFoundation's section-frame / boss-card / activity-panel classifiers used

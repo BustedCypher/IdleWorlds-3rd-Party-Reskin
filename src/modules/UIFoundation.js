@@ -16,13 +16,9 @@ import { decorateVillagePanel, clearVillagePanel } from './VillagePanels.js';
 import { reconcileVillageScene, clearVillageScene } from './VillageScene.js';
 import { decorateCollapsibleFrames, clearCollapsibleFrames } from './CollapsibleFrames.js';
 import { classifyHeaderChrome, clearHeaderChrome } from './HeaderChrome.js';
-import {
-  decoratePanelOrder, clearPanelOrder, setRearrangeMode, isRearrangeMode, resetPanelOrder,
-} from './PanelOrder.js';
 import css from '../styles/ui-system.css';
 import villageSceneCss from '../styles/village-scene.css';
 import collapsibleCss from '../styles/collapsible.css';
-import panelOrderCss from '../styles/panel-order.css';
 import compactCss from '../styles/compact-buttons.css';
 import { decorateCompactButtons, clearCompactButtons } from './CompactButtons.js';
 
@@ -36,10 +32,11 @@ const NAV_LABELS = ['game', 'market', 'leaderboards', 'village', 'dungeon'];
  * after its append, World Chat and Action Log stopped reading as split headers
  * and lost their two-column treatment, a regression whose cause was in a
  * different module from its symptom. Every sweep below that counts controls in
- * a panel has to be told about both of them.
+ * a panel has to be told about it. (The Rearrange feature's grab handle was the
+ * second such control until the feature was removed, 2026-09-15.)
  */
-const SKIN_OWNED_CONTROL = '[data-iw-collapse], [data-iw-order-handle]';
-const GAME_CONTROL = 'button:not([data-iw-collapse]):not([data-iw-order-handle])';
+const SKIN_OWNED_CONTROL = '[data-iw-collapse]';
+const GAME_CONTROL = 'button:not([data-iw-collapse])';
 const ACTIVITY_PANELS = new Map([
   ['current action', 'current-action'],
   ['action log', 'action-log'],
@@ -302,61 +299,16 @@ function ensureToolkitLink(track) {
   track.append(link);
 }
 
-/**
- * The skin's own Rearrange and Reset controls.
- *
- * Same shape and the same four reasons as ensureToolkitLink above: they wear
- * `data-iw-ui="nav-tab"` so the rail's plate and metrics come from whichever
- * nav rule is winning; `data-iw-nav-link` is this module's namespace and is
- * already swept by clearUIFoundation; every attribute is set BEFORE insertion
- * so the append costs one mutation record and nothing after; and neither label
- * is in NAV_LABELS, so countNavTabsIn cannot see the skin's own appends and
- * invalidate the nav cache into a whole-document re-resolve every flush.
- *
- * Reset is always present and hidden by CSS outside the mode, rather than
- * created and destroyed with it — a `<button>` appended on a mode change would
- * be one more childList record on a gesture that currently costs zero.
- */
-function ensureOrderControls(track) {
-  if (!track || track.querySelector(':scope > [data-iw-nav-link="rearrange"]')) return;
-  const toggle = document.createElement('button');
-  toggle.type = 'button';
-  toggle.dataset.iwNavLink = 'rearrange';
-  toggle.dataset.iwUi = 'nav-tab';
-  toggle.title = 'Rearrange panels (your layout is remembered)';
-  toggle.textContent = 'Rearrange';
-  toggle.addEventListener('click', event => {
-    event.preventDefault();
-    setRearrangeMode(!isRearrangeMode(document), document);
-  });
-
-  const reset = document.createElement('button');
-  reset.type = 'button';
-  reset.dataset.iwNavLink = 'order-reset';
-  reset.dataset.iwUi = 'nav-tab';
-  reset.title = 'Restore the game’s own panel order';
-  reset.textContent = 'Reset layout';
-  reset.addEventListener('click', event => {
-    event.preventDefault();
-    resetPanelOrder(document);
-  });
-
-  track.append(toggle);
-  track.append(reset);
-}
-
 function classifyMainNav() {
   if (mainNavResolution && mainNavResolutionValid(mainNavResolution)) {
     applyMainNavState(mainNavResolution.tabs);
     ensureToolkitLink(mainNavResolution.track);
-    ensureOrderControls(mainNavResolution.track);
     return;
   }
   mainNavResolution = resolveMainNav();
   if (!mainNavResolution) return;
   applyMainNavState(mainNavResolution.tabs);
   ensureToolkitLink(mainNavResolution.track);
-  ensureOrderControls(mainNavResolution.track);
 }
 
 // Once a zone-bar host is resolved, WHICH element plays the role never
@@ -1076,14 +1028,14 @@ function classifyPanelHeader(host, heading) {
   if (!titleBranch) return;
   let companion = titleBranch.nextElementSibling;
   // Skip the skin's own appended controls: a panel whose only other child is
-  // the rearrange handle must still read exactly as it did before the append.
+  // one of them must still read exactly as it did before the append.
   while (companion?.matches?.(SKIN_OWNED_CONTROL)) companion = companion.nextElementSibling;
   // `:not([data-iw-collapse])` — the skin's OWN per-panel collapse toggle is
   // appended INTO this row (CollapsibleFrames), and counting it as a control
   // made a split header stop reading as split on the very next pass: the
   // classifier saw a button in the title branch that the game never wrote.
   const split = titleBranch !== heading &&
-    !titleBranch.querySelector(GAME_CONTROL + ',a,[role="button"]:not([data-iw-collapse]):not([data-iw-order-handle])') &&
+    !titleBranch.querySelector(GAME_CONTROL + ',a,[role="button"]:not([data-iw-collapse])') &&
     companion &&
     !companion.querySelector('input,textarea,h1,h2,h3,h4,[role="heading"]') &&
     (companion.querySelector('button,a,[role="button"]') || /\bxp\s*\/\s*hr\b/i.test(normText(companion.textContent)));
@@ -1111,9 +1063,10 @@ function classifyFeed(host) {
   if (!feed) {
     feed = [...host.children].find(child =>
       child.dataset.iwPanelPart !== 'header' &&
-      // Without this the skin's own full-panel rearrange handle — a direct
-      // child with no input and no heading — is the first thing this fallback
-      // finds, and it would be given the feed's `overflow-y:auto; max-height`.
+      // Without this a skin-owned control appended as a direct child with no
+      // input and no heading is the first thing this fallback finds, and it
+      // would be given the feed's `overflow-y:auto; max-height`. (The Rearrange
+      // handle proved it, before that feature was removed.)
       !child.matches(SKIN_OWNED_CONTROL) &&
       !child.querySelector('input,textarea') &&
       !child.matches('form') &&
@@ -1440,17 +1393,12 @@ function queueClassify() {
     // LAST: it reads the marks every classifier above writes — which frames are
     // leaves, which host is an activity panel, and where each title landed.
     guard('ui:collapsible', () => decorateCollapsibleFrames(document));
-    // AFTER collapsible: the panel identity falls back to `data-iw-panel`
-    // for Action Log, which ships no heading of its own, so the order pass
-    // has to run once every classifier above has had its say.
-    guard('ui:panel-order', () => decoratePanelOrder(document));
   });
 }
 
 /** Remove every semantic role attribute this module applied. Kill switch. */
 export function clearUIFoundation() {
   clearHeaderChrome();
-  clearPanelOrder(document);
   clearCollapsibleFrames(document);
   clearVillageScene();
   clearCompactButtons();
@@ -1497,7 +1445,7 @@ export function clearUIFoundation() {
 // Both activation and standalone initialization must install the same complete
 // sheet. StyleInjector keeps the first sheet for an id and ignores later calls.
 export function injectUIFoundationStyles() {
-  inject('ui-system', css + '\n' + compactCss + '\n' + villageSceneCss + '\n' + collapsibleCss + '\n' + panelOrderCss);
+  inject('ui-system', css + '\n' + compactCss + '\n' + villageSceneCss + '\n' + collapsibleCss);
 }
 
 export function initUIFoundation() {

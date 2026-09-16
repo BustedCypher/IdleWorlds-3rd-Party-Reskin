@@ -186,6 +186,24 @@ most expensive family of bug this project has had after the flush loop above.
 The tell is always the same: an expensive resolution is correctly cached, and
 the cache never hits.
 
+- **Both structure signatures contained every button's `disabled` state**
+  (2026-09-16, reported as "clicking Prejoin scrolls the page up slightly").
+  IdleWorlds disables EVERY action button on the page while any request is in
+  flight — Prejoin, Turn In, Equip — and re-enables them when it returns. No
+  role depends on `disabled` (except a locked skill card's action button, and
+  an unlock also flips DOMWatcher's type), so each half of that toggle
+  stripped every skill and quest card's roles and re-derived them in one
+  flush, reading `getComputedStyle` / `getBoundingClientRect` in between. That
+  is a forced layout of the UNDECORATED cards, and Chrome applies scroll
+  anchoring on it: the window moved ~17px per toggle and never came back.
+  Nothing reached a painted frame, so frame-to-frame probes saw nothing move;
+  what found it was reading `scrollY` in a MutationObserver callback after
+  every task, which pinned the jump to the flush with the role rewrites
+  (`claude/probe-boss-prejoin-scroll.js`, round 7). Two lessons: a
+  strip-then-rederive pass is a visible layout event, not just a cost; and
+  `html { overflow-anchor: none }` in the console is the one-line test for
+  "is this scroll anchoring". Pinned by `flush-quiescence` ("Busy toggle") and
+  `skill-structure-signature` (c).
 - **`SkillPanelRenderer.structureSignature()` contained the ticking XP number.**
   The "Lv N - X% • 4,120 to go" readout is a genuine `<button>`, so it landed in
   the signature's `querySelectorAll('button')` sweep and its digits changed

@@ -187,3 +187,57 @@ higher-specificity `[data-iw-skill-layout="three-zone"]` rule set the grey, so
 the unmet override is listed at both specificities. Per Curtis (2026-09). If a
 future capture shows the game using some non-`text-*-N` unmet marker, widen the
 detection in `SkillPanelRenderer` — do not go back to unconditional red.
+
+**Two items the skin puts in ONE grid cell paint in DOM order, and the later
+one swallows the earlier one's clicks — including across padding that looks
+empty.** Reported 2026-09-16 as "World Boss Participation works on mobile, on
+desktop it does nothing". Nothing was wrong with the control or its handler.
+The boss card's grid deliberately shares cell (2, 3) between the game's
+participation link and its `status` row (the respawn / protection timer), with
+`status` stretched across the cell and `padding-left: 155px` so the timer
+prints to the right of the link. `status` is the LATER child, and
+`[data-iw-boss="card"] > *` gives both the same `z-index: 1`, so the stretched
+wrapper painted over the link end to end; `elementFromPoint` on the link's own
+box returned the wrapper at every width from 761px up. The `@media (max-width:
+760px)` block moves `status` onto its own row, which is the whole of "but it
+works on my phone" — a viewport-shaped symptom with no viewport-shaped cause.
+
+Two declarations fix it and BOTH are needed: `status` takes
+`pointer-events: none` with `> * { pointer-events: auto }` so its gutter stops
+intercepting while its own content stays live, and the link is lifted to
+`z-index: 2` because the 155px gutter is a fixed number while the widest label
+the game puts in that slot ("… players currently fighting world boss") is wider
+than it, which would leave the link's tail dead under the timer paragraph.
+Painted output is byte-identical before and after (screenshot hashes at 1440,
+800 and 390px) — only hit testing changed.
+
+**Superseded the same day: the shared cell was the bug, not its stacking.**
+The line above about the link being "wider than" the gutter was the tell. With
+the live fighting label ("28 players currently fighting world boss", ~300px)
+the HP readout started at 155px and PAINTED over the link's tail — reported as
+"the Boss HP overlaps the participants text on desktop". The card grid is now
+`104px auto minmax(0, 1fr)`: the link owns the `auto` column, `status` the
+`1fr` column, header and progress span `2 / -1`. Separate cells cannot overlap,
+so the `pointer-events` / `z-index` workaround is gone. The `auto` track is
+sized by the link alone because an item spanning a flexible (`fr`) track does
+not contribute to sizing the non-flexible tracks it crosses. The phone block
+(≤ 760px) is untouched and measured identical: every card descendant's box at
+760, 430, 390 and 360px matches the old CSS. The general lesson: a fixed
+gutter sized for one label is a latent overlap for every longer label the game
+can put there — give each item its own track instead.
+
+Lessons that generalise past this card:
+
+- A control the skin never touched can still be broken BY the skin's layout.
+  Rule 1 is about effect, not about which node you wrote to.
+- A grid/flex ITEM honours a numeric `z-index` while still `position: static`.
+  That is what makes the lift work here, and it is also what made the first
+  attempt at a negative control useless: reverting the fix with `z-index: 1`
+  instead of `z-index: auto` still floated the link and reproduced nothing.
+- When a bug is reported as "works on mobile, not on desktop", suspect a
+  breakpoint that *removes* an overlap rather than one that creates a bug.
+- Measure it with `elementFromPoint` on the control's own box at three points
+  (both ends and the middle): a link whose tail alone is buried is still
+  broken, and a centre-only probe would have called the gutter fix done.
+  `tests/boss-participation-hit.test.mjs` pins all of this and runs its own
+  negative control.

@@ -35,7 +35,9 @@ const CARDS = [
     lines: ['&bull; Moonsteel Ore 58097/2'] },
   { id: 'spellcrafting', icon: '&#10024;', skill: 'Spellcrafting', lv: 60, pct: '64',
     title: 'Harvest Moonsteel Mana', verb: 'Gather', base: 124, pager: 'content', active: 100, lines: [] },
-  { id: 'tailoring', nestTitle: true, icon: '&#129525;', skill: 'Tailoring', lv: 54, pct: '86',
+  /* Bonus level: the live Smithing/Herbalism/Alchemy shape that makes the
+     level plaque substantially wider than a plain two-digit level. */
+  { id: 'tailoring', nestTitle: true, icon: '&#129525;', skill: 'Tailoring', lv: '54+2', pct: '86',
     title: 'Weave Moonsilk Cloth', verb: 'Weave', base: 1008, pager: 'commands',
     lines: ['&bull; Moonsilk 0/8', 'Requires Tailoring Lv 49'] },
   { id: 'woodcutting', icon: '&#127794;', skill: 'Woodcutting', lv: 63, pct: '39.8',
@@ -173,6 +175,7 @@ const AUDIT = (ids) => {
       .reduce((a, b) => Math.max(a, b), 0);
     const name = q('[data-iw-skill-role="identity"]');
     const glyph = q('[data-iw-skill-v2-action-glyph]');
+    const actionLabel = q('[data-iw-skill-v2-action-label]');
     const btn = q('[data-iw-skill-role="action-button"]');
     const navs = [...c.querySelectorAll('[data-iw-skill-role="nav-button"]')];
     const tabsHost = q('[data-iw-skill-v2-tabs]');
@@ -199,8 +202,10 @@ const AUDIT = (ids) => {
          width to the left. Assert the input; the geometry alone cannot see it. */
       ring: { w: round(rw), h: round(rh), cx: round(rl + rw / 2), cy: round(rt + rh / 2),
         display: rs.display, transform: rs.transform,
-        weight: (rs.maskImage || rs.webkitMaskImage || '') },
+        weight: (rs.maskImage || rs.webkitMaskImage || ''),
+        weightPx: parseFloat(getComputedStyle(c).getPropertyValue('--iw-skill-v2-ring-weight')) },
       readout: shown(q('[data-iw-skill-v2-level-readout]')) ? box(q('[data-iw-skill-v2-level-readout]')) : null,
+      levelText: (q('.iw-skill-v2-level')?.textContent || '').trim(),
       nameBox: shown(name) ? box(name) : null,
       nameInk: name ? round(name.scrollWidth) : 0,
       nameRoom: name ? round(name.clientWidth) : 0,
@@ -212,6 +217,7 @@ const AUDIT = (ids) => {
       summaryColour: shown(q('[data-iw-skill-v2-summary]')) ? getComputedStyle(q('[data-iw-skill-v2-summary]')).color : null,
       summaryBox: shown(q('[data-iw-skill-v2-summary]')) ? box(q('[data-iw-skill-v2-summary]')) : null,
       titleBox: shown(q('[data-iw-skill-role="action-title"]')) ? box(q('[data-iw-skill-role="action-title"]')) : null,
+      titleFont: q('[data-iw-skill-role="action-title"]') ? getComputedStyle(q('[data-iw-skill-role="action-title"]'), '::before').fontFamily : '',
       chipBox: shown(q('.fs-skill-base-exp')) ? box(q('.fs-skill-base-exp')) : null,
       /* The name is drawn by a ::before, and a pseudo-element's overflow does
          NOT show up in its host's scrollWidth — so the host-level clip check
@@ -222,25 +228,37 @@ const AUDIT = (ids) => {
       nameHostOverflow: name ? getComputedStyle(name).overflow : '',
       nameMaxWidth: name ? getComputedStyle(name, '::before').maxWidth : '',
       identityW: box(q('[data-iw-skill-zone="identity"]')).w,
+      /* The hero column's box: it spans the whole card on a wide card and only
+         the top band on a phone card, which is what the command group centres
+         on in both. */
+      identityBox: box(q('[data-iw-skill-zone="identity"]')),
       /* The COLUMN, not the zone element: when the button is its own zone the element is only the button. */ commandW: round(c.getBoundingClientRect().right - q('[data-iw-skill-zone="content"]').getBoundingClientRect().right),
       button: shown(btn) ? box(btn) : null,
       buttonBg: btn ? getComputedStyle(btn).backgroundImage : '',
+      buttonColor: btn ? getComputedStyle(btn).color : '',
+      buttonFont: btn ? parseFloat(getComputedStyle(btn).fontSize) : null,
+      buttonText: (btn?.textContent || '').trim(),
       glyph: shown(glyph) ? box(glyph) : null,
       glyphBg: glyph ? getComputedStyle(glyph).backgroundImage.slice(0, 24) : '',
       glyphIcon: glyph ? ((getComputedStyle(glyph).backgroundImage.match(/action-icons\/([a-z]+)\.svg/) || [])[1] || null) : null,
       glyphUrl: glyph ? ((getComputedStyle(glyph).backgroundImage.match(/url\("?([^")]+)"?\)/) || [])[1] || null) : null,
+      actionLabel: shown(actionLabel) ? box(actionLabel) : null,
+      actionLabelText: (actionLabel?.textContent || '').trim(),
+      actionLabelFont: actionLabel ? getComputedStyle(actionLabel).fontFamily : '',
+      actionLabelTransform: actionLabel ? getComputedStyle(actionLabel).textTransform : '',
       zoneBox: box(q('[data-iw-skill-zone="content"]')),
       /* TEXT rects only: a Range over the button also returns the box of the
          game's activity fill, which is the button's full width while starting. */
-      labelFit: (() => { const rs = textRects(btn);
-        const cs = getComputedStyle(btn);
+      labelFit: (() => { const host = shown(actionLabel) ? actionLabel : btn;
+        const rs = textRects(host);
+        const cs = getComputedStyle(host);
         return { lines: new Set(rs.map(x => Math.round(x.top))).size,
           text: rs.length ? round(Math.max(...rs.map(x => x.right)) - Math.min(...rs.map(x => x.left)) - (parseFloat(cs.letterSpacing) || 0)) : 0,
-          room: round(btn.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)),
+          room: round(host.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)),
           pad: round(Math.min(parseFloat(cs.paddingLeft), parseFloat(cs.paddingRight))),
-          size: parseFloat(cs.fontSize), label: btn.textContent.trim() }; })(),
+          size: parseFloat(cs.fontSize), label: host.textContent.trim() }; })(),
       contentGround: getComputedStyle(q('[data-iw-skill-zone="content"]')).backgroundImage,
-      labelBox: (() => { const rs = textRects(btn);
+      labelBox: (() => { const rs = textRects(shown(actionLabel) ? actionLabel : btn);
         return rs.length ? { top: round(Math.min(...rs.map(x => x.top))), bottom: round(Math.max(...rs.map(x => x.bottom))) } : null; })(),
       footBox: shown(q('[data-iw-skill-v2-controls]')) ? box(q('[data-iw-skill-v2-controls]')) : null,
       nav: navs.filter(shown).map(box),
@@ -287,9 +305,10 @@ try {
   check('the info frame shares the left edge of the title',
     framed.every(r => Math.abs(r.bodyBox.x - r.titleBox.x) <= 1),
     framed.map(r => `${r.id} body=${r.bodyBox.x} title=${r.titleBox.x}`).join(' '));
-  /* 20% smaller than the first V2 badge, still well above an inline icon. */
-  check('the hero icon keeps a readable badge scale',
-    open.every(r => r.icon.w >= 48 && r.icon.w <= 54), open.map(r => r.icon.w).join(','));
+  /* The visible hero reduction has to be large enough to read at normal game
+     scale, while remaining well above an inline-icon scale. */
+  check('the hero icon fits comfortably inside its frame',
+    open.every(r => r.icon.w >= 42 && r.icon.w <= 44), open.map(r => r.icon.w).join(','));
   check('the action is a portrait control with room for its illustration',
     open.every(r => r.button.h >= 60 && r.button.h >= r.button.w), open.map(r => `${r.button.w}x${r.button.h}`).join(','));
 
@@ -312,9 +331,11 @@ try {
   check('the ring clearly surrounds the icon rather than sitting on it',
     open.every(r => (r.ring.w - r.icon.painted) / 2 >= 6),
     open.map(r => `${r.id} ${round1((r.ring.w - r.icon.painted) / 2)}px`).join(' '));
-  check('the ring is substantially thick',
-    open.every(r => /calc\(100% - 6px\)/.test(r.ring.weight)),
-    open[0].ring.weight.slice(0, 70));
+  check('the complete EXP ring is visibly compact',
+    open.every(r => r.ring.w <= 56), open.map(r => `${r.id} ${r.ring.w}px`).join(' '));
+  check('the ring stays legible without crowding the hero frame',
+    open.every(r => r.ring.weightPx === 4),
+    open.map(r => `${r.id} ${r.ring.weightPx}px`).join(' '));
   check('the ring is the same size on every card', uniq(open.map(r => r.ring.w)).length === 1,
     uniq(open.map(r => r.ring.w)).join(','));
 
@@ -324,6 +345,14 @@ try {
     open.every(r => !r.nativeLevel && !r.nativePercent),
     open.filter(r => r.nativeLevel || r.nativePercent).map(r => r.id).join(',') || 'none');
   check('the level block is present on every card', open.every(r => r.readout));
+  check('the bonus-level fixture renders the full level value',
+    open.find(r => r.id === 'tailoring')?.levelText === 'Lv 54+2',
+    open.find(r => r.id === 'tailoring')?.levelText || 'missing');
+  check('the level plaque stays compact vertically',
+    open.every(r => r.readout.h <= 31), open.map(r => `${r.id} ${r.readout.h}px`).join(' '));
+  check('a bonus level does not make the plaque excessively wide',
+    open.find(r => r.id === 'tailoring')?.readout.w <= 60,
+    `${open.find(r => r.id === 'tailoring')?.readout.w || 'missing'}px`);
   check('the level block sits directly under the icon on every card',
     uniq(open.map(r => round1(r.readout.y - (r.icon.y + r.icon.h)))).length === 1,
     uniq(open.map(r => round1(r.readout.y - (r.icon.y + r.icon.h)))).join(','));
@@ -350,12 +379,11 @@ try {
   /* 4 and 17. Compactness, and height that follows content. Control: put the
      shell's `min-height: 86px` row floor back and all five report one height. */
   const simple = open.filter(r => ['spellcrafting', 'woodcutting'].includes(r.id));
-  /* Hero -20% and the action button -30% in BOTH axes. Width alone left the
-     command column needing 148px, which held every card at 148-152px.
-     Control: restore the 94px button height and a card with a pager reads
-     150px. */
+  /* The external action label adds 16px to the centred command stack. The
+     pager case therefore tops out at 140px while a title-only, no-pager card
+     remains close to 110px. */
   check('simple cards retain the compact reference proportions',
-    simple.every(r => r.height <= 132), simple.map(r => `${r.id} ${r.height}`).join(' '));
+    simple.every(r => r.height <= 140), simple.map(r => `${r.id} ${r.height}`).join(' '));
   /* The centre column is ONE stack - title row, frame, foot row - between two
      flexible spacer rows, so it sits on the card's middle line and each frame
      is only as tall as its content. Before the spacers, a card at its floor
@@ -474,6 +502,18 @@ try {
   check('the command button carries the discipline glyph',
     open.every(r => r.glyph && /url\(/.test(r.glyphBg)),
     open.map(r => r.id + ':' + (r.glyph ? 'yes' : 'no')).join(' '));
+  check('the game-owned action text is mirrored above every button frame',
+    open.every(r => r.actionLabel && r.actionLabelText === r.buttonText),
+    open.map(r => `${r.id}:${r.actionLabelText || 'missing'}`).join(' '));
+  check('the visual action label renders in all capitals',
+    open.every(r => r.actionLabelTransform === 'uppercase'),
+    open.map(r => `${r.id}:${r.actionLabelTransform || 'none'}`).join(' '));
+  check('the visual action label uses the skill heading typeface',
+    open.every(r => r.actionLabelFont === r.titleFont),
+    open.map(r => `${r.id}:${r.actionLabelFont} / ${r.titleFont}`).join(' '));
+  check('the native action text takes no visual space inside the framed button',
+    open.every(r => r.buttonFont === 0),
+    open.map(r => `${r.id}:${r.buttonFont}px`).join(' '));
   /* Curtis's own artwork (2026-09), one icon per discipline, imported from his
      EPS by build-tools/import-action-icons.mjs. The URL alone proves nothing -
      a missing file still computes a perfectly good background-image - so each
@@ -491,6 +531,35 @@ try {
   check('the glyph is centred on the button on every card',
     open.every(r => r.glyph && Math.abs(r.glyph.cx - r.button.cx) <= 1),
     open.map(r => `${r.id} ${r.glyph ? round1(r.glyph.cx - r.button.cx) : 'no icon'}`).join(' '));
+  check('every glyph box keeps a safe margin inside its action frame',
+    open.every(r => r.glyph
+      && r.glyph.x - r.button.x >= 14
+      && r.button.x + r.button.w - (r.glyph.x + r.glyph.w) >= 14
+      && r.glyph.y - r.button.y >= 14
+      && r.button.y + r.button.h - (r.glyph.y + r.glyph.h) >= 14),
+    open.map(r => r.glyph ? `${r.id} ${round1(r.glyph.x - r.button.x)}/${round1(r.glyph.y - r.button.y)}/${round1(r.button.x + r.button.w - r.glyph.x - r.glyph.w)}/${round1(r.button.y + r.button.h - r.glyph.y - r.glyph.h)}` : `${r.id} missing`).join(' '));
+  const responsiveGlyph = await page.evaluate(() => {
+    const card = document.querySelector('#jewelcrafting');
+    const btn = card.querySelector('[data-iw-skill-role="action-button"]');
+    const glyph = card.querySelector('[data-iw-skill-v2-action-glyph]');
+    const sample = () => { const b = btn.getBoundingClientRect(), g = glyph.getBoundingClientRect();
+      return { buttonW: b.width, buttonH: b.height, glyphW: g.width, glyphH: g.height,
+        left: g.left - b.left, top: g.top - b.top, right: b.right - g.right, bottom: b.bottom - g.bottom }; };
+    const before = sample();
+    card.style.setProperty('--iw-skill-v2-btn-w', '80px');
+    card.style.setProperty('--iw-skill-v2-btn-h', '82px');
+    const after = sample();
+    card.style.removeProperty('--iw-skill-v2-btn-w');
+    card.style.removeProperty('--iw-skill-v2-btn-h');
+    return { before, after };
+  });
+  check('the glyph scales with the available button interior',
+    responsiveGlyph.after.glyphW > responsiveGlyph.before.glyphW
+      && responsiveGlyph.after.glyphH > responsiveGlyph.before.glyphH,
+    `${round1(responsiveGlyph.before.glyphW)} -> ${round1(responsiveGlyph.after.glyphW)}`);
+  check('a dynamically enlarged glyph preserves the safe frame margin',
+    ['left','top','right','bottom'].every(k => responsiveGlyph.after[k] >= 14),
+    ['left','top','right','bottom'].map(k => `${k}=${round1(responsiveGlyph.after[k])}`).join(' '));
 
   /* 9. The pager is demoted, and no longer sets the card's height. Control:
      restore 26x44 and the three pager cards grow past the simple ones. */
@@ -541,28 +610,31 @@ try {
      card's foot again and the buffer reads ~15px with the group ~3px off
      centre; put the button back in flow and the buffer reads ~21px with the
      group ~6px off centre. */
-  const commandGroup = r => { const top = r.button.y;
+  /* Centred on the HERO COLUMN, which on a wide card spans the whole card (so
+     this is the card's middle, as before) and on a phone card spans only the
+     top band that the command column shares; the info frame and the note are
+     full-width rows under that band there (mobile audit, 2026-09). */
+  const commandGroup = r => { const top = r.actionLabel?.y ?? r.button.y;
     const bottom = r.navGroup ? r.navGroup.y + r.navGroup.h : r.button.y + r.button.h;
-    return { top, bottom, mid: (top + bottom) / 2, cardMid: r.card.y + r.card.h / 2 }; };
+    return { top, bottom, mid: (top + bottom) / 2, cardMid: r.identityBox.y + r.identityBox.h / 2 }; };
   const groupChecks = (label, set) => {
     const pagedHere = set.filter(r => r.navGroup);
     check(`${label}: a fixed buffer separates the button from its arrows`,
       pagedHere.length > 0 && pagedHere.every(r => { const b = r.navGroup.y - (r.button.y + r.button.h); return b >= 6 && b <= 10; }),
       pagedHere.map(r => `${r.id} buffer=${round1(r.navGroup.y - (r.button.y + r.button.h))}`).join(' '));
-    check(`${label}: the command group is centred vertically on the card`,
+    check(`${label}: the command group is centred vertically on the hero column`,
       set.every(r => (g => Math.abs(g.mid - g.cardMid) <= 1.5)(commandGroup(r))),
       set.map(r => (g => `${r.id} d=${round1(g.mid - g.cardMid)}`)(commandGroup(r))).join(' '));
-    /* The icon and the label are ONE group centred on the button (Curtis,
-       2026-09: "always centred on the button"). Before, the group sat ~6px
-       high with the label hard against the icon. Control: put the renderer's
-       old `44px 4px 8px` padding back and this reports -3.5px, with the label
-       overlapping the icon by ~5px. */
-    check(`${label}: the icon and label are centred on the button as one group`,
-      set.every(r => r.glyph && r.labelBox && Math.abs(((r.glyph.y + r.labelBox.bottom) / 2) - (r.button.y + r.button.h / 2)) <= 1),
-      set.map(r => `${r.id} d=${r.glyph && r.labelBox ? round1(((r.glyph.y + r.labelBox.bottom) / 2) - (r.button.y + r.button.h / 2)) : 'no icon'}`).join(' '));
-    check(`${label}: the label sits below its icon, not on it`,
-      set.every(r => r.glyph && r.labelBox && r.labelBox.top >= r.glyph.y + r.glyph.h - 1),
-      set.map(r => `${r.id} icon=${r.glyph ? round1(r.glyph.y + r.glyph.h) : 'none'} label=${r.labelBox && r.labelBox.top}`).join(' '));
+    check(`${label}: the action label sits above its button frame`,
+      set.every(r => r.actionLabel && r.actionLabel.y + r.actionLabel.h <= r.button.y
+        && r.button.y - (r.actionLabel.y + r.actionLabel.h) >= 3
+        && r.button.y - (r.actionLabel.y + r.actionLabel.h) <= 5),
+      set.map(r => `${r.id} gap=${r.actionLabel ? round1(r.button.y - r.actionLabel.y - r.actionLabel.h) : 'missing'}`).join(' '));
+    check(`${label}: the glyph is centred within the button frame`,
+      set.every(r => r.glyph
+        && Math.abs(r.glyph.cx - r.button.cx) <= 1
+        && Math.abs(r.glyph.cy - r.button.cy) <= 1),
+      set.map(r => `${r.id} d=${r.glyph ? `${round1(r.glyph.cx - r.button.cx)},${round1(r.glyph.cy - r.button.cy)}` : 'missing'}`).join(' '));
     /* The label is always ONE line inside the button with a buffer both sides
        (Curtis, 2026-09: "CRAFT PARTS" wrapped). The size is fitted per label by
        SkillCardDesignController.fitActionLabel. Controls: remove the fit call
@@ -576,9 +648,8 @@ try {
       set.map(r => `${r.id} glyph=${r.glyph ? `${r.glyph.y}..${round1(r.glyph.y + r.glyph.h)}` : 'none'} btn=${r.button.y}..${round1(r.button.y + r.button.h)}`).join(' '));
   };
   groupChecks('1100px', open);
-  check('a long label is shrunk rather than left at the ceiling, and a short one is not',
-    (c => c.labelFit.size < 9.5)(open.find(r => r.id === 'construction'))
-      && open.filter(r => r.id !== 'construction').every(r => r.labelFit.size === 9.5),
+  check('action labels retain the readable ceiling when they fit above the frame',
+    open.every(r => r.labelFit.size === 9.5),
     open.map(r => `${r.id}:${r.labelFit.size}`).join(' '));
   /* No ground behind the title row (Curtis, 2026-09): the content zone spans
      only that row, so its wash drew a lighter box that ended under the title.
@@ -852,21 +923,45 @@ try {
   await page.setViewportSize({ width: 440, height: 1600 });
   await page.waitForTimeout(400);
   const narrow = await page.evaluate(AUDIT, ids);
-  /* A frame too narrow for three cells must shed COLUMNS, never crush them.
-     Control: replace the `max(floor, third)` track with a plain
-     `repeat(3, 1fr)` and the cells here measure ~45px wide. */
-  check('a narrow frame sheds columns instead of crushing its cells',
-    (r => r.cellBoxes.length === 6 && r.cellBoxes.every(b => b.w >= 96) && gridOf(r).cols < 3)(narrow.find(r => r.id === 'construction')),
-    (r => `cols=${gridOf(r).cols} widths=${r.cellBoxes.map(b => Math.round(b.w)).join('/')}`)(narrow.find(r => r.id === 'construction')));
+  /* THE PHONE CARD (mobile audit, 2026-09). Under a 480px card the columns
+     narrow into one top band - hero, name over BASE, command group - and the
+     info frame and the note become full-width rows beneath it. The block this
+     replaced stacked the card for the retired tabbed design, and at a phone
+     width the arrows landed on the title, the button floated in a 146px band
+     and a bare button sat on the requirement note. */
+  const phoneFramed = narrow.filter(r => r.bodyBox);
+  check('phone card: the info frame is a full-width row under the top band',
+    phoneFramed.length > 0 && phoneFramed.every(r => r.bodyBox.y >= r.identityBox.y + r.identityBox.h - 1 && r.bodyBox.w >= r.card.w - 2 * 10 - 4),
+    phoneFramed.map(r => `${r.id} frame y=${r.bodyBox.y} w=${r.bodyBox.w} band=${round1(r.identityBox.y + r.identityBox.h)} card=${r.card.w}`).join(' '));
+  check('phone card: the BASE chip sits under the action name',
+    narrow.every(r => r.titleBox && r.chipBox && r.chipBox.y >= r.titleBox.y + r.titleBox.h - 1),
+    narrow.map(r => `${r.id} title=${r.titleBox ? round1(r.titleBox.y + r.titleBox.h) : '-'} chip=${r.chipBox ? r.chipBox.y : '-'}`).join(' '));
+  check('phone card: the button and its arrows stay right of the name column',
+    narrow.every(r => r.button && r.button.x >= r.zoneBox.x + r.zoneBox.w - 1 && (!r.navGroup || r.navGroup.x >= r.zoneBox.x + r.zoneBox.w - 1)),
+    narrow.map(r => `${r.id} column=${round1(r.zoneBox.x + r.zoneBox.w)} btn=${r.button && r.button.x} nav=${r.navGroup ? r.navGroup.x : '-'}`).join(' '));
   groupChecks('440px', narrow);
+  /* A frame too narrow for three cells must shed COLUMNS, never crush them.
+     On a phone card the frame is a full-width row, so it only runs out of room
+     for three cells on the narrowest phones - a 330px viewport here.
+     Control: replace the `max(floor, third)` track with a plain
+     `repeat(3, 1fr)` and the cells here measure under 96px wide. */
+  await page.setViewportSize({ width: 330, height: 1600 });
+  await page.waitForTimeout(400);
+  const smallest = await page.evaluate(AUDIT, ids);
+  check('a narrow frame sheds columns instead of crushing its cells',
+    (r => r.cellBoxes.length === 6 && r.cellBoxes.every(b => b.w >= 96) && gridOf(r).cols < 3)(smallest.find(r => r.id === 'construction')),
+    (r => `cols=${gridOf(r).cols} widths=${r.cellBoxes.map(b => Math.round(b.w)).join('/')} card=${r.card.w}`)(smallest.find(r => r.id === 'construction')));
+  groupChecks('330px', smallest);
   check('the command label fits its button at 440px too',
     narrow.every(r => !r.clipped.some(c => c.includes('action-button'))),
     narrow.flatMap(r => r.clipped.filter(c => c.includes('action-button')).map(c => r.id + ':' + c)).join(' ') || 'none');
   await page.setViewportSize({ width: 1100, height: 1400 });
 
   /* LAST, because it changes the page. The renderer re-decides the layout only
-     when the structure signature moves - a button's text or disabled state -
-     and clears `data-iw-skill-layout` first. With the layout gone, none of the
+     when the structure signature moves - a button's text or aria-label (its
+     disabled state only on a LOCKED card: a busy toggle deciding no role must
+     not re-derive, see tests/flush-quiescence.test.mjs) - and clears
+     `data-iw-skill-layout` first. With the layout gone, none of the
      action icon's own rules apply, so a shell-child icon (Construction's) is an
      unstyled block while that decision is made; any host style that gives it
      height made it "an unknown visible branch" and the card fell back to the
@@ -880,7 +975,21 @@ try {
     window.__layoutDrops = 0;
     /* The renderer clears and restores the attribute in one task, so the callback only ever sees it restored: count the records, not the final value. */ new MutationObserver(rs => { window.__layoutDrops += rs.length; })
       .observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-iw-skill-layout'] });
-    document.querySelectorAll('[data-iw-skill-role="action-button"]').forEach(b => b.setAttribute('aria-disabled', 'true'));
+    /* A RELABEL: rewrite the button's own text node in upper case. That is a
+       characterData record DOMWatcher sees, it moves the signature (text is
+       compared exactly), and the action-verb test is case-insensitive, so the
+       button keeps its role. A disabled flip no longer re-decides, by design;
+       aria-label alone is not in DOMWatcher's attribute filter. Only the game's
+       text node is touched, never the skin's appended icon/label nodes. */
+    document.querySelectorAll('[data-iw-skill-role="action-button"]').forEach(b => {
+      const walker = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (n.nodeValue.trim() && !n.parentElement.closest('[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label]')) {
+          n.nodeValue = n.nodeValue.toUpperCase();
+          break;
+        }
+      }
+    });
   });
   await page.waitForTimeout(900);
   const redecided = await page.evaluate(ids => ({ drops: window.__layoutDrops,

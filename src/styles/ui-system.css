@@ -676,7 +676,11 @@
     gap: 8px !important;
   }
   [data-iw-panel-part="feed-row"] { padding: 8px 9px !important; font-size: 11.5px !important; }
-  [data-iw-panel-part="header"] { align-items: flex-start !important; }
+  /* No `align-items: flex-start` on the header here (mobile audit, 2026-09).
+     The row never wraps, the collapse toggle is centred on it, and the game's
+     own controls centre too, so top-aligning only the title put Current
+     Action's title 4.7px above its cancel button and the toggle on phones
+     while desktop lined them up. */
 }
 
 @media (max-width: 430px) {
@@ -963,9 +967,19 @@
 @media (max-width: 860px) {
   [data-iw-chrome="shell"] { grid-template-columns: minmax(0, 1fr); }
   [data-iw-chrome="shell"] [data-iw-chrome="zone-text"] { grid-row: 2; grid-column: 1; margin: 6px var(--iw-chrome-inset) 8px !important; }
-  [data-iw-chrome="notice"] { grid-row: 3; grid-column: 1; justify-self: start; max-width: none; margin: 0 14px 9px; }
+  /* Stacked, every row spans the frame's inner width (mobile audit, 2026-09).
+     `justify-self: start` shrank the notice and the action row to their
+     content, so the notice stopped 65px short of the frame's right edge and the
+     zone buttons - each `flex: 1 1 0` in header.css - had no row to share.
+     Only the WIDTH of the game's notice changes; its colours stay its own. */
+  [data-iw-chrome="notice"] { grid-row: 3; grid-column: 1; justify-self: stretch; max-width: none; margin: 0 var(--iw-chrome-inset) 9px; }
   [data-iw-chrome="nav"] { grid-row: 4; grid-column: 1; margin: 9px var(--iw-chrome-inset) 6px !important; }
-  [data-iw-chrome="zone-actions"] { grid-row: 5; grid-column: 1; justify-self: start; margin: 0 14px 8px; }
+  /* The margin is `!important` at (0,2,0) for the same reason as zone-text's
+     above: header.css's `[data-iw-header="zone-shell"] > :not(:has([data-iw-ui=
+     "zone-title"]))` sets `margin-left: auto !important` at (0,2,0) on this
+     branch, and an auto margin disables stretch - the row stayed right-aligned
+     at its content width however justify-self was set. */
+  [data-iw-chrome="shell"] [data-iw-chrome="zone-actions"] { grid-row: 5; grid-column: 1; justify-self: stretch; margin: 0 var(--iw-chrome-inset) 8px !important; }
   [data-iw-chrome="shell"]::before { grid-row: 2 / 6; }
   [data-iw-chrome="shell"]::after { grid-row: 4; }
 }
@@ -1079,6 +1093,59 @@ input[placeholder*="Search" i] {
   }
 }
 
+/* ── The rail is ONE row on phones and tablets (Curtis, 2026-09-15) ────────
+   Below `xl` the tabs no longer wrap; their TYPE scales with the rail's own
+   width instead. The rail is a size container (its inline size comes from its
+   grid track or its parent's width, never from its tabs), so `100cqi` is the
+   rail, and the font is what is left after padding and gaps, divided by the
+   labels' width per pixel of font:
+
+     font = (100cqi - fixed) / k,   clamped to [7.5px, 11.5px]
+
+   k is MEASURED, not guessed: Barlow 700 uppercase at the tabs' .025em
+   tracking, rendered at 100px and divided by 100 - Game 2.666, Market 3.945,
+   Leaderboards 7.665, Village 4.067, Dungeon 4.569 (routes 22.912), Toolkit
+   4.02 and its arrow .757. Each k below carries ~1.5% slack. A label the game
+   renames or adds changes k; re-measure rather than widening the clamp.
+   `fixed` is the tabs' side padding, the gaps between them, and for the rail's
+   Toolkit link its detaching margin plus the arrow's 5px gap. */
+@media (max-width: 1279px) {
+  :is([data-iw-ui="main-nav"], [data-iw-ui="section-frame"]):has(> [data-iw-ui="nav-tab"]) {
+    --iw-nav-gap: 6px;
+    --iw-nav-pad: 12px;
+    --iw-nav-k: 28.1;
+    --iw-nav-fixed: calc(12 * var(--iw-nav-pad) + 5 * var(--iw-nav-gap) + 7px + 5px);
+    container: iw-nav-row / inline-size;
+    flex-wrap: nowrap !important;
+    column-gap: var(--iw-nav-gap) !important;
+  }
+  [data-iw-ui="nav-tab"] {
+    min-width: 0 !important;
+    padding-inline: var(--iw-nav-pad, 12px) !important;
+    white-space: nowrap !important;
+    font-size: clamp(7.5px, calc((100cqi - var(--iw-nav-fixed, 186px)) / var(--iw-nav-k, 28.1)), 11.5px) !important;
+  }
+}
+/* Phones: no Toolkit link at all (Curtis, 2026-09-16 - "the nav bar looks too
+   crowded"), so the rail is always the five route tabs and the zone controls
+   have their row to themselves. The link is hidden, not un-built: it is one
+   guarded append on a page that may cross back over 768px without a reload. */
+@media (max-width: 767px) {
+  [data-iw-nav-link="toolkit"] { display: none !important; }
+  :is([data-iw-ui="main-nav"], [data-iw-ui="section-frame"]):has(> [data-iw-ui="nav-tab"]) {
+    --iw-nav-gap: 5px;
+    --iw-nav-pad: 8px;
+    --iw-nav-k: 23.25;
+    --iw-nav-fixed: calc(10 * var(--iw-nav-pad) + 4 * var(--iw-nav-gap));
+  }
+  /* No rule for the zone row itself: with the Toolkit link out of it, its three
+     controls are header.css's own `flex: 1 1 0` with `min-width: 0` and a 6px
+     gap, so they cannot overflow and already share the row's whole width. A
+     `flex-wrap: nowrap` here measured byte-identical with and without (88/88/88
+     at 320px, 101/101/101 at 360px), so it was removed rather than left as a
+     declaration no test can show doing anything. */
+}
+
 /* -- World Boss cards ---------------------------------------------------
    The boss list ships `.compact-panel` cards that carried the game's flat
    grey plate inside our forged frame, so the panel read as two unrelated
@@ -1183,7 +1250,13 @@ input[placeholder*="Search" i] {
 }
 [data-iw-encounter]:not([data-iw-encounter="zone"]) {
   display: grid !important;
-  grid-template-columns: 104px minmax(0, 1fr);
+  /* Three columns: art | participation link | status. The link and the status
+     row (HP / timer, buff) used to SHARE column 2 with a fixed 155px gutter,
+     but the live label "28 players currently fighting world boss" is ~300px,
+     so the HP text painted on top of it (2026-09-16). The `auto` track is
+     sized by the link alone: header and progress span into the `1fr` track,
+     and an item spanning a flexible track does not size the auto one. */
+  grid-template-columns: 104px auto minmax(0, 1fr);
   grid-template-rows: auto auto auto auto auto;
   column-gap: 14px;
   row-gap: 8px;
@@ -1191,7 +1264,7 @@ input[placeholder*="Search" i] {
 [data-iw-encounter="abyssal_behemoth"] { --iw-boss-accent: #77bcd1; }
 [data-iw-encounter="world_eater"] { --iw-boss-accent: #b997df; }
 [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="header"] {
-  grid-column: 2;
+  grid-column: 2 / -1;
   grid-row: 1;
   min-height: 0;
   padding-left: 0;
@@ -1244,7 +1317,16 @@ input[placeholder*="Search" i] {
 }
 [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="header"] > *:first-child {
   display: grid !important;
-  grid-template-columns: max-content max-content;
+  /* The tracks may SHRINK (mobile audit, 2026-09). Two max-content tracks
+     cannot, so on a phone "Abyssal Behemoth" + RAID asked for 232px in a
+     ~200px block and pushed the badge past the card's right border (x 334 on a
+     310px card at a 360px viewport). BOTH tracks take the 0 minimum, not just
+     the title's: the buff line spans both, and a spanning item's extra size
+     goes to the tracks with an INTRINSIC minimum first - with only the title
+     at 0, the badge's track absorbed the buff line and drew SOLO 140px wide,
+     on desktop too. With room, each track still grows to its max-content, so
+     wide cards are unchanged; without it the name wraps in its own cell. */
+  grid-template-columns: minmax(0, max-content) minmax(0, max-content);
   grid-template-areas: "title difficulty" "buff buff";
   align-items: center;
   column-gap: 8px;
@@ -1266,7 +1348,7 @@ input[placeholder*="Search" i] {
 [data-iw-encounter]:not([data-iw-encounter="zone"]) [data-iw-boss-role="buff"] { grid-area: buff; }
 [data-iw-encounter] [data-iw-boss-role="timer"] { color: #aaa596 !important; font-size: 11px !important; font-variant-numeric: tabular-nums; }
 [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="progress"] {
-  grid-column: 2;
+  grid-column: 2 / -1;
   grid-row: 2;
   margin: 0 !important;
 }
@@ -1277,13 +1359,19 @@ input[placeholder*="Search" i] {
   justify-self: start;
   margin: 0 !important;
 }
+/* `status` has its OWN column now (see the grid above). It used to share cell
+   (2, 3) with the participation link behind a 155px padding gutter, which
+   first swallowed the link's clicks (fixed with pointer-events) and then, with
+   the wider live label, painted the HP readout over the link. Separate cells
+   cannot overlap, so neither workaround is needed.
+   Pinned by tests/boss-participation-hit.test.mjs. */
 [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="status"] {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 3;
   align-self: center;
   justify-self: stretch;
+  min-width: 0;
   margin: 0 !important;
-  padding-left: 155px;
   gap: 8px !important;
 }
 [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="details"] {
@@ -1800,10 +1888,14 @@ input[placeholder*="Search" i] {
   .iw-control-crystal-core::before { animation-duration: 11.3s; }
   .iw-control-state { font-size: 15px !important; }
   .iw-control-meter-head { gap: 5px; }
-  .iw-control-meter-label, .iw-control-meter-value { font-size: 8px; letter-spacing: .045em; }
+  /* Floors, not fits (mobile audit, 2026-09): the faction names were 7px and
+     the meter labels 8px here, against 9px and 10px on desktop - below what
+     reads on a phone. A faction name that no longer fits its third of the row
+     wraps onto a second line inside its own cell instead of shrinking. */
+  .iw-control-meter-label, .iw-control-meter-value { font-size: 9px; letter-spacing: .045em; }
   .iw-control-meter-track { height: 15px; }
   .iw-control-factions { gap: 5px; }
-  .iw-control-faction { font-size: 7px; letter-spacing: .045em; }
+  .iw-control-faction { font-size: 8.5px; letter-spacing: .045em; line-height: 1.25; }
   .iw-boss-reward-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
   [data-iw-encounter] button.iw-boss-reward { width: auto !important; min-height: 72px !important; }
   .iw-boss-reward-name { font-size: 10px !important; }

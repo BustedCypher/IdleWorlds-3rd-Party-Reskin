@@ -76,8 +76,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
         </div>
       </div>
       <!-- The panel COLUMN, a sibling of the header/nav/zone-bar chrome, the
-           way the live page lays it out. PanelOrder claims this and not the
-           shell, which it recognises by the shell's own header child. -->
+           way the live page lays it out. -->
       <div class="iw-test-column" style="display:flex;flex-direction:column;gap:12px">
       <section id="current-action-panel">
         <header id="current-action-header"><h2>Current Action</h2><div><button id="cancel-current" aria-label="Cancel current action">×</button><span>3s</span></div></header>
@@ -142,6 +141,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
              filter tabs / pagers), which InventoryRenderer tags
              data-iw-inventory-list for the inner frame. A flat fixture would
              hide that classification. -->
+        <div class="flex flex-wrap gap-1.5" id="inv-filters"><button>All</button><button>Gear</button><button>Materials</button><button>Consumables</button><button>Drops</button></div>
         <div class="space-y-1.5" id="inv-list">
         <div class="compact-row">
           <div><span>Iron Sword</span><span>Lv 3</span></div>
@@ -557,36 +557,11 @@ check('every nav tab in the rail is classified',
 // it did, the resolution cache would invalidate on our OWN append and re-run a
 // whole-document scan every flush.
 const toolkitLinks = [...navRail.querySelectorAll('[data-iw-nav-link="toolkit"]')];
-/* Panel arrangement. Asserting the module actually CLAIMED this page is the
-   half that makes the teardown checks below capable of failing: a container it
-   never claimed leaves nothing to remove. */
-const orderedPanels = [...window.document.querySelectorAll('[data-iw-order]')];
-check('panels carry an arrangement slot',
-  orderedPanels.length >= 3 &&
-  orderedPanels.every(el => /^\d+$/.test(el.getAttribute('data-iw-order'))),
-  `n=${orderedPanels.length}`);
-/* Slots are unique WITHIN a container, not across the page: each claimed
-   container numbers its own children from zero. */
-const slotGroups = new Map();
-for (const el of orderedPanels) {
-  const parent = el.parentElement;
-  if (!slotGroups.has(parent)) slotGroups.set(parent, []);
-  slotGroups.get(parent).push(el.getAttribute('data-iw-order'));
-}
-check('the container holding them is marked, and the slots are unique within it',
-  // `[].every()` is vacuously TRUE, so the length test is what stops this
-  // passing on a page where the module claimed nothing at all.
-  orderedPanels.length >= 3 &&
-  orderedPanels.every(el => el.parentElement?.getAttribute('data-iw-order-container') === '1') &&
-  [...slotGroups.values()].every(slots => new Set(slots).size === slots.length),
-  [...slotGroups.values()].map(v => v.join('/')).join(' | '));
-check('rearrange and reset controls appended to the rail, exactly once each',
-  window.document.querySelectorAll('[data-iw-nav-link="rearrange"]').length === 1 &&
-  window.document.querySelectorAll('[data-iw-nav-link="order-reset"]').length === 1);
-/* The grab surface exists only inside the mode, so normal play carries no
-   extra control and no extra tab stop. */
-check('no grab handle during normal play',
-  window.document.querySelectorAll('[data-iw-order-handle]').length === 0);
+/* The Rearrange feature is RETIRED (Curtis, 2026-09-15): no mode toggle, no
+   Reset control, and no arrangement marks on any panel. */
+check('the retired Rearrange feature adds no control and no marks',
+  window.document.querySelectorAll('[data-iw-nav-link="rearrange"], [data-iw-nav-link="order-reset"], [data-iw-order], [data-iw-order-container], [data-iw-order-handle]').length === 0 &&
+  !window.document.documentElement.hasAttribute('data-iw-order-mode'));
 
 check('toolkit link appended to the rail, exactly once, and never a route tab',
   toolkitLinks.length === 1 && toolkitLinks[0].parentElement === navRail &&
@@ -675,6 +650,17 @@ check('toolkit link points off-site and opens in a new tab',
   toolkitLinks[0]?.getAttribute('target') === '_blank' &&
   /noopener/.test(toolkitLinks[0]?.getAttribute('rel') || ''),
   `${toolkitLinks[0]?.getAttribute('href')} ${toolkitLinks[0]?.getAttribute('target')} ${toolkitLinks[0]?.getAttribute('rel')}`);
+/* The rail is the link's ONLY slot (Curtis, 2026-09-16: no Toolkit on a phone,
+   where CSS hides this one - tests/menu-rows.test.mjs measures that). Nothing
+   of the skin's may sit in the zone action row: a nav tab there would stop
+   classifyZoneBar's host walk from ever finding the bar again. */
+check('the zone action row carries nothing the skin appended',
+  [...(window.document.getElementById('zone-bar-actions')?.children || [])]
+    .every(el => el.tagName === 'BUTTON' && el.dataset.iwUi === 'zone-action'),
+  [...(window.document.getElementById('zone-bar-actions')?.children || [])]
+    .map(el => el.tagName + ':' + (el.dataset.iwUi || '-')).join(' '));
+check('the row the inventory filter tabs share is tagged',
+  window.document.getElementById('inv-filters')?.getAttribute('data-iw-inventory-filters') === '1');
 const lateTab = window.document.createElement('button');
 lateTab.id = 'late-nav-tab';
 lateTab.textContent = '⚔️ Dungeon 🔒';
@@ -1609,6 +1595,8 @@ check('ALL runtime stylesheets removed', window.document.querySelectorAll('style
 check('ui role attributes removed', window.document.querySelectorAll('[data-iw-ui]').length === 0);
 check('appended toolkit link removed on teardown',
   window.document.querySelectorAll('[data-iw-nav-link]').length === 0);
+check('inventory filter row tag removed on teardown',
+  window.document.querySelectorAll('[data-iw-inventory-filters]').length === 0);
 check('header chrome marks removed on teardown',
   window.document.querySelectorAll('[data-iw-chrome]').length === 0);
 check('zone link mark removed on teardown',
@@ -1621,14 +1609,6 @@ check('appended village scene removed on teardown',
   window.document.querySelectorAll('[data-iw-village-scene]').length === 0);
 check('collapse controls and their marks removed on teardown',
   window.document.querySelectorAll('[data-iw-collapse], [data-iw-collapsed], [data-iw-collapse-head]').length === 0);
-/* The arrangement is presentation written onto GAME nodes, so every mark has to
-   come back off — and the live region is an appended element, so like the
-   toolkit link and the village scene it is removed outright. */
-check('panel arrangement marks and handles removed on teardown',
-  window.document.querySelectorAll(
-    '[data-iw-order], [data-iw-order-container], [data-iw-order-handle], [data-iw-order-live]').length === 0);
-check('rearrange mode flag cleared from the document element on teardown',
-  !window.document.documentElement.hasAttribute('data-iw-order-mode'));
 check('the panel that followed Skill Actions follows it again',
   window.document.getElementById('skill-actions-panel')?.nextElementSibling?.id === 'village-housing-panel',
   window.document.getElementById('skill-actions-panel')?.nextElementSibling?.id || '(none)');

@@ -155,3 +155,132 @@ work — promoting the head row's two children to grid items of the card so the
 controls take their own full-width row and the copy column keeps ~65% of the
 card instead of ~110px. `render-fixtures.mjs` measures that ratio at 390px;
 revert the rule and it throws.
+
+## The ledger (2026-09-16)
+
+`VillageLedger.js`, the reading beside the picture: the home and every
+installed building as a collapsible heading over its benefits, and an
+**Overall stats** block under them.
+
+**The scene knows WHAT is in the village; only items.json knows what it is
+WORTH.** `/api/player?scope=core` gives a tier, a slot number, an `itemKey` and
+a name — no effects anywhere. Every add-on building is an ITEM though
+(`construction_building_tier_<N>`, category "Trade Good", 34 of them, audited
+against the live table on 2026-09-16), carrying the same
+`atk`/`def`/`xp_per_task`/`*_pct`/`skill_bonus_*` fields the inventory rows and
+the hover card already read. So the join is `ItemDatabase.find({ id })` on the
+key the snapshot already carries, and the derivation is the shared
+`deriveDisplayStats()` — the same one the building's own tooltip uses, so one
+building cannot be labelled two ways on one page. `normaliseVillage()` had to
+start carrying that key: the RENDERED Village route never prints one, so for
+that path it is reconstructed from the tier the name resolved to.
+
+**Housing is not an item.** Nothing in items.json matches Camp / Cottage /
+Villa / Manor / Citadel, so the home's benefits cannot be looked up, and the
+honest answer is to print only what is actually known: the slot count (which is
+arithmetic on `totalSlots`, a number the API does give) and the tail of the
+Village route's own tier line, "Current tier: 4 • Base actions take 6s",
+captured VERBATIM by `readHousingPerks()`. It is held beside the snapshot and
+not in it, because the API refresh that replaces the snapshot five minutes
+later carries no such line and would otherwise silently drop it — the same
+family as the tab-swap bug above. A tier change invalidates it, because at that
+point the printed interval belongs to the old house.
+
+**Overall stats counts installed buildings only**, which is what was asked for
+and also the only total this code can stand behind: it is the sum of the
+per-item fields listed directly above it, so a reader can check it. Housing
+contributes an action interval and slots, which are not the same currency as an
+ATK. Skill levels sum PER SKILL ("Smithing +4" and "Mining +2", never a pooled
+"+6"), because the pooled number is a stat the game does not have.
+
+**The scene and the ledger WRAP rather than squeeze, and the wrap is the whole
+responsive mechanism.** They are two flex items on one wrapping line inside
+`.iw-vs-body`: 330 + 250 + 12 = 592, so a body content box at least that wide
+holds both and anything narrower drops the ledger to its own full-width line.
+There is no breakpoint to keep in step — the single `@container iw-village-frame
+(min-width: 592px)` rule only caps the ledger's width, and it repeats the same
+sum, so the cap can never apply to a wrapped ledger. Remove `flex-wrap` and at
+390px the scene measures 198px with a 150px ledger jammed beside it; that is
+the negative control, and it is verified. The query keys on the BODY and not on
+the viewport for the reason everything else here does: measured live
+(`claude/captures`), the frame is **1150px** wide at a 1188px root — the app is
+single-column below its own 1280 breakpoint — and **681px** at a 1683px root,
+where the dashboard's 0.42fr column finally splits. Wider viewport, narrower
+frame.
+
+**`.iw-vs-stage` is a COLUMN FLEX box on purpose, and that is not tidiness
+either.** `.iw-vs-scene`'s `width:100%` only does anything in a flex column,
+where its own `margin:auto` cancels the stretch — that is the collapse recorded
+above. Wrapping the scene in a plain block to make it a flex item's child would
+have left it filling the stage by ordinary block layout, `width:100%` inert,
+and the layout test's oldest negative control passing no matter what. Made a
+column flex box, the control still reproduces exactly: drop `width:100%` and
+the scene measures 2px at every one of the six widths. Verified both ways.
+
+**A second writer of `data-plot-state` broke a count, not a paint.** The
+ledger's vacant rows first carried the scene's own `data-plot-state`, and
+`tests/village-scene.test.mjs` counts `[data-plot-state="empty"]` inside the
+frame: 2 became 4 and the test failed on a number, with nothing visibly wrong.
+Same shared-attribute family as the teardown bug above, in its cheapest form.
+The ledger's is `data-iw-vs-slot-state`.
+
+**The collapse state is applied by a callback nothing else would drive.** The
+open/closed choice is read from `chrome.storage` AFTER the ledger has rendered,
+and it is carried by `data-iw-vs-open`, which is outside DOMWatcher's
+`attributeFilter` — so it schedules no flush and no later pass will apply it.
+`loadPreferences()` therefore re-applies to the entries it built. Delete that
+one line and `tests/village-ledger.test.mjs` fails on "the late storage read
+re-folds it"; live, every entry would silently reopen on each page load and the
+panel would just look forgetful. The same reasoning puts an
+`iw:item-db-updated` listener in `VillageScene.bindOnce()`: items.json lands on
+its own clock, a settled dashboard mutates nothing, and without it the ledger
+would sit on "Effects arrive with the item database" until the village itself
+changed.
+
+**Two levels of disclosure, one mechanism, and the thing the fold must LEAVE is
+structural.** Curtis asked (2026-09-16) for the BUILDINGS list itself to fold,
+down to the plot scene and Overall stats. What survives a fold is therefore not
+a CSS nicety — `.iw-vs-totals` is a SIBLING of `.iw-vs-ledger-list`, never a
+child, so no rule that hides the list can take the totals with it, and
+`tests/village-ledger.test.mjs` asserts that relationship rather than a
+rendered height. The heading survives too, for CollapsibleFrames' reason (rule
+5): a list folded to nothing erases what it even was. Both levels go through
+one `wire()`, so a click cannot mean two different things or be remembered two
+different ways.
+
+The section control is a 22px SQUARE, not a full-width plate like the entry
+heads. `ui-system.css` paints every unclaimed `button` as a forged plate at
+(0,4,1) `!important`, and the way to live with that rule is to design around it
+rather than to out-specify it or to grow its `:not()` chain for a cosmetic
+preference — a plate the width of the header row would give the section exactly
+the weight of the entries inside it. A small square wearing the same plate reads
+as a control, and matches what CollapsibleFrames' own panel toggle looks like.
+
+The chevron rotation is scoped through `> .iw-vs-ledger-head` / `>
+.iw-vs-entry-head`, not through the open state alone: a bare
+`[data-iw-vs-open="0"] .iw-vs-chevron` also turns every entry chevron inside a
+folded list, and those entries are not folded — they are hidden, and they come
+back pointing the way the player left them. Negative control verified: delete
+`[data-iw-village-ledger][data-iw-vs-open="0"] > .iw-vs-ledger-list
+{ display:none }` and the layout test fails with "438.5px of list, display
+flex" at every width.
+
+**A rare stat needs a semantic hook, not a label-shaped selector.** Skill-level
+gains are the ledger's mythic rows in both a building and Overall stats, but
+styling `[text$="level"]` is not a CSS capability and re-parsing visible copy in
+the DOM would make presentation depend on wording. `buildingBenefits()` and
+`totalBenefits()` already know which rows come from `skill_bonus_*`, so they
+carry `kind: "skill-level"` into `statList()`, which writes
+`data-iw-vs-stat-kind="skill-level"`. The amber treatment keys only on that
+marker; changing a label or adding another ordinary stat cannot accidentally
+promote it.
+
+**The collapsed ledger aligns by stretching the existing flex item, not by
+guessing a height.** When BUILDINGS is folded beside the 290px scene, the
+natural-height ledger used to end well above the scene. In the existing
+`min-width:592px` container query — the same arithmetic that proves both items
+are on one line — the closed ledger gets `align-self:stretch` and its Overall
+stats card gets `flex:1`. That makes the card's bottom inherit the scene's
+actual bottom at every side-by-side width. Wrapped ledgers stay natural-height;
+a fixed `min-height` would leave dead space on those narrow layouts and drift
+as soon as the scene height changes.

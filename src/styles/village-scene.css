@@ -79,3 +79,114 @@
 }
 /* Frame padding is the FRAME's business, so this one stays viewport-keyed. */
 @media (max-width:480px) { .iw-village-scene { --iw-frame-pad-x:12px; } }
+
+/* ── The ledger: the picture and its reading, side by side ──────────────
+ *
+ * The scene and the ledger are two flex items on a wrapping line, and the WRAP
+ * is the whole responsive mechanism: 330 + 250 + 12 = 592, so below 592px of
+ * content box the ledger cannot fit beside the scene, drops to its own line and
+ * grows to the full width. There is no second breakpoint to keep in step — the
+ * one container query below only caps the ledger's width, and its 592px is the
+ * same arithmetic, so the cap can never apply to a wrapped ledger.
+ *
+ * The query keys on `.iw-vs-body` and not on the viewport, for the reason the
+ * scene's own queries do: measured live (claude/captures), this frame is 1150px
+ * wide at a 1188px root — the app is single-column below its 1280 breakpoint —
+ * and 681px at a 1683px root, where the dashboard's 0.42fr column finally
+ * splits. Wider viewport, NARROWER frame. A media query gets that backwards.
+ *
+ * `container-type` sits on `.iw-vs-body` rather than on the frame, so the
+ * frame's own chrome (the filigree, its stacking) is left exactly as it is. */
+.iw-vs-body { display:flex; flex-wrap:wrap; align-items:flex-start; gap:12px; container-type:inline-size; container-name:iw-village-frame; }
+/* A COLUMN FLEX box, deliberately — that is the environment `.iw-vs-scene`'s
+ * `width:100%` exists for. The frame it used to sit in directly is
+ * `display:flex; flex-direction:column`, where an auto cross-axis margin
+ * cancels the item's stretch and the box shrink-to-fits over five out-of-flow
+ * children down to its own border (docs/traps/village.md). Make the stage a
+ * plain block and that stops being true: the scene would fill it by ordinary
+ * block layout, `width:100%` would go inert, and the negative control the
+ * layout test is built on — remove it, watch the scene measure 2px — would
+ * quietly stop failing. The guard is worth more than the one declaration. */
+.iw-vs-stage { flex:1 1 330px; min-width:0; display:flex; flex-direction:column; }
+.iw-vs-ledger { flex:1 1 250px; min-width:0; display:flex; flex-direction:column; gap:8px; }
+@container iw-village-frame (min-width:592px) { .iw-vs-ledger { max-width:310px; } }
+
+.iw-vs-ledger-title, .iw-vs-totals-title { font-family:var(--iw-font-display, 'Cinzel', serif); color:#eee4cb; font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+/* The whole BUILDINGS list folds, leaving this header, the totals and the plot
+ * scene. Its control is a 22px square rather than a full-width plate like the
+ * entry heads below it: ui-system.css paints every unclaimed `button` as a
+ * forged plate, and a plate the width of this row would give the section header
+ * exactly the weight of the entries it contains. A small square wearing that
+ * same plate reads as a control instead — which is also what CollapsibleFrames'
+ * panel toggle looks like, so the two disclosures on this panel agree. */
+.iw-vs-ledger-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding-bottom:3px; border-bottom:1px solid #777e5155; }
+.iw-vs-ledger-toggle { flex:0 0 22px; width:22px; height:22px; display:grid; place-items:center; padding:0; color:#c9a24d; cursor:pointer; }
+.iw-vs-ledger-list { display:flex; flex-direction:column; gap:6px; }
+[data-iw-village-ledger][data-iw-vs-open="0"] > .iw-vs-ledger-list { display:none; }
+
+/* No box of its own: the HEAD is the plate and the body hangs off it under a
+ * rule. Wrapping the pair in a bordered card instead would put that card's
+ * corners against the head's own `border-radius`, which ui-system.css sets
+ * `!important` on every unclaimed control — and the way to live with that rule
+ * is to design around it, not to out-specify it. */
+.iw-vs-entry { display:flex; flex-direction:column; }
+/* The head takes the generic forged-plate treatment ui-system.css gives every
+ * unclaimed control — plate, radius, hover and focus ring come free, so this
+ * rule sets LAYOUT only and the disclosure reads like every other control in
+ * the skin. Nothing here needs `!important`, because nothing in that rule
+ * touches display, padding or alignment. */
+.iw-vs-entry-head { display:flex; align-items:center; gap:8px; width:100%; padding:6px 8px; text-align:left; cursor:pointer; }
+.iw-vs-entry-icon { flex:0 0 26px; height:26px; display:grid; place-items:center; color:#e2dcbbc9; font-size:18px; }
+.iw-vs-entry-sprite { display:block; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 2px 3px #0008); }
+.iw-vs-entry-label { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.iw-vs-entry-name { color:#f3f0df; font-size:12px; font-weight:600; line-height:1.3; overflow-wrap:anywhere; }
+.iw-vs-entry-meta { color:#b9b2a0; font-size:10px; line-height:1.3; }
+/* The same rotated border corner CollapsibleFrames draws, so the two
+ * disclosures on this panel point the same way: expanded points UP ("fold this
+ * away"), collapsed points DOWN. No glyph, so no font and nothing a
+ * text-matching classifier can pick up. */
+.iw-vs-chevron { flex:0 0 8px; width:8px; height:8px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:translateY(1px) rotate(-135deg); transition:transform .16s ease; }
+.iw-vs-entry-head > .iw-vs-chevron { margin-right:2px; color:#c9a24d; }
+/* Scoped through the TOGGLE, not through the ledger alone: a bare
+ * `[data-iw-vs-open="0"] .iw-vs-chevron` would also turn every entry's chevron
+ * inside a folded list, and they are not folded — they are hidden. */
+.iw-vs-entry[data-iw-vs-open="0"] > .iw-vs-entry-head > .iw-vs-chevron,
+[data-iw-village-ledger][data-iw-vs-open="0"] > .iw-vs-ledger-head .iw-vs-chevron { transform:translateY(-2px) rotate(45deg); }
+.iw-vs-entry[data-iw-vs-open="0"] > .iw-vs-entry-body { display:none; }
+.iw-vs-entry-body { margin:5px 0 3px 12px; padding:0 2px 0 9px; border-left:1px solid #777e5155; }
+.iw-vs-entry-note { margin:4px 0 0; color:#b9b2a0; font-size:10px; line-height:1.5; }
+.iw-vs-entry-body > .iw-vs-stats + .iw-vs-entry-note { margin-top:6px; }
+
+.iw-vs-stats { margin:0; display:grid; gap:2px; }
+.iw-vs-stat { display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:11px; line-height:1.45; }
+.iw-vs-stat dt { color:#c4b992; min-width:0; overflow-wrap:anywhere; }
+/* `dd` carries a user-agent margin; the value is a number in a row, not a
+ * block of prose. */
+.iw-vs-stat dd { margin:0; flex:0 0 auto; color:#f3f0df; font-variant-numeric:tabular-nums; }
+
+/* Skill levels are the village's rarest gains, so they read as a mythic tier
+ * in both a building's own list and the sum below it. Static light keeps the
+ * emphasis ceremonial without turning the ledger into a field of animations. */
+.iw-vs-stat[data-iw-vs-stat-kind="skill-level"] { position:relative; isolation:isolate; margin:2px -4px; padding:3px 6px 3px 11px; border:1px solid #c66d2b99; border-radius:6px; background:linear-gradient(90deg,#652b0bb8 0%,#3217099c 58%,#17100bc7 100%); box-shadow:inset 0 0 0 1px #ffb24a14,inset 0 0 10px #ff8a1f16,0 0 8px #e565223d; }
+.iw-vs-stat[data-iw-vs-stat-kind="skill-level"]::before { content:""; position:absolute; left:4px; top:50%; width:4px; height:4px; background:#ffad45; box-shadow:0 0 4px #ff8a1f,0 0 8px #e45b20; transform:translateY(-50%) rotate(45deg); }
+.iw-vs-stat[data-iw-vs-stat-kind="skill-level"] dt { color:#efbd7a; text-shadow:0 0 6px #d75b2459; }
+.iw-vs-stat[data-iw-vs-stat-kind="skill-level"] dd { color:#ffe0b0; font-weight:700; text-shadow:0 0 5px #ff7a2e8f; }
+
+.iw-vs-ledger-vacant { display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:4px 9px; border:1px dashed #777e5140; border-radius:10px; color:#9e9884; font-size:10px; }
+.iw-vs-ledger-vacant[data-iw-vs-slot-state="locked"] { opacity:.72; }
+
+/* The totals are the last thing in the ledger and the only block that is never
+ * folded: they are the answer the entries above are the working for. */
+.iw-vs-totals { margin-top:4px; padding:8px 9px; border:1px solid #777e5155; border-radius:10px; background:linear-gradient(#0c160c3d,#0c160c14); }
+.iw-vs-totals-title { margin-bottom:5px; }
+.iw-vs-totals-note { margin:7px 0 0; color:#9e9884; font-size:10px; line-height:1.5; }
+
+/* On the side-by-side line, folding BUILDINGS leaves the scene as the line's
+ * height. Stretch the remaining reading to that same edge, then let its totals
+ * card consume the freed space. Wrapped ledgers keep their natural height. */
+@container iw-village-frame (min-width:592px) {
+  .iw-vs-ledger[data-iw-vs-open="0"] { align-self:stretch; }
+  .iw-vs-ledger[data-iw-vs-open="0"] > .iw-vs-totals { flex:1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) { .iw-vs-chevron { transition:none; } }

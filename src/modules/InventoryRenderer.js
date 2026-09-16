@@ -30,6 +30,11 @@ const INVENTORY_CONTROL_ATTR = 'data-iw-inventory-control';
 const INVENTORY_TITLE_ATTR = 'data-iw-inventory-title';
 const INVENTORY_LIST_ATTR = 'data-iw-inventory-list';
 const INVENTORY_FILTER_STATE_ATTR = 'data-iw-inventory-filter-state';
+// The row the filter tabs share, so the sheet can hold it to ONE row on phones
+// and tablets (Curtis, 2026-09-15) without a `:has()` whose subject would be
+// every node of a 600-row inventory.
+const INVENTORY_FILTERS_ATTR = 'data-iw-inventory-filters';
+const filterRows = new WeakMap();
 const ROW_SELECTOR = '.compact-row, [class*="item-row"]';
 // Chrome resolves `:not(<complex selector>)` in the selector engine, so
 // appending this to a panel-chrome sweep rejects every item-row descendant
@@ -40,7 +45,7 @@ const ROW_SELECTOR = '.compact-row, [class*="item-row"]';
 // to the inventory frame by CollapsibleFrames. It is not a game control, and
 // tagging it `data-iw-inventory-control` would hand it the tool-row chrome and
 // a second owner for its appearance.
-const NOT_IN_ROW = ':not(.compact-row *):not([class*="item-row"] *):not([data-iw-collapse]):not([data-iw-order-handle])';
+const NOT_IN_ROW = ':not(.compact-row *):not([class*="item-row"] *):not([data-iw-collapse])';
 const notInRow = sel => sel.split(',').map(s => s.trim() + NOT_IN_ROW).join(', ');
 const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [role="button"], [tabindex]';
 const pendingEmptyRetries = new WeakSet();
@@ -351,6 +356,17 @@ function classifyInventoryChrome(root) {
       else button.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
     }
   }
+
+  // Mark the filter tabs' shared row. Only when every tab has the SAME parent:
+  // a layout the game splits is not one row to hold together. The last marked
+  // row is remembered per root, so a settled page neither searches nor writes.
+  const filters = buttons.filter(b => b.getAttribute(INVENTORY_CONTROL_ATTR) === 'filter');
+  const filterRow = filters.length && filters.every(b => b.parentElement === filters[0].parentElement)
+    ? filters[0].parentElement : null;
+  const previousRow = filterRows.get(root);
+  if (previousRow && previousRow !== filterRow) previousRow.removeAttribute(INVENTORY_FILTERS_ATTR);
+  if (filterRow && !filterRow.hasAttribute(INVENTORY_FILTERS_ATTR)) filterRow.setAttribute(INVENTORY_FILTERS_ATTR, '1');
+  if (filterRow) filterRows.set(root, filterRow); else filterRows.delete(root);
 
   // The tool row ends with a bare <svg class="lucide lucide-package … text-ember">
   // that is NOT a control: `cursor: auto`, no role, no tabindex, no aria-label,
@@ -708,8 +724,9 @@ export function clearInventoryRenderer() {
   document.querySelectorAll(`[${INVENTORY_ROOT_ATTR}]`).forEach(el => {
     el.removeAttribute(INVENTORY_ROOT_ATTR);
   });
-  document.querySelectorAll(`[${INVENTORY_LIST_ATTR}]`).forEach(el => {
+  document.querySelectorAll(`[${INVENTORY_LIST_ATTR}], [${INVENTORY_FILTERS_ATTR}]`).forEach(el => {
     el.removeAttribute(INVENTORY_LIST_ATTR);
+    el.removeAttribute(INVENTORY_FILTERS_ATTR);
   });
   document.querySelectorAll('.fs-inv-rule').forEach(el => el.remove());
   document.querySelectorAll(

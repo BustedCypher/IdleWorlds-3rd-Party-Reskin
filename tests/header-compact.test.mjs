@@ -304,19 +304,47 @@ async function loadFlat(width, mutate = '') {
   return page;
 }
 
-{
-  const page = await loadFlat(800);
+for (const width of [800, 400]) {
+  const page = await loadFlat(width);
   const n = await page.evaluate(() => {
     const r = el => { const b = el.getBoundingClientRect(); return { top: b.top, bottom: b.bottom, left: b.left, right: b.right }; };
     const pick = role => document.querySelector(`[data-iw-chrome="${role}"]`);
     const parts = ['zone-text', 'notice', 'nav', 'zone-actions'].map(role => pick(role) && r(pick(role)));
-    return { tagged: parts.every(Boolean), parts };
+    const tabs = [...document.querySelectorAll('[data-iw-ui="nav-tab"]')].filter(el => el.getBoundingClientRect().width > 0).map(r);
+    const rows = [...new Set(tabs.map(t => Math.round(t.top)))].map(top => {
+      const row = tabs.filter(t => Math.round(t.top) === top);
+      return { left: Math.min(...row.map(t => t.left)), right: Math.max(...row.map(t => t.right)), n: row.length };
+    });
+    return { tagged: parts.every(Boolean), parts, rows };
   });
-  console.log('\nNarrow (800px)');
-  check('narrow: every chrome part is tagged', n.tagged);
+  console.log(`\nNarrow (${width}px)`);
+  check(`narrow ${width}: every chrome part is tagged`, n.tagged);
   const stacked = n.tagged && n.parts.every((p, i) => i === 0 || p.top >= n.parts[i - 1].bottom - 0.5);
-  check('narrow: title, notice, nav and actions stack in that order without overlapping', stacked,
+  check(`narrow ${width}: title, notice, nav and actions stack in that order without overlapping`, stacked,
     JSON.stringify(n.parts.map(p => p && [Math.round(p.top), Math.round(p.bottom)])));
+  /* Stacked, every row spans the frame's inner width (mobile audit, 2026-09),
+     measured against the nav row, which stretches by default. Controls: put
+     `justify-self: start` back on the notice and it ends ~65px short; drop the
+     (0,2,0) `!important` margin on the action row and header.css's
+     `margin-left: auto` right-aligns it at its content width again. */
+  if (n.tagged) {
+    const [, notice, nav, actions] = n.parts;
+    const spans = p => Math.abs(p.left - nav.left) <= 1 && Math.abs(p.right - nav.right) <= 1;
+    check(`narrow ${width}: the notice spans the frame's inner width`, spans(notice),
+      `notice ${Math.round(notice.left)}..${Math.round(notice.right)} nav ${Math.round(nav.left)}..${Math.round(nav.right)}`);
+    check(`narrow ${width}: the zone action row spans the frame's inner width`, spans(actions),
+      `actions ${Math.round(actions.left)}..${Math.round(actions.right)} nav ${Math.round(nav.left)}..${Math.round(nav.right)}`);
+    /* The rail is ONE row on phones and tablets (Curtis, 2026-09-15; the width
+       sweep and its controls live in tests/menu-rows.test.mjs). On a phone the
+       route tabs also grow, so that one row is flush at both ends; at 800px
+       they keep their content widths and start at the left, as on desktop. */
+    check(`narrow ${width}: the nav is one row`, n.rows.length === 1, n.rows.map(row => `${row.n} tabs`).join(' | '));
+    if (width <= 767) {
+      check(`narrow ${width}: the nav row is flush at both ends`,
+        n.rows.length === 1 && Math.abs(n.rows[0].left - nav.left) <= 1 && Math.abs(n.rows[0].right - nav.right) <= 1,
+        n.rows.map(row => `${row.n} tabs ${Math.round(row.left)}..${Math.round(row.right)}`).join(' | ') + ` nav ${Math.round(nav.left)}..${Math.round(nav.right)}`);
+    }
+  }
   await page.close();
 }
 

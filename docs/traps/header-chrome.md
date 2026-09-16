@@ -150,7 +150,7 @@ The boss-card two-writers trap, hiding behind a frame that looked correct.
   unlocks, a breakpoint crossing) from stripping the frame for one flush and
   invalidating the frame cache.
 - **Anything that finds the rail keys on `nav-tab`, not `main-nav`.** The rail
-  CSS in `ui-system.css`, `PanelOrder.isReorderable`, and `classifyZoneBar`'s
+  CSS in `ui-system.css`, `PanelOrder.isReorderable` (removed with that feature, 2026-09-15), and `classifyZoneBar`'s
   host-walk stop all carry it. The tabs are the one role on that rail nobody
   else writes.
 - **Padding is re-pointed through the token, and the rail has NO corner

@@ -66,7 +66,7 @@ function injectPresentationStyles() {
   inject('header', headerCss);
   inject('overlay', overlayCss);
   // ui-system.css MUST be injected LAST (see CLAUDE.md). UIFoundation now owns
-  // its lifecycle injection, including the compact/collapsible/panel-order layers.
+  // its lifecycle injection, including the compact/collapsible layers.
   injectUIFoundationStyles();
 }
 

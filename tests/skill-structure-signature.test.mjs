@@ -12,8 +12,15 @@ import { dirname, resolve } from 'node:path';
  *   (a) INSENSITIVE to a pure ticking-value change (XP/progress text) --
  *       otherwise the cache never hits and the optimization does nothing;
  *   (b) SENSITIVE to anything that could actually change which element
- *       plays which role -- skill type, a button's text/label, an unlock
- *       (disabled -> enabled), or the panel gaining/losing children.
+ *       plays which role -- skill type, a button's text/label, or the panel
+ *       gaining/losing children. `disabled` only picks a role on a LOCKED
+ *       card (its action button is "the disabled control"); an unlock also
+ *       flips DOMWatcher's type from 'locked', which (b1) already covers.
+ *   (c) INSENSITIVE to a disabled toggle on a normal card. The game disables
+ *       every action button while any request is in flight; when that toggle
+ *       was in the key, each Prejoin/Turn In stripped every card's roles and
+ *       re-derived them with forced layouts of the bare card, and Chrome's
+ *       scroll anchoring jumped the window ~17px per toggle (live, 2026-09-16).
  *
  * TWO THINGS THIS TEST GOT WRONG BEFORE, both of which let a real regression
  * through while every case still printed ok:
@@ -105,13 +112,24 @@ function check(label, expectSame, sigBefore, sigAfter) {
     structureSignature(panel, 'mining'), structureSignature(panel, 'fishing'));
 }
 
-// (b2) sensitive: a button unlocks (disabled -> enabled), no text change.
+// (b2) sensitive: on a LOCKED card the disabled control IS the action button.
 {
   const panel = basePanel();
   panel.querySelector('#action').disabled = true;
-  const sigBefore = structureSignature(panel, 'mining');
+  const sigBefore = structureSignature(panel, 'locked');
   panel.querySelector('#action').disabled = false;
-  check('button unlock (disabled -> enabled) invalidates', false, sigBefore, structureSignature(panel, 'mining'));
+  check('locked card: disabled flip invalidates', false, sigBefore, structureSignature(panel, 'locked'));
+}
+
+// (c) insensitive: the game's busy toggle on a normal card decides no role.
+{
+  const panel = basePanel();
+  const sigBefore = structureSignature(panel, 'mining');
+  panel.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
+  const sigBusy = structureSignature(panel, 'mining');
+  check('busy toggle (all buttons disabled) does not invalidate', true, sigBefore, sigBusy);
+  panel.querySelectorAll('button').forEach(btn => { btn.disabled = false; });
+  check('busy toggle cleared does not invalidate', true, sigBusy, structureSignature(panel, 'mining'));
 }
 
 // (b3) sensitive: a button's label changes (new action verb).
