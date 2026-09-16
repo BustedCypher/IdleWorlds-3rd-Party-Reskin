@@ -2699,6 +2699,41 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   gap: 8px !important;
 }
 
+/* Approved quest rings: source pixels remain unchanged. Percentage sprite
+   windows select each ring from assets/quest-frames/index.json; a radial mask
+   removes the presentation backdrop around and inside the ring. The variables
+   inherit from html so zone changes need no quest DOM writes or extra observer. */
+:root {
+  --fs-quest-frame-position: 49.625268% 3.747323%;
+}
+:root[data-iw-zone-theme="verdant"] {
+  --fs-quest-frame-position: 9.368308% 3.800857%;
+}
+:root[data-iw-zone-theme="forged-metal"] {
+  --fs-quest-frame-position: 49.625268% 3.747323%;
+}
+:root[data-iw-zone-theme="infernal"] {
+  --fs-quest-frame-position: 89.989293% 3.854390%;
+}
+:root[data-iw-zone-theme="celestial"] {
+  --fs-quest-frame-position: 9.100642% 45.396146%;
+}
+:root[data-iw-zone-theme="voidborn"] {
+  --fs-quest-frame-position: 49.678801% 45.503212%;
+}
+:root[data-iw-zone-theme="runic-arcane"] {
+  --fs-quest-frame-position: 90.096360% 45.556745%;
+}
+:root[data-iw-zone-theme="lunar-spectral"] {
+  --fs-quest-frame-position: 9.314775% 86.777302%;
+}
+:root[data-iw-zone-theme="tempest-oceanic"] {
+  --fs-quest-frame-position: 49.678801% 86.777302%;
+}
+:root[data-iw-zone-theme="glacial"] {
+  --fs-quest-frame-position: 89.882227% 86.884368%;
+}
+
 /* Medallion sigil. */
 .compact-panel.fs-quest-panel .fs-quest-sigil {
   /* One knob for the medallion, one for how much of it the sprite fills.
@@ -2714,16 +2749,12 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   place-items: center !important;
   width: var(--fs-quest-sigil-size) !important;
   height: var(--fs-quest-sigil-size) !important;
-  border: 1px solid color-mix(in srgb, var(--fs-quest-accent) 46%, var(--iw-th-edge)) !important;
+  border: 0 !important;
   border-radius: 50% !important;
   background:
     radial-gradient(circle at 42% 34%, color-mix(in srgb, var(--fs-quest-accent) 22%, #242019), #0D0D0B 68%) !important;
   box-shadow:
-    inset 0 0 0 5px #11100D,
-    inset 0 0 0 6px color-mix(in srgb, var(--iw-th-brass) 48%, transparent),
     inset 0 0 16px rgba(0,0,0,.35),
-    0 0 0 3px #0A0907,
-    0 0 0 4px color-mix(in srgb, var(--iw-th-brass) 52%, transparent),
     0 3px 10px rgba(0,0,0,.5) !important;
   pointer-events: none !important;
 }
@@ -2737,16 +2768,18 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   line-height: 1 !important;
   text-shadow: 0 1px 0 #000, 0 0 10px color-mix(in srgb, var(--fs-quest-accent) 30%, transparent) !important;
 }
-.compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] .fs-quest-sigil::after {
+.compact-panel.fs-quest-panel .fs-quest-sigil::after {
   content: "" !important;
   position: absolute !important;
-  inset: -11px -8px !important;
+  inset: -4px !important;
   z-index: 1 !important;
   pointer-events: none !important;
-  background-image: var(--fs-skills-ui-atlas) !important;
-  background-size: var(--fs-ui-medallion-frame-size) !important;
-  background-position: var(--fs-ui-medallion-frame-position) !important;
+  background-image: url('../assets/quest-frames/approved-frames.png') !important;
+  background-size: 391.875% 391.875% !important;
+  background-position: var(--fs-quest-frame-position) !important;
   background-repeat: no-repeat !important;
+  -webkit-mask-image: radial-gradient(ellipse closest-side, transparent 65%, #000 67%, #000 97%, transparent 100%) !important;
+  mask-image: radial-gradient(ellipse closest-side, transparent 65%, #000 67%, #000 97%, transparent 100%) !important;
 }
 
 /* The objective item's real atlas icon. AtlasService writes background-image,
@@ -2767,7 +2800,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
 .compact-panel.fs-quest-panel .fs-quest-sigil-pct {
   position: absolute !important;
   left: 50% !important;
-  bottom: -17px !important;
+  bottom: -21px !important;
   transform: translateX(-50%) !important;
   z-index: 3 !important;
   padding: 1px 7px !important;
@@ -3221,10 +3254,12 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   .compact-panel.fs-quest-panel .fs-quest-sigil-pct {
     bottom: -14px !important;
     padding: 0 4px !important;
-    font-size: 8.5px !important;
+    /* 9.5px, not 8.5px: a floor for phone legibility (mobile audit, 2026-09).
+       "100%" still fits the 44px sigil with room to spare. */
+    font-size: 9.5px !important;
   }
-  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] .fs-quest-sigil::after {
-    inset: -8px -6px !important;
+  .compact-panel.fs-quest-panel .fs-quest-sigil::after {
+    inset: -2px !important;
   }
 
   .compact-panel.fs-quest-panel [data-iw-quest-zone="row"] {
@@ -3272,7 +3307,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   .compact-panel.fs-quest-panel [data-iw-quest-role="objective"] {
     padding-right: calc(var(--fs-quest-cmd-w, 116px) + 8px) !important;
   }
-  .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"] { font-size: 8.5px !important; }
+  .compact-panel.fs-quest-panel [data-iw-quest-role="kicker"] { font-size: 9.5px !important; }
   .compact-panel.fs-quest-panel [data-iw-quest-role="title"] {
     font-size: 13px !important;
     line-height: 1.12 !important;
@@ -3300,7 +3335,7 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   .compact-panel.fs-quest-panel [data-iw-quest-role="progress-track"] { height: 4px !important; }
   .compact-panel.fs-quest-panel [data-iw-quest-role="progress-label"] {
     margin-top: 1px !important;
-    font-size: 9px !important;
+    font-size: 10px !important;
   }
 }
 
@@ -3314,9 +3349,6 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   }
   .compact-panel.fs-quest-panel .fs-quest-sigil { --fs-quest-sigil-size: 40px; }
   .compact-panel.fs-quest-panel .fs-quest-sigil::before { font-size: 15px !important; }
-  .compact-panel.fs-quest-panel[data-iw-skills-ui-ready="1"] .fs-quest-sigil::after {
-    inset: -7px -5px !important;
-  }
   .compact-panel.fs-quest-panel [data-iw-quest-zone="commands"] { max-width: 66% !important; }
   .compact-panel.fs-quest-panel [data-iw-quest-role="turn-in"],
   .compact-panel.fs-quest-panel [data-iw-quest-role="skip"] {

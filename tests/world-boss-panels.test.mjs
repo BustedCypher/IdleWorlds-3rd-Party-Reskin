@@ -38,6 +38,20 @@ assert.equal(cards[1].querySelectorAll('.iw-control-crest-art').length, 3, 'all 
 assert.equal(cards[1].querySelectorAll('.iw-control-sword-energy').length, 2, 'crest has independent red and blue sword-energy layers');
 assert.equal(cards[1].querySelectorAll('.iw-control-crystal-core').length, 1, 'crest has a local crystal-energy layer');
 assert.equal(cards[1].querySelector('.iw-control-meter-fill')?.style.width, '62.5%', 'ward meter mirrors native progress');
+/* A no-op re-run must emit nothing DOMWatcher observes. The dominion readout
+   lives INSIDE the zone .compact-panel, so a same-value textContent write there
+   is a childList record -> iw:skill-panel -> decorate -> write again: a
+   self-driving loop measured live (2026-09-16) at one rewrite every ~10ms. */
+{
+  const watched = ['class', 'style', 'disabled', 'aria-disabled', 'aria-pressed', 'aria-selected', 'aria-current', 'data-state'];
+  const observer = new dom.window.MutationObserver(() => {});
+  observer.observe(root, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: watched });
+  decorateWorldBossPanel({ root, heading });
+  const records = observer.takeRecords();
+  observer.disconnect();
+  assert.deepEqual(records.map(r => `${r.type}:${r.target.className || r.target.nodeName}`), [],
+    'an unchanged re-decorate is quiescent for the shared watcher');
+}
 assert.equal(cards[1].querySelector('.iw-control-meter-value')?.textContent, '12,500 / 20,000 HP', 'ward meter preserves native HP');
 assert.equal(cards[1].querySelector('[data-iw-boss-role="participation"]')?.textContent, 'Last battle participants');
 assert.equal(action.dataset.iwBossActionLabel, 'Prejoin', 'native Prejoin receives the compact display label');

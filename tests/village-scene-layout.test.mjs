@@ -19,9 +19,14 @@
  *      they overlap. The house is anchored to the TOP edge and sized as a
  *      PERCENTAGE of the scene for exactly this reason; a fixed-px house
  *      clears the plot at one height and sits on it at the next.
+ *   3. The ledger beside it wraps below it on a narrow frame, and that wrap is
+ *      the ONLY thing that keeps a 330px scene and a 250px ledger from being
+ *      squeezed into 360px together. It is driven by flex bases summing past
+ *      the body's content box, so it is layout as well, and the container query
+ *      that caps the ledger's width has to agree with that same sum.
  *
- * REAL BROWSER (Playwright): both are layout, and the second needs rects that
- * jsdom answers with zeros.
+ * REAL BROWSER (Playwright): all three are layout, and the second needs rects
+ * that jsdom answers with zeros.
  *
  * The whole bundle boots here rather than the module alone, so this also pins
  * the wiring — UIFoundation's `ui:village-scene` pass, the sheet reaching
@@ -32,9 +37,12 @@
  * boxes, which is the same lie the collapse told.
  *
  * Negative controls, verified by reverting the source:
- *   - drop `width:100%` from `.iw-vs-scene` and the scene measures 1px wide;
+ *   - drop `width:100%` from `.iw-vs-scene` and the scene measures 2px wide
+ *     (its stage is a COLUMN FLEX box precisely so this stays true);
  *   - grow `.iw-vs-house`'s `height` share from 52% to 75% and it overlaps
- *     plot 5.
+ *     plot 5;
+ *   - drop `flex-wrap` from `.iw-vs-body` and the ledger stops wrapping below
+ *     the scene at 390px.
  */
 
 import { chromium } from 'playwright';
@@ -160,6 +168,8 @@ async function measure(page) {
     const frame = document.querySelector('[data-iw-village-scene]');
     const scene = frame && frame.querySelector('.iw-vs-scene');
     if (!scene) return { scene: null };
+    const stage = frame.querySelector('.iw-vs-stage');
+    const ledger = frame.querySelector('[data-iw-village-ledger]');
     const style = getComputedStyle(frame);
     // clientWidth, not the border-box rect: the section frame draws a 1px
     // border and the scene may only ever fill the CONTENT box.
@@ -175,6 +185,10 @@ async function measure(page) {
       beforeNext: frame.nextElementSibling && frame.nextElementSibling.id === 'after',
       innerWidth: +inner.toFixed(1),
       scene: box(scene),
+      stage: box(stage),
+      ledger: box(ledger),
+      entries: frame.querySelectorAll('[data-iw-vs-entry]').length,
+      totals: !!frame.querySelector('[data-iw-village-totals]'),
       houseCaption: caption.map(box),
       plots: [...frame.querySelectorAll('.iw-vs-plot')].map(el => ({
         slot: el.dataset.slot, state: el.dataset.plotState, ...box(el),
@@ -205,16 +219,41 @@ async function run(width, height) {
   const tallestPlot = Math.max(...r.plots.map(p => p.height));
   const captionEnds = Math.max(...r.houseCaption.map(l => l.bottom)) - r.scene.top;
   const plotFive = r.plots.find(p => p.slot === '5');
-  console.log(`\n@${width}px  scene ${r.scene.width}x${r.scene.height} in a ${r.innerWidth}px column`
+  console.log(`\n@${width}px  scene ${r.scene.width}x${r.scene.height} + ledger ${r.ledger.width}px`
+    + ` in a ${r.innerWidth}px column`
     + `\n        tallest plot ${tallestPlot.toFixed(0)}px · house caption ends ${captionEnds.toFixed(0)}px down`
     + ` · plot 5 starts ${(plotFive.top - r.scene.top).toFixed(0)}px down`);
   check('the scene sits directly below Skill Actions', r.afterActions);
   check('the panel that followed Actions still follows the scene', r.beforeNext);
   // The collapse: auto cross-axis margins cancel a flex item's stretch, and
-  // every child is out of flow, so shrink-to-fit is the border box alone.
-  check('the scene fills its column instead of collapsing to its border',
-    r.scene.width >= Math.min(r.innerWidth, 680) - 1,
-    `${r.scene.width}px of ${r.innerWidth}px`);
+  // every child is out of flow, so shrink-to-fit is the border box alone. The
+  // scene's column is now the STAGE (a column flex box, kept that way for
+  // exactly this reason — see village-scene.css), not the frame.
+  check('the scene fills its stage instead of collapsing to its border',
+    r.scene.width >= Math.min(r.stage.width, 680) - 1,
+    `${r.scene.width}px of a ${r.stage.width}px stage`);
+  /* The ledger beside the scene, or under it. The wrap point is arithmetic and
+     not a breakpoint: 330 + 250 + 12 = 592, so a body content box at least that
+     wide holds both on one line and anything narrower cannot. Checking the
+     RESULT against that number is what would catch the flex bases and the
+     container query drifting apart. */
+  const sideBySide = r.innerWidth >= 592;
+  check(`the ledger sits ${sideBySide ? 'beside' : 'below'} the scene at this width`,
+    sideBySide
+      ? r.ledger.left >= r.stage.right - 0.6 && r.ledger.top < r.scene.bottom
+      : r.ledger.top >= r.stage.bottom - 0.6,
+    `ledger ${r.ledger.left}..${r.ledger.right} / ${r.ledger.top}..${r.ledger.bottom}`
+    + ` vs stage ${r.stage.left}..${r.stage.right} / ${r.stage.top}..${r.stage.bottom}`);
+  check('the ledger never overlaps the scene',
+    !overlaps(r.ledger, r.scene),
+    `ledger ${r.ledger.left}..${r.ledger.right} vs scene ${r.scene.left}..${r.scene.right}`);
+  check('a wrapped ledger takes the whole row rather than a column of it',
+    sideBySide || r.ledger.width >= r.innerWidth - 1,
+    `${r.ledger.width}px of ${r.innerWidth}px`);
+  // Six entries: the home plus five installed buildings, every one of them a
+  // disclosure, and the totals block under them.
+  check('the ledger lists the home and every building, and totals them',
+    r.entries === 6 && r.totals, `${r.entries} entries, totals ${r.totals}`);
   check('every building sprite decoded',
     r.sprites.length === 6 && r.sprites.every(s => s.w > 0),
     r.sprites.filter(s => !s.w).map(s => s.src).join(', ') || `${r.sprites.length} sprite(s)`);
@@ -238,6 +277,39 @@ async function run(width, height) {
         `${r.plots[i].left}..${r.plots[i].right} vs ${r.plots[j].left}..${r.plots[j].right}`);
     }
   }
+  /* The BUILDINGS fold, in a real browser with every sheet in injection order.
+     jsdom can see the attribute flip; only this can see whether the rule that
+     hides the list exists, reached the page and left the totals and the scene
+     standing. */
+  const folded = await page.evaluate(async () => {
+    const ledger = document.querySelector('[data-iw-village-ledger]');
+    const list = ledger.querySelector('.iw-vs-ledger-list');
+    const before = list.getBoundingClientRect().height;
+    ledger.querySelector('.iw-vs-ledger-toggle').click();
+    await new Promise(r => requestAnimationFrame(r));
+    const totals = ledger.querySelector('[data-iw-village-totals]');
+    const result = {
+      open: ledger.dataset.iwVsOpen,
+      before,
+      list: getComputedStyle(list).display,
+      heading: ledger.querySelector('.iw-vs-ledger-title').getBoundingClientRect().height,
+      totals: totals.getBoundingClientRect().height,
+      totalsBottom: totals.getBoundingClientRect().bottom,
+      scene: document.querySelector('.iw-vs-scene').getBoundingClientRect().height,
+      sceneBottom: document.querySelector('.iw-vs-scene').getBoundingClientRect().bottom,
+    };
+    ledger.querySelector('.iw-vs-ledger-toggle').click();
+    return result;
+  });
+  check('folding BUILDINGS hides the whole list', folded.open === '0'
+    && folded.before > 60 && folded.list === 'none',
+    `${folded.before}px of list, display ${folded.list}`);
+  check('and leaves the heading, the totals and the plot scene standing',
+    folded.heading > 0 && folded.totals > 40 && folded.scene > 200,
+    `heading ${folded.heading}, totals ${folded.totals}, scene ${folded.scene}`);
+  check('a side-by-side collapsed ledger extends Overall stats to the scene bottom',
+    !sideBySide || Math.abs(folded.totalsBottom - folded.sceneBottom) <= 1,
+    `totals bottom ${folded.totalsBottom}, scene bottom ${folded.sceneBottom}`);
   await page.close();
 }
 

@@ -127,19 +127,21 @@ function clearRoles(card) {
 
 /**
  * annotateStructure() only needs to re-run when something that decides which
- * node plays which role could have changed: the button set / disabled state,
- * or the number of text lines. It must NOT re-run on a pure value tick -- the
+ * node plays which role could have changed: the button set or the number of
+ * text lines. NOT `disabled`: no role depends on it (questState reads it on
+ * every render), and the game disables every button while any request is in
+ * flight, so keying on it stripped and rebuilt every quest card per request -
+ * a forced layout of the bare card that Chrome scroll-anchored on (2026-09-16).
+ * It also must NOT re-run on a pure value tick -- the
  * objective count climbing, the progress percentage, or the Skip countdown --
  * so the Skip label is compared with its "(n)" timer stripped. Mirrors
  * SkillPanelRenderer.structureSignature / InventoryRenderer.cheapSignature.
  */
 function structureSignature(card) {
   const { turnIn, skip } = questButtons(card);
-  const btn = [turnIn, skip].filter(Boolean).map(b => {
-    const disabled = (b.disabled || b.getAttribute('aria-disabled') === 'true') ? '1' : '0';
-    const label = normText(b.textContent).replace(/\s*\(\d+\)\s*$/, '');
-    return `${disabled}:${label}`;
-  }).join('|');
+  const btn = [turnIn, skip].filter(Boolean)
+    .map(b => normText(b.textContent).replace(/\s*\(\d+\)\s*$/, ''))
+    .join('|');
   return `${textLeaves(card).length}|${btn}|${findProgress(card).track ? 't' : '-'}`;
 }
 

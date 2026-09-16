@@ -1,0 +1,552 @@
+{
+  "themes": [
+    "forged-metal",
+    "infernal",
+    "glacial",
+    "celestial",
+    "lunar-spectral",
+    "runic-arcane",
+    "tempest-oceanic",
+    "verdant",
+    "voidborn"
+  ],
+  "states": [
+    "idle",
+    "hover",
+    "clicked"
+  ],
+  "atlases": {
+    "action": {
+      "width": 887,
+      "height": 1774,
+      "x": [
+        128,
+        358,
+        589
+      ],
+      "y": [
+        11,
+        190,
+        370,
+        550,
+        730,
+        911,
+        1091,
+        1271,
+        1451
+      ],
+      "cellWidth": 173,
+      "cellHeight": 168
+    },
+    "nav": {
+      "width": 948,
+      "height": 1659,
+      "x": [
+        58,
+        348,
+        638
+      ],
+      "y": [
+        55,
+        207,
+        359,
+        510,
+        664,
+        822,
+        979,
+        1142,
+        1303
+      ],
+      "cellWidth": 252,
+      "cellHeight": 129
+    }
+  },
+  "entries": [
+    {
+      "theme": "forged-metal",
+      "kind": "action",
+      "state": "idle",
+      "x": 128,
+      "y": 11,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "forged-metal",
+      "kind": "action",
+      "state": "hover",
+      "x": 358,
+      "y": 11,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "forged-metal",
+      "kind": "action",
+      "state": "clicked",
+      "x": 589,
+      "y": 11,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "forged-metal",
+      "kind": "nav",
+      "state": "idle",
+      "x": 58,
+      "y": 55,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "forged-metal",
+      "kind": "nav",
+      "state": "hover",
+      "x": 348,
+      "y": 55,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "forged-metal",
+      "kind": "nav",
+      "state": "clicked",
+      "x": 638,
+      "y": 55,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "infernal",
+      "kind": "action",
+      "state": "idle",
+      "x": 128,
+      "y": 190,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "infernal",
+      "kind": "action",
+      "state": "hover",
+      "x": 358,
+      "y": 190,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "infernal",
+      "kind": "action",
+      "state": "clicked",
+      "x": 589,
+      "y": 190,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "infernal",
+      "kind": "nav",
+      "state": "idle",
+      "x": 58,
+      "y": 207,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "infernal",
+      "kind": "nav",
+      "state": "hover",
+      "x": 348,
+      "y": 207,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "infernal",
+      "kind": "nav",
+      "state": "clicked",
+      "x": 638,
+      "y": 207,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "glacial",
+      "kind": "action",
+      "state": "idle",
+      "x": 128,
+      "y": 370,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "glacial",
+      "kind": "action",
+      "state": "hover",
+      "x": 358,
+      "y": 370,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "glacial",
+      "kind": "action",
+      "state": "clicked",
+      "x": 589,
+      "y": 370,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "glacial",
+      "kind": "nav",
+      "state": "idle",
+      "x": 58,
+      "y": 359,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "glacial",
+      "kind": "nav",
+      "state": "hover",
+      "x": 348,
+      "y": 359,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "glacial",
+      "kind": "nav",
+      "state": "clicked",
+      "x": 638,
+      "y": 359,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "celestial",
+      "kind": "action",
+      "state": "idle",
+      "x": 128,
+      "y": 550,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "celestial",
+      "kind": "action",
+      "state": "hover",
+      "x": 358,
+      "y": 550,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "celestial",
+      "kind": "action",
+      "state": "clicked",
+      "x": 589,
+      "y": 550,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "celestial",
+      "kind": "nav",
+      "state": "idle",
+      "x": 58,
+      "y": 510,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "celestial",
+      "kind": "nav",
+      "state": "hover",
+      "x": 348,
+      "y": 510,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "celestial",
+      "kind": "nav",
+      "state": "clicked",
+      "x": 638,
+      "y": 510,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "lunar-spectral",
+      "kind": "action",
+      "state": "idle",
+      "x": 128,
+      "y": 730,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "lunar-spectral",
+      "kind": "action",
+      "state": "hover",
+      "x": 358,
+      "y": 730,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "lunar-spectral",
+      "kind": "action",
+      "state": "clicked",
+      "x": 589,
+      "y": 730,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "lunar-spectral",
+      "kind": "nav",
+      "state": "idle",
+      "x": 58,
+      "y": 664,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "lunar-spectral",
+      "kind": "nav",
+      "state": "hover",
+      "x": 348,
+      "y": 664,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "lunar-spectral",
+      "kind": "nav",
+      "state": "clicked",
+      "x": 638,
+      "y": 664,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "runic-arcane",
+      "kind": "action",
+      "state": "idle",
+      "x": 128,
+      "y": 911,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "runic-arcane",
+      "kind": "action",
+      "state": "hover",
+      "x": 358,
+      "y": 911,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "runic-arcane",
+      "kind": "action",
+      "state": "clicked",
+      "x": 589,
+      "y": 911,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "runic-arcane",
+      "kind": "nav",
+      "state": "idle",
+      "x": 58,
+      "y": 822,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "runic-arcane",
+      "kind": "nav",
+      "state": "hover",
+      "x": 348,
+      "y": 822,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "runic-arcane",
+      "kind": "nav",
+      "state": "clicked",
+      "x": 638,
+      "y": 822,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "tempest-oceanic",
+      "kind": "action",
+      "state": "idle",
+      "x": 128,
+      "y": 1091,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "tempest-oceanic",
+      "kind": "action",
+      "state": "hover",
+      "x": 358,
+      "y": 1091,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "tempest-oceanic",
+      "kind": "action",
+      "state": "clicked",
+      "x": 589,
+      "y": 1091,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "tempest-oceanic",
+      "kind": "nav",
+      "state": "idle",
+      "x": 58,
+      "y": 979,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "tempest-oceanic",
+      "kind": "nav",
+      "state": "hover",
+      "x": 348,
+      "y": 979,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "tempest-oceanic",
+      "kind": "nav",
+      "state": "clicked",
+      "x": 638,
+      "y": 979,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "verdant",
+      "kind": "action",
+      "state": "idle",
+      "x": 128,
+      "y": 1271,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "verdant",
+      "kind": "action",
+      "state": "hover",
+      "x": 358,
+      "y": 1271,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "verdant",
+      "kind": "action",
+      "state": "clicked",
+      "x": 589,
+      "y": 1271,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "verdant",
+      "kind": "nav",
+      "state": "idle",
+      "x": 58,
+      "y": 1142,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "verdant",
+      "kind": "nav",
+      "state": "hover",
+      "x": 348,
+      "y": 1142,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "verdant",
+      "kind": "nav",
+      "state": "clicked",
+      "x": 638,
+      "y": 1142,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "voidborn",
+      "kind": "action",
+      "state": "idle",
+      "x": 128,
+      "y": 1451,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "voidborn",
+      "kind": "action",
+      "state": "hover",
+      "x": 358,
+      "y": 1451,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "voidborn",
+      "kind": "action",
+      "state": "clicked",
+      "x": 589,
+      "y": 1451,
+      "width": 173,
+      "height": 168
+    },
+    {
+      "theme": "voidborn",
+      "kind": "nav",
+      "state": "idle",
+      "x": 58,
+      "y": 1303,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "voidborn",
+      "kind": "nav",
+      "state": "hover",
+      "x": 348,
+      "y": 1303,
+      "width": 252,
+      "height": 129
+    },
+    {
+      "theme": "voidborn",
+      "kind": "nav",
+      "state": "clicked",
+      "x": 638,
+      "y": 1303,
+      "width": 252,
+      "height": 129
+    }
+  ]
+}

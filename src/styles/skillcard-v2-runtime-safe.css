@@ -1,0 +1,29 @@
+/* V2 may visually tuck native semantic rows away, but SkillPanelRenderer also
+   uses computed display/visibility to choose the live reward/action among stale
+   React siblings. Never mark those native rows display:none or visibility:hidden.
+   Clip them instead, so the renderer still sees their true game visibility while
+   the V2 composition stays compact.
+
+   Since the shell refactor these rows are ALWAYS clipped, in both states. The
+   expanded body is a row of the shell that SkillCardDesignController BUILDS
+   from this text — the same thing SkillPanelRenderer already does to turn the
+   game's raw material line into `.fs-skill-ingredient-grid`. Un-clipping the
+   source as well rendered every section TWICE: once in the summary column and
+   once in the body row. */
+
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"] [data-iw-skill-v2-section] {
+  display: revert !important;
+  position: absolute !important;
+  width: 1px !important;
+  min-width: 0 !important;
+  max-width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  max-height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

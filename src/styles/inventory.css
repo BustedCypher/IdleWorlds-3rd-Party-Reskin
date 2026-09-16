@@ -95,7 +95,7 @@
      computed-value time and the Inventory title silently inherited whatever
      the game was using. (Audit S3.1) */
   font-family: var(--iw-font-head) !important;
-  font-size: 18px !important;
+  font-size: var(--iw-frame-title-size, 18px) !important;
   font-weight: 700 !important;
   letter-spacing: .13em !important;
   text-transform: uppercase !important;
@@ -159,6 +159,19 @@
   background-size: contain;
   background-position: center;
 }
+/* Phones (mobile audit, 2026-09): the header row is title-left, tool buttons
+   right, and the centred ornament reaches 31px ABOVE its anchor - so once the
+   panel is narrower than ~506px its top overlaps the Filter and Search buttons
+   (at 390px: ornament x 77-263 / y 38-100 in the panel, tools from x 198 at
+   y 21-52). Scaled in proportion (`contain` keeps the art's ratio) and
+   anchored lower, it clears the tools' bottom edge by ~2.5px and still ends
+   ~4.5px above the list, so the panel is no taller. Line and ornament keep
+   one `top`, so they stay concentric. */
+@media (max-width: 560px) {
+  .fs-inv-rule::before,
+  .fs-inv-rule::after { top: 18px; }
+  .fs-inv-rule::after { width: 140px; height: 47px; }
+}
 
 [data-iw-inventory-root="1"] [data-iw-inventory-control="filter"],
 [data-iw-inventory-root="1"] [data-iw-inventory-control="page"] {
@@ -183,6 +196,49 @@
   letter-spacing: .09em !important;
   text-transform: uppercase !important;
   color: var(--iw-dim) !important;
+}
+
+/* ONE row on phones and tablets (Curtis, 2026-09-15). InventoryRenderer tags
+   the row the filter tabs share (`data-iw-inventory-filters`); it is a size
+   container, so the tabs' type scales with the row instead of wrapping:
+
+     font = (100cqi - fixed) / k,   clamped to [7.5px, 10.5px]
+
+   k is MEASURED - Barlow 600 uppercase rendered at 100px, labels All, Gear,
+   Materials, Consumables, Drops: 22.179 per px at the desktop .09em tracking,
+   20.579 at the phone .04em - with ~1.5% slack. `fixed` is ten side paddings,
+   four gaps (the game's own gap-1.5 is 6px) and ten 1px plate borders - the
+   borders were the part first left out, and at 320px flex-shrink handed the
+   whole shortfall to the widest tab, so Consumables clipped inside its plate. Renamed or added labels
+   change k: re-measure rather than widening the clamp. */
+@media (max-width: 1279px) {
+  [data-iw-inventory-root="1"] [data-iw-inventory-filters="1"] {
+    --iw-filter-gap: 6px;
+    --iw-filter-pad: 11px;
+    --iw-filter-k: 22.5;
+    --iw-filter-fixed: calc(10 * var(--iw-filter-pad) + 4 * var(--iw-filter-gap) + 10px);
+    container: iw-inventory-filters / inline-size;
+    flex-wrap: nowrap !important;
+    column-gap: var(--iw-filter-gap) !important;
+  }
+  [data-iw-inventory-root="1"] [data-iw-inventory-filters="1"] > [data-iw-inventory-control="filter"] {
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    padding: 0 var(--iw-filter-pad) !important;
+    font-size: clamp(7.5px, calc((100cqi - var(--iw-filter-fixed)) / var(--iw-filter-k)), 10.5px) !important;
+  }
+}
+/* Phones: tighter tracking and plates, and the tabs fill the row the way the
+   nav tabs do. */
+@media (max-width: 767px) {
+  [data-iw-inventory-root="1"] [data-iw-inventory-filters="1"] {
+    --iw-filter-pad: 7px;
+    --iw-filter-k: 20.9;
+  }
+  [data-iw-inventory-root="1"] [data-iw-inventory-filters="1"] > [data-iw-inventory-control="filter"] {
+    flex: 1 1 auto !important;
+    letter-spacing: .04em !important;
+  }
 }
 
 /* No seam collapsing here: the game's filter container ships gap-1.5 (6px), so

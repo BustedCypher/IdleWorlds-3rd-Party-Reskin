@@ -1,0 +1,538 @@
+/* ============================================================================
+   Skill Card V2 — functional concept
+
+   This sheet is intentionally presentation-only. SkillPanelRenderer continues
+   to identify and own the native gameplay nodes. V2 only consumes its semantic
+   role attributes and skin-owned helper nodes from SkillCardDesignController.
+   No new artwork is introduced here.
+   ========================================================================== */
+
+/* The V2 card is the only design (Curtis, 2026-09): the old/new switch and
+   the "current" mode it selected are gone. */
+
+
+/* Shared composition. Native game branches remain in place. The additional
+   selector is intentional: this design must outrank the later ui-system sheet.
+   Keep geometry here; the renderer's inline dimensions resolve these tokens. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] {
+  /* The hero group is compact enough to breathe inside its ornamental frame
+     (Curtis, 2026-09); the discipline name under it keeps its size. */
+  --iw-skill-v2-icon: 43px;
+  --iw-skill-v2-ring-gap: 7px;
+  --iw-skill-v2-ring-weight: 4px;
+  --iw-skill-v2-identity-w: 144px;
+  --iw-skill-v2-command-w: 96px;
+  --iw-skill-v2-gutter: 20px;
+  --iw-skill-v2-rail-bottom: 6px;
+  --iw-skill-v2-cmd-buffer: 8px;
+  /* The action label, framed button and pager are one centred command stack.
+     The icon scales from the button's current dimensions and always preserves
+     a safe inset outside its box; the SVGs add their own 4% ink padding. */
+  --iw-skill-v2-label-h: 12px;
+  --iw-skill-v2-action-label-gap: 4px;
+  --iw-skill-v2-glyph-safe-inset: 14px;
+  /* The label's CEILING. SkillCardDesignController.fitActionLabel measures
+     each label once and writes a smaller size inline on the card whenever the
+     text would not fit on one line inside the buffer. */
+  --iw-skill-v2-action-label-font: 9.5px;
+  /* The game-owned label remains in the real button for its accessible name,
+     but occupies no visual layout; the aria-hidden mirror above is painted. */
+  --iw-skill-v2-btn-font: 0px;
+  --iw-skill-v2-label-buffer: 4px;
+  --iw-skill-v2-btn-tracking: .02em;
+  --iw-skill-v2-btn-border: 3px;
+  --iw-skill-v2-btn-offset: calc(var(--iw-skill-v2-label-h) + var(--iw-skill-v2-action-label-gap));
+  --iw-skill-v2-glyph: max(16px, min(calc(var(--iw-skill-v2-btn-w) - var(--iw-skill-v2-glyph-safe-inset) - var(--iw-skill-v2-glyph-safe-inset)), calc(var(--iw-skill-v2-btn-h) - var(--iw-skill-v2-glyph-safe-inset) - var(--iw-skill-v2-glyph-safe-inset))));
+  --iw-skill-v2-glyph-inset: calc(var(--iw-skill-v2-btn-offset) + (var(--iw-skill-v2-btn-h) - var(--iw-skill-v2-glyph)) / 2);
+  --iw-skill-v2-btn-pad: 0;
+  --iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h));
+  /* 30% smaller in BOTH axes. Width alone would leave the command column
+     needing btn-h + buffer + nav-h + 24px = 148px, which is exactly what held
+     every card at 148-152px however small the hero became. */
+  --iw-skill-v2-btn-w: 64px;
+  --iw-skill-v2-nav-w: 30px;
+  --iw-skill-v2-nav-h: 22px;
+  --iw-skill-v2-nav-radius: 4px;
+  --iw-skill-v2-btn-h: 66px;
+  /* The card's frame, dividers and panels follow the CURRENT ZONE (Curtis,
+     2026-09) from the shared --iw-th-* layer. Left literal on purpose: the
+     met/unmet greens and oranges (rule 5), the skill-accent ring and hero
+     wash (identity) and the text colours. */
+  --iw-skill-v2-edge: var(--iw-th-edge-mid);
+  --iw-skill-v2-edge-soft: var(--iw-th-edge-soft);
+  container: iw-skill-card / inline-size !important;
+  position: relative !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  margin-bottom: 10px !important;
+  border: 1px solid var(--iw-skill-v2-edge) !important;
+  border-radius: 7px !important;
+  background: radial-gradient(ellipse at 0 0, color-mix(in srgb, var(--iw-th-edge) 50%, transparent), transparent 60%), linear-gradient(color-mix(in srgb, var(--iw-th-ground-a) 93%, transparent), color-mix(in srgb, var(--iw-th-ground-b) 96%, transparent)), url('../assets/skills_panel_texture.webp') center / cover !important;
+  box-shadow: inset 0 0 0 3px var(--iw-th-plate), inset 0 0 0 4px var(--iw-th-edge-soft), 0 4px 12px #0006 !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]::before {
+  content: "" !important; position: absolute !important; inset: 3px 20px auto !important;
+  height: 1px !important; background: linear-gradient(90deg, var(--iw-th-hairline-hi), color-mix(in srgb, var(--iw-th-accent) 65%, transparent), transparent) !important;
+  pointer-events: none !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]::after {
+  content: "" !important; display: block !important; position: absolute !important;
+  inset: -1px !important; z-index: 3 !important; pointer-events: none !important;
+  border: solid transparent !important; border-width: 17px 16px !important; border-radius: 0 !important;
+  background: none !important; box-shadow: none !important;
+  border-image: var(--iw-corner-filigree) 50% / 17px 16px / 0 stretch !important;
+  opacity: .85 !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"],
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:has(> [data-iw-skill-layout-shell="1"])) {
+  display: grid !important;
+  grid-template-columns: var(--iw-skill-v2-identity-w) minmax(0, 1fr) var(--iw-skill-v2-command-w) !important;
+  /* The hero and action columns span every row, so the centre column owns
+     three bands - the title row, the info frame and the foot row - between two
+     flexible SPACER rows. The spacers take whatever height the hero column or
+     the command group adds beyond the centre stack, so the stack sits on the
+     card's middle line as one group and the frame hugs its own content. With
+     the spare height in the frame's row instead, a card at its floor drew a
+     frame nearly twice as tall as its one material. A title-only card is the
+     same stack with two empty bands, so it centres by the same rule. */
+  grid-template-rows: 1fr auto auto auto 1fr !important;
+  grid-template-areas:
+    "identity .        commands"
+    "identity content  commands"
+    "identity body     commands"
+    "identity tabs     commands"
+    "identity .        commands" !important;
+  gap: 0 !important; align-items: stretch !important;
+  /* Tall enough for the command group plus a margin, whatever the content. */
+  min-height: calc(var(--iw-skill-v2-cmd-stack) + 24px) !important;
+}
+html[data-iw-skill-card-design="new"] [data-iw-collapsed="1"] > .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state] { display: none !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone] {
+  position: relative !important; align-self: stretch !important;
+  min-width: 0 !important; border: 0 !important; margin: 0 !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="identity"] {
+  grid-area: identity !important; display: flex !important; flex-direction: column !important;
+  align-items: center !important; justify-content: center !important; gap: 0 !important;
+  padding: 13px 7px 8px !important; border-right: 1px solid var(--iw-skill-v2-edge-soft) !important;
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--fs-skill-accent) 18%, transparent), color-mix(in srgb, var(--iw-th-plate) 67%, transparent) 75%) !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="identity"]::before,
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="identity"]::after { display: none !important; content: none !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="identity"] *:not(.fs-skill-medallion-art):not([data-iw-skill-v2-level-readout]):not([data-iw-skill-role="identity"]):not(.fs-skill-medallion-art *):not([data-iw-skill-v2-level-readout] *):not([data-iw-skill-role="identity"] *):not(:has([data-iw-skill-role="identity"])) { display: none !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .fs-skill-medallion-art {
+  position: relative !important; order: 1 !important; flex: 0 0 auto !important;
+  width: var(--iw-skill-v2-icon) !important; min-width: var(--iw-skill-v2-icon) !important;
+  height: var(--iw-skill-v2-icon) !important; min-height: var(--iw-skill-v2-icon) !important;
+  margin: 0 !important; border: 1px solid var(--iw-th-hairline) !important; border-radius: 50% !important;
+  box-shadow: inset 0 0 0 3px var(--iw-th-plate), inset 0 0 12px #0009 !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .fs-skill-medallion-art::after {
+  content: "" !important; display: block !important; position: absolute !important;
+  inset: calc(-1 * var(--iw-skill-v2-ring-gap)) !important;
+  width: auto !important; height: auto !important; min-width: 0 !important; min-height: 0 !important;
+  transform: none !important; border: 0 !important; border-radius: 50% !important; z-index: 2 !important;
+  background: conic-gradient(color-mix(in srgb, var(--fs-skill-accent, #55b6d9) 70%, #ccefff) 0 var(--iw-skill-v2-progress, 0%), var(--iw-th-edge-mid) var(--iw-skill-v2-progress, 0%) 100%) !important;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--iw-skill-v2-ring-weight)), #000 calc(100% - var(--iw-skill-v2-ring-weight) + 1px)) !important;
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--iw-skill-v2-ring-weight)), #000 calc(100% - var(--iw-skill-v2-ring-weight) + 1px)) !important;
+  filter: drop-shadow(0 0 3px #70cfff66) !important; box-shadow: none !important; pointer-events: none !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-level-readout {
+  position: relative !important; z-index: 3 !important; order: 2 !important;
+  display: flex !important; flex-direction: column !important; align-items: center !important;
+  width: max-content !important; min-width: 44px !important; max-width: 100% !important;
+  margin: -2px 0 0 !important; padding: 1px 5px 3px !important;
+  border: 1px solid var(--iw-th-hairline) !important; border-radius: 4px 4px 11px 11px !important;
+  background: linear-gradient(var(--iw-th-ground-a), var(--iw-th-plate)) !important;
+  box-shadow: inset 0 0 0 2px var(--iw-th-edge-soft), 0 2px 4px #0009 !important;
+  color: #f0f1e9 !important; font-family: var(--iw-font-ui, sans-serif) !important;
+  line-height: 1.12 !important; font-variant-numeric: tabular-nums !important; pointer-events: none !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-level { font-size: 12px !important; font-weight: 700 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-percent { font-size: 9px !important; color: #bbcedc !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="identity"] {
+  order: 3 !important; width: 100% !important; min-width: 0 !important;
+  margin: 6px 0 0 !important; overflow: visible !important; text-align: center !important;
+}
+/* The renderer paints clean labels in ::before. Keep native text at size zero. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="identity"]::before {
+  display: block !important; font-size: 11px !important; line-height: 1.2 !important;
+  letter-spacing: .035em !important; font-weight: 700 !important; text-transform: uppercase !important;
+  color: color-mix(in srgb, var(--fs-skill-accent) 65%, #d4e4ef) !important;
+  white-space: nowrap !important; overflow: visible !important; text-overflow: clip !important; max-width: none !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="level-progress"], html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-break { display: none !important; }
+
+/* The title row: the action name with its BASE chip beside it, centred on the
+   text. It is a GRID, not a flex column ordered with `order`, because the two
+   are not always siblings: the chip is appended straight into the content zone,
+   but live the game wraps the title in a branch of its own, so a rule keyed on
+   `> [action-title]` never matched, the wrapper kept the default order, and the
+   chip painted ABOVE a centred title. Placing "the branch that holds the title"
+   and "the chip" into named cells works for both shapes without moving a node.
+   The title track is `minmax(0, max-content)`, so a long name wraps and the chip
+   stays beside it rather than being pushed onto a line of its own. The ROW gap
+   is 0 on purpose: the zone also holds the game's own zero-height and clipped
+   nodes, and each one that lays out as a grid item costs a row, so a 6px row
+   gap measured 30px of empty space between the title and the frame. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] {
+  grid-area: content !important; display: grid !important;
+  grid-template-columns: minmax(0, max-content) auto !important; justify-content: start !important;
+  align-content: center !important; align-items: center !important; gap: 0 12px !important;
+  position: static !important;
+  /* No ground of its own (Curtis, 2026-09). This zone spans only the title
+     row, so a wash here drew a lighter box behind the title that stopped
+     short of the card's foot and broke the card into two panels. */
+  padding: 14px var(--iw-skill-v2-gutter) 10px !important; background: none !important;
+  text-align: left !important; box-shadow: none !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > * {
+  flex: 0 0 auto !important; align-self: flex-start !important; order: 5 !important;
+  min-width: 0 !important; max-width: 100% !important; margin: 0 !important; text-align: left !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > * { grid-column: 1 / -1 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > :is([data-iw-skill-role="action-title"], :has([data-iw-skill-role="action-title"])) {
+  grid-column: 1 !important; grid-row: 1 !important; align-self: center !important; width: auto !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="action-title"]::before {
+  display: block !important; font-size: clamp(17px, 2cqi, 23px) !important;
+  line-height: 1.15 !important; letter-spacing: .01em !important; color: #f0eee5 !important;
+  white-space: normal !important; overflow-wrap: anywhere !important; text-align: left !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > .fs-skill-base-exp {
+  grid-column: 2 !important; grid-row: 1 !important; align-self: center !important; justify-self: start !important;
+  white-space: nowrap !important; width: max-content !important; padding: 3px 10px !important;
+  border: 1px solid var(--iw-th-edge-mid) !important; border-radius: 4px !important;
+  background: linear-gradient(color-mix(in srgb, var(--iw-th-edge-soft) 80%, var(--iw-th-plate)), var(--iw-th-plate)) !important; color: #e6e4d5 !important;
+  font-size: 11px !important; line-height: 1.2 !important; letter-spacing: .04em !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > .iw-skill-v2-summary {
+  order: 3 !important; display: block !important; width: fit-content !important;
+  padding: 4px 10px !important; border: 1px solid #294131 !important; border-left: 2px solid #6bbd8b !important;
+  border-radius: 3px !important; background: linear-gradient(90deg, #111d1b, #08101244) !important;
+  color: #91d3a7 !important; font-family: var(--iw-font-ui, sans-serif) !important;
+  font-size: 12px !important; line-height: 1.3 !important; overflow-wrap: anywhere !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > .iw-skill-v2-summary[data-iw-skill-v2-summary-state="unmet"] { color: #e1b197 !important; border-color: #533f35 !important; border-left-color: #cb8d6c !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > *:not([data-iw-skill-role]):not([data-iw-skill-v2-section]):not([class*="fs-skill"]):not([class*="iw-skill-v2"]) {
+  color: #a7b4bb !important; font-size: 12px !important; line-height: 1.3 !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > .iw-skill-v2-expand {
+  order: 9 !important; align-self: flex-end !important; margin: -2px 0 0 !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  width: 28px !important; min-width: 28px !important; height: 24px !important; min-height: 24px !important;
+  padding: 0 !important; border: 0 !important; background: none !important; color: #a8c8e2 !important;
+  cursor: pointer !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-expand::before { content: "" !important; display: block !important; width: 9px !important; height: 9px !important; border: solid currentColor !important; border-width: 0 2px 2px 0 !important; transform: translateY(-2px) rotate(45deg) !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-expand[aria-expanded="true"]::before { transform: translateY(2px) rotate(225deg) !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-expand:focus-visible { outline: 2px solid #68b7ff !important; outline-offset: 2px !important; }
+
+/* Portrait action: existing textured artwork, metal bevel and blue inset. */
+/* The command GROUP - the action button, its glyph and the recipe arrows - is
+   centred vertically in the card, with a fixed buffer between the button and
+   the arrows (Curtis, 2026-09: "the arrow buttons are being hidden underneath
+   the action button"). Every part is placed from ONE anchor, the column's
+   vertical centre, rather than letting the button sit in flex flow and
+   measuring the arrows off wherever it ended up. That is deliberate: live, the
+   button sat ~14px lower than in any fixture, so some in-flow node the fixture
+   does not model sits above it, and an arrow offset measured from a guess about
+   the button's position lands on top of it. Out of flow, nothing else in the
+   column can move the button. The pager ships in EITHER branch, and both
+   resolve 50% against a box with the card's full height: the commands zone
+   spans all three shell rows, and the content zone is static, so a pager there
+   resolves against the card. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] {
+  --iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h));
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:has([data-iw-skill-role="nav-group"]) {
+  --iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h) + var(--iw-skill-v2-cmd-buffer) + var(--iw-skill-v2-nav-h));
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="commands"] {
+  grid-area: commands !important; display: block !important;
+  padding: 0 !important; border-left: 1px solid var(--iw-skill-v2-edge-soft) !important;
+  background: linear-gradient(270deg, color-mix(in srgb, var(--iw-th-edge) 13%, transparent), transparent) !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"] {
+  /* Frame and fill follow the CURRENT ZONE (Curtis, 2026-09), from the same
+     --iw-th-* layer every other framed surface reads, so a glacial zone draws
+     a cold button and an infernal one a hot button with no JS. Only the
+     structure is themed: the discipline icon, the label and the disabled grey
+     are not zone colours. */
+  --fs-motion-idle: linear-gradient(135deg, color-mix(in srgb, var(--iw-th-cta) 58%, transparent), color-mix(in srgb, var(--iw-th-plate) 86%, transparent)), url('../assets/skills_panel_texture.webp') center / cover !important;
+  --fs-motion-hover: linear-gradient(135deg, color-mix(in srgb, var(--iw-th-cta-hi) 62%, transparent), color-mix(in srgb, var(--iw-th-cta) 55%, transparent)), url('../assets/skills_panel_texture.webp') center / cover !important;
+  --fs-motion-pressed: linear-gradient(color-mix(in srgb, var(--iw-th-plate) 88%, transparent), color-mix(in srgb, var(--iw-th-cta) 72%, transparent)), url('../assets/skills_panel_texture.webp') center / cover !important;
+  --fs-button-border: var(--iw-skill-v2-btn-border) double var(--iw-th-hairline-hi) !important;
+  --fs-button-shadow: inset 0 0 0 2px var(--iw-th-plate), inset 0 0 0 3px var(--iw-th-accent-dim), inset 0 0 16px color-mix(in srgb, var(--iw-th-accent) 42%, transparent), 0 0 0 2px var(--iw-th-plate), 0 0 0 3px var(--iw-th-edge-mid), 0 0 12px color-mix(in srgb, var(--iw-th-accent) 26%, transparent) !important;
+  position: absolute !important; top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-offset)) !important;
+  left: calc(50% - var(--iw-skill-v2-btn-w) / 2) !important; right: auto !important; bottom: auto !important;
+  margin: 0 !important; border-radius: 9px !important;
+  outline: none !important; color: transparent !important; overflow: hidden !important;
+  font-size: 12px !important; line-height: var(--iw-skill-v2-label-h) !important; letter-spacing: .04em !important;
+  white-space: nowrap !important; text-shadow: none !important;
+  filter: none !important; transition: filter .15s ease !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"] > :not([style*="width"]) { opacity: 0 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"]:hover { filter: brightness(1.2) drop-shadow(0 0 5px color-mix(in srgb, var(--iw-th-accent) 55%, transparent)) !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"]:active { filter: brightness(.85) !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"]:focus-visible { outline: 2px solid var(--iw-th-accent) !important; outline-offset: 5px !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"]:disabled,
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"][aria-disabled="true"] { --fs-motion-idle: linear-gradient(#25313d, #121920) !important; --fs-motion-hover: linear-gradient(#25313d, #121920) !important; filter: grayscale(.8) !important; opacity: .55 !important; }
+/* The ACTIVE skill's progress. The game draws it inside its own button:
+   `<span class="relative z-10">label</span>` plus, while that skill runs,
+   `<span class="absolute inset-0 bg-black/15" style="width:N%">` (or the same
+   span at 100% with `animate-pulse` while it starts). Fifteen percent black
+   over this button's dark themed fill was a change of a few levels, which is
+   the "very difficult to see" report. While a fill exists the TRACK goes dark,
+   so the filled share is a bright band on a dark button rather than one purple
+   on another. The span is restyled, never replaced:
+   its WIDTH stays the game's inline value (rule 5 - the skin computes no
+   progress), and it is keyed on that inline width rather than on Tailwind
+   class names. It paints a zone-accent fill with a bright leading edge under
+   the label; the discipline icon is a sibling of the button at z-index 2, so
+   it stays above the fill too. While a fill exists the frame's rule turns
+   accent as well, so a running skill reads as running even at 8%. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"] > span[style*="width"] {
+  position: absolute !important; top: 0 !important; bottom: 0 !important; left: 0 !important; height: auto !important; z-index: 1 !important;
+  border-radius: 0 !important; pointer-events: none !important;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--iw-th-accent) 40%, transparent), color-mix(in srgb, var(--iw-th-accent) 82%, transparent)) !important;
+  box-shadow: inset -2px 0 0 color-mix(in srgb, var(--iw-th-accent) 35%, #fff), 3px 0 12px color-mix(in srgb, var(--iw-th-accent) 75%, transparent) !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"] > span:not([style*="width"]) { position: relative !important; z-index: 2 !important; }
+/* The game rewrites the fill's width every 250ms, so the band stepped. A
+   LINEAR transition one tick long makes each step continuous motion; the
+   duration is SkillCardDesignController's measured tick (ProgressCadence, the
+   same measurement the Current Action bar uses), and .28s - the game's 250ms
+   interval with the shared 1.12 lead bias - until three ticks are measured.
+   The completion is not a tick: on the frame the width drops back, the card
+   carries data-iw-skill-v2-fill-reset and the band snaps. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"] > span[style*="width"] { transition: width var(--iw-skill-v2-fill-duration, .28s) linear !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-fill-reset] button[data-iw-skill-role="action-button"] > span[style*="width"] { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"][data-iw-skill-role] > span[style*="width"] { transition: none !important; } }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="action-button"]:has(> span[style*="width"]) {
+  --fs-motion-idle: linear-gradient(135deg, color-mix(in srgb, var(--iw-th-plate) 76%, transparent), color-mix(in srgb, var(--iw-th-plate) 94%, transparent)), url('../assets/skills_panel_texture.webp') center / cover !important;
+  --fs-motion-hover: linear-gradient(135deg, color-mix(in srgb, var(--iw-th-plate) 70%, transparent), color-mix(in srgb, var(--iw-th-plate) 88%, transparent)), url('../assets/skills_panel_texture.webp') center / cover !important;
+  --fs-button-border: var(--iw-skill-v2-btn-border) double color-mix(in srgb, var(--iw-th-accent) 80%, #fff) !important;
+  --fs-button-shadow: inset 0 0 0 2px var(--iw-th-plate), inset 0 0 0 3px var(--iw-th-accent), 0 0 0 2px var(--iw-th-plate), 0 0 0 3px var(--iw-th-accent-dim), 0 0 14px color-mix(in srgb, var(--iw-th-accent) 55%, transparent) !important;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000c !important;
+}
+/* When the game ships the action button as the shell's own child (the button
+   IS the command zone), the icon is appended next to it, in the shell grid. An
+   absolutely positioned grid item is placed against its GRID AREA, not the
+   whole grid, so the button measured from the command column while the icon,
+   with no area, measured from the entire card and landed in its middle. The
+   icon takes the same area. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"] > :is(.iw-skill-v2-action-glyph,.iw-skill-v2-action-label),
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:has(> [data-iw-skill-layout-shell="1"])) > :is(.iw-skill-v2-action-glyph,.iw-skill-v2-action-label) { grid-area: commands !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-action-label {
+  display: block !important; position: absolute !important; z-index: 3 !important;
+  top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2) !important;
+  left: calc(50% - var(--iw-skill-v2-btn-w) / 2) !important;
+  width: var(--iw-skill-v2-btn-w) !important; height: var(--iw-skill-v2-label-h) !important;
+  margin: 0 !important; padding: 0 var(--iw-skill-v2-label-buffer) !important;
+  color: #f3e3c0 !important; font: 700 var(--iw-skill-v2-action-label-font)/var(--iw-skill-v2-label-h) var(--iw-font-ui, sans-serif) !important;
+  letter-spacing: var(--iw-skill-v2-btn-tracking) !important; text-align: center !important;
+  white-space: nowrap !important; overflow: visible !important; pointer-events: none !important;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000c !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-action-glyph {
+  display: block !important; position: absolute !important; z-index: 2 !important;
+  top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-glyph-inset)) !important; left: 50% !important; transform: translateX(-50%) !important;
+  width: var(--iw-skill-v2-glyph) !important; height: var(--iw-skill-v2-glyph) !important; background: none center / contain no-repeat !important;
+  pointer-events: none !important; filter: drop-shadow(0 2px 3px #000a) !important;
+}
+/* A condition-adjusted action that STARTS above 11 seconds uses the existing
+   skin-owned glyph as its countdown readout. The game's label stays in the
+   button (and therefore keeps its handler and accessible name), but becomes
+   visually transparent while the mirrored Current Action time is shown. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] button[data-iw-skill-role="action-button"] {
+  color: transparent !important; text-shadow: none !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] button[data-iw-skill-role="action-button"] > :not([style*="width"]) {
+  opacity: 0 !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] .iw-skill-v2-action-label { opacity: 0 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] .iw-skill-v2-action-glyph[data-iw-skill-v2-action-timer] {
+  display: grid !important; place-items: center !important; z-index: 3 !important;
+  top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-offset)) !important;
+  left: calc(50% - var(--iw-skill-v2-btn-w) / 2) !important;
+  width: var(--iw-skill-v2-btn-w) !important; height: var(--iw-skill-v2-btn-h) !important;
+  transform: none !important; background: none !important;
+  color: #f3fbff !important; font: 700 15px/1 var(--iw-font-ui, sans-serif) !important;
+  letter-spacing: .02em !important; font-variant-numeric: tabular-nums !important;
+  text-shadow: 0 1px 2px #000, 0 0 6px color-mix(in srgb, var(--iw-th-accent) 65%, transparent) !important;
+  filter: none !important;
+}
+/* One icon per discipline, drawn by Curtis and imported from his EPS by
+   build-tools/import-action-icons.mjs - never re-drawn by hand. Picked by the
+   card's own `data-iw-skill-v2-type`, so the controller writes no inline style.
+   `gathering` is the renderer's key for Herbalism. A discipline the artwork
+   does not cover keeps an empty glyph and shows its label alone. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="combat"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/combat.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="mining"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/mining.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="smithing"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/smithing.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="gathering"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/gathering.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="alchemy"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/alchemy.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="jewelcrafting"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/jewelcrafting.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="spellcrafting"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/spellcrafting.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="tailoring"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/tailoring.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="woodcutting"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/woodcutting.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type="construction"] .iw-skill-v2-action-glyph { background-image: url('../assets/skills-ui/action-icons/construction.svg') !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:is([data-iw-skill-v2-type="combat"], [data-iw-skill-v2-type="mining"], [data-iw-skill-v2-type="smithing"], [data-iw-skill-v2-type="gathering"], [data-iw-skill-v2-type="alchemy"], [data-iw-skill-v2-type="jewelcrafting"], [data-iw-skill-v2-type="spellcrafting"], [data-iw-skill-v2-type="tailoring"], [data-iw-skill-v2-type="woodcutting"], [data-iw-skill-v2-type="construction"])) { --iw-skill-v2-btn-pad: 0 4px; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:is([data-iw-skill-v2-type="combat"], [data-iw-skill-v2-type="mining"], [data-iw-skill-v2-type="smithing"], [data-iw-skill-v2-type="gathering"], [data-iw-skill-v2-type="alchemy"], [data-iw-skill-v2-type="jewelcrafting"], [data-iw-skill-v2-type="spellcrafting"], [data-iw-skill-v2-type="tailoring"], [data-iw-skill-v2-type="woodcutting"], [data-iw-skill-v2-type="construction"])) .iw-skill-v2-action-glyph { display: none !important; }
+/* React can ship the pager in either branch. Keep the actual buttons and their
+   handlers; place both copies a fixed buffer below the button. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone] [data-iw-skill-role="nav-group"] {
+  position: absolute !important; top: calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h) + var(--iw-skill-v2-cmd-buffer)) !important; bottom: auto !important; left: auto !important;
+  right: 0 !important; transform: none !important; z-index: 4 !important;
+  display: flex !important; align-items: stretch !important; justify-content: center !important; gap: 4px !important;
+  width: var(--iw-skill-v2-command-w) !important; max-width: none !important; min-width: 0 !important;
+  height: var(--iw-skill-v2-nav-h) !important; margin: 0 !important; padding: 0 !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="commands"] :has(button[data-iw-skill-role="action-button"]),
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone] :has(> [data-iw-skill-role="nav-group"]):not([data-iw-skill-zone]) {
+  /* Everything that makes an element a containing block for absolutely
+     positioned descendants, not just `position`. A game wrapper with a
+     transform, filter, containment or will-change around the button would
+     otherwise place the button against ITSELF while the content-branch arrows
+     are placed against the card - reproduced with `--wrap-command`, where the
+     8px buffer measured 1px. */
+  position: static !important; transform: none !important; filter: none !important; backdrop-filter: none !important;
+  perspective: none !important; contain: none !important; will-change: auto !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] { display: flex !important; align-items: center !important; justify-content: center !important; --fs-button-background: linear-gradient(color-mix(in srgb, var(--iw-th-edge-soft) 70%, var(--iw-th-plate)), var(--iw-th-plate)) !important; --fs-button-border: 1px solid var(--iw-th-edge-mid) !important; --fs-button-shadow: inset 0 1px 0 #ffffff0d !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:hover { --fs-button-background: linear-gradient(var(--iw-th-edge-soft), var(--iw-th-plate)) !important; --fs-button-border: 1px solid var(--iw-th-accent) !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::before { background: none !important; border-image: none !important; content: "" !important; width: 7px !important; height: 7px !important; inset: auto !important; position: relative !important; display: block !important; opacity: 1 !important; filter: none !important; margin: 0 !important; border: solid color-mix(in srgb, var(--iw-th-accent) 72%, #fff) !important; border-width: 0 2px 2px 0 !important; transform: translateX(calc((7px - 2px) / -2.8284)) rotate(-45deg) !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="nav-button"][data-iw-nav-direction="prev"]::before { transform: translateX(calc((7px - 2px) / 2.8284)) rotate(135deg) !important; }
+/* The chevron is a 7px square's right and bottom borders (2px) turned 45deg.
+   Turned, its ink spans from the stroke end at -2/sqrt2 to the apex at 7/sqrt2
+   along the pointing axis, so it sits (7 - 2) / (2 x sqrt2) = 1.77px toward
+   its point - measured 1.75px before this - and the translate cancels exactly
+   that. The plate is a centred ROW FLEX, not a grid: the game's own ‹ › glyph
+   is still a text node at font-size 0, and in a grid that becomes a second
+   grid item taking half the plate, so place-items: center put every chevron
+   in the TOP half (measured -3px) - the same trap the reward plaque documents.
+   Keyed on data-iw-nav-direction rather than :first-child, because DOM order
+   is React's. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]::after { display: none !important; }
+/* The live arrows are not text: each button holds a Lucide `<svg class="h-4
+   w-4">`. It is already invisible (the inline plate paints the button's text
+   transparent and the svg strokes currentColor), but it is still a 16px FLEX
+   ITEM beside the ::before chevron, so the centred row put the pair 16px wide
+   and the chevron 7.5px left of centre on BOTH arrows - the fixture's text
+   glyph at font-size 0 takes no width and never showed it. Out of flow, the
+   chevron is the row's only item. It stays in the DOM and inside the button,
+   so the click still lands on the game's control. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] > * { position: absolute !important; top: 0 !important; left: 0 !important; margin: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+
+/* Details are two full-width rows. Only real game sections become tabs. */
+/* The foot row carries the tabs and, only when the player does NOT meet a
+   requirement, that requirement in small type. With neither, the row is gone
+   and costs the card nothing. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-controls { grid-area: tabs !important; display: flex !important; flex-wrap: wrap !important; align-items: center !important; justify-content: center !important; gap: 3px 10px !important; width: 100% !important; margin: 0 !important; padding: 0 var(--iw-skill-v2-gutter) var(--iw-skill-v2-rail-bottom) !important; border: 0 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-controls { justify-content: flex-start !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-controls:not(:has(.iw-skill-v2-req-note)) { display: none !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-req-note { flex: 1 1 200px !important; min-width: 0 !important; color: #deb097 !important; font: 500 10.5px/1.3 var(--iw-font-ui, sans-serif) !important; letter-spacing: .01em !important; text-align: left !important; overflow-wrap: anywhere !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-req-note::before { content: "\26A0\FE0E\00a0" !important; color: #c7856c !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body:empty { display: none !important; }
+/* At most THREE columns, and fewer only when a cell would drop under its
+   floor. The min track is the larger of the floor and a third of the row, so
+   `auto-fit` can never fit a fourth, and it collapses to two or one on its own
+   as the frame narrows - no breakpoint, and no knowledge of the card. Empty
+   tracks collapse too, so one or two materials still fill the frame. The frame
+   is also a size container, so its cells scale their type to IT rather than
+   to the viewport; its inline size comes from its grid area, never from its
+   contents, so the containment is safe. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body { --iw-skill-v2-cell-min: 96px; --iw-skill-v2-cell-gap: 5px; container: iw-skill-body / inline-size !important; grid-area: body !important; display: grid !important; grid-template-columns: repeat(auto-fit, minmax(max(var(--iw-skill-v2-cell-min), calc((100% - 2 * var(--iw-skill-v2-cell-gap)) / 3)), 1fr)) !important; align-content: center !important; align-items: stretch !important; gap: var(--iw-skill-v2-cell-gap) !important; width: auto !important; min-height: 0 !important; margin: 0 var(--iw-skill-v2-gutter) 6px !important; padding: 7px 8px !important; border: 1px solid var(--iw-th-edge-mid) !important; border-radius: 7px !important; background: linear-gradient(180deg, var(--iw-th-ground-a), var(--iw-th-plate)) !important; box-shadow: inset 0 1px 0 #ffffff0d, inset 0 0 22px #00000066 !important; text-align: left !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row { display: flex !important; align-items: center !important; min-width: 0 !important; padding: 5px 8px !important; border: 1px solid var(--iw-th-edge-faint) !important; border-left: 2px solid #67ab83 !important; border-radius: 3px !important; color: #91cba4 !important; background: color-mix(in srgb, var(--iw-th-edge-soft) 33%, transparent) !important; font: 400 clamp(10px, 3cqi, 12.5px)/1.3 var(--iw-font-ui, sans-serif) !important; text-align: left !important; overflow-wrap: anywhere !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-state="unmet"] { border-left-color: #c7856c !important; color: #deb097 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-state="met"]:not([data-iw-skill-v2-body-kind="material"])::before { content: "\2713" !important; flex: 0 0 auto !important; margin-right: 7px !important; color: #67ab83 !important; font-size: 12px !important; line-height: 1 !important; }
+/* A material cell keeps name and count on ONE line while the cell is wide
+   enough, and lets the count wrap beneath the name only when it is not. A
+   forced stack cost a single-material card a whole line (+12px) for nothing.
+   The tick moves onto the COUNT, because the count is what it is about. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-kind="material"] { flex-flow: row wrap !important; align-items: baseline !important; align-content: center !important; gap: 0 6px !important; padding: 4px 7px !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-name { display: block !important; max-width: 100% !important; font-size: max(10px, .9em) !important; line-height: 1.2 !important; opacity: .92 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-count { display: block !important; font-weight: 600 !important; line-height: 1.2 !important; font-variant-numeric: tabular-nums !important; white-space: nowrap !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-state="met"] .iw-skill-v2-body-count::before { content: "\2713\00a0" !important; color: #67ab83 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row:not([data-iw-skill-v2-body-kind="material"]) { grid-column: 1 / -1 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row:not([data-iw-skill-v2-body-state]) { color: #b9c9d5 !important; border-left-color: var(--iw-th-accent-dim) !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .fs-skill-ingredient-item { justify-content: flex-start !important; text-align: left !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state="collapsed"] .iw-skill-v2-controls,
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state="collapsed"] .iw-skill-v2-body { display: none !important; }
+
+/* Tokens are defined on the shell at narrow widths: a container cannot query
+   itself. Keep one layout and allow long labels to wrap without clipping. */
+@container iw-skill-card (max-width: 580px) {
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"] { --iw-skill-v2-identity-w: 106px; --iw-skill-v2-command-w: 80px; --iw-skill-v2-btn-w: 64px; --iw-skill-v2-nav-w: 30px; --iw-skill-v2-gutter: 10px; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] { padding: 12px var(--iw-skill-v2-gutter) 8px !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="identity"]::before { font-size: 9px !important; letter-spacing: 0 !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="action-title"]::before { font-size: 16px !important; }
+}
+/* Phone cards (mobile audit, 2026-09). The block this replaced still stacked
+   the card for the retired tabbed design: a 146px command row spanning the
+   card, a 0px tab row, and the command group and content-branch arrows still
+   placed from the CARD's middle, so the arrows landed on the title, the button
+   floated in an empty band and a bare button sat on the requirement note.
+   The card keeps its three columns, narrower, as one top band; the info frame
+   and the note become full-width rows under it. Everything the command group
+   is placed from resolves against that band:
+   - the commands zone spans only row 1 and is already position: relative;
+   - a bare button is a grid item of the (relative) shell, placed against its
+     grid area, which is row 1;
+   - the content zone becomes position: relative, so a content-branch pager
+     resolves against row 1 too, and reaches one command column to its right.
+   Row 1's floor is the command group plus a margin, as the desktop shell's
+   min-height was. */
+@container iw-skill-card (max-width: 480px) {
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"] {
+    --iw-skill-v2-identity-w: 92px; --iw-skill-v2-command-w: 76px;
+    grid-template-rows: minmax(calc(var(--iw-skill-v2-cmd-stack) + 20px), auto) auto auto !important;
+    grid-template-areas: "identity content commands" "body body body" "tabs tabs tabs" !important;
+    min-height: 0 !important;
+  }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] {
+    position: relative !important; grid-template-columns: minmax(0, 1fr) !important;
+    padding: 10px var(--iw-skill-v2-gutter) !important;
+  }
+  /* The chip goes UNDER the name: beside it, a 150px column left the title
+     under 50px and wrapped it to four lines. */
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] > .fs-skill-base-exp { grid-column: 1 !important; grid-row: 2 !important; margin-top: 6px !important; }
+  /* grid-column: auto is load-bearing. The zone is a GRID, and an absolutely
+     positioned grid child that keeps the zone's `> *` placement (1 / -1) is
+     placed against those grid LINES - the padding-inset box - so `right` was
+     measured from 10px inside the zone and the pair sat one gutter left of
+     the command column. Auto placement uses the padding edge. */
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] { grid-column: auto !important; right: calc(-1 * var(--iw-skill-v2-command-w)) !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role="action-title"]::before { font-size: 15px !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body { margin: 8px var(--iw-skill-v2-gutter) !important; }
+}
+@media (prefers-reduced-motion: reduce) { html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] * { transition: none !important; } }
+
+/* Identity wrappers remain React-owned; contents lets the retained name join
+   the same badge stack while only the obsolete readouts are hidden. */
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="identity"] *:has([data-iw-skill-role="identity"]) { display: contents !important; }
+/* Touch screens (mobile audit, 2026-09): the recipe arrows were 30x22, under
+   WCAG 2.2's 24px minimum target. They cannot borrow an invisible hit area the
+   way the collapse toggle does, because each arrow clips its own paint
+   (`overflow: hidden` plus a polygon `clip-path`), and a clip-path clips hit
+   testing too. So the arrows really are taller; the token also feeds
+   --iw-skill-v2-cmd-stack, so the button-to-arrow buffer, the group's centring
+   and the band's floor all follow. */
+@media (pointer: coarse) {
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] { --iw-skill-v2-nav-h: 26px; }
+}
+
+/* The oldest game layout puts zones directly on the card, which is then the
+   grid AND the container, so no token or template can change here. Its
+   children can still query their card: they take the same band-then-rows
+   order through explicit lines inside the card's five-row template (rows 1
+   and 5 are its empty 1fr spacers), keeping the card's own column widths. */
+@container iw-skill-card (max-width: 480px) {
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-zone="identity"] { grid-area: auto !important; grid-column: 1 !important; grid-row: 2 !important; min-height: calc(var(--iw-skill-v2-cmd-stack) + 20px) !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-zone="content"] { grid-area: auto !important; grid-column: 2 !important; grid-row: 2 !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-zone="commands"],
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > :is(.iw-skill-v2-action-glyph,.iw-skill-v2-action-label) { grid-area: auto !important; grid-column: 3 !important; grid-row: 2 !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > .iw-skill-v2-body { grid-area: auto !important; grid-column: 1 / -1 !important; grid-row: 3 !important; }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > .iw-skill-v2-controls { grid-area: auto !important; grid-column: 1 / -1 !important; grid-row: 4 !important; }
+}

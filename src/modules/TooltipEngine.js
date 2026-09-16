@@ -276,7 +276,9 @@ function isOpen() {
 }
 
 function nodeInside(root, node) {
-  return !!(root && node && (node === root || root.contains(node)));
+  // A virtual anchor (see isVirtual) has no DOM containment; callers must ask
+  // anchorContainsPointer() for it. Answer "no" rather than throw.
+  return !!(root && node && (node === root || (typeof root.contains === 'function' && root.contains(node))));
 }
 
 const TRIGGER_SELECTOR = [
@@ -434,7 +436,18 @@ export function initTooltipEngine() {
   });
   STATE.el.addEventListener('mouseleave', e => {
     if (STATE.keyboardOwned) return;
-    if (!isMobile() && STATE.anchor && nodeInside(STATE.anchor, e.relatedTarget)) return;
+    // Leaving the card back onto its anchor keeps it open. A virtual anchor
+    // (NameScanner's prose hover) is a rect, not a node: it used to reach
+    // nodeInside and throw "root.contains is not a function", skipping hide().
+    if (!isMobile() && STATE.anchor) {
+      if (isVirtual(STATE.anchor)) {
+        STATE.pointerX = e.clientX;
+        STATE.pointerY = e.clientY;
+        if (anchorContainsPointer()) return;
+      } else if (nodeInside(STATE.anchor, e.relatedTarget)) {
+        return;
+      }
+    }
     hide();
   });
   STATE.el.addEventListener('focusout', e => {

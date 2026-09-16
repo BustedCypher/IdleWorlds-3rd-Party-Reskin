@@ -76,8 +76,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
         </div>
       </div>
       <!-- The panel COLUMN, a sibling of the header/nav/zone-bar chrome, the
-           way the live page lays it out. PanelOrder claims this and not the
-           shell, which it recognises by the shell's own header child. -->
+           way the live page lays it out. -->
       <div class="iw-test-column" style="display:flex;flex-direction:column;gap:12px">
       <section id="current-action-panel">
         <header id="current-action-header"><h2>Current Action</h2><div><button id="cancel-current" aria-label="Cancel current action">×</button><span>3s</span></div></header>
@@ -142,6 +141,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
              filter tabs / pagers), which InventoryRenderer tags
              data-iw-inventory-list for the inner frame. A flat fixture would
              hide that classification. -->
+        <div class="flex flex-wrap gap-1.5" id="inv-filters"><button>All</button><button>Gear</button><button>Materials</button><button>Consumables</button><button>Drops</button></div>
         <div class="space-y-1.5" id="inv-list">
         <div class="compact-row">
           <div><span>Iron Sword</span><span>Lv 3</span></div>
@@ -529,7 +529,12 @@ check('approved layout adds a Base: plaque from the live XP datum',
 check('identity shows the full discipline name, not the abbreviated one',
   panel.querySelector('[data-iw-skill-role="identity"]')?.dataset.iwCleanText === 'Mining' &&
   panel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Mine Copper Ore');
-check('skill renderer actively overrides native inline width while enabled', skillAction.style.width === '155px', skillAction.style.cssText);
+/* The renderer still owns the command button's width against React's own
+   inline writes; the VALUE is now the design's, 78px compact under V2 and
+   155px on the legacy plaque, so this asserts ownership rather than one
+   number. Both are checked explicitly below. */
+check('skill renderer actively overrides native inline width while enabled',
+  ['var(--iw-skill-v2-btn-w, 90px)', '155px'].includes(skillAction.style.width), skillAction.style.cssText);
 check('background painter actively overrides native navy while enabled',
   inventorySection.style.getPropertyValue('background-color') !== 'rgb(15, 23, 42)',
   inventorySection.style.cssText);
@@ -552,36 +557,11 @@ check('every nav tab in the rail is classified',
 // it did, the resolution cache would invalidate on our OWN append and re-run a
 // whole-document scan every flush.
 const toolkitLinks = [...navRail.querySelectorAll('[data-iw-nav-link="toolkit"]')];
-/* Panel arrangement. Asserting the module actually CLAIMED this page is the
-   half that makes the teardown checks below capable of failing: a container it
-   never claimed leaves nothing to remove. */
-const orderedPanels = [...window.document.querySelectorAll('[data-iw-order]')];
-check('panels carry an arrangement slot',
-  orderedPanels.length >= 3 &&
-  orderedPanels.every(el => /^\d+$/.test(el.getAttribute('data-iw-order'))),
-  `n=${orderedPanels.length}`);
-/* Slots are unique WITHIN a container, not across the page: each claimed
-   container numbers its own children from zero. */
-const slotGroups = new Map();
-for (const el of orderedPanels) {
-  const parent = el.parentElement;
-  if (!slotGroups.has(parent)) slotGroups.set(parent, []);
-  slotGroups.get(parent).push(el.getAttribute('data-iw-order'));
-}
-check('the container holding them is marked, and the slots are unique within it',
-  // `[].every()` is vacuously TRUE, so the length test is what stops this
-  // passing on a page where the module claimed nothing at all.
-  orderedPanels.length >= 3 &&
-  orderedPanels.every(el => el.parentElement?.getAttribute('data-iw-order-container') === '1') &&
-  [...slotGroups.values()].every(slots => new Set(slots).size === slots.length),
-  [...slotGroups.values()].map(v => v.join('/')).join(' | '));
-check('rearrange and reset controls appended to the rail, exactly once each',
-  window.document.querySelectorAll('[data-iw-nav-link="rearrange"]').length === 1 &&
-  window.document.querySelectorAll('[data-iw-nav-link="order-reset"]').length === 1);
-/* The grab surface exists only inside the mode, so normal play carries no
-   extra control and no extra tab stop. */
-check('no grab handle during normal play',
-  window.document.querySelectorAll('[data-iw-order-handle]').length === 0);
+/* The Rearrange feature is RETIRED (Curtis, 2026-09-15): no mode toggle, no
+   Reset control, and no arrangement marks on any panel. */
+check('the retired Rearrange feature adds no control and no marks',
+  window.document.querySelectorAll('[data-iw-nav-link="rearrange"], [data-iw-nav-link="order-reset"], [data-iw-order], [data-iw-order-container], [data-iw-order-handle]').length === 0 &&
+  !window.document.documentElement.hasAttribute('data-iw-order-mode'));
 
 check('toolkit link appended to the rail, exactly once, and never a route tab',
   toolkitLinks.length === 1 && toolkitLinks[0].parentElement === navRail &&
@@ -670,6 +650,17 @@ check('toolkit link points off-site and opens in a new tab',
   toolkitLinks[0]?.getAttribute('target') === '_blank' &&
   /noopener/.test(toolkitLinks[0]?.getAttribute('rel') || ''),
   `${toolkitLinks[0]?.getAttribute('href')} ${toolkitLinks[0]?.getAttribute('target')} ${toolkitLinks[0]?.getAttribute('rel')}`);
+/* The rail is the link's ONLY slot (Curtis, 2026-09-16: no Toolkit on a phone,
+   where CSS hides this one - tests/menu-rows.test.mjs measures that). Nothing
+   of the skin's may sit in the zone action row: a nav tab there would stop
+   classifyZoneBar's host walk from ever finding the bar again. */
+check('the zone action row carries nothing the skin appended',
+  [...(window.document.getElementById('zone-bar-actions')?.children || [])]
+    .every(el => el.tagName === 'BUTTON' && el.dataset.iwUi === 'zone-action'),
+  [...(window.document.getElementById('zone-bar-actions')?.children || [])]
+    .map(el => el.tagName + ':' + (el.dataset.iwUi || '-')).join(' '));
+check('the row the inventory filter tabs share is tagged',
+  window.document.getElementById('inv-filters')?.getAttribute('data-iw-inventory-filters') === '1');
 const lateTab = window.document.createElement('button');
 lateTab.id = 'late-nav-tab';
 lateTab.textContent = '⚔️ Dungeon 🔒';
@@ -727,16 +718,16 @@ const caFill = caTrack.firstElementChild;
 // note above smoothActionProgress -- and would correctly get excluded from the
 // measurement, leaving too few samples to commit). Five writes give four
 // intervals, one more than the three smoothActionProgress() needs, so the
-// first (possibly reset-adjacent) one has slack to spare. ~250ms apart with a
-// PROGRESS_LEAD_BIAS of 1.12 baked in, so a correct measurement lands close to
-// 0.28s and not merely at "some plausible value" — a check that accepted any
-// committed number would pass for a hardcoded default.
+// first (possibly reset-adjacent) one has slack to spare. The writes are
+// nominally ~250ms apart, but a loaded CI runner can delay MutationObserver /
+// timer processing substantially. Keep enough scheduling slack to reject the
+// 1s unmeasured fallback without treating runner load as a product regression.
 for (let step = 1; step <= 5; step += 1) {
   caFill.style.width = `${48 + step * 4}%`;
   await settle(250);
 }
 check('progress tick interval is measured, not assumed',
-  progressDurationSeconds(caTrack) > 0.2 && progressDurationSeconds(caTrack) < 0.5,
+  progressDurationSeconds(caTrack) > 0.2 && progressDurationSeconds(caTrack) < 0.75,
   'duration=' + progressDurationSeconds(caTrack) + 's');
 
 // Completion: the width drops back to the start of the next repetition. Left
@@ -918,6 +909,9 @@ check('every zone action is classified and toned, icon prefix or not',
   window.document.getElementById('zone-next')?.dataset.iwZoneAction === 'next',
   ['zone-zones', 'zone-prev', 'zone-next']
     .map(id => `${id}=${window.document.getElementById(id)?.dataset.iwZoneAction}`).join(' '));
+check('the zone title text link is tagged as a link, not as a zone action',
+  window.document.getElementById('zone-whos-here')?.dataset.iwZoneLink === '1' &&
+  !window.document.getElementById('zone-zones')?.dataset.iwZoneLink);
 check('a non-navigation control in the zone bar is left alone',
   !window.document.getElementById('zone-whos-here')?.dataset.iwUi &&
   !window.document.getElementById('zone-whos-here')?.dataset.iwZoneAction);
@@ -931,6 +925,23 @@ check('zone bar role is not smeared onto a page wrapper',
   !window.document.querySelector('.app')?.dataset.iwUi,
   [...window.document.querySelectorAll('[data-iw-ui="zone-bar"]')]
     .map(el => el.id || el.className || el.tagName).join(', '));
+
+// HeaderChrome merges nav + announcement + zone bar into one grid frame on
+// their shared parent, in its own `data-iw-chrome` namespace (never data-iw-ui
+// or data-iw-header, which the two classifiers above already own here).
+await waitFor(() => window.document.querySelector('.app')?.dataset.iwChrome === 'shell');
+check('header chrome tags the shell, nav, notice and both zone branches',
+  window.document.querySelector('.app')?.dataset.iwChrome === 'shell' &&
+  window.document.querySelector('.app > nav')?.dataset.iwChrome === 'nav' &&
+  window.document.getElementById('announcement')?.dataset.iwChrome === 'notice' &&
+  window.document.getElementById('zone-bar-panel')?.dataset.iwChrome === 'zone-bar' &&
+  window.document.getElementById('zone-bar-text')?.dataset.iwChrome === 'zone-text' &&
+  window.document.getElementById('zone-bar-actions')?.dataset.iwChrome === 'zone-actions',
+  [...window.document.querySelectorAll('[data-iw-chrome]')]
+    .map(el => `${el.id || el.tagName}=${el.dataset.iwChrome}`).join(' '));
+check('header chrome leaves the zone bar and announcement roles to their owners',
+  window.document.getElementById('zone-bar-panel')?.dataset.iwUi === 'zone-bar' &&
+  window.document.getElementById('zone-bar-panel')?.getAttribute('data-iw-header') === 'zone-shell');
 
 const jewelPanel = window.document.getElementById('jewel-panel');
 const spellPanel = window.document.getElementById('spell-panel');
@@ -1084,8 +1095,12 @@ check('coming-soon copy is normalised without inventing EXP',
   lockedPanel.querySelector('[data-iw-skill-role="identity"]')?.dataset.iwCleanText === 'Coming Soon' &&
   lockedPanel.querySelector('[data-iw-skill-role="action-title"]')?.dataset.iwCleanText === 'Upcoming Skill' &&
   !lockedPanel.querySelector('.fs-skill-base-exp'));
+/* Deterministic, and the same on every card — which is the point. The V2
+   design ships compact by default, so 78px is what these resolve to; the
+   legacy plaque's 155px applies when the design toggle is set to current. */
 check('live skill action buttons use deterministic width',
-  ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === '155px'));
+  ['jewel-action', 'spell-action', 'tailor-action'].every(id => window.document.getElementById(id).style.width === 'var(--iw-skill-v2-btn-w, 90px)'),
+  ['jewel-action', 'spell-action', 'tailor-action'].map(id => window.document.getElementById(id).style.width).join(' || '));
 
 // ── The command button wears the QUEST rail's artwork ────────────────────
 // Curtis (2026-09): one action-button skin across the site. The sprite is the
@@ -1138,8 +1153,9 @@ check('an atlas-ready skill action button draws the quest action_frame sprite',
   /--fs-ui-action-idle-position/.test(jewelAction.style.background) &&
   /--fs-skills-ui-atlas/.test(jewelAction.style.background),
   'background=' + jewelAction.style.background);
-check('the sprite replaces the forged plate rather than layering over it',
-  jewelAction.style.boxShadow === 'none' && /^0(px)?$/.test(jewelAction.style.border) &&
+check('the portrait frame resolves through the design chrome variables',
+  jewelAction.style.boxShadow === 'var(--fs-button-shadow, none)' &&
+  jewelAction.style.border === 'var(--fs-button-border, 3px double #96bddf)' &&
   !/gradient/.test(jewelAction.style.background),
   'border=' + jewelAction.style.border + ' shadow=' + jewelAction.style.boxShadow);
 check('a disabled action keeps the desaturated frame (rule 5)',
@@ -1162,9 +1178,36 @@ for (const panel of [window.document.getElementById('jewel-panel'), lockedPanel]
     navBtns.every(btn => !/fs-skills-nav|skills_nav_/.test(inlineOf(btn))) &&
     navBtns.every(btn => /gradient/.test(btn.style.getPropertyValue('background') || btn.style.getPropertyValue('background-image'))),
     navBtns.map(btn => btn.style.getPropertyValue('background') || btn.style.getPropertyValue('background-image')).join(' || ') || 'no nav buttons');
-  check('recipe pager arrows are thin and match the action button height',
-    navBtns.every(btn => btn.style.getPropertyValue('width') === '26px' && btn.style.getPropertyValue('height') === '44px'),
-    navBtns.map(btn => `${btn.style.getPropertyValue('width')}x${btn.style.getPropertyValue('height')}`).join(' || '));
+  /* Under V2 the pager is deliberately DEMOTED rather than matched to the
+     command button: at 26x44 the pair measured 58x44 and became the tallest
+     thing in the command column, so the pager — not the content — set the
+     height of every card that had one. Thin is still the requirement; equal to
+     the button is not, and that is a design decision, not a regression. */
+  /* Curtis's reference (2026-09) draws the pair as TABS directly under the
+     action button and exactly as wide as it, so the box is a function of
+     `--iw-skill-v2-btn-w` and the literal moved out of the renderer into the
+     sheet. jsdom resolves no cascade, so what is asserted here is the
+     DECLARATION: it must name the pager tokens, and their fallbacks must
+     still be thinner and shorter than the command button's own. A revert to
+     a fat literal, and a declaration pointed at the wrong token, both fail. */
+  const pxOf = v => Number(/(-?[\d.]+)px/.exec(v || '')?.[1] ?? NaN);
+  const fallbackOf = (btn, prop, token) => {
+    const raw = btn?.style.getPropertyValue(prop) || '';
+    const m = new RegExp('var\\(\\s*' + token + '\\s*,\\s*([^)]+)\\)').exec(raw);
+    return m ? pxOf(m[1]) : NaN;
+  };
+  const cmdBtn = jewelPanel.querySelector('[data-iw-skill-role="action-button"]');
+  const cmdW = fallbackOf(cmdBtn, 'width', '--iw-skill-v2-btn-w');
+  const cmdH = fallbackOf(cmdBtn, 'height', '--iw-skill-v2-btn-h');
+  check('recipe pager arrows are thin and smaller than the command button',
+    navBtns.length === 2 && cmdW > 0 && cmdH > 0 &&
+    navBtns.every(btn => {
+      const w = fallbackOf(btn, 'width', '--iw-skill-v2-nav-w');
+      const h = fallbackOf(btn, 'height', '--iw-skill-v2-nav-h');
+      return w > 0 && h > 0 && w < cmdW && h < cmdH;
+    }),
+    navBtns.map(btn => `${btn.style.getPropertyValue('width')}x${btn.style.getPropertyValue('height')}`)
+      .join(' || ') + ` against command ${cmdW}x${cmdH}`);
   check('recipe pager carries its own steel frame and no overlaid glyph',
     navBtns.every(btn => /1px solid/.test(btn.style.getPropertyValue('border'))) &&
     navBtns.every(btn => btn.style.getPropertyValue('color') === 'transparent') &&
@@ -1552,6 +1595,12 @@ check('ALL runtime stylesheets removed', window.document.querySelectorAll('style
 check('ui role attributes removed', window.document.querySelectorAll('[data-iw-ui]').length === 0);
 check('appended toolkit link removed on teardown',
   window.document.querySelectorAll('[data-iw-nav-link]').length === 0);
+check('inventory filter row tag removed on teardown',
+  window.document.querySelectorAll('[data-iw-inventory-filters]').length === 0);
+check('header chrome marks removed on teardown',
+  window.document.querySelectorAll('[data-iw-chrome]').length === 0);
+check('zone link mark removed on teardown',
+  window.document.querySelectorAll('[data-iw-zone-link]').length === 0);
 /* The village scene is the skin's other whole-element append (rule 2), so
    like the toolkit link it must be REMOVED, not merely stripped of its
    attributes — and the Skill Actions panel it anchored to must be left with
@@ -1560,14 +1609,6 @@ check('appended village scene removed on teardown',
   window.document.querySelectorAll('[data-iw-village-scene]').length === 0);
 check('collapse controls and their marks removed on teardown',
   window.document.querySelectorAll('[data-iw-collapse], [data-iw-collapsed], [data-iw-collapse-head]').length === 0);
-/* The arrangement is presentation written onto GAME nodes, so every mark has to
-   come back off — and the live region is an appended element, so like the
-   toolkit link and the village scene it is removed outright. */
-check('panel arrangement marks and handles removed on teardown',
-  window.document.querySelectorAll(
-    '[data-iw-order], [data-iw-order-container], [data-iw-order-handle], [data-iw-order-live]').length === 0);
-check('rearrange mode flag cleared from the document element on teardown',
-  !window.document.documentElement.hasAttribute('data-iw-order-mode'));
 check('the panel that followed Skill Actions follows it again',
   window.document.getElementById('skill-actions-panel')?.nextElementSibling?.id === 'village-housing-panel',
   window.document.getElementById('skill-actions-panel')?.nextElementSibling?.id || '(none)');

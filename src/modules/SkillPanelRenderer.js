@@ -224,6 +224,15 @@ const BUTTON_STYLES = {
   },
 };
 
+/* True when this command button belongs to a card rendered in the V2 design.
+   Both halves matter: the root attribute is the player's design choice and the
+   panel attribute is whether this particular card was re-identified as a skill
+   card at all. */
+function compactCommandButton(btn) {
+  return document.documentElement?.dataset?.iwSkillCardDesign === 'new'
+    && !!btn.closest?.('[data-iw-skill-v2="1"]');
+}
+
 function styleButton(btn) {
   const role = btn.getAttribute(ROLE_ATTR) || '';
   // Live IdleWorlds renders the level/XP datum as a real <button>. It is data,
@@ -244,10 +253,16 @@ function styleButton(btn) {
   const art = role === 'action-button' && btn.closest('[data-iw-skills-ui-ready="1"]')
     ? ACTION_ART[state === 'disabled' ? 'disabled' : 'idle']
     : null;
+  // The design toggle changes the command button's GEOMETRY (see the
+  // action-button branch below) while state, role and the style attribute can
+  // all be unchanged at the moment it flips, so it belongs in the key for the
+  // same reason atlas readiness already does.
+  const compact = compactCommandButton(btn);
   const currentStyle = btn.getAttribute('style') || '';
   const previous = buttonStyleSnapshots.get(btn);
   if (previous && previous.state === state && previous.role === role &&
-      previous.art === !!art && previous.style === currentStyle) return;
+      previous.art === !!art && previous.compact === compact &&
+      previous.style === currentStyle) return;
 
   for (const [prop, value] of Object.entries(BUTTON_STYLES.base)) {
     setOwnedStyle(buttonStyleOwner, btn, prop, value);
@@ -273,14 +288,26 @@ function styleButton(btn) {
     //     and the classified-state gradient from BUTTON_STYLES.
     // NAV_BUTTON_W is below the suite's usual 44px target on the minor axis
     // only; height stays 44 and 26x44 clears WCAG 2.5.8 (24x24).
-    setOwnedStyle(buttonStyleOwner, btn, 'width', NAV_BUTTON_W);
-    setOwnedStyle(buttonStyleOwner, btn, 'min-width', NAV_BUTTON_W);
-    setOwnedStyle(buttonStyleOwner, btn, 'height', '44px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '44px');
+    // Under the V2 design the pager is demoted to a secondary control beside a
+    // compact command button, and its box has to shrink HERE for the same
+    // reason the command button's does: these are inline `!important`. At
+    // 26x44 the two chevrons measured 58x44 together and became the tallest
+    // thing in the command column, so the pager — not the content — set the
+    // height of every card that has one.
+    //
+    // Every compact value is a TOKEN rather than a literal. Curtis's reference
+    // draws the two arrows as a pair of tabs directly under the action button
+    // and exactly as wide as it, so their width is a function of
+    // `--iw-skill-v2-btn-w` and has to move whenever that does — which only
+    // the sheet knows, and which an inline literal would silently outrank.
+    setOwnedStyle(buttonStyleOwner, btn, 'width', compact ? 'var(--iw-skill-v2-nav-w, 39px)' : NAV_BUTTON_W);
+    setOwnedStyle(buttonStyleOwner, btn, 'min-width', compact ? 'var(--iw-skill-v2-nav-w, 39px)' : NAV_BUTTON_W);
+    setOwnedStyle(buttonStyleOwner, btn, 'height', compact ? 'var(--iw-skill-v2-nav-h, 22px)' : '44px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-height', compact ? 'var(--iw-skill-v2-nav-h, 22px)' : '44px');
     setOwnedStyle(buttonStyleOwner, btn, 'padding', '0');
     setOwnedStyle(buttonStyleOwner, btn, 'background', `var(--fs-button-background, ${FORGE.bg})`);
     setOwnedStyle(buttonStyleOwner, btn, 'border', `var(--fs-button-border, ${FORGE.border})`);
-    setOwnedStyle(buttonStyleOwner, btn, 'border-radius', '2px');
+    setOwnedStyle(buttonStyleOwner, btn, 'border-radius', compact ? 'var(--iw-skill-v2-nav-radius, 2px)' : '2px');
     setOwnedStyle(buttonStyleOwner, btn, 'box-shadow', `var(--fs-button-shadow, ${FORGE.shadow})`);
     setOwnedStyle(buttonStyleOwner, btn, 'color', 'transparent');
     setOwnedStyle(buttonStyleOwner, btn, 'font-size', '0');
@@ -289,15 +316,38 @@ function styleButton(btn) {
     // and 44px is the touch-target floor, so 155x44 is the undistorted size.
     // These are inline `!important`, so a disagreement here silently overrides
     // the stylesheet rather than losing to it.
-    setOwnedStyle(buttonStyleOwner, btn, 'width', '155px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-width', '155px');
-    setOwnedStyle(buttonStyleOwner, btn, 'height', '44px');
-    setOwnedStyle(buttonStyleOwner, btn, 'min-height', '44px');
-    setOwnedStyle(buttonStyleOwner, btn, 'padding', '0 12px');
+    //
+    // The V2 design asks for a compact, portrait command button instead of the
+    // wide plaque, and its geometry has to be written HERE for the same reason:
+    // no stylesheet can outrank an inline `!important`. The FILL is still the
+    // stylesheet's, because the art map paints through
+    // `var(--fs-button-background, …)` and an inline `var()` resolves against
+    // the cascade — so skillcard-v2.css re-points that one custom property and
+    // never has to fight this declaration. `compact` is part of the snapshot
+    // key below, so flipping the design toggle re-runs this.
+    setOwnedStyle(buttonStyleOwner, btn, 'width', compact ? 'var(--iw-skill-v2-btn-w, 90px)' : '155px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-width', compact ? 'var(--iw-skill-v2-btn-w, 90px)' : '155px');
+    setOwnedStyle(buttonStyleOwner, btn, 'height', compact ? 'var(--iw-skill-v2-btn-h, 94px)' : '44px');
+    setOwnedStyle(buttonStyleOwner, btn, 'min-height', compact ? 'var(--iw-skill-v2-btn-h, 94px)' : '44px');
+    /* A token, like the box: the sheet derives it from the icon, the label and
+       the button height so the icon and label sit centred as one group, and a
+       discipline with no icon centres its label alone. */
+    setOwnedStyle(buttonStyleOwner, btn, 'padding', compact ? 'var(--iw-skill-v2-btn-pad, 44px 4px 8px)' : '0 12px');
+    if (compact) {
+      /* The base map writes the label's type inline for every button; a compact
+         button is too narrow for 12px at .09em, so both are tokens here. */
+      setOwnedStyle(buttonStyleOwner, btn, 'font-size', 'var(--iw-skill-v2-btn-font, 12px)');
+      setOwnedStyle(buttonStyleOwner, btn, 'letter-spacing', 'var(--iw-skill-v2-btn-tracking, 0.09em)');
+    }
+    if (compact) {
+      setOwnedStyle(buttonStyleOwner, btn, 'border', 'var(--fs-button-border, 3px double #96bddf)');
+      setOwnedStyle(buttonStyleOwner, btn, 'box-shadow', 'var(--fs-button-shadow, none)');
+      setOwnedStyle(buttonStyleOwner, btn, 'border-radius', '8px');
+    }
   }
 
   if (btn.dataset.iwBtnState !== state) btn.dataset.iwBtnState = state;
-  buttonStyleSnapshots.set(btn, { state, role, art: !!art, style: btn.getAttribute('style') || '' });
+  buttonStyleSnapshots.set(btn, { state, role, art: !!art, compact, style: btn.getAttribute('style') || '' });
 }
 
 // Thin flanking pager buttons. Width is the minor axis; height stays 44px.
@@ -484,21 +534,80 @@ function pointAtTextOffset(root, targetOffset) {
   return null;
 }
 
+/**
+ * Offsets into `root.textContent` at which a NEW element's own text begins.
+ *
+ * `textContent` concatenates every descendant text node with no separator of
+ * any kind — no newline, no space — so a run of sibling elements reads as one
+ * unbroken string. These offsets put the element boundaries back, which is the
+ * only anchor that survives a card whose materials are separate nodes.
+ */
+function elementTextStarts(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const starts = [];
+  let offset = 0;
+  let lastParent = null;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.parentElement !== lastParent) {
+      starts.push(offset);
+      lastParent = node.parentElement;
+    }
+    offset += node.nodeValue?.length || 0;
+  }
+  return starts;
+}
+
+/**
+ * Where the material that owns the count at `matchIndex` STARTS.
+ *
+ * The anchors used to be `•` and `\n` alone, which is only ever right for the
+ * one shape every fixture in this repo carried: all the materials on one line,
+ * inside ONE text node, separated by bullets. Neither anchor is reliable live.
+ * docs/traps quotes the game's own lines with an EMOJI per material instead
+ * ("📦 Bloodstone Building Parts 298/2600", "💠 Night Claw 22/100"), and
+ * `textContent` never inserts a newline between elements, so a card that ships
+ * its materials as separate nodes has no `\n` anywhere in the string either.
+ * Both cases make `lastIndexOf` return -1 and every entry start at offset 0, so
+ * each cell held the whole run-up to its own count and the last one held the
+ * card's copy run together with no separators — which is what the columns of
+ * repeated text in Curtis's 2026-09-16 capture are made of, wrapped mid-number
+ * by the body row's `overflow-wrap: anywhere`.
+ *
+ * Two anchors that are ALWAYS present fix it: the end of the previous count,
+ * so entries can never overlap, and the element boundary, so a material in its
+ * own node is its own entry. Both are floors, so the bullet and the newline
+ * still win wherever the game does provide them.
+ */
+function entryStart(text, starts, matchIndex, previousEnd) {
+  const bulletStart = text.lastIndexOf('•', matchIndex - 1) + 1;
+  const lineStart = text.lastIndexOf('\n', matchIndex - 1) + 1;
+  let elementStart = 0;
+  for (const offset of starts) {
+    if (offset > matchIndex) break;
+    elementStart = offset;
+  }
+  return Math.max(bulletStart, lineStart, elementStart, previousEnd);
+}
+
 function completedIngredientRanges(root) {
   const text = root.textContent || '';
+  const elementStarts = elementTextStarts(root);
   const ranges = [];
   INGR_COUNT_PATTERN.lastIndex = 0;
 
   let match;
+  let previousEnd = 0;
   while ((match = INGR_COUNT_PATTERN.exec(text))) {
+    const matchEnd = match.index + match[0].length;
+    const start0 = entryStart(text, elementStarts, match.index, previousEnd);
+    previousEnd = matchEnd;
+
     const owned = Number(match[1].replaceAll(',', ''));
     const required = Number(match[2].replaceAll(',', ''));
     if (!Number.isFinite(owned) || !Number.isFinite(required) || owned < required) continue;
 
-    const bulletStart = text.lastIndexOf('•', match.index - 1) + 1;
-    const lineStart = text.lastIndexOf('\n', match.index - 1) + 1;
-    let start = Math.max(bulletStart, lineStart);
-    let end = match.index + match[0].length;
+    let start = start0;
+    let end = matchEnd;
     while (start < end && /\s/.test(text[start])) start += 1;
     while (end > start && /\s/.test(text[end - 1])) end -= 1;
 
@@ -517,20 +626,23 @@ function completedIngredientRanges(root) {
 
 function ingredientEntries(root) {
   const text = root.textContent || '';
+  const elementStarts = elementTextStarts(root);
   const entries = [];
   INGR_COUNT_PATTERN.lastIndex = 0;
 
   let match;
+  let previousEnd = 0;
   while ((match = INGR_COUNT_PATTERN.exec(text))) {
+    const matchEnd = match.index + match[0].length;
+    const start = entryStart(text, elementStarts, match.index, previousEnd);
+    previousEnd = matchEnd;
+
     const owned = Number(match[1].replaceAll(',', ''));
     const required = Number(match[2].replaceAll(',', ''));
     if (!Number.isFinite(owned) || !Number.isFinite(required)) continue;
 
-    const bulletStart = text.lastIndexOf('•', match.index - 1) + 1;
-    const lineStart = text.lastIndexOf('\n', match.index - 1) + 1;
-    const start = Math.max(bulletStart, lineStart);
     entries.push({
-      text: text.slice(start, match.index + match[0].length).trim(),
+      text: text.slice(start, matchEnd).trim(),
       state: owned >= required ? 'met' : 'unmet',
     });
   }
@@ -639,6 +751,17 @@ function clearIngredientLists(panel) {
 function neutraliseIngredients(panel) {
   for (const el of panel.querySelectorAll('div, span, p')) {
     if (el.closest('[data-iw-skill-ingredient-list="1"]')) continue;
+    /* The V2 collapsed summary REPEATS a material line verbatim when a recipe
+       has exactly one ("Moonsilk 0/8"), so it matches INGR_PATTERN and was
+       being marked as a second ingredient SOURCE — which built a second grid
+       after it, grew the card, flushed, and tore the grid down again. Measured
+       on an expanded card: the height alternated 213.5 / 156.6 every frame
+       forever, and `tests/flush-quiescence.test.mjs` could not see it because
+       its fixture has no expanded card with materials. A skin-owned node is
+       never one of the game's ingredient lines. The expanded BODY repeats the
+       same text for the same reason, so it is excluded by the same guard —
+       measured, a body of six material rows was producing twelve. */
+    if (el.closest('[data-iw-skill-v2-summary], [data-iw-skill-v2-body], [data-iw-skill-v2-controls]')) continue;
     if (el.tagName === 'BUTTON' || el.closest('button, a, [role="button"]')) continue;
     if (el.childElementCount > 3) continue;
     const text = normText(el.textContent);
@@ -718,8 +841,15 @@ let lastCandidates = null;
 
 function textCandidates(panel) {
   if (lastCandidatePanel === panel) return lastCandidates;
+  // The V2 tab strip is a skin-owned control appended INTO the content branch
+  // so its tabs can sit above the section they reveal. Its tab labels are spans
+  // carrying words like "Materials" and "Rewards", which is exactly the shape
+  // this sweep resolves roles from — without the exclusion a tab can be chosen
+  // as the card's requirement or reward line, and the symptom appears in a
+  // different module from the cause. Same opt-out rule the generic control
+  // rule and the collapse toggle already document.
   const candidates = [...panel.querySelectorAll('h1,h2,h3,h4,div,span,p')]
-    .filter(el => !el.closest('button, a'))
+    .filter(el => !el.closest('button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body]'))
     .filter(el => normText(el.textContent).length <= 130)
     .sort((a, b) => Number(isPresentationHidden(a)) - Number(isPresentationHidden(b)));
   lastCandidatePanel = panel;
@@ -783,7 +913,8 @@ const structureSignatures = new WeakMap();
  * of that was forced layout, re-deriving roles that had not moved.
  *
  * Blanking digit runs keeps every signal the walk actually depends on: which
- * buttons exist, their disabled state, and their non-numeric labels. A real
+ * buttons exist, their non-numeric labels, and - on a locked card only - their
+ * disabled state. A real
  * structural change still moves the signature — Mine -> Fish, an action button
  * appearing or being relabelled, a pager arriving. Only "the same control
  * showing a different number" stops re-triggering it.
@@ -796,8 +927,18 @@ const structureSignatures = new WeakMap();
 const structureText = value => normText(value).replace(/\d[\d,.]*/g, '#');
 
 function structureSignature(panel, type) {
+  // `disabled` decides a role ONLY for a locked card (its action button is
+  // "the disabled one"). Everywhere else it is button STATE, which styleButton
+  // repaints on every pass. Keeping it in the key made the game's busy toggle -
+  // every action button on the page disabled while a request is in flight, then
+  // re-enabled - strip and re-derive every role on every card, and the
+  // re-derivation reads layout of the stripped card: Chrome scroll-anchored on
+  // that transient layout and jumped the window ~17px per toggle (live,
+  // 2026-09-16, "clicking Prejoin scrolls the page up").
+  // tests/flush-quiescence.test.mjs "Busy toggle" pins it.
+  const keyDisabled = type === 'locked';
   const buttonState = [...panel.querySelectorAll('button')].map(btn => {
-    const disabled = (btn.disabled || btn.getAttribute('aria-disabled') === 'true') ? '1' : '0';
+    const disabled = keyDisabled && (btn.disabled || btn.getAttribute('aria-disabled') === 'true') ? '1' : '0';
     return `${disabled}:${structureText(btn.textContent)}:${structureText(btn.getAttribute('aria-label'))}`;
   }).join('|');
   return `${type} ${panel.childElementCount} ${buttonState}`;
@@ -1061,6 +1202,27 @@ function annotateStructure(panel, type, meta) {
       // known presentation-only node (and is hidden in the redesigned layout),
       // so it must not make an otherwise valid three-zone card fall back.
       if (el.matches?.(`[${ROLE_ATTR}="progress-track"]`) || el.querySelector?.(`[${ROLE_ATTR}="progress-track"]`)) return false;
+      // The V2 design adds its own ROWS to this shell — the tab strip and the
+      // expanded body — so that expanding a card creates new grid rows instead
+      // of growing the summary column. They are the skin's own nodes and are
+      // in flow by design, so without this they would read as an unknown
+      // visible branch and make the card refuse the three-zone layout
+      // OUTRIGHT: no medallion, no grid, no pager, no studs. The symptom is
+      // "the skin didn't reach this card", which is why it is excluded here
+      // rather than made absolute.
+      if (el.matches?.('[data-iw-skill-v2-row]')) return false;
+      // The V2 action icon, when the game ships the button as the shell's own
+      // child, is appended NEXT to it - in this shell. It is out of flow, but
+      // only because of rules that require `data-iw-skill-layout`, and this is
+      // the very test that decides whether that attribute is set. clearStructure-
+      // Roles deletes it first, so on any re-annotation (an action button going
+      // disabled, a relabel) the icon is an unstyled block here, and any host
+      // style that gives it a few pixels makes it "an unknown visible branch".
+      // The card then refuses the layout for good, because the icon is never
+      // removed: reported live (Curtis, 2026-09) as Smithing and Alchemy
+      // rendering in the old theme. Excluded by NAME, like the rows above,
+      // never by its computed style - that style is downstream of this answer.
+      if (el.matches?.('[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label]')) return false;
       try {
         const cs = getComputedStyle(el);
         if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position === 'absolute' || cs.position === 'fixed') return false;
