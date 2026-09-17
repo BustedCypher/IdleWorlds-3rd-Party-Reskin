@@ -51,10 +51,28 @@ function labelText(el) {
  * div with an explicit role), and a bare `h1..h4` is the last resort for a
  * panel whose heading never classified.
  */
-function frameTitle(frame) {
-  return frame.querySelector('[data-iw-ui="section-title"]')
-    || frame.querySelector('[role="heading"]')
-    || frame.querySelector('h1, h2, h3, h4');
+function frameTitle(frame, found = frameLandmarks(frame)) {
+  return found.sectionTitle || found.roleHeading || found.heading;
+}
+
+/**
+ * The first of each landmark inside a frame, from ONE subtree walk.
+ *
+ * frameTitle and frameKey used to issue up to four separate queries per frame
+ * per pass - and the `[data-iw-panel]` one misses on almost every frame, which
+ * walks the whole subtree (the inventory frame alone is ~6k nodes). Matches come
+ * back in document order, so the first of each kind is exactly what each
+ * separate querySelector returned.
+ */
+function frameLandmarks(frame) {
+  const found = { sectionTitle: null, roleHeading: null, heading: null, panel: null };
+  for (const el of frame.querySelectorAll('[data-iw-ui="section-title"], [role="heading"], h1, h2, h3, h4, [data-iw-panel]')) {
+    if (!found.sectionTitle && el.getAttribute('data-iw-ui') === 'section-title') found.sectionTitle = el;
+    if (!found.roleHeading && el.getAttribute('role') === 'heading') found.roleHeading = el;
+    if (!found.heading && /^H[1-4]$/.test(el.tagName)) found.heading = el;
+    if (!found.panel && el.hasAttribute('data-iw-panel')) found.panel = el;
+  }
+  return found;
 }
 
 /**
@@ -131,11 +149,11 @@ function collapseTarget(frame) {
  * reworded heading therefore forgets that panel's state, which resets it to
  * expanded — the safe direction — rather than folding the wrong panel.
  */
-function frameKey(target, title) {
+function frameKey(target, title, found = frameLandmarks(target)) {
   // The slug may sit on an inner host rather than on the card itself — see
   // collapseTarget() — so look inside as well as at the target.
   const slug = target.dataset.iwPanel
-    || target.querySelector('[data-iw-panel]')?.dataset.iwPanel;
+    || found.panel?.dataset.iwPanel;
   if (slug) return `panel:${slug}`;
   const name = labelText(title).toLowerCase();
   return name ? `title:${name}` : null;
@@ -211,16 +229,21 @@ function ensureToggle(head, frame, key, name) {
 
 export function decorateCollapsibleFrames(root = document) {
   void loadPreferences();
-  const frames = [...root.querySelectorAll(FRAME)].filter(frame => !frame.querySelector(FRAME));
+  // Leaf frames only. The list is in document order, so a frame holds another
+  // frame exactly when the NEXT frame in the list is inside it - one contains()
+  // instead of a FRAME query over every frame's whole subtree each pass.
+  const all = [...root.querySelectorAll(FRAME)];
+  const frames = all.filter((frame, i) => !(all[i + 1] && frame.contains(all[i + 1])));
   // Two frames can resolve to one card (a `.panel` marked `section-frame` that
   // also holds an activity host), so dedupe on the TARGET or the second visit
   // appends a second toggle to the same box.
   const targets = new Set(frames.map(collapseTarget));
   const live = new Set();
   for (const target of targets) {
-    const title = frameTitle(target);
+    const found = frameLandmarks(target);
+    const title = frameTitle(target, found);
     const head = title ? headOf(target, title) : null;
-    const key = frameKey(target, title);
+    const key = frameKey(target, title, found);
     // No heading means no identity to remember and no row to leave behind,
     // so such a panel simply does not get a toggle rather than getting one
     // that folds it into an anonymous strip.

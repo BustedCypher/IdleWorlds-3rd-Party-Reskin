@@ -84,8 +84,17 @@ function isQuestCard(card) {
   // Cheap gate first so a flush over the skill / boss / village compact-panels
   // does not pay for the leaf sweep below. Skill panels say "Base reward:" but
   // never "Turn In" or "% complete".
+  //
+  // No `\b` here: `textContent` joins sibling elements with NO separator, and
+  // React ships no whitespace between them, so the live blob reads
+  // "…+900 smithing XPTurn InSkip" - there is no word boundary before "Turn" or
+  // after "complete". The old `\bturn\s*in\b` / `complete\b` gate rejected a
+  // real quest card whenever that was the case; it only passed where "N%
+  // complete" happened to be the card's last text, and every fixture here
+  // indents its markup, which adds the whitespace React does not. This is a
+  // prefilter only - the leaf and button tests below still decide.
   const bulk = card.textContent || '';
-  if (!/\bturn\s*in\b/i.test(bulk) && !/\d+%\s*complete\b/i.test(bulk)) return false;
+  if (!/turn\s*in/i.test(bulk) && !/\d+%\s*complete/i.test(bulk)) return false;
   const leaves = textLeaves(card);
   const hasReward = leaves.some(el => /^reward\s*:/i.test(normText(el.textContent)));
   if (!hasReward) return false;
@@ -295,16 +304,21 @@ function ensureDecoration(card, style, ref) {
   // glyph stays as the fallback when the item has no sprite / isn't loaded yet.
   let icon = sigil.querySelector(':scope > .fs-quest-sigil-icon');
   if (ref && ref.name && AtlasService.isReady()) {
-    if (!icon) {
-      icon = document.createElement('span');
-      icon.className = 'fs-quest-sigil-icon';
-      icon.setAttribute('aria-hidden', 'true');
-      sigil.appendChild(icon);
-    }
-    if (AtlasService.paint(icon, { id: ref.id, name: ref.name })) {
+    // Paint a DETACHED span and attach it only when the item has a sprite. The
+    // old order appended, failed to paint and removed again on every render
+    // for an objective with no sprite: two childList records inside the card,
+    // which re-queue it - a reconcile loop at frame rate on an idle page.
+    // A failed paint writes nothing, so painting off-DOM is safe.
+    // tests/flush-quiescence.test.mjs (quest-nosprite) pins it.
+    const target = icon || Object.assign(document.createElement('span'), { className: 'fs-quest-sigil-icon' });
+    if (AtlasService.paint(target, { id: ref.id, name: ref.name })) {
+      if (!icon) {
+        target.setAttribute('aria-hidden', 'true');
+        sigil.appendChild(target);
+      }
       if (sigil.dataset.iwQuestIcon !== '1') sigil.dataset.iwQuestIcon = '1';
     } else {
-      icon.remove();
+      icon?.remove();
       delete sigil.dataset.iwQuestIcon;
     }
   } else {

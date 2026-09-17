@@ -253,7 +253,11 @@ function applyMainNavState(tabs) {
   tabs.forEach((btn, index) => {
     const wasActive = btn.dataset.iwState === 'active';
     setRole(btn, 'nav-tab');
-    btn.dataset.iwTab = navLabelText(btn);
+    // Compared first: this runs on every classify pass, and a same-value
+    // attribute write still queues a record and re-matches `[data-iw-tab]` /
+    // `[data-iw-state]` selectors (2026-09-17: 5 writes per pass, every pass).
+    const tab = navLabelText(btn);
+    if (btn.dataset.iwTab !== tab) btn.dataset.iwTab = tab;
     const active = hasSemanticActive
       ? semanticActive[index]
       : hasRouteActive
@@ -261,8 +265,8 @@ function applyMainNavState(tabs) {
         : firstClassification
           ? warmActive[index]
           : wasActive;
-    if (active) btn.dataset.iwState = 'active';
-    else delete btn.dataset.iwState;
+    if (active) { if (!wasActive) btn.dataset.iwState = 'active'; }
+    else if ('iwState' in btn.dataset) delete btn.dataset.iwState;
   });
 }
 

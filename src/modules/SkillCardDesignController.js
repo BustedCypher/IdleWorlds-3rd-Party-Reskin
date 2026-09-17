@@ -253,8 +253,7 @@ function durationSeconds(value) {
   return Number(units[1] || 0) * 3600 + Number(units[2] || 0) * 60 + Number(units[3] || 0);
 }
 function currentActionRemaining() {
-  const hosts = [...document.querySelectorAll('[data-iw-panel="current-action"], [id="current-action-panel"]')];
-  const host = pickRendered(hosts);
+  const host = pickRendered([...document.querySelectorAll(CURRENT_ACTION_HOSTS)]);
   if (!host) return null;
   for (const el of host.querySelectorAll('time,span,p,strong,div')) {
     if (el.childElementCount || el.closest('[data-iw-panel-part="progress"]')) continue;
@@ -271,16 +270,48 @@ function clearLongActionTimer(panel, glyph = panel.querySelector('[data-iw-skill
   }
   delete panel.dataset.iwSkillV2LongAction;
 }
-function syncLongActionTimer(panel, glyph) {
+function syncLongActionTimer(panel, glyph, remaining = currentActionRemaining) {
   const running = !!actionButtonOf(panel)?.querySelector(FILL);
   if (!running) return clearLongActionTimer(panel, glyph);
-  const remaining = currentActionRemaining();
+  if (typeof remaining === 'function') remaining = remaining();
   const startedLong = panel.dataset.iwSkillV2LongAction === '1';
   if (!startedLong && !(remaining?.seconds > LONG_ACTION_SECONDS)) return clearLongActionTimer(panel, glyph);
   if (!remaining || !glyph) return;
   setData(panel, 'iwSkillV2LongAction', '1');
   if (!glyph.hasAttribute('data-iw-skill-v2-action-timer')) glyph.setAttribute('data-iw-skill-v2-action-timer', '1');
   setText(glyph, remaining.text);
+}
+/* The countdown ticks in the Current Action panel, not in the card, so
+   DOMWatcher's per-panel `iw:skill-panel` never fires for it: the card would
+   only re-read the clock when its OWN fill width stepped, which on a long craft
+   is every ~10s. A tick is a text mutation, so it reaches the flush events as a
+   root inside (or around) the Current Action host; re-sync the running cards
+   then. setText compares first, so the card's echo mutation settles at once.
+
+   Cost: both flush events reach this on EVERY flush - chat rows, log rows,
+   inventory ticks - and picking the rendered host is a `checkVisibility`, which
+   forces a style recalc. So the pure containment test runs first, against every
+   host candidate: only a flush that actually touches Current Action pays for
+   the rendered pick, and the remaining time is then read once for every card
+   rather than once per card. Measured on a 15k-node ticking page: ~30
+   visibility reads a second before, ~1 after. */
+const CURRENT_ACTION_HOSTS = '[data-iw-panel="current-action"], [id="current-action-panel"]';
+function touchesHost(roots, host) {
+  return roots.some(r => r === host || host.contains(r) || r?.contains?.(host));
+}
+function syncTimersOnTick(roots) {
+  if (!Array.isArray(roots) || !roots.length) return;
+  const candidates = [...document.querySelectorAll(CURRENT_ACTION_HOSTS)];
+  if (!candidates.some(host => touchesHost(roots, host))) return;
+  const host = pickRendered(candidates);
+  if (!host || !touchesHost(roots, host)) return;
+  let remaining;
+  const readOnce = () => (remaining === undefined ? (remaining = currentActionRemaining()) : remaining);
+  document.querySelectorAll('.compact-panel.fs-skill-panel[data-iw-skill-v2]').forEach(panel => {
+    if (!panel.isConnected) return;
+    if (panel.dataset.iwSkillV2LongAction !== '1' && !actionButtonOf(panel)?.querySelector(FILL)) return;
+    syncLongActionTimer(panel, panel.querySelector('[data-iw-skill-v2-action-glyph]'), readOnce);
+  });
 }
 
 function fitActionLabel(panel) {
@@ -488,6 +519,9 @@ function bindOnce() {
   bound = true;
   on('iw:skill-panel', e => {
     if (active && isRuntimeActive()) guard('skill-v2:panel', () => reconcile(e.detail?.panel, e.detail?.skill));
+  });
+  for (const type of ['iw:name-scan-flush', 'iw:dom-flush']) on(type, e => {
+    if (active && isRuntimeActive()) guard('skill-v2:action-timer', () => syncTimersOnTick(e.detail?.roots));
   });
 }
 export function initSkillCardDesignController() {

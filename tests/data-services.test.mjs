@@ -153,4 +153,69 @@ for (let level = 1; level <= 4; level += 1) {
     `+${level} enhancement art must use gear atlas index ${level - 1}`);
 }
 
+// 4) Revalidation. items.json is ~5.5 MB; an unchanged table must not be
+//    re-parsed or written back to storage on every page load.
+{
+  const writes = [];
+  const realSet = chrome.storage.local.set;
+  chrome.storage.local.set = async bag => { writes.push(...Object.keys(bag)); return realSet(bag); };
+  const headers = map => ({ get: name => map[name.toLowerCase()] ?? null });
+  const V1 = { etag: 'W/"53e2e7-1"', 'last-modified': 'Wed, 16 Sep 2026 13:08:48 GMT' };
+  const table = gen => ({ items: [{ item_id: 'bar_1', name: 'Iron Bar', tier: 2 }], generatedAt: gen });
+  let parses = 0;
+  let requestInit = null;
+  let respond = () => ({ ok: true, status: 200, headers: headers(V1), async json() { parses += 1; return table('gen-A'); } });
+  globalThis.fetch = async (url, init) => { requestInit = init; return respond(); };
+
+  extStorage.clear();
+  const { ItemDatabase: db } = await import('../src/modules/ItemDatabase.js?revalidate=4');
+  await db.ready();
+  await new Promise(r => setTimeout(r, 0));
+  assert.equal(parses, 1, 'first load parses the table');
+  assert.equal(requestInit?.cache, 'no-cache', 'the request revalidates instead of bypassing the HTTP cache');
+  assert.equal(extStorage.get('iw-item-db-cache')?.validator, `${V1.etag}|${V1['last-modified']}`,
+    'the validator is stored with the table');
+
+  // 4a) Same validator: no parse, no table write, only the small checked key.
+  writes.length = 0;
+  respond = () => ({ ok: true, status: 200, headers: headers(V1), async json() { throw new Error('must not parse an unchanged table'); } });
+  await db._refreshOnce();
+  await new Promise(r => setTimeout(r, 0));
+  assert.deepEqual(writes, ['iw-item-db-cache-checked'], 'an unchanged table writes only its confirmation');
+  assert.equal(db.getByName('Iron Bar')?.item_id, 'bar_1');
+
+  // 4b) The confirmation keeps an old cache fresh on the next page load...
+  extStorage.set('iw-item-db-cache', { ...extStorage.get('iw-item-db-cache'), cachedAt: Date.now() - 7 * 3600 * 1000 });
+  assert.equal((await db._readCache()).stale, false, 'a confirmed cache is fresh although cachedAt is 7h old');
+  // ...but only for the generation it confirmed (negative control).
+  extStorage.set('iw-item-db-cache-checked', { generatedAt: 'gen-OTHER', checkedAt: Date.now() });
+  assert.equal(await db._readCache(), null, 'a confirmation of another generation does not freshen the cache');
+
+  // 4c) Negative control: a changed validator IS parsed and re-indexed.
+  parses = 0;
+  const V2 = { etag: 'W/"53e2e7-2"', 'last-modified': 'Thu, 17 Sep 2026 09:00:00 GMT' };
+  respond = () => ({ ok: true, status: 200, headers: headers(V2), async json() {
+    parses += 1; return { items: [{ item_id: 'bar_2', name: 'Steel Bar', tier: 3 }], generatedAt: 'gen-B' };
+  } });
+  await db._refreshOnce();
+  assert.equal(parses, 1, 'a new validator is parsed');
+  assert.equal(db.getByName('Steel Bar')?.item_id, 'bar_2', 'and the new table is indexed');
+
+  // 4d) A cache written before validators existed upgrades with ONE full write.
+  extStorage.clear();
+  extStorage.set('iw-item-db-cache', { ...table('gen-A'), cachedAt: Date.now() });
+  const { ItemDatabase: legacy } = await import('../src/modules/ItemDatabase.js?legacy-cache=4');
+  parses = 0;
+  respond = () => ({ ok: true, status: 200, headers: headers(V1), async json() { parses += 1; return table('gen-A'); } });
+  await legacy.ready();
+  await legacy._refreshOnce();
+  await new Promise(r => setTimeout(r, 0));
+  assert.equal(parses, 1, 'the unvalidated cache is parsed once to learn its validator');
+  assert.equal(extStorage.get('iw-item-db-cache')?.validator, `${V1.etag}|${V1['last-modified']}`);
+  respond = () => ({ ok: true, status: 200, headers: headers(V1), async json() { throw new Error('must not parse again'); } });
+  await legacy._refreshOnce();
+
+  chrome.storage.local.set = realSet;
+}
+
 console.log('PASS data service resilience tests');

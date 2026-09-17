@@ -75,7 +75,9 @@ const card = (id, turnIn) => `
     </div>
   </div>`;
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>
   *,::before,::after{box-sizing:border-box;border:0 solid}
   svg{display:block}button{background:none;font:inherit;color:inherit}
@@ -185,6 +187,20 @@ async function measure(page) {
   await page.waitForFunction(
     () => [...document.querySelectorAll('.fs-quest-panel')]
       .every(el => el.style.getPropertyValue('--fs-quest-cmd-w')), null, { timeout: 8000 })
+    .catch(() => {});
+  // ...and has SETTLED. The first reserve is measured in the same pass that
+  // marks the card skills-ui-ready, before the framed button has grown to its
+  // label (106px floor vs 122px here). Publishing it is an inline style write,
+  // which queues one more reconcile, and that pass re-measures - by design,
+  // see QuestPanelRenderer.measureCommandBlock. Reading between the two was a
+  // race: it passed only while an unrelated per-frame re-render loop (the
+  // no-sprite sigil icon, fixed 2026-09-16) happened to win it. Bounded and
+  // not fatal, so a reserve that never tracks still fails the checks below.
+  await page.waitForFunction(
+    () => [...document.querySelectorAll('.fs-quest-panel')].every(el => {
+      const block = el.querySelector('[data-iw-quest-zone="commands"]');
+      return block && Math.abs(parseFloat(el.style.getPropertyValue('--fs-quest-cmd-w')) - block.getBoundingClientRect().width) <= 1;
+    }), null, { timeout: 8000 })
     .catch(() => {});
   const r = await measure(page);
   console.log('\n@390px (narrow layout, command block absolute)');

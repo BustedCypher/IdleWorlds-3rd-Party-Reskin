@@ -187,7 +187,9 @@ const PANELS = sfx => ({
 const narrow = PANELS('');
 const wide = PANELS('-wide');
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IdleWorlds</title><style>${GAME_CSS}</style></head>
 <body><div id="root" data-skin="default">
   <div class="mx-auto flex w-full max-w-[1380px] flex-col gap-3 overflow-x-hidden px-2 py-3 sm:px-4 sm:py-5">

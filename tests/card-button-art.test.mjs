@@ -13,7 +13,9 @@ for(const entry of index.entries) {
   const atlas=index.atlases[entry.kind];
   assert.ok(entry.x>=0 && entry.y>=0 && entry.x+entry.width<=atlas.width && entry.y+entry.height<=atlas.height,'registered sprite stays inside its sheet');
 }
-const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const html = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><style>
 *,::before,::after{box-sizing:border-box;border:0 solid}button{font:inherit;color:inherit}
 body{margin:0;background:#09090c}.panel{padding:8px}.grid{display:grid}.gap-2{gap:.5rem}
 </style></head><body><div id="root" data-skin="default">

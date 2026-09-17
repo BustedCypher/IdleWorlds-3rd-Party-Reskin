@@ -12,6 +12,7 @@
  */
 
 import { inject, removeAll as removeAllStyles } from './modules/StyleInjector.js';
+import { waitForPageHydration, clearHydrationLatch } from './modules/HydrationGate.js';
 import { startWatcher, stopWatcher, on, getScanRoots } from './modules/DOMWatcher.js';
 import { AtlasService } from './modules/AtlasService.js';
 import { ItemDatabase } from './modules/ItemDatabase.js';
@@ -179,6 +180,7 @@ function teardown() {
   guard('teardown:background', clearBackgroundPaint);
   guard('teardown:overlay', clearOverlayFramer);
   guard('teardown:styles', removeAllStyles);
+  guard('teardown:hydration-latch', () => clearHydrationLatch());
 
   // From here until the next boot, any late async/data callbacks are inert.
   setRuntimeActive(false);
@@ -198,6 +200,15 @@ function applyEnabled(enabled) {
   // Default to enabled: a storage read failure must never leave the user with
   // a silently inert extension.
   const stored = await storageGet(ENABLED_KEY);
+
+  // Hold the FIRST boot until React has hydrated the page (HydrationGate.js):
+  // appending skin nodes mid-hydration made React throw #418 and re-render the
+  // whole tree. Bounded by a hard timeout; the log line is the measurement.
+  const hydration = await waitForPageHydration();
+  if (hydration.state !== 'disabled') {
+    console.log(`[IW Fantasy Skin] boot after page hydration: ${hydration.state} (${hydration.waitedMs}ms)`);
+  }
+
   applyEnabled(stored === null ? true : stored !== false);
 
   // This listener intentionally remains active while the skin is disabled: it

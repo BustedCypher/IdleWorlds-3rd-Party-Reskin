@@ -73,7 +73,9 @@ const CARD = `
   </div>
 </div>`;
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>*,::before,::after{box-sizing:border-box;border:0 solid}svg{display:block}
 button{background:none;font:inherit;color:inherit}body{margin:0;background:#0f172a}
 .panel{padding:8px}.flex{display:flex}.grid{display:grid}.gap-2{gap:.5rem}</style>

@@ -53,6 +53,49 @@ const ITEM_ATLAS_URL    = assetUrl('assets/item_icons_atlas.png');
 // the atlas into a calculated 1x1 image.
 const REQUIRED_ITEM_COLUMNS = ['item_id', 'name', 'x', 'y', 'width', 'height'];
 
+/* Every write below compares first. `paint()` runs on every reconcile of the
+   card or row that owns the host, and a same-value `class` write is NOT free:
+   it emits a mutation record, `class` is in DOMWatcher's attributeFilter, and
+   the record re-queues the owning `.compact-panel` - which repaints, which
+   writes again. Measured 2026-09-17 on a quest whose objective is an upgraded
+   gear piece ("Silk Gloves+3"): the badge's className rewrite drove ~56
+   flushes a second on a page doing nothing, 1,000+ same-value attribute
+   records in 3s. The quiescence fixture's objective ("Night Claw") has no
+   badge, which is why it read silence. */
+function setAttr(el, name, value) {
+  if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+}
+
+/* The badge is absolutely positioned against its host, so an unpositioned host
+   is given `position: relative`. Every host painted today is positioned by its
+   own sheet (.fs-inv-icon and .iw-tip-art-host relative, the quest sigil icon
+   absolute), so this is a guard for a future host - but the READ it needs was
+   the single largest boot cost: done per badge, straight after the row's
+   overlay was appended, every `getComputedStyle` forced a full style recalc
+   of the page against ~320 KB of skin CSS. Measured on a 15k-node page with a
+   200-row inventory: 660 recalcs and ~10s of main thread at boot. Queue the
+   hosts and read them together in one microtask - still before the next paint,
+   so nothing renders unpositioned - then write: one recalc per batch. */
+const pendingBadgeHosts = new Set();
+let badgeHostCheckQueued = false;
+function positionBadgeHost(hostEl) {
+  if (typeof getComputedStyle !== 'function') return;
+  const inline = hostEl.style.position;
+  if (inline && inline !== 'static') return;
+  pendingBadgeHosts.add(hostEl);
+  if (badgeHostCheckQueued) return;
+  badgeHostCheckQueued = true;
+  queueMicrotask(() => {
+    badgeHostCheckQueued = false;
+    const hosts = [...pendingBadgeHosts];
+    pendingBadgeHosts.clear();
+    // All reads, then all writes. A detached host has no computed position,
+    // which is what the per-badge read also saw, so it is left alone.
+    const unpositioned = hosts.filter(h => h.isConnected && getComputedStyle(h).position === 'static');
+    for (const h of unpositioned) h.style.position = 'relative';
+  });
+}
+
 const UPGRADE_SUFFIX = /\s*\+\s*\d+\s*$/i;
 const LEVEL_SUFFIX   = /\s+lv\.?\s*\d+\s*$/i;
 const OF_SUFFIX       = /\s+of\s+.+$/i;
@@ -343,7 +386,7 @@ class _AtlasService {
 
     const { atlas, entry, badge } = result;
     this._applySprite(hostEl, atlas, entry);
-    hostEl.dataset.iwAtlas = atlas;
+    if (hostEl.dataset.iwAtlas !== atlas) hostEl.dataset.iwAtlas = atlas;
 
     if (badge) this._paintBadge(hostEl, badge);
     else this._clearBadge(hostEl);
@@ -382,9 +425,7 @@ class _AtlasService {
    * A text chip is retained only for a future enhancement level with no art.
    */
   _paintBadge(hostEl, level) {
-    if (typeof getComputedStyle === 'function' && getComputedStyle(hostEl).position === 'static') {
-      hostEl.style.position = 'relative';
-    }
+    positionBadgeHost(hostEl);
     let badgeEl = hostEl.querySelector('.iw-icon-badge');
     if (!badgeEl) {
       badgeEl = document.createElement('span');
@@ -394,22 +435,22 @@ class _AtlasService {
     const entry = this._gearByName ? this._gearByName.get(normalise(`+${level}`)) : null;
 
     if (entry) {
-      badgeEl.className = 'iw-icon-badge iw-icon-badge--sprite';
-      badgeEl.textContent = '';
-      badgeEl.setAttribute('aria-hidden', 'true');
-      badgeEl.setAttribute('data-iw-badge', String(level));
+      if (badgeEl.className !== 'iw-icon-badge iw-icon-badge--sprite') badgeEl.className = 'iw-icon-badge iw-icon-badge--sprite';
+      if (badgeEl.firstChild) badgeEl.textContent = '';
+      setAttr(badgeEl, 'aria-hidden', 'true');
+      setAttr(badgeEl, 'data-iw-badge', String(level));
       this._applySprite(badgeEl, 'gear', entry);
       return;
     }
 
-    badgeEl.className = 'iw-icon-badge';
-    badgeEl.removeAttribute('aria-hidden');
-    badgeEl.setAttribute('data-iw-badge', String(level));
+    if (badgeEl.className !== 'iw-icon-badge') badgeEl.className = 'iw-icon-badge';
+    if (badgeEl.hasAttribute('aria-hidden')) badgeEl.removeAttribute('aria-hidden');
+    setAttr(badgeEl, 'data-iw-badge', String(level));
     badgeEl.style.removeProperty('background-image');
     badgeEl.style.removeProperty('background-size');
     badgeEl.style.removeProperty('background-position');
     badgeEl.style.removeProperty('background-repeat');
-    badgeEl.textContent = `+${level}`;
+    if (badgeEl.textContent !== `+${level}`) badgeEl.textContent = `+${level}`;
   }
 
   _clearBadge(hostEl) {

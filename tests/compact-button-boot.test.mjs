@@ -7,7 +7,9 @@ import {chromium} from 'playwright';
 
 const root=resolve(import.meta.dirname,'..');
 const bundle=await readFile(resolve(root,'dist/content.bundle.js'),'utf8');
-const fixture=`<!doctype html><html><body>
+// data-iw-page-hydrated: the latch src/page/hydration-signal.js sets once React
+// has hydrated. Without it HydrationGate holds the first boot for its full timeout.
+const fixture=`<!doctype html><html data-iw-page-hydrated="1"><body>
 <nav><button>Game</button><button>Market</button><button>Leaderboards</button><button>Village</button></nav>
 <div><p>Zone 19: Eternium Verge</p><div><button>Zones</button><button>Next Zone</button></div></div>
 <h2>Inventory</h2><section aria-label="Inventory" id="inventory">

@@ -12,6 +12,11 @@ import { storageGet, storageSet, warnOnce } from './Runtime.js';
 
 const API_URL = 'https://idleworlds.com/items.json';
 const CACHE_KEY = 'iw-item-db-cache';
+// When the cached table was last CONFIRMED current, kept apart from the table
+// itself. items.json is ~5.5 MB (4,458 items, 2026-09); bumping `cachedAt`
+// inside CACHE_KEY meant writing the whole table back to disk on every page
+// load that found it unchanged.
+const CHECKED_KEY = 'iw-item-db-cache-checked';
 const CACHE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const REFRESH_RETRY_MS = 15 * 60 * 1000;
 
@@ -43,12 +48,22 @@ function evictLegacyCache() {
   }
 }
 
+/** The response's identity for the table it carries. `Last-Modified` is a
+ *  CORS-safelisted header and `ETag` is readable same-origin; null when the
+ *  server sent neither, which disables the parse skip. */
+function responseValidator(res) {
+  const header = name => res.headers?.get?.(name) || '';
+  const value = `${header('etag')}|${header('last-modified')}`;
+  return value === '|' ? null : value;
+}
+
 class _ItemDatabase {
   constructor() {
     this._items = null;
     this._byId = null;
     this._byName = null;
     this._generatedAt = null;
+    this._validator = null;
     this._source = null;
     this._promise = null;
     this._revision = 0;
@@ -119,7 +134,7 @@ class _ItemDatabase {
     const cached = await this._readCache({ allowStale: true });
 
     if (cached && !cached.stale) {
-      this._index(cached.items, cached.generatedAt, 'cache');
+      this._index(cached.items, cached.generatedAt, 'cache', cached.validator);
       // A refresh failure does not invalidate a known-good fresh cache.
       this._refreshOnce().catch(err => {
         console.warn('[ItemDatabase] Background refresh failed:', err.message);
@@ -130,7 +145,7 @@ class _ItemDatabase {
     if (cached && cached.stale) {
       // Index stale data immediately so renderers have a coherent fallback,
       // then attempt to replace it with the live table before ready resolves.
-      this._index(cached.items, cached.generatedAt, 'stale-cache');
+      this._index(cached.items, cached.generatedAt, 'stale-cache', cached.validator);
       try {
         await this._refreshOnce();
       } catch (err) {
@@ -143,8 +158,23 @@ class _ItemDatabase {
   }
 
   async _fetchFresh() {
-    const res = await fetch(API_URL, { cache: 'no-store' });
+    // `no-cache` revalidates rather than bypassing the HTTP cache: the server
+    // sends ETag + Last-Modified, so an unchanged table comes back as a 304
+    // from the browser's own cache instead of a fresh ~230 KB download. The
+    // previous `no-store` refetched the whole file on every page load.
+    const res = await fetch(API_URL, { cache: 'no-cache' });
     if (!res.ok) throw new Error(`items.json fetch failed: ${res.status}`);
+    const validator = responseValidator(res);
+
+    // The server vouches for the table already indexed: nothing to parse,
+    // index or rewrite - only record that it was confirmed.
+    if (this.isReady() && validator && validator === this._validator) {
+      this._source = 'network';
+      res.body?.cancel?.().catch?.(() => {});
+      this._markCacheChecked();
+      return;
+    }
+
     const data = await res.json();
 
     if (!data || !Array.isArray(data.items) || data.items.length === 0) {
@@ -156,20 +186,28 @@ class _ItemDatabase {
     // renderer and scanner to rebuild needlessly.
     if (this.isReady() && data.generatedAt && data.generatedAt === this._generatedAt) {
       this._source = 'network';
-      this._writeCache(data.items, data.generatedAt);
+      if (validator && validator !== this._validator) {
+        // Same table under a new validator (the file was re-deployed): store
+        // the validator with it once, so the next load can skip the parse.
+        this._validator = validator;
+        this._writeCache(data.items, data.generatedAt, validator);
+      } else {
+        this._markCacheChecked();
+      }
       return;
     }
 
-    this._index(data.items, data.generatedAt, 'network');
-    this._writeCache(data.items, data.generatedAt);
+    this._index(data.items, data.generatedAt, 'network', validator);
+    this._writeCache(data.items, data.generatedAt, validator);
     console.log(`[ItemDatabase] Loaded ${data.items.length} items (generated ${data.generatedAt})`);
   }
 
-  _index(items, generatedAt, source) {
+  _index(items, generatedAt, source, validator = null) {
     if (!Array.isArray(items) || items.length === 0) return;
 
     this._items = items;
     this._generatedAt = generatedAt || null;
+    this._validator = validator || null;
     this._source = source || null;
     this._byId = new Map();
     this._byName = new Map();
@@ -196,9 +234,13 @@ class _ItemDatabase {
 
   async _readCache({ allowStale = false } = {}) {
     try {
-      const parsed = await storageGet(CACHE_KEY);
+      const [parsed, checked] = await Promise.all([storageGet(CACHE_KEY), storageGet(CHECKED_KEY)]);
       if (!parsed || !Array.isArray(parsed.items) || parsed.items.length === 0) return null;
-      const age = Date.now() - Number(parsed.cachedAt || 0);
+      // A confirmation only counts for the generation it confirmed.
+      const confirmedAt = checked && checked.generatedAt === (parsed.generatedAt ?? null)
+        ? Math.max(Number(parsed.cachedAt || 0), Number(checked.checkedAt || 0))
+        : Number(parsed.cachedAt || 0);
+      const age = Date.now() - confirmedAt;
       const stale = !Number.isFinite(age) || age > CACHE_MAX_AGE_MS;
       if (stale && !allowStale) return null;
       return { ...parsed, stale };
@@ -207,11 +249,16 @@ class _ItemDatabase {
     }
   }
 
-  _writeCache(items, generatedAt) {
+  _writeCache(items, generatedAt, validator = null) {
     // Deliberately not awaited: a slow or failed cache write must never delay
     // the renderers, which already have the freshly indexed table in memory.
-    storageSet(CACHE_KEY, { items, generatedAt, cachedAt: Date.now() })
+    storageSet(CACHE_KEY, { items, generatedAt, validator, cachedAt: Date.now() })
       .then(ok => { if (!ok) warnOnce('itemdb:cache-write', new Error('cache write rejected')); });
+  }
+
+  _markCacheChecked() {
+    storageSet(CHECKED_KEY, { generatedAt: this._generatedAt, checkedAt: Date.now() })
+      .then(ok => { if (!ok) warnOnce('itemdb:cache-check-write', new Error('cache check write rejected')); });
   }
 
   getById(id) {

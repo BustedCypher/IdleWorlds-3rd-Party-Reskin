@@ -207,6 +207,9 @@ const zoneTitle = () => doc.querySelector('[data-iw-ui="zone-title"]');
 
 /* -- Boot on the Game route ------------------------------------------- */
 navigate(GAME_ROUTE);
+// The latch src/page/hydration-signal.js sets once React has hydrated; without
+// it HydrationGate holds the first boot for its full timeout.
+doc.documentElement.setAttribute('data-iw-page-hydrated', '1');
 new window.Function('window', 'document', 'chrome', bundle)(window, doc, window.chrome);
 
 await waitFor(() => bossCards().length > 0 && taggedBossCards().length === bossCards().length);

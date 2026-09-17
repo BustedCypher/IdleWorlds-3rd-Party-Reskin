@@ -61,7 +61,10 @@
  *   - drop the `ownsPanel(panel)` guard in `renderPanel`: 853 flushes, 3,412
  *     skill reconciles and 243,105 mutation records per 4s;
  *   - drop the `setOwnText` guards in `ensureSkillPresentation`: 0 flushes but
- *     3,740 skill reconciles and 56,100 mutation records per 4s.
+ *     3,740 skill reconciles and 56,100 mutation records per 4s;
+ *   - drop the className compare in `AtlasService._paintBadge` (the upgraded
+ *     quest objective below): 227 flushes, 227 skill reconciles, 10,669 style
+ *     writes and 1,362 mutation records per 4s (2026-09-17).
  */
 
 import { chromium } from 'playwright';
@@ -125,6 +128,34 @@ const questCard = i =>
      <button>Turn In</button><button>Skip</button>
    </div>`;
 
+/* A quest whose objective item has NO atlas sprite. ensureDecoration used to
+   append the medallion icon, fail to paint it and remove it again on every
+   render - two childList records inside the card, which re-queue the card:
+   ~120 reconciles a second on an idle page (found 2026-09-16 via
+   quest-command-width, whose "Ironwood Plank" has no sprite). The Night Claw
+   cards above resolve, so they never reached that branch. */
+const questNoSprite = `<div class="compact-panel" id="quest-nosprite">
+     <p>🪵 Crafting Work Order</p>
+     <p>Qzxv Unlisted Widget 3/10</p>
+     <p>Reward: +900g • +400 crafting XP</p>
+     <p>30% complete</p>
+     <button>Turn In</button><button>Skip</button>
+   </div>`;
+
+/* A quest whose objective is an UPGRADED gear piece, so the medallion icon
+   carries an enhancement badge. AtlasService._paintBadge assigned the badge's
+   className unconditionally, and a same-value class write is a mutation record
+   DOMWatcher observes: it re-queued the card, which repainted the badge, at
+   frame rate (2026-09-17: ~56 flushes a second, 1,000+ same-value attribute
+   records in 3s on a ticking 15k-node page). Neither quest above has a badge. */
+const questUpgraded = `<div class="compact-panel" id="quest-upgraded">
+     <p>🧤 Smithing Work Order</p>
+     <p>Iron Gloves+3 0/1</p>
+     <p>Reward: +2,100g • +900 smithing XP</p>
+     <p>0% complete</p>
+     <button>Turn In</button><button>Skip</button>
+   </div>`;
+
 const invRow = i =>
   `<div class="compact-row">
      <div><span>Moonsteel Ore</span><span>+${i % 5}</span></div>
@@ -139,7 +170,9 @@ const VILLAGE = { player: { housing: { tier: 3 }, villageAddons: { totalSlots: 3
   { slot: 3, itemKey: 'construction_building_tier_4', name: 'Copperbrand Smithy' },
 ] } } };
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>*,::before,::after{box-sizing:border-box;border:0 solid}svg{display:block}
 button{background:none;font:inherit;color:inherit}body{margin:0;background:#0f172a}
 .panel{padding:8px}.flex{display:flex}.grid{display:grid}.gap-2{gap:.5rem}</style>
@@ -165,7 +198,7 @@ button{background:none;font:inherit;color:inherit}body{margin:0;background:#0f17
 <div class="panel" id="skill-actions"><h2>Skill Actions</h2>
 ${SKILLS.map((s, i) => skillPanel(i, s)).join('')}</div>
 <h2>Quests</h2>
-<div class="panel" id="quests">${[1, 2].map(questCard).join('')}</div>
+<div class="panel" id="quests">${[1, 2].map(questCard).join('')}${questNoSprite}${questUpgraded}</div>
 </div>
 </div><script>${bundle}</` + `script></body></html>`;
 
@@ -283,6 +316,7 @@ check('the readouts under test are actually classified', readouts >= SKILLS.leng
 
 const shapes = await page.evaluate(() => ({
   quests: document.querySelectorAll('.fs-quest-panel').length,
+  badges: document.querySelectorAll('#quest-upgraded .iw-icon-badge--sprite').length,
   plaques: document.querySelectorAll('.fs-skill-base-exp').length,
   percents: document.querySelectorAll('.fs-skill-identity-percent').length,
   plots: document.querySelectorAll('[data-iw-village-scene] .iw-vs-plot').length,
@@ -290,7 +324,9 @@ const shapes = await page.evaluate(() => ({
   chrome: document.querySelectorAll('[data-iw-chrome]').length,
 }));
 check('quest cards are classified, so loop A has a surface to run on',
-  shapes.quests >= 2, `${shapes.quests} quest panels`);
+  shapes.quests >= 4, `${shapes.quests} quest panels`);
+check('an enhancement badge is painted, so the badge loop has a surface to run on',
+  shapes.badges >= 1, `${shapes.badges} badges`);
 check('Base-EXP plaques exist, so loop B has a surface to run on',
   shapes.plaques >= 1, `${shapes.plaques} plaques (needs the live "Base reward: +N ... XP" copy)`);
 /* The village scene is the skin's own subtree — it OWNS every node in it and

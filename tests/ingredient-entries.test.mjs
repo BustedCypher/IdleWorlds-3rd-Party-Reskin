@@ -102,6 +102,9 @@ async function boot(materials) {
   };
   window.CSS = { highlights: new Map() };
   window.Highlight = class extends Set { constructor(...r) { super(r); } };
+  // The latch src/page/hydration-signal.js sets once React has hydrated;
+  // without it HydrationGate holds boot past the settle below.
+  window.document.documentElement.setAttribute('data-iw-page-hydrated', '1');
   window.eval(bundle);
   await settle(1400);
   return window;

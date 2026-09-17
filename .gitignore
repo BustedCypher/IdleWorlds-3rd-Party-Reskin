@@ -26,3 +26,6 @@ tmp/
 # them locally if you need to re-cut the atlases.
 assets/skills-ui/buttons/themes-v2/
 assets/skills-ui/buttons/source-v4/
+
+# Release zips. `npm run package` rebuilds them from an allowlist.
+release/

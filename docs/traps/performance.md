@@ -356,3 +356,117 @@ entirely.
 
 Measured previously — `:has()` is **not** the problem (0.075 ms vs 0.087 ms
 with it removed). Do not spend effort there.
+
+## Release pass (2026-09-17): measured on a ticking page
+
+Every number in this section comes from `claude/perf-harness.mjs`: a
+~15k-node live-shaped page (both duplicate columns, a 200-row inventory with
++N gear, 100 chat rows, 12 skill cards, quests, bosses, the real 5.5 MB
+items.json) with a simulated game ticking it, measured with CDP
+`Performance.getMetrics` deltas plus a CPU profile whose samples are charged to
+the nearest skin frame. Medians of 3 runs, headless Chromium, verified in the
+harness, NOT live. Before -> after the pass:
+
+| Window | Main-thread task | Style recalc | Skin JS | Flushes | Mutation records |
+| --- | --- | --- | --- | --- | --- |
+| boot, 6s | 12,858 -> 3,480 ms | 10,398 -> 776 ms | 12,565 -> 2,499 ms | | |
+| ticking, 10s | 8,810 -> 4,300 ms | 990 -> 784 ms | 5,423 -> 1,195 ms | 1,116 -> 90 | 16,132 -> 485 |
+| pointer moving, 5s | 5,072 -> 2,975 ms | | 2,838 -> 804 ms | 672 -> 72 | 6,647 -> 229 |
+
+The same page with NO skin costs ~105 ms per 10s ticking. What remains is
+mostly rendering, not JS - see the last bullets.
+
+**A fourth self-driving loop, in shipped code: the enhancement badge.**
+`AtlasService._paintBadge` assigned `badgeEl.className` unconditionally. A
+same-value class write emits a record (see the table above), so any card that
+repaints a badge re-queued itself: a quest whose objective is an upgraded gear
+piece ("Iron Gloves+3") ran the skin at frame rate on a page doing nothing -
+the quiescence test, given that card, reports 227 flushes, 227 skill reconciles
+and 10,669 style writes per 4s with the guard removed, and 0 with it. The
+fixture's quests ("Night Claw") had no badge, so it read silence: the "a cost
+test is only as good as its shapes" trap again. Every write in `_paintBadge`
+and `paint()` now compares first, and `flush-quiescence` carries the shape.
+
+**A computed-style read inside a write loop is a full recalc per iteration.**
+The same function read `getComputedStyle(host).position` per badge, straight
+after `renderRow` appended that row's overlay - so every upgraded inventory row
+forced a whole-page style recalc against ~320 KB of skin CSS: 660 recalcs and
+~10 s of main thread at boot. The read is now batched (`positionBadgeHost`:
+queue the hosts, read them all in one microtask, then write), which is still
+before the next paint. Same family, smaller: `SkillPanelRenderer`'s
+visible-first sort called `getComputedStyle` in its COMPARATOR, i.e. O(n log n)
+reads per card; `visibleFirst` reads once per element (sort is stable, so the
+order is identical).
+
+**Same-value attribute writes are not free even when DOMWatcher cannot see
+them.** `ensureSkillActionsFrame` re-added `fs-skills-section-frame` (a
+`classList.add` of a present class still writes) on every skill-card render,
+which queued the whole Skill Actions frame as a background root: a subtree walk
+with a `getComputedStyle` per card, 5 times a second on a ticking skill. And
+`data-iw-*` writes, which the observer ignores, still queue records for every
+other observer and re-match the attribute selectors keyed on them: nine per
+skill-card render, five per classify pass on the nav tabs, a dozen per
+inventory chrome sweep. All compare first now (`setOwnData`, `setData`,
+`setAttr`); ticking-page mutation records fell from 16,132 to 485 per 10s.
+
+**O(n^2) and O(n x depth) sweeps on hot paths:**
+
+- `DOMWatcher.addNameRoot` compared each new root with every pending root (a
+  set copy plus two `contains` each): 420 ms of boot. It now walks UP from the
+  new element and drops covered roots when draining (`takeNameRoot`); the set
+  of scanned subtrees is unchanged.
+- `NameScanner.scanForItemNames` ran `closest(SKIP_CONTAINERS)` from every text
+  node. Skip containers are now rejected by the TreeWalker filter where they
+  start. And every scan created a fresh Range for every match on the page and
+  registered a new Highlight (a repaint of all highlighted text) even when
+  nothing changed; unchanged nodes now keep their ranges and the highlight is
+  re-registered only when its range set differs. A range is reused only while
+  it still spans its match exactly, because the DOM collapses a live range
+  when its text node is rewritten. Verified against the previous module by a
+  150-seed differential run in Chromium (identical highlights), whose two
+  negative controls - no container pruning, no collapse check - both diverge.
+- `CollapsibleFrames` ran a FRAME query over every frame's subtree to find
+  leaves, then up to four more subtree queries per frame for its title and
+  slug. Leaves come from the document-ordered list (a frame nests another
+  exactly when the NEXT frame is inside it), and the landmarks from one query.
+- `CompactButtons` read each button's `textContent` up to five times and ran
+  three `:scope >` queries per button per pass (~800 buttons).
+- `SkillCardDesignController.syncTimersOnTick` (the Current Action countdown
+  mirror) picked the RENDERED Current Action host - a `checkVisibility` - on
+  every flush before checking whether the flush touched it; the containment
+  test now runs first, and the remaining time is read once per tick, not once
+  per card.
+
+**items.json was re-downloaded, re-parsed and rewritten on every page load.**
+It is ~5.5 MB (4,458 items; 230 KB gzipped). `_fetchFresh` used
+`cache: 'no-store'`, and an unchanged table (same `generatedAt`) was written
+back whole to `chrome.storage.local` just to bump `cachedAt`. It now revalidates
+(`no-cache`; the server sends ETag + Last-Modified and answers 304), skips the
+parse when the response validator matches the indexed table, and records the
+confirmation in a separate small key (`iw-item-db-cache-checked`).
+`tests/data-services.test.mjs` section 4 pins it, with negative controls.
+
+**Measured and NOT worth changing:**
+
+- Removing the rendered-state reads from `sectionFramePanels` (the largest
+  remaining skin line, `isRendered`) changed nothing: 4,238 vs 4,297 ms, and an
+  identical 617 recalcs. The classify pass runs in a rAF, the progress
+  transitions have already dirtied style, and the first reader pays for a
+  recalc the frame performs anyway. Remove the reader and the cost moves to the
+  next one. Judge such changes on TaskDuration, never on one function's share.
+- CSS selector matching (Chrome's selector stats, 4s ticking): 697 selectors,
+  ~146 ms of matching in total, the worst single selector 4.7 ms, and recalcs
+  are incremental (~300 elements each). No outlier to rewrite.
+- **The continuous motion is the largest remaining cost, and it is a design
+  choice, not a bug.** The linear `width` transitions that smooth the Current
+  Action and action-button fills (current-action-progress.md), plus the
+  infinite `iw-control-meter-current` shimmer, restyle, lay out and repaint
+  every frame while an action runs - which in an idle game is always. With
+  `prefers-reduced-motion: reduce` the same 10s costs 2,026 ms instead of
+  4,238 ms (97 recalcs instead of 617). `width` cannot be composited; a
+  `transform: scaleX()` mirror could be, at the price of the skin owning a
+  second fill. Headless software rendering overstates paint relative to a GPU,
+  so measure live before deciding.
+- Still one forced recalc per skill card at boot (`isPresentationHidden`,
+  ~300 ms): each card's reads follow the previous card's writes. Only a
+  read-all-then-write-all render pass would remove it.

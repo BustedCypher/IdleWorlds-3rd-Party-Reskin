@@ -50,7 +50,9 @@ const NAV_SHAPES = {
   flat: '<div class="panel flex flex-wrap items-center gap-3" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px"><button>Game</button><button>Market</button><button>Leaderboards</button><button>Village</button></div>',
   wrapped: '<div class="panel"><nav><button>Game</button><button>Market</button><button>Leaderboards</button><button>Village</button></nav></div>',
 };
-const page_for = nav => `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title></head><body>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const page_for = nav => `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title></head><body>
 <div id="root" data-skin="default">
   <header id="top-header">
     <div id="profile-block"><h1>BustedCypher</h1><p>Gemcutter Supreme</p><p>⚔ Combat Lv 62 · Zone 19: Eternium Verge</p><p>● Players online: 141</p></div>

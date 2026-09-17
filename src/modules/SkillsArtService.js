@@ -124,13 +124,20 @@ function paint(host, index, entry) {
   host.style.backgroundSize = sprite.size;
   host.style.backgroundPosition = sprite.position;
   host.style.backgroundRepeat = 'no-repeat';
-  host.dataset.iwSkillsAtlas = index.atlas;
-  host.dataset.iwSkillsAtlasIndex = String(entry.index ?? '');
+  setData(host, 'iwSkillsAtlas', index.atlas);
+  setData(host, 'iwSkillsAtlasIndex', String(entry.index ?? ''));
   return true;
 }
 
 function setVar(panel, name, value) {
   panel.style.setProperty(name, value);
+}
+
+/* Compare first. `data-iw-*` is invisible to DOMWatcher, but a same-value
+   attribute write still queues a mutation record and makes Chrome re-match
+   the attribute selectors keyed on it, and these run on every card render. */
+function setData(el, key, value) {
+  if (el.dataset[key] !== value) el.dataset[key] = value;
 }
 
 function clearThemeVariables(host) {
@@ -151,13 +158,13 @@ function applyThemeVariables(host, theme) {
   }
   const revised = revisedButtonAtlas.themes.includes(theme);
   if (revised) {
-    host.dataset.iwCompactAtlas = 'compact-ghost-v3';
+    setData(host, 'iwCompactAtlas', 'compact-ghost-v3');
     setVar(host, '--iw-compact-atlas', `url("${assetUrl(`assets/skills-ui/buttons/compact-ghost-v3/${theme}.png`)}")`);
   } else {
     delete host.dataset.iwCompactAtlas;
     host.style.removeProperty('--iw-compact-atlas');
   }
-  if (revised) host.dataset.iwButtonAtlas = 'revised-v5';
+  if (revised) setData(host, 'iwButtonAtlas', 'revised-v5');
   else delete host.dataset.iwButtonAtlas;
   for (const kind of BUTTON_ART_KINDS) {
     if (revised) {
@@ -207,7 +214,7 @@ function applyUiVariables(panel) {
     // two ends stay at the band window's scale however wide the button grows.
     setVar(panel, '--fs-ui-action-cap-ratio', String(cap / entry.height));
   }
-  panel.dataset.iwSkillsUiReady = '1';
+  setData(panel, 'iwSkillsUiReady', '1');
   return true;
 }
 

@@ -291,6 +291,13 @@ function ensureInventoryRule(root, title) {
   if (anchorChild.nextElementSibling !== rule) anchorChild.after(rule);
 }
 
+/* Compare first. The chrome sweep and hideOriginalChildren re-derive these on
+   every pass over a row or panel, and a same-value setAttribute still queues a
+   mutation record and re-matches every attribute selector keyed on it. */
+function setAttr(el, name, value) {
+  if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+}
+
 /**
  * classifyInventoryChrome() classifies the PANEL's chrome — its title, filter
  * tabs, pagers and tool row. None of that depends on which row is being
@@ -316,11 +323,11 @@ function classifyInventoryChromeOnce(root) {
 
 function classifyInventoryChrome(root) {
   if (!root) return;
-  root.setAttribute(INVENTORY_ROOT_ATTR, '1');
+  setAttr(root, INVENTORY_ROOT_ATTR, '1');
   const titleCandidates = root.querySelectorAll(notInRow('h1, h2, h3, h4, [data-title]'));
   for (const title of titleCandidates) {
     if (headingIsInventory(title)) {
-      title.setAttribute(INVENTORY_TITLE_ATTR, '1');
+      setAttr(title, INVENTORY_TITLE_ATTR, '1');
       ensureInventoryRule(root, title);
     }
   }
@@ -339,7 +346,7 @@ function classifyInventoryChrome(root) {
     // An icon control carries no label of its own and draws an <svg>. Both
     // conditions are required: a bare text-free anchor is not a tool button.
     else if ((!text || text.length <= 2) && button.querySelector('svg')) role = 'icon';
-    if (role) button.setAttribute(INVENTORY_CONTROL_ATTR, role);
+    if (role) setAttr(button, INVENTORY_CONTROL_ATTR, role);
 
     // Which filter is live is real information the game paints itself. If the
     // skin repaints every filter identically that information is destroyed,
@@ -352,7 +359,7 @@ function classifyInventoryChrome(root) {
         button.getAttribute('aria-current') === 'page' ||
         button.dataset?.state === 'active' ||
         /(?:bg|text|border)-(?:orange|amber|primary|accent)|data-\[state=active\]/i.test(cls);
-      if (active) button.setAttribute(INVENTORY_FILTER_STATE_ATTR, 'active');
+      if (active) setAttr(button, INVENTORY_FILTER_STATE_ATTR, 'active');
       else button.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
     }
   }
@@ -394,13 +401,13 @@ function classifyInventoryChrome(root) {
   for (const toolRow of toolRows) {
     for (const child of toolRow.children) {
       if (child.tagName.toLowerCase() !== 'svg') continue;
-      child.setAttribute(INVENTORY_CONTROL_ATTR, 'glyph');
+      setAttr(child, INVENTORY_CONTROL_ATTR, 'glyph');
     }
   }
 
   for (const el of root.querySelectorAll(notInRow('span, div, p'))) {
     const text = String(el.textContent || '').trim();
-    if (/^\d+\s*\/\s*\d+$/.test(text)) el.setAttribute(INVENTORY_CONTROL_ATTR, 'page-count');
+    if (/^\d+\s*\/\s*\d+$/.test(text)) setAttr(el, INVENTORY_CONTROL_ATTR, 'page-count');
   }
 
   classifyRowList(root);
@@ -426,7 +433,7 @@ function classifyRowList(root) {
   root.querySelectorAll(`[${INVENTORY_LIST_ATTR}]`).forEach(el => {
     if (el !== list) el.removeAttribute(INVENTORY_LIST_ATTR);
   });
-  if (ok) list.setAttribute(INVENTORY_LIST_ATTR, '1');
+  if (ok) setAttr(list, INVENTORY_LIST_ATTR, '1');
 }
 
 function splitLevel(name) {
@@ -443,7 +450,7 @@ function restoreDisplay(el) {
 }
 
 function suppressDisplayBranch(el) {
-  el.setAttribute(SUPPRESSED_ATTR, '1');
+  setAttr(el, SUPPRESSED_ATTR, '1');
   el.removeAttribute(ACTION_ATTR);
   el.removeAttribute(ACTION_HOST_ATTR);
   displayStyleOwner.set(el, 'display', 'none', '');
@@ -463,8 +470,8 @@ function preserveInteractiveTree(el) {
   if (!el) return;
 
   if (el.matches?.(INTERACTIVE_SELECTOR)) {
-    el.setAttribute(ACTION_ATTR, 'control');
-    el.setAttribute(ACTION_KIND_ATTR, classifyActionControl(el));
+    setAttr(el, ACTION_ATTR, 'control');
+    setAttr(el, ACTION_KIND_ATTR, classifyActionControl(el));
     el.removeAttribute(ACTION_HOST_ATTR);
     el.removeAttribute(SUPPRESSED_ATTR);
     restoreDisplay(el);
@@ -476,8 +483,8 @@ function preserveInteractiveTree(el) {
     return;
   }
 
-  el.setAttribute(ACTION_ATTR, 'host');
-  el.setAttribute(ACTION_HOST_ATTR, '1');
+  setAttr(el, ACTION_ATTR, 'host');
+  setAttr(el, ACTION_HOST_ATTR, '1');
   el.removeAttribute(SUPPRESSED_ATTR);
   restoreDisplay(el);
   [...el.children].forEach(child => preserveInteractiveTree(child));
@@ -568,6 +575,10 @@ function paintIcon(overlay, item, data) {
     if (!AtlasService.paint(host, ref)) host.textContent = '❓';
   };
 
+  // With both atlases loaded, ready() is already resolved and its then() would
+  // only repeat this exact paint. A PARTIAL load still takes both: paint now
+  // with what is there, and again once ready() has retried the missing atlas.
+  if (AtlasService.isComplete()) { apply(); return; }
   if (AtlasService.isReady()) apply();
   AtlasService.ready().then(apply).catch(() => {
     if (host.isConnected && !host.style.backgroundImage) host.textContent = '❓';

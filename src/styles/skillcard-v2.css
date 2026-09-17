@@ -330,7 +330,12 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
   left: calc(50% - var(--iw-skill-v2-btn-w) / 2) !important;
   width: var(--iw-skill-v2-btn-w) !important; height: var(--iw-skill-v2-label-h) !important;
   margin: 0 !important; padding: 0 var(--iw-skill-v2-label-buffer) !important;
-  color: #f3e3c0 !important; font: 700 var(--iw-skill-v2-action-label-font)/var(--iw-skill-v2-label-h) var(--iw-font-ui, sans-serif) !important;
+  /* Capitals in the recipe title's typeface (Curtis, 2026-09-16, chosen over
+     capitals in Barlow): the label reads as part of the card's heading voice.
+     Cinzel is wider, so fitActionLabel sizes the longest verb down ("CRAFT
+     PARTS" 7.7px at the 64px button). Pinned by skill-card-system. */
+  color: #f3e3c0 !important; font: 700 var(--iw-skill-v2-action-label-font)/var(--iw-skill-v2-label-h) var(--iw-font-head, serif) !important;
+  text-transform: uppercase !important;
   letter-spacing: var(--iw-skill-v2-btn-tracking) !important; text-align: center !important;
   white-space: nowrap !important; overflow: visible !important; pointer-events: none !important;
   text-shadow: 0 1px 2px #000, 0 0 4px #000c !important;

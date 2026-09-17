@@ -494,7 +494,7 @@ function neutraliseReadouts(panel) {
   }
 
   for (const target of branch) {
-    target.dataset.iwReadout = '1';
+    setOwnData(target, 'iwReadout', '1');
     for (const [prop, value] of Object.entries(READOUT_STYLES)) {
       setOwnedStyle(readoutStyleOwner, target, prop, value);
     }
@@ -832,6 +832,19 @@ function isPresentationHidden(el) {
   } catch { return false; }
 }
 
+/* Visible elements first, otherwise in document order. The comparator used to
+   call isPresentationHidden on both sides of every comparison - O(n log n)
+   `getComputedStyle` reads, ~400 per card for a ~40-candidate panel, the
+   largest remaining cost of a skill card's first render (306ms of a 15k-node
+   boot). Reading once per element is identical: sort is stable and nothing
+   can change the answer mid-sort. */
+function visibleFirst(elements) {
+  return elements
+    .map(el => [el, isPresentationHidden(el)])
+    .sort((a, b) => Number(a[1]) - Number(b[1]))
+    .map(([el]) => el);
+}
+
 // annotateStructure() calls findBestText() 8+ times per panel per render,
 // each of which used to re-run this same full-panel sweep + getComputedStyle
 // sort from scratch. One call's worth of candidates never changes mid-call
@@ -848,10 +861,9 @@ function textCandidates(panel) {
   // as the card's requirement or reward line, and the symptom appears in a
   // different module from the cause. Same opt-out rule the generic control
   // rule and the collapse toggle already document.
-  const candidates = [...panel.querySelectorAll('h1,h2,h3,h4,div,span,p')]
+  const candidates = visibleFirst([...panel.querySelectorAll('h1,h2,h3,h4,div,span,p')]
     .filter(el => !el.closest('button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body]'))
-    .filter(el => normText(el.textContent).length <= 130)
-    .sort((a, b) => Number(isPresentationHidden(a)) - Number(isPresentationHidden(b)));
+    .filter(el => normText(el.textContent).length <= 130));
   lastCandidatePanel = panel;
   lastCandidates = candidates;
   return candidates;
@@ -941,7 +953,7 @@ function structureSignature(panel, type) {
     const disabled = keyDisabled && (btn.disabled || btn.getAttribute('aria-disabled') === 'true') ? '1' : '0';
     return `${disabled}:${structureText(btn.textContent)}:${structureText(btn.getAttribute('aria-label'))}`;
   }).join('|');
-  return `${type} ${panel.childElementCount} ${buttonState}`;
+  return `${type}\u0000${panel.childElementCount}\u0000${buttonState}`;
 }
 
 function annotateStructure(panel, type, meta) {
@@ -983,8 +995,7 @@ function annotateStructure(panel, type, meta) {
   });
   if (actionTitle) setRole(outerSameTextShell(actionTitle, panel), 'action-title');
 
-  const buttons = [...panel.querySelectorAll('button')]
-    .sort((a, b) => Number(isPresentationHidden(a)) - Number(isPresentationHidden(b)));
+  const buttons = visibleFirst([...panel.querySelectorAll('button')]);
 
   // Audit 1.5.5 proved the visible "Lv N - X% â€¢ ... to go" widget is itself
   // a button. Mark that exact live control before any button receives chrome.
@@ -1253,7 +1264,7 @@ function ensureSkillArtwork(panel, type) {
   const paint = () => {
     if (!artHost.isConnected || !panel.isConnected) return;
     SkillsArtService.decoratePanel(panel);
-    if (SkillsArtService.paintIcon(artHost, type)) artHost.dataset.iwSkillArtReady = '1';
+    if (SkillsArtService.paintIcon(artHost, type)) setOwnData(artHost, 'iwSkillArtReady', '1');
   };
 
   if (SkillsArtService.isReady()) {
@@ -1330,7 +1341,12 @@ function skillActionsFrame(panel) {
 function ensureSkillActionsFrame(panel) {
   const frame = skillActionsFrame(panel);
   if (!frame) return;
-  frame.classList.add('fs-skills-section-frame');
+  // Guarded: `classList.add` of a class already present still rewrites the
+  // attribute and emits a record DOMWatcher observes. This runs on every skill
+  // card render, so the unguarded add re-queued the whole Skill Actions frame
+  // as a background root each time - a full-subtree walk with a computed-style
+  // read per card, ~5 times a second on a ticking skill (2026-09-17).
+  if (!frame.classList.contains('fs-skills-section-frame')) frame.classList.add('fs-skills-section-frame');
   const paint = () => SkillsArtService.decoratePanel(frame);
   if (SkillsArtService.isReady()) paint();
   else SkillsArtService.ready().then(paint).catch(() => {});
@@ -1354,6 +1370,14 @@ function setOwnText(el, value) {
   if (el && el.textContent !== value) el.textContent = value;
 }
 
+/* The same for `data-iw-*`. DOMWatcher does not observe these, so an
+   unconditional write is not a loop - but every one still queues a mutation
+   record and makes Chrome re-match the attribute selectors the sheets key on
+   it, and this module writes nine of them on every card render. */
+function setOwnData(el, key, value) {
+  if (el.dataset[key] !== value) el.dataset[key] = value;
+}
+
 function ensureSkillPresentation(panel, meta) {
   ensureSkillActionsFrame(panel);
 
@@ -1368,10 +1392,10 @@ function ensureSkillPresentation(panel, meta) {
     // string `data-fs-skill-label` already carries, so the two agree by
     // construction. Detection still keys on `meta.labels`; only the display
     // copy is canonical here.
-    identity.dataset.iwCleanText = meta.label;
+    setOwnData(identity, 'iwCleanText', meta.label);
   }
-  if (title) title.dataset.iwCleanText = textWithoutLeadingGlyph(title.textContent);
-  if (levelProgress) levelProgress.dataset.iwProgressDisplay = centralProgressText(levelProgress.textContent);
+  if (title) setOwnData(title, 'iwCleanText', textWithoutLeadingGlyph(title.textContent));
+  if (levelProgress) setOwnData(levelProgress, 'iwProgressDisplay', centralProgressText(levelProgress.textContent));
 
   const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
   if (identityZone) {
@@ -1413,7 +1437,7 @@ function ensureSkillPresentation(panel, meta) {
         contentZone.appendChild(plaque);
       }
       setOwnText(plaque, `Base: ${amount}`);
-      plaque.dataset.iwBaseExp = amount;
+      setOwnData(plaque, 'iwBaseExp', amount);
     } else {
       plaque?.remove();
     }
@@ -1491,9 +1515,9 @@ function applyPanelChrome(panel, type, meta) {
   }
   if (!panel.classList.contains(`fs-skill--${type}`)) panel.classList.add(`fs-skill--${type}`);
 
-  panel.dataset.iwUi = 'skill-panel';
-  panel.dataset.iwSkill = type;
-  panel.dataset.iwSkillGlyph = meta.glyph;
+  setOwnData(panel, 'iwUi', 'skill-panel');
+  setOwnData(panel, 'iwSkill', type);
+  setOwnData(panel, 'iwSkillGlyph', meta.glyph);
   if (panel.dataset.fsSkillLabel !== meta.label) panel.dataset.fsSkillLabel = meta.label;
 }
 

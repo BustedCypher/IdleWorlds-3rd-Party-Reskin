@@ -64,6 +64,34 @@ enhanceSkillCardV2(panel, 'mining');
 assert.equal(state().active, true, 'the countdown remains active after remaining time falls below the starting threshold');
 assert.equal(state().timer, '10s', 'the countdown follows the game-owned remaining time');
 
+/* Live, the countdown ticks in the Current Action panel while the card itself
+   does not mutate, so no `iw:skill-panel` fires. The tick reaches the card
+   only through the flush events: the timer used to freeze until the card's
+   own fill stepped (~10s on a long craft). */
+const { initSkillCardDesignController, clearSkillCardDesignController } = await import('../src/modules/SkillCardDesignController.js');
+initSkillCardDesignController();
+const tick = (text, type = 'iw:name-scan-flush') => {
+  const el = document.querySelector('#remaining');
+  el.textContent = text;
+  document.dispatchEvent(new CustomEvent(type, { detail: { roots: [el] } }));
+};
+tick('9s');
+assert.equal(state().timer, '9s', 'a Current Action tick alone advances the card countdown');
+tick('8s', 'iw:dom-flush');
+assert.equal(state().timer, '8s', 'a dom-flush carrying the tick also advances it');
+const elsewhere = document.createElement('p');
+document.body.append(elsewhere);
+document.querySelector('#remaining').textContent = '7s';
+document.dispatchEvent(new CustomEvent('iw:name-scan-flush', { detail: { roots: [elsewhere] } }));
+assert.equal(state().timer, '8s', 'negative control: a flush outside Current Action does not re-read the clock');
+elsewhere.remove();
+clearSkillCardDesignController();
+document.querySelector('#remaining').textContent = '70s';
+enhanceSkillCardV2(panel, 'mining');
+assert.equal(state().timer, '70s');
+tick('69s');
+assert.equal(state().timer, '70s', 'negative control: an inactive controller ignores ticks');
+
 document.querySelector('#fill').remove();
 enhanceSkillCardV2(panel, 'mining');
 assert.deepEqual(state(), {

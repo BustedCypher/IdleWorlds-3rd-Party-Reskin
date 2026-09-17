@@ -34,7 +34,9 @@ const bundle = await readFile(resolve(ROOT, 'dist/content.bundle.js'), 'utf8');
 
 const ROUTES = ['Game', 'Market', 'Leaderboards', 'Village', 'Dungeon'];
 const row = gap => `display:flex;flex-wrap:wrap;align-items:center;gap:${gap}px`;
-const page = ({ zoneBar }) => `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const page = ({ zoneBar }) => `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>*,::before,::after{box-sizing:border-box;border:0 solid}svg{display:block}
 button,a{font:inherit;color:inherit;background:none}body{margin:0}</style></head><body>
 <div id="root" data-skin="default"><div id="shell" style="display:flex;flex-direction:column;gap:12px;padding:12px 8px">

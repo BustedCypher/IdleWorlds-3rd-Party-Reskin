@@ -25,7 +25,9 @@ const card = (id, objective, title) => `<div class="compact-panel p-2.5" id="${i
   </div>
   <div class="h-1.5 overflow-hidden rounded-full bg-white/10"><div class="h-full rounded-full bg-emerald-400" style="width:22%"></div></div>
   <div class="text-[11px] text-white/45">22% complete</div></div></div>`;
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>
 *,::before,::after{box-sizing:border-box;border:0 solid}
 button{background:none;font:inherit;color:inherit}body{margin:0}

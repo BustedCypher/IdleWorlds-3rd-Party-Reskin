@@ -40,7 +40,9 @@ const VILLAGE = { player: { housing: { tier: 3 }, villageAddons: { totalSlots: 3
 
 /* Header shapes are the live app's: a `justify-between` row whose right-hand
    side is already occupied on five of these nine. */
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>
   *,::before,::after{box-sizing:border-box;border:0 solid}
   svg{display:block}button{background:none;font:inherit;color:inherit}

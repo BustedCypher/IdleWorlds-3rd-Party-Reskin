@@ -19,9 +19,11 @@ npm run build     # esbuild -> dist/content.bundle.js (strict; needs assets)
 npm test          # rebuild, syntax-check, regression suites, sprite-window audit
 npm run fixtures  # responsive visual fixture renders
 npm run audit:items   # validates against the live /items.json (not in CI)
+npm run package   # rebuild, verify the manifest, write release/idleworlds-fantasy-skin-v<version>.zip from an allowlist
 npm run import:village-art  # 34 building + 5 housing icons from the art-source repo
 npm run import:action-icons -- "<Vector Action button Icons.eps>"  # V2 action-button icons
 node claude/audit-mobile.mjs --widths 360,390,430,768  # phone/tablet audit -> tmp/mobile-audit/ (docs/traps/mobile.md)
+node claude/perf-harness.mjs --runs 3 [--noskin | --bundle <file>]  # main-thread cost on a ticking 15k-node page -> tmp/perf/ (docs/traps/performance.md)
 ```
 
 `build-tools/audit-sprite-windows.mjs` (run by `npm test`) checks every pixel
@@ -39,7 +41,12 @@ never runs in CI. Most suites load `dist/content.bundle.js` rather than `src/`,
 so run `npm run build` (or `node build-tools/build.mjs --allow-missing-assets`
 without vendored assets) after a `src/` change or the test exercises the old
 bundle. About half the suites are real-browser Playwright tests and need
-`npx playwright install chromium` once.
+`npx playwright install chromium` once. A harness that boots the bundle must
+put `data-iw-page-hydrated="1"` on `<html>` (the latch the page-world signal
+sets live), or boot waits out HydrationGate's 4s timeout and races every
+settle window ([test-harness](docs/traps/test-harness.md)).
+`tests/extension-e2e.test.mjs` is the only suite that loads the real unpacked
+extension (manifest, both content-script worlds, `web_accessible_resources`).
 
 `dist/content.bundle.js` is **committed**, and CI fails if it is stale. Rebuild
 and commit it with any `src/` change.
@@ -49,6 +56,13 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
 ## Architecture
 
 - `src/content.js` — activation lifecycle, boot order, teardown, kill switch
+- `src/modules/HydrationGate.js` + `src/page/hydration-signal.js` — hold the
+  FIRST boot until React has hydrated (appending skin nodes mid-hydration made
+  React throw #418 and re-render the tree). The signal is a separate
+  MAIN-world content script at `document_start`, outside the bundle, because
+  only page JS can see React's root; it writes one latch attribute on `<html>`,
+  which the gate reads and removes. Bounded by a 4s timeout.
+  `tests/hydration-gate.test.mjs` pins the protocol.
 - `src/modules/Runtime.js` — `chrome.*` wrappers, `guard`/`guardEach`, `raf`
 - `src/modules/DOMWatcher.js` — **the single MutationObserver** + flush budget
 - `src/modules/StyleInjector.js` — lifecycle-owned CSS injection; rewrites
@@ -218,9 +232,15 @@ here. Add a line to this list only when a lesson applies across surfaces.
 - DOMWatcher's `attributeFilter` has eight entries: `class`, `style`,
   `disabled`, `aria-disabled`, `aria-pressed`, `aria-selected`,
   `aria-current`, `data-state`. A `data-iw-*` write is invisible to it, and so
-  is a same-value `style.setProperty`. A same-value `classList`,
-  `setAttribute` on a watched attribute, or `textContent` write still emits a
-  record, so compare before writing.
+  is a same-value `style.setProperty`. A same-value `classList` (including
+  `add` of a class already present), `setAttribute` on a watched attribute, or
+  `textContent` write still emits a record, so compare before writing. Compare
+  same-value `data-iw-*` writes too: invisible to the observer, they still
+  re-match every attribute selector keyed on them.
+- Never read computed style or layout between writes in a per-row or per-card
+  loop - including inside a sort comparator. Each read after a write is a
+  whole-page recalc; one per inventory row once cost ~10s of boot. Batch the
+  reads, then write.
 - Never put a shorthand and its own longhand in one inline-style map. The page
   flushes itself forever, and the end state still looks correct.
 - A change carried only by `data-iw-*` or by `<html>` (outside the observer's
@@ -261,10 +281,12 @@ here. Add a line to this list only when a lesson applies across surfaces.
   Read them from the game's own classes; never repaint them uniformly.
 - `textContent` joins descendants with NO separator — no newline, no space — so
   sibling elements read as one unbroken string. Never slice a flattened blob on
-  `\n`, and never assume the game's own separator (its material lines use an
-  emoji per item, not `•`). Anchor on the previous match and on the element
-  boundary, which are always there
-  ([skill-card-v2](docs/traps/skill-card-v2.md)).
+  `\n`, never put a `\b` where two elements may join ("XPTurn In" has no
+  boundary before "Turn"), and never assume the game's own separator (its
+  material lines use an emoji per item, not `•`). Anchor on the previous match
+  and on the element boundary, which are always there
+  ([skill-card-v2](docs/traps/skill-card-v2.md),
+  [test-harness](docs/traps/test-harness.md)).
 
 **Tests** ([test-harness](docs/traps/test-harness.md))
 

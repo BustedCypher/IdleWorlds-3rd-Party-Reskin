@@ -423,6 +423,10 @@ console.error = (...args) => { consoleErrors.push(args.join(' ')); origError(...
 
 console.log('\nsmoke: boot');
 let bootThrew = null;
+/* The latch src/page/hydration-signal.js sets on the live page once React has
+   hydrated. Without it HydrationGate holds the first boot for its full timeout,
+   which outlasts waitFor's 4s and fails every check below for the wrong reason. */
+window.document.documentElement.setAttribute('data-iw-page-hydrated', '1');
 try {
   const fn = new window.Function(bundle);
   fn.call(window);

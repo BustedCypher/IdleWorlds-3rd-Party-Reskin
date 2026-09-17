@@ -212,11 +212,17 @@ function addIfConnected(set, el) {
   if (isElement(el)) set.add(el);
 }
 
+/* Name roots never nest, so one subtree is never scanned twice. That used to be
+   enforced here by comparing the new element with EVERY pending root (a copy of
+   the set plus two `contains` calls each), which made a mount burst O(n^2):
+   measured at 420ms of a 15k-node boot, the largest skin cost left in it. Now
+   the check walks UP from the element, O(depth), and a pending root whose
+   ancestor arrived after it is dropped when drained (takeNameRoot) instead of
+   being searched for here. The set of subtrees scanned is the same. */
 function addNameRoot(el) {
   if (!isElement(el)) return;
-  for (const root of [...pendingNameRoots]) {
-    if (root === el || root.contains?.(el)) return;
-    if (el.contains?.(root)) pendingNameRoots.delete(root);
+  for (let node = el; node; node = node.parentElement) {
+    if (pendingNameRoots.has(node)) return;
   }
   pendingNameRoots.add(el);
 }
@@ -276,17 +282,38 @@ function takeConnected(set) {
   }
   return null;
 }
+/* A name root is redundant when an ancestor is still pending (it will be
+   scanned with that ancestor) or was taken earlier in this same flush. */
+function takeNameRoot(set, taken) {
+  for (const el of set) {
+    set.delete(el);
+    if (!el?.isConnected) continue;
+    let covered = false;
+    for (let node = el.parentElement; node && !covered; node = node.parentElement) {
+      covered = set.has(node) || taken.has(node);
+    }
+    if (!covered) return el;
+  }
+  return null;
+}
 function drainGlobalBudget(budget) {
   const groups = [
     ['inventory', pendingInventory], ['skills', pendingSkills],
     ['bgRoots', pendingBgRoots], ['nameRoots', pendingNameRoots],
   ];
   const out = Object.fromEntries(groups.map(([key]) => [key, []]));
+  const takenNameRoots = new Set();
   let cursor = 0, idle = 0, remaining = budget;
   while (remaining > 0 && idle < groups.length) {
     const [key, set] = groups[cursor];
     cursor = (cursor + 1) % groups.length;
-    const el = takeConnected(set);
+    let el;
+    if (set === pendingNameRoots) {
+      el = takeNameRoot(set, takenNameRoots);
+      if (el) takenNameRoots.add(el);
+    } else {
+      el = takeConnected(set);
+    }
     if (el) { out[key].push(el); remaining -= 1; idle = 0; }
     else idle += 1;
   }

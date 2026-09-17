@@ -115,11 +115,18 @@ function longestMatchAt(root, lowerText, start) {
 /* ── Match index ─────────────────────────────────────────────────────── */
 
 /**
- * Text node → [{ start, end, item }]. A plain Map (not Weak) because we need to
- * enumerate it to rebuild the highlight; entries for disconnected nodes are
- * pruned on every rebuild, so it cannot grow without bound.
+ * Text node → { matches: [{ start, end, item }], ranges }. A plain Map (not
+ * Weak) because we need to enumerate it to rebuild the highlight; entries for
+ * disconnected nodes are pruned on every rebuild, so it cannot grow without
+ * bound. `ranges` are the live Ranges the registered highlight holds for this
+ * node, kept so an unchanged node is not re-created on every rebuild.
  */
 const matchIndex = new Map();
+
+function sameMatches(a, b) {
+  return a.length === b.length && a.every((m, i) =>
+    m.start === b[i].start && m.end === b[i].end && m.item === b[i].item);
+}
 
 function shouldSkipParent(el) {
   if (!el) return true;
@@ -155,6 +162,8 @@ const supportsHighlight = typeof CSS !== 'undefined'
   && typeof Highlight !== 'undefined';
 
 let rebuildQueued = false;
+// Exactly the ranges the registered highlight holds, in registration order.
+let registeredRanges = [];
 
 function queueHighlightRebuild() {
   if (rebuildQueued) return;
@@ -165,34 +174,61 @@ function queueHighlightRebuild() {
   });
 }
 
+/* A Range is live: when the game rewrites a text node, the DOM collapses every
+   range inside it. So "the node's matches did not change" is not enough to
+   reuse its ranges - they are reused only while each still spans exactly its
+   match, which a rewrite always breaks. */
+function rangesIntact(node, entry) {
+  return !!entry.ranges && entry.ranges.length === entry.matches.length &&
+    entry.ranges.every((range, i) =>
+      range.startContainer === node && range.endContainer === node &&
+      range.startOffset === entry.matches[i].start && range.endOffset === entry.matches[i].end);
+}
+
+function buildRanges(node, matches) {
+  const len = node.nodeValue ? node.nodeValue.length : 0;
+  const ranges = [];
+  for (const m of matches) {
+    // Text may have changed between scan and paint; a stale offset would
+    // throw on setStart/setEnd.
+    if (m.end > len) continue;
+    const range = document.createRange();
+    try {
+      range.setStart(node, m.start);
+      range.setEnd(node, m.end);
+      ranges.push(range);
+    } catch (err) {
+      /* stale offset — drop this one silently */
+    }
+  }
+  return ranges;
+}
+
+/* Every text tick on the page triggers a scan, and each scan used to create a
+   Range for EVERY match on the page and register a brand-new Highlight - which
+   makes Chrome repaint all highlighted text - even when nothing had changed.
+   Unchanged nodes now keep their ranges, and the highlight is registered again
+   only when the set of ranges differs from the one already registered. */
 function rebuildHighlight() {
   const ranges = [];
 
-  for (const [node, matches] of [...matchIndex.entries()]) {
+  for (const [node, entry] of matchIndex) {
     if (!node.isConnected) {
       matchIndex.delete(node);
       continue;
     }
-    const len = node.nodeValue ? node.nodeValue.length : 0;
-    for (const m of matches) {
-      // Text may have changed between scan and paint; a stale offset would
-      // throw on setStart/setEnd.
-      if (m.end > len) continue;
-      const range = document.createRange();
-      try {
-        range.setStart(node, m.start);
-        range.setEnd(node, m.end);
-        ranges.push(range);
-      } catch (err) {
-        /* stale offset — drop this one silently */
-      }
-    }
+    if (!rangesIntact(node, entry)) entry.ranges = buildRanges(node, entry.matches);
+    ranges.push(...entry.ranges);
   }
 
   if (!supportsHighlight) return;
+  // Also re-register if the registry lost the highlight behind our back.
+  if (ranges.length === registeredRanges.length && ranges.every((r, i) => r === registeredRanges[i]) &&
+      CSS.highlights.has(HIGHLIGHT_NAME) === ranges.length > 0) return;
   try {
     if (!ranges.length) CSS.highlights.delete(HIGHLIGHT_NAME);
     else CSS.highlights.set(HIGHLIGHT_NAME, new Highlight(...ranges));
+    registeredRanges = ranges;
   } catch (err) {
     warnOnce('name-scan:highlight-set', err);
   }
@@ -228,7 +264,7 @@ function pointTextNode(x, y) {
 }
 
 function hitInTextNode(node, x, y) {
-  const matches = matchIndex.get(node);
+  const matches = matchIndex.get(node)?.matches;
   if (!matches?.length) return null;
   const len = node.nodeValue ? node.nodeValue.length : 0;
   for (const m of matches) {
@@ -362,9 +398,22 @@ export function scanForItemNames(root) {
 
   bindHover();
 
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+  /* Skip containers are pruned where they START, once per element, instead of
+     by a `closest()` walk up from every text node (O(nodes x depth) on a
+     whole-body scan). The root and its ancestors are checked once here; every
+     element below it is checked by the filter as the walk enters it. The tag
+     test stays on the DIRECT parent, exactly as shouldSkipParent applies it. */
+  if (root.nodeType === 1 && root.closest?.(SKIP_CONTAINERS)) {
+    queueHighlightRebuild();
+    return 0;
+  }
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
-      if (shouldSkipParent(node.parentElement)) return NodeFilter.FILTER_REJECT;
+      if (node.nodeType === 1) {
+        return node.matches(SKIP_CONTAINERS) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP;
+      }
+      const parent = node.parentElement;
+      if (!parent || SKIP_TAGS.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     },
   });
@@ -380,7 +429,9 @@ export function scanForItemNames(root) {
 
     const matches = findMatches(text, trie);
     if (matches.length) {
-      matchIndex.set(node, matches);
+      const entry = matchIndex.get(node);
+      // Same matches: keep the entry, so its ranges can be reused if intact.
+      if (!entry || !sameMatches(entry.matches, matches)) matchIndex.set(node, { matches, ranges: null });
       matchedNodes += 1;
     } else if (matchIndex.has(node)) {
       matchIndex.delete(node);
@@ -394,6 +445,7 @@ export function scanForItemNames(root) {
 /** Drop every recorded match and clear the paint. Used by the kill switch. */
 export function clearItemNameScan() {
   matchIndex.clear();
+  registeredRanges = [];
   activeItem = null;
   if (supportsHighlight) {
     try { CSS.highlights.delete(HIGHLIGHT_NAME); } catch (err) { /* no-op */ }

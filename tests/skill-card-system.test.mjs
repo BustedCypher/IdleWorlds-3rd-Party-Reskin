@@ -92,7 +92,9 @@ const card = c => `
   </div>
 </div>`;
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>*,::before,::after{box-sizing:border-box;border:0 solid}svg{display:block}
 button{background:none;font:inherit;color:inherit}body{margin:0;background:#0f172a}
 .panel{padding:8px}.flex{display:flex}.grid{display:grid}.gap-2{gap:.5rem}.h-4{height:1rem}.w-4{width:1rem}
@@ -648,8 +650,20 @@ try {
       set.map(r => `${r.id} glyph=${r.glyph ? `${r.glyph.y}..${round1(r.glyph.y + r.glyph.h)}` : 'none'} btn=${r.button.y}..${round1(r.button.y + r.button.h)}`).join(' '));
   };
   groupChecks('1100px', open);
-  check('action labels retain the readable ceiling when they fit above the frame',
-    open.every(r => r.labelFit.size === 9.5),
+  /* A label keeps the 9.5px ceiling whenever it fits, and one that does not
+     shrinks ONLY as far as it must: its text then fills the room to within one
+     0.1px size step (fitActionLabel floors to 0.1px). Since the labels became
+     capitals in Cinzel (Curtis, 2026-09-16) "CRAFT PARTS" no longer fits at
+     9.5px in the 64px button and sits at ~7.7px; the short verbs still sit at
+     the ceiling. Controls: size every label to the longest one's fit and the
+     short verbs leave the ceiling; shrink 10% past the fit and CRAFT PARTS
+     leaves ~6px of its room empty. */
+  check('action labels keep the ceiling when they fit, and shrink only as far as they must',
+    open.every(r => r.labelFit.size === 9.5 ||
+      (r.labelFit.size < 9.5 && r.labelFit.text <= r.labelFit.room + 0.5 && r.labelFit.room - r.labelFit.text <= 1.5)),
+    open.map(r => `${r.id}:${r.labelFit.size}px ${r.labelFit.text}/${r.labelFit.room}`).join(' '));
+  check('the short verbs still sit at the ceiling',
+    open.filter(r => r.id !== 'construction').every(r => r.labelFit.size === 9.5),
     open.map(r => `${r.id}:${r.labelFit.size}`).join(' '));
   /* No ground behind the title row (Curtis, 2026-09): the content zone spans
      only that row, so its wash drew a lighter box that ended under the title.

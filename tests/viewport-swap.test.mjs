@@ -75,7 +75,9 @@ const stack = tag => `
     <div class="compact-panel"><p>Ancient Treant</p><button>Attack</button></div>
   </div>`;
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>
   *,::before,::after{box-sizing:border-box;border:0 solid}
   svg{display:block}button{background:none;font:inherit;color:inherit}

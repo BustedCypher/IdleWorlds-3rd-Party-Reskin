@@ -328,8 +328,12 @@ state to lay out. What each cost:
   measures each aria-hidden visual mirror once and writes the size that fits
   (ceiling 9.5px, a 4px technical floor) as
   `--iw-skill-v2-action-label-font` on the card; width is linear in size because
-  the tracking is in em, so one measurement is exact. At the current 64px
-  width every fixture verb, including "CRAFT PARTS", retains the 9.5px ceiling.
+  the tracking is in em, so one measurement is exact. The mirror is capitals in
+  the heading typeface, Cinzel (Curtis, 2026-09-16, chosen over capitals in
+  Barlow). Cinzel is wider, so at the current 64px width the short verbs keep
+  the 9.5px ceiling but "CRAFT PARTS" fits at ~7.7px; the system test asserts
+  "keeps the ceiling when it fits, shrinks only as far as it must", not a
+  fixed size.
   The native button's `--iw-skill-v2-btn-font` is 0px so its preserved text
   takes no visual space behind the icon.
   Three things about the cache key `label | layout | inline width | layout
@@ -475,6 +479,21 @@ state to lay out. What each cost:
   `tests/skill-action-countdown.test.mjs`
   pins the 11-second boundary, 180s start, persistence through 10s, completion,
   teardown and the rendered replacement styling.
+- **The timer is refreshed by Current Action ticks, not by card events.** The
+  countdown ticks in ANOTHER panel, so DOMWatcher never emits `iw:skill-panel`
+  for it; the first build re-read the clock only when the card itself mutated,
+  and live the button's fill sat at `8%` for 12.5s of a Netherite Chest craft,
+  so the timer froze at 108s for ~10s and then jumped. The controller now also
+  listens to `iw:name-scan-flush` / `iw:dom-flush` and re-syncs running cards
+  when a root intersects the Current Action host. Measured with
+  `claude/probe-action-timer-start.js` (2026-09-17): the button follows the
+  game's text within 11-41ms.
+- **The ~2s hold on the first second is the game's, and is deliberately kept.**
+  The same capture shows Current Action itself holding `108s` for 2179ms before
+  its first tick (the same doubled first tick as
+  [current-action-progress](current-action-progress.md)). A local clock would
+  start counting at once but disagree with Current Action for up to ~2s;
+  Curtis chose to keep mirroring the game (2026-09-17).
 
 - **The command zone can BE the action button - and that, not a wrapper, was
   the live shape.** Reported (Curtis, 2026-09) first as every icon ~12px high,

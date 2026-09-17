@@ -75,7 +75,9 @@ const PAYLOAD = {
 
 /* The dashboard's own left column: the game stacks the panels at
    `minmax(320px,0.42fr)`, so the scene is narrow long before the viewport is. */
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+/* data-iw-page-hydrated: the latch src/page/hydration-signal.js sets on the live page once React
+   has hydrated. Without it HydrationGate holds the first boot for its full timeout. */
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>
   *,::before,::after{box-sizing:border-box;border:0 solid}
   svg{display:block}button{background:none;font:inherit;color:inherit}
