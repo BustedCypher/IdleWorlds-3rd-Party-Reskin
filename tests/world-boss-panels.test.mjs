@@ -81,8 +81,8 @@ assert.equal(cards[1].querySelector('.iw-control-meter-fill')?.style.width, '62.
 }
 assert.equal(cards[1].querySelector('.iw-control-meter-value')?.textContent, '12,500 / 20,000 HP', 'ward meter preserves native HP');
 assert.equal(cards[1].querySelector('[data-iw-boss-role="participation"]')?.textContent, 'Last battle participants');
-assert.equal(action.dataset.iwBossActionLabel, 'Prejoin', 'native Prejoin receives the compact display label');
-assert.equal(action.dataset.iwBossActionState, 'idle', 'native Prejoin is tagged as the idle action state');
+assert.equal(action.dataset.iwBossActionLabel, undefined, 'dedicated button artwork does not need a synthetic display label');
+assert.equal(action.dataset.iwBossActionState, 'join', 'native Prejoin uses the JOIN artwork state');
 assert.equal(participation?.dataset.iwBossRole, 'participation', 'participation link is available to the compact layout');
 assert.equal(statusRow?.dataset.iwBossRole, 'status', 'timer row is available to the compact layout');
 assert.equal(progress?.dataset.iwBossRole, 'progress', 'health progress stays in the compact information column');
@@ -132,9 +132,14 @@ action.click();
 assert.equal(clicks, 1);
 action.textContent = '⏳ Prejoined';
 decorateWorldBossPanel({ root, heading });
-assert.equal(action.dataset.iwBossActionLabel, 'Queued', 'native Prejoined is presented as Queued');
-assert.equal(action.dataset.iwBossActionState, 'active', 'native Prejoined is tagged as the active queued state');
+assert.equal(action.dataset.iwBossActionLabel, undefined, 'Prejoined keeps native text without synthetic copy');
+assert.equal(action.dataset.iwBossActionState, 'prejoined', 'native Prejoined uses the dedicated prejoined artwork state');
+action.textContent = 'Fighting';
+decorateWorldBossPanel({ root, heading });
+assert.equal(action.dataset.iwBossActionState, 'fighting', 'native Fighting uses the dedicated fighting artwork state');
 action.textContent = 'Prejoin';
+decorateWorldBossPanel({ root, heading });
+assert.equal(action.dataset.iwBossActionState, 'join', 'returning to Prejoin restores the JOIN artwork state');
 cards[1].querySelector('p').textContent = '🔵 Blue Team controls Zone 12';
 decorateWorldBossPanel({ root, heading });
 assert.equal(cards[1].dataset.iwControl, 'blue');

@@ -1381,8 +1381,8 @@ input[placeholder*="Search" i] {
 }
 [data-iw-encounter] [data-iw-boss-role="action"] {
   flex: 0 0 auto !important;
-  width: 132px !important; min-width: 132px !important; max-width: 132px !important;
-  height: 38px !important; min-height: 38px !important;
+  width: 150px !important; min-width: 150px !important; max-width: 150px !important;
+  height: 30px !important; min-height: 30px !important; max-height: 30px !important;
   padding: 0 12px !important;
   font: 700 11px var(--iw-font-head) !important;
   letter-spacing: .07em !important;
@@ -1391,71 +1391,51 @@ input[placeholder*="Search" i] {
   text-shadow: 0 1px 2px #000;
   background: linear-gradient(#6e4423,#241610) !important;
   border: 1px solid #b58b4b !important;
+  outline: 0 !important;
 }
-[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-art-ready] {
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="join"],
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="prejoined"],
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="fighting"] {
+  padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
-  background-color: transparent !important;
-  background-image: var(--fs-skills-ui-atlas) !important;
-  background-size: var(--fs-ui-action-idle-size) !important;
-  background-position: var(--fs-ui-action-idle-position) !important;
-  background-repeat: no-repeat !important;
-  box-shadow: none !important;
-  filter: drop-shadow(0 2px 4px #0008);
-}
-[data-iw-encounter] [data-iw-boss-role="action"] { outline: 0 !important; }
-/* Prejoined/Fighting is a persistent participation state, not a hover state.
-   Keep the existing action sprite and geometry; add only a static inner ring
-   plus a soft encounter-colour bloom. No animation is used, so the cue is
-   identical under reduced motion and cannot create another idle paint loop. */
-[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="active"] {
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--iw-boss-accent) 78%, #fff 22%),
-    inset 0 0 9px color-mix(in srgb, var(--iw-boss-accent) 22%, transparent) !important;
-  filter:
-    drop-shadow(0 2px 4px #0008)
-    drop-shadow(0 0 5px color-mix(in srgb, var(--iw-boss-accent) 50%, transparent));
-}
-/* The compact label is drawn with ::after; the game's own text ("Prejoin",
-   "⏳ Prejoined") stays in the button as the accessible copy at font-size 0.
-   It is still a FLEX ITEM of zero width, though, which is why `gap` is 0 here:
-   a gap applies on BOTH sides of that invisible item, so the old 5px gap moved
-   the label 2.5px right of centre on its own -- and the "active" state added a
-   "⌛" ::before on top of that, which pushed QUEUED a measured 12.9px right,
-   hard against the frame's right flourish (the sprite's flat interior is only
-   x 25..107 of the 132px box) while the space left of the glyph sat empty.
-   That is the whole of the reported "QUEUED is off centre". State is still
-   carried by the word itself -- QUEUED vs PREJOIN -- so nothing is lost.
-   Pinned by tests/boss-action-label.test.mjs, which measures the WORD's ink
-   alone: restore the gap and it reports +2.5px, restore the glyph and it
-   reports +8.25px, both and it reports the +12.9px above. */
-[data-iw-encounter] [data-iw-boss-action-label] {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
   color: transparent !important;
   font-size: 0 !important;
+  text-shadow: none !important;
+  background-color: transparent !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 2px 3px #0009);
+  animation: none !important;
 }
-[data-iw-encounter] [data-iw-boss-action-label]::after {
-  content: attr(data-iw-boss-action-label);
-  color: #fff0d8;
-  font: 700 11px var(--iw-font-head);
-  letter-spacing: .07em;
-  /* letter-spacing puts its step AFTER the last letter too, so the ink sits
-     half a step left of the box centre. Cancel exactly that much. */
-  margin-right: -.07em;
-  text-transform: uppercase;
-  text-shadow: 0 1px 2px #000;
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="join"] {
+  background-image: url('../assets/world-boss/world_boss_join.webp') !important;
 }
-[data-iw-encounter] [data-iw-boss-role="action"]:hover:not(:disabled) { filter: brightness(1.18); }
-[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="active"]:hover:not(:disabled) {
-  filter:
-    brightness(1.12)
-    drop-shadow(0 2px 4px #0008)
-    drop-shadow(0 0 6px color-mix(in srgb, var(--iw-boss-accent) 58%, transparent));
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="join"]:hover:not(:disabled) {
+  background-image: url('../assets/world-boss/world_boss_join_hover.webp') !important;
+  filter: drop-shadow(0 2px 4px #000b);
 }
-[data-iw-encounter] [data-iw-boss-role="action"]:disabled { opacity: .5 !important; filter: saturate(.3); cursor: not-allowed !important; }
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="prejoined"] {
+  background-image: url('../assets/world-boss/world_boss_prejoined.webp') !important;
+}
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="fighting"] {
+  background-image: url('../assets/world-boss/world_boss_fighting.webp') !important;
+}
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="prejoined"]:hover:not(:disabled),
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="fighting"]:hover:not(:disabled) {
+  filter: brightness(1.04) drop-shadow(0 2px 4px #000b);
+}
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state]:focus-visible {
+  outline: 1px solid #d6aa5d !important;
+  outline-offset: 2px !important;
+}
+[data-iw-encounter] [data-iw-boss-role="action"]:disabled {
+  opacity: .5 !important;
+  filter: saturate(.35) brightness(.8);
+  cursor: not-allowed !important;
+}
 .iw-boss-rewards { margin-top: 2px; padding-top: 9px; border-top: 1px solid #a88d4c35; }
 [data-iw-encounter]:not([data-iw-encounter="zone"]) > .iw-boss-rewards { grid-column: 1 / -1; grid-row: 5; }
 [data-iw-encounter] .iw-boss-rewards-title { font: 600 10px var(--iw-font-head) !important; color: #cdbb94 !important; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 7px !important; }
@@ -1921,7 +1901,10 @@ input[placeholder*="Search" i] {
 @media (max-width: 380px) {
   [data-iw-encounter]:not([data-iw-encounter="zone"]) { grid-template-columns: 80px minmax(0, 1fr); }
   [data-iw-encounter] > .iw-boss-art { width: 80px; height: 80px; }
-  [data-iw-encounter] [data-iw-boss-role="action"] { width: 120px !important; min-width: 120px !important; max-width: 120px !important; }
+  [data-iw-encounter] [data-iw-boss-role="action"] {
+    width: 120px !important; min-width: 120px !important; max-width: 120px !important;
+    height: 24px !important; min-height: 24px !important; max-height: 24px !important;
+  }
   .iw-control-dominion { grid-template-columns: 88px minmax(0, 1fr); }
   .iw-control-crest { width: 88px; }
   .iw-control-state { font-size: 13px !important; }
