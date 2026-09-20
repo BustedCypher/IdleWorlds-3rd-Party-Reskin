@@ -1,5 +1,5 @@
 name: Finish launch Task 1
-# Final Task 1 run; tolerate only the exact pre-existing main skill-card baseline failure
+# Final Task 1 run; remove the temporary sprite checkout before verifying generated changes
 
 on:
   push:
@@ -73,10 +73,10 @@ jobs:
       - name: Verify generated changes
         shell: bash
         run: |
+          rm -rf sprite-source
           git status --short
           git diff --check
           git diff --quiet -- src/modules/WorldBossPanels.js || true
-          test -z "$(git status --porcelain -- sprite-source)"
           git status --porcelain -- assets/gear_icons_atlas.png assets/gear_icons_manifest.json dist/content.bundle.js | grep -q .
 
       - name: Commit generated Task 1 assets
