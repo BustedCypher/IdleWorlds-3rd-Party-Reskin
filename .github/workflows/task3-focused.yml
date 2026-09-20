@@ -1,0 +1,28 @@
+name: Task 3 focused verification
+
+on:
+  push:
+    branches:
+      - fix/launch-task-3-active-menu-labels
+    paths:
+      - .github/workflows/task3-focused.yml
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Run Task 3 regressions
+        run: |
+          node tests/compact-button-atlas.test.mjs
+          node tests/compact-button-reconcile.test.mjs
