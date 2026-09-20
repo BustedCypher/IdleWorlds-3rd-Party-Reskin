@@ -14,9 +14,9 @@
  * both source cells must match their audited RGBA SHA-256 before any write.
  */
 
-import { chromium } from 'playwright';
 import { createHash } from 'node:crypto';
 import { readFile, readdir, rename, writeFile } from 'node:fs/promises';
+import { deflateSync, inflateSync } from 'node:zlib';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -104,81 +104,210 @@ function findAuditRecord(audit, spec) {
   );
 }
 
-async function decodeAndPatch({ sourceBytes, targetBytes, patch }) {
-  const browser = await chromium.launch();
-  try {
-    const page = await browser.newPage();
-    return await page.evaluate(async ({ sourceUri, targetUri, cell, patch }) => {
-      const toBase64 = data => {
-        let binary = '';
-        const size = 0x8000;
-        for (let i = 0; i < data.length; i += size) {
-          binary += String.fromCharCode(...data.subarray(i, i + size));
-        }
-        return btoa(binary);
-      };
-      const load = async uri => {
-        const img = new Image();
-        img.src = uri;
-        await img.decode();
-        return img;
-      };
-      const [source, target] = await Promise.all([load(sourceUri), load(targetUri)]);
 
-      const sourceCanvas = document.createElement('canvas');
-      sourceCanvas.width = source.naturalWidth;
-      sourceCanvas.height = source.naturalHeight;
-      const sx = sourceCanvas.getContext('2d', { willReadFrequently: true });
-      sx.drawImage(source, 0, 0);
-
-      const targetCanvas = document.createElement('canvas');
-      targetCanvas.width = target.naturalWidth;
-      targetCanvas.height = target.naturalHeight;
-      const tx = targetCanvas.getContext('2d', { willReadFrequently: true });
-      tx.drawImage(target, 0, 0);
-
-      const before = [];
-      const sourceCells = [];
-      for (const spec of patch) {
-        const src = sx.getImageData(spec.sourceX, spec.sourceY, cell, cell);
-        const dst = tx.getImageData(spec.targetX, spec.targetY, cell, cell);
-        sourceCells.push(toBase64(src.data));
-        before.push({
-          rgba: toBase64(dst.data),
-          occupied: dst.data.some((value, index) => index % 4 === 3 && value !== 0),
-        });
-      }
-
-      for (const spec of patch) {
-        tx.drawImage(source,
-          spec.sourceX, spec.sourceY, cell, cell,
-          spec.targetX, spec.targetY, cell, cell);
-      }
-
-      const after = patch.map(spec => {
-        const data = tx.getImageData(spec.targetX, spec.targetY, cell, cell).data;
-        return toBase64(data);
-      });
-
-      return {
-        sourceWidth: source.naturalWidth,
-        sourceHeight: source.naturalHeight,
-        targetWidth: target.naturalWidth,
-        targetHeight: target.naturalHeight,
-        sourceCells,
-        before,
-        after,
-        png: targetCanvas.toDataURL('image/png').split(',')[1],
-      };
-    }, {
-      sourceUri: `data:image/png;base64,${sourceBytes.toString('base64')}`,
-      targetUri: `data:image/png;base64,${targetBytes.toString('base64')}`,
-      cell: CELL,
-      patch,
-    });
-  } finally {
-    await browser.close();
+const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n += 1) {
+    let value = n;
+    for (let k = 0; k < 8; k += 1) {
+      value = (value & 1) ? (0xedb88320 ^ (value >>> 1)) : (value >>> 1);
+    }
+    table[n] = value >>> 0;
   }
+  return table;
+})();
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) crc = CRC_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type, data) {
+  const typeBytes = Buffer.from(type, 'ascii');
+  const out = Buffer.alloc(12 + data.length);
+  out.writeUInt32BE(data.length, 0);
+  typeBytes.copy(out, 4);
+  data.copy(out, 8);
+  out.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])), 8 + data.length);
+  return out;
+}
+
+function paeth(a, b, c) {
+  const p = a + b - c;
+  const pa = Math.abs(p - a);
+  const pb = Math.abs(p - b);
+  const pc = Math.abs(p - c);
+  if (pa <= pb && pa <= pc) return a;
+  if (pb <= pc) return b;
+  return c;
+}
+
+function decodePng(bytes) {
+  if (bytes.length < PNG_SIGNATURE.length || !bytes.subarray(0, 8).equals(PNG_SIGNATURE)) {
+    throw new Error('expected PNG signature');
+  }
+
+  const chunks = [];
+  const idats = [];
+  let ihdr = null;
+  for (let offset = 8; offset < bytes.length;) {
+    const length = bytes.readUInt32BE(offset);
+    const type = bytes.toString('ascii', offset + 4, offset + 8);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    const rawEnd = dataEnd + 4;
+    if (rawEnd > bytes.length) throw new Error(\`truncated PNG chunk \${type}\`);
+    const data = bytes.subarray(dataStart, dataEnd);
+    chunks.push({ type, raw: bytes.subarray(offset, rawEnd) });
+    if (type === 'IHDR') ihdr = Buffer.from(data);
+    if (type === 'IDAT') idats.push(Buffer.from(data));
+    offset = rawEnd;
+    if (type === 'IEND') break;
+  }
+
+  if (!ihdr || idats.length === 0) throw new Error('PNG missing IHDR or IDAT');
+  const width = ihdr.readUInt32BE(0);
+  const height = ihdr.readUInt32BE(4);
+  const bitDepth = ihdr[8];
+  const colorType = ihdr[9];
+  const compression = ihdr[10];
+  const filterMethod = ihdr[11];
+  const interlace = ihdr[12];
+  if (bitDepth !== 8 || colorType !== 6 || compression !== 0 || filterMethod !== 0 || interlace !== 0) {
+    throw new Error(\`unsupported PNG format: bitDepth=\${bitDepth} colorType=\${colorType} compression=\${compression} filter=\${filterMethod} interlace=\${interlace}\`);
+  }
+
+  const bpp = 4;
+  const stride = width * bpp;
+  const packed = inflateSync(Buffer.concat(idats));
+  const expectedLength = height * (stride + 1);
+  requireEqual(packed.length, expectedLength, 'decoded PNG scanline byte length');
+
+  const pixels = Buffer.alloc(width * height * bpp);
+  const filters = new Uint8Array(height);
+  for (let y = 0; y < height; y += 1) {
+    const packedRow = y * (stride + 1);
+    const filter = packed[packedRow];
+    if (filter > 4) throw new Error(\`unsupported PNG row filter \${filter}\`);
+    filters[y] = filter;
+    const outRow = y * stride;
+    const prevRow = outRow - stride;
+    for (let x = 0; x < stride; x += 1) {
+      const raw = packed[packedRow + 1 + x];
+      const a = x >= bpp ? pixels[outRow + x - bpp] : 0;
+      const b = y > 0 ? pixels[prevRow + x] : 0;
+      const cc = y > 0 && x >= bpp ? pixels[prevRow + x - bpp] : 0;
+      let value;
+      if (filter === 0) value = raw;
+      else if (filter === 1) value = (raw + a) & 0xff;
+      else if (filter === 2) value = (raw + b) & 0xff;
+      else if (filter === 3) value = (raw + Math.floor((a + b) / 2)) & 0xff;
+      else value = (raw + paeth(a, b, cc)) & 0xff;
+      pixels[outRow + x] = value;
+    }
+  }
+
+  return { width, height, pixels, filters, chunks };
+}
+
+function encodePng(decoded) {
+  const { width, height, pixels, filters, chunks } = decoded;
+  const bpp = 4;
+  const stride = width * bpp;
+  const packed = Buffer.alloc(height * (stride + 1));
+
+  for (let y = 0; y < height; y += 1) {
+    const filter = filters[y];
+    const packedRow = y * (stride + 1);
+    const row = y * stride;
+    const prevRow = row - stride;
+    packed[packedRow] = filter;
+    for (let x = 0; x < stride; x += 1) {
+      const value = pixels[row + x];
+      const a = x >= bpp ? pixels[row + x - bpp] : 0;
+      const b = y > 0 ? pixels[prevRow + x] : 0;
+      const cc = y > 0 && x >= bpp ? pixels[prevRow + x - bpp] : 0;
+      let filtered;
+      if (filter === 0) filtered = value;
+      else if (filter === 1) filtered = (value - a + 256) & 0xff;
+      else if (filter === 2) filtered = (value - b + 256) & 0xff;
+      else if (filter === 3) filtered = (value - Math.floor((a + b) / 2) + 256) & 0xff;
+      else filtered = (value - paeth(a, b, cc) + 256) & 0xff;
+      packed[packedRow + 1 + x] = filtered;
+    }
+  }
+
+  const idat = pngChunk('IDAT', deflateSync(packed, { level: 9 }));
+  const out = [PNG_SIGNATURE];
+  let emittedIdat = false;
+  for (const chunk of chunks) {
+    if (chunk.type === 'IDAT') {
+      if (!emittedIdat) {
+        out.push(idat);
+        emittedIdat = true;
+      }
+      continue;
+    }
+    out.push(Buffer.from(chunk.raw));
+  }
+  if (!emittedIdat) throw new Error('cannot encode PNG without IDAT slot');
+  return Buffer.concat(out);
+}
+
+function readCell(decoded, x, y) {
+  if (x < 0 || y < 0 || x + CELL > decoded.width || y + CELL > decoded.height) {
+    throw new Error(\`cell \${x},\${y} is outside PNG bounds \${decoded.width}x\${decoded.height}\`);
+  }
+  const out = Buffer.alloc(CELL * CELL * 4);
+  const sourceStride = decoded.width * 4;
+  const cellStride = CELL * 4;
+  for (let row = 0; row < CELL; row += 1) {
+    const srcStart = (y + row) * sourceStride + x * 4;
+    decoded.pixels.copy(out, row * cellStride, srcStart, srcStart + cellStride);
+  }
+  return out;
+}
+
+function writeCell(decoded, x, y, cell) {
+  const targetStride = decoded.width * 4;
+  const cellStride = CELL * 4;
+  for (let row = 0; row < CELL; row += 1) {
+    const dstStart = (y + row) * targetStride + x * 4;
+    cell.copy(decoded.pixels, dstStart, row * cellStride, (row + 1) * cellStride);
+  }
+}
+
+function hasVisibleAlpha(cell) {
+  for (let i = 3; i < cell.length; i += 4) if (cell[i] !== 0) return true;
+  return false;
+}
+
+function decodeAndPatch({ sourceBytes, targetBytes, patch }) {
+  const source = decodePng(sourceBytes);
+  const target = decodePng(targetBytes);
+  const sourceCells = patch.map(spec => readCell(source, spec.sourceX, spec.sourceY));
+  const before = patch.map(spec => {
+    const rgba = readCell(target, spec.targetX, spec.targetY);
+    return { rgba, occupied: hasVisibleAlpha(rgba) };
+  });
+
+  for (let i = 0; i < patch.length; i += 1) {
+    writeCell(target, patch[i].targetX, patch[i].targetY, sourceCells[i]);
+  }
+  const after = patch.map(spec => readCell(target, spec.targetX, spec.targetY));
+
+  return {
+    sourceWidth: source.width,
+    sourceHeight: source.height,
+    targetWidth: target.width,
+    targetHeight: target.height,
+    sourceCells,
+    before,
+    after,
+    png: encodePng(target),
+  };
 }
 
 const manifestPath = await discoverSingle(/^icon-manifest\.[a-f0-9]+\.json$/i, 'hashed v2 icon manifest');
@@ -219,7 +348,7 @@ for (const spec of EXPECTED) {
 }
 
 const sourceBytes = await readFile(path.join(SOURCE_V2, gloveChunk.path));
-const pixels = await decodeAndPatch({ sourceBytes, targetBytes, patch: EXPECTED });
+const pixels = decodeAndPatch({ sourceBytes, targetBytes, patch: EXPECTED });
 requireEqual(pixels.sourceWidth, Number(gloveChunk.width), 'source glove chunk width');
 requireEqual(pixels.sourceHeight, Number(gloveChunk.height), 'source glove chunk height');
 requireEqual(pixels.targetWidth, Number(targetManifest.columns) * CELL, 'target atlas width');
@@ -227,9 +356,9 @@ requireEqual(pixels.targetHeight, Number(targetManifest.rows) * CELL, 'target at
 
 for (let i = 0; i < EXPECTED.length; i += 1) {
   const spec = EXPECTED[i];
-  const sourceHash = sha256(Buffer.from(pixels.sourceCells[i], 'base64'));
+  const sourceHash = sha256(pixels.sourceCells[i]);
   requireEqual(sourceHash, spec.sha256, `${spec.sourceKey} decoded source RGBA hash`);
-  const afterHash = sha256(Buffer.from(pixels.after[i], 'base64'));
+  const afterHash = sha256(pixels.after[i]);
   requireEqual(afterHash, spec.sha256, `${spec.sourceKey} patched destination RGBA hash`);
 }
 
@@ -240,7 +369,7 @@ const alreadyImported = existing.every((entry, i) =>
   Number(entry.y) === EXPECTED[i].targetY &&
   Number(entry.width) === CELL &&
   Number(entry.height) === CELL &&
-  sha256(Buffer.from(pixels.before[i].rgba, 'base64')) === EXPECTED[i].sha256
+  sha256(pixels.before[i].rgba) === EXPECTED[i].sha256
 );
 
 if (CHECK) {
@@ -273,7 +402,7 @@ for (let i = 0; i < EXPECTED.length; i += 1) {
 const nextIndex = Math.max(-1, ...(targetManifest.icons || []).map(icon => Number(icon.index)).filter(Number.isFinite)) + 1;
 targetManifest.icons.push(...EXPECTED.map((spec, offset) => targetEntryFor(spec, nextIndex + offset)));
 
-await atomicWrite(TARGET_ATLAS, Buffer.from(pixels.png, 'base64'));
+await atomicWrite(TARGET_ATLAS, pixels.png);
 await atomicWrite(TARGET_MANIFEST, Buffer.from(JSON.stringify(targetManifest, null, 2) + '\n', 'utf8'));
 
 for (const spec of EXPECTED) console.log(`IMPORTED ${spec.name}: ${spec.sha256}`);
