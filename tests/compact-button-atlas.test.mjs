@@ -40,6 +40,10 @@ try {
     await page.setContent(`<html data-iw-zone-theme="${theme}" data-iw-compact-atlas="compact-ghost-v3" style='${host.style.cssText}'><style>${css}</style><style>*{box-sizing:border-box}body{background:#090e12!important;padding:35px!important}.test-row{display:flex;gap:12px;align-items:center;margin:30px 0}button,a{font:600 12px Arial;color:#ddd4c0}.native-active-label,.native-active-label-inner{color:#050505!important;-webkit-text-fill-color:#050505!important;opacity:.35!important;visibility:visible!important}.small{height:26px;padding:0 10px;border:1px solid #345}#loadouts button{width:26px;padding:0}#inventory-tool{width:28px;height:28px}</style>${fixture}</html>`);
     const baseline=await page.evaluate(ids=>ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return [r.x,r.y,r.width,r.height]}),ids);
     await page.addScriptTag({content:`(()=>{${renderer};window.decorate=decorateCompactButtons;window.clearCompact=clearCompactButtons;window.nativeRefs=[...document.querySelectorAll('button,a')].map(el=>[el,el.firstChild]);window.clickCount=0;document.getElementById('list').addEventListener('click',()=>window.clickCount++);decorateCompactButtons();})()`});
+    /* The decorator adds data-iw-compact-button, which changes the active
+       foreground and can briefly be sampled mid-transition. Let the declared
+       180ms colour transition settle before comparing descendant paint. */
+    await page.waitForTimeout(220);
     const after=await page.evaluate(ids=>ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return [r.x,r.y,r.width,r.height]}),ids);
     assert.deepEqual(after,baseline,`${theme}: adding art must preserve all native dimensions`);
     assert.equal(await page.locator('#unrelated').getAttribute('data-iw-compact-button'),null);
