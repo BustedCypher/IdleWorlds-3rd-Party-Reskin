@@ -56,6 +56,32 @@ document.body.innerHTML = `
       <h2>Inventory</h2>
     </div>
   </main>
+  <div class="panel" id="inventory" data-iw-inventory-root="1"
+       data-cs='{"position":"relative"}' data-rect='{"x":8,"y":330,"w":396,"h":500}'>
+    <div id="inventory-tools" data-cs='{"position":"relative"}' data-rect='{"x":20,"y":350,"w":372,"h":44}'>
+      <div class="relative" id="filter-anchor" data-cs='{"position":"relative"}' data-rect='{"x":300,"y":352,"w":30,"h":31}'>
+        <button id="filter-trigger" aria-label="Filter inventory" title="Filter inventory"
+                data-rect='{"x":300,"y":352,"w":30,"h":31}'>F</button>
+        <div id="filter-popup" class="absolute right-0 top-full z-30"
+             data-cs='{"position":"absolute","zIndex":"30"}' data-rect='{"x":120,"y":384,"w":224,"h":210}'>
+          <p>Tier</p><button>All</button><button>18</button>
+          <p>Type</p><button>Weapon</button><button>Material</button>
+        </div>
+        <div id="closed-filter-popup" class="absolute right-0 top-full z-30"
+             data-cs='{"position":"absolute","zIndex":"30","display":"none"}' data-rect='{"x":120,"y":384,"w":224,"h":210}'>
+          <button>Closed</button>
+        </div>
+      </div>
+      <div id="ordinary-absolute" data-cs='{"position":"absolute","zIndex":"30"}'
+           data-rect='{"x":40,"y":384,"w":120,"h":60}'><button>Ordinary</button></div>
+      <div class="iw-tip" id="inventory-tip" role="dialog"
+           data-cs='{"position":"absolute","zIndex":"40"}' data-rect='{"x":40,"y":450,"w":120,"h":80}'><button>Tip</button></div>
+    </div>
+    <div data-iw-inventory-list="1" id="inventory-list"
+         data-cs='{"position":"relative","zIndex":"1"}' data-rect='{"x":20,"y":400,"w":372,"h":400}'>
+      <div>Item row</div>
+    </div>
+  </div>
   <div class="fixed inset-0 z-50" id="scrim"
        data-cs='{"position":"fixed","zIndex":"50","display":"flex","backgroundColor":"rgba(0, 0, 0, 0.65)","backdropFilter":"blur(4px)"}'
        data-rect='${FULL_RECT}'>
@@ -73,6 +99,11 @@ const scrim = document.getElementById('scrim');
 const modalPanel = document.getElementById('modal-panel');
 const pagePanel = document.getElementById('page-panel');
 const bareLayer = document.getElementById('bare-layer');
+const filterPopup = document.getElementById('filter-popup');
+const filterHost = document.getElementById('inventory-tools');
+const closedFilterPopup = document.getElementById('closed-filter-popup');
+const ordinaryAbsolute = document.getElementById('ordinary-absolute');
+const inventoryTip = document.getElementById('inventory-tip');
 
 /* ── 1. Detection ─────────────────────────────────────────────────────── */
 frameOverlays();
@@ -82,11 +113,23 @@ assert.equal(modalPanel.dataset.iwOverlay, 'panel', 'the .panel inside it is tag
 assert.equal(pagePanel.dataset.iwOverlay, undefined, 'a plain in-page .panel is never tagged');
 assert.equal(bareLayer.dataset.iwOverlay, undefined,
   'a transparent full-screen positioning layer is not a scrim');
+assert.equal(filterPopup.dataset.iwOverlay, 'popup',
+  'the deployed Inventory Filters sibling is tagged as a contained popup');
+assert.equal(filterHost.dataset.iwOverlayHost, '1',
+  'the frame direct child that owns the popup is tagged as its lifted host');
+assert.equal(closedFilterPopup.dataset.iwOverlay, undefined,
+  'a closed deployed-shape popup is not tagged');
+assert.equal(ordinaryAbsolute.dataset.iwOverlay, undefined,
+  'an ordinary absolute child with a button is not mistaken for a popup');
+assert.equal(inventoryTip.dataset.iwOverlay, undefined,
+  'the skin tooltip namespace is excluded from contained popup framing');
 
 /* ── 2. Idempotent ───────────────────────────────────────────────────── */
 frameOverlays();
 assert.equal(scrim.dataset.iwOverlay, 'scrim', 'second pass keeps the scrim tag');
 assert.equal(modalPanel.dataset.iwOverlay, 'panel', 'second pass keeps the panel tag');
+assert.equal(filterPopup.dataset.iwOverlay, 'popup', 'second pass keeps the contained popup tag');
+assert.equal(filterHost.dataset.iwOverlayHost, '1', 'second pass keeps the popup host tag');
 
 /* ── 3. The dialog closes: scrim stops covering the viewport ──────────── */
 scrim.setAttribute('data-cs', '{"position":"fixed","zIndex":"50","display":"none"}');
@@ -94,16 +137,29 @@ scrim.setAttribute('data-rect', JSON.stringify({ x: 0, y: 0, w: 0, h: 0 }));
 frameOverlays();
 assert.equal(scrim.dataset.iwOverlay, undefined, 'a scrim that no longer reads as an overlay is un-tagged');
 
-/* ── 4. Teardown ─────────────────────────────────────────────────────── */
+/* ── 4. Contained popup closes while its wrapper remains ─────────────── */
+filterPopup.setAttribute('data-cs', '{"position":"absolute","zIndex":"30","display":"none"}');
+filterPopup.setAttribute('data-rect', JSON.stringify({ x: 120, y: 384, w: 0, h: 0 }));
+frameOverlays();
+assert.equal(filterPopup.dataset.iwOverlay, undefined, 'closed popup loses its popup marker');
+assert.equal(filterHost.dataset.iwOverlayHost, undefined, 'closing the popup releases the lifted host marker');
+
+/* ── 5. Teardown ─────────────────────────────────────────────────────── */
 // Re-open and re-tag, then kill-switch.
 scrim.setAttribute('data-cs', '{"position":"fixed","zIndex":"50","display":"flex","backgroundColor":"rgba(0, 0, 0, 0.65)","backdropFilter":"blur(4px)"}');
 scrim.setAttribute('data-rect', FULL_RECT);
+filterPopup.setAttribute('data-cs', '{"position":"absolute","zIndex":"30"}');
+filterPopup.setAttribute('data-rect', JSON.stringify({ x: 120, y: 384, w: 224, h: 210 }));
 frameOverlays();
 assert.equal(scrim.dataset.iwOverlay, 'scrim', 're-tag after re-open');
 assert.equal(modalPanel.dataset.iwOverlay, 'panel', 're-tag the panel after re-open');
+assert.equal(filterPopup.dataset.iwOverlay, 'popup', 're-tag the contained popup after re-open');
+assert.equal(filterHost.dataset.iwOverlayHost, '1', 're-tag its direct host after re-open');
 
 clearOverlayFramer();
 assert.equal(document.querySelectorAll('[data-iw-overlay]').length, 0,
-  'clearOverlayFramer removes every attribute the module wrote');
+  'clearOverlayFramer removes every overlay attribute the module wrote');
+assert.equal(document.querySelectorAll('[data-iw-overlay-host]').length, 0,
+  'clearOverlayFramer removes every contained-popup host attribute');
 
 console.log('PASS overlay-framer');
