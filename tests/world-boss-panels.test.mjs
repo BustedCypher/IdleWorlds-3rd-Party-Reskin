@@ -55,6 +55,7 @@ assert.equal(cards[1].querySelector('.iw-control-meter-fill')?.style.width, '62.
 assert.equal(cards[1].querySelector('.iw-control-meter-value')?.textContent, '12,500 / 20,000 HP', 'ward meter preserves native HP');
 assert.equal(cards[1].querySelector('[data-iw-boss-role="participation"]')?.textContent, 'Last battle participants');
 assert.equal(action.dataset.iwBossActionLabel, 'Prejoin', 'native Prejoin receives the compact display label');
+assert.equal(action.dataset.iwBossActionState, 'idle', 'native Prejoin is tagged as the idle action state');
 assert.equal(participation?.dataset.iwBossRole, 'participation', 'participation link is available to the compact layout');
 assert.equal(statusRow?.dataset.iwBossRole, 'status', 'timer row is available to the compact layout');
 assert.equal(progress?.dataset.iwBossRole, 'progress', 'health progress stays in the compact information column');
@@ -92,6 +93,7 @@ assert.equal(clicks, 1);
 action.textContent = '⏳ Prejoined';
 decorateWorldBossPanel({ root, heading });
 assert.equal(action.dataset.iwBossActionLabel, 'Queued', 'native Prejoined is presented as Queued');
+assert.equal(action.dataset.iwBossActionState, 'active', 'native Prejoined is tagged as the active queued state');
 action.textContent = 'Prejoin';
 cards[1].querySelector('p').textContent = '🔵 Blue Team controls Zone 12';
 decorateWorldBossPanel({ root, heading });
