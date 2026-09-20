@@ -8,21 +8,39 @@ on:
       - .github/workflows/task2-focused.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   focused:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: fix/launch-task-2-boss-queued-state
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
+      - name: Rebuild production bundle
+        run: |
+          npm run build
+          node --check dist/content.bundle.js
       - name: Run Task 2 regressions
         run: |
           node tests/world-boss-panels.test.mjs
           node tests/boss-action-label.test.mjs
+      - name: Verify and commit generated bundle
+        shell: bash
+        run: |
+          git diff --check
+          git status --short
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- dist/content.bundle.js; then
+            git add dist/content.bundle.js
+            git commit -m "build: refresh bundle for queued boss state"
+            git push origin HEAD:fix/launch-task-2-boss-queued-state
+          fi
