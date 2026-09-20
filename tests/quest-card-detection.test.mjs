@@ -30,7 +30,7 @@ const compiled = await build({
 // Whitespace-free, in the live card's element order: text column, controls,
 // progress bar, then the percent line.
 const CARDS = `<div class="panel"><div><h2>Quests</h2></div><div class="space-y-2">`
-  + `<div class="compact-panel" id="no-percent-last"><div><div><p>Tailoring Work Order</p><p>Craft 1 Moonsilk Boots for the tailor.</p><p>Moonsilk Boots 0/1</p><p>Reward: +3,870g • +3240 tailoring XP</p></div><div><button>Turn In</button><button>Skip (0)</button></div></div><p id="skip-note">Out of skips - they reset daily at 00:00 UTC, or completing (not skipping) a work order refills them to your daily max right away.</p><div class="h-1.5 rounded-full"><div style="width: 0%"></div></div><div>0% complete</div><p>Expires in 3h</p></div>`
+  + `<div class="compact-panel" id="no-percent-last"><div class="space-y-2"><div><div><p>Tailoring Work Order</p><p>Craft 1 Moonsilk Boots for the tailor.</p><p>Moonsilk Boots 0/1</p><p>Reward: +3,870g • +3240 tailoring XP</p></div><div><button>Turn In</button><button>Skip (0)</button></div></div><p id="skip-note">Out of skips - they reset daily at 00:00 UTC, or completing (not skipping) a work order refills them to your daily max right away.</p><div class="h-1.5 rounded-full"><div style="width: 0%"></div></div><div>0% complete</div><p>Expires in 3h</p></div></div>`
   + `<div class="compact-panel" id="turn-in-only"><div><p>Night Claw Bounty</p><p>Reward: +3,225g • +1350 combat XP</p></div><div><button>Turn In</button></div><p>Ready</p></div>`
   + `<div class="compact-panel" id="not-a-quest"><p>Return into town to rest.</p><button>Rest</button></div>`
   + `</div></div>`;
