@@ -11465,6 +11465,26 @@
       "y": 19456,
       "width": 128,
       "height": 128
+    },
+    {
+      "name": "Woodcutter's Gloves",
+      "index": 1146,
+      "row": 152,
+      "column": 7,
+      "x": 896,
+      "y": 19456,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Builder's Gloves",
+      "index": 1147,
+      "row": 152,
+      "column": 8,
+      "x": 1024,
+      "y": 19456,
+      "width": 128,
+      "height": 128
     }
   ],
   "asset_version": "2x-2026-08-18-missing27-lapidaryfix-plus4restore1"
