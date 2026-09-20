@@ -38,6 +38,21 @@ severs the connecting rule; `border-image` crushes the 140px edge slices 4.7x
 vertically and flattens the flourish; anchoring the bottom to `100%` leaves the
 frame short. Do not spend another round trying to make it fit.
 
+**No resolved zone is a semantic state, not permission to remove control art.**
+The Game route owns the live `Zone N:` label. A direct cold load onto Dungeon
+(or Market/Village/Leaderboards) can therefore start with no zone number and no
+cached zone at all. In that state `data-iw-zone-theme` must stay `default`,
+and `--iw-zone-atlas`, `--iw-corner-filigree` and `--iw-zone-separator`
+must remain cleared — claiming `forged-metal` there would invent a player
+location. But `SkillsArtService` also owns the compact/action button atlases;
+clearing those at the same time makes the persistent top nav revert to legacy
+buttons. `HeaderRenderer.applyZoneTheme()` therefore separates semantic zone
+theme from visual control fallback: a real zone uses its mapped theme for both,
+while an unresolved zone uses `forged-metal` only for control art. The cold
+`/dungeon` browser fixture pins all three facts together: zone theme remains
+`default`, no zone-specific atlas var appears, and the active Dungeon tab
+still paints the forged-metal compact atlas.
+
 **A `gap` is applied on BOTH sides of an invisible flex item, so flattening a
 label's native text does not make it free.** The World Boss action button keeps
 the game's own copy ("Prejoin", "⏳ Prejoined") inside the control at
