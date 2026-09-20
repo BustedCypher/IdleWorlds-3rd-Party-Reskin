@@ -197,6 +197,13 @@ window.chrome = {
 const doc = window.document;
 const outlet = doc.getElementById('route');
 const navigate = html => { outlet.innerHTML = html; };
+const navigatePath = (pathname, html) => {
+  window.history.pushState({}, '', pathname);
+  navigate(html);
+};
+const navTab = label => [...doc.querySelectorAll('[data-iw-ui="nav-tab"]')]
+  .find(el => el.dataset.iwTab === label);
+const toolkitCount = () => doc.querySelectorAll('[data-iw-nav-link="toolkit"]').length;
 
 const marketRows = () => [...doc.querySelectorAll('.compact-row')];
 const taggedMarketRows = () => [...doc.querySelectorAll('[data-iw-market="row"]')];
@@ -220,6 +227,30 @@ check('baseline: nothing market-tagged on a route with no Market',
   doc.querySelectorAll('[data-iw-market]').length === 0);
 check('baseline: zone bar classified on the boot route',
   !!zoneBar() && !!zoneTitle());
+
+/* -- Game -> Dungeon -> Game keeps one Toolkit and follows the route ----- */
+/* The route tabs are persistent React nodes. Only their active state changes,
+   and Toolkit is the one node the skin appends. Reclassification must update
+   the active tab without ever appending a second Toolkit link. */
+await waitFor(() => toolkitCount() === 1 && navTab('game')?.dataset.iwState === 'active');
+check('baseline: exactly one Toolkit link is appended',
+  toolkitCount() === 1, `toolkit=${toolkitCount()}`);
+
+navigatePath('/dungeon', DUNGEON_ROUTE);
+await waitFor(() => navTab('dungeon')?.dataset.iwState === 'active');
+check('Game -> Dungeon: the persistent nav marks Dungeon active',
+  navTab('dungeon')?.dataset.iwState === 'active' && !navTab('game')?.dataset.iwState,
+  `game=${navTab('game')?.dataset.iwState || '-'} dungeon=${navTab('dungeon')?.dataset.iwState || '-'}`);
+check('Game -> Dungeon: Toolkit is not duplicated',
+  toolkitCount() === 1, `toolkit=${toolkitCount()}`);
+
+navigatePath('/', GAME_ROUTE);
+await waitFor(() => navTab('game')?.dataset.iwState === 'active' && !!zoneBar() && !!zoneTitle());
+check('Dungeon -> Game: the persistent nav restores Game active',
+  navTab('game')?.dataset.iwState === 'active' && !navTab('dungeon')?.dataset.iwState,
+  `game=${navTab('game')?.dataset.iwState || '-'} dungeon=${navTab('dungeon')?.dataset.iwState || '-'}`);
+check('Dungeon -> Game: still exactly one Toolkit link',
+  toolkitCount() === 1, `toolkit=${toolkitCount()}`);
 
 /* -- Game -> Market ---------------------------------------------------- */
 navigate(MARKET_ROUTE);

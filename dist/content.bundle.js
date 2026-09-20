@@ -7330,25 +7330,27 @@
     root.style.setProperty("--iw-header-surface-mobile", zoneSurfaceUrl(zone, "_mobile"));
   }
   var THEME_ASSET_DIR = "assets/skills-ui";
+  var FALLBACK_VISUAL_THEME = "forged-metal";
   function applyZoneTheme() {
     const html = document.documentElement;
     if (!html) return;
     const theme = zoneTheme(currentZoneNumber());
     const key = theme || "default";
-    const buttonThemeReady = !theme || !!html.style.getPropertyValue("--iw-action-idle");
-    if (html.dataset.iwZoneTheme === key && buttonThemeReady) return;
+    const visualTheme = theme || FALLBACK_VISUAL_THEME;
+    const zoneVarsReady = theme ? !!html.style.getPropertyValue("--iw-zone-atlas") : !html.style.getPropertyValue("--iw-zone-atlas") && !html.style.getPropertyValue("--iw-corner-filigree") && !html.style.getPropertyValue("--iw-zone-separator");
+    const buttonThemeReady = html.dataset.iwCompactAtlas === "compact-ghost-v3" && !!html.style.getPropertyValue("--iw-compact-atlas") && !!html.style.getPropertyValue("--iw-action-idle");
+    if (html.dataset.iwZoneTheme === key && zoneVarsReady && buttonThemeReady) return;
     html.dataset.iwZoneTheme = key;
     if (theme) {
       html.style.setProperty("--iw-zone-atlas", `url("${assetUrl(`${THEME_ASSET_DIR}/theme_${theme}.webp`)}")`);
       html.style.setProperty("--iw-corner-filigree", `url("${assetUrl(`${THEME_ASSET_DIR}/panel_corners_${theme}.webp`)}")`);
       html.style.setProperty("--iw-zone-separator", `url("${assetUrl(`${THEME_ASSET_DIR}/separator_flourish_${theme}.webp`)}")`);
-      SkillsArtService.applyThemeVariables(html, theme);
     } else {
       html.style.removeProperty("--iw-zone-atlas");
       html.style.removeProperty("--iw-corner-filigree");
       html.style.removeProperty("--iw-zone-separator");
-      SkillsArtService.clearThemeVariables(html);
     }
+    SkillsArtService.applyThemeVariables(html, visualTheme);
   }
   function setRole5(el, role) {
     if (el && el.getAttribute(ROLE2) !== role) el.setAttribute(ROLE2, role);

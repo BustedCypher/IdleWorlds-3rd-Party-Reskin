@@ -67,18 +67,18 @@ const check = (label, ok, detail = '') => {
 const browser = await chromium.launch();
 const errors = [];
 
-async function open(width, zoneBar) {
+async function open(width, zoneBar, pathname = '/') {
   const tab = await browser.newPage({ viewport: { width, height: 900 } });
   tab.on('pageerror', e => errors.push(String(e)));
   const html = page({ zoneBar });
   await tab.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.origin !== ORIGIN) return route.abort();
-    if (url.pathname === '/') return route.fulfill({ contentType: 'text/html; charset=utf-8', body: html });
+    if (url.pathname === pathname) return route.fulfill({ contentType: 'text/html; charset=utf-8', body: html });
     try { return route.fulfill({ contentType: MIME[extname(url.pathname)] || 'application/octet-stream', body: await readFile(resolve(ROOT, url.pathname.slice(1))) }); }
     catch { return route.fulfill({ status: 404, body: '' }); }
   });
-  await tab.goto(`${ORIGIN}/`, { waitUntil: 'load' });
+  await tab.goto(`${ORIGIN}${pathname}`, { waitUntil: 'load' });
   await tab.waitForFunction(() => document.querySelector('[data-iw-nav-link="toolkit"]') &&
     document.querySelector('[data-iw-inventory-filters]'), null, { timeout: 20000 });
   await tab.evaluate(() => document.fonts.ready);
@@ -162,6 +162,45 @@ for (const width of [360, 390]) {
   console.log(`\nNo zone bar, ${width}px`);
   check(`${width} no zone bar: still no Toolkit link on a phone`, m.railExists && !m.railShown, `exists=${m.railExists} shown=${m.railShown}`);
   check(`${width} no zone bar: the five-tab rail is one unclipped row`, m.nav.n === 5 && m.nav.rows === 1 && m.nav.inside && m.nav.clipped.length === 0, JSON.stringify(m.nav));
+  await tab.close();
+}
+
+/* Cold-load regression: Dungeon can be the FIRST route, before Game has
+   mounted a Zone N label. The skin must not invent a zone theme, but it still
+   needs a deterministic visual atlas so the top menu never falls back to the
+   legacy button presentation. */
+{
+  const tab = await open(900, false, '/dungeon');
+  const cold = await tab.evaluate(() => {
+    const dungeon = [...document.querySelectorAll('[data-iw-ui="nav-tab"]')]
+      .find(el => (el.dataset.iwTab || '').toLowerCase() === 'dungeon');
+    const idle = dungeon?.querySelector('[data-iw-compact-layer="idle"]');
+    const html = document.documentElement;
+    return {
+      zoneTheme: html.dataset.iwZoneTheme || '',
+      zoneAtlas: html.style.getPropertyValue('--iw-zone-atlas'),
+      compactAtlas: html.dataset.iwCompactAtlas || '',
+      compactAtlasUrl: html.style.getPropertyValue('--iw-compact-atlas'),
+      dungeonState: dungeon?.dataset.iwState || '',
+      dungeonCompact: dungeon?.dataset.iwCompactButton || '',
+      dungeonIdleImage: idle ? getComputedStyle(idle).backgroundImage : '',
+      toolkitCount: document.querySelectorAll('[data-iw-nav-link="toolkit"]').length,
+    };
+  });
+  console.log('\nCold /dungeon, 900px');
+  check('cold Dungeon does not fabricate a zone palette',
+    cold.zoneTheme === 'default' && !cold.zoneAtlas,
+    JSON.stringify(cold));
+  check('cold Dungeon receives the forged-metal compact visual fallback',
+    cold.compactAtlas === 'compact-ghost-v3' &&
+    /compact-ghost-v3\/forged-metal\.png/.test(cold.compactAtlasUrl),
+    JSON.stringify(cold));
+  check('cold Dungeon marks Dungeon active and paints compact art',
+    cold.dungeonState === 'active' && cold.dungeonCompact === 'text' &&
+    /forged-metal\.png/.test(cold.dungeonIdleImage),
+    JSON.stringify(cold));
+  check('cold Dungeon still appends exactly one Toolkit link',
+    cold.toolkitCount === 1, `toolkit=${cold.toolkitCount}`);
   await tab.close();
 }
 
