@@ -32,6 +32,50 @@ on a node the game already has. Teardown drops `data-iw-inventory-list` beside
 tag + teardown; `render-fixtures.mjs` renders the panel in context to
 `fixtures/inventory-panel.png`.
 
+**The Inventory Filters menu is a CONTAINED popup, not a modal
+(launch capture, 2026-09-21).** The deployed IdleWorlds bundle
+`v0.2.0+2026-09-20.703` renders it exactly as:
+
+```html
+<div class="flex items-center gap-2">               <!-- frame direct child -->
+  <div class="relative">                            <!-- popup anchor -->
+    <button aria-label="Filter inventory"
+            title="Filter inventory">...</button>
+    <div class="absolute right-0 top-full z-30 mt-1 w-56 ...">
+      <p>Tier</p> ... buttons ...
+      <p>Type</p> ... buttons ...
+    </div>
+  </div>
+  ...
+</div>
+<div data-iw-inventory-list="1">...</div>            <!-- later sibling -->
+```
+
+The game currently publishes **no** `role`, `aria-expanded` or
+`aria-controls` for that popup. Do not make the implementation depend on
+those attributes. `OverlayFramer` supports semantic ARIA popups when games do
+publish them, and has one narrow structural fallback for this captured
+`Filter inventory` sibling shape.
+
+The failure was a stacking-context problem, not a too-small popup z-index.
+`ui-system.css` gives every direct child of a forged frame
+`position: relative; z-index: 1`. The popup's own `z-30` therefore remained
+trapped inside the EARLIER tool/header child's stacking context while the later
+inventory-list child painted above it. Raising the popup alone cannot cross
+that boundary. The framer tags the frame's direct popup owner
+`data-iw-overlay-host="1"` and the popup `data-iw-overlay="popup"`;
+`overlay.css` lifts the host to local z=20 and the popup to z=21. Inventory's
+normal `overflow:hidden` is relaxed only while a positively classified popup
+exists. Close or teardown removes both markers and restores clipping without
+reparenting or touching React handlers.
+
+`tests/contained-popover-render.test.mjs` reproduces the real trap in Chromium
+with an earlier tool child, later z=1 list child and absolute popup. Its
+negative control proves `elementFromPoint()` lands on the list before
+classification; after classification the popup must be topmost. The unit test
+also rejects a hidden popup, an ordinary absolute child, `.iw-tip`, and the
+existing viewport-scrim path remains independent.
+
 **The inventory tool row is three controls and ONE ORNAMENT.** Live DOM:
 
 ```

@@ -141,6 +141,27 @@ un-classified, and the rule-5 state colours inside (`"Upgrade vs equipped"`,
 team colour) are still untouched by design. Zone Control ships team colour (`"Blue team controls this zone"`, `"Red Team"`,
 `"Zone is open for attack"`) — team identity is state, do not repaint it.
 
+**Contained popups need OWNER classification, not merely popup z-index
+(2026-09-21).** A child `z-index: 999` cannot outrank a later sibling when its
+ancestor has already created a lower stacking context. The Inventory Filters
+menu is the concrete case: every direct child of the forged Inventory frame is
+z=1, so the menu's native z-30 is trapped inside the earlier tool/header child
+while the later z=1 list paints over it. `OverlayFramer` therefore owns two
+markers as one reversible unit: `data-iw-overlay="popup"` on the positively
+classified positioned popup and `data-iw-overlay-host="1"` on the closest
+DIRECT child under its framed ancestor. CSS lifts the host first, then the
+popup. Never reparent a React-owned popup to `body` to escape a stacking
+context; that changes ownership, event relationships and positioning.
+
+Classification prefers actual popup semantics (`role=menu|listbox|dialog` or
+a matching expanded `aria-controls`). The deployed Inventory popup currently
+publishes none of those, so one captured structural fallback is allowed:
+`button[aria-label/title="Filter inventory"]` and a visible positioned sibling
+with multiple interactive controls inside the same anchor. An ordinary
+absolute child, a hidden copy and `.iw-tip` are explicit negative controls.
+The owner marker must be removed as soon as the popup closes, otherwise a
+settled page retains a bogus high stacking context.
+
 **Verified against the app's real palette:** the requirement met/unmet test
 (`/\btext-(?:red|rose|orange|amber|yellow)-\d/`) is correct. The app's full
 `text-*` colour set is amber, blue, cyan, emerald, fuchsia, green, orange,
