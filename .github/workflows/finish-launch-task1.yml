@@ -1,4 +1,5 @@
 name: Finish launch Task 1
+# Retry after switching importer to raw PNG RGBA verification
 
 on:
   push:
