@@ -7,7 +7,7 @@ import { storageGet, storageSet } from './Runtime.js';
 import fallbackItems from '../../assets/world-bosses/rewards.json';
 
 const BOSSES = [
-  { key: 'ancient_treant', name: 'Ancient Treant', ids: ['miners_gloves', 'herbalists_gloves', 'blacksmiths_gloves', 'alchemists_gloves', 'jewelcrafters_gloves', 'spellcrafters_gloves', 'tailors_gloves'] },
+  { key: 'ancient_treant', name: 'Ancient Treant', ids: ['miners_gloves', 'herbalists_gloves', 'blacksmiths_gloves', 'alchemists_gloves', 'jewelcrafters_gloves', 'spellcrafters_gloves', 'tailors_gloves', 'woodcutters_gloves', 'builders_gloves'] },
   { key: 'abyssal_behemoth', name: 'Abyssal Behemoth', ids: ['invisibility_ring'] },
   { key: 'world_eater', name: 'World Eater', ids: ['worldbreaker'] },
 ];

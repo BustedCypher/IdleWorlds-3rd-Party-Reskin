@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 class MemoryStorage {
   constructor() { this.map = new Map(); }
@@ -118,6 +119,8 @@ globalThis.fetch = async (url) => {
           { name: '+3', index: 2, x: 256, y: 0, width: 128, height: 128 },
           { name: '+4', index: 3, x: 384, y: 0, width: 128, height: 128 },
           { name: 'Iron Sword', index: 4, x: 0, y: 128, width: 128, height: 128 },
+          { name: "Woodcutter's Gloves", index: 5, x: 128, y: 128, width: 128, height: 128 },
+          { name: "Builder's Gloves", index: 6, x: 256, y: 128, width: 128, height: 128 },
         ] };
       },
     };
@@ -145,6 +148,19 @@ atlas._nextRetryAt = 0;
 await atlas.ready();
 assert.equal(atlas.isComplete(), true);
 assert.equal(atlas.resolve({ name: 'Iron Sword' })?.atlas, 'gear');
+assert.equal(atlas.resolve({ id: 'woodcutters_gloves', name: "Woodcutter's Gloves" })?.atlas, 'gear',
+  'a live Woodcutter\'s Gloves item must fall through an item-atlas ID miss to bundled gear art by name');
+assert.equal(atlas.resolve({ id: 'builders_gloves', name: "Builder's Gloves" })?.atlas, 'gear',
+  'a live Builder\'s Gloves item must fall through an item-atlas ID miss to bundled gear art by name');
+
+const bundledGearManifest = JSON.parse(
+  await readFile(new URL('../assets/gear_icons_manifest.json', import.meta.url), 'utf8')
+);
+for (const name of ["Woodcutter's Gloves", "Builder's Gloves"]) {
+  assert.ok(bundledGearManifest.icons.some(icon => icon.name === name),
+    `bundled gear manifest must contain the launch reward art for ${name}`);
+}
+
 for (let level = 1; level <= 4; level += 1) {
   const resolved = atlas.resolve({ name: `Iron Sword+${level}` });
   assert.equal(resolved?.badge, level, `+${level} gear must retain its enhancement level`);
