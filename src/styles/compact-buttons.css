@@ -108,9 +108,19 @@ html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-
 /* The live active route label is a native child with its own dark utility
    colour. Paint that existing child directly so it remains readable once the
    atlas replaces the native bright active-tab fill. */
-html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-ui="nav-tab"][data-iw-state="active"],
-html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-ui="nav-tab"][data-iw-state="active"] :not([data-iw-compact-layer]) {
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-ui="nav-tab"][data-iw-state="active"] {
   color: var(--iw-text-hi, #fff0dc) !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+}
+html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button][data-iw-ui="nav-tab"][data-iw-state="active"] :not([data-iw-compact-layer]) {
+  /* Native route-label children can carry their own dark utility paint.
+     Inherit the already-resolved active-button foreground so theme-specific
+     nav colour stays authoritative, then neutralise independent text fill
+     and faded opacity without touching the atlas layers. */
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
 }
 html[data-iw-compact-atlas="compact-ghost-v3"] [data-iw-compact-button]:focus-visible {
   outline: 2px solid var(--iw-th-accent, #5dbbd0) !important;

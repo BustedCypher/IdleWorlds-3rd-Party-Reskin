@@ -38,6 +38,22 @@ severs the connecting rule; `border-image` crushes the 140px edge slices 4.7x
 vertically and flattens the flourish; anchoring the bottom to `100%` leaves the
 frame short. Do not spend another round trying to make it fit.
 
+**An active nav BUTTON can be bright while its native CHILD still paints dark.**
+The compact atlas removes the game's bright active-tab plate, so native route
+children that carry utility paint become visible again. A Chromium capture
+before the 2026-09 Fix 3 selector showed the exact split: the active child's
+computed `color` had already been corrected to the skin foreground, but
+`-webkit-text-fill-color` still resolved to `rgb(5, 5, 5)` and `opacity`
+to `.35`; `visibility` was already `visible`. Fix all of the paint channels
+that can independently affect glyphs, not just `color`: the active nav button
+owns the themed foreground, and every native descendant except
+`[data-iw-compact-layer]` inherits that foreground, uses
+`-webkit-text-fill-color: currentColor`, and resets opacity to 1. Do not
+target the decorative compact layers: their opacity is the hover/pressed state
+machine. `tests/compact-button-atlas.test.mjs` carries a hostile nested-span
+fixture with black color/text-fill and 35% opacity so a future one-property
+"fix" fails in a real browser.
+
 **A `gap` is applied on BOTH sides of an invisible flex item, so flattening a
 label's native text does not make it free.** The World Boss action button keeps
 the game's own copy ("Prejoin", "⏳ Prejoined") inside the control at

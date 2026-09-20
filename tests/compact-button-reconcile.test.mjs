@@ -13,19 +13,24 @@ const result=await build({stdin:{resolveDir:resolve(import.meta.dirname,'..'),co
 const browser=await chromium.launch();
 try {
   const page=await browser.newPage();
-  await page.setContent('<button id="send" data-iw-panel-part="send">Send</button><div><button id="one" aria-pressed="true">I</button><button id="two" aria-pressed="false">II</button></div>');
+  await page.setContent('<button id="nav" data-iw-ui="nav-tab" data-iw-state="active"><span id="nav-label"><span id="nav-label-inner">Game</span></span></button><button id="send" data-iw-panel-part="send">Send</button><div><button id="one" aria-pressed="true">I</button><button id="two" aria-pressed="false">II</button></div>');
   await page.addScriptTag({content:result.outputFiles[0].text});
   await page.waitForFunction(()=>document.querySelectorAll('#send [data-iw-compact-layer]').length===3);
+  await page.waitForFunction(()=>document.querySelectorAll('#nav > [data-iw-compact-layer]').length===3);
+  assert.equal(await page.locator('#nav-label-inner').textContent(),'Game','native active-nav descendants survive initial decoration');
   // Let initialization settle so its pending mount flush cannot conceal the
   // missing text-only update path.
   await page.waitForTimeout(250);
   await page.evaluate(()=>document.getElementById('send').replaceChildren('Send'));
   await page.waitForFunction(()=>document.querySelectorAll('#send [data-iw-compact-layer]').length===3,{},{timeout:1500});
+  await page.evaluate(()=>document.getElementById('nav').replaceChildren(Object.assign(document.createElement('span'),{id:'nav-label',innerHTML:'<span id="nav-label-inner">Game</span>'})));
+  await page.waitForFunction(()=>document.querySelectorAll('#nav > [data-iw-compact-layer]').length===3,{},{timeout:1500});
+  assert.equal(await page.locator('#nav-label-inner').textContent(),'Game','React-style active-nav content replacement keeps the native label intact');
   await page.evaluate(()=>{document.getElementById('one').setAttribute('aria-pressed','false');document.getElementById('two').setAttribute('aria-pressed','true');});
   await page.waitForFunction(()=>document.getElementById('two').dataset.iwCompactSelected==='true');
   assert.equal(await page.locator('#one').getAttribute('data-iw-compact-selected'),null);
   await page.waitForTimeout(250);const before=await page.evaluate(()=>window.flushes);
   await page.waitForTimeout(350);assert.equal(await page.evaluate(()=>window.flushes),before,'quiet controls must not create repeating mutation flushes');
   await page.evaluate(()=>window.stop());assert.equal(await page.locator('[data-iw-compact-layer]').count(),0);
-  console.log('PASS compact-button reconciliation: native text replacement, aria-only selection, quiet idle and teardown');
+  console.log('PASS compact-button reconciliation: active-nav replacement, native text replacement, aria-only selection, quiet idle and teardown');
 }finally{await browser.close();}

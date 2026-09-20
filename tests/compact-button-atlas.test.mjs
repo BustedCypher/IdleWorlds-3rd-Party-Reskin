@@ -23,7 +23,7 @@ await page.route('**/*',async route=>{
   }
   return route.fulfill({contentType:'text/html',body:'<!doctype html><html></html>'});
 });
-const fixture=`<div class="test-row"><button id="nav" data-iw-ui="nav-tab" data-iw-state="active"><span id="nav-label" class="native-active-label">Game</span></button><button id="long" data-iw-ui="nav-tab">Leaderboards</button><a id="toolkit" data-iw-ui="nav-tab" data-iw-nav-link="toolkit" href="#">Toolkit</a></div>
+const fixture=`<div class="test-row"><button id="nav" data-iw-ui="nav-tab" data-iw-state="active"><span id="nav-label" class="native-active-label"><span id="nav-label-inner" class="native-active-label-inner">Game</span></span></button><button id="long" data-iw-ui="nav-tab">Leaderboards</button><a id="toolkit" data-iw-ui="nav-tab" data-iw-nav-link="toolkit" href="#">Toolkit</a></div>
 <div data-iw-inventory-root="1" style="display:contents"><div class="test-row"><button id="filter" data-iw-inventory-control="filter" data-iw-inventory-filter-state="active">Consumables</button><button id="prev" data-iw-inventory-control="page" disabled>Prev</button><button id="next" data-iw-inventory-control="page">Next</button></div></div>
 <div class="test-row"><button id="equip" data-fs-preserved-action="control" data-fs-action-kind="equip">Equip</button><button id="equipped" data-fs-preserved-action="control" data-fs-action-kind="equipped">Equipped</button><button id="list" data-fs-preserved-action="control" data-fs-action-kind="secondary">List</button><button id="use" data-fs-preserved-action="control" data-fs-action-kind="secondary">Use</button><button id="bonus" data-fs-preserved-action="control" data-fs-action-kind="set">✦ Set Bonus</button><button id="lock" data-fs-preserved-action="control" data-fs-action-kind="icon" aria-label="Lock"><svg width="14" height="14" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" d="M5 10h14v11H5z M8 10V6a4 4 0 0 1 8 0v4"/></svg></button></div>
 <div class="test-row"><div id="loadouts"><button id="one" class="small bg-ember" aria-pressed="true">I</button><button id="two" class="small" aria-pressed="false">II</button></div><div><button id="zone" class="small">Change Zone</button><button id="timer" class="small" aria-label="Zone timer">⏱</button></div><button id="send" data-iw-panel-part="send">Send</button><button id="zone-next" data-iw-ui="zone-action">Next Zone</button></div>
@@ -37,15 +37,29 @@ try {
     SkillsArtService.applyThemeVariables(host,theme);
     assert.equal(host.dataset.iwCompactAtlas,'compact-ghost-v3');
     assert.equal(host.style.getPropertyValue('--iw-compact-atlas'),`url("${dir}/${theme}.png")`);
-    await page.setContent(`<html data-iw-zone-theme="${theme}" data-iw-compact-atlas="compact-ghost-v3" style='${host.style.cssText}'><style>${css}</style><style>*{box-sizing:border-box}body{background:#090e12!important;padding:35px!important}.test-row{display:flex;gap:12px;align-items:center;margin:30px 0}button,a{font:600 12px Arial;color:#ddd4c0}.native-active-label{color:#050505!important}.small{height:26px;padding:0 10px;border:1px solid #345}#loadouts button{width:26px;padding:0}#inventory-tool{width:28px;height:28px}</style>${fixture}</html>`);
+    await page.setContent(`<html data-iw-zone-theme="${theme}" data-iw-compact-atlas="compact-ghost-v3" style='${host.style.cssText}'><style>${css}</style><style>*{box-sizing:border-box}body{background:#090e12!important;padding:35px!important}.test-row{display:flex;gap:12px;align-items:center;margin:30px 0}button,a{font:600 12px Arial;color:#ddd4c0}.native-active-label,.native-active-label-inner{color:#050505!important;-webkit-text-fill-color:#050505!important;opacity:.35!important;visibility:visible!important}.small{height:26px;padding:0 10px;border:1px solid #345}#loadouts button{width:26px;padding:0}#inventory-tool{width:28px;height:28px}</style>${fixture}</html>`);
     const baseline=await page.evaluate(ids=>ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return [r.x,r.y,r.width,r.height]}),ids);
     await page.addScriptTag({content:`(()=>{${renderer};window.decorate=decorateCompactButtons;window.clearCompact=clearCompactButtons;window.nativeRefs=[...document.querySelectorAll('button,a')].map(el=>[el,el.firstChild]);window.clickCount=0;document.getElementById('list').addEventListener('click',()=>window.clickCount++);decorateCompactButtons();})()`});
+    /* The decorator adds data-iw-compact-button, which changes the active
+       foreground and can briefly be sampled mid-transition. Let the declared
+       180ms colour transition settle before comparing descendant paint. */
+    await page.waitForTimeout(220);
     const after=await page.evaluate(ids=>ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return [r.x,r.y,r.width,r.height]}),ids);
     assert.deepEqual(after,baseline,`${theme}: adding art must preserve all native dimensions`);
     assert.equal(await page.locator('#unrelated').getAttribute('data-iw-compact-button'),null);
     assert.equal(await page.locator('#inventory-tool').getAttribute('data-iw-compact-button'),null);
     assert.equal(await page.locator('[data-iw-compact-layer]').count(),54);
-    assert.notEqual(await page.locator('#nav-label').evaluate(el=>getComputedStyle(el).color),'rgb(5, 5, 5)',`${theme}: active nav label must remain readable over compact artwork`);
+    {
+      const activeForeground=await page.locator('#nav').evaluate(el=>getComputedStyle(el).color);
+      for(const selector of ['#nav','#nav-label','#nav-label-inner']) {
+        const paint=await page.locator(selector).evaluate(el=>{const s=getComputedStyle(el);return {color:s.color,textFill:s.webkitTextFillColor,opacity:s.opacity,visibility:s.visibility};});
+        assert.equal(paint.color,activeForeground,`${theme}/${selector}: active nav paint must inherit the active foreground`);
+        assert.equal(paint.textFill,activeForeground,`${theme}/${selector}: native -webkit-text-fill-color must not darken the active label`);
+        assert.equal(paint.opacity,'1',`${theme}/${selector}: native opacity must not fade the active label`);
+        assert.equal(paint.visibility,'visible',`${theme}/${selector}: active nav content must remain visible`);
+      }
+      assert.equal(await page.locator('#nav > [data-iw-compact-layer]').count(),3,`${theme}: active-nav paint fix must not target or replace compact art layers`);
+    }
     await page.evaluate(()=>{window.decorate();window.decorate();});
     assert.equal(await page.locator('[data-iw-compact-layer]').count(),54,'reconciliation must not duplicate layers');
 
