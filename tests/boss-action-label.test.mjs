@@ -136,6 +136,44 @@ for (const [state, word] of [['active', 'QUEUED'], ['idle', 'PREJOIN']]) {
   console.log(`  ${word}: ink ${m.inkW}px, offset ${m.offX}px in a ${m.boxW}px button  ok`);
 }
 
+/* Queued participation must read as a STATE, not merely as different copy.
+   The active cue is deliberately static: no pulse/shimmer and no layout
+   movement. Compare the same control geometry in both states, then require
+   at least one persistent paint channel (filter, box-shadow or outline) to
+   differ. Reduced-motion must not introduce or preserve an animation. */
+const statePaint = async selector => page.locator(selector).evaluate(el => {
+  const cs = getComputedStyle(el);
+  const r = el.getBoundingClientRect();
+  return {
+    width: +r.width.toFixed(2),
+    height: +r.height.toFixed(2),
+    filter: cs.filter,
+    boxShadow: cs.boxShadow,
+    outline: `${cs.outlineStyle} ${cs.outlineWidth} ${cs.outlineColor}`,
+    animationName: cs.animationName,
+    animationDuration: cs.animationDuration,
+  };
+});
+const idlePaint = await statePaint('[data-probe="idle"]');
+const activePaint = await statePaint('[data-probe="active"]');
+assert.equal(activePaint.width, idlePaint.width, 'queued state must not change the action button width');
+assert.equal(activePaint.height, idlePaint.height, 'queued state must not change the action button height');
+assert.ok(
+  activePaint.filter !== idlePaint.filter ||
+  activePaint.boxShadow !== idlePaint.boxShadow ||
+  activePaint.outline !== idlePaint.outline,
+  `queued state needs a persistent visual cue beyond its label; active and idle paint are identical: ${JSON.stringify(activePaint)}`
+);
+
+await page.emulateMedia({ reducedMotion: 'reduce' });
+const reducedActivePaint = await statePaint('[data-probe="active"]');
+assert.equal(reducedActivePaint.animationName, 'none', 'queued state must remain static under reduced motion');
+assert.ok(
+  reducedActivePaint.animationDuration === '0s' || reducedActivePaint.animationDuration === '',
+  `queued state must not animate under reduced motion (duration ${reducedActivePaint.animationDuration})`
+);
+console.log('  QUEUED persistent state cue keeps identical geometry and no motion  ok');
+
 /* The title row on a PHONE card (mobile audit, 2026-09). The header's title
    block was two max-content tracks, which cannot shrink, so at a 360px
    viewport "Abyssal Behemoth" + RAID pushed the badge past the card's right

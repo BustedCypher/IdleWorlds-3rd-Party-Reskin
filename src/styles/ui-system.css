@@ -1404,6 +1404,18 @@ input[placeholder*="Search" i] {
   filter: drop-shadow(0 2px 4px #0008);
 }
 [data-iw-encounter] [data-iw-boss-role="action"] { outline: 0 !important; }
+/* Prejoined/Fighting is a persistent participation state, not a hover state.
+   Keep the existing action sprite and geometry; add only a static inner ring
+   plus a soft encounter-colour bloom. No animation is used, so the cue is
+   identical under reduced motion and cannot create another idle paint loop. */
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="active"] {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--iw-boss-accent) 78%, #fff 22%),
+    inset 0 0 9px color-mix(in srgb, var(--iw-boss-accent) 22%, transparent) !important;
+  filter:
+    drop-shadow(0 2px 4px #0008)
+    drop-shadow(0 0 5px color-mix(in srgb, var(--iw-boss-accent) 50%, transparent));
+}
 /* The compact label is drawn with ::after; the game's own text ("Prejoin",
    "⏳ Prejoined") stays in the button as the accessible copy at font-size 0.
    It is still a FLEX ITEM of zero width, though, which is why `gap` is 0 here:
@@ -1437,6 +1449,12 @@ input[placeholder*="Search" i] {
   text-shadow: 0 1px 2px #000;
 }
 [data-iw-encounter] [data-iw-boss-role="action"]:hover:not(:disabled) { filter: brightness(1.18); }
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="active"]:hover:not(:disabled) {
+  filter:
+    brightness(1.12)
+    drop-shadow(0 2px 4px #0008)
+    drop-shadow(0 0 6px color-mix(in srgb, var(--iw-boss-accent) 58%, transparent));
+}
 [data-iw-encounter] [data-iw-boss-role="action"]:disabled { opacity: .5 !important; filter: saturate(.3); cursor: not-allowed !important; }
 .iw-boss-rewards { margin-top: 2px; padding-top: 9px; border-top: 1px solid #a88d4c35; }
 [data-iw-encounter]:not([data-iw-encounter="zone"]) > .iw-boss-rewards { grid-column: 1 / -1; grid-row: 5; }
