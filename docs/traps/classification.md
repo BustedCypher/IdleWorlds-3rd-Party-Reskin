@@ -162,6 +162,31 @@ absolute child, a hidden copy and `.iw-tip` are explicit negative controls.
 The owner marker must be removed as soon as the popup closes, otherwise a
 settled page retains a bogus high stacking context.
 
+**Player Stats label weight is structural, not a "Wood Chopped" special case
+(launch capture, 2026-09-21).** The deployed IdleWorlds bundle
+`/_next/static/chunks/9075-ab1177f6f4522a71.js` builds Character Stats'
+`Lifetime Stats` block as a `.compact-panel` followed by repeated
+`div.flex.items-center.justify-between` rows. Every label — Monsters
+Defeated, Ore Mined, **Wood Chopped**, Potions Brewed and the rest — is the
+same `<p class="text-xs text-white/70">`. Every numeric value is the same
+`<p class="text-xs font-semibold text-white">`. The deployed stylesheet
+`47785f59571f8636.css` confirms `.font-semibold { font-weight: 600 }`;
+the label has no weight utility, so it remains the normal inherited 400. The
+production source therefore does **not** support Wood Chopped being natively
+bold; the launch screenshot is presentation drift.
+
+Do not fix this by matching `/wood chopped/i`. Inside a positively owned
+overlay panel, `OverlayFramer` finds the compact panel whose direct child says
+`Lifetime Stats`, then accepts repeated direct rows only when each has exactly
+two children and the second child is numeric. It tags the surface
+`data-iw-overlay-content="player-stats"`, the first cell
+`data-iw-overlay-role="stat-label"`, and the second
+`data-iw-overlay-role="stat-value"`. CSS makes every label 400 and every
+value 700. Unrelated "Wood Chopped" prose outside the modal is an explicit
+negative control, and teardown removes all three semantic hooks. This keeps the
+fix scoped to the role the game itself expresses structurally rather than to
+one currently reported string.
+
 **Verified against the app's real palette:** the requirement met/unmet test
 (`/\btext-(?:red|rose|orange|amber|yellow)-\d/`) is correct. The app's full
 `text-*` colour set is amber, blue, cyan, emerald, fuchsia, green, orange,

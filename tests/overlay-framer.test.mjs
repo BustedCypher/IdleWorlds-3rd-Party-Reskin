@@ -90,6 +90,22 @@ document.body.innerHTML = `
       <div class="space-y-4"><div>Active now (16)</div></div>
     </div>
   </div>
+  <div class="fixed inset-0 z-50" id="stats-scrim"
+       data-cs='{"position":"fixed","zIndex":"50","display":"flex","backgroundColor":"rgba(0, 0, 0, 0.65)","backdropFilter":"blur(4px)"}'
+       data-rect='${FULL_RECT}'>
+    <div class="panel" id="stats-modal" data-cs='{"position":"static"}' data-rect='${CARD_RECT}'>
+      <div><h2>Character Stats</h2><button>Close</button></div>
+      <div class="space-y-3">
+        <div class="compact-panel p-3 space-y-1.5" id="lifetime-stats">
+          <p>Lifetime Stats</p>
+          <div id="stat-monsters"><p>⚔️ Monsters Defeated</p><p>12,345</p></div>
+          <div id="stat-wood"><p style="font-weight:700">🪓 Wood Chopped</p><p>6,789</p></div>
+          <div id="stat-potions"><p>🧪 Potions Brewed</p><p>321</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p id="outside-wood">Unrelated prose: Wood Chopped appears here too.</p>
   <div class="fixed inset-0" id="bare-layer"
        data-cs='{"position":"fixed","zIndex":"10"}' data-rect='${FULL_RECT}'>
     <div id="bare-child" data-rect='{"x":0,"y":0,"w":100,"h":40}">x</div>
@@ -104,6 +120,11 @@ const filterHost = document.getElementById('inventory-tools');
 const closedFilterPopup = document.getElementById('closed-filter-popup');
 const ordinaryAbsolute = document.getElementById('ordinary-absolute');
 const inventoryTip = document.getElementById('inventory-tip');
+const statsScrim = document.getElementById('stats-scrim');
+const statsModal = document.getElementById('stats-modal');
+const lifetimeStats = document.getElementById('lifetime-stats');
+const statRows = ['stat-monsters','stat-wood','stat-potions'].map(id => document.getElementById(id));
+const outsideWood = document.getElementById('outside-wood');
 
 /* ── 1. Detection ─────────────────────────────────────────────────────── */
 frameOverlays();
@@ -123,6 +144,18 @@ assert.equal(ordinaryAbsolute.dataset.iwOverlay, undefined,
   'an ordinary absolute child with a button is not mistaken for a popup');
 assert.equal(inventoryTip.dataset.iwOverlay, undefined,
   'the skin tooltip namespace is excluded from contained popup framing');
+assert.equal(statsScrim.dataset.iwOverlay, 'scrim', 'Character Stats backdrop is an owned scrim');
+assert.equal(statsModal.dataset.iwOverlay, 'panel', 'Character Stats card is an owned overlay panel');
+assert.equal(lifetimeStats.dataset.iwOverlayContent, 'player-stats',
+  'the structural Lifetime Stats block is classified as Player Stats content');
+for (const row of statRows) {
+  assert.equal(row.children[0].dataset.iwOverlayRole, 'stat-label',
+    'the first cell of every repeated stat row is the semantic label');
+  assert.equal(row.children[1].dataset.iwOverlayRole, 'stat-value',
+    'the second cell of every repeated stat row is the semantic value');
+}
+assert.equal(outsideWood.dataset.iwOverlayRole, undefined,
+  'unrelated Wood Chopped prose outside the stats modal is untouched');
 
 /* ── 2. Idempotent ───────────────────────────────────────────────────── */
 frameOverlays();
@@ -130,6 +163,8 @@ assert.equal(scrim.dataset.iwOverlay, 'scrim', 'second pass keeps the scrim tag'
 assert.equal(modalPanel.dataset.iwOverlay, 'panel', 'second pass keeps the panel tag');
 assert.equal(filterPopup.dataset.iwOverlay, 'popup', 'second pass keeps the contained popup tag');
 assert.equal(filterHost.dataset.iwOverlayHost, '1', 'second pass keeps the popup host tag');
+assert.equal(lifetimeStats.dataset.iwOverlayContent, 'player-stats',
+  'second pass keeps Player Stats content classification without duplication');
 
 /* ── 3. The dialog closes: scrim stops covering the viewport ──────────── */
 scrim.setAttribute('data-cs', '{"position":"fixed","zIndex":"50","display":"none"}');
@@ -161,5 +196,7 @@ assert.equal(document.querySelectorAll('[data-iw-overlay]').length, 0,
   'clearOverlayFramer removes every overlay attribute the module wrote');
 assert.equal(document.querySelectorAll('[data-iw-overlay-host]').length, 0,
   'clearOverlayFramer removes every contained-popup host attribute');
+assert.equal(document.querySelectorAll('[data-iw-overlay-content],[data-iw-overlay-role]').length, 0,
+  'clearOverlayFramer removes Player Stats content and role markers');
 
 console.log('PASS overlay-framer');
