@@ -1,0 +1,28 @@
+name: Task 2 focused verification
+
+on:
+  push:
+    branches:
+      - fix/launch-task-2-boss-queued-state
+    paths:
+      - .github/workflows/task2-focused.yml
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Run Task 2 regressions
+        run: |
+          node tests/world-boss-panels.test.mjs
+          node tests/boss-action-label.test.mjs
