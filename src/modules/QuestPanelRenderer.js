@@ -223,13 +223,19 @@ function annotateStructure(card) {
     !/^reward\s*:/i.test(normText(el.textContent)) &&
     !/%\s*complete\b/i.test(normText(el.textContent))) || null;
   const progressLabel = leaves.find(el => /\d+%\s*complete\b/i.test(normText(el.textContent))) || null;
+  const skipNote = leaves.find(el => /^out of skips\b/i.test(normText(el.textContent))) || null;
 
   // The title/brief live in the same column as the reward line. Everything in
   // that column that is not the objective / reward, in document order: first
   // is the title, the rest are the brief (a bounty has one brief line; a work
   // order leads with a short kicker then an emphasized instruction).
   const column = reward?.parentElement || objective?.parentElement || card;
-  const columnLeaves = leaves.filter(el => column.contains(el) && el !== reward && el !== objective && el !== progressLabel);
+  const columnLeaves = leaves.filter(el =>
+    column.contains(el) &&
+    el !== reward &&
+    el !== objective &&
+    el !== progressLabel &&
+    el !== skipNote);
   columnLeaves.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
 
   // A work order leads with a short discipline kicker ("Tailoring Work Order")
@@ -253,6 +259,7 @@ function annotateStructure(card) {
     setRole(progressLabel, 'progress-label');
     progressLabel.dataset.iwQuestPercent = (normText(progressLabel.textContent).match(/(\d+)%/) || [, ''])[1];
   }
+  if (skipNote) setRole(skipNote, 'skip-note');
 
   const { track, fill } = findProgress(card);
   if (track) setRole(track, 'progress-track');
@@ -276,7 +283,20 @@ function annotateStructure(card) {
     : (card.firstElementChild && card.firstElementChild.contains(row || column) ? card.firstElementChild : null);
   if (body && body !== card) setZone(body, 'body');
 
+  // Optional helper copy is a direct layout row of its own. Keep the React
+  // node where the game mounted it; tag only the direct host beneath the body
+  // so CSS can span the complete quest grid without reparenting anything.
+  const skipHost = body && skipNote ? directChildUnder(skipNote, body) : null;
+  if (skipHost) setZone(skipHost, 'skip-note');
+
   structureSignatures.set(card, sig);
+}
+
+function directChildUnder(descendant, ancestor) {
+  if (!descendant || !ancestor || descendant === ancestor) return null;
+  let node = descendant;
+  while (node.parentElement && node.parentElement !== ancestor) node = node.parentElement;
+  return node.parentElement === ancestor ? node : null;
 }
 
 function commonAncestor(scope, a, b) {

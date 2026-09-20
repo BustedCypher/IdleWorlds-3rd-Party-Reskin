@@ -113,6 +113,32 @@ fixture carries a second visible Current Action panel (`#current-action-no-queue
 that the live page does not, so a drift test must relabel BOTH or the text pass
 still succeeds and the check passes for the wrong reason.
 
+**Optional quest helpers need named GRID ownership, even when they are already
+in the right DOM order (launch capture, 2026-09-21).** The deployed
+`9075-ab1177f6f4522a71.js` quest shape is
+`compact-panel > div.space-y-2`: row (content + commands), optional
+`<p>Out of skips - they reset daily at [time], or completing (not skipping) a
+work order refills them to your daily max right away. ...</p>`, progress track,
+then `N% complete`. The helper is React-owned and may also contain the game's
+Supporter button.
+
+The quest body becomes a two-column CSS grid with rows 1-3 explicitly occupied
+by `row`, `track`, and `label`. Before this fix the optional paragraph had
+no role or grid placement, so CSS auto-placement put it in a narrow implicit
+cell: the browser regression measured only 76px wide at a 360px viewport and
+145px at 1100px. Its DOM order happened to leave it below the percent line, but
+its width was not owned.
+
+`QuestPanelRenderer` now detects a text leaf beginning `/^out of skips\b/i`
+inside a positively identified quest, excludes it from brief assignment, marks
+it `data-iw-quest-role="skip-note"`, and marks only its direct host beneath
+the resolved body `data-iw-quest-zone="skip-note"`. No node is moved. CSS
+places that host on `grid-row: 4` and `grid-column: 1 / -1`. Row 4 is
+implicit on purpose: it exists only while the optional helper exists, so
+ordinary bounty/work-order cards gain neither an empty row nor an extra gap.
+`tests/quest-skip-note-layout.test.mjs` pins full-width bottom placement at
+360px and 1100px and verifies no overlap with the sigil or command rail.
+
 **The skin's surface coverage vs the game's, from the bundle's own aria-label /
 title vocabulary.** Covered: Skills, Quests, Inventory/Bag, header, main nav,
 zone bar, Current Action, Action Log, World Chat, World Boss, Market, Village
