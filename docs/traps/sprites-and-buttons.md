@@ -52,14 +52,22 @@ flourish starts (the flat interior of `action_frame_idle` is only x 25..107 of
 the box), while the space to the left of the glyph sat empty. Reported as
 "the QUEUED text is off centre", which is precisely what it was. Fix: `gap: 0`,
 no in-flow ornament, and `margin-right: -.07em` on the `::after` to cancel the
-step `letter-spacing` adds after the LAST letter. State is not lost — the word
-itself is the cue (QUEUED vs PREJOIN), and `data-iw-boss-action-state` still
-tags the control. `tests/boss-action-label.test.mjs` pins it in a real browser
-by diffing the button against itself with only the `::after` colour cleared,
-which isolates the WORD's ink from the frame art (and so still measures the
-reported symptom if a future ornament returns out of flow); restore the gap and
-it reports +2.5px, restore the glyph +8.25px, both +12.9px. Note the diff is
-what makes the test independent of the atlas loading — see the next trap.
+step `letter-spacing` adds after the LAST letter. The word still carries the
+compact copy (QUEUED vs PREJOIN), but queued participation also needs a
+persistent NON-MOTION state cue: `data-iw-boss-action-state="active"` paints
+a static inset ring plus an encounter-colour drop-shadow bloom. Do not put the
+old hourglass back into flow and do not pulse/animate the active state — both
+would reintroduce the original centring/idle-paint problems. The active paint
+must leave the 132x38 control geometry unchanged and remain static under
+`prefers-reduced-motion: reduce`.
+
+`tests/boss-action-label.test.mjs` pins both concerns in a real browser. It
+diffs the button against itself with only the `::after` colour cleared to
+isolate the WORD's ink from the frame art (restore the gap and it reports
++2.5px, restore the glyph +8.25px, both +12.9px), then separately compares
+idle/active computed paint and bounds so the queued cue cannot disappear or
+move the control. Note the word-diff is what makes the centring check
+independent of atlas loading — see the next trap.
 
 **A sprite frame on a button means the button's own plate must go.** The
 quest rail drew `action_frame_idle` on top of its own `border` + gradient +
