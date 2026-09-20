@@ -304,3 +304,18 @@ than in the sheet, and the fixture's `ACTION_INLINE` carries a third copy.
 `background-size` as a percentage pair. Overriding it with a pixel value moves
 the sprite window onto the wrong region of the sheet — the art does not just
 resize, it becomes a different image.
+
+
+**Newly live gear can precede the extension's offline atlas pin.** A live
+`items.json` record proves the item ID, catalogue name and effects; it does
+**not** prove that the extension has matching local artwork. World-boss rewards
+therefore use the live `ItemDatabase` record for metadata and let
+`AtlasService.resolve({ id, name })` fall through from an item-atlas ID miss
+to the gear atlas by catalogue name. When the offline atlas is behind, import
+the exact audited source cell rather than substituting a visually similar
+sprite. The launch Woodcutting/Construction glove hotfix is intentionally
+guarded by `build-tools/import-launch-glove-icons.mjs`: it verifies the
+source v2 manifest coordinates and the source audit's RGBA SHA-256 before
+copying into the two unused legacy cells, and `--check` verifies the committed
+destination still carries those same pixels. If the source manifest/audit does
+not contain the documented cells, stop the import instead of guessing.
