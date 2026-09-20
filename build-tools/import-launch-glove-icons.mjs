@@ -158,7 +158,7 @@ function decodePng(bytes) {
     const dataStart = offset + 8;
     const dataEnd = dataStart + length;
     const rawEnd = dataEnd + 4;
-    if (rawEnd > bytes.length) throw new Error(\`truncated PNG chunk \${type}\`);
+    if (rawEnd > bytes.length) throw new Error(`truncated PNG chunk ${type}`);
     const data = bytes.subarray(dataStart, dataEnd);
     chunks.push({ type, raw: bytes.subarray(offset, rawEnd) });
     if (type === 'IHDR') ihdr = Buffer.from(data);
@@ -176,7 +176,7 @@ function decodePng(bytes) {
   const filterMethod = ihdr[11];
   const interlace = ihdr[12];
   if (bitDepth !== 8 || colorType !== 6 || compression !== 0 || filterMethod !== 0 || interlace !== 0) {
-    throw new Error(\`unsupported PNG format: bitDepth=\${bitDepth} colorType=\${colorType} compression=\${compression} filter=\${filterMethod} interlace=\${interlace}\`);
+    throw new Error(`unsupported PNG format: bitDepth=${bitDepth} colorType=${colorType} compression=${compression} filter=${filterMethod} interlace=${interlace}`);
   }
 
   const bpp = 4;
@@ -190,7 +190,7 @@ function decodePng(bytes) {
   for (let y = 0; y < height; y += 1) {
     const packedRow = y * (stride + 1);
     const filter = packed[packedRow];
-    if (filter > 4) throw new Error(\`unsupported PNG row filter \${filter}\`);
+    if (filter > 4) throw new Error(`unsupported PNG row filter ${filter}`);
     filters[y] = filter;
     const outRow = y * stride;
     const prevRow = outRow - stride;
@@ -258,7 +258,7 @@ function encodePng(decoded) {
 
 function readCell(decoded, x, y) {
   if (x < 0 || y < 0 || x + CELL > decoded.width || y + CELL > decoded.height) {
-    throw new Error(\`cell \${x},\${y} is outside PNG bounds \${decoded.width}x\${decoded.height}\`);
+    throw new Error(`cell ${x},${y} is outside PNG bounds ${decoded.width}x${decoded.height}`);
   }
   const out = Buffer.alloc(CELL * CELL * 4);
   const sourceStride = decoded.width * 4;
