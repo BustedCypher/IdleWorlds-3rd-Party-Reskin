@@ -104,7 +104,7 @@ function findAuditRecord(audit, spec) {
   );
 }
 
-function base64FromBytes(data) {
+function toBase64(data) {
   let binary = '';
   const size = 0x8000;
   for (let i = 0; i < data.length; i += size) {
@@ -118,6 +118,14 @@ async function decodeAndPatch({ sourceBytes, targetBytes, patch }) {
   try {
     const page = await browser.newPage();
     return await page.evaluate(async ({ sourceUri, targetUri, cell, patch }) => {
+      const toBase64 = data => {
+        let binary = '';
+        const size = 0x8000;
+        for (let i = 0; i < data.length; i += size) {
+          binary += String.fromCharCode(...data.subarray(i, i + size));
+        }
+        return btoa(binary);
+      };
       const load = async uri => {
         const img = new Image();
         img.src = uri;
@@ -143,9 +151,9 @@ async function decodeAndPatch({ sourceBytes, targetBytes, patch }) {
       for (const spec of patch) {
         const src = sx.getImageData(spec.sourceX, spec.sourceY, cell, cell);
         const dst = tx.getImageData(spec.targetX, spec.targetY, cell, cell);
-        sourceCells.push(base64FromBytes(src.data));
+        sourceCells.push(toBase64(src.data));
         before.push({
-          rgba: base64FromBytes(dst.data),
+          rgba: toBase64(dst.data),
           occupied: dst.data.some((value, index) => index % 4 === 3 && value !== 0),
         });
       }
@@ -158,7 +166,7 @@ async function decodeAndPatch({ sourceBytes, targetBytes, patch }) {
 
       const after = patch.map(spec => {
         const data = tx.getImageData(spec.targetX, spec.targetY, cell, cell).data;
-        return base64FromBytes(data);
+        return toBase64(data);
       });
 
       return {
