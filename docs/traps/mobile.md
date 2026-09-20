@@ -89,6 +89,17 @@ header.
 
 ## Findings that were real, and why
 
+- **Skill material overflow was invisible to the old audit (2026-09-21).**
+  `overflow: visible` is not evidence that text fits. A 9-digit have/need pair
+  such as `218,014,373/221,276,974` painted up to ~24px outside its material
+  cell at ordinary 375-768px viewports while scroll/clipping checks stayed
+  green. The dedicated `skill-card-responsive.test.mjs` measures Range paint
+  rectangles against every cell across 25 widths. Counts now split at the slash
+  so they can wrap only between owned and required values, never through a
+  number. The same pass moves the detail frame to a full-width row once the card
+  itself is <=680px; this matters because a mid-sized tablet/phone used to have
+  a NARROWER centre frame than a smaller phone that had already switched to the
+  full-width phone mode.
 - **Wrapped nav rows (<=560px) - SUPERSEDED the next day by the single-row
   rail above.** The Toolkit link kept `flex: 0 0 auto` and a 7px detaching
   margin, so in a wrapped rail it started 7px right of the row edge and its row

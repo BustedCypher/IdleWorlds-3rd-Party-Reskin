@@ -456,15 +456,52 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
    enough, and lets the count wrap beneath the name only when it is not. A
    forced stack cost a single-material card a whole line (+12px) for nothing.
    The tick moves onto the COUNT, because the count is what it is about. */
-html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-kind="material"] { flex-flow: row wrap !important; align-items: baseline !important; align-content: center !important; gap: 0 6px !important; padding: 4px 7px !important; }
-html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-name { display: block !important; max-width: 100% !important; font-size: max(10px, .9em) !important; line-height: 1.2 !important; opacity: .92 !important; }
-html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-count { display: block !important; font-weight: 600 !important; line-height: 1.2 !important; font-variant-numeric: tabular-nums !important; white-space: nowrap !important; }
-html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-state="met"] .iw-skill-v2-body-count::before { content: "\2713\00a0" !important; color: #67ab83 !important; }
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-kind="material"] {
+  flex-flow: row wrap !important; align-items: baseline !important; align-content: center !important;
+  gap: 0 6px !important; padding: 4px 7px !important; max-width: 100% !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-name {
+  display: block !important; flex: 1 1 auto !important; min-width: 0 !important; max-width: 100% !important;
+  font-size: max(10px, .9em) !important; line-height: 1.2 !important; opacity: .92 !important;
+  overflow-wrap: anywhere !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-count {
+  display: inline-flex !important; flex: 0 1 auto !important; flex-wrap: wrap !important; align-items: baseline !important;
+  min-width: 0 !important; max-width: 100% !important; font-weight: 600 !important; line-height: 1.2 !important;
+  font-variant-numeric: tabular-nums !important; white-space: normal !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] :is(.iw-skill-v2-body-count-owned,.iw-skill-v2-body-count-required) {
+  display: inline-block !important; max-width: 100% !important; white-space: nowrap !important;
+}
+html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-state="met"] .iw-skill-v2-body-count-owned::before { content: "\2713\00a0" !important; color: #67ab83 !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row:not([data-iw-skill-v2-body-kind="material"]) { grid-column: 1 / -1 !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row:not([data-iw-skill-v2-body-state]) { color: #b9c9d5 !important; border-left-color: var(--iw-th-accent-dim) !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .fs-skill-ingredient-item { justify-content: flex-start !important; text-align: left !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state="collapsed"] .iw-skill-v2-controls,
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state="collapsed"] .iw-skill-v2-body { display: none !important; }
+
+/* Tablet cards stop squeezing the detail frame between the hero and command
+   rails. The top band keeps the desktop identity/title/action composition, but
+   the information frame and unmet-requirement foot become full-card rows below
+   it. This removes the fragile 300-450px centre column that varies wildly
+   across phone/tablet browser chrome while preserving the desktop reference. */
+@container iw-skill-card (max-width: 680px) {
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"] {
+    grid-template-rows: minmax(calc(var(--iw-skill-v2-cmd-stack) + 20px), auto) auto auto !important;
+    grid-template-areas: "identity content commands" "body body body" "tabs tabs tabs" !important;
+    min-height: 0 !important;
+  }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] {
+    position: relative !important;
+  }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] {
+    grid-column: auto !important;
+    right: calc(-1 * var(--iw-skill-v2-command-w)) !important;
+  }
+  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body {
+    margin: 8px var(--iw-skill-v2-gutter) 6px !important;
+  }
+}
 
 /* Tokens are defined on the shell at narrow widths: a container cannot query
    itself. Keep one layout and allow long labels to wrap without clipping. */

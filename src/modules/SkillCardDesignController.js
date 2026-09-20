@@ -364,6 +364,7 @@ function controlsHost(panel) {
 /* "📦 Bloodstone Building Parts 298/2600" -> name, "298/2600". The count is
    the same N/M shape SkillPanelRenderer's INGR_COUNT_PATTERN reads. */
 const MATERIAL_PARTS = /^(.*?)\s*([\d,]+\s*\/\s*[\d,]+)\s*$/;
+const MATERIAL_COUNT_PARTS = /^([\d,]+)\s*\/\s*([\d,]+)$/;
 
 /* The frame is BUILT by the skin from the game's section text, exactly as
    SkillPanelRenderer already builds .fs-skill-ingredient-grid from the raw
@@ -411,10 +412,11 @@ function ensureDetailBody(panel) {
     const el = document.createElement('span');
     el.className = 'iw-skill-v2-body-row';
     if (row.state) el.dataset.iwSkillV2BodyState = row.state;
-    /* A material is a compact CELL: name and have/need count, which the sheet
-       keeps on one line while the cell has room. The count is the state
-       (rule 5), so it is never the part that gets squeezed. A line with no
-       trailing N/M stays one block of prose. */
+    /* A material is a compact CELL: name and have/need count. The sheet keeps
+       the count on one line while it fits, but very large values may wrap only
+       at the slash boundary; splitting the owned and required halves here
+       gives CSS a safe wrap point without changing the visible N/M wording.
+       A line with no trailing N/M stays one block of prose. */
     const parts = row.kind === 'material' ? MATERIAL_PARTS.exec(row.text) : null;
     if (parts) {
       el.dataset.iwSkillV2BodyKind = 'material';
@@ -423,7 +425,18 @@ function ensureDetailBody(panel) {
       name.textContent = parts[1];
       const count = document.createElement('span');
       count.className = 'iw-skill-v2-body-count';
-      count.textContent = parts[2];
+      const countParts = MATERIAL_COUNT_PARTS.exec(parts[2]);
+      if (countParts) {
+        const owned = document.createElement('span');
+        owned.className = 'iw-skill-v2-body-count-owned';
+        owned.textContent = `${countParts[1]}/`;
+        const required = document.createElement('span');
+        required.className = 'iw-skill-v2-body-count-required';
+        required.textContent = countParts[2];
+        count.append(owned, required);
+      } else {
+        count.textContent = parts[2];
+      }
       el.append(name, count);
     } else {
       el.textContent = row.text;
