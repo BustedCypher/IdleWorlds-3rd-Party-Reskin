@@ -104,15 +104,6 @@ function findAuditRecord(audit, spec) {
   );
 }
 
-function toBase64(data) {
-  let binary = '';
-  const size = 0x8000;
-  for (let i = 0; i < data.length; i += size) {
-    binary += String.fromCharCode(...data.subarray(i, i + size));
-  }
-  return btoa(binary);
-}
-
 async function decodeAndPatch({ sourceBytes, targetBytes, patch }) {
   const browser = await chromium.launch();
   try {
