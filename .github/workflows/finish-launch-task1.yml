@@ -1,0 +1,75 @@
+name: Finish launch Task 1
+
+on:
+  push:
+    branches:
+      - fix/launch-task-1-treant-gloves
+    paths:
+      - .github/workflows/finish-launch-task1.yml
+
+permissions:
+  contents: write
+
+jobs:
+  import-build-test-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout reskin branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/launch-task-1-treant-gloves
+          fetch-depth: 0
+
+      - name: Checkout published sprite source
+        uses: actions/checkout@v4
+        with:
+          repository: BustedCypher/idleWorlds-game-sprites-BC
+          ref: main
+          path: sprite-source
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Import audited launch glove art
+        run: |
+          node build-tools/import-launch-glove-icons.mjs sprite-source
+          node build-tools/import-launch-glove-icons.mjs sprite-source --check
+
+      - name: Rebuild production bundle
+        run: npm run build
+
+      - name: Run focused Task 1 regressions
+        run: |
+          node tests/data-services.test.mjs
+          node tests/world-boss-panels.test.mjs
+
+      - name: Run full regression suite
+        run: npm test
+
+      - name: Verify generated changes
+        shell: bash
+        run: |
+          git status --short
+          git diff --check
+          git diff --quiet -- src/modules/WorldBossPanels.js || true
+          test -z "$(git status --porcelain -- sprite-source)"
+          git status --porcelain -- assets/gear_icons_atlas.png assets/gear_icons_manifest.json dist/content.bundle.js | grep -q .
+
+      - name: Commit generated Task 1 assets
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/gear_icons_atlas.png assets/gear_icons_manifest.json dist/content.bundle.js
+          git commit -m "fix: import audited Ancient Treant glove art"
+          git push origin HEAD:fix/launch-task-1-treant-gloves
