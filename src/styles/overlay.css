@@ -27,6 +27,17 @@
   -webkit-backdrop-filter: blur(3px) !important;
 }
 
+/* Character Stats / Lifetime Stats. OverlayFramer assigns these roles from
+   repeated two-cell stat rows inside an owned modal, never from the words
+   "Wood Chopped" or any other individual label. */
+[data-iw-overlay-content="player-stats"] [data-iw-overlay-role="stat-label"] {
+  font-weight: 400 !important;
+}
+
+[data-iw-overlay-content="player-stats"] [data-iw-overlay-role="stat-value"] {
+  font-weight: 700 !important;
+}
+
 [data-iw-overlay="panel"] {
   isolation: isolate !important;
   border: 1px solid var(--iw-th-edge) !important;

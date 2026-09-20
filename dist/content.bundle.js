@@ -7700,6 +7700,9 @@
   // src/modules/OverlayFramer.js
   var SCRIM = "scrim";
   var PANEL = "panel";
+  var PLAYER_STATS = "player-stats";
+  var STAT_LABEL = "stat-label";
+  var STAT_VALUE = "stat-value";
   var SKIN_OWNED = [
     ".iw-tip",
     "#iw-tip",
@@ -7717,6 +7720,52 @@
     ".compact-panel"
   ].join(",");
   var tagged = /* @__PURE__ */ new Set();
+  var normText5 = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  function setData3(el, key, value) {
+    if (el?.dataset && el.dataset[key] !== value) el.dataset[key] = value;
+  }
+  function clearPlayerStatsSurface(surface) {
+    if (!surface) return;
+    if (surface.dataset?.iwOverlayContent === PLAYER_STATS) delete surface.dataset.iwOverlayContent;
+    surface.querySelectorAll?.("[data-iw-overlay-role]").forEach((el) => {
+      if ([STAT_LABEL, STAT_VALUE].includes(el.dataset.iwOverlayRole)) delete el.dataset.iwOverlayRole;
+    });
+  }
+  function findPlayerStatsSurface(card) {
+    if (!card) return null;
+    for (const surface of card.querySelectorAll(".compact-panel")) {
+      const children = [...surface.children];
+      const heading = children.find((el) => normText5(el.textContent).toLowerCase() === "lifetime stats");
+      if (!heading) continue;
+      const rows = children.filter((row) => {
+        const cells = [...row.children];
+        if (cells.length !== 2) return false;
+        const label3 = normText5(cells[0].textContent);
+        const value = normText5(cells[1].textContent);
+        return !!label3 && /^-?[\d,.]+$/.test(value);
+      });
+      if (rows.length >= 2) return { surface, rows };
+    }
+    return null;
+  }
+  function classifyOverlayContent(card) {
+    const match = findPlayerStatsSurface(card);
+    const existing = [...card.querySelectorAll('[data-iw-overlay-content="player-stats"]')];
+    for (const surface of existing) if (surface !== match?.surface) clearPlayerStatsSurface(surface);
+    if (!match) return;
+    setData3(match.surface, "iwOverlayContent", PLAYER_STATS);
+    const keep = /* @__PURE__ */ new Set();
+    for (const row of match.rows) {
+      const [label3, value] = row.children;
+      setData3(label3, "iwOverlayRole", STAT_LABEL);
+      setData3(value, "iwOverlayRole", STAT_VALUE);
+      keep.add(label3);
+      keep.add(value);
+    }
+    match.surface.querySelectorAll("[data-iw-overlay-role]").forEach((el) => {
+      if (!keep.has(el) && [STAT_LABEL, STAT_VALUE].includes(el.dataset.iwOverlayRole)) delete el.dataset.iwOverlayRole;
+    });
+  }
   function visible(el) {
     if (!el || el.nodeType !== 1) return false;
     const cs = getComputedStyle(el);
@@ -7771,6 +7820,7 @@
     if (card && !card.closest(SKIN_OWNED) && !card.matches(ALREADY_FRAMED)) {
       if (card.dataset.iwOverlay !== PANEL) card.dataset.iwOverlay = PANEL;
       tagged.add(card);
+      classifyOverlayContent(card);
     }
   }
   function untag(el) {
@@ -7786,7 +7836,9 @@
         if (el.dataset.iwOverlay === SCRIM && !isScrim(el)) {
           untag(el);
           tagged.delete(el);
+          continue;
         }
+        if (el.dataset.iwOverlay === PANEL) classifyOverlayContent(el);
       }
       const seen = /* @__PURE__ */ new Set();
       const candidates = document.querySelectorAll(
@@ -7805,6 +7857,10 @@
   }
   function clearOverlayFramer() {
     document.querySelectorAll("[data-iw-overlay]").forEach(untag);
+    document.querySelectorAll('[data-iw-overlay-content="player-stats"]').forEach(clearPlayerStatsSurface);
+    document.querySelectorAll("[data-iw-overlay-role]").forEach((el) => {
+      if ([STAT_LABEL, STAT_VALUE].includes(el.dataset.iwOverlayRole)) delete el.dataset.iwOverlayRole;
+    });
     tagged = /* @__PURE__ */ new Set();
   }
 
@@ -7824,7 +7880,7 @@
   var card_buttons_default = 'html[data-iw-zone-theme][data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role=action-button]{--fs-motion-idle: var(--iw-card-action-idle) !important;--fs-motion-hover: var(--iw-card-action-hover) !important;--fs-motion-pressed: var(--iw-card-action-clicked) !important;--fs-button-background: var(--iw-card-action-idle) !important;--fs-button-border: var(--iw-skill-v2-btn-border) solid transparent !important;--fs-button-shadow: none !important;background-origin:padding-box!important;background-clip:padding-box!important;border-radius:2px!important;filter:none!important;transition:none!important;text-shadow:0 1px 2px #000,0 0 3px #000!important}html[data-iw-zone-theme][data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role=action-button]::before,html[data-iw-zone-theme][data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role=action-button]::after{inset:0!important;border-radius:2px!important}html[data-iw-zone-theme][data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role=action-button]>span[style*=width]{clip-path:inset(5px max(0px,calc(100% - var(--iw-skill-v2-btn-w) + 2 * var(--iw-skill-v2-btn-border) + 5px)) 5px 5px round 2px)!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-th-accent) 48%,#090c16),color-mix(in srgb,var(--iw-th-accent) 68%,#090c16))!important;box-shadow:inset -2px 0 0 color-mix(in srgb,var(--iw-th-accent) 25%,#fff),inset 0 1px 0 #ffffff24!important;animation:none!important}html[data-iw-zone-theme][data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role=action-button]:is(:disabled,[aria-disabled=true],[data-iw-btn-state=disabled]){filter:grayscale(.9)!important;opacity:.6!important}html[data-iw-zone-theme][data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role=nav-button][data-iw-nav-direction]{--fs-button-background: var(--iw-card-nav-idle) !important;--fs-button-border: 1px solid transparent !important;--fs-button-shadow: none !important;background-origin:border-box!important;border-radius:0!important;clip-path:polygon(8% 0,92% 0,100% 14%,100% 86%,92% 100%,8% 100%,0 86%,0 14%);filter:none!important}html[data-iw-zone-theme][data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role=nav-button][data-iw-nav-direction]:not(:disabled):not([aria-disabled=true]):not([data-iw-btn-state=disabled]):is(:hover,:focus-visible){--fs-button-background: var(--iw-card-nav-hover) !important}html[data-iw-zone-theme][data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role=nav-button][data-iw-nav-direction]:not(:disabled):not([aria-disabled=true]):not([data-iw-btn-state=disabled]):active{--fs-button-background: var(--iw-card-nav-clicked) !important}html[data-iw-zone-theme][data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skills-ui-ready="1"] button[data-iw-skill-role=nav-button][data-iw-nav-direction]:focus-visible{outline:2px solid var(--iw-th-accent)!important;outline-offset:-3px!important}\n';
 
   // src/styles/overlay.css
-  var overlay_default = "[data-iw-overlay=scrim]{background:rgba(7,7,11,0.72)!important;backdrop-filter:blur(3px)!important;-webkit-backdrop-filter:blur(3px)!important}[data-iw-overlay=panel]{isolation:isolate!important;border:1px solid var(--iw-th-edge)!important;border-image:var(--iw-corner-filigree) 50% / 25px 23px / 0 stretch!important;border-radius:var(--iw-r-panel, 3px)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,0.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;background-attachment:scroll!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.78),inset 0 1px 0 var(--iw-th-glow),0 12px 40px rgba(0,0,0,0.55)!important}\n";
+  var overlay_default = "[data-iw-overlay=scrim]{background:rgba(7,7,11,0.72)!important;backdrop-filter:blur(3px)!important;-webkit-backdrop-filter:blur(3px)!important}[data-iw-overlay-content=player-stats] [data-iw-overlay-role=stat-label]{font-weight:400!important}[data-iw-overlay-content=player-stats] [data-iw-overlay-role=stat-value]{font-weight:700!important}[data-iw-overlay=panel]{isolation:isolate!important;border:1px solid var(--iw-th-edge)!important;border-image:var(--iw-corner-filigree) 50% / 25px 23px / 0 stretch!important;border-radius:var(--iw-r-panel, 3px)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,0.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;background-attachment:scroll!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.78),inset 0 1px 0 var(--iw-th-glow),0 12px 40px rgba(0,0,0,0.55)!important}\n";
 
   // src/content.js
   var ENABLED_KEY = "iw-skin-enabled";

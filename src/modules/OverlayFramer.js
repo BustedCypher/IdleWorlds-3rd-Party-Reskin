@@ -14,21 +14,28 @@
  * backdrop or a translucent dark fill). Its content card is the largest visible
  * box inside it, preferring the game's own `.panel` primitive.
  *
- * It writes two attributes in their own `data-iw-overlay` namespace so it can
- * never fight another writer over `data-iw-ui` (the "two writers, one attribute"
- * trap): `scrim` on the backdrop, `panel` on the card. overlay.css draws the
- * shared forged frame on the card and normalises the scrim. Presentation only —
- * nothing inside the card is touched, so state colour, team colour and button
- * affordances are left exactly as the game painted them (rule 5).
+ * It owns the `data-iw-overlay` namespace so it can never fight another writer
+ * over `data-iw-ui` (the "two writers, one attribute" trap): `scrim` on the
+ * backdrop and `panel` on the card. overlay.css draws the shared forged frame
+ * on the card and normalises the scrim.
  *
- * Reversible: clearOverlayFramer() drops both attributes. No elements added, no
- * reparenting, no inline styles.
+ * One narrowly identified content surface is annotated too: Character Stats'
+ * repeated Lifetime Stats label/value rows receive `data-iw-overlay-content`
+ * and `data-iw-overlay-role` hooks so typography can be normalised without
+ * matching individual copy such as "Wood Chopped". No game text, classes,
+ * handlers or state attributes are changed.
+ *
+ * Reversible: clearOverlayFramer() drops every attribute this module owns. No
+ * elements are added, reparented or given inline styles.
  */
 
 import { warnOnce } from './Runtime.js';
 
 const SCRIM = 'scrim';
 const PANEL = 'panel';
+const PLAYER_STATS = 'player-stats';
+const STAT_LABEL = 'stat-label';
+const STAT_VALUE = 'stat-value';
 
 // Elements the skin already owns or that another classifier frames — never a
 // generic overlay, and framing one would double-draw or fight a writer.
@@ -52,6 +59,57 @@ const ALREADY_FRAMED = [
 ].join(',');
 
 let tagged = new Set();
+
+const normText = value => String(value || '').replace(/\s+/g, ' ').trim();
+
+function setData(el, key, value) {
+  if (el?.dataset && el.dataset[key] !== value) el.dataset[key] = value;
+}
+
+function clearPlayerStatsSurface(surface) {
+  if (!surface) return;
+  if (surface.dataset?.iwOverlayContent === PLAYER_STATS) delete surface.dataset.iwOverlayContent;
+  surface.querySelectorAll?.('[data-iw-overlay-role]').forEach(el => {
+    if ([STAT_LABEL, STAT_VALUE].includes(el.dataset.iwOverlayRole)) delete el.dataset.iwOverlayRole;
+  });
+}
+
+function findPlayerStatsSurface(card) {
+  if (!card) return null;
+  for (const surface of card.querySelectorAll('.compact-panel')) {
+    const children = [...surface.children];
+    const heading = children.find(el => normText(el.textContent).toLowerCase() === 'lifetime stats');
+    if (!heading) continue;
+    const rows = children.filter(row => {
+      const cells = [...row.children];
+      if (cells.length !== 2) return false;
+      const label = normText(cells[0].textContent);
+      const value = normText(cells[1].textContent);
+      return !!label && /^-?[\d,.]+$/.test(value);
+    });
+    if (rows.length >= 2) return { surface, rows };
+  }
+  return null;
+}
+
+function classifyOverlayContent(card) {
+  const match = findPlayerStatsSurface(card);
+  const existing = [...card.querySelectorAll('[data-iw-overlay-content="player-stats"]')];
+  for (const surface of existing) if (surface !== match?.surface) clearPlayerStatsSurface(surface);
+  if (!match) return;
+
+  setData(match.surface, 'iwOverlayContent', PLAYER_STATS);
+  const keep = new Set();
+  for (const row of match.rows) {
+    const [label, value] = row.children;
+    setData(label, 'iwOverlayRole', STAT_LABEL);
+    setData(value, 'iwOverlayRole', STAT_VALUE);
+    keep.add(label); keep.add(value);
+  }
+  match.surface.querySelectorAll('[data-iw-overlay-role]').forEach(el => {
+    if (!keep.has(el) && [STAT_LABEL, STAT_VALUE].includes(el.dataset.iwOverlayRole)) delete el.dataset.iwOverlayRole;
+  });
+}
 
 function visible(el) {
   if (!el || el.nodeType !== 1) return false;
@@ -126,6 +184,7 @@ function tagScrim(scrim) {
   if (card && !card.closest(SKIN_OWNED) && !card.matches(ALREADY_FRAMED)) {
     if (card.dataset.iwOverlay !== PANEL) card.dataset.iwOverlay = PANEL;
     tagged.add(card);
+    classifyOverlayContent(card);
   }
 }
 
@@ -150,7 +209,9 @@ export function frameOverlays() {
       if (el.dataset.iwOverlay === SCRIM && !isScrim(el)) {
         untag(el);
         tagged.delete(el);
+        continue;
       }
+      if (el.dataset.iwOverlay === PANEL) classifyOverlayContent(el);
     }
 
     // NOTE (perf): this candidate sweep is three attribute-SUBSTRING selectors,
@@ -184,5 +245,9 @@ export function frameOverlays() {
 /** Drop every attribute this module writes. Kill switch. */
 export function clearOverlayFramer() {
   document.querySelectorAll('[data-iw-overlay]').forEach(untag);
+  document.querySelectorAll('[data-iw-overlay-content="player-stats"]').forEach(clearPlayerStatsSurface);
+  document.querySelectorAll('[data-iw-overlay-role]').forEach(el => {
+    if ([STAT_LABEL, STAT_VALUE].includes(el.dataset.iwOverlayRole)) delete el.dataset.iwOverlayRole;
+  });
   tagged = new Set();
 }
