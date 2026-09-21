@@ -151,17 +151,21 @@ function ensureActionLabel(panel) {
   const btn = actionButtonOf(panel);
   const host = btn?.parentElement;
   if (!host) return null;
-  panel.querySelectorAll('[data-iw-skill-v2-action-label]').forEach(el => {
-    if (el.parentElement !== host) el.remove();
-  });
-  let label = host.querySelector(':scope > [data-iw-skill-v2-action-label]');
+  const labels = [...panel.querySelectorAll('[data-iw-skill-v2-action-label]')];
+  let label = labels.find(el => el.parentElement === host) || null;
+  labels.forEach(el => { if (el !== label) el.remove(); });
   if (!label) {
     label = document.createElement('span');
     label.dataset.iwSkillV2ActionLabel = '1';
-    label.className = 'iw-skill-v2-action-label';
-    label.setAttribute('aria-hidden', 'true');
     host.appendChild(label);
   }
+  /* Hot extension reloads retain skin-owned DOM from the prior bundle. Repair
+     the node contract as well as its text: a short-lived build wrote the label
+     typography inline, which outranks this design's !important stylesheet and
+     produced the giant wrapped CRAF/T + a second native label underneath. */
+  if (label.className !== 'iw-skill-v2-action-label') label.className = 'iw-skill-v2-action-label';
+  if (label.getAttribute('aria-hidden') !== 'true') label.setAttribute('aria-hidden', 'true');
+  if (label.hasAttribute('style')) label.removeAttribute('style');
   setText(label, (btn.textContent || '').replace(/\s+/g, ' ').trim());
   return label;
 }
@@ -490,6 +494,10 @@ function syncRequirementNote(panel) {
 
 export function enhanceSkillCardV2(panel, skillType) {
   if (!panel || !panel.isConnected || !skillType || skillType === 'unknown') return null;
+  /* This token is stylesheet-owned now. Clear the inline value left by the
+     earlier inside-button label fitter so native text cannot reappear behind
+     the discipline icon after an in-page extension reload. */
+  if (panel.style.getPropertyValue('--iw-skill-v2-btn-font')) panel.style.removeProperty('--iw-skill-v2-btn-font');
   setData(panel, 'iwSkillV2', '1');
   setData(panel, 'iwSkillV2Type', skillType);
   /* Always "expanded": CollapsibleFrames' fold rule keys on this attribute

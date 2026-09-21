@@ -32,9 +32,11 @@ const CARDS = [
      containing block, the live shape that put every action icon ~12px high. */
   { id: 'jewelcrafting', wrapCommand: true, icon: '&#128142;', skill: 'Jewelcrafting', lv: 70, pct: '41.1',
     title: 'Prospect Moonsteel Ore', verb: 'Prospect', base: 677, pager: 'content',
+    contentStyle: 'content-visibility:auto',
     lines: ['&bull; Moonsteel Ore 58097/2'] },
   { id: 'spellcrafting', icon: '&#10024;', skill: 'Spellcrafting', lv: 60, pct: '64',
-    title: 'Harvest Moonsteel Mana', verb: 'Gather', base: 124, pager: 'content', active: 100, lines: [] },
+    title: 'Harvest Moonsteel Mana', verb: 'Gather', base: 124, pager: 'content', active: 100,
+    contentStyle: 'translate:1px', lines: [] },
   /* Bonus level: the live Smithing/Herbalism/Alchemy shape that makes the
      level plaque substantially wider than a plain two-digit level. */
   { id: 'tailoring', nestTitle: true, icon: '&#129525;', skill: 'Tailoring', lv: '54+2', pct: '86',
@@ -49,6 +51,7 @@ const CARDS = [
      clips first. */
   { id: 'construction', bareCommand: true, icon: '&#127959;', skill: 'Construction', lv: 56, pct: '55.9',
     title: 'Craft Sunforged Building Parts', verb: 'Craft Parts', base: 252, pager: 'content',
+    contentStyle: 'scale:1;rotate:0deg',
     lines: ['&bull; Moonsteel Building Parts 1220/2800 &bull; Moonwood 35940/19600 '
             + '&bull; Moonsteel Ore 58097/9800 &bull; Mythril Building Parts 152/200 '
             + '&bull; Aethersteel Building Parts 1/400 &bull; Bloodstone Building Parts 0/520',
@@ -78,7 +81,7 @@ const card = c => `
 <div class="compact-panel" id="${c.id}">
   <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2">
     <div><p>${c.icon} ${c.skill}</p><p>LV ${c.lv}</p></div>
-    <div>
+    <div class="${c.pager === 'content' ? 'relative' : ''}"${c.contentStyle ? ` style="${c.contentStyle}"` : ''}>
       ${c.nestTitle
         ? `<div><p>${c.title}</p><button>Lv ${c.lv} - ${c.pct}% &bull; 4,120 to go</button></div>`
         : `<p>${c.title}</p>
@@ -627,22 +630,24 @@ try {
     check(`${label}: the command group is centred vertically on the hero column`,
       set.every(r => (g => Math.abs(g.mid - g.cardMid) <= 1.5)(commandGroup(r))),
       set.map(r => (g => `${r.id} d=${round1(g.mid - g.cardMid)}`)(commandGroup(r))).join(' '));
-    check(`${label}: the action label sits above its button frame`,
-      set.every(r => r.actionLabel && r.actionLabel.y + r.actionLabel.h <= r.button.y
+    check(`${label}: the action label is a single band above its button frame`,
+      set.every(r => r.actionLabel
+        && r.actionLabel.x >= r.button.x - 1
+        && r.actionLabel.x + r.actionLabel.w <= r.button.x + r.button.w + 1
         && r.button.y - (r.actionLabel.y + r.actionLabel.h) >= 3
         && r.button.y - (r.actionLabel.y + r.actionLabel.h) <= 5),
-      set.map(r => `${r.id} gap=${r.actionLabel ? round1(r.button.y - r.actionLabel.y - r.actionLabel.h) : 'missing'}`).join(' '));
+      set.map(r => `${r.id} label=${r.actionLabel ? `${r.actionLabel.y}..${round1(r.actionLabel.y + r.actionLabel.h)}` : 'missing'} button=${r.button.y}..${round1(r.button.y + r.button.h)}`).join(' '));
     check(`${label}: the glyph is centred within the button frame`,
       set.every(r => r.glyph
         && Math.abs(r.glyph.cx - r.button.cx) <= 1
         && Math.abs(r.glyph.cy - r.button.cy) <= 1),
       set.map(r => `${r.id} d=${r.glyph ? `${round1(r.glyph.cx - r.button.cx)},${round1(r.glyph.cy - r.button.cy)}` : 'missing'}`).join(' '));
-    /* The label is always ONE line inside the button with a buffer both sides
+    /* The label is always ONE line above the button with a buffer both sides
        (Curtis, 2026-09: "CRAFT PARTS" wrapped). The size is fitted per label by
        SkillCardDesignController.fitActionLabel. Controls: remove the fit call
        and CRAFT PARTS overflows at 9.5px; drop the button's inline width from
        its cache key and it is measured in the legacy button and never shrinks. */
-    check(`${label}: every action label is one line inside its buffer`,
+    check(`${label}: every action label is one line above its button`,
       set.every(r => r.labelFit.lines === 1 && r.labelFit.text <= r.labelFit.room + 0.5 && r.labelFit.pad >= 3),
       set.map(r => `${r.id} "${r.labelFit.label}" ${r.labelFit.size}px lines=${r.labelFit.lines} ${r.labelFit.text}/${r.labelFit.room}`).join(' '));
     check(`${label}: the glyph stays inside its button`,

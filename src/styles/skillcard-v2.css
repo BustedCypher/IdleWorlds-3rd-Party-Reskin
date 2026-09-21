@@ -179,7 +179,14 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
   grid-area: content !important; display: grid !important;
   grid-template-columns: minmax(0, max-content) auto !important; justify-content: start !important;
   align-content: center !important; align-items: center !important; gap: 0 12px !important;
-  position: static !important;
+  /* React/Tailwind branches can establish a containing block with more than
+     `position`. A content-branch pager must resolve against the full card, not
+     this title-sized zone, or it jumps beside the title while command-branch
+     cards remain correct. */
+  position: static !important; transform: none !important; filter: none !important;
+  translate: none !important; rotate: none !important; scale: none !important;
+  backdrop-filter: none !important; perspective: none !important; contain: none !important;
+  content-visibility: visible !important; will-change: auto !important;
   /* No ground of its own (Curtis, 2026-09). This zone spans only the title
      row, so a wash here drew a lighter box behind the title that stopped
      short of the card's foot and broke the card into two panels. */
@@ -268,7 +275,7 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
   left: calc(50% - var(--iw-skill-v2-btn-w) / 2) !important; right: auto !important; bottom: auto !important;
   margin: 0 !important; border-radius: 9px !important;
   outline: none !important; color: transparent !important; overflow: hidden !important;
-  font-size: 12px !important; line-height: var(--iw-skill-v2-label-h) !important; letter-spacing: .04em !important;
+  font-size: 0 !important; line-height: var(--iw-skill-v2-label-h) !important; letter-spacing: .04em !important;
   white-space: nowrap !important; text-shadow: none !important;
   filter: none !important; transition: filter .15s ease !important;
 }
@@ -403,7 +410,8 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
      are placed against the card - reproduced with `--wrap-command`, where the
      8px buffer measured 1px. */
   position: static !important; transform: none !important; filter: none !important; backdrop-filter: none !important;
-  perspective: none !important; contain: none !important; will-change: auto !important;
+  translate: none !important; rotate: none !important; scale: none !important;
+  perspective: none !important; contain: none !important; content-visibility: visible !important; will-change: auto !important;
 }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="nav-button"][data-iw-nav-direction] { display: flex !important; align-items: center !important; justify-content: center !important; --fs-button-background: linear-gradient(color-mix(in srgb, var(--iw-th-edge-soft) 70%, var(--iw-th-plate)), var(--iw-th-plate)) !important; --fs-button-border: 1px solid var(--iw-th-edge-mid) !important; --fs-button-shadow: inset 0 1px 0 #ffffff0d !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role="nav-button"][data-iw-nav-direction]:hover { --fs-button-background: linear-gradient(var(--iw-th-edge-soft), var(--iw-th-plate)) !important; --fs-button-border: 1px solid var(--iw-th-accent) !important; }
@@ -479,29 +487,6 @@ html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skil
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .fs-skill-ingredient-item { justify-content: flex-start !important; text-align: left !important; }
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state="collapsed"] .iw-skill-v2-controls,
 html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state="collapsed"] .iw-skill-v2-body { display: none !important; }
-
-/* Tablet cards stop squeezing the detail frame between the hero and command
-   rails. The top band keeps the desktop identity/title/action composition, but
-   the information frame and unmet-requirement foot become full-card rows below
-   it. This removes the fragile 300-450px centre column that varies wildly
-   across phone/tablet browser chrome while preserving the desktop reference. */
-@container iw-skill-card (max-width: 680px) {
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] > [data-iw-skill-layout-shell="1"] {
-    grid-template-rows: minmax(calc(var(--iw-skill-v2-cmd-stack) + 20px), auto) auto auto !important;
-    grid-template-areas: "identity content commands" "body body body" "tabs tabs tabs" !important;
-    min-height: 0 !important;
-  }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] {
-    position: relative !important;
-  }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone="content"] [data-iw-skill-role="nav-group"] {
-    grid-column: auto !important;
-    right: calc(-1 * var(--iw-skill-v2-command-w)) !important;
-  }
-  html[data-iw-skill-card-design="new"] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body {
-    margin: 8px var(--iw-skill-v2-gutter) 6px !important;
-  }
-}
 
 /* Tokens are defined on the shell at narrow widths: a container cannot query
    itself. Keep one layout and allow long labels to wrap without clipping. */

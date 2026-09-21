@@ -30,16 +30,14 @@ still describe the code:
 
 ## 1. Current design (newest pass)
 
-**Tablet and phone detail content is full-width before the phone breakpoint
-(responsive hardening, 2026-09-21).** The launch screenshots exposed a gap in
-the earlier audit: the detail frame stayed trapped between the 106/144px hero
-rail and the 80/96px command rail until the card reached 480px, so mid-sized
-phones and tablets produced the NARROWEST material cells even though smaller
-phones were already in the full-width mode. At `max-width: 680px` the shell
-now keeps the desktop identity/title/command top band but puts `body` and
-`tabs` on full-card rows beneath it. A content-branch pager is still a native
-React descendant; the content zone becomes its containing block and the pager
-reaches the command rail with `right: -command-width`, so no node is moved.
+**Detail content stays in the centre rail until the phone breakpoint
+(layout correction, 2026-09-21).** A short-lived responsive rule put `body`
+and `tabs` on full-card rows at 680px. At raised browser zoom the otherwise
+desktop-shaped card crossed that CSS-pixel breakpoint, so its resource frame
+escaped beneath both the identity and command rails. The shell now preserves
+the reference's centre-column containment above 480px. Only the true phone
+layout at `max-width: 480px` uses full-card detail rows, where the centre rail
+cannot hold the material-cell floor.
 
 The same screenshots exposed a second blind spot: the old overflow audit
 ignored text whose CSS declared `overflow: visible`. A value such as
@@ -51,13 +49,14 @@ boundary. The material name can wrap independently, so no number is clipped or
 broken at arbitrary digits.
 
 `tests/skill-card-responsive.test.mjs` is the regression for this entire
-contract. It sweeps 25 widths from 1024px to 320px with four stress cards,
+contract. It sweeps 27 widths from 1024px to 320px with four stress cards,
 including 9-digit counts, six materials, a bonus level, long requirements,
 both pager branches and paired one-vs-six-material CONTENT-branch cards. At
 every width it checks painted text rectangles rather than only scrollWidth,
 title/BASE versus command collisions, body/note/card containment, one-line
-action labels, a 6-10px button-to-pager gap, and full-width detail rows whenever
-the card is <=680px. A touch context at 390px and 768px also verifies the
+action labels above their button frames, a 6-10px button-to-pager gap, centre-
+column detail containment above 480px, and full-width detail rows at or below
+480px. A touch context at 390px and 768px also verifies the
 coarse-pointer pager target stays at least 24px high. Do not replace this with
 a handful of named-device breakpoints; the card responds to its own container
 because browser chrome, zoom and embedding widths differ across users.
@@ -174,8 +173,13 @@ state to lay out. What each cost:
 
   - **Both branches resolve 50% against a full-height box.** The commands zone
     spans all three shell rows and stays `position: relative` (the glyph is
-    anchored to it); the content zone is `position: static`, so a pager React
-    ships there resolves against the card.
+    anchored to it); the content zone clears every containing-block source
+    `contain`, `content-visibility`, `will-change`, and both shorthand and
+    individual transforms), so a pager React ships there resolves against the
+    card. Clearing only `position` / `transform` passed the fixtures but failed live on
+    content-branch cards whose title zone carried a transform: their arrows
+    jumped beside the title while command-branch and no-pager cards looked
+    correct.
   - **A game wrapper must not become the containing block.** Any element
     inside a zone that holds the button or the pager is forced
     `position: static`, because a Tailwind `relative` wrapper would otherwise
@@ -368,6 +372,15 @@ state to lay out. What each cost:
   fixed size.
   The native button's `--iw-skill-v2-btn-font` is 0px so its preserved text
   takes no visual space behind the icon.
+  The renderer must select compact geometry from its own `fs-skill-panel`
+  marker, not wait for `data-iw-skill-v2`: it is the first `iw:skill-panel`
+  listener and the V2 controller sets that later marker only after the first
+  button-style pass. The zero-font token also uses a 0px fallback, so native
+  text never flashes while the V2 variables are landing. On an in-page
+  extension upgrade the controller repairs the skin-owned mirror's class and
+  removes stale inline typography / `--iw-skill-v2-btn-font`; otherwise an
+  older inside-button build can survive as a giant wrapped mirror plus a second
+  native label under the icon.
   Three things about the cache key `label | layout | inline width | layout
   epoch`, each learned by measurement:
 

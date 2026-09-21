@@ -41,7 +41,7 @@ function check(label, condition, detail = '') {
 // assigned by SkillPanelRenderer. Native gameplay nodes stay in place.
 {
   installDom(`
-    <div class="compact-panel" id="card">
+    <div class="compact-panel" id="card" style="--iw-skill-v2-btn-font: 12px">
       <div data-iw-skill-zone="identity"><span data-iw-skill-role="identity">Construction</span></div>
       <div data-iw-skill-zone="content">
         <h3 data-iw-skill-role="action-title">Build Moonsteel Arboretum</h3>
@@ -52,7 +52,7 @@ function check(label, condition, detail = '') {
         <p data-iw-skill-role="action-detail">Missing materials — will queue</p>
         <p data-iw-skill-role="reward">Base Reward: 252</p>
       </div>
-      <div data-iw-skill-zone="commands"><button data-iw-skill-role="action-button">Build</button></div>
+      <div data-iw-skill-zone="commands"><button data-iw-skill-role="action-button">Build</button><span data-iw-skill-v2-action-label="1" style="font: 700 21px serif !important">stale</span><span data-iw-skill-v2-action-label="1">duplicate</span></div>
     </div>
   `);
   const panel = document.querySelector('#card');
@@ -72,6 +72,13 @@ function check(label, condition, detail = '') {
   check('the visual action label is a sibling above the native button',
     panel.querySelector('[data-iw-skill-zone="commands"] > [data-iw-skill-v2-action-label]')?.textContent === 'Build'
       && !action.querySelector('[data-iw-skill-v2-action-label]'));
+  const visualLabel = panel.querySelector('[data-iw-skill-v2-action-label]');
+  check('an existing visual label is repaired to the current class contract',
+    visualLabel?.classList.contains('iw-skill-v2-action-label') && !visualLabel.hasAttribute('style'));
+  check('duplicate stale visual labels are reduced to one canonical mirror',
+    panel.querySelectorAll('[data-iw-skill-v2-action-label]').length === 1);
+  check('a stale inline native-label font cannot override the icon-only button token',
+    !panel.style.getPropertyValue('--iw-skill-v2-btn-font'));
   action.textContent = 'Assemble';
   enhanceSkillCardV2(panel, 'construction');
   check('the visual action label follows the game-owned button text',

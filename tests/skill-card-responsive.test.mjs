@@ -39,7 +39,9 @@ const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset
 <div class="panel"><h2>Skill Actions</h2>${STRESS}${DENSE}${ONE_CONTENT}${SIX_CONTENT}</div></div><script>${bundle}</` + `script></body></html>`;
 const MIME={'.json':'application/json','.webp':'image/webp','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2'};
 const ORIGIN='http://iw.test';
-const WIDTHS=[1024,900,820,768,745,700,640,600,581,580,560,520,500,481,480,460,440,430,412,390,375,360,344,330,320];
+/* Container queries use the card's content box. The rendered section frame and
+   card borders mean 517/516 produce exact 481/480px container widths. */
+const WIDTHS=[1024,900,820,768,745,700,640,600,581,580,560,520,517,516,500,481,480,460,440,430,412,390,375,360,344,330,320];
 const browser=await chromium.launch();
 const page=await browser.newPage({viewport:{width:1024,height:1400}});
 const errors=[]; page.on('pageerror',e=>errors.push(String(e)));
@@ -67,28 +69,33 @@ for(const width of WIDTHS){
    const rows=[...c.querySelectorAll('.iw-skill-v2-body-row[data-iw-skill-v2-body-kind="material"]')];
    const title=rect(q('[data-iw-skill-role="action-title"]')), chip=rect(q('.fs-skill-base-exp'));
    const button=rect(q('[data-iw-skill-role="action-button"]')), nav=rect(q('[data-iw-skill-role="nav-group"]'));
+   const actionLabel=rect(q('[data-iw-skill-v2-action-label]')), glyph=rect(q('[data-iw-skill-v2-action-glyph]'));
    const bodyEl=q('[data-iw-skill-v2-body]'), body=rect(bodyEl), note=rect(q('[data-iw-skill-v2-req-note]'));
-   const card=rect(c), label=q('.iw-skill-v2-action-label');
+   const card=rect(c), content=rect(q('[data-iw-skill-zone="content"]')), label=q('.iw-skill-v2-action-label');
    const countOverflow=rows.map(r=>Math.max(paintedOverflow(r),...([...r.children].map(paintedOverflow))));
    const labelRange=label?document.createRange():null; if(labelRange) labelRange.selectNodeContents(label);
    const labelRects=labelRange?[...labelRange.getClientRects()]:[];
    const gutter=bodyEl?(parseFloat(getComputedStyle(bodyEl).getPropertyValue('--iw-skill-v2-gutter'))||20):20;
-   return {id,card,body,note,button,nav,title,chip,gutter,
+   return {id,card,containerW:c.clientWidth,content,body,note,button,nav,actionLabel,glyph,title,chip,gutter,
     maxMaterialOverflow:countOverflow.length?Math.max(...countOverflow):0,
     titleCollision:overlap(title,button)||overlap(title,nav)||overlap(chip,button)||overlap(chip,nav),
     bodyOutside:body?body.x<card.x-1||body.r>card.r+1:false,
     noteOutside:note?note.x<card.x-1||note.r>card.r+1:false,
     noteBeforeBody:note&&body?note.y<body.b-1:false,
     pagerGap:nav&&button?nav.y-button.b:null,
-    commandOutside:[button,nav].filter(Boolean).some(r=>r.x<card.x-1||r.r>card.r+1||r.y<card.y-1||r.b>card.b+1),
+    commandOutside:[actionLabel,button,nav].filter(Boolean).some(r=>r.x<card.x-1||r.r>card.r+1||r.y<card.y-1||r.b>card.b+1),
     labelOverflow:label?paintedOverflow(label):0,
     labelLines:labelRects.length?new Set(labelRects.map(r=>Math.round(r.top))).size:0,
+    centralBody:body&&content?body.x>=content.x-1&&body.r<=content.r+1:false,
     fullWidthBody:body?body.w>=card.w-2*gutter-4:false,
     pageOverflow:document.documentElement.scrollWidth-document.documentElement.clientWidth};
   });
  });
  const oneGap=audit.find(r=>r.id==='one-content')?.pagerGap;
  const sixGap=audit.find(r=>r.id==='six-content')?.pagerGap;
+ const boundaryCardWidth=width===517?481:width===516?480:null;
+ if(boundaryCardWidth!==null&&audit.some(r=>Math.abs(r.containerW-boundaryCardWidth)>.1))
+   failures.push(`${width}px viewport did not produce the expected ${boundaryCardWidth}px card-container boundary (got ${audit.map(r=>r.containerW).join('/')})`);
  if(oneGap===null||oneGap===undefined||sixGap===null||sixGap===undefined||Math.abs(oneGap-sixGap)>0.5)
    failures.push(`${width}px content-branch pager gap differs: one=${oneGap} six=${sixGap}`);
  for(const row of audit){
@@ -100,7 +107,16 @@ for(const width of WIDTHS){
    if(row.pagerGap !== null && (row.pagerGap < 6 || row.pagerGap > 10)) failures.push(`${width}px ${row.id}: button→pager gap ${row.pagerGap.toFixed(1)}px`);
    if(row.commandOutside) failures.push(`${width}px ${row.id}: command controls escape card`);
    if(row.labelOverflow > 1 || row.labelLines !== 1) failures.push(`${width}px ${row.id}: action label overflow ${row.labelOverflow.toFixed(1)}px lines=${row.labelLines}`);
-   if(row.card.w <= 680 && !row.fullWidthBody) failures.push(`${width}px ${row.id}: tablet/phone detail frame is not full width`);
+   const labelGap=row.actionLabel&&row.button?row.button.y-row.actionLabel.b:null;
+   if(!row.actionLabel || !row.button || row.actionLabel.x<row.button.x-1 || row.actionLabel.r>row.button.r+1
+     || labelGap<3 || labelGap>5)
+     failures.push(`${width}px ${row.id}: action label is not a single band above its button (gap=${labelGap})`);
+   if(row.glyph&&row.button&&(Math.abs((row.glyph.x+row.glyph.w/2)-(row.button.x+row.button.w/2))>1
+     || Math.abs((row.glyph.y+row.glyph.h/2)-(row.button.y+row.button.h/2))>1))
+     failures.push(`${width}px ${row.id}: discipline icon is not centred inside the action button`);
+   if(row.containerW > 480 && (!row.centralBody || !row.body || !row.title || Math.abs(row.body.x-row.title.x)>1))
+     failures.push(`${width}px ${row.id}: detail frame is not left-aligned inside the centre column (body=${row.body?.x} title=${row.title?.x} content=${row.content?.x})`);
+   if(row.containerW <= 480 && !row.fullWidthBody) failures.push(`${width}px ${row.id}: phone detail frame is not full width`);
    if(row.pageOverflow>2) failures.push(`${width}px ${row.id}: document horizontal overflow ${row.pageOverflow}px`);
  }
 }

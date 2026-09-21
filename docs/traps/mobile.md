@@ -94,12 +94,12 @@ header.
   such as `218,014,373/221,276,974` painted up to ~24px outside its material
   cell at ordinary 375-768px viewports while scroll/clipping checks stayed
   green. The dedicated `skill-card-responsive.test.mjs` measures Range paint
-  rectangles against every cell across 25 widths. Counts now split at the slash
+  rectangles against every cell across 27 widths. Counts now split at the slash
   so they can wrap only between owned and required values, never through a
-  number. The same pass moves the detail frame to a full-width row once the card
-  itself is <=680px; this matters because a mid-sized tablet/phone used to have
-  a NARROWER centre frame than a smaller phone that had already switched to the
-  full-width phone mode.
+  number. A follow-up corrected the initial 680px full-width switch: it made
+  zoomed desktop cards spill their detail frame beneath the identity and command
+  rails. Detail frames now stay in the centre rail above 480px and use the
+  full-width row only in the true phone layout.
 - **Wrapped nav rows (<=560px) - SUPERSEDED the next day by the single-row
   rail above.** The Toolkit link kept `flex: 0 0 auto` and a 7px detaching
   margin, so in a wrapped rail it started 7px right of the row edge and its row

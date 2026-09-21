@@ -225,12 +225,14 @@ const BUTTON_STYLES = {
 };
 
 /* True when this command button belongs to a card rendered in the V2 design.
-   Both halves matter: the root attribute is the player's design choice and the
-   panel attribute is whether this particular card was re-identified as a skill
-   card at all. */
+   SkillPanelRenderer is the first iw:skill-panel listener: applyPanelChrome()
+   has set fs-skill-panel by the time buttons are styled, but the later V2
+   listener has not set data-iw-skill-v2 yet. Keying this first pass on the V2
+   marker leaves legacy geometry and visible native text behind until an
+   unrelated mutation happens to schedule a second render. */
 function compactCommandButton(btn) {
   return document.documentElement?.dataset?.iwSkillCardDesign === 'new'
-    && !!btn.closest?.('[data-iw-skill-v2="1"]');
+    && !!btn.closest?.('.compact-panel.fs-skill-panel');
 }
 
 function styleButton(btn) {
@@ -336,7 +338,7 @@ function styleButton(btn) {
     if (compact) {
       /* The base map writes the label's type inline for every button; a compact
          button is too narrow for 12px at .09em, so both are tokens here. */
-      setOwnedStyle(buttonStyleOwner, btn, 'font-size', 'var(--iw-skill-v2-btn-font, 12px)');
+      setOwnedStyle(buttonStyleOwner, btn, 'font-size', 'var(--iw-skill-v2-btn-font, 0px)');
       setOwnedStyle(buttonStyleOwner, btn, 'letter-spacing', 'var(--iw-skill-v2-btn-tracking, 0.09em)');
     }
     if (compact) {
@@ -862,7 +864,7 @@ function textCandidates(panel) {
   // different module from the cause. Same opt-out rule the generic control
   // rule and the collapse toggle already document.
   const candidates = visibleFirst([...panel.querySelectorAll('h1,h2,h3,h4,div,span,p')]
-    .filter(el => !el.closest('button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body]'))
+    .filter(el => !el.closest('button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body], [data-iw-skill-v2-action-label], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-level-readout]'))
     .filter(el => normText(el.textContent).length <= 130));
   lastCandidatePanel = panel;
   lastCandidates = candidates;
@@ -873,7 +875,17 @@ function findBestText(panel, predicate) {
   const candidates = textCandidates(panel);
   const exactOwn = candidates.find(el => predicate(normText(el.childElementCount ? '' : el.textContent), el));
   if (exactOwn) return exactOwn;
-  return candidates.find(el => predicate(normText(el.textContent), el)) || null;
+  /* A live recipe title is not always a text leaf: NameScanner can wrap the
+     item name in `.iw-item-ref`. In that shape both the title and every broad
+     ancestor whose text STARTS with the title satisfy an action predicate.
+     Document order puts the broad ancestor first, which used to promote the
+     whole content branch to `action-title`. Prefer the innermost matching node
+     while retaining visible-first/document order among equally specific
+     candidates. This is also the generally correct fallback for requirements,
+     rewards and details: structural containers are evidence sources, not the
+     semantic text node when a matching descendant exists. */
+  const matches = candidates.filter(el => predicate(normText(el.textContent), el));
+  return matches.find(el => !matches.some(inner => inner !== el && el.contains(inner))) || matches[0] || null;
 }
 
 function findProgress(panel) {
