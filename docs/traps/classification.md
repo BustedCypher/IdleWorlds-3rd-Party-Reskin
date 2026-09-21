@@ -113,6 +113,32 @@ fixture carries a second visible Current Action panel (`#current-action-no-queue
 that the live page does not, so a drift test must relabel BOTH or the text pass
 still succeeds and the check passes for the wrong reason.
 
+**Optional quest helpers need named GRID ownership, even when they are already
+in the right DOM order (launch capture, 2026-09-21).** The deployed
+`9075-ab1177f6f4522a71.js` quest shape is
+`compact-panel > div.space-y-2`: row (content + commands), optional
+`<p>Out of skips - they reset daily at [time], or completing (not skipping) a
+work order refills them to your daily max right away. ...</p>`, progress track,
+then `N% complete`. The helper is React-owned and may also contain the game's
+Supporter button.
+
+The quest body becomes a two-column CSS grid with rows 1-3 explicitly occupied
+by `row`, `track`, and `label`. Before this fix the optional paragraph had
+no role or grid placement, so CSS auto-placement put it in a narrow implicit
+cell: the browser regression measured only 76px wide at a 360px viewport and
+145px at 1100px. Its DOM order happened to leave it below the percent line, but
+its width was not owned.
+
+`QuestPanelRenderer` now detects a text leaf beginning `/^out of skips\b/i`
+inside a positively identified quest, excludes it from brief assignment, marks
+it `data-iw-quest-role="skip-note"`, and marks only its direct host beneath
+the resolved body `data-iw-quest-zone="skip-note"`. No node is moved. CSS
+places that host on `grid-row: 4` and `grid-column: 1 / -1`. Row 4 is
+implicit on purpose: it exists only while the optional helper exists, so
+ordinary bounty/work-order cards gain neither an empty row nor an extra gap.
+`tests/quest-skip-note-layout.test.mjs` pins full-width bottom placement at
+360px and 1100px and verifies no overlap with the sigil or command rail.
+
 **The skin's surface coverage vs the game's, from the bundle's own aria-label /
 title vocabulary.** Covered: Skills, Quests, Inventory/Bag, header, main nav,
 zone bar, Current Action, Action Log, World Chat, World Boss, Market, Village
@@ -140,6 +166,52 @@ Village's "Housing Bank" and "Village NPCs" panels are still frame-only.
 un-classified, and the rule-5 state colours inside (`"Upgrade vs equipped"`,
 team colour) are still untouched by design. Zone Control ships team colour (`"Blue team controls this zone"`, `"Red Team"`,
 `"Zone is open for attack"`) — team identity is state, do not repaint it.
+
+**Contained popups need OWNER classification, not merely popup z-index
+(2026-09-21).** A child `z-index: 999` cannot outrank a later sibling when its
+ancestor has already created a lower stacking context. The Inventory Filters
+menu is the concrete case: every direct child of the forged Inventory frame is
+z=1, so the menu's native z-30 is trapped inside the earlier tool/header child
+while the later z=1 list paints over it. `OverlayFramer` therefore owns two
+markers as one reversible unit: `data-iw-overlay="popup"` on the positively
+classified positioned popup and `data-iw-overlay-host="1"` on the closest
+DIRECT child under its framed ancestor. CSS lifts the host first, then the
+popup. Never reparent a React-owned popup to `body` to escape a stacking
+context; that changes ownership, event relationships and positioning.
+
+Classification prefers actual popup semantics (`role=menu|listbox|dialog` or
+a matching expanded `aria-controls`). The deployed Inventory popup currently
+publishes none of those, so one captured structural fallback is allowed:
+`button[aria-label/title="Filter inventory"]` and a visible positioned sibling
+with multiple interactive controls inside the same anchor. An ordinary
+absolute child, a hidden copy and `.iw-tip` are explicit negative controls.
+The owner marker must be removed as soon as the popup closes, otherwise a
+settled page retains a bogus high stacking context.
+
+**Player Stats label weight is structural, not a "Wood Chopped" special case
+(launch capture, 2026-09-21).** The deployed IdleWorlds bundle
+`/_next/static/chunks/9075-ab1177f6f4522a71.js` builds Character Stats'
+`Lifetime Stats` block as a `.compact-panel` followed by repeated
+`div.flex.items-center.justify-between` rows. Every label — Monsters
+Defeated, Ore Mined, **Wood Chopped**, Potions Brewed and the rest — is the
+same `<p class="text-xs text-white/70">`. Every numeric value is the same
+`<p class="text-xs font-semibold text-white">`. The deployed stylesheet
+`47785f59571f8636.css` confirms `.font-semibold { font-weight: 600 }`;
+the label has no weight utility, so it remains the normal inherited 400. The
+production source therefore does **not** support Wood Chopped being natively
+bold; the launch screenshot is presentation drift.
+
+Do not fix this by matching `/wood chopped/i`. Inside a positively owned
+overlay panel, `OverlayFramer` finds the compact panel whose direct child says
+`Lifetime Stats`, then accepts repeated direct rows only when each has exactly
+two children and the second child is numeric. It tags the surface
+`data-iw-overlay-content="player-stats"`, the first cell
+`data-iw-overlay-role="stat-label"`, and the second
+`data-iw-overlay-role="stat-value"`. CSS makes every label 400 and every
+value 700. Unrelated "Wood Chopped" prose outside the modal is an explicit
+negative control, and teardown removes all three semantic hooks. This keeps the
+fix scoped to the role the game itself expresses structurally rather than to
+one currently reported string.
 
 **Verified against the app's real palette:** the requirement met/unmet test
 (`/\btext-(?:red|rose|orange|amber|yellow)-\d/`) is correct. The app's full

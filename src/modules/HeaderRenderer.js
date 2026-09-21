@@ -114,26 +114,40 @@ function applyZoneSurface(root) {
 // on <html>, which is OUTSIDE document.body and therefore not watched by the
 // single MutationObserver — writing here can never feed a flush.
 const THEME_ASSET_DIR = 'assets/skills-ui';
+// A route can cold-load before the Game-only Zone N label has ever existed.
+// In that state there is no semantic zone theme to claim, but the compact and
+// action controls still need deterministic art. Forged metal is the neutral
+// visual fallback only; data-iw-zone-theme remains "default" and the three
+// zone-specific surface variables stay cleared until a real zone resolves.
+const FALLBACK_VISUAL_THEME = 'forged-metal';
 
 function applyZoneTheme() {
   const html = document.documentElement;
   if (!html) return;
   const theme = zoneTheme(currentZoneNumber());
   const key = theme || 'default';
-  const buttonThemeReady = !theme || !!html.style.getPropertyValue('--iw-action-idle');
-  if (html.dataset.iwZoneTheme === key && buttonThemeReady) return;
+  const visualTheme = theme || FALLBACK_VISUAL_THEME;
+  const zoneVarsReady = theme
+    ? !!html.style.getPropertyValue('--iw-zone-atlas')
+    : !html.style.getPropertyValue('--iw-zone-atlas')
+      && !html.style.getPropertyValue('--iw-corner-filigree')
+      && !html.style.getPropertyValue('--iw-zone-separator');
+  const buttonThemeReady =
+    html.dataset.iwCompactAtlas === 'compact-ghost-v3'
+    && !!html.style.getPropertyValue('--iw-compact-atlas')
+    && !!html.style.getPropertyValue('--iw-action-idle');
+  if (html.dataset.iwZoneTheme === key && zoneVarsReady && buttonThemeReady) return;
   html.dataset.iwZoneTheme = key;
   if (theme) {
     html.style.setProperty('--iw-zone-atlas', `url("${assetUrl(`${THEME_ASSET_DIR}/theme_${theme}.webp`)}")`);
     html.style.setProperty('--iw-corner-filigree', `url("${assetUrl(`${THEME_ASSET_DIR}/panel_corners_${theme}.webp`)}")`);
     html.style.setProperty('--iw-zone-separator', `url("${assetUrl(`${THEME_ASSET_DIR}/separator_flourish_${theme}.webp`)}")`);
-    SkillsArtService.applyThemeVariables(html, theme);
   } else {
     html.style.removeProperty('--iw-zone-atlas');
     html.style.removeProperty('--iw-corner-filigree');
     html.style.removeProperty('--iw-zone-separator');
-    SkillsArtService.clearThemeVariables(html);
   }
+  SkillsArtService.applyThemeVariables(html, visualTheme);
 }
 
 function setRole(el, role) {

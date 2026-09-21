@@ -38,6 +38,37 @@ severs the connecting rule; `border-image` crushes the 140px edge slices 4.7x
 vertically and flattens the flourish; anchoring the bottom to `100%` leaves the
 frame short. Do not spend another round trying to make it fit.
 
+**An active nav BUTTON can be bright while its native CHILD still paints dark.**
+The compact atlas removes the game's bright active-tab plate, so native route
+children that carry utility paint become visible again. A Chromium capture
+before the 2026-09 Fix 3 selector showed the exact split: the active child's
+computed `color` had already been corrected to the skin foreground, but
+`-webkit-text-fill-color` still resolved to `rgb(5, 5, 5)` and `opacity`
+to `.35`; `visibility` was already `visible`. Fix all of the paint channels
+that can independently affect glyphs, not just `color`: the active nav button
+owns the themed foreground, and every native descendant except
+`[data-iw-compact-layer]` inherits that foreground, uses
+`-webkit-text-fill-color: currentColor`, and resets opacity to 1. Do not
+target the decorative compact layers: their opacity is the hover/pressed state
+machine. `tests/compact-button-atlas.test.mjs` carries a hostile nested-span
+fixture with black color/text-fill and 35% opacity so a future one-property
+"fix" fails in a real browser.
+
+**No resolved zone is a semantic state, not permission to remove control art.**
+The Game route owns the live `Zone N:` label. A direct cold load onto Dungeon
+(or Market/Village/Leaderboards) can therefore start with no zone number and no
+cached zone at all. In that state `data-iw-zone-theme` must stay `default`,
+and `--iw-zone-atlas`, `--iw-corner-filigree` and `--iw-zone-separator`
+must remain cleared — claiming `forged-metal` there would invent a player
+location. But `SkillsArtService` also owns the compact/action button atlases;
+clearing those at the same time makes the persistent top nav revert to legacy
+buttons. `HeaderRenderer.applyZoneTheme()` therefore separates semantic zone
+theme from visual control fallback: a real zone uses its mapped theme for both,
+while an unresolved zone uses `forged-metal` only for control art. The cold
+`/dungeon` browser fixture pins all three facts together: zone theme remains
+`default`, no zone-specific atlas var appears, and the active Dungeon tab
+still paints the forged-metal compact atlas.
+
 **A `gap` is applied on BOTH sides of an invisible flex item, so flattening a
 label's native text does not make it free.** The World Boss action button keeps
 the game's own copy ("Prejoin", "⏳ Prejoined") inside the control at
@@ -52,14 +83,22 @@ flourish starts (the flat interior of `action_frame_idle` is only x 25..107 of
 the box), while the space to the left of the glyph sat empty. Reported as
 "the QUEUED text is off centre", which is precisely what it was. Fix: `gap: 0`,
 no in-flow ornament, and `margin-right: -.07em` on the `::after` to cancel the
-step `letter-spacing` adds after the LAST letter. State is not lost — the word
-itself is the cue (QUEUED vs PREJOIN), and `data-iw-boss-action-state` still
-tags the control. `tests/boss-action-label.test.mjs` pins it in a real browser
-by diffing the button against itself with only the `::after` colour cleared,
-which isolates the WORD's ink from the frame art (and so still measures the
-reported symptom if a future ornament returns out of flow); restore the gap and
-it reports +2.5px, restore the glyph +8.25px, both +12.9px. Note the diff is
-what makes the test independent of the atlas loading — see the next trap.
+step `letter-spacing` adds after the LAST letter. The word still carries the
+compact copy (QUEUED vs PREJOIN), but queued participation also needs a
+persistent NON-MOTION state cue: `data-iw-boss-action-state="active"` paints
+a static inset ring plus an encounter-colour drop-shadow bloom. Do not put the
+old hourglass back into flow and do not pulse/animate the active state — both
+would reintroduce the original centring/idle-paint problems. The active paint
+must leave the 132x38 control geometry unchanged and remain static under
+`prefers-reduced-motion: reduce`.
+
+`tests/boss-action-label.test.mjs` pins both concerns in a real browser. It
+diffs the button against itself with only the `::after` colour cleared to
+isolate the WORD's ink from the frame art (restore the gap and it reports
++2.5px, restore the glyph +8.25px, both +12.9px), then separately compares
+idle/active computed paint and bounds so the queued cue cannot disappear or
+move the control. Note the word-diff is what makes the centring check
+independent of atlas loading — see the next trap.
 
 **A sprite frame on a button means the button's own plate must go.** The
 quest rail drew `action_frame_idle` on top of its own `border` + gradient +
@@ -304,3 +343,18 @@ than in the sheet, and the fixture's `ACTION_INLINE` carries a third copy.
 `background-size` as a percentage pair. Overriding it with a pixel value moves
 the sprite window onto the wrong region of the sheet — the art does not just
 resize, it becomes a different image.
+
+
+**Newly live gear can precede the extension's offline atlas pin.** A live
+`items.json` record proves the item ID, catalogue name and effects; it does
+**not** prove that the extension has matching local artwork. World-boss rewards
+therefore use the live `ItemDatabase` record for metadata and let
+`AtlasService.resolve({ id, name })` fall through from an item-atlas ID miss
+to the gear atlas by catalogue name. When the offline atlas is behind, import
+the exact audited source cell rather than substituting a visually similar
+sprite. The launch Woodcutting/Construction glove hotfix is intentionally
+guarded by `build-tools/import-launch-glove-icons.mjs`: it verifies the
+source v2 manifest coordinates and the source audit's RGBA SHA-256 before
+copying into the two unused legacy cells, and `--check` verifies the committed
+destination still carries those same pixels. If the source manifest/audit does
+not contain the documented cells, stop the import instead of guessing.

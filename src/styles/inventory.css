@@ -33,6 +33,14 @@
   overflow: hidden !important;
 }
 
+/* The deployed Filters menu is an absolute child of the header/tool branch and
+   intentionally extends over the later item-list branch. The outer Inventory
+   frame normally clips its contents, so relax that clip only for the lifetime
+   of a positively classified contained popup. */
+[data-iw-inventory-root="1"]:has([data-iw-overlay="popup"]) {
+  overflow: visible !important;
+}
+
 /* Inner frame around the item list — the same relationship the Quests panel
    has with its quest cards: an ornate outer section frame (corner filigree +
    gold hairline, from ui-system.css) enclosing a recessed inner card that

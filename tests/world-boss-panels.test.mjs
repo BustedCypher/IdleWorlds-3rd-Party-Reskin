@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 import { resolve } from 'node:path';
 
 const projectRoot = resolve(import.meta.dirname, '..');
-const compiled = await build({ stdin: { contents: "export * from './src/modules/WorldBossPanels.js';", resolveDir: projectRoot }, bundle: true, write: false, format: 'iife', globalName: 'BossPanels', loader: { '.css': 'text' } });
+const compiled = await build({ stdin: { contents: "export * from './src/modules/WorldBossPanels.js'; export { ItemDatabase } from './src/modules/ItemDatabase.js'; export { AtlasService } from './src/modules/AtlasService.js';", resolveDir: projectRoot }, bundle: true, write: false, format: 'iife', globalName: 'BossPanels', loader: { '.css': 'text' } });
 const dom = new JSDOM('<div class="panel"><div><h2>World Bosses</h2><p>Shared world events</p></div><div class="compact-panel"><div><div><p>🌍 Ancient Treant</p><p>Solo</p><p>Buff on kill: +4 XP/task for 1h</p></div><button>Prejoin</button></div><div class="h-1.5 rounded-full"><div style="width: 40%"></div></div><button>World boss participation</button><div class="fighter-details"><p>Top Fighters</p></div><div><p>Respawns 3m left</p></div></div><h2>Zone Control</h2><div class="compact-panel"><div><p>🔴 Red Team controls Zone 12</p></div><p>12,500 / 20,000 HP</p><div class="h-1.5 rounded-full"><div style="width: 62.5%"></div></div><p>Protected for 1h</p><button>Last battle participants</button></div></div>', { runScripts: 'outside-only' });
 const saved = {};
 dom.window.chrome = { runtime: { id: 'test' }, storage: { local: {
@@ -12,7 +12,34 @@ dom.window.chrome = { runtime: { id: 'test' }, storage: { local: {
   async set(values) { Object.assign(saved, values); },
 } } };
 dom.window.eval(compiled.outputFiles[0].text);
-const { decorateWorldBossPanel, clearWorldBossPanel } = dom.window.BossPanels;
+const { decorateWorldBossPanel, clearWorldBossPanel, ItemDatabase, AtlasService } = dom.window.BossPanels;
+ItemDatabase._index([
+  {
+    item_id: 'woodcutters_gloves',
+    name: "Woodcutter's Gloves",
+    category: 'Equipment',
+    subcategory: 'Gloves slot',
+    effects_raw: 'DEF +1; Woodcutting skill bonus +4',
+    acquisition_type: 'BossDrop',
+    acquisition_summary: 'Rare Ancient Treant drop.',
+    acquisition_detail: '',
+  },
+  {
+    item_id: 'builders_gloves',
+    name: "Builder's Gloves",
+    category: 'Equipment',
+    subcategory: 'Gloves slot',
+    effects_raw: 'DEF +1; Construction skill bonus +4',
+    acquisition_type: 'BossDrop',
+    acquisition_summary: 'Rare Ancient Treant drop.',
+    acquisition_detail: '',
+  },
+], 'launch-glove-fixture', 'fixture');
+AtlasService._gearByName = new Map([
+  ['woodcutters gloves', { name: "Woodcutter's Gloves", index: 1146, row: 152, column: 7, x: 896, y: 19456, width: 128, height: 128 }],
+  ['builders gloves', { name: "Builder's Gloves", index: 1147, row: 152, column: 8, x: 1024, y: 19456, width: 128, height: 128 }],
+]);
+AtlasService._gearDims = { cols: 10, rows: 153, cell: 128 };
 const root = dom.window.document.querySelector('.panel');
 const heading = root.querySelector('h2');
 const cards = root.querySelectorAll('.compact-panel');
@@ -54,13 +81,27 @@ assert.equal(cards[1].querySelector('.iw-control-meter-fill')?.style.width, '62.
 }
 assert.equal(cards[1].querySelector('.iw-control-meter-value')?.textContent, '12,500 / 20,000 HP', 'ward meter preserves native HP');
 assert.equal(cards[1].querySelector('[data-iw-boss-role="participation"]')?.textContent, 'Last battle participants');
-assert.equal(action.dataset.iwBossActionLabel, 'Prejoin', 'native Prejoin receives the compact display label');
+assert.equal(action.dataset.iwBossActionLabel, undefined, 'dedicated button artwork does not need a synthetic display label');
+assert.equal(action.dataset.iwBossActionState, 'join', 'native Prejoin uses the JOIN artwork state');
 assert.equal(participation?.dataset.iwBossRole, 'participation', 'participation link is available to the compact layout');
 assert.equal(statusRow?.dataset.iwBossRole, 'status', 'timer row is available to the compact layout');
 assert.equal(progress?.dataset.iwBossRole, 'progress', 'health progress stays in the compact information column');
 assert.equal(details?.dataset.iwBossRole, 'details', 'expanded fighter details retain a full-width layout region');
 assert.equal(root.querySelectorAll('.iw-boss-notice').length, 1);
-assert.equal(cards[0].querySelectorAll('.iw-boss-reward').length, 9);
+assert.equal(cards[0].querySelectorAll('.iw-boss-reward').length, 11,
+  'Ancient Treant includes the two Woodcutting/Construction launch glove rewards');
+const launchGloveRewards = [...cards[0].querySelectorAll('.iw-boss-reward')]
+  .filter(tile => ['woodcutters_gloves', 'builders_gloves'].includes(tile.dataset.iwItem))
+  .map(tile => ({
+    id: tile.dataset.iwItem,
+    name: tile.dataset.iwItemName,
+    atlas: tile.querySelector('.iw-boss-reward-icon')?.dataset.iwAtlas || null,
+    fallback: tile.querySelector('.iw-boss-reward-icon')?.textContent || '',
+  }));
+assert.deepEqual(launchGloveRewards, [
+  { id: 'woodcutters_gloves', name: "Woodcutter's Gloves", atlas: 'gear', fallback: '' },
+  { id: 'builders_gloves', name: "Builder's Gloves", atlas: 'gear', fallback: '' },
+], 'launch gloves use live item names and bundled gear art without the diamond fallback');
 const disclosure = cards[0].querySelector('details.iw-boss-rewards');
 assert.ok(disclosure, 'rewards use a keyboard-accessible native disclosure');
 assert.equal(disclosure.open, true, 'new preferences default to expanded');
@@ -83,7 +124,7 @@ restored.open = true;
 await new Promise(resolve => setTimeout(resolve, 10));
 assert.equal(saved['iw-boss-rewards-collapsed:ancient_treant'], false, 'expansion is saved too');
 fresh.window.close();
-assert.equal(cards[0].querySelectorAll('[data-iw-tooltip-trigger="1"]').length, 9);
+assert.equal(cards[0].querySelectorAll('[data-iw-tooltip-trigger="1"]').length, 11);
 decorateWorldBossPanel({ root, heading });
 assert.equal(cards[0].querySelectorAll('.iw-boss-rewards').length, 1);
 assert.equal(action, cards[0].querySelector('button'));
@@ -91,8 +132,14 @@ action.click();
 assert.equal(clicks, 1);
 action.textContent = '⏳ Prejoined';
 decorateWorldBossPanel({ root, heading });
-assert.equal(action.dataset.iwBossActionLabel, 'Queued', 'native Prejoined is presented as Queued');
+assert.equal(action.dataset.iwBossActionLabel, undefined, 'Prejoined keeps native text without synthetic copy');
+assert.equal(action.dataset.iwBossActionState, 'prejoined', 'native Prejoined uses the dedicated prejoined artwork state');
+action.textContent = 'Fighting';
+decorateWorldBossPanel({ root, heading });
+assert.equal(action.dataset.iwBossActionState, 'fighting', 'native Fighting uses the dedicated fighting artwork state');
 action.textContent = 'Prejoin';
+decorateWorldBossPanel({ root, heading });
+assert.equal(action.dataset.iwBossActionState, 'join', 'returning to Prejoin restores the JOIN artwork state');
 cards[1].querySelector('p').textContent = '🔵 Blue Team controls Zone 12';
 decorateWorldBossPanel({ root, heading });
 assert.equal(cards[1].dataset.iwControl, 'blue');

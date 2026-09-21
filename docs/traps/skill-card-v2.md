@@ -30,6 +30,38 @@ still describe the code:
 
 ## 1. Current design (newest pass)
 
+**Tablet and phone detail content is full-width before the phone breakpoint
+(responsive hardening, 2026-09-21).** The launch screenshots exposed a gap in
+the earlier audit: the detail frame stayed trapped between the 106/144px hero
+rail and the 80/96px command rail until the card reached 480px, so mid-sized
+phones and tablets produced the NARROWEST material cells even though smaller
+phones were already in the full-width mode. At `max-width: 680px` the shell
+now keeps the desktop identity/title/command top band but puts `body` and
+`tabs` on full-card rows beneath it. A content-branch pager is still a native
+React descendant; the content zone becomes its containing block and the pager
+reaches the command rail with `right: -command-width`, so no node is moved.
+
+The same screenshots exposed a second blind spot: the old overflow audit
+ignored text whose CSS declared `overflow: visible`. A value such as
+`218,014,373/221,276,974` therefore painted 10-24px into the next material
+cell while every existing check stayed green. `ensureDetailBody()` now splits
+the skin-owned COUNT into owned and required spans without changing the visible
+N/M text. CSS keeps each half unbroken but may wrap BETWEEN them, at the slash
+boundary. The material name can wrap independently, so no number is clipped or
+broken at arbitrary digits.
+
+`tests/skill-card-responsive.test.mjs` is the regression for this entire
+contract. It sweeps 25 widths from 1024px to 320px with four stress cards,
+including 9-digit counts, six materials, a bonus level, long requirements,
+both pager branches and paired one-vs-six-material CONTENT-branch cards. At
+every width it checks painted text rectangles rather than only scrollWidth,
+title/BASE versus command collisions, body/note/card containment, one-line
+action labels, a 6-10px button-to-pager gap, and full-width detail rows whenever
+the card is <=680px. A touch context at 390px and 768px also verifies the
+coarse-pointer pager target stays at least 24px high. Do not replace this with
+a handful of named-device breakpoints; the card responds to its own container
+because browser chrome, zoom and embedding widths differ across users.
+
 **The phone card is one top band plus full-width rows (mobile audit,
 2026-09-15).** Under a 480px card (`@container iw-skill-card (max-width:
 480px)`, i.e. every phone) the three columns narrow to 92px hero / name / 76px

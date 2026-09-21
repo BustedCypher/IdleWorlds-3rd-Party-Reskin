@@ -30,7 +30,7 @@ const compiled = await build({
 // Whitespace-free, in the live card's element order: text column, controls,
 // progress bar, then the percent line.
 const CARDS = `<div class="panel"><div><h2>Quests</h2></div><div class="space-y-2">`
-  + `<div class="compact-panel" id="no-percent-last"><div><div><p>Tailoring Work Order</p><p>Craft 1 Moonsilk Boots for the tailor.</p><p>Moonsilk Boots 0/1</p><p>Reward: +3,870g • +3240 tailoring XP</p></div><div><button>Turn In</button><button>Skip (8)</button></div></div><div class="h-1.5 rounded-full"><div style="width: 0%"></div></div><div>0% complete</div><p>Expires in 3h</p></div>`
+  + `<div class="compact-panel" id="no-percent-last"><div class="space-y-2"><div><div><p>Tailoring Work Order</p><p>Craft 1 Moonsilk Boots for the tailor.</p><p>Moonsilk Boots 0/1</p><p>Reward: +3,870g • +3240 tailoring XP</p></div><div><button>Turn In</button><button>Skip (0)</button></div></div><p id="skip-note">Out of skips - they reset daily at 00:00 UTC, or completing (not skipping) a work order refills them to your daily max right away.</p><div class="h-1.5 rounded-full"><div style="width: 0%"></div></div><div>0% complete</div><p>Expires in 3h</p></div></div>`
   + `<div class="compact-panel" id="turn-in-only"><div><p>Night Claw Bounty</p><p>Reward: +3,225g • +1350 combat XP</p></div><div><button>Turn In</button></div><p>Ready</p></div>`
   + `<div class="compact-panel" id="not-a-quest"><p>Return into town to rest.</p><button>Rest</button></div>`
   + `</div></div>`;
@@ -56,6 +56,19 @@ assert.equal(isQuest('turn-in-only'), true,
   'a whitespace-free card with a Turn In control and no percent line is still a quest');
 assert.equal(isQuest('not-a-quest'), false,
   'negative control: "return into" text with no reward line is not a quest');
+
+const skipNote = doc.getElementById('skip-note');
+assert.equal(skipNote.getAttribute('data-iw-quest-role'), 'skip-note',
+  'the Out of skips helper receives its own semantic role, not brief');
+assert.notEqual(skipNote.getAttribute('data-iw-quest-role'), 'brief',
+  'the helper never inherits main-column brief typography');
+const body = doc.getElementById('no-percent-last').querySelector('[data-iw-quest-zone="body"]');
+let skipHost = skipNote;
+while (skipHost?.parentElement && skipHost.parentElement !== body) skipHost = skipHost.parentElement;
+assert.ok(body && skipHost && skipHost.parentElement === body,
+  'fixture resolves a direct helper host under the quest body');
+assert.equal(skipHost.getAttribute('data-iw-quest-zone'), 'skip-note',
+  'the direct helper host owns the full-width skip-note grid zone');
 
 window.Quest.clearQuestPanels();
 assert.equal(doc.querySelectorAll('.fs-quest-panel').length, 0, 'teardown clears every card');
