@@ -1,7 +1,6 @@
 /** Presentation only: preserve native controls, text, state and handlers. */
 import { AtlasService } from './AtlasService.js';
 import { ItemDatabase } from './ItemDatabase.js';
-import { SkillsArtService } from './SkillsArtService.js';
 import { registerTooltipItem } from './TooltipEngine.js';
 import { storageGet, storageSet } from './Runtime.js';
 import fallbackItems from '../../assets/world-bosses/rewards.json';
@@ -308,10 +307,13 @@ export function decorateWorldBossPanel({ root, heading }) {
     mark(action, 'data-iw-boss-role', 'action');
     if (action) {
       const actionText = norm(action.textContent);
-      mark(action, 'data-iw-boss-action-state', /prejoined|fighting/i.test(actionText) ? 'active' : 'idle');
-      if (/prejoined/i.test(actionText)) mark(action, 'data-iw-boss-action-label', 'Queued');
-      else if (/\bprejoin\b/i.test(actionText)) mark(action, 'data-iw-boss-action-label', 'Prejoin');
-      else action.removeAttribute('data-iw-boss-action-label');
+      const actionState =
+        /fighting/i.test(actionText) ? 'fighting' :
+        /prejoined/i.test(actionText) ? 'prejoined' :
+        /\b(?:prejoin|join)\b/i.test(actionText) ? 'join' :
+        'idle';
+      mark(action, 'data-iw-boss-action-state', actionState);
+      action.removeAttribute('data-iw-boss-action-label');
     }
     const participation = [...card.querySelectorAll('button, p')].find(el =>
       /world boss participation|players? currently fighting world boss|last battle participants/i.test(norm(el.textContent)));
@@ -337,12 +339,6 @@ export function decorateWorldBossPanel({ root, heading }) {
         mark(el, 'data-iw-boss-role', 'details');
       }
     }
-    // The skill renderer clears shared panel variables on unknown cards.
-    // Own the action's variables instead so its artwork survives that cleanup.
-    if (action && SkillsArtService.isReady() && !action.hasAttribute('data-iw-boss-art-ready')) {
-      SkillsArtService.decoratePanel(action);
-      action.dataset.iwBossArtReady = '1';
-    }
     if (boss) rewards(card, boss);
     else {
       // Only the status title proves ownership, never fighter names/team buttons.
@@ -356,7 +352,6 @@ export function decorateWorldBossPanel({ root, heading }) {
 export function clearWorldBossPanel(root) {
   root.querySelectorAll('[data-iw-encounter="zone"]').forEach(card => strengthHistory.delete(card));
   root.querySelectorAll('.iw-control-dominion').forEach(stopStrengthImpact);
-  root.querySelectorAll('[data-iw-boss-art-ready]').forEach(card => SkillsArtService.clearPanel(card));
   root.querySelectorAll('[data-iw-boss-owned]').forEach(el => el.remove());
   for (const attr of ['data-iw-encounter', 'data-iw-control', 'data-iw-boss-role', 'data-iw-boss-action-state', 'data-iw-boss-action-label', 'data-iw-boss-art-ready']) {
     root.querySelectorAll(`[${attr}]`).forEach(el => el.removeAttribute(attr));
