@@ -1218,3 +1218,32 @@ forever — the unbounded version of the same symptom. The last block of
 `tests/ingredient-entries.test.mjs` asserts it directly, and
 `claude/probe-text-runaway.mjs` checks it in a real browser across sixteen card
 shapes (`--churn` re-renders the card from React's side mid-run).
+
+## The XP readout is player-formatted (2026-09-21)
+
+The game's level line (`title="Click to cycle XP display"`) cycles through at
+least three forms: `Lv 63 - 69.2% • 6,277,190 to go`, `Lv 63 •
+14,096,043/20,373,233 XP` and `Lv 71+2 - 5.24M/99.90M XP`. The skin used to
+recognise it by wording alone, and only knew the first two. Reported live
+(Curtis): with any non-percent form the V2 card broke. The compact form went
+unrecognised (`Lv —` in the hero, the raw line as a plate in the content
+column). In the whole-number form the counts are a have/need pair to
+`INGR_PATTERN`, and the only thing that kept them out was the `\bxp\b`
+lookahead, which fails as soon as the counts and "XP" are separate nodes
+(textContent: `…867XP`, no boundary). The readout then became a material
+source, the grid built after it made its ancestors match too, and a card with
+no materials filled with doubled numbers.
+
+- Resolve the readout by the `title` hook first (`findHookedReadout`), then
+  by `isLevelReadoutText`, which accepts any value after the level.
+- `neutraliseIngredients` never takes the readout, anything inside it or
+  anything containing it as a source, whatever its text.
+- The hero shows the readout verbatim under the discipline name
+  (`[data-iw-skill-v2-xp]`, `SkillCardDesignController.xpLine`), minus the
+  level and percent the medallion already shows. It is never recomputed, and
+  a click or Enter forwards to the hidden game control, so the player can
+  still cycle the format.
+- `tests/skill-xp-formats.test.mjs` pins seven shapes. `node
+  claude/probe-skill-cards.mjs --xp whole|compact|split` renders them. The
+  live DOM shape of the whole-number readout has NOT been captured yet: the
+  fixture's split shapes are the plausible candidates, not a measurement.

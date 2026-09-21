@@ -357,6 +357,32 @@ function styleButton(btn) {
 const NAV_BUTTON_W = '26px';
 
 const LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?(?:\s*[-\u2013]\s*\d+(?:\.\d+)?%\s*[\u2022\u00b7]\s*[\d,]+\s+(?:xp\s+)?to\s+go|\s*[\u2022\u00b7]\s*[\d,]+\s*\/\s*[\d,]+\s*xp)$/i;
+/* The readout is PLAYER-FORMATTED: the game's button cycles it through at
+   least "Lv 63 - 69.2% \u2022 6,277,190 to go", "Lv 63 \u2022 14,096,043/20,373,233 XP"
+   and "Lv 71+2 - 5.24M/99.90M XP" (Curtis, 2026-09-21). The strict pattern
+   above knew only the first two, so the compact form went unrecognised and
+   sat in the content column as a plate. This one accepts any value after the
+   level. No `\b` before `xp`: React may render the count and "XP" as separate
+   text nodes, and textContent joins them with no space. */
+const LEVEL_READOUT_LOOSE = /^lv\s*\d+(?:\s*\+\s*\d+)?\s*[-\u2013\u2014\u2022\u00b7:|]\s*\S.*(?:xp|to\s+go|%)$/i;
+/* The stable hook: the game titles the control "Click to cycle XP display" in
+   every format. The skin's own hero XP line forwards to it and says the same
+   thing, so skin-owned nodes are excluded. */
+const XP_READOUT_TITLE = /\bxp display\b/i;
+const XP_LINE_ATTR = 'data-iw-skill-v2-xp';
+
+function isLevelReadoutText(text) {
+  return LEVEL_PROGRESS_PATTERN.test(text) || LEVEL_READOUT_LOOSE.test(text);
+}
+
+function findHookedReadout(panel) {
+  for (const el of panel.querySelectorAll('[title]')) {
+    if (!XP_READOUT_TITLE.test(el.getAttribute('title') || '')) continue;
+    if (el.closest(`[${XP_LINE_ATTR}], [data-iw-skill-v2-level-readout]`)) continue;
+    return el;
+  }
+  return null;
+}
 const READOUT_STYLES = {
   // `background` is a SHORTHAND: it already resets background-color and
   // background-image to their initial values. Listing those longhands here as
@@ -465,7 +491,7 @@ function neutraliseReadouts(panel) {
   if (!readout) {
     readout = [...panel.querySelectorAll('div,span,p,strong')].find(el => {
       if (el.closest('button,a,[role="button"]')) return false;
-      return LEVEL_PROGRESS_PATTERN.test(normText(el.textContent));
+      return isLevelReadoutText(normText(el.textContent));
     }) || null;
   }
 
@@ -751,6 +777,17 @@ function clearIngredientLists(panel) {
 }
 
 function neutraliseIngredients(panel) {
+  /* The XP readout is never an ingredient line, whatever format the player
+     set. Its "14,096,043/20,373,233" is a have/need pair to INGR_PATTERN, and
+     the `\bxp\b` lookahead only kept it out while "XP" shared a text node with
+     the counts. When it did not, the counts became a material, the grid built
+     after them made every ancestor match too, and the card filled with doubled
+     numbers (Curtis, 2026-09-21). So nothing inside the readout is a source,
+     and neither is anything that CONTAINS it: a container holding the readout
+     is a branch of the card, not a material line, and ingredientEntries would
+     slice the readout's counts out of its textContent. The real material lines
+     under such a container are still visited, and marked, on their own. */
+  const readouts = [...panel.querySelectorAll(`[${ROLE_ATTR}="level-progress"], [${XP_LINE_ATTR}]`)];
   for (const el of panel.querySelectorAll('div, span, p')) {
     if (el.closest('[data-iw-skill-ingredient-list="1"]')) continue;
     /* The V2 collapsed summary REPEATS a material line verbatim when a recipe
@@ -767,7 +804,7 @@ function neutraliseIngredients(panel) {
     if (el.tagName === 'BUTTON' || el.closest('button, a, [role="button"]')) continue;
     if (el.childElementCount > 3) continue;
     const text = normText(el.textContent);
-    const matches = INGR_PATTERN.test(text);
+    const matches = INGR_PATTERN.test(text) && !readouts.some(readout => el.contains(readout) || readout.contains(el));
     if (!matches) {
       if (el.dataset.iwIngr) {
         ingredientStyleOwner.restoreElement(el);
@@ -864,7 +901,7 @@ function textCandidates(panel) {
   // different module from the cause. Same opt-out rule the generic control
   // rule and the collapse toggle already document.
   const candidates = visibleFirst([...panel.querySelectorAll('h1,h2,h3,h4,div,span,p')]
-    .filter(el => !el.closest('button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body], [data-iw-skill-v2-action-label], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-level-readout]'))
+    .filter(el => !el.closest('button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body], [data-iw-skill-v2-action-label], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-level-readout], [data-iw-skill-v2-xp]'))
     .filter(el => normText(el.textContent).length <= 130));
   lastCandidatePanel = panel;
   lastCandidates = candidates;
@@ -1011,7 +1048,11 @@ function annotateStructure(panel, type, meta) {
 
   // Audit 1.5.5 proved the visible "Lv N - X% â€¢ ... to go" widget is itself
   // a button. Mark that exact live control before any button receives chrome.
-  const levelProgressButton = buttons.find(btn => LEVEL_PROGRESS_PATTERN.test(normText(btn.textContent))) || null;
+  // Resolved by the game's title hook first, because the WORDING is whatever
+  // XP format the player picked; the text patterns are the fallback.
+  const hookedReadout = findHookedReadout(panel);
+  const levelProgressButton = (hookedReadout?.tagName === 'BUTTON' ? hookedReadout : null)
+    || buttons.find(btn => isLevelReadoutText(normText(btn.textContent))) || null;
   if (levelProgressButton) setRole(levelProgressButton, 'level-progress');
 
   let actionButton = null;
@@ -1115,7 +1156,7 @@ function annotateStructure(panel, type, meta) {
       !candidate.querySelector?.(`[${ROLE_ATTR}], button, a, input, select, textarea`) &&
       !candidate.closest?.(`[${ROLE_ATTR}="identity"]`) &&
       !candidate.closest?.('.iw-item-ref') &&
-      !LEVEL_PROGRESS_PATTERN.test(candidateText);
+      !isLevelReadoutText(candidateText);
     if (usable) {
       actionTitle = candidate;
       setRole(outerSameTextShell(candidate, panel), 'action-title');
@@ -1136,7 +1177,7 @@ function annotateStructure(panel, type, meta) {
 
   // Non-button fallback retained for older/mobile DOM variants.
   if (!levelProgressButton) {
-    const readout = findBestText(panel, text => LEVEL_PROGRESS_PATTERN.test(text));
+    const readout = hookedReadout || findBestText(panel, text => isLevelReadoutText(text));
     if (readout) setRole(readout, 'level-progress');
   }
 

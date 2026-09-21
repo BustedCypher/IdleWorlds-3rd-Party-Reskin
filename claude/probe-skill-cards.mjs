@@ -80,6 +80,16 @@ const LUCIDE = d => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="
 const ACTIVE = process.argv.includes('--active') ? { woodcutting: '<span class="absolute inset-0 bg-black/15" style="width: 40%;"></span>',
   spellcrafting: '<span class="absolute inset-0 animate-pulse bg-black/15" style="width: 100%;"></span>' } : {};
 const actionButton = c => `<button><span class="relative z-10">${c.verb}</span>${ACTIVE[c.id] || ''}</button>`;
+/* --xp whole|compact|split: the player's XP display format (the game's readout
+   cycles through them; Curtis, 2026-09-21). Default is the percent form. */
+const XP_FORM = arg('--xp');
+const readoutHtml = c => {
+  const t = 'title="Click to cycle XP display"';
+  if (XP_FORM === 'whole') return `<button ${t}>Lv ${c.lv} &bull; 656,676,891/724,850,867 XP</button>`;
+  if (XP_FORM === 'compact') return `<button ${t}>Lv ${c.lv}+2 - 5.24M/99.90M XP</button>`;
+  if (XP_FORM === 'split') return `<p ${t}><span>Lv ${c.lv} &bull; </span><span>656,676,891/724,850,867</span><span>XP</span></p>`;
+  return `<button ${t}>Lv ${c.lv} - ${c.pct}% &bull; 4,120 to go</button>`;
+};
 const PAGER_HTML = process.argv.includes('--text-pager') ? '<div><button>&lsaquo;</button><button>&rsaquo;</button></div>'
   : `<div><button>${LUCIDE('m15 18-6-6 6-6')}</button><button>${LUCIDE('m9 18 6-6-6-6')}</button></div>`;
 const card = c => `
@@ -87,8 +97,8 @@ const card = c => `
   ${process.argv.includes('--shellless') ? '' : '<div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2">'}
     <div>${process.argv.includes('--nested') ? '<div>' : ''}<p>${c.icon} ${c.skill}</p><p>LV ${c.lv}</p>${process.argv.includes('--nested') ? '</div>' : ''}</div>
     <div>
-      ${process.argv.includes('--nest-title') ? `<div><p>${c.title}</p><button>Lv ${c.lv} - ${c.pct}% &bull; 4,120 to go</button></div>` : `<p>${c.title}</p>
-      <button>Lv ${c.lv} - ${c.pct}% &bull; 4,120 to go</button>`}
+      ${process.argv.includes('--nest-title') ? `<div><p>${c.title}</p>${readoutHtml(c)}</div>` : `<p>${c.title}</p>
+      ${readoutHtml(c)}`}
       ${c.lines.map(l => l.startsWith('<') ? l : `<p>${l}</p>`).join('\n      ')}
       ${c.pager === 'content' ? PAGER_HTML : ''}
       <p>Base reward: +${c.base} ${c.skill.toLowerCase()} XP/task</p>
@@ -98,7 +108,7 @@ const card = c => `
   ${process.argv.includes('--shellless') ? '' : '</div>'}
 </div>`;
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>IdleWorlds</title>
+const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset="utf-8"><title>IdleWorlds</title>
 <style>*,::before,::after{box-sizing:border-box;border:0 solid}svg{display:block}
 button{background:none;font:inherit;color:inherit}body{margin:0;background:#0f172a}
 .panel{padding:8px}.flex{display:flex}.grid{display:grid}.gap-2{gap:.5rem}

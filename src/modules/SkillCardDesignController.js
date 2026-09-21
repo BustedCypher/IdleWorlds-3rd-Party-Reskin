@@ -38,7 +38,7 @@ function markSections(panel) {
   // the game's direct text rows, never controls or our own mirrored detail body.
   const content = panel.querySelector('[data-iw-skill-zone="content"]');
   content?.querySelectorAll('p,span').forEach(el => {
-    if (el.closest('[class*="iw-skill-v2"],.fs-skill-ingredient-grid,button,a')) return;
+    if (el.closest('[class*="iw-skill-v2"],.fs-skill-ingredient-grid,button,a,[data-iw-skill-role="level-progress"]')) return;
     if (el.querySelector('p,span,button,a')) return;
     const text = (el.textContent || '').trim();
     if (/missing materials|will queue|queued|queue first/i.test(text)) desired.set(el, 'queue');
@@ -85,6 +85,47 @@ function levelReadout(panel) {
   }
   setText(out.children[0], lvl ? `Lv ${lvl[1].replace(/\s+/g,' ')}` : 'Lv —');
   setText(out.children[1], pct ? `${pct[1]}%` : '—');
+  xpLine(panel, zone, text);
+}
+
+/* The player's XP, under the discipline name. The game's readout is hidden in
+   V2 and its FORMAT is the player's choice (percent, whole numbers, compact),
+   so this line is that readout verbatim minus the level and percent the
+   medallion already shows - never a number the skin computed. It forwards a
+   click to the hidden game control so the format can still be cycled; the
+   control does exactly what it did before (rule 1). */
+const XP_LINE = 'data-iw-skill-v2-xp';
+export function xpLineText(readout) {
+  return String(readout || '').replace(/\s+/g, ' ').trim()
+    .replace(/^lv\s*\d+(?:\s*\+\s*\d+)?\s*[-–—•·:|]?\s*/i, '')
+    .replace(/^\d+(?:\.\d+)?\s*%\s*(?:[-–—•·:|]\s*)?/, '')
+    .replace(/\s*\/\s*/, ' / ')
+    /* textContent joins sibling nodes with no space: "24,850,867" + "XP". */
+    .replace(/([\d.,]+[kmbt]?)(xp|to\s+go)$/i, '$1 $2')
+    .trim();
+}
+function forwardXpCycle(event) {
+  if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  event.stopPropagation();
+  const panel = event.currentTarget.closest('.compact-panel');
+  panel?.querySelector('[data-iw-skill-role="level-progress"]')?.click();
+}
+function xpLine(panel, zone, readoutText) {
+  const value = xpLineText(readoutText);
+  let line = zone.querySelector(`:scope > [${XP_LINE}]`);
+  if (!value) { line?.remove(); return; }
+  if (!line) {
+    line = document.createElement('span');
+    line.setAttribute(XP_LINE, '1');
+    line.className = 'iw-skill-v2-xp';
+    line.tabIndex = 0;
+    line.title = 'Click to cycle XP display';
+    line.addEventListener('click', forwardXpCycle);
+    line.addEventListener('keydown', forwardXpCycle);
+    zone.append(line);
+  }
+  setText(line, value);
 }
 /* Nodes from earlier designs, removed on sight so a card that has been through
    one of them does not keep a stray: the collapsed summary chip and its line
@@ -517,7 +558,7 @@ export function enhanceSkillCardV2(panel, skillType) {
 }
 export function clearSkillCardV2(panel) {
   if (!panel) return;
-  panel.querySelectorAll('[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]')
+  panel.querySelectorAll('[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-xp],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]')
     .forEach(el => el.remove());
   panel.querySelectorAll('[data-iw-skill-v2-section]').forEach(el => delete el.dataset.iwSkillV2Section);
   panel.style.removeProperty('--iw-skill-v2-progress');
