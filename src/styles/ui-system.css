@@ -1284,13 +1284,41 @@ input[placeholder*="Search" i] {
   align-items: baseline;
   justify-content: space-between;
   flex-wrap: wrap;
-  width: 100%;
+  /* GROWS rather than `width: 100%`: while the zone is open for capture the
+     game puts the "Fight for Red/Blue" action beside this block, and a
+     full-width block wrapped it onto a line of its own at the left. While the
+     zone is protected there is no action and this still fills the row. */
+  flex: 1 1 auto;
+  min-width: 0;
   gap: 4px 12px;
+}
+/* The action's wrapper (`flex-col items-end`, with the fight-progress bar
+   under the button while fighting) sits at the right of the title row. */
+[data-iw-encounter="zone"] > [data-iw-boss-role="header"]:has([data-iw-boss-role="action"]) {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+/* While fighting, the game adds a progress bar under the button in the same
+   wrapper. Hang it just below the button, out of flow, so the BUTTON (not
+   button + bar) centres on the title; the header's bottom padding makes room. */
+[data-iw-encounter="zone"] > [data-iw-boss-role="header"] > :has(> [data-iw-boss-role="action"]) {
+  position: relative;
+}
+[data-iw-encounter="zone"] > [data-iw-boss-role="header"] > :has(> [data-iw-boss-role="action"]) > [data-iw-boss-role="action"] ~ * {
+  position: absolute !important;
+  top: calc(100% + 3px);
+  right: 0;
+  width: 100% !important;
+  margin: 0 !important;
+}
+[data-iw-encounter="zone"] > [data-iw-boss-role="header"]:has([data-iw-boss-role="action"] ~ *) {
+  padding-bottom: 14px !important;
 }
 [data-iw-encounter] > .iw-boss-art {
   position: absolute !important;
   top: 12px; left: 12px;
   width: 104px; height: 104px;
+  box-sizing: border-box; /* the host's preflight already does; the action's centring below assumes it */
   background-image: url('../assets/world-bosses/encounters.png') !important;
   background-size: 200% 200% !important;
   background-position: 0% 0% !important;
@@ -1379,10 +1407,16 @@ input[placeholder*="Search" i] {
   grid-row: 4;
   margin: 0 !important;
 }
+/* Every label is painted into a 300x60 source with the same frame and cap
+   height. All states therefore share one 5:1 box; no state-specific scaling
+   is needed, so switching actions cannot resize or squash the control. */
+[data-iw-encounter] {
+  --iw-boss-action-w: 150px;
+}
 [data-iw-encounter] [data-iw-boss-role="action"] {
   flex: 0 0 auto !important;
-  width: 150px !important; min-width: 150px !important; max-width: 150px !important;
-  height: 30px !important; min-height: 30px !important; max-height: 30px !important;
+  width: var(--iw-boss-action-w) !important; min-width: var(--iw-boss-action-w) !important; max-width: var(--iw-boss-action-w) !important;
+  height: calc(var(--iw-boss-action-w) / 5) !important; min-height: calc(var(--iw-boss-action-w) / 5) !important; max-height: calc(var(--iw-boss-action-w) / 5) !important;
   padding: 0 !important;
   margin: 0 !important;
   font: 700 11px var(--iw-font-head) !important;
@@ -1407,28 +1441,30 @@ input[placeholder*="Search" i] {
   transition: filter 120ms ease !important;
 }
 [data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="join"] {
-  background-image: url('../assets/world-boss/world_boss_join.webp') !important;
+  background-image: url('../assets/world-boss/world_boss_join-v2.png') !important;
   filter:
     drop-shadow(0 2px 3px #000b)
     drop-shadow(0 0 4px rgba(232,174,84,.42))
     drop-shadow(0 0 10px rgba(232,174,84,.20)) !important;
 }
 [data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="join"]:hover:not(:disabled) {
-  background-image: url('../assets/world-boss/world_boss_join_hover.webp') !important;
+  background-image: url('../assets/world-boss/world_boss_join_hover-v2.png') !important;
   filter:
+    brightness(1.12)
+    saturate(1.08)
     drop-shadow(0 2px 4px #000c)
     drop-shadow(0 0 6px rgba(250,196,103,.62))
     drop-shadow(0 0 14px rgba(250,196,103,.30)) !important;
 }
 [data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="prejoined"] {
-  background-image: url('../assets/world-boss/world_boss_prejoined.webp') !important;
+  background-image: url('../assets/world-boss/world_boss_prejoined-v2.png') !important;
   filter:
     drop-shadow(0 2px 3px #000b)
     drop-shadow(0 0 5px rgba(72,148,255,.48))
     drop-shadow(0 0 12px rgba(72,148,255,.22)) !important;
 }
 [data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="fighting"] {
-  background-image: url('../assets/world-boss/world_boss_fighting.webp') !important;
+  background-image: url('../assets/world-boss/world_boss_fighting-v3.png') !important;
   filter:
     drop-shadow(0 2px 3px #000b)
     drop-shadow(0 0 5px rgba(255,103,57,.50))
@@ -1456,6 +1492,86 @@ input[placeholder*="Search" i] {
   opacity: .5 !important;
   filter: saturate(.35) brightness(.8) !important;
   cursor: not-allowed !important;
+}
+/* Zone Control's "Fight for Red/Blue": the JOIN art hides the team the game
+   named, so the glow carries it (rule 5). */
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="join"][data-iw-boss-action-team="red"] {
+  filter:
+    drop-shadow(0 2px 3px #000b)
+    drop-shadow(0 0 5px rgba(232,82,82,.55))
+    drop-shadow(0 0 12px rgba(232,82,82,.25)) !important;
+}
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="join"][data-iw-boss-action-team="blue"] {
+  filter:
+    drop-shadow(0 2px 3px #000b)
+    drop-shadow(0 0 5px rgba(82,158,255,.55))
+    drop-shadow(0 0 12px rgba(82,158,255,.25)) !important;
+}
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="join"][data-iw-boss-action-team="red"]:hover:not(:disabled) {
+  filter:
+    brightness(1.12)
+    saturate(1.08)
+    drop-shadow(0 2px 4px #000c)
+    drop-shadow(0 0 7px rgba(244,96,96,.66))
+    drop-shadow(0 0 15px rgba(244,96,96,.30)) !important;
+}
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="join"][data-iw-boss-action-team="blue"]:hover:not(:disabled) {
+  filter:
+    brightness(1.12)
+    saturate(1.08)
+    drop-shadow(0 2px 4px #000c)
+    drop-shadow(0 0 7px rgba(96,170,255,.66))
+    drop-shadow(0 0 15px rgba(96,170,255,.30)) !important;
+}
+/* A state with no art ("Defeated") keeps the game's own word on a plain
+   plate at the same box. Before this, `idle` inherited the transparent,
+   zero-size text of the art states and painted NOTHING - which is how Zone
+   Control's "Fight for Red/Blue" (then unrecognised) vanished. */
+[data-iw-encounter] [data-iw-boss-role="action"][data-iw-boss-action-state="idle"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #e9dcc0 !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  text-shadow: 0 1px 2px #000 !important;
+  background: linear-gradient(#3a2a1a, #19110b) !important;
+  border: 1px solid #8a6a3a !important;
+  border-radius: 2px !important;
+}
+/* Desktop: the action sits at the card's right edge, centred on the portrait
+   band (rows 1-3, the art's height) rather than on the title block beside it.
+   The game puts the button either straight in the header ("Fight Boss" /
+   "Fighting") or one level down in a `flex-col` wrapper during the prejoin
+   window ("Prejoin" / "⏳ Prejoined"), so it is matched at ANY depth, and the
+   only thing lifted above the card's `::after` is the title block - a lifted
+   wrapper would become the button's containing block and drag it inward.
+   Header and wrapper are unpositioned, so the containing block is the CARD:
+   a game margin on the header cannot shift it off the art's centre. The
+   header and the HP bar keep the widest state's width clear (the status row
+   sits below the button). Phones keep the button in the wrapping header. */
+@media (min-width: 761px) {
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) {
+    --iw-boss-action-reserve: calc(var(--iw-boss-action-w) + 14px);
+  }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="header"] {
+    position: static !important;
+    padding-right: var(--iw-boss-action-reserve) !important;
+  }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="header"] > *:first-child:not([data-iw-boss-role="action"]) {
+    position: relative;
+    z-index: 1;
+  }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="progress"] {
+    margin-right: var(--iw-boss-action-reserve) !important;
+  }
+  [data-iw-encounter]:not([data-iw-encounter="zone"]) > [data-iw-boss-role="header"] [data-iw-boss-role="action"] {
+    position: absolute !important;
+    top: 64px !important; /* card padding 12px + half the 104px art */
+    right: 12px !important;
+    transform: translateY(-50%) !important;
+    z-index: 2 !important;
+  }
 }
 .iw-boss-rewards { margin-top: 2px; padding-top: 9px; border-top: 1px solid #a88d4c35; }
 [data-iw-encounter]:not([data-iw-encounter="zone"]) > .iw-boss-rewards { grid-column: 1 / -1; grid-row: 5; }
@@ -1922,10 +2038,7 @@ input[placeholder*="Search" i] {
 @media (max-width: 380px) {
   [data-iw-encounter]:not([data-iw-encounter="zone"]) { grid-template-columns: 80px minmax(0, 1fr); }
   [data-iw-encounter] > .iw-boss-art { width: 80px; height: 80px; }
-  [data-iw-encounter] [data-iw-boss-role="action"] {
-    width: 120px !important; min-width: 120px !important; max-width: 120px !important;
-    height: 24px !important; min-height: 24px !important; max-height: 24px !important;
-  }
+  [data-iw-encounter] { --iw-boss-action-w: 120px; }
   .iw-control-dominion { grid-template-columns: 88px minmax(0, 1fr); }
   .iw-control-crest { width: 88px; }
   .iw-control-state { font-size: 13px !important; }

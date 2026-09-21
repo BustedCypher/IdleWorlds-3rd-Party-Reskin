@@ -307,13 +307,23 @@ export function decorateWorldBossPanel({ root, heading }) {
     mark(action, 'data-iw-boss-role', 'action');
     if (action) {
       const actionText = norm(action.textContent);
+      // The game's copy: "Prejoin" / "⏳ Prejoined" in a boss's prejoin window,
+      // "Fight Boss" / "Fighting" / "Defeated" otherwise, and Zone Control's
+      // "⚔️ Fight for Red!" / "⚔️ Fight for Blue!" / "Fighting". Every offer to
+      // enter a fight takes the JOIN art; "Defeated" has no art and stays a
+      // text plate (`idle`), because painting JOIN over it would lie (rule 5).
       const actionState =
         /fighting/i.test(actionText) ? 'fighting' :
         /prejoined/i.test(actionText) ? 'prejoined' :
-        /\b(?:prejoin|join)\b/i.test(actionText) ? 'join' :
+        /\b(?:prejoin|join|fight)\b/i.test(actionText) ? 'join' :
         'idle';
       mark(action, 'data-iw-boss-action-state', actionState);
-      action.removeAttribute('data-iw-boss-action-label');
+      // "Fight for Red/Blue" names the player's team; the JOIN art hides the
+      // words, so the team survives as the plate's glow colour instead.
+      const team = actionState === 'join' && /fight for (red|blue)/i.exec(actionText)?.[1].toLowerCase();
+      if (team) mark(action, 'data-iw-boss-action-team', team);
+      else if (action.hasAttribute('data-iw-boss-action-team')) action.removeAttribute('data-iw-boss-action-team');
+      if (action.hasAttribute('data-iw-boss-action-label')) action.removeAttribute('data-iw-boss-action-label');
     }
     const participation = [...card.querySelectorAll('button, p')].find(el =>
       /world boss participation|players? currently fighting world boss|last battle participants/i.test(norm(el.textContent)));
@@ -353,7 +363,7 @@ export function clearWorldBossPanel(root) {
   root.querySelectorAll('[data-iw-encounter="zone"]').forEach(card => strengthHistory.delete(card));
   root.querySelectorAll('.iw-control-dominion').forEach(stopStrengthImpact);
   root.querySelectorAll('[data-iw-boss-owned]').forEach(el => el.remove());
-  for (const attr of ['data-iw-encounter', 'data-iw-control', 'data-iw-boss-role', 'data-iw-boss-action-state', 'data-iw-boss-action-label', 'data-iw-boss-art-ready']) {
+  for (const attr of ['data-iw-encounter', 'data-iw-control', 'data-iw-boss-role', 'data-iw-boss-action-state', 'data-iw-boss-action-team', 'data-iw-boss-action-label', 'data-iw-boss-art-ready']) {
     root.querySelectorAll(`[${attr}]`).forEach(el => el.removeAttribute(attr));
   }
 }
