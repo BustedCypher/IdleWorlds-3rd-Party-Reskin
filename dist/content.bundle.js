@@ -3700,11 +3700,22 @@
       const disabled = keyDisabled && (btn.disabled || btn.getAttribute("aria-disabled") === "true") ? "1" : "0";
       return `${disabled}:${structureText(btn.textContent)}:${structureText(btn.getAttribute("aria-label"))}`;
     }).join("|");
-    return `${type}\0${panel.childElementCount}\0${buttonState}`;
+    const hasRequirement = /(?:needs|requires)\b/i.test(panel.textContent || "") ? "r" : "-";
+    return `${hasRequirement}${type}\0${panel.childElementCount}\0${buttonState}`;
+  }
+  var UNMET_CLASS = /\btext-(?:red|rose|orange|amber|yellow)-\d|\b(?:text-danger|text-warning)\b/;
+  function syncRequirementState(panel) {
+    panel.querySelectorAll(`[${ROLE_ATTR}="requirement"]`).forEach((shell) => {
+      const classes = [shell, ...shell.querySelectorAll("*")].map((el) => typeof el.className === "string" ? el.className : "").join(" ");
+      const state = UNMET_CLASS.test(classes) ? "unmet" : "met";
+      if (shell.getAttribute("data-iw-req-state") !== state) shell.setAttribute("data-iw-req-state", state);
+    });
   }
   function annotateStructure(panel, type, meta) {
     const sig = structureSignature(panel, type);
     if (structureSignatures.get(panel) === sig) return;
+    lastCandidatePanel = null;
+    lastCandidates = null;
     clearStructureRoles(panel);
     const identityLabels = (meta.labels || [meta.label]).map((label3) => label3.toLowerCase());
     let identity = findBestText(panel, (text) => identityLabels.includes(textWithoutLeadingGlyph(text).toLowerCase()));
@@ -3830,9 +3841,6 @@
     if (requirement) {
       const reqShell = outerSameTextShell(requirement, panel);
       setRole(reqShell, "requirement");
-      const reqClasses = `${requirement.className || ""} ${reqShell.className || ""}`;
-      const unmet = /\btext-(?:red|rose|orange|amber|yellow)-\d/.test(reqClasses) || /\b(?:text-danger|text-warning)\b/.test(reqClasses);
-      reqShell.setAttribute("data-iw-req-state", unmet ? "unmet" : "met");
     }
     const reward = findBestText(panel, (text) => /^base reward\s*:/i.test(text));
     if (reward) setRole(outerSameTextShell(reward, panel), "reward");
@@ -4026,6 +4034,7 @@
   }
   function applyPanelTreatment(panel, type, meta) {
     annotateStructure(panel, type, meta);
+    syncRequirementState(panel);
     ensureSkillArtwork(panel, type, meta);
     ensureSkillPresentation(panel, meta);
     panel.querySelectorAll("button").forEach(styleButton);

@@ -1002,13 +1002,46 @@ function structureSignature(panel, type) {
     const disabled = keyDisabled && (btn.disabled || btn.getAttribute('aria-disabled') === 'true') ? '1' : '0';
     return `${disabled}:${structureText(btn.textContent)}:${structureText(btn.getAttribute('aria-label'))}`;
   }).join('|');
-  return `${type}\u0000${panel.childElementCount}\u0000${buttonState}`;
+  // Whether a "Needs/Requires" line exists at all. It is not a button and
+  // usually not a direct child, so without this a requirement that mounts
+  // after the card's first pass was never tagged, and its unmet note never
+  // appeared until the player clicked or paged (Curtis, 2026-09-22). A flag,
+  // not the text: the met/unmet state is re-read every pass by
+  // syncRequirementState. textContent has no separators, so no leading \b
+  // ("XPNeeds level").
+  const hasRequirement = /(?:needs|requires)\b/i.test(panel.textContent || '') ? 'r' : '-';
+  return `${hasRequirement}${type}\u0000${panel.childElementCount}\u0000${buttonState}`;
+}
+
+/* Met or unmet is game STATE, painted by the game's own class: a muted
+   `text-white/xx` when the player meets the requirement, a warm/danger class
+   when they do not. The skin used to force the line red unconditionally,
+   which deleted that distinction (rule 5), so it mirrors the class instead.
+   It is re-read on EVERY pass, outside annotateStructure's cache: a class
+   change is not structural, so a line the game turned red after the card's
+   first pass (the player's levels landing, a paged-in locked recipe with the
+   same button label) kept its stale 'met', and the V2 card's unmet note stayed
+   hidden until something structural happened. Compare before writing: a
+   same-value data-iw-* write still re-matches every selector keyed on it. */
+const UNMET_CLASS = /\btext-(?:red|rose|orange|amber|yellow)-\d|\b(?:text-danger|text-warning)\b/;
+function syncRequirementState(panel) {
+  panel.querySelectorAll(`[${ROLE_ATTR}="requirement"]`).forEach(shell => {
+    const classes = [shell, ...shell.querySelectorAll('*')]
+      .map(el => (typeof el.className === 'string' ? el.className : '')).join(' ');
+    const state = UNMET_CLASS.test(classes) ? 'unmet' : 'met';
+    if (shell.getAttribute('data-iw-req-state') !== state) shell.setAttribute('data-iw-req-state', state);
+  });
 }
 
 function annotateStructure(panel, type, meta) {
   const sig = structureSignature(panel, type);
   if (structureSignatures.get(panel) === sig) return;
 
+  // The candidate memo holds ONE call's worth. Left over from this panel's
+  // previous walk, it hid every node mounted since - a late "Needs level"
+  // line was never found even after the signature moved.
+  lastCandidatePanel = null;
+  lastCandidates = null;
   clearStructureRoles(panel);
 
   const identityLabels = (meta.labels || [meta.label]).map(label => label.toLowerCase());
@@ -1187,16 +1220,8 @@ function annotateStructure(panel, type, meta) {
   const requirement = findBestText(panel, text => /^(?:needs|requires)\b/i.test(text));
   if (requirement) {
     const reqShell = outerSameTextShell(requirement, panel);
+    // Its met/unmet state is set by syncRequirementState, every pass.
     setRole(reqShell, 'requirement');
-    // The game already colours this line by state: a muted `text-white/xx`
-    // when the player MEETS the requirement, a warm/danger text class when
-    // they do not. The skin used to force it red unconditionally, which
-    // deleted that distinction (rule 5). Mirror the native state instead —
-    // red only when unmet, grey when met.
-    const reqClasses = `${requirement.className || ''} ${reqShell.className || ''}`;
-    const unmet = /\btext-(?:red|rose|orange|amber|yellow)-\d/.test(reqClasses) ||
-                  /\b(?:text-danger|text-warning)\b/.test(reqClasses);
-    reqShell.setAttribute('data-iw-req-state', unmet ? 'unmet' : 'met');
   }
 
   const reward = findBestText(panel, text => /^base reward\s*:/i.test(text));
@@ -1500,6 +1525,7 @@ function ensureSkillPresentation(panel, meta) {
 function applyPanelTreatment(panel, type, meta) {
   // Structure first so button styling can use semantic action/nav roles.
   annotateStructure(panel, type, meta);
+  syncRequirementState(panel);
   ensureSkillArtwork(panel, type, meta);
   ensureSkillPresentation(panel, meta);
   panel.querySelectorAll('button').forEach(styleButton);

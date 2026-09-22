@@ -211,9 +211,16 @@ state to lay out. What each cost:
 
   - **A requirement appears only when it is NOT met**, in small type on the
     card's foot row under the frame. `syncRequirementNote` copies the lines
-    whose `data-iw-req-state` is `unmet` - the game's own warm-class signal,
-    read once by `SkillPanelRenderer` (rule 5: the skin never decides met or
-    unmet itself). The foot row exists only while there is a note. The row is
+    whose `data-iw-req-state` is `unmet` - the game's own warm-class signal
+    (rule 5: the skin never decides met or unmet itself). That state is
+    re-read EVERY pass by `SkillPanelRenderer.syncRequirementState`, outside
+    `annotateStructure`'s cache: read once inside it, a line the game turned
+    red after the card's first pass stayed 'met', and the note only appeared
+    once the player clicked or paged (Curtis, 2026-09-22). The cache key also
+    flags whether a "Needs/Requires" line exists, and each walk resets the
+    `textCandidates` memo, which had been serving the previous walk's nodes.
+    `tests/skill-requirement-state.test.mjs` pins all of it. The foot row
+    exists only while there is a note. The row is
     excluded by both `textCandidates` and `neutraliseIngredients`, so the
     copied "Requires ..." cannot become a second requirement or a second
     ingredient source.
