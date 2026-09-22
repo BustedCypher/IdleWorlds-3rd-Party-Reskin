@@ -549,6 +549,109 @@
   border-bottom-right-radius: 10px !important;
 }
 
+/* ── §4d  Unread alert ────────────────────────────────────────────────────
+   Players missed new mail / game events: the game's only signal is an 8px
+   count pill on a white/60 icon. The game renders that pill — a
+   `span.absolute.rounded-full` (bg-ember) DIRECTLY in the button — only while
+   the count is above 0 (Mailbox, the bell, and the bell's menu variant all use
+   the same markup, read from the game's bundle 2026-09-22), so its presence IS
+   the unread state and `:has()` keys on it: no JS, no attribute, nothing to
+   tear down, and the pulse stops the moment the game drops the pill.
+
+   Amplify, never repaint (rule 5): the pill keeps the game's own ember fill
+   and count; it only grows and moves inside the square so the column's edge
+   cannot clip it. The pulse is two pseudo-elements animating ONLY `transform`
+   and `opacity` (compositor work, no per-frame paint of the button). Nothing
+   else in any sheet draws on this button's ::before/::after. */
+[data-iw-header="utility-button"]:has(> span.absolute.rounded-full) {
+  color: #FFD9A0 !important;
+  border-color: rgba(255, 160, 72, 0.95) !important;
+  background: rgba(46, 22, 8, 0.82) !important;
+  box-shadow:
+    inset 0 0 10px rgba(255, 138, 61, 0.35),
+    0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 0 12px rgba(255, 138, 61, 0.55) !important;
+}
+[data-iw-header="utility-button"]:has(> span.absolute.rounded-full) svg {
+  filter: drop-shadow(0 0 4px rgba(255, 170, 90, 0.85));
+}
+/* Inner ember glow that breathes, and an outer ring that ripples outward. */
+[data-iw-header="utility-button"]:has(> span.absolute.rounded-full)::before,
+[data-iw-header="utility-button"]:has(> span.absolute.rounded-full)::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+}
+[data-iw-header="utility-button"]:has(> span.absolute.rounded-full)::before {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 150, 70, 0.45), rgba(255, 150, 70, 0) 70%);
+  animation: iw-hd-alert-breathe 1.6s ease-in-out infinite;
+}
+[data-iw-header="utility-button"]:has(> span.absolute.rounded-full)::after {
+  border: 2px solid rgba(255, 150, 60, 0.95);
+  box-shadow: 0 0 10px rgba(255, 138, 61, 0.8);
+  z-index: 1;
+  animation: iw-hd-alert-ring 1.6s ease-out infinite;
+}
+/* The game's count pill: bigger type, a dark keyline so it reads on the ember
+   glow, and hung OFF the square's top-right corner (Curtis, 2026-09-22: inside
+   the corner it covered the icon) — centred on the corner, so only a quarter
+   of it overlaps the button. -6px fits: the column bleeds 8px into the
+   header's 16px top padding, and the header root clips (overflow: hidden).
+   A true circle: a fixed 16px square box (20px read as too big) with a 50% radius — live, something
+   flattened the game's `rounded-full` into a square, so the radius is forced.
+   16px holds the game's cap of "99" at 10px type. */
+[data-iw-header="utility-button"] > span.absolute.rounded-full {
+  top: -6px !important;
+  right: -6px !important;
+  left: auto !important;
+  bottom: auto !important;
+  z-index: 3 !important;
+  box-sizing: border-box !important;
+  width: 16px !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  /* Fixed alert colours (Curtis, 2026-09-22): the game's `bg-ember` follows
+     the zone theme, so the pill changed colour per zone. The `background`
+     shorthand also clears any themed image; the text fill is pinned for the
+     same reason `color` alone was not enough on the nav labels. No outline:
+     a white 2px ring was tried and read as too much. */
+  background: #D32F2F !important;
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55), 0 0 8px rgba(211, 47, 47, 0.85) !important;
+}
+@keyframes iw-hd-alert-breathe {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+@keyframes iw-hd-alert-ring {
+  0%   { opacity: 0.95; transform: scale(1); }
+  70%  { opacity: 0; transform: scale(1.22); }
+  100% { opacity: 0; transform: scale(1.22); }
+}
+/* Reduced motion keeps the lit, glowing state; only the movement goes. */
+@media (prefers-reduced-motion: reduce) {
+  [data-iw-header="utility-button"]:has(> span.absolute.rounded-full)::before {
+    animation: none;
+    opacity: 0.8;
+  }
+  [data-iw-header="utility-button"]:has(> span.absolute.rounded-full)::after {
+    animation: none;
+    opacity: 0.9;
+  }
+}
+
 /* Low-profile status tiles. An ornate plate covered most of the (now per-zone)
    header artwork and read as gaudy; these are a
    quiet smoked-glass panel instead — translucent dark fill + blur so the

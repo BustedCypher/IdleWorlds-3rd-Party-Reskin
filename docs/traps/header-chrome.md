@@ -277,3 +277,25 @@ opt-out and the nav reads a 1px border of its own. `flush-quiescence` asserts
 the chrome is merged in its fixture — it was NOT at first, because that
 fixture's `<nav>` had three tabs and nav classification needs four, so the
 module correctly refused and the silence was about nothing.
+
+### Unread alert on the utility column (2026-09-22)
+
+Players missed new mail and game events. The game's only signal is an 8px
+count pill on a dim icon, rendered as a `span.absolute.rounded-full`
+(`bg-ember`) DIRECTLY inside the button and **only while the count is above
+0** — read from the game's bundle, the same markup on Mailbox, the bell and the
+bell's menu variant. Its presence is therefore the unread state, and
+`header.css` §4d keys on it with `:has(> span.absolute.rounded-full)`: a lit
+ember plate, a breathing inner glow and a rippling ring, with no JS, no
+attribute and nothing to tear down. The pill keeps the game's count
+(rule 5) — but not its COLOUR: `bg-ember` follows the zone theme, and Curtis
+wants the alert identical everywhere, so it is pinned to a red fill with a
+white number (a white 2px outline was tried and read as too much). It grows to 10px type and becomes a forced 16px circle centred
+on the button's top-right corner (Curtis: inside the corner it covered the
+icon, and live it rendered square). The -6px offset fits only because the
+column bleeds 8px into the header's 16px top padding — the header root is
+`overflow: hidden`, so a bigger offset gets clipped; the test checks both. The pulse animates only `transform`/`opacity` on the two
+pseudo-elements; reduced motion keeps the lit state without movement. If the
+game ever changes the pill's classes, this goes silent rather than wrong —
+`tests/header-compact.test.mjs` carries the real classes and checks that only
+the pill-bearing button pulses and that removing the pill stops it.

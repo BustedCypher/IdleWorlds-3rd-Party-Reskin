@@ -409,7 +409,9 @@ for (const width of [800, 400]) {
   // bottom button bottom-right) rounded, every other button corner square.
   const icon = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>';
   const btn = (label, extra = '') => `<button class="header-icon-btn relative" aria-label="${label}" title="${label}">${icon}${extra}</button>`;
-  const badge = '<span style="position:absolute;right:-4px;top:-4px">3</span>';
+  // The game's own unread pill (bundle, 2026-09-22): rendered only while the
+  // count is above 0, directly inside the button.
+  const badge = '<span class="absolute -right-1 -top-1 inline-flex min-w-[14px] items-center justify-center rounded-full bg-ember" style="position:absolute;right:-4px;top:-4px">3</span>';
   const SHAPES = {
     direct: `${btn('Notifications', badge)}${btn('More')}${btn('Settings')}`,
     wrapped: `<div class="relative">${btn('Notifications', badge)}</div>` +
@@ -483,6 +485,25 @@ for (const width of [800, 400]) {
             radius(el, 'TopLeft'), radius(el, 'BottomLeft'),
             i ? radius(el, 'TopRight') : 0, i < els.length - 1 ? radius(el, 'BottomRight') : 0,
           ]).filter(v => v > 0.5).length,
+          // §4d: the button carrying the game's unread pill pulses; the rest do not.
+          alert: els.map(el => getComputedStyle(el, '::after').animationName),
+          pill: (() => {
+            const p = els[0].querySelector(':scope > span.rounded-full');
+            if (!p) return null;
+            const pr = p.getBoundingClientRect(), br = els[0].getBoundingClientRect();
+            const hr = document.querySelector('[data-iw-header="root"]').getBoundingClientRect();
+            const cs = getComputedStyle(p);
+            return {
+              // Centred on the button's top-right corner, so it covers little of the icon.
+              onCorner: Math.abs((pr.left + pr.right) / 2 - br.right) <= 4 && Math.abs((pr.top + pr.bottom) / 2 - br.top) <= 4,
+              // Not clipped by the header root's overflow: hidden.
+              unclipped: pr.top >= hr.top && pr.right <= hr.right,
+              circle: Math.abs(pr.width - pr.height) <= 0.5 && parseFloat(cs.borderTopLeftRadius) >= pr.width / 2 - 0.5,
+              font: parseFloat(cs.fontSize),
+              // Fixed red / white, never the zone theme's ember.
+              colours: [cs.backgroundColor, cs.color, cs.borderTopWidth].join(' | '),
+            };
+          })(),
         };
       });
       const tag = `column ${shapeName} ${width}`;
@@ -501,6 +522,21 @@ for (const width of [800, 400]) {
       check(`${tag}: the column's outer corners are rounded, the rest square`,
         u.firstTR > 0 && u.lastBR > 0 && u.otherCorners === 0, JSON.stringify(u));
       check(`${tag}: every button is still a usable tap target`, u.size >= 34, `size=${u.size}`);
+      check(`${tag}: only the button with an unread pill pulses`,
+        u.alert?.[0] === 'iw-hd-alert-ring' && u.alert.slice(1).every(a => a === 'none'), JSON.stringify(u.alert));
+      check(`${tag}: the unread pill is a circle on the button's top-right corner, unclipped and readable`,
+        u.pill?.onCorner && u.pill.unclipped && u.pill.circle && u.pill.font >= 10, JSON.stringify(u.pill));
+      check(`${tag}: the unread pill is red with a white number and no outline`,
+        u.pill?.colours === 'rgb(211, 47, 47) | rgb(255, 255, 255) | 0px', u.pill?.colours);
+      // Negative control: the game drops the pill when the count reaches 0,
+      // and the pulse must stop with it.
+      const cleared = await page.evaluate(async () => {
+        document.querySelector('[data-iw-header="utility-button"] > span.rounded-full')?.remove();
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        return [...document.querySelectorAll('[data-iw-header="utility-button"]')]
+          .map(el => getComputedStyle(el, '::after').animationName);
+      });
+      check(`${tag}: the pulse stops when the pill is gone`, cleared.every(a => a === 'none'), JSON.stringify(cleared));
       await page.close();
     }
   }
