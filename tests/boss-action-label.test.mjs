@@ -312,5 +312,58 @@ const wrappedZone = await place(1100, ZONE_CARDS, fullWidth);
 assert.ok(wrappedZone.every(r => Math.abs(r.titleOff) > 1.5), `zone negative control is broken: got ${wrappedZone.map(r => r.titleOff.toFixed(1)).join(', ')}`);
 console.log('  zone control action: JOIN/FIGHTING art at boss sizes, right of the title, team kept  ok');
 
+/* Zone Control's participation roster (captured game source): one container
+   of a Red Team box and a Blue Team box ("Battle ended hh:mm" first, after a
+   capture), then - while fighting - a Queue block. It spans the card's foot,
+   Red | Blue side by side, the Queue full width above; phones stack. */
+const teamBox = (tint, label, name) => `<div class="rounded-2xl border border-${tint}-400/20 bg-${tint}-900/10 p-2"><p>${label}</p>
+  <div><div class="flex items-center justify-between gap-3"><button class="truncate text-left">1. ${name}</button><span class="shrink-0">1077 dmg</span></div></div></div>`;
+const rosterCard = ended => `<div class="compact-panel" data-iw-boss="card">
+  <div class="${ROW}"><div class="min-w-0"><p>⚔️ Zone 13 — Race to capture!</p></div><div class="${COL}"><button>Fighting</button></div></div>
+  <div><div><span>🔴</span><div class="h-1.5 rounded-full"><div style="width:60%"></div></div><span>63,923</span></div>
+  <div><span>🔵</span><div class="h-1.5 rounded-full"><div style="width:40%"></div></div><span>42,666</span></div></div>
+  <button class="underline decoration-dotted">Zone control participation</button>
+  <div class="mt-2 space-y-2">${ended ? '<p>Battle ended 14:02</p>' : ''}${teamBox('rose', '🔴 Red Team', 'LilSquishy')}${teamBox('sky', '🔵 Blue Team', 'BustedCypher')}</div>
+  <div class="mt-2 border-t pt-2"><p>Queue</p><div><p>1. Mine Stormglass</p></div></div></div>`;
+const roster = async (width, sheet = css.join('\n')) => {
+  const p = await browser.newPage({ viewport: { width, height: 2000 } });
+  await p.setContent(`<style>${TAILWIND}.space-y-2>*+*{margin-top:8px}</style><style>${sheet}</style><style>body{margin:0;background:#000}main{max-width:1040px;padding:0 16px}</style>
+    <main><div class="panel"><div><h2>Zone Control</h2></div>${rosterCard(false)}${rosterCard(true)}</div></main>`);
+  await p.addScriptTag({ content: 'window.chrome={runtime:{id:"test"},storage:{local:{get:async()=>({}),set:async()=>{}}}};' });
+  await p.addScriptTag({ content: compiled.outputFiles[0].text });
+  await p.evaluate(() => { const root = document.querySelector('.panel'); window.BossPanels.decorateWorldBossPanel({ root, heading: root.querySelector('h2') }); });
+  await p.waitForTimeout(100);
+  const rows = await p.evaluate(() => [...document.querySelectorAll('.compact-panel')].map(c => {
+    const R = el => el.getBoundingClientRect();
+    const teams = c.querySelector('[data-iw-boss-role="control-teams"]'), queue = c.querySelector('[data-iw-boss-role="control-queue"]');
+    if (!teams || !queue) return { missing: true };
+    const [red, blue] = [...teams.querySelectorAll('.rounded-2xl')].map(R);
+    const cs = getComputedStyle(c), card = R(c), t = R(teams);
+    const inner = card.width - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const last = [...c.children].filter(el => !el.hasAttribute('data-iw-boss-owned') || el.classList.contains('iw-control-dominion'))
+      .reduce((m, el) => Math.max(m, R(el).bottom), 0);
+    return { sideBySide: Math.abs(red.top - blue.top) < 0.5 && red.right <= blue.left, stacked: blue.top >= red.bottom,
+      spans: Math.abs(t.width - inner) < 1, atFoot: Math.abs(t.bottom - last) < 0.5, queueAbove: R(queue).bottom <= t.top + 0.5,
+      queueSpans: Math.abs(R(queue).width - inner) < 1 };
+  }));
+  await p.close();
+  return rows;
+};
+for (const width of [1440, 1100, 761, 481]) {
+  for (const [i, r] of (await roster(width)).entries()) {
+    const where = `zone roster ${i ? '(battle ended)' : '(racing)'} @ ${width}px`;
+    assert.ok(!r.missing, `${where}: roster or queue not classified`);
+    assert.ok(r.sideBySide, `${where}: Red and Blue must sit side by side`);
+    assert.ok(r.spans && r.queueSpans, `${where}: roster and queue must span the card's width`);
+    assert.ok(r.atFoot && r.queueAbove, `${where}: roster must be the card's foot, under the queue`);
+  }
+}
+for (const r of await roster(390)) assert.ok(!r.missing && r.stacked && r.spans, 'zone roster @ 390px: phones stack Red over Blue at full width');
+/* Negative control, EXECUTED: without the roster rules the card's grid packs
+   the two boxes into one column, stacked. */
+const noRoster = css.join('\n').replaceAll('[data-iw-boss-role="control-teams"]', '[data-iw-probe-disabled]');
+assert.ok((await roster(1100, noRoster)).every(r => !r.sideBySide), 'roster negative control is broken: boxes are side by side without the rules');
+console.log('  zone control roster: Red | Blue across the foot, queue above, phones stack  ok');
+
 await browser.close();
 console.log('boss-action-label: dedicated world-boss action artwork states  ok');

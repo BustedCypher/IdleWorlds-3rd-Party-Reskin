@@ -58,7 +58,7 @@ const PAGE = `<!doctype html><html><head><title>IdleWorlds</title></head><body>
     <div class="app">
       <header id="top-header">
         <div id="profile-block"><h1>BustedCypher</h1><p>Gemcutter Supreme</p><p>⚔ Combat Lv 62 · Zone 14: Moonsteel Basin</p><p>● Players online: 145</p></div>
-        <div id="utility-block"><button>☆</button><button>✉</button><button>+</button><button>1</button><button>⚙</button></div>
+        <div id="utility-block"><button>☆</button><button>✉</button><button>+</button><button>🏆</button><button>1</button><button>⚙</button></div>
         <div id="status-grid"><div>💰 515,686</div><div>🧪 XP +36/task · 22h 53m left</div><div>⚔ ATK 292 · DEF 252 · HP 477</div><div>⚔ No ATK potion active</div><div>🛡 No DEF potion active</div><div>⚡ BritishDemon boosted (1/12) · 9h 15m left</div></div>
       </header>
       <nav><button>Game</button><button>Market</button><button>Leaderboards</button>
@@ -853,7 +853,7 @@ check('top header adds one skin-owned crest without replacing native profile tex
   window.document.querySelectorAll('#profile-block > .fs-header-crest').length === 1 &&
   window.document.getElementById('profile-block')?.textContent.includes('BustedCypher'));
 check('header utility buttons are classified without replacing native controls',
-  window.document.querySelectorAll('[data-iw-header="utility-button"]').length === 5);
+  window.document.querySelectorAll('[data-iw-header="utility-button"]').length === 6);
 // The vitals/timers layout places cards by KIND, derived from their text. It
 // must not key off DOM position: the game drops buff tiles as they expire,
 // which reshuffles every index behind them and would silently move the wrong

@@ -52,7 +52,6 @@ verified byte-for-byte unchanged when the five additional themes were added.
 - Chevron cells: **135 × 225** pixels, displayed at 26 × 44.
 - Twelve transparent pixels separate cells and surround the sheet.
 - `index.json` contains the source rectangles and cell anchors.
-- `registration.json` records each sprite's visible bounds.
 
 `SkillsArtService` supplies complete background definitions for each sprite
 window. Idle, hover and pressed artwork occupy fixed layers: hover crossfades

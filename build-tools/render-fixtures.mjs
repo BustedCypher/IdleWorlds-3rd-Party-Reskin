@@ -405,15 +405,11 @@ const tooltipCard = ({ sprite, name, tier, badges, effect, stats, acqMain, acqSu
    which is how a mis-scaled frame ornament and a mis-aligned utility rail both
    survived "verified" passes. */
 const HEADER_ASSET_VARS = [
-  ['--iw-header-frame', 'header_frame.webp'],
   ['--iw-header-surface', 'header_surface.webp'],
   // Distinct file so the mobile-swap media query in header.css can be verified
   // by name below; HeaderRenderer sets this per zone alongside the wide strip.
   ['--iw-header-surface-mobile', 'zones/zone_1_mobile.webp'],
   ['--iw-header-crest', 'header_crest.webp'],
-  ['--iw-header-divider', 'header_divider.webp'],
-  ['--iw-utility-frame', 'utility_frame.webp'],
-  ['--iw-status-frame', 'status_frame.webp'],
 ].map(([name, file]) => `${name}:url('${fileUrl(`assets/header/${file}`)}')`).join(';');
 
 /* The four inventory tool controls. They were absent from this fixture, which
@@ -461,7 +457,7 @@ const headerBlock = () => `
         <button data-iw-header="profile-online">Players online: 141</button>
       </div>
       <div class="flex items-center gap-2" data-iw-header="utilities">
-        ${Array.from({ length: 5 }, () => `<button class="header-icon-btn" data-iw-header="utility-button">${UTIL_ICON}</button>`).join('')}
+        ${Array.from({ length: 6 }, () => `<button class="header-icon-btn" data-iw-header="utility-button">${UTIL_ICON}</button>`).join('')}
       </div>
     </div>
     <div class="grid grid-cols-2 gap-2 min-w-0" data-iw-header="status-grid">
@@ -1254,13 +1250,8 @@ if (nameInk.b <= nameInk.r) {
     `is warm, so a skin token repainted it. The player's display colour is the game's (rule 5).`);
 }
 console.log(`player name keeps the game's own clip-text gradient (${nameInk.n} ink px, blue-dominant)  ok`);
-/* Sprite-backed chrome is only aligned if the ART is concentric with the BOX,
-   and no computed-style check can see that: the sheet's own dead margin lives
-   inside the image. So measure the painted pixels. utility_frame.webp is
-   208x197 carrying a 180x176 plate at offset 6,7, and the old
-   `border-image … 50 fill / 11px` mapped the whole sheet onto the button —
-   which put a 35.5x37.1 plate in a 42x42 box, centred at 19.25,20.25 while the
-   box-centred glyph sat at 21,21. Reverting the CSS crop fails this. */
+/* Pixel measurement catches visual alignment regressions that computed styles
+   alone cannot see. */
 async function inkBox(locator) {
   const shot = (await locator.screenshot()).toString('base64');
   const box = await locator.boundingBox();

@@ -42,8 +42,16 @@ bug, and it hid behind the fact that the Game route always looked correct.
 (`lastZoneNumber`): the player's zone is game state and does not change because
 they opened a tab. `clearHeaderRenderer()` resets it, so the kill switch leaves
 nothing behind. Pinned across all four routes in
-`tests/route-swap-reclassify.test.mjs` — drop the cache and eight checks fail
-with `theme=default` plus the fallback surface.
+`tests/route-swap-reclassify.test.mjs`.
+
+**Village is intentionally standard-themed.** The `/housing` route (including
+the `/ssf/housing` league prefix) is the sole exception to carrying the cached
+zone presentation across tabs. `presentationZoneNumber()` returns `null` there,
+which gives Village the stock gold palette, generic header surface, default
+atlas/corners/separator and forged-metal control art. It does NOT clear
+`lastZoneNumber`: Market, Leaderboards, Dungeon or Game immediately restore the
+player's cached zone palette and header after leaving Village. The route-swap
+test pins both Village path shapes and the restore transition.
 
 `zone_1..34.webp` (wide) and `zone_1..34_mobile.webp` (portrait) are the real
 hand-painted headers, imported from the sibling sprites repo

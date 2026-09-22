@@ -8,7 +8,8 @@ await page.waitForTimeout(2500);
 console.log('url', page.url());
 console.log('roles', await page.locator('[data-iw-header]').count());
 const info = await page.locator('[data-iw-header="root"]').evaluate(el => ({
-  frame: getComputedStyle(el).getPropertyValue('--iw-header-frame'),
+  surface: getComputedStyle(el).getPropertyValue('--iw-header-surface'),
+  crest: getComputedStyle(el).getPropertyValue('--iw-header-crest'),
   bg: getComputedStyle(el).backgroundImage,
   rect: el.getBoundingClientRect().toJSON(),
 })).catch(error => ({ error: error.message }));

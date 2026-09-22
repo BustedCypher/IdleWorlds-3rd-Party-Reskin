@@ -14,7 +14,6 @@ const UI_INDEX_URL = 'assets/skills_ui_index.json';
 const TEXTURE_URL = 'assets/skills_panel_texture.webp';
 const NAV_PREV_URL = 'assets/skills_nav_prev.svg';
 const NAV_NEXT_URL = 'assets/skills_nav_next.svg';
-const BUTTON_THEME_ROOT = 'assets/skills-ui/buttons/exact-v3';
 const REVISED_BUTTON_ROOT = 'assets/skills-ui/buttons/revised-v5';
 const BUTTON_ART_KINDS = Object.freeze([
   'action-idle', 'action-hover', 'action-clicked',
@@ -152,33 +151,21 @@ function clearThemeVariables(host) {
 }
 
 function applyThemeVariables(host, theme) {
-  if (!host?.style || !theme) {
+  if (!host?.style || !theme || !revisedButtonAtlas.themes.includes(theme)) {
     clearThemeVariables(host);
     return false;
   }
-  const revised = revisedButtonAtlas.themes.includes(theme);
-  if (revised) {
-    setData(host, 'iwCompactAtlas', 'compact-ghost-v3');
-    setVar(host, '--iw-compact-atlas', `url("${assetUrl(`assets/skills-ui/buttons/compact-ghost-v3/${theme}.png`)}")`);
-  } else {
-    delete host.dataset.iwCompactAtlas;
-    host.style.removeProperty('--iw-compact-atlas');
-  }
-  if (revised) setData(host, 'iwButtonAtlas', 'revised-v5');
-  else delete host.dataset.iwButtonAtlas;
+  setData(host, 'iwCompactAtlas', 'compact-ghost-v3');
+  setVar(host, '--iw-compact-atlas', `url("${assetUrl(`assets/skills-ui/buttons/compact-ghost-v3/${theme}.png`)}")`);
+  setData(host, 'iwButtonAtlas', 'revised-v5');
   for (const kind of BUTTON_ART_KINDS) {
-    if (revised) {
-      const entry = revisedButtonAtlas.entries.find(item => item.key === kind.replace('action-secondary-', 'action-'));
-      const image = `url("${assetUrl(`${REVISED_BUTTON_ROOT}/${theme}.png`)}")`;
-      const x = 100 * entry.x / (revisedButtonAtlas.width - entry.width);
-      const y = 100 * entry.y / (revisedButtonAtlas.height - entry.height);
-      const size = `${100 * revisedButtonAtlas.width / entry.width}% ${100 * revisedButtonAtlas.height / entry.height}%`;
-      setVar(host, `--iw-${kind}`, image);
-      setVar(host, `--iw-${kind}-paint`, `transparent ${image} ${x}% ${y}% / ${size} no-repeat`);
-    } else {
-      setVar(host, `--iw-${kind}`, `url("${assetUrl(`${BUTTON_THEME_ROOT}/${theme}/${kind}.png`)}")`);
-      host.style.removeProperty(`--iw-${kind}-paint`);
-    }
+    const entry = revisedButtonAtlas.entries.find(item => item.key === kind.replace('action-secondary-', 'action-'));
+    const image = `url("${assetUrl(`${REVISED_BUTTON_ROOT}/${theme}.png`)}")`;
+    const x = 100 * entry.x / (revisedButtonAtlas.width - entry.width);
+    const y = 100 * entry.y / (revisedButtonAtlas.height - entry.height);
+    const size = `${100 * revisedButtonAtlas.width / entry.width}% ${100 * revisedButtonAtlas.height / entry.height}%`;
+    setVar(host, `--iw-${kind}`, image);
+    setVar(host, `--iw-${kind}-paint`, `transparent ${image} ${x}% ${y}% / ${size} no-repeat`);
   }
   return true;
 }

@@ -6,6 +6,9 @@ const root = resolve(import.meta.dirname, '..');
 const dir = resolve(root,'assets/skills-ui/buttons/card-v6');
 await mkdir(dir,{recursive:true});
 const themes = ['forged-metal','infernal','glacial','celestial','lunar-spectral','runic-arcane','tempest-oceanic','verdant','voidborn'];
+// The runic palette is teal-green; the sheet's labelled runic row is violet.
+// Reuse the green row so its controls match the palette used by Zone 18.
+const artworkTheme = {'runic-arcane':'verdant'};
 const states = ['idle','hover','clicked'];
 const atlases = {
   action: {width:887,height:1774,x:[128,358,589],y:[11,190,370,550,730,911,1091,1271,1451],cellWidth:173,cellHeight:168},
@@ -13,10 +16,11 @@ const atlases = {
 };
 const index = {themes,states,atlases,entries:[]};
 const rules=[];
-for(const [r,theme] of themes.entries()) {
+for(const theme of themes) {
+  const artworkRow = themes.indexOf(artworkTheme[theme] || theme);
   const vars=[];
   for(const [kind,a] of Object.entries(atlases)) for(const [c,state] of states.entries()) {
-    const entry={theme,kind,state,x:a.x[c],y:a.y[r],width:a.cellWidth,height:a.cellHeight};
+    const entry={theme,kind,state,x:a.x[c],y:a.y[artworkRow],width:a.cellWidth,height:a.cellHeight};
     index.entries.push(entry);
     const x=100*entry.x/(a.width-entry.width), y=100*entry.y/(a.height-entry.height);
     const size=`${100*a.width/entry.width}% ${100*a.height/entry.height}%`;

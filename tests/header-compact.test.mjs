@@ -56,7 +56,7 @@ const page_for = nav => `<!doctype html><html data-iw-page-hydrated="1"><head><m
 <div id="root" data-skin="default">
   <header id="top-header">
     <div id="profile-block"><h1>BustedCypher</h1><p>Gemcutter Supreme</p><p>⚔ Combat Lv 62 · Zone 19: Eternium Verge</p><p>● Players online: 141</p></div>
-    <div id="utility-block"><button>☆</button><button>✉</button><button>+</button><button>1</button><button>⚙</button></div>
+    <div id="utility-block"><button>☆</button><button>✉</button><button>+</button><button>🏆</button><button>1</button><button>⚙</button></div>
     <div id="status-grid"><div>💰 515,686</div><div>🧪 XP +36/task</div><div>⚔ ATK 292 · DEF 252 · HP 477</div></div>
   </header>
   ${nav}
@@ -392,6 +392,118 @@ for (const width of [800, 400]) {
   check('notice: the frame stays merged without one', t.stillMerged && t.gone === 0, JSON.stringify(t));
   check('notice: re-tagged when it returns', t.back === 'notice', `back=${t.back}`);
   await page.close();
+}
+
+{
+  // The utility column BESIDE the player-info frame (Curtis, 2026-09-22). The
+  // game's 2026-09 header update collapsed six icon buttons to three
+  // (Notifications, a "…" menu, Settings) and nests some of them in wrappers —
+  // which is what left Settings stretching alone while the other two stayed
+  // narrow. Both markups are rendered: every button a direct child, and the
+  // bell (with its badge) and the "…" menu (with a hidden dropdown) wrapped.
+  //
+  // The column must: stack three equal squares top to bottom; sit a small seam
+  // right of the frame; span exactly the frame's height (top button's top and
+  // bottom button's bottom on the frame's edges); and finish the frame — frame
+  // right corners sharp, the column's two outer corners (top button top-right,
+  // bottom button bottom-right) rounded, every other button corner square.
+  const icon = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>';
+  const btn = (label, extra = '') => `<button class="header-icon-btn relative" aria-label="${label}" title="${label}">${icon}${extra}</button>`;
+  const badge = '<span style="position:absolute;right:-4px;top:-4px">3</span>';
+  const SHAPES = {
+    direct: `${btn('Notifications', badge)}${btn('More')}${btn('Settings')}`,
+    wrapped: `<div class="relative">${btn('Notifications', badge)}</div>` +
+      `<div class="relative">${btn('More')}<div class="absolute right-0 top-full" style="display:none">menu</div></div>` +
+      `${btn('Settings')}`,
+  };
+  for (const [shapeName, utilityMarkup] of Object.entries(SHAPES)) {
+    const liveHeader = `<header class="panel"><div class="grid gap-3">
+      <div class="flex min-w-0 items-start justify-between gap-3">
+        <div class="min-w-0 overflow-hidden">
+          <p>IdleWorlds</p>
+          <h1 class="header-player-name"><button title="View your profile">BustedCypher</button></h1>
+          <p class="header-player-title">Craftbound Innovator</p>
+          <p>⚔️ Combat Lv 62 • Zone 19: Eternium Verge</p>
+          <button>Players online: 141</button>
+        </div>
+        <div class="flex items-center gap-2">${utilityMarkup}</div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 min-w-0"><div class="stat-chip">💰 10,957,780</div><button class="stat-chip">ATK 350 • DEF 358 • HP 477</button></div>
+    </div></header>`;
+    console.log(`\nUtility column (${shapeName} buttons, three)`);
+    for (const width of [1440, 1024, 390]) {
+      // Tailwind's preflight (`box-sizing: border-box` on everything) is on the
+      // live page but not in this fixture; without it the header's `width:100%`
+      // plus padding overflows its parent by ~30px and the column's position
+      // is measured off a header the game never renders.
+      PAGE = page_for(NAV_SHAPES.flat)
+        .replace('<title>IdleWorlds</title>', '<title>IdleWorlds</title><style>*,::before,::after{box-sizing:border-box}</style>')
+        .replace(/<header id="top-header">[\s\S]*?<\/header>/, liveHeader);
+      const page = await browser.newPage({ viewport: { width, height: 900 } });
+      page.on('pageerror', e => errs.push(String(e)));
+      await serve(page);
+      await page.goto(PAGE_URL, { waitUntil: 'load', timeout: 60000 });
+      await page.waitForFunction(
+        () => document.querySelectorAll('[data-iw-header="utility-button"]').length === 3 &&
+          document.querySelector('[data-iw-header="identity-region"]'), null, { timeout: 20000 }).catch(() => {});
+      const u = await page.evaluate(() => {
+        const region = document.querySelector('[data-iw-header="identity-region"]');
+        const els = [...document.querySelectorAll('[data-iw-header="utility-button"]')];
+        if (!region || !els.length) return { n: els.length };
+        const btns = els.map(b => b.getBoundingClientRect());
+        const r = region.getBoundingClientRect();
+        const before = getComputedStyle(region, '::before');
+        // The frame is the ::before, a grid item spanning the crest + profile
+        // tracks and bleeding by its negative margins.
+        const profile = document.querySelector('[data-iw-header="profile"]').getBoundingClientRect();
+        const frame = {
+          top: profile.top - (profile.top - r.top) + parseFloat(before.marginTop),
+          bottom: r.bottom - parseFloat(before.marginBottom),
+          right: profile.right - parseFloat(before.marginRight),
+        };
+        const radius = (el, corner) => parseFloat(getComputedStyle(el)[`border${corner}Radius`]) || 0;
+        const round = v => +v.toFixed(1);
+        return {
+          n: els.length,
+          lefts: new Set(btns.map(b => Math.round(b.left))).size,
+          stacked: btns.every((b, i) => !i || b.top >= btns[i - 1].bottom - 0.5),
+          square: Math.max(...btns.map(b => Math.abs(b.width - b.height))),
+          size: round(Math.min(...btns.map(b => b.width))),
+          seams: btns.slice(1).map((b, i) => round(b.top - btns[i].bottom)),
+          frameSeam: round(btns[0].left - frame.right),
+          insideHeader: btns.every(b => b.right <= document.querySelector('[data-iw-header="root"]').getBoundingClientRect().right + 0.5),
+          topFlush: round(btns[0].top - frame.top),
+          bottomFlush: round(frame.bottom - btns.at(-1).bottom),
+          frameTR: parseFloat(before.borderTopRightRadius) || 0,
+          frameBR: parseFloat(before.borderBottomRightRadius) || 0,
+          frameTL: parseFloat(before.borderTopLeftRadius) || 0,
+          firstTR: radius(els[0], 'TopRight'),
+          lastBR: radius(els.at(-1), 'BottomRight'),
+          otherCorners: els.flatMap((el, i) => [
+            radius(el, 'TopLeft'), radius(el, 'BottomLeft'),
+            i ? radius(el, 'TopRight') : 0, i < els.length - 1 ? radius(el, 'BottomRight') : 0,
+          ]).filter(v => v > 0.5).length,
+        };
+      });
+      const tag = `column ${shapeName} ${width}`;
+      check(`${tag}: all three header buttons are classified`, u.n === 3, `n=${u.n}`);
+      check(`${tag}: one column, stacked top to bottom`, u.lefts === 1 && u.stacked, JSON.stringify(u));
+      check(`${tag}: every button is a square`, u.square <= 1, JSON.stringify(u));
+      check(`${tag}: small, even seams between the buttons`,
+        u.seams && u.seams.every(g => g >= 4 && g <= 8) && Math.max(...u.seams) - Math.min(...u.seams) <= 1, JSON.stringify(u));
+      check(`${tag}: a small seam between the frame and the column`,
+        u.frameSeam >= 4 && u.frameSeam <= 8, JSON.stringify(u));
+      check(`${tag}: the column stays inside the header`, u.insideHeader, JSON.stringify(u));
+      check(`${tag}: the column spans the frame's full height`,
+        Math.abs(u.topFlush) <= 1 && Math.abs(u.bottomFlush) <= 1, JSON.stringify(u));
+      check(`${tag}: the frame's right corners are sharp, its left ones round`,
+        u.frameTR === 0 && u.frameBR === 0 && u.frameTL > 0, JSON.stringify(u));
+      check(`${tag}: the column's outer corners are rounded, the rest square`,
+        u.firstTR > 0 && u.lastBR > 0 && u.otherCorners === 0, JSON.stringify(u));
+      check(`${tag}: every button is still a usable tap target`, u.size >= 34, `size=${u.size}`);
+      await page.close();
+    }
+  }
 }
 await browser.close();
 

@@ -263,9 +263,23 @@ function pointTextNode(x, y) {
   return null;
 }
 
-function hitInTextNode(node, x, y) {
+/**
+ * Is `node` what the browser actually paints at the point whose topmost element
+ * is `el`? Range geometry alone cannot say: a range scrolled out of an
+ * `overflow` container keeps its unclipped client rects, so a chat line that
+ * scrolled away still "sits" over the heading above the list. If the text were
+ * really under the pointer, elementFromPoint would land on its own element or
+ * on an inline child of it.
+ */
+function textPaintedAt(node, el) {
+  const host = node.parentElement;
+  return !!host && (host === el || host.contains(el));
+}
+
+function hitInTextNode(node, x, y, el) {
   const matches = matchIndex.get(node)?.matches;
   if (!matches?.length) return null;
+  if (!textPaintedAt(node, el)) return null;
   const len = node.nodeValue ? node.nodeValue.length : 0;
   for (const m of matches) {
     if (m.end > len) continue;
@@ -287,7 +301,7 @@ function hitTest(x, y) {
 
   const precise = pointTextNode(x, y);
   if (precise && !shouldSkipParent(precise.parentElement)) {
-    const hit = hitInTextNode(precise, x, y);
+    const hit = hitInTextNode(precise, x, y, el);
     if (hit) return hit;
   }
 
@@ -309,7 +323,7 @@ function hitTest(x, y) {
     for (const child of cur.childNodes) add(child);
   }
   for (const candidate of candidates) {
-    const hit = hitInTextNode(candidate, x, y);
+    const hit = hitInTextNode(candidate, x, y, el);
     if (hit) return hit;
   }
   return null;

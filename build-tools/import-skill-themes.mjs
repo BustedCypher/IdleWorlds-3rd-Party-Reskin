@@ -227,16 +227,35 @@ for (const { theme, name } of themeFiles) {
   }
 
   const atlasBytes = srcBytes;
-  const cornersBytes = Buffer.from(cornersB64, 'base64');
-  const separatorBytes = Buffer.from(separatorB64, 'base64');
+  const cornerOutput = path.join(OUT_DIR, `panel_corners_${theme}.webp`);
+  let cornersBytes = Buffer.from(cornersB64, 'base64');
+  let cornersStatus = 'generated';
+  try {
+    // The committed corner sheets are manually restored, complete 8x assets.
+    // Preserve them when refreshing the atlas/separator imports; rebuilding
+    // from the old atlas crop would reintroduce clipped ends and matte halos.
+    cornersBytes = await readFile(cornerOutput);
+    cornersStatus = 'preserved repaired';
+  } catch {
+    await writeFile(cornerOutput, cornersBytes);
+  }
+  const separatorOutput = path.join(OUT_DIR, `separator_flourish_${theme}.webp`);
+  let separatorBytes = Buffer.from(separatorB64, 'base64');
+  let separatorStatus = 'generated';
+  try {
+    // As with the corner sheets, these committed separators are manually
+    // restored complete 8x assets. Never replace them with the damaged crop.
+    separatorBytes = await readFile(separatorOutput);
+    separatorStatus = 'preserved repaired';
+  } catch {
+    await writeFile(separatorOutput, separatorBytes);
+  }
   total += atlasBytes.length + cornersBytes.length + separatorBytes.length;
   await writeFile(path.join(OUT_DIR, `theme_${theme}.webp`), atlasBytes);
-  await writeFile(path.join(OUT_DIR, `panel_corners_${theme}.webp`), cornersBytes);
-  await writeFile(path.join(OUT_DIR, `separator_flourish_${theme}.webp`), separatorBytes);
   console.log(
     `theme_${theme}.webp  (${(atlasBytes.length / 1024).toFixed(0)} KB)   ` +
-    `panel_corners_${theme}.webp  (${(cornersBytes.length / 1024).toFixed(0)} KB)   ` +
-    `separator_flourish_${theme}.webp  (${(separatorBytes.length / 1024).toFixed(0)} KB)`
+    `panel_corners_${theme}.webp  (${(cornersBytes.length / 1024).toFixed(0)} KB, ${cornersStatus})   ` +
+    `separator_flourish_${theme}.webp  (${(separatorBytes.length / 1024).toFixed(0)} KB, ${separatorStatus})`
   );
 }
 

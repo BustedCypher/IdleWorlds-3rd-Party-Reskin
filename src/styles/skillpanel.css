@@ -2894,10 +2894,8 @@ html .compact-panel.fs-skill-panel[data-iw-skills-ui-ready="1"][data-iw-skill-la
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--fs-quest-accent) 14%, transparent) !important;
 }
 
-/* ── Reward chip: a plain plate, not the ornate horned plaque ──────────
-   Curtis (2026-09): the 3-slice `skills_xp_plaque_wide.webp` frame (horns +
-   flared studs) read as gaudy against the rest of the quest card and was
-   dropped for a flat bordered chip — the same "carved slate" language the
+/* ── Reward chip: a plain plate ───────────────────────────────────────
+   The flat bordered chip uses the same "carved slate" language the
    sigil's percentage badge and the skill base-EXP readout already use
    elsewhere on this page, just sized for this label. Still FLEX (not grid):
    the native "Reward: ..." text stays in the node as the accessible copy at
@@ -3657,8 +3655,8 @@ html .compact-panel.fs-skill-panel[data-iw-skill-layout="three-zone"] [data-iw-s
   }
 }
 
-/* ══ Exact themed button states ═══════════════════════════════════════
-   The state images in exact-v3 share one alpha mask and canvas per control,
+/* ══ Registered themed button states ═════════════════════════════════
+   The state images share one alpha mask and canvas per control,
    so interaction changes only lighting. The renderer's inline background
    reads --fs-button-background; changing this inherited custom property does
    not touch layout or React's event ownership. */

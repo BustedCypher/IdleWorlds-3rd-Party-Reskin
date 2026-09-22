@@ -47,11 +47,9 @@ def build():
     entries = [dict(key=f'{kind}-{state}', x=GAP if kind == 'text' else W + GAP * 2,
                     y=GAP + row * (H + GAP), width=W if kind == 'text' else SIZE, height=H)
                for row, state in enumerate(STATES) for kind in ['text', 'icon']]
-    report = {}
     for theme in THEMES:
         source = Image.open(OUT / 'sources' / f'{theme}.png').convert('RGB')
         atlas = Image.new('RGBA', (SW, SH))
-        report[theme] = {}
         for kind in ['text', 'icon']:
             sprites = [extract(source, row, kind == 'icon') for row in range(3)]
             idle = np.asarray(sprites[0]).copy()
@@ -65,7 +63,6 @@ def build():
                 sprite = Image.fromarray(data)
                 entry = next(e for e in entries if e['key'] == f'{kind}-{STATES[row]}')
                 atlas.paste(sprite, (entry['x'], entry['y']))
-                report[theme][entry['key']] = list(sprite.getbbox())
         atlas.save(OUT / f'{theme}.png', optimize=True)
         print(f'{theme}: {SW}x{SH}, six registered states')
     metadata = {
@@ -79,7 +76,6 @@ def build():
                  width=SW, height=SH, themes=THEMES, states=STATES,
                  textCapWidth=CAP, entries=entries)
     (OUT / 'index.json').write_text(json.dumps(index, indent=2) + '\n')
-    (OUT / 'registration.json').write_text(json.dumps(report, indent=2) + '\n')
 
 
 if __name__ == '__main__':

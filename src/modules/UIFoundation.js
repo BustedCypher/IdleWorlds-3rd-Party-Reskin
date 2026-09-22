@@ -23,6 +23,7 @@ import compactCss from '../styles/compact-buttons.css';
 import { decorateCompactButtons, clearCompactButtons } from './CompactButtons.js';
 
 const NAV_LABELS = ['game', 'market', 'leaderboards', 'village', 'dungeon'];
+const NAV_ROUTE_KEYS = Object.freeze({ village: 'housing' });
 /**
  * Controls the SKIN appended into a game node, and the game-control selector
  * that excludes them.
@@ -240,12 +241,17 @@ function resolveMainNav() {
 function applyMainNavState(tabs) {
   const semanticActive = tabs.map(btn => deriveTabActive(btn));
   const hasSemanticActive = semanticActive.some(Boolean);
-  const route = `${location.pathname || ''} ${location.hash || ''}`.toLowerCase();
-  const routeActive = tabs.map(btn => {
-    const label = navLabelText(btn);
-    if (label === 'game') return /(?:^|\/)(?:game)?\/?$/.test(location.pathname || '/') && !location.hash;
-    return route.includes(label);
-  });
+  const routeSegments = value => new Set(String(value || '').toLowerCase()
+    .split(/[^a-z0-9-]+/).filter(Boolean));
+  const routeLabel = segments => NAV_LABELS.find(label =>
+    segments.has(NAV_ROUTE_KEYS[label] || label));
+  // Path routes win over hashes so `/housing#market` cannot mark two tabs.
+  // The live navigation label says "Village", but its route is `/housing`.
+  const pathRoute = routeLabel(routeSegments(location.pathname));
+  const hashRoute = routeLabel(routeSegments(location.hash));
+  const rootRoute = !location.hash && /^\/$/.test(location.pathname || '/') ? 'game' : '';
+  const activeRoute = pathRoute || hashRoute || rootRoute;
+  const routeActive = tabs.map(btn => navLabelText(btn) === activeRoute);
   const hasRouteActive = routeActive.some(Boolean);
   const firstClassification = tabs.every(btn => btn.dataset.iwUi !== 'nav-tab');
   const warmActive = firstClassification ? tabs.map(warmBackground) : tabs.map(() => false);
@@ -258,10 +264,12 @@ function applyMainNavState(tabs) {
     // `[data-iw-state]` selectors (2026-09-17: 5 writes per pass, every pass).
     const tab = navLabelText(btn);
     if (btn.dataset.iwTab !== tab) btn.dataset.iwTab = tab;
-    const active = hasSemanticActive
-      ? semanticActive[index]
-      : hasRouteActive
-        ? routeActive[index]
+    // A recognised URL is authoritative during SPA swaps: React can leave the
+    // previous tab's aria/class state in place for a frame after the path moves.
+    const active = hasRouteActive
+      ? routeActive[index]
+      : hasSemanticActive
+        ? semanticActive[index]
         : firstClassification
           ? warmActive[index]
           : wasActive;

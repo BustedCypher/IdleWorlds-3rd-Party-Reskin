@@ -203,6 +203,7 @@ const navigatePath = (pathname, html) => {
 };
 const navTab = label => [...doc.querySelectorAll('[data-iw-ui="nav-tab"]')]
   .find(el => el.dataset.iwTab === label);
+const activeNavTabs = () => [...doc.querySelectorAll('[data-iw-ui="nav-tab"][data-iw-state="active"]')];
 const toolkitCount = () => doc.querySelectorAll('[data-iw-nav-link="toolkit"]').length;
 
 const marketRows = () => [...doc.querySelectorAll('.compact-row')];
@@ -251,6 +252,32 @@ check('Dungeon -> Game: the persistent nav restores Game active',
   `game=${navTab('game')?.dataset.iwState || '-'} dungeon=${navTab('dungeon')?.dataset.iwState || '-'}`);
 check('Dungeon -> Game: still exactly one Toolkit link',
   toolkitCount() === 1, `toolkit=${toolkitCount()}`);
+
+/* The live route is `/housing`, although the tab's visible label is Village.
+   A label-only URL match finds no active route and falls back to the previous
+   state, leaving Game highlighted while the Village page is visible. The
+   route must also beat stale semantic state left on Game during an SPA swap. */
+navTab('game')?.setAttribute('aria-current', 'page');
+navigatePath('/housing', VILLAGE_ROUTE);
+await waitFor(() => navTab('village')?.dataset.iwState === 'active');
+check('Game -> /housing: Village is the sole active tab despite stale Game semantics',
+  navTab('village')?.dataset.iwState === 'active' && activeNavTabs().length === 1,
+  `active=${activeNavTabs().map(tab => tab.dataset.iwTab).join(',') || '-'}`);
+
+navigatePath('/dungeon', DUNGEON_ROUTE);
+await waitFor(() => navTab('dungeon')?.dataset.iwState === 'active');
+navigatePath('/housing', VILLAGE_ROUTE);
+await waitFor(() => navTab('village')?.dataset.iwState === 'active');
+check('Dungeon -> /housing: Village remains the sole active tab on a return visit',
+  navTab('village')?.dataset.iwState === 'active' && activeNavTabs().length === 1,
+  `active=${activeNavTabs().map(tab => tab.dataset.iwTab).join(',') || '-'}`);
+
+navigatePath('/', GAME_ROUTE);
+await waitFor(() => navTab('game')?.dataset.iwState === 'active');
+check('/housing -> Game: the persistent nav restores Game active',
+  navTab('game')?.dataset.iwState === 'active' && activeNavTabs().length === 1,
+  `active=${activeNavTabs().map(tab => tab.dataset.iwTab).join(',') || '-'}`);
+navTab('game')?.removeAttribute('aria-current');
 
 /* -- Game -> Market ---------------------------------------------------- */
 navigate(MARKET_ROUTE);
@@ -403,20 +430,24 @@ check('a modal card is left to OverlayFramer, never section-framed as well',
   !framed('dungeon-modal'),
   `section=${framed('dungeon-modal')}`);
 
-/* -- The zone survives leaving the Game route ---------------------------- */
+/* -- The zone survives leaving Game, except on the Village route ---------- */
 /* The "Zone N:" label lives in the zone bar, which only the Game route mounts.
    Reading it fresh every flush meant every OTHER tab resolved zone=null: the
    header dropped its per-zone artwork back to the generic strip and <html> lost
-   data-iw-zone-theme, so Market/Village/Leaderboards/Dungeon rendered un-themed
-   while Game looked right. Reported live: "removed the header graphics and
-   didn't actually theme the other pages".
-   Negative control: drop the lastZoneNumber cache in HeaderRenderer and both
-   checks below fail. */
+   data-iw-zone-theme. Market, Leaderboards and Dungeon should keep the cached
+   zone, while Village deliberately presents the standard gold theme and generic
+   header on both standard and SSF routes. Leaving Village must restore the
+   cached zone rather than losing it. */
 const html = doc.documentElement;
 const headerRoot = () => doc.querySelector('[data-iw-header="root"]');
 const zoneSurface = () => headerRoot()?.style.getPropertyValue('--iw-header-surface') || '';
+const zoneChrome = () => [
+  html.style.getPropertyValue('--iw-zone-atlas'),
+  html.style.getPropertyValue('--iw-corner-filigree'),
+  html.style.getPropertyValue('--iw-zone-separator'),
+];
 
-navigate(GAME_ROUTE);
+navigatePath('/', GAME_ROUTE);
 await waitFor(() => html.dataset.iwZoneTheme && html.dataset.iwZoneTheme !== 'default');
 const gameTheme = html.dataset.iwZoneTheme;
 const gameSurface = zoneSurface();
@@ -424,9 +455,10 @@ check('baseline: the Game route resolves zone 19 to its palette and artwork',
   gameTheme === 'voidborn' && /zone_19\.webp/.test(gameSurface),
   `theme=${gameTheme} surface=${gameSurface}`);
 
-for (const [label, route] of [['Market', MARKET_ROUTE], ['Village', VILLAGE_ROUTE],
-                              ['Leaderboards', LEADERBOARDS_ROUTE], ['Dungeon', DUNGEON_ROUTE]]) {
-  navigate(route);
+for (const [label, path, route] of [['Market', '/market', MARKET_ROUTE],
+                                    ['Leaderboards', '/leaderboards', LEADERBOARDS_ROUTE],
+                                    ['Dungeon', '/dungeon', DUNGEON_ROUTE]]) {
+  navigatePath(path, route);
   await settle(120);
   check(`${label}: keeps the zone palette after the zone bar unmounts`,
     html.dataset.iwZoneTheme === gameTheme,
@@ -435,6 +467,35 @@ for (const [label, route] of [['Market', MARKET_ROUTE], ['Village', VILLAGE_ROUT
     zoneSurface() === gameSurface,
     `surface=${zoneSurface()}`);
 }
+
+for (const path of ['/housing', '/ssf/housing']) {
+  navigatePath(path, VILLAGE_ROUTE);
+  await settle(120);
+  check(`${path}: Village uses the standard palette with no zone chrome`,
+    html.dataset.iwZoneTheme === 'default' && zoneChrome().every(value => !value),
+    `theme=${html.dataset.iwZoneTheme} chrome=${zoneChrome().join(' | ')}`);
+  check(`${path}: Village uses the generic standard header artwork`,
+    /\/header\/header_surface\.webp/.test(zoneSurface()) && !/\/zones\/zone_/.test(zoneSurface()),
+    `surface=${zoneSurface()}`);
+  check(`${path}: Village keeps the standard forged-metal control artwork`,
+    /compact-ghost-v3\/forged-metal\.png/.test(html.style.getPropertyValue('--iw-compact-atlas')),
+    `atlas=${html.style.getPropertyValue('--iw-compact-atlas')}`);
+}
+
+navigatePath('/admin/housing', LEADERBOARDS_ROUTE);
+await settle(120);
+check('an unrelated path with a housing segment keeps the cached zone palette',
+  html.dataset.iwZoneTheme === gameTheme && zoneSurface() === gameSurface,
+  `theme=${html.dataset.iwZoneTheme} surface=${zoneSurface()}`);
+
+navigatePath('/leaderboards', LEADERBOARDS_ROUTE);
+await settle(120);
+check('leaving Village restores the cached zone palette',
+  html.dataset.iwZoneTheme === gameTheme,
+  `theme=${html.dataset.iwZoneTheme} (expected ${gameTheme})`);
+check('leaving Village restores the cached per-zone header artwork',
+  zoneSurface() === gameSurface,
+  `surface=${zoneSurface()}`);
 
 console.log(failures ? `\nFAIL — ${failures} check(s)` : '\nPASS route-swap reclassification');
 process.exit(failures ? 1 : 0);

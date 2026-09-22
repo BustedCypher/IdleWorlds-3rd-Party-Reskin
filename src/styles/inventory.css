@@ -49,7 +49,8 @@
    data-iw-inventory-list; nothing is reparented. Ground recipe is identical to
    `.fs-quest-panel[data-iw-skills-ui-ready="1"]` and the shared forged frame:
    texture over the themed --iw-th-ground gradient, soft-light blended. */
-[data-iw-inventory-root="1"] [data-iw-inventory-list="1"] {
+[data-iw-inventory-root="1"] [data-iw-inventory-list="1"],
+[data-iw-salvage-list="1"] {
   position: relative !important;
   isolation: isolate !important;
   margin: 2px 0 4px !important;
@@ -68,7 +69,8 @@
 }
 /* Themed hairline across the head of the inner frame — the shared frame's
    ::before, scaled to a card. */
-[data-iw-inventory-root="1"] [data-iw-inventory-list="1"]::before {
+[data-iw-inventory-root="1"] [data-iw-inventory-list="1"]::before,
+[data-iw-salvage-list="1"]::before {
   content: "" !important;
   position: absolute !important;
   z-index: 0 !important;
@@ -81,7 +83,8 @@
   opacity: .7 !important;
 }
 /* Recessed inner line, exactly like the quest card's inset border. */
-[data-iw-inventory-root="1"] [data-iw-inventory-list="1"]::after {
+[data-iw-inventory-root="1"] [data-iw-inventory-list="1"]::after,
+[data-iw-salvage-list="1"]::after {
   content: "" !important;
   position: absolute !important;
   inset: 3px !important;
@@ -92,10 +95,28 @@
   box-shadow: inset 0 0 12px rgba(0,0,0,.26) !important;
 }
 /* Rows sit above both ornaments. */
-[data-iw-inventory-root="1"] [data-iw-inventory-list="1"] > * {
+[data-iw-inventory-root="1"] [data-iw-inventory-list="1"] > *,
+[data-iw-salvage-list="1"] > * {
   position: relative;
   z-index: 1;
 }
+
+/* Salvaging (Village route) reuses the list frame. The game spaces its rows
+   with `grid gap-2`; inventory rows join on a hairline, so close the gap. The
+   last page pads with `div.compact-row` "Empty salvage slot" fillers, which are
+   not items and are never rendered; keep them as quiet hairline rows. */
+[data-iw-salvage-list="1"] { gap: 0 !important; }
+[data-iw-salvage-list="1"] > .compact-row:not([data-fs-inv]) {
+  border: 0 !important;
+  border-top: 1px solid var(--iw-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+[data-iw-salvage-list="1"] > .compact-row:first-child { border-top: 0 !important; }
+/* The whole salvage row is the game's own <button>: keep its pointer, and its
+   keyboard focus ring (the generic outline rule still applies). */
+button.compact-row > .fs-inv-row { cursor: pointer; }
 
 [data-iw-inventory-title="1"] {
   /* --iw-font-display was never defined in base.css (only --iw-font-head,

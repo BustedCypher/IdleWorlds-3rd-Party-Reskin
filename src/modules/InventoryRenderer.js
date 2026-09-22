@@ -34,6 +34,12 @@ const INVENTORY_FILTER_STATE_ATTR = 'data-iw-inventory-filter-state';
 // and tablets (Curtis, 2026-09-15) without a `:has()` whose subject would be
 // every node of a 600-row inventory.
 const INVENTORY_FILTERS_ATTR = 'data-iw-inventory-filters';
+// The Village route's Salvaging panel lists owned items as whole-row
+// `button.compact-row`s (click selects the item to salvage). They get the same
+// owned-item row as Inventory; the button stays the game's and the overlay is
+// appended inside it, so a click anywhere on the row still reaches React.
+const SALVAGE_LIST_ATTR = 'data-iw-salvage-list';
+const SALVAGE_TITLE = /^salvaging$/i;
 const filterRows = new WeakMap();
 const ROW_SELECTOR = '.compact-row, [class*="item-row"]';
 // Chrome resolves `:not(<complex selector>)` in the selector engine, so
@@ -255,13 +261,31 @@ function findInventoryRoot(row) {
  * either way -- callers must never invoke findInventoryRoot a second time to
  * get what this already computed.
  */
+function findSalvageRoot(row) {
+  // The row's own panel: button.compact-row < div.grid < div.compact-panel <
+  // div.panel. Stop at the FIRST .panel, so a row can never borrow the heading
+  // of some outer container.
+  let node = row.parentElement;
+  for (let depth = 0; node && depth < 5; depth += 1, node = node.parentElement) {
+    if (!node.classList?.contains('panel')) continue;
+    const heading = node.querySelector(':scope > div > h2, :scope > h2');
+    const text = String(heading?.textContent || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+    return SALVAGE_TITLE.test(text) ? node : null;
+  }
+  return null;
+}
+
 function resolveInventoryContext(row) {
   const controls = [...row.querySelectorAll('button, [role="button"]')]
     .map(el => String(el.textContent || '').trim().toLowerCase())
     .filter(Boolean);
   const equipShortcut = controls.some(t => /^(equip|equipped|unequip|list)$/.test(t));
   const root = findInventoryRoot(row);
-  return { inContext: equipShortcut || !!root, root };
+  if (equipShortcut || root) return { inContext: true, root, salvage: null };
+  // Only the game's selectable salvage rows. The empty-slot filler on the last
+  // page is a plain div.compact-row, and it is not an item.
+  const salvage = row.tagName === 'BUTTON' ? findSalvageRoot(row) : null;
+  return { inContext: !!salvage, root: null, salvage };
 }
 
 function isInventoryContext(row) {
@@ -434,6 +458,37 @@ function classifyRowList(root) {
     if (el !== list) el.removeAttribute(INVENTORY_LIST_ATTR);
   });
   if (ok) setAttr(list, INVENTORY_LIST_ATTR, '1');
+}
+
+/**
+ * The salvage rows' wrapper (`div.grid.gap-2`) gets the Inventory's recessed
+ * list frame. It holds only rows; the search and pager live in sibling rows.
+ */
+function classifySalvageList(row, panel) {
+  const list = row.parentElement;
+  if (list && list !== panel && panel.contains(list)) setAttr(list, SALVAGE_LIST_ATTR, '1');
+}
+
+/**
+ * A salvage row's only per-instance state is the variant marker the game
+ * appends to the tier line (`<span>· enchanted · socketed</span>`, purple).
+ * Salvaging destroys that enchant/gem, so it must survive the overlay (rule 5).
+ */
+function salvageDetails(row) {
+  const details = [];
+  for (const span of row.querySelectorAll('p > span')) {
+    if (span.closest('.fs-inv-row')) continue;
+    for (const part of String(span.textContent || '').split(/[·•]/)) {
+      const text = part.trim();
+      if (!/^(?:enchanted|socketed)$/i.test(text)) continue;
+      details.push({
+        text: text[0].toUpperCase() + text.slice(1).toLowerCase(),
+        kind: /socket/i.test(text) ? 'socket' : 'status',
+        count: 1,
+      });
+    }
+  }
+  return { details, requirements: [] };
 }
 
 function splitLevel(name) {
@@ -619,13 +674,14 @@ function renderRow(row) {
   // panel; it just falls through to a fresh resolve like a cache miss would.
   const cheapSig = cheapSignature(row);
   const cachedContext = contextCache.get(row);
-  let inContext, root;
+  let inContext, root, salvage;
+  const cachedHost = cachedContext && (cachedContext.root || cachedContext.salvage);
   if (cachedContext && sameCheapSignature(cachedContext.sig, cheapSig) &&
-      (cachedContext.root === null || (cachedContext.root.isConnected && cachedContext.root.contains(row)))) {
-    ({ inContext, root } = cachedContext);
+      (!cachedHost || (cachedHost.isConnected && cachedHost.contains(row)))) {
+    ({ inContext, root, salvage } = cachedContext);
   } else {
-    ({ inContext, root } = resolveInventoryContext(row));
-    contextCache.set(row, { sig: cheapSig, inContext, root });
+    ({ inContext, root, salvage } = resolveInventoryContext(row));
+    contextCache.set(row, { sig: cheapSig, inContext, root, salvage });
   }
 
   if (!inContext) {
@@ -648,6 +704,7 @@ function renderRow(row) {
   }
 
   classifyInventoryChromeOnce(root);
+  if (salvage) classifySalvageList(row, salvage);
 
   const data = extractRowData(row);
   if (!data.name) {
@@ -656,7 +713,9 @@ function renderRow(row) {
   }
 
   const item = ItemDatabase.getByName(data.name);
-  const detailModel = buildInventoryDetails(data.detailTexts, item, data.name);
+  const detailModel = salvage
+    ? salvageDetails(row)
+    : buildInventoryDetails(data.detailTexts, item, data.name);
   const signature = rowSignature(data, item, detailModel);
   const existing = row.querySelector(':scope > .fs-inv-row');
 
@@ -735,9 +794,10 @@ export function clearInventoryRenderer() {
   document.querySelectorAll(`[${INVENTORY_ROOT_ATTR}]`).forEach(el => {
     el.removeAttribute(INVENTORY_ROOT_ATTR);
   });
-  document.querySelectorAll(`[${INVENTORY_LIST_ATTR}], [${INVENTORY_FILTERS_ATTR}]`).forEach(el => {
+  document.querySelectorAll(`[${INVENTORY_LIST_ATTR}], [${INVENTORY_FILTERS_ATTR}], [${SALVAGE_LIST_ATTR}]`).forEach(el => {
     el.removeAttribute(INVENTORY_LIST_ATTR);
     el.removeAttribute(INVENTORY_FILTERS_ATTR);
+    el.removeAttribute(SALVAGE_LIST_ATTR);
   });
   document.querySelectorAll('.fs-inv-rule').forEach(el => el.remove());
   document.querySelectorAll(

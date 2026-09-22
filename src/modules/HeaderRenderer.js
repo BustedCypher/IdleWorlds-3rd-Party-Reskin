@@ -15,28 +15,12 @@ const ROLE = 'data-iw-header';
 let queued = false;
 
 const HEADER_ASSETS = {
-  headerFrame: 'assets/header/header_frame.webp',
   headerSurface: 'assets/header/header_surface.webp',
   headerCrest: 'assets/header/header_crest.webp',
-  headerDivider: 'assets/header/header_divider.webp',
-  utilityFrame: 'assets/header/utility_frame.webp',
-  statusFrame: 'assets/header/status_frame.webp',
-  navRail: 'assets/header/nav_rail.webp',
-  navActive: 'assets/header/nav_active.webp',
-  navIdle: 'assets/header/nav_idle.webp',
-  announcementFrame: 'assets/header/announcement_frame.webp',
-  zoneFrame: 'assets/header/zone_frame.webp',
-  zoneScene: 'assets/header/zone_scene.webp',
-  zoneButtonActive: 'assets/header/zone_button_active.webp',
-  zoneButtonIdle: 'assets/header/zone_button_idle.webp',  zoneButtonTeal: 'assets/header/zone_button_teal.webp',
 };
 
 const ASSET_VARS = [
-  '--iw-header-frame', '--iw-header-surface', '--iw-header-surface-mobile', '--iw-header-crest',
-  '--iw-header-divider', '--iw-utility-frame', '--iw-status-frame',
-  '--iw-nav-rail', '--iw-nav-active', '--iw-nav-idle',
-  '--iw-announcement-frame', '--iw-zone-frame', '--iw-zone-scene',
-  '--iw-zone-button-active', '--iw-zone-button-idle', '--iw-zone-button-teal',
+  '--iw-header-surface', '--iw-header-surface-mobile', '--iw-header-crest', '--iw-zone-scene',
   // Per-zone frame theme, set on <html> by applyZoneTheme(). The teardown loop
   // below walks '*', which includes <html>, so listing them here clears them.
   '--iw-zone-atlas', '--iw-corner-filigree', '--iw-zone-separator',
@@ -64,6 +48,8 @@ const ZONE_SURFACE_MAX = 34;
 // strip and applyZoneTheme() reset <html> to "default", so every page except
 // Game rendered un-themed. The player's zone is game state that does not change
 // because they opened a tab, so the last reading is still the right answer.
+// Village is the deliberate exception: it presents the standard theme while
+// retaining this cached reading so the zone theme returns on the next route.
 // Cleared by clearHeaderRenderer() so the kill switch leaves nothing behind.
 let lastZoneNumber = null;
 
@@ -80,6 +66,12 @@ function currentZoneNumber() {
   return lastZoneNumber;
 }
 
+function presentationZoneNumber() {
+  const zone = currentZoneNumber();
+  const route = String(location.pathname || '/').toLowerCase().replace(/\/+$/, '') || '/';
+  return route === '/housing' || route === '/ssf/housing' ? null : zone;
+}
+
 function zoneSurfaceUrl(zone, variant = '') {
   const key = Number.isInteger(zone) && zone >= 1 && zone <= ZONE_SURFACE_MAX
     ? `${ZONE_SURFACE_DIR}/zone_${zone}${variant}.webp`
@@ -89,7 +81,7 @@ function zoneSurfaceUrl(zone, variant = '') {
 
 function applyZoneSurface(root) {
   if (!root) return;
-  const zone = currentZoneNumber();
+  const zone = presentationZoneNumber();
   const key = zone == null ? 'fallback' : String(zone);
   // Only touch the inline style when the zone actually changed — otherwise
   // every dom-flush would rewrite it and feed the MutationObserver. The
@@ -124,7 +116,7 @@ const FALLBACK_VISUAL_THEME = 'forged-metal';
 function applyZoneTheme() {
   const html = document.documentElement;
   if (!html) return;
-  const theme = zoneTheme(currentZoneNumber());
+  const theme = zoneTheme(presentationZoneNumber());
   const key = theme || 'default';
   const visualTheme = theme || FALLBACK_VISUAL_THEME;
   const zoneVarsReady = theme
@@ -161,31 +153,13 @@ function setAssetVar(el, name, key) {
 }
 
 function applyHeaderVars(root) {
-  setAssetVar(root, '--iw-header-frame', 'headerFrame');
-  setAssetVar(root, '--iw-header-frame-bar', 'headerFrameBar');
   // `--iw-header-surface` is set per-zone by applyZoneSurface(), not here.
   // The zone bar keeps the static header_surface art (see applyZoneVars).
   setAssetVar(root, '--iw-header-crest', 'headerCrest');
-  setAssetVar(root, '--iw-header-divider', 'headerDivider');  setAssetVar(root, '--iw-utility-frame', 'utilityFrame');
-  setAssetVar(root, '--iw-status-frame', 'statusFrame');
-}
-
-function applyNavVars(nav) {
-  setAssetVar(nav, '--iw-nav-rail', 'navRail');
-  setAssetVar(nav, '--iw-nav-active', 'navActive');
-  setAssetVar(nav, '--iw-nav-idle', 'navIdle');
-}
-
-function applyAnnouncementVars(el) {
-  setAssetVar(el, '--iw-announcement-frame', 'announcementFrame');
 }
 
 function applyZoneVars(el) {
-  setAssetVar(el, '--iw-zone-frame', 'zoneFrame');
-  setAssetVar(el, '--iw-zone-scene', 'headerSurface'); // swapped — see applyHeaderVars
-  setAssetVar(el, '--iw-zone-button-active', 'zoneButtonActive');
-  setAssetVar(el, '--iw-zone-button-idle', 'zoneButtonIdle');
-  setAssetVar(el, '--iw-zone-button-teal', 'zoneButtonTeal');
+  setAssetVar(el, '--iw-zone-scene', 'headerSurface');
 }
 
 /**
@@ -425,12 +399,10 @@ function classifyAdjacent() {
   // the point that actually binds header artwork to it, rather than
   // trusting whichever one document order happens to put first.
   const nav = pickVisible([...document.querySelectorAll('[data-iw-ui="main-nav"]')]);
-  if (nav) applyNavVars(nav);
 
   const announcement = findAnnouncement(nav);
   if (announcement) {
     setRole(announcement, 'announcement');
-    applyAnnouncementVars(announcement);
   }
 
   const zone = pickVisible([...document.querySelectorAll('[data-iw-ui="zone-bar"]')]);

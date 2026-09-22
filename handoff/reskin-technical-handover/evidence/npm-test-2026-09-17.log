@@ -1,0 +1,1308 @@
+
+> idleworlds-fantasy-skin-recovered@1.6.0 test
+> node build-tools/build.mjs --allow-missing-assets && node --check dist/content.bundle.js && npm run test:run
+
+Built <repo>\dist\content.bundle.js (668,309 bytes, 48 source modules)
+WARNING - bundle is 668,309 bytes, over the 300,000-byte soft budget. Not fatal; review the growth.
+
+> idleworlds-fantasy-skin-recovered@1.6.0 test:run
+> node tests/data-services.test.mjs && node tests/inventory-model.test.mjs && node tests/item-display.test.mjs && node tests/static-invariants.test.mjs && node tests/hydration-gate.test.mjs && node tests/extension-e2e.test.mjs && node tests/smoke.test.mjs && node tests/route-swap-reclassify.test.mjs && node tests/overlay-framer.test.mjs && node tests/zone-themes.test.mjs && node tests/button-art-states.test.mjs && node tests/revised-button-atlas.test.mjs && node tests/compact-button-atlas.test.mjs && node tests/compact-button-reconcile.test.mjs && node tests/compact-button-boot.test.mjs && node tests/corner-filigree-density.test.mjs && node tests/separator-symmetry.test.mjs && node tests/action-progress-theme.test.mjs && node tests/skill-action-countdown.test.mjs && node tests/card-button-art.test.mjs && node tests/zone-headers.test.mjs && node tests/inventory-root.test.mjs && node tests/header-hidden-duplicate.test.mjs && node tests/skill-structure-signature.test.mjs && node tests/skill-card-v2.test.mjs && node tests/skill-card-v2-wiring.test.mjs && node tests/skill-card-v2-render.test.mjs && node tests/skill-card-system.test.mjs && node tests/ingredient-entries.test.mjs && node tests/quest-structure-signature.test.mjs && node tests/quest-card-detection.test.mjs && node tests/world-boss-panels.test.mjs && node tests/zone-control-motion.test.mjs && node tests/tooltip-virtual-anchor.test.mjs && node tests/boss-action-label.test.mjs && node tests/boss-participation-hit.test.mjs && node tests/village-panels.test.mjs && node tests/village-scene.test.mjs && node tests/village-ledger.test.mjs && node tests/village-scene-layout.test.mjs && node tests/collapsible-frames.test.mjs && node tests/panel-frame-nesting.test.mjs && node tests/viewport-swap.test.mjs && node tests/quest-command-width.test.mjs && node tests/header-compact.test.mjs && node tests/menu-rows.test.mjs && node tests/flush-quiescence.test.mjs && node build-tools/audit-sprite-windows.mjs
+
+[ItemDatabase] Evicted legacy cache from page localStorage
+[ItemDatabase] Using stale cache after refresh failure: offline
+[ItemDatabase] Loaded 1 items (generated fresh-generation)
+[AtlasService] Partial load: gear: Gear manifest fetch failed: 503
+[AtlasService] Ready — gear: 0 icons, items: 1 icons
+[AtlasService] Ready — gear: 5 icons, items: 1 icons
+[ItemDatabase] Loaded 1 items (generated gen-A)
+[ItemDatabase] Loaded 1 items (generated gen-B)
+PASS data service resilience tests
+PASS inventory item-row model
+PASS upgraded-cloak identity + rolled-stat model
+PASS enhanced item display model
+WARNING - production bundle is 668,309 bytes (soft budget 300,000). Not a failure — keep an eye on growth.
+PASS static lifecycle + visual invariants
+
+hydration gate
+  ok    the gate ships enabled
+  ok    an already-hydrated page releases at once
+  ok    the release removes the latch from <html>
+  ok    a late latch releases when it appears, not at the timeout
+  ok    negative control: no latch waits out the timeout
+  ok    "unknown" (unreadable React) releases at once
+  ok    ...and is removed too
+  ok    a disabled gate never waits
+  ok    teardown clears a latch the gate never consumed (rule 3)
+
+page-world hydration signal
+  ok    the signal writes the attribute the gate reads
+  ok    negative control: a root still hydrating writes no latch
+  ok    the latch appears once the root reports hydrated
+  ok    a #__next mount (pages router shape) is found too
+  ok    an unrecognised React shape signals "unknown" instead of stalling boot
+  ok    negative control: no React root at all writes nothing (the gate times out)
+
+manifest wiring
+  ok    the signal runs in the PAGE world (only it can see React internals)
+  ok    the signal runs at document_start, before the bundle
+  ok    the bundle stays in the isolated world at document_idle
+  ok    both entries match the same hosts
+
+PASS hydration-gate
+
+extension e2e: React root hydrating at 600ms
+  ok    the extension boots on idleworlds.com (7 stylesheets)
+  ok    the page-world signal released boot as hydrated
+  ok    ...shortly after hydration, not at the gate timeout
+  ok    the latch is removed from <html> after release
+  ok    main nav classified
+  ok    whitespace-free quest card rendered
+  ok    inventory row overlay rendered
+  ok    bundled font resolves through web_accessible_resources
+  ok    extension assets load and none fail
+  ok    no page errors
+  ok    no skin warnings or errors in the console
+
+extension e2e: no React root
+  ok    the extension boots on idleworlds.com (7 stylesheets)
+  ok    with no React root the gate times out, then boots
+  ok    the latch is removed from <html> after release
+  ok    main nav classified
+  ok    whitespace-free quest card rendered
+  ok    inventory row overlay rendered
+  ok    bundled font resolves through web_accessible_resources
+  ok    extension assets load and none fail
+  ok    no page errors
+  ok    no skin warnings or errors in the console
+
+PASS extension e2e
+
+smoke: boot
+  ok    bundle boots without throwing
+[IW Fantasy Skin] boot after page hydration: 1 (0ms)
+[IW Fantasy Skin] v1.6.0 booted
+[AtlasService] Partial load: gear: network disabled in smoke test | item: network disabled in smoke test
+[IW Fantasy Skin] Atlas failed to load: No atlas metadata available (gear: network disabled in smoke test | item: network disabled in smoke test)
+[ItemDatabase] Background refresh failed: network disabled in smoke test
+[IW Fantasy Skin] skills-art: network disabled in smoke test
+  ok    no third-party network requests
+  ok    the village read goes to the game's own player endpoint
+  ok    atlas assets fetched from the extension bundle
+  ok    all seven runtime stylesheets mounted
+  ok    base stylesheet is runtime-owned
+  ok    base stylesheet rewrites font URLs to extension assets
+  ok    exactly one tooltip surface exists
+
+smoke: React safety
+  ok    no game text node was detached
+  ok    no name-scan wrapper elements inserted
+
+smoke: rendering
+  ok    inventory row received an overlay
+  ok    inventory root was classified
+  ok    inventory row list wrapper is tagged for the inner frame
+  ok    all three tool controls classified as icon
+  ok    bare package svg classified as ornament, not a control
+  ok    ornament is NOT framed as an icon control
+  ok    ornament tagging did not reach svgs inside the controls
+  ok    native Equip button still present
+  ok    initial quantity rendered
+  ok    separate +4 badge resolves enhanced item identity
+  ok    enhanced Tailoring bonus survives Inventory replacement
+  ok    enhanced row preserves per-copy loadout and socket details
+  ok    live Mine alias gets mining three-zone layout
+  ok    live Mine wrapper is retained as the layout shell without ingredient pollution
+  ok    absolute XP display is recognised as a readout
+  ok    material fraction is neutralised without matching XP fractions
+  ok    approved layout adds a left-column progress mirror at native precision
+  ok    identity completion label is rounded for reading, not printed raw
+  ok    approved layout adds a Base: plaque from the live XP datum
+  ok    identity shows the full discipline name, not the abbreviated one
+  ok    skill renderer actively overrides native inline width while enabled
+  ok    background painter actively overrides native navy while enabled
+  ok    main nav classified
+  ok    every nav tab in the rail is classified
+  ok    the retired Rearrange feature adds no control and no marks
+  ok    toolkit link appended to the rail, exactly once, and never a route tab
+  ok    every parent frame gets a collapse control
+  ok    no frame gets two collapse controls
+  ok    the control is a button the skin appended, never a reparented node
+  ok    clicking folds that frame and nothing else
+  ok    the folded frame keeps its heading row marked
+  ok    the fold hides content through CSS only — every child is still there
+  ok    the control reports the new state to assistive tech
+  ok    the choice is written to extension-private storage
+  ok    clicking again unfolds it
+  ok    and the storage record is dropped with it
+  ok    village scene mounted directly below the Skill Actions panel
+  ok    village scene keeps its own namespace and does not touch the panel
+  ok    toolkit link points off-site and opens in a new tab
+  ok    the zone action row carries nothing the skin appended
+  ok    the row the inventory filter tabs share is tagged
+  ok    a decorated tab that mounts after boot is still classified
+  ok    current action receives semantic frame and compact subregions
+  ok    action log receives semantic feed and control roles
+  ok    world chat receives semantic feed and composer roles
+  ok    activity panel classification preserves native controls
+  ok    activity panels classify ordinary empty and single-entry states
+
+smoke: current action progress smoothing
+  ok    progress tick interval is measured, not assumed
+  ok    completion drop is tagged so the bar snaps instead of sliding back
+  ok    reset tag is released on the next frame
+  ok    a forward tick is not tagged as a reset
+  ok    the anomalous post-reset gap does not pollute the tick measurement
+  ok    the tick measurement recovers to the true steady interval
+  ok    activity headers include metadata and even a single toolbar control
+  ok    split activity headers classify title and sibling toolbar without moving native nodes
+  ok    top header receives the Option 1 semantic layout
+  ok    current zone resolves its frame theme onto <html>
+  ok    zone theme points the atlas, corners and separator at its assets
+  ok    header carries both the wide and the mobile zone surface for zone 19
+  ok    top header adds one skin-owned crest without replacing native profile text
+  ok    header utility buttons are classified without replacing native controls
+  ok    status tiles are classified by content, not position
+  ok    server boost tile is classified apart from plain buff timers
+  ok    a status card re-classifies when its text changes under a valid cache
+  ok    and reverts when the buff text goes back
+  ok    announcement strip is classified for layered header treatment
+  ok    zone bar resolves despite the leading icon on its label
+  ok    every zone action is classified and toned, icon prefix or not
+  ok    the zone title text link is tagged as a link, not as a zone action
+  ok    a non-navigation control in the zone bar is left alone
+  ok    zone bar role is not smeared onto a page wrapper
+  ok    header chrome tags the shell, nav, notice and both zone branches
+  ok    header chrome leaves the zone bar and announcement roles to their owners
+  ok    live Jewel label gets jewelcrafting three-zone layout
+  ok    live Jewel Craft identity exposes label, level and layout-shell roles
+  ok    skill identity receives a skin-owned medallion host without replacing native identity text
+  ok    live XP wrapper is neutralised with the readout branch
+  ok    live Wood/Chop panel is identified as woodcutting and framed
+  ok    live Build/Craft Parts panel is construction, not crafting
+  ok    new skills still receive a medallion art host
+  ok    skill material requirements render as one separated list item per resource
+  ok    skill material list carries independent complete/incomplete states
+  ok    skill material list preserves the connected native React text as its source
+  ok    native material row is hidden behind its generated list without relying on the ingredient role
+  ok    skill material highlighting marks only entries whose owned count meets or exceeds the requirement
+  ok    completed skill materials have an injected green highlight treatment
+  ok    skill material highlights reconcile when live owned counts cross the requirement
+  ok    skill material list reconciles live counts without duplicating the list
+  ok    Spellcraft identity wins over ambiguous Craft action
+  ok    Spellcraft Craft title is normalised
+  ok    Jewel Craft title is derived from its native action control
+  ok    Tailor Upgrade title is derived from its native action control
+  ok    Jewelcrafting plaque uses the visible current reward instead of a hidden stale action
+  ok    Tailoring plaque uses the visible current reward instead of a hidden stale action
+  ok    live Tailor Upgrade gets tailoring three-zone layout
+  ok    Smithing "Craft …" title under a "Forge" button still resolves
+  ok    a title/button verb mismatch does not cost the three-zone layout
+  ok    clickable XP readout keeps a pointer affordance
+  ok    coming-soon skill gets locked three-zone artwork
+  ok    coming-soon skill keeps dash level and lock control
+  ok    coming-soon copy is normalised without inventing EXP
+  ok    live skill action buttons use deterministic width
+  ok    an atlas-ready skill action button draws the quest action_frame sprite
+  ok    the portrait frame resolves through the design chrome variables
+  ok    a disabled action keeps the desaturated frame (rule 5)
+  ok    recipe pager arrows drop the old SVG frame for a plain plate
+  ok    recipe pager arrows are thin and smaller than the command button
+  ok    recipe pager carries its own steel frame and no overlaid glyph
+
+smoke: quest cards
+  ok    in-progress bounty gets the forged quest frame
+  ok    bounty combat reward drives the combat accent
+  ok    bounty native title / objective / reward / progress get semantic roles
+  ok    bounty gains a skin-owned sigil with the completion readout
+  ok    bounty Turn In stays the native disabled control and opts out of the generic button skin
+  ok    work order with an enabled Turn In is marked ready
+  ok    work order keeps the discipline kicker above the instruction title
+  ok    work order Skip control is classified and left native
+  ok    quest cards are not mistaken for skill panels
+
+smoke: world boss cards
+  ok    boss cards in the World Bosses panel are tagged for the card material
+  ok    the Zone Control card in the same panel is tagged too
+  ok    a compact-panel outside the boss panel is never tagged
+  ok    boss cards are not mistaken for skill or quest panels
+  ok    the Village Add-on slot carries its occupancy and its own hand-painted building
+  ok    the empty slot reads as vacant and paints no building
+  ok    the housing hero resolves its tier from the game's own "Current tier: N"
+  ok    village cards are not mistaken for skill, quest or boss cards
+  ok    known objective item turns the objective line into a tooltip trigger (attributes only)
+  ok    hovering the quest objective opens the item tooltip
+
+smoke: tooltip coverage
+  ok    explicit inventory item name opens tooltip on hover
+  ok    rich tooltip renders large atlas artwork slot
+  ok    rich tooltip renders requirement badge
+  ok    rich tooltip renders authoritative effect text
+  ok    rich tooltip renders base value, work-order value and trader turn-in
+  ok    rich tooltip preserves work-order context note
+  ok    rich tooltip renders drop rate and boost source
+  ok    rich tooltip renders wiki link and cache provenance
+  ok    Unknown acquisition with authoritative text preserves source details
+  ok    keyboard activation opens an interactive dialog card
+  ok    keyboard trigger exposes dialog relationship
+  ok    keyboard-owned tooltip survives unrelated pointer movement
+  ok    Escape closes keyboard tooltip and restores trigger focus
+  ok    close control dismisses keyboard tooltip and restores focus
+  ok    explicit tooltip trigger does not consume native row click
+  ok    unclassified nested native item name opens tooltip on hover
+  ok    virtual item tooltip survives name-to-card pointer handoff
+  ok    virtual item tooltip closes after pointer leaves name and card
+  ok    item name nested inside native button is also hover-discoverable
+  ok    void click dismisses an open tooltip
+  ok    touch tap on native item text opens tooltip without stealing native click
+  ok    touch void tap dismisses tooltip
+  ok    newly mounted unknown React subtree gains item tooltip coverage
+  ok    relabelled Current Action is re-resolved via its stable id
+
+smoke: equal-length reconciliation
+[AtlasService] Partial load: gear: network disabled in smoke test | item: network disabled in smoke test
+  ok    equal-length inventory quantity change reconciles
+  ok    inventory quantity reconciles back
+  ok    equal-length skill action change invalidates skill cache
+  ok    skill classification reconciles back to mining
+
+smoke: mutation burst
+  ok    all 122 rows eventually rendered across frames
+  ok    Inventory skin owns suppressed native display while active
+
+smoke: first disable
+[IW Fantasy Skin] disabled — active presentation removed
+  ok    overlays removed
+  ok    inventory root + list-frame attributes removed
+  ok    ALL runtime stylesheets removed
+  ok    ui role attributes removed
+  ok    appended toolkit link removed on teardown
+  ok    inventory filter row tag removed on teardown
+  ok    header chrome marks removed on teardown
+  ok    zone link mark removed on teardown
+  ok    appended village scene removed on teardown
+  ok    collapse controls and their marks removed on teardown
+  ok    the panel that followed Skill Actions follows it again
+  ok    zone action tone hooks removed
+  ok    activity panel role attributes removed
+  ok    header roles and decorative crest removed
+  ok    header zone surface vars (wide + mobile) cleared on teardown
+  ok    per-zone frame theme cleared from <html> on teardown
+  ok    skill panel classes removed
+  ok    skill medallion artwork removed on teardown
+  ok    skill presentation artifacts removed on teardown
+  ok    completed skill material highlights removed on teardown
+  ok    skill material lists and native-source markers removed on teardown
+  ok    quest chrome fully removed on teardown
+  ok    village slot roles, art and housing hero removed on teardown
+  ok    boss card tagging removed on teardown
+  ok    progress smoothing attributes and inline duration removed on teardown
+  ok    native Equip button survived teardown
+  ok    Inventory teardown preserves React display changes made while skin was active
+  ok    skill native inline style restored exactly
+  ok    background native inline style restored exactly
+  ok    no game text node detached after teardown
+
+smoke: re-enable
+[IW Fantasy Skin] v1.6.0 booted
+[IW Fantasy Skin] Atlas failed to load: Atlas metadata unavailable (backing off)
+[AtlasService] Partial load: gear: network disabled in smoke test | item: network disabled in smoke test
+  ok    inventory presentation returns after re-enable
+  ok    navigation classification returns after re-enable
+  ok    activity panel classification returns after re-enable
+  ok    header presentation returns after re-enable
+  ok    skill presentation returns after re-enable
+  ok    quest presentation returns after re-enable
+  ok    exactly seven stylesheets re-injected
+  ok    base stylesheet re-injected
+  ok    tooltip surface was not duplicated
+  ok    storage listener was not duplicated
+
+smoke: second disable
+[IW Fantasy Skin] disabled — active presentation removed
+  ok    second teardown removes overlays
+  ok    tool-row ornament attribute removed on teardown
+  ok    tool-row control attributes removed on teardown
+  ok    second teardown removes all styles
+  ok    second teardown restores skill inline style
+  ok    second teardown restores background inline style
+  ok    tooltip surface remains singular
+  ok    no game text node detached after full lifecycle
+
+PASS — 0 console.error(s)
+
+[IW Fantasy Skin] boot after page hydration: 1 (0ms)
+[IW Fantasy Skin] v1.6.0 booted
+[AtlasService] Partial load: gear: network disabled in route-swap test | item: network disabled in route-swap test
+[IW Fantasy Skin] Atlas failed to load: No atlas metadata available (gear: network disabled in route-swap test | item: network disabled in route-swap test)
+[IW Fantasy Skin] Item database failed to load: network disabled in route-swap test
+  ok    baseline: boss cards tagged on the boot route
+  ok    baseline: nothing market-tagged on a route with no Market
+  ok    baseline: zone bar classified on the boot route
+  ok    Market panel is framed after navigating to it
+  ok    Market rows are tagged after navigating from Game
+  ok    the row name button opts out of the shared control plate
+  ok    boss cards are re-tagged after navigating back to Game
+  ok    the departed Market resolution does not linger on the Game route
+  ok    zone bar is re-classified after navigating back to Game
+  ok    zone action buttons are re-tagged after navigating back to Game
+  ok    Market rows are tagged on a SECOND visit
+  ok    Village, Village Add-ons, Housing Bank and Village NPCs are each framed as their own section
+  ok    their headings (including the leading-icon ones) are tagged section-title
+  ok    Village Add-on slots are classified by occupancy
+  ok    the installed slot paints its own hand-painted building
+  ok    the empty slot paints no building sprite
+  ok    the housing hero resolves its tier from "Current tier: N"
+  ok    Village panels are re-decorated on a SECOND visit
+  ok    Market: a sub-panel below the named top-level card is framed
+  ok    Leaderboards: an unnamed sibling panel is framed
+  ok    the wrapping column is marked too, for the leaf-vs-column CSS rule to strip
+  ok    Dungeon: the route the skin reached nothing inside is framed
+  ok    a panel with NO heading is framed too (frame does not require a title)
+  ok    a panel with no heading gets no section-title
+  ok    a modal card is left to OverlayFramer, never section-framed as well
+  ok    baseline: the Game route resolves zone 19 to its palette and artwork
+  ok    Market: keeps the zone palette after the zone bar unmounts
+  ok    Market: keeps the per-zone header artwork
+  ok    Village: keeps the zone palette after the zone bar unmounts
+  ok    Village: keeps the per-zone header artwork
+  ok    Leaderboards: keeps the zone palette after the zone bar unmounts
+  ok    Leaderboards: keeps the per-zone header artwork
+  ok    Dungeon: keeps the zone palette after the zone bar unmounts
+  ok    Dungeon: keeps the per-zone header artwork
+
+PASS route-swap reclassification
+PASS overlay-framer
+ok    every zone 1..34 resolves to a theme
+ok    zoneThemes.js matches assets/skills-ui/zone-theme-map.json
+ok    theme map declares a 2x physical atlas density
+ok    theme "celestial" atlas present
+ok    theme "celestial" corner filigree present
+ok    theme "celestial" separator flourish present
+ok    theme "celestial" atlas is physically 2x
+ok    theme "celestial" corner filigree is physically 2x
+ok    theme "celestial" separator flourish is physically 2x
+ok    theme "forged-metal" atlas present
+ok    theme "forged-metal" corner filigree present
+ok    theme "forged-metal" separator flourish present
+ok    theme "forged-metal" atlas is physically 2x
+ok    theme "forged-metal" corner filigree is physically 2x
+ok    theme "forged-metal" separator flourish is physically 2x
+ok    theme "glacial" atlas present
+ok    theme "glacial" corner filigree present
+ok    theme "glacial" separator flourish present
+ok    theme "glacial" atlas is physically 2x
+ok    theme "glacial" corner filigree is physically 2x
+ok    theme "glacial" separator flourish is physically 2x
+ok    theme "infernal" atlas present
+ok    theme "infernal" corner filigree present
+ok    theme "infernal" separator flourish present
+ok    theme "infernal" atlas is physically 2x
+ok    theme "infernal" corner filigree is physically 2x
+ok    theme "infernal" separator flourish is physically 2x
+ok    theme "lunar-spectral" atlas present
+ok    theme "lunar-spectral" corner filigree present
+ok    theme "lunar-spectral" separator flourish present
+ok    theme "lunar-spectral" atlas is physically 2x
+ok    theme "lunar-spectral" corner filigree is physically 2x
+ok    theme "lunar-spectral" separator flourish is physically 2x
+ok    theme "runic-arcane" atlas present
+ok    theme "runic-arcane" corner filigree present
+ok    theme "runic-arcane" separator flourish present
+ok    theme "runic-arcane" atlas is physically 2x
+ok    theme "runic-arcane" corner filigree is physically 2x
+ok    theme "runic-arcane" separator flourish is physically 2x
+ok    theme "tempest-oceanic" atlas present
+ok    theme "tempest-oceanic" corner filigree present
+ok    theme "tempest-oceanic" separator flourish present
+ok    theme "tempest-oceanic" atlas is physically 2x
+ok    theme "tempest-oceanic" corner filigree is physically 2x
+ok    theme "tempest-oceanic" separator flourish is physically 2x
+ok    theme "verdant" atlas present
+ok    theme "verdant" corner filigree present
+ok    theme "verdant" separator flourish present
+ok    theme "verdant" atlas is physically 2x
+ok    theme "verdant" corner filigree is physically 2x
+ok    theme "verdant" separator flourish is physically 2x
+ok    theme "voidborn" atlas present
+ok    theme "voidborn" corner filigree present
+ok    theme "voidborn" separator flourish present
+ok    theme "voidborn" atlas is physically 2x
+ok    theme "voidborn" corner filigree is physically 2x
+ok    theme "voidborn" separator flourish is physically 2x
+ok    THEME_NAMES covers exactly the themes zones reference
+ok    un-themed fallback atlas present
+ok    un-themed fallback corner filigree present
+ok    un-themed fallback separator flourish present
+ok    palette "celestial" defines the core --iw-th-* tokens
+ok    palette "forged-metal" defines the core --iw-th-* tokens
+ok    palette "glacial" defines the core --iw-th-* tokens
+ok    palette "infernal" defines the core --iw-th-* tokens
+ok    palette "lunar-spectral" defines the core --iw-th-* tokens
+ok    palette "runic-arcane" defines the core --iw-th-* tokens
+ok    palette "tempest-oceanic" defines the core --iw-th-* tokens
+ok    palette "verdant" defines the core --iw-th-* tokens
+ok    palette "voidborn" defines the core --iw-th-* tokens
+ok    base.css derives the inner frame scale off --iw-th-edge for every theme
+ok    the derived block re-points the whole inner frame scale
+ok    every derived frame token is a function of --iw-th-edge
+ok    --iw-th-edge-mid has an un-themed :root default
+ok    --iw-th-edge-soft has an un-themed :root default
+ok    --iw-th-edge-faint has an un-themed :root default
+
+PASS
+PASS themed button artwork: all themes, asset exposure, hover and clicked switching
+PASS revised atlases: nine themes, exact alpha registration, actual sprite windows, stable geometry, disabled controls and default-theme cleanup
+forged-metal: all 18 controls, stable bounds, dark hover centres and six aligned sprites verified
+infernal: all 18 controls, stable bounds, dark hover centres and six aligned sprites verified
+glacial: all 18 controls, stable bounds, dark hover centres and six aligned sprites verified
+celestial: all 18 controls, stable bounds, dark hover centres and six aligned sprites verified
+lunar-spectral: all 18 controls, stable bounds, dark hover centres and six aligned sprites verified
+runic-arcane: all 18 controls, stable bounds, dark hover centres and six aligned sprites verified
+tempest-oceanic: all 18 controls, stable bounds, dark hover centres and six aligned sprites verified
+verdant: all 18 controls, stable bounds, dark hover centres and six aligned sprites verified
+voidborn: all 18 controls, stable bounds, dark hover centres and six aligned sprites verified
+Compact-button transitions, native events, reconciliation, accessibility and teardown verified.
+PASS compact-button reconciliation: native text replacement, aria-only selection, quiet idle and teardown
+initial startup {
+  theme: 'voidborn',
+  atlas: 'compact-ghost-v3',
+  layers: 3,
+  compactCss: true
+}
+disable/re-enable {
+  theme: 'voidborn',
+  atlas: 'compact-ghost-v3',
+  layers: 3,
+  compactCss: true
+}
+PASS actual extension bundle: compact CSS, loaded atlas, visible states, stable bounds and reactivation
+ok    section frame divides the corner sheet by proportion
+ok    header frame divides the corner sheet by proportion
+ok    tooltip frame divides the corner sheet by proportion
+ok    overlay frame divides the corner sheet by proportion
+ok    quest medallion is scoped to quest cards
+ok    skill-card corner flourish matches the surrounding chrome brightness
+ok    separator flourish uses its repaired standalone asset
+
+PASS
+ok    separator_flourish.webp is bilaterally symmetrical
+ok    separator_flourish_celestial.webp is bilaterally symmetrical
+ok    separator_flourish_forged-metal.webp is bilaterally symmetrical
+ok    separator_flourish_glacial.webp is bilaterally symmetrical
+ok    separator_flourish_infernal.webp is bilaterally symmetrical
+ok    separator_flourish_lunar-spectral.webp is bilaterally symmetrical
+ok    separator_flourish_runic-arcane.webp is bilaterally symmetrical
+ok    separator_flourish_tempest-oceanic.webp is bilaterally symmetrical
+ok    separator_flourish_verdant.webp is bilaterally symmetrical
+ok    separator_flourish_voidborn.webp is bilaterally symmetrical
+
+PASS
+PASS action progress: Zone Control rail, zone palette, current animation, mobile, reduced motion
+PASS skill action countdown lifecycle
+PASS card button artwork: nine themes, three states, both arrows, stable geometry, native content and progress, disabled, reduced motion, responsive
+ok    every zone 1..34 has a wide header strip
+ok    every zone 1..34 has a mobile portrait header
+ok    the static header-surface fallback exists
+
+PASS
+case                       expected          fixed             previous
+------------------------------------------------------------------------------
+desktop inventory row      desktop-inv       desktop-inv       desktop-inv
+mobile inventory row       mobile-inv        mobile-inv        mobile-inv
+desktop QUESTS row         null              null              desktop
+mobile QUESTS row          null              null              mobile
+------------------------------------------------------------------------------
+previous implementation wrong on 2/4 cases  (control works: this test can fail)
+
+PASS
+element     expected           fixed              previous
+------------------------------------------------------------------------
+header      visible-header     visible-header     hidden-header
+main-nav    visible-nav        visible-nav        hidden-nav
+zone-bar    visible-zone       visible-zone       hidden-zone
+------------------------------------------------------------------------
+previous implementation wrong on 3/3 cases  (control works: this test can fail)
+
+PASS
+case                                                    expect   got
+------------------------------------------------------------------------
+XP/progress tick does not invalidate                     true     true
+readout BUTTON tick does not invalidate                  true     true
+level-up in the readout does not invalidate              true     true
+skill type change invalidates                            false    false
+locked card: disabled flip invalidates                   false    false
+busy toggle (all buttons disabled) does not invalidate   true     true
+busy toggle cleared does not invalidate                  true     true
+button relabel invalidates                               false    false
+equal-length relabel (Mine -> Fish) invalidates          false    false
+panel child count change invalidates                     false    false
+a new control invalidates                                false    false
+------------------------------------------------------------------------
+
+PASS skill-structure-signature
+case                                                     result
+------------------------------------------------------------------------
+the root is marked new on init                           PASS
+a toggle mounted by an older build is removed on init    PASS
+teardown removes the root mark                           PASS
+card is marked as V2-ready                               PASS
+the card carries its discipline, which picks its action icon PASS
+the action glyph is appended to the command zone, not the button PASS
+the glyph writes no inline style - the sheet picks the icon PASS
+the visual action label is a sibling above the native button PASS
+the visual action label follows the game-owned button text PASS
+no tab strip and no tab buttons                          PASS
+the frame shows the materials                            PASS  Moonsteel Ore 3 / 9800Found in the Bloodoak Grove
+the frame shows the source line after the materials      PASS  Moonsteel Ore 3 / 9800Found in the Bloodoak Grove
+the frame shows neither the queue status nor the reward  PASS  Moonsteel Ore 3 / 9800Found in the Bloodoak Grove
+the requirement line is still marked, so the game copy stays clipped PASS
+a requirement with no unmet state shows no note or foot row PASS
+an unmet requirement shows its line on the foot row      PASS
+the note and its row go away once the requirement is met PASS
+native action button is not reparented                   PASS
+native title is not reparented                           PASS
+teardown removes V2 marker                               PASS
+teardown removes the frame, glyph and visual action label PASS
+teardown leaves native action button connected           PASS
+------------------------------------------------------------------------
+
+PASS (22 checks)
+ok   content imports V2 controller
+ok   content initialises V2 controller
+ok   content tears V2 controller down
+ok   V2 CSS is composed into lifecycle-owned skillpanel stylesheet
+ok   new design selector is explicit
+ok   the old/new design switch is gone from the sheet
+ok   no rule targets a "current" design
+ok   every discipline in the artwork has an action icon rule
+
+PASS skill-card-v2 wiring
+  ok    the card boots into the new design
+  ok    the card is in the three-zone shell
+  ok    the skills atlas resolved
+  ok    the ring is told the live percentage
+  ok    the action title is painted exactly once
+  ok    the discipline name is painted exactly once
+  ok    the discipline keeps its cleaned label
+  ok    the raw emoji copy stays suppressed
+  ok    the level ring is not display:none
+  ok    the level ring is a real box, not the base 7x7 speck
+  ok    the level ring paints a conic gradient
+  ok    the ring gradient carries the live percentage
+  ok    native percent is hidden under V2
+  ok    native bar is hidden under V2
+  ok    native readoutButton is hidden under V2
+  ok    native identityLevel is hidden under V2
+  ok    the skin readout stacks rather than running a row
+  ok    the identity readout fits its column
+  ok    the card wears the shared corner filigree
+  ok    the filigree slice keeps the art ratio
+  ok    the content zone carries no stray divider
+  ok    the card is always open and ships no collapse control
+  ok    the native material grid stays clipped
+  ok    met and unmet materials stay visually distinct
+  ok    material rows read left, like the concept strip
+  ok    the info frame is drawn as a bordered panel
+  ok    the info frame sits between the hero and command columns
+  ok    the info frame sits below the title
+  ok    the card carries no tab strip
+  ok    no old/new design switch is mounted
+  ok    the page stays on the V2 design
+  ok    no page errors
+
+PASS skill-card-v2-render (32 checks)
+  ok    the cards with content in their frame are the ones expected
+  ok    the info frame shares the left edge of the title
+  ok    the hero icon fits comfortably inside its frame
+  ok    the action is a portrait control with room for its illustration
+  ok    every shape is re-identified as an always-open V2 skill card
+  ok    no card ships a collapse control any more
+  ok    the ring is concentric with its icon on every card
+  ok    the ring carries no inherited transform to displace or rotate it
+  ok    the ring clearly surrounds the icon rather than sitting on it
+  ok    the complete EXP ring is visibly compact
+  ok    the ring stays legible without crowding the hero frame
+  ok    the ring is the same size on every card
+  ok    no native level or percent survives beside the skin readout
+  ok    the level block is present on every card
+  ok    the bonus-level fixture renders the full level value
+  ok    the level plaque stays compact vertically
+  ok    a bonus level does not make the plaque excessively wide
+  ok    the level block sits directly under the icon on every card
+  ok    icon, level and name share one centre line on every card
+  ok    the discipline name is never clipped
+  ok    nothing in the discipline name chain can truncate it
+  ok    the discipline name is drawn in the skill accent, not one flat colour
+  ok    nothing anywhere in any card is clipped
+  ok    simple cards retain the compact reference proportions
+  ok    the centre stack sits on the card's middle line
+  ok    a one-material frame hugs its content
+  ok    six materials lay out as three columns of two
+  ok    a single material cell is one line tall
+  ok    each card has exactly one material grid
+  ok    the native material section never paints; the skin builds the rows
+  ok    BASE sits beside the title, not above or below it
+  ok    BASE is vertically centred on the title text
+  ok    a title-only card centres its title on the card
+  ok    every action icon shares its parent with its button
+  ok    the page carries a bare action button that is its own command zone
+  ok    the page carries a wrapped command cell, so that shape is tested
+  ok    the page carries a wrapped title, so the nested shape is tested
+  ok    the info frame follows the title row without a dead band
+  ok    the hero column is only as wide as the hero needs
+  ok    the command column is only as wide as the compact button
+  ok    the command button is compact and portrait on every card
+  ok    the command label fits its narrower button on every card
+  ok    the command button is one size across every card
+  ok    the command button uses the dedicated square graphic artwork
+  ok    the command button carries the discipline glyph
+  ok    the game-owned action text is mirrored above every button frame
+  ok    the visual action label renders in all capitals
+  ok    the visual action label uses the skill heading typeface
+  ok    the native action text takes no visual space inside the framed button
+  ok    each action icon is its own discipline's
+  ok    every action icon actually decodes
+  ok    the glyph is centred on the button on every card
+  ok    every glyph box keeps a safe margin inside its action frame
+  ok    the glyph scales with the available button interior
+  ok    a dynamically enlarged glyph preserves the safe frame margin
+  ok    the pager exists only on the cards that ship one
+  ok    each pager arrow is smaller than the command button
+  ok    the two arrows together are exactly as wide as the button they page
+  ok    the arrows are centred under the button, not against the column edge
+  ok    both pager branches are represented, so neither rule is untested
+  ok    the pager carries no inherited transform
+  ok    the pager lands in the command column whichever branch ships it
+  ok    the pager sits under the button it pages, not beside the content
+  ok    the pager never overlaps the button it pages
+  ok    the pager stays inside its card
+  ok    1100px: a fixed buffer separates the button from its arrows
+  ok    1100px: the command group is centred vertically on the hero column
+  ok    1100px: the action label sits above its button frame
+  ok    1100px: the glyph is centred within the button frame
+  ok    1100px: every action label is one line inside its buffer
+  ok    1100px: the glyph stays inside its button
+  ok    action labels keep the ceiling when they fit, and shrink only as far as they must
+  ok    the short verbs still sit at the ceiling
+  ok    the title row paints no ground of its own
+  ok    every chevron paints measurable ink
+  ok    every chevron is centred on its arrow button
+  ok    the activity fill keeps the game width (40% running, 100% starting)
+  ok    the activity fill paints a clearly visible band
+  ok    the label and icon paint above the activity fill
+  ok    the activity fill moves every frame instead of in 250ms steps
+  ok    the activity fill snaps back at a completion instead of sliding
+  ok    the action button frame is the current zone's colour
+  ok    the arrow button frame is the current zone's colour
+  ok    the card, info frame and BASE chip frames are the current zone's colour
+  ok    the card frames follow a zone change
+  ok    the frames follow a zone change
+  ok    no card carries a tab strip or a tab button
+  ok    the info frame stays inside the centre column
+  ok    an unmet requirement is shown on the foot row
+  ok    a met requirement shows nothing
+  ok    only the card with an unmet requirement carries a note
+  ok    the requirement note sits under the frame, on its left edge
+  ok    the requirement note is small type
+  ok    Construction's frame holds every ingredient
+  ok    a source line follows the materials in the same frame
+  ok    native action and recipe navigation still receive clicks
+  ok    at the live card width six materials are still three columns of two
+  ok    live width: a fixed buffer separates the button from its arrows
+  ok    live width: the command group is centred vertically on the hero column
+  ok    live width: the action label sits above its button frame
+  ok    live width: the glyph is centred within the button frame
+  ok    live width: every action label is one line inside its buffer
+  ok    live width: the glyph stays inside its button
+  ok    nothing is clipped at the live card width
+  ok    phone card: the info frame is a full-width row under the top band
+  ok    phone card: the BASE chip sits under the action name
+  ok    phone card: the button and its arrows stay right of the name column
+  ok    440px: a fixed buffer separates the button from its arrows
+  ok    440px: the command group is centred vertically on the hero column
+  ok    440px: the action label sits above its button frame
+  ok    440px: the glyph is centred within the button frame
+  ok    440px: every action label is one line inside its buffer
+  ok    440px: the glyph stays inside its button
+  ok    a narrow frame sheds columns instead of crushing its cells
+  ok    330px: a fixed buffer separates the button from its arrows
+  ok    330px: the command group is centred vertically on the hero column
+  ok    330px: the action label sits above its button frame
+  ok    330px: the glyph is centred within the button frame
+  ok    330px: every action label is one line inside its buffer
+  ok    330px: the glyph stays inside its button
+  ok    the command label fits its button at 440px too
+  ok    changing an action button makes the renderer re-decide the layout
+  ok    every card keeps its V2 layout through that re-decision
+  ok    no page errors
+
+PASS skill-card-system (124 checks)
+[IW Fantasy Skin] boot after page hydration: 1 (0ms)
+[IW Fantasy Skin] v1.6.0 booted
+[AtlasService] Partial load: gear: offline fixture | item: offline fixture
+[IW Fantasy Skin] Atlas failed to load: No atlas metadata available (gear: offline fixture | item: offline fixture)
+[IW Fantasy Skin] Item database failed to load: offline fixture
+[IW Fantasy Skin] skills-art: offline fixture
+[IW Fantasy Skin] boot after page hydration: 1 (0ms)
+[IW Fantasy Skin] v1.6.0 booted
+[AtlasService] Partial load: gear: offline fixture | item: offline fixture
+[IW Fantasy Skin] Atlas failed to load: No atlas metadata available (gear: offline fixture | item: offline fixture)
+[IW Fantasy Skin] Item database failed to load: offline fixture
+[IW Fantasy Skin] skills-art: offline fixture
+[IW Fantasy Skin] boot after page hydration: 1 (0ms)
+[IW Fantasy Skin] v1.6.0 booted
+[AtlasService] Partial load: gear: offline fixture | item: offline fixture
+[IW Fantasy Skin] Atlas failed to load: No atlas metadata available (gear: offline fixture | item: offline fixture)
+[IW Fantasy Skin] Item database failed to load: offline fixture
+[IW Fantasy Skin] skills-art: offline fixture
+[IW Fantasy Skin] boot after page hydration: 1 (0ms)
+[IW Fantasy Skin] v1.6.0 booted
+[AtlasService] Partial load: gear: offline fixture | item: offline fixture
+[IW Fantasy Skin] Atlas failed to load: No atlas metadata available (gear: offline fixture | item: offline fixture)
+[IW Fantasy Skin] Item database failed to load: offline fixture
+[IW Fantasy Skin] skills-art: offline fixture
+ingredient-entries: 4 material-line shapes cut correctly, containment invariant holds
+case                                                    expect   got
+----------------------------------------------------------------------
+value ticks (count / % / Skip timer) do not invalidate true     true
+Turn In unlock (disabled -> enabled) invalidates       false    false
+Skip control removal invalidates                       false    false
+new text line invalidates                              false    false
+----------------------------------------------------------------------
+
+PASS
+[AtlasService] Partial load: gear: offline fixture | item: offline fixture
+[IW Fantasy Skin] skills-art: offline fixture
+PASS quest card detection on whitespace-free markup
+World boss decoration, rewards, live control state, idempotence and teardown passed.
+PASS ward motion: irregular flow, continuous crystal, interrupted crossfades, controlled ambient light, mobile, reduced motion, teardown
+tooltip-virtual-anchor: leaving the card on a virtual anchor closes it without throwing; returning to the anchor keeps it open
+  QUEUED: ink 56px, offset 0px in a 132px button  ok
+  PREJOIN: ink 58.75px, offset 0.13px in a 132px button  ok
+  boss title row: badge inside the card at 360px, natural width at 1100px  ok
+boss-action-label: label centred in the forged frame in both states  ok
+boss-participation-hit: link and status never overlap, link hit-testable, 360-1440px; old shared cell overlaps again
+[ItemDatabase] Loaded 2 items (generated 2026-09-07T00:00:00Z)
+Village building art, slot roles, install picker, housing hero and teardown passed.
+Village scene: placement, real slots, no-house state, rendered-route read, snapshot across tabs, league reset, idempotence and teardown passed.
+[ItemDatabase] Loaded 3 items (generated 2026-09-16)
+Village ledger: item join, per-building effects, building-only totals, disclosure, rebuild and late storage read passed.
+
+@390px  scene 360x290 + ledger 360px in a 360px column
+        tallest plot 104px · house caption ends 151px down · plot 5 starts 185px down
+  ok    the scene sits directly below Skill Actions
+  ok    the panel that followed Actions still follows the scene
+  ok    the scene fills its stage instead of collapsing to its border
+  ok    the ledger sits below the scene at this width
+  ok    the ledger never overlaps the scene
+  ok    a wrapped ledger takes the whole row rather than a column of it
+  ok    the ledger lists the home and every building, and totals them
+  ok    every building sprite decoded
+  ok    plot 1 stays inside the scene
+  ok    plot 2 stays inside the scene
+  ok    plot 3 stays inside the scene
+  ok    plot 4 stays inside the scene
+  ok    plot 5 stays inside the scene
+  ok    the house caption clears every plot
+  ok    the house caption clears every plot
+  ok    plots 1 and 2 keep apart
+  ok    plots 1 and 3 keep apart
+  ok    plots 1 and 4 keep apart
+  ok    plots 1 and 5 keep apart
+  ok    plots 2 and 3 keep apart
+  ok    plots 2 and 4 keep apart
+  ok    plots 2 and 5 keep apart
+  ok    plots 3 and 4 keep apart
+  ok    plots 3 and 5 keep apart
+  ok    plots 4 and 5 keep apart
+  ok    folding BUILDINGS hides the whole list
+  ok    and leaves the heading, the totals and the plot scene standing
+  ok    a side-by-side collapsed ledger extends Overall stats to the scene bottom
+
+@760px  scene 408x290 + ledger 310px in a 730px column
+        tallest plot 104px · house caption ends 151px down · plot 5 starts 185px down
+  ok    the scene sits directly below Skill Actions
+  ok    the panel that followed Actions still follows the scene
+  ok    the scene fills its stage instead of collapsing to its border
+  ok    the ledger sits beside the scene at this width
+  ok    the ledger never overlaps the scene
+  ok    a wrapped ledger takes the whole row rather than a column of it
+  ok    the ledger lists the home and every building, and totals them
+  ok    every building sprite decoded
+  ok    plot 1 stays inside the scene
+  ok    plot 2 stays inside the scene
+  ok    plot 3 stays inside the scene
+  ok    plot 4 stays inside the scene
+  ok    plot 5 stays inside the scene
+  ok    the house caption clears every plot
+  ok    the house caption clears every plot
+  ok    plots 1 and 2 keep apart
+  ok    plots 1 and 3 keep apart
+  ok    plots 1 and 4 keep apart
+  ok    plots 1 and 5 keep apart
+  ok    plots 2 and 3 keep apart
+  ok    plots 2 and 4 keep apart
+  ok    plots 2 and 5 keep apart
+  ok    plots 3 and 4 keep apart
+  ok    plots 3 and 5 keep apart
+  ok    plots 4 and 5 keep apart
+  ok    folding BUILDINGS hides the whole list
+  ok    and leaves the heading, the totals and the plot scene standing
+  ok    a side-by-side collapsed ledger extends Overall stats to the scene bottom
+
+@900px  scene 548x290 + ledger 310px in a 870px column
+        tallest plot 130px · house caption ends 151px down · plot 5 starts 159px down
+  ok    the scene sits directly below Skill Actions
+  ok    the panel that followed Actions still follows the scene
+  ok    the scene fills its stage instead of collapsing to its border
+  ok    the ledger sits beside the scene at this width
+  ok    the ledger never overlaps the scene
+  ok    a wrapped ledger takes the whole row rather than a column of it
+  ok    the ledger lists the home and every building, and totals them
+  ok    every building sprite decoded
+  ok    plot 1 stays inside the scene
+  ok    plot 2 stays inside the scene
+  ok    plot 3 stays inside the scene
+  ok    plot 4 stays inside the scene
+  ok    plot 5 stays inside the scene
+  ok    the house caption clears every plot
+  ok    the house caption clears every plot
+  ok    plots 1 and 2 keep apart
+  ok    plots 1 and 3 keep apart
+  ok    plots 1 and 4 keep apart
+  ok    plots 1 and 5 keep apart
+  ok    plots 2 and 3 keep apart
+  ok    plots 2 and 4 keep apart
+  ok    plots 2 and 5 keep apart
+  ok    plots 3 and 4 keep apart
+  ok    plots 3 and 5 keep apart
+  ok    plots 4 and 5 keep apart
+  ok    folding BUILDINGS hides the whole list
+  ok    and leaves the heading, the totals and the plot scene standing
+  ok    a side-by-side collapsed ledger extends Overall stats to the scene bottom
+
+@1000px  scene 385x290 + ledger 385px in a 385px column
+        tallest plot 104px · house caption ends 151px down · plot 5 starts 185px down
+  ok    the scene sits directly below Skill Actions
+  ok    the panel that followed Actions still follows the scene
+  ok    the scene fills its stage instead of collapsing to its border
+  ok    the ledger sits below the scene at this width
+  ok    the ledger never overlaps the scene
+  ok    a wrapped ledger takes the whole row rather than a column of it
+  ok    the ledger lists the home and every building, and totals them
+  ok    every building sprite decoded
+  ok    plot 1 stays inside the scene
+  ok    plot 2 stays inside the scene
+  ok    plot 3 stays inside the scene
+  ok    plot 4 stays inside the scene
+  ok    plot 5 stays inside the scene
+  ok    the house caption clears every plot
+  ok    the house caption clears every plot
+  ok    plots 1 and 2 keep apart
+  ok    plots 1 and 3 keep apart
+  ok    plots 1 and 4 keep apart
+  ok    plots 1 and 5 keep apart
+  ok    plots 2 and 3 keep apart
+  ok    plots 2 and 4 keep apart
+  ok    plots 2 and 5 keep apart
+  ok    plots 3 and 4 keep apart
+  ok    plots 3 and 5 keep apart
+  ok    plots 4 and 5 keep apart
+  ok    folding BUILDINGS hides the whole list
+  ok    and leaves the heading, the totals and the plot scene standing
+  ok    a side-by-side collapsed ledger extends Overall stats to the scene bottom
+
+@1200px  scene 457x290 + ledger 457px in a 457px column
+        tallest plot 104px · house caption ends 151px down · plot 5 starts 185px down
+  ok    the scene sits directly below Skill Actions
+  ok    the panel that followed Actions still follows the scene
+  ok    the scene fills its stage instead of collapsing to its border
+  ok    the ledger sits below the scene at this width
+  ok    the ledger never overlaps the scene
+  ok    a wrapped ledger takes the whole row rather than a column of it
+  ok    the ledger lists the home and every building, and totals them
+  ok    every building sprite decoded
+  ok    plot 1 stays inside the scene
+  ok    plot 2 stays inside the scene
+  ok    plot 3 stays inside the scene
+  ok    plot 4 stays inside the scene
+  ok    plot 5 stays inside the scene
+  ok    the house caption clears every plot
+  ok    the house caption clears every plot
+  ok    plots 1 and 2 keep apart
+  ok    plots 1 and 3 keep apart
+  ok    plots 1 and 4 keep apart
+  ok    plots 1 and 5 keep apart
+  ok    plots 2 and 3 keep apart
+  ok    plots 2 and 4 keep apart
+  ok    plots 2 and 5 keep apart
+  ok    plots 3 and 4 keep apart
+  ok    plots 3 and 5 keep apart
+  ok    plots 4 and 5 keep apart
+  ok    folding BUILDINGS hides the whole list
+  ok    and leaves the heading, the totals and the plot scene standing
+  ok    a side-by-side collapsed ledger extends Overall stats to the scene bottom
+
+@1400px  scene 541x320 + ledger 541px in a 541px column
+        tallest plot 130px · house caption ends 166px down · plot 5 starts 189px down
+  ok    the scene sits directly below Skill Actions
+  ok    the panel that followed Actions still follows the scene
+  ok    the scene fills its stage instead of collapsing to its border
+  ok    the ledger sits below the scene at this width
+  ok    the ledger never overlaps the scene
+  ok    a wrapped ledger takes the whole row rather than a column of it
+  ok    the ledger lists the home and every building, and totals them
+  ok    every building sprite decoded
+  ok    plot 1 stays inside the scene
+  ok    plot 2 stays inside the scene
+  ok    plot 3 stays inside the scene
+  ok    plot 4 stays inside the scene
+  ok    plot 5 stays inside the scene
+  ok    the house caption clears every plot
+  ok    the house caption clears every plot
+  ok    plots 1 and 2 keep apart
+  ok    plots 1 and 3 keep apart
+  ok    plots 1 and 4 keep apart
+  ok    plots 1 and 5 keep apart
+  ok    plots 2 and 3 keep apart
+  ok    plots 2 and 4 keep apart
+  ok    plots 2 and 5 keep apart
+  ok    plots 3 and 4 keep apart
+  ok    plots 3 and 5 keep apart
+  ok    plots 4 and 5 keep apart
+  ok    folding BUILDINGS hides the whole list
+  ok    and leaves the heading, the totals and the plot scene standing
+  ok    a side-by-side collapsed ledger extends Overall stats to the scene bottom
+
+The read
+  ok    the scene reads the player API
+  ok    it asks for a section the app actually ships
+  ok    it stamps the league header the app selects on
+
+pageerrors: none
+
+PASS village-scene-layout
+
+Coverage
+  ok    panel:current-action has a collapse control
+  ok    panel:action-log has a collapse control
+  ok    panel:world-chat has a collapse control
+  ok    panel:village-scene has a collapse control
+  ok    title:skill actions has a collapse control
+  ok    title:inventory has a collapse control
+  ok    title:quests has a collapse control
+  ok    title:world bosses has a collapse control
+  ok    title:zone control has a collapse control
+  ok    no frame gets two toggles
+  ok    every toggle starts expanded
+
+Daily XP boost
+  ok    the daily boost line is tagged
+  ok    only the boost line, not the reset timer beside it
+  ok    it wears the met-requirement green rail and ink
+  ok    the frame hugs its text (one line) or fits its column (wrapped)
+
+One heading size
+  ok    the Inventory heading was found to compare against
+  ok    every frame heading is the Inventory heading size
+
+The control clears the game's own header controls
+  ok    panel:current-action: toggle does not cover "ca-cancel"
+  ok    title:inventory: toggle does not cover "inv-filter, inv-search, inv-equip"
+  ok    panel:action-log: toggle does not cover "log-view-all"
+  ok    panel:world-chat: toggle does not cover "Favourite chat, Global chat, chat-settings"
+  ok    title:zone control: toggle does not cover "zc-attack, zc-refresh"
+  ok    panel:current-action really does have a game control in its heading row
+  ok    panel:action-log really does have a game control in its heading row
+  ok    panel:world-chat really does have a game control in its heading row
+  ok    title:zone control really does have a game control in its heading row
+  ok    title:inventory really does have a game control in its heading row
+
+The control sits ON the heading row
+  ok    panel:current-action: toggle is centred on its heading row
+  ok    title:skill actions: toggle is centred on its heading row
+  ok    panel:village-scene: toggle is centred on its heading row
+  ok    title:inventory: toggle is centred on its heading row
+  ok    title:quests: toggle is centred on its heading row
+  ok    panel:action-log: toggle is centred on its heading row
+  ok    panel:world-chat: toggle is centred on its heading row
+  ok    title:world bosses: toggle is centred on its heading row
+  ok    title:zone control: toggle is centred on its heading row
+
+Folding
+  ok    the clicked panel is marked collapsed
+  ok    its heading row survives the fold
+  ok    its content is gone
+  ok    the control relabels itself for the new direction
+  ok    every OTHER panel is untouched
+  ok    a collapsed panel is shorter than it was
+
+The choice survives a re-render
+  ok    the folded panel is still folded after a reclassify
+  ok    and nothing else folded with it
+
+Every collapsed bar is the same bar
+  ok    every panel folds to the same height
+  ok    every panel folds to one title treatment
+  ok    and that bar is thin
+  ok    every folded title is still readable
+  ok    all nine panels were folded for that comparison
+  ok    a folded bar keeps only its top-left flourish
+  ok    every collapse control is the same size
+  ok    every collapse control is painted the same
+  ok    every collapse control sits the same distance from the frame edge
+  ok    the folded title clears that flourish
+  ok    the comparison folded panels that were open, not an already-folded page
+  ok    an EXPANDED panel still gets all four corners
+  ok    the folded corner keeps the expanded corner proportions
+
+Unfolding
+  ok    the panel opens again
+  ok    every child comes back
+
+pageerrors: none
+
+PASS collapsible-frames
+element                              border  pad   texture corners hairline   verdict
+--------------------------------------------------------------------------------------------
+COLUMN (grid-column)                0px     0px   false   false   false      ok
+COLUMN (inventory-quests-stack)     0px     0px   false   false   false      ok
+PANEL  Inventory                    1px     18px  true    true    true       ok
+PANEL  Quests                       1px     18px  true    true    true       ok
+COLUMN (skills-column)              0px     0px   false   false   false      ok
+PANEL  Skill Actions                1px     18px  true    true    true       ok
+COLUMN (activity-column)            0px     0px   false   false   false      ok
+PANEL  Current Action               1px     18px  true    true    true       ok
+PANEL  Action Log                   1px     18px  true    true    true       ok
+--------------------------------------------------------------------------------------------
+5 leaf panels framed, 4 layout columns stripped
+pageerrors: none
+
+PASS
+
+1. Cold boot @390px (phone)
+  ok    wide (offscreen) column has NO section frames
+  ok    wide (offscreen) column has NO activity panels
+  ok    wide (offscreen) column has NO boss cards
+  ok    narrow (visible) column IS decorated
+
+2. Resize 1400px -> 800px (desktop -> tablet)
+  ok    boot @1400px decorates the wide column
+  ok    wide column is FULLY undecorated after the resize
+  ok    narrow column is decorated after the resize
+  ok    narrow column decoration matches the wide column's pre-resize count
+
+3. Round-trip resize: 1400 -> 800 -> 1400 -> 500 -> 1600
+  ok    @800px: visible column decorated, hidden column clean
+  ok    @1400px: visible column decorated, hidden column clean
+  ok    @500px: visible column decorated, hidden column clean
+  ok    @1600px: visible column decorated, hidden column clean
+
+pageerrors: none
+  ok    no page errors
+
+PASS viewport-swap
+
+@390px (narrow layout, command block absolute)
+  ok    both work orders are classified
+  ok    each card publishes the command block reserve
+  ok    the frame grows with the label instead of clipping it
+  ok    growing sideways only — the button height is unchanged
+  ok    the published --fs-quest-cmd-w matches the block it measured
+  ok    the two cards publish DIFFERENT reserves — the var tracks the label
+  ok    the title clears the command block on the long card
+  ok    the title clears the command block on the short card
+
+@1400px (desktop layout)
+  ok    the frame grows with the label here too
+  ok    the short label still rests at the 148px floor
+  ok    both buttons keep the same height
+
+pageerrors: none
+
+PASS quest-command-width
+
+Nav shape: flat
+  ok    flat: the nav rail's panel wears the section frame
+  ok    flat: nothing fights over the rail's role attribute
+  ok    flat: a settled nav does not re-resolve on every flush
+  ok    flat: a tab that mounts late is classified
+  ok    flat: re-resolving the nav does not strip the rail's frame role
+  ok    flat: the nav rail is compact
+  ok    flat: the nav rail draws no corner flourish
+  ok    flat: the zone bar is compact
+  ok    flat: the zone title and target share one row
+  ok    flat: every zone action button is the same compact height
+  ok    flat: the shell/nav/zone-text/zone-actions are all tagged
+  ok    flat: the merged frame paints a border
+  ok    flat: the nav rail draws no border of its own inside the merged frame
+  ok    flat: the zone title/target and the notice share row A
+  ok    flat: the nav tabs and the zone actions share row B
+  ok    flat: row A sits above row B
+  ok    flat: nothing in row B overlaps
+  ok    flat: the zone title's emoji starts on the first nav tab's left edge
+  ok    flat: "who's here?" is a plain link, not a plated button
+  ok    flat: the merged frame is compact
+
+Nav shape: wrapped
+  ok    wrapped: the nav rail's panel wears the section frame
+  ok    wrapped: nothing fights over the rail's role attribute
+  ok    wrapped: a settled nav does not re-resolve on every flush
+  ok    wrapped: a tab that mounts late is classified
+  ok    wrapped: re-resolving the nav does not strip the rail's frame role
+  ok    wrapped: the nav rail is compact
+  ok    wrapped: the nav rail draws no corner flourish
+  ok    wrapped: the announcement strip is compact
+  ok    wrapped: the zone bar is compact
+  ok    wrapped: the zone title and target share one row
+  ok    wrapped: every zone action button is the same compact height
+  ok    wrapped: the shell/nav/zone-text/zone-actions are all tagged
+  ok    wrapped: the merged frame paints a border
+  ok    wrapped: the nav rail draws no border of its own inside the merged frame
+  ok    wrapped: the zone title/target and the notice share row A
+  ok    wrapped: the nav tabs and the zone actions share row B
+  ok    wrapped: row A sits above row B
+  ok    wrapped: nothing in row B overlaps
+  ok    wrapped: the zone title's emoji starts on the first nav tab's left edge
+  ok    wrapped: "who's here?" is a plain link, not a plated button
+  ok    wrapped: the merged frame is compact
+
+Narrow (800px)
+  ok    narrow 800: every chrome part is tagged
+  ok    narrow 800: title, notice, nav and actions stack in that order without overlapping
+  ok    narrow 800: the notice spans the frame's inner width
+  ok    narrow 800: the zone action row spans the frame's inner width
+  ok    narrow 800: the nav is one row
+
+Narrow (400px)
+  ok    narrow 400: every chrome part is tagged
+  ok    narrow 400: title, notice, nav and actions stack in that order without overlapping
+  ok    narrow 400: the notice spans the frame's inner width
+  ok    narrow 400: the zone action row spans the frame's inner width
+  ok    narrow 400: the nav is one row
+  ok    narrow 400: the nav row is flush at both ends
+
+Refusal (unexpected zone bar child)
+  ok    refusal: an unplaceable zone bar child leaves the chrome unmerged
+  ok    refusal: the zone bar keeps its own box (not display: contents)
+
+Notice comes and goes
+  ok    notice: tagged while present
+  ok    notice: the frame stays merged without one
+  ok    notice: re-tagged when it returns
+
+pageerrors: none
+
+PASS header-compact
+
+Game route, 320px
+  ok    320: the nav rail is one row
+  ok    320: no nav label is clipped
+  ok    320: the filter tabs are one row
+  ok    320: no filter label is clipped
+  ok    320: no Toolkit link on a phone
+  ok    320: the three zone controls are one row of equal buttons
+  ok    320: the zone controls span the whole row
+
+Game route, 360px
+  ok    360: the nav rail is one row
+  ok    360: no nav label is clipped
+  ok    360: the filter tabs are one row
+  ok    360: no filter label is clipped
+  ok    360: no Toolkit link on a phone
+  ok    360: the three zone controls are one row of equal buttons
+  ok    360: the zone controls span the whole row
+
+Game route, 390px
+  ok    390: the nav rail is one row
+  ok    390: no nav label is clipped
+  ok    390: the filter tabs are one row
+  ok    390: no filter label is clipped
+  ok    390: no Toolkit link on a phone
+  ok    390: the three zone controls are one row of equal buttons
+  ok    390: the zone controls span the whole row
+
+Game route, 430px
+  ok    430: the nav rail is one row
+  ok    430: no nav label is clipped
+  ok    430: the filter tabs are one row
+  ok    430: no filter label is clipped
+  ok    430: no Toolkit link on a phone
+  ok    430: the three zone controls are one row of equal buttons
+  ok    430: the zone controls span the whole row
+
+Game route, 767px
+  ok    767: the nav rail is one row
+  ok    767: no nav label is clipped
+  ok    767: the filter tabs are one row
+  ok    767: no filter label is clipped
+  ok    767: no Toolkit link on a phone
+  ok    767: the three zone controls are one row of equal buttons
+  ok    767: the zone controls span the whole row
+
+Game route, 768px
+  ok    768: the nav rail is one row
+  ok    768: no nav label is clipped
+  ok    768: the filter tabs are one row
+  ok    768: no filter label is clipped
+  ok    768: Toolkit shows in the rail
+
+Game route, 900px
+  ok    900: the nav rail is one row
+  ok    900: no nav label is clipped
+  ok    900: the filter tabs are one row
+  ok    900: no filter label is clipped
+  ok    900: Toolkit shows in the rail
+
+Game route, 1100px
+  ok    1100: the nav rail is one row
+  ok    1100: no nav label is clipped
+  ok    1100: the filter tabs are one row
+  ok    1100: no filter label is clipped
+  ok    1100: Toolkit shows in the rail
+
+No zone bar, 360px
+  ok    360 no zone bar: still no Toolkit link on a phone
+  ok    360 no zone bar: the five-tab rail is one unclipped row
+
+No zone bar, 390px
+  ok    390 no zone bar: still no Toolkit link on a phone
+  ok    390 no zone bar: the five-tab rail is one unclipped row
+  ok    no page errors
+
+PASS menu-rows
+
+Quiescence — 4s with no game mutation whatsoever
+  observed: 0 flushes, 0 skill reconciles, 0 inline-style writes, 0 mutation records
+  ok    a quiet page schedules no repeating flushes
+  ok    a quiet page reconciles no skill panels
+  ok    the skin does not rewrite inline styles on a quiet page
+  ok    a quiet page produces no DOM mutations at all
+  ok    the readouts under test are actually classified
+  ok    quest cards are classified, so loop A has a surface to run on
+  ok    an enhancement badge is painted, so the badge loop has a surface to run on
+  ok    Base-EXP plaques exist, so loop B has a surface to run on
+  ok    the village scene is mounted, so its reconcile has a surface too
+  ok    collapse controls are mounted, so their pass has a surface too
+  ok    the header chrome is merged, so its pass has a surface too
+
+Busy toggle — every button disabled, then re-enabled
+  observed: 0 role-attribute writes; Fight plate disabled -> primary
+  ok    a disabled toggle does not strip and rebuild card roles
+  ok    the action button still repaints as disabled while busy
+  ok    and returns to its idle plate afterwards
+  ok    no page errors
+
+PASS flush-quiescence
+  inventory.css  [data-iw-inventory-root="1"] [data-iw-inventory-control="icon"
+    nav_frame_idle 80x83 @0.3750 -> 30.00x31.13  box 30x31  ok (+0.00, +0.13)
+  inventory.css  [data-iw-inventory-root="1"] [data-iw-inventory-control="icon"
+    nav_frame_active 80x83 @0.3750 -> 30.00x31.13  (window inherited from the base rule)  box not declared in this rule
+
+2 pixel sprite window(s) checked against 12 atlas cells
+PASS — every pixel window lands on a named cell and fills its box
+
+real	3m26.181s
+user	0m0.121s
+sys	0m0.046s
+EXIT=0

@@ -20,7 +20,7 @@ const html = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset
 body{margin:0;background:#09090c}.panel{padding:8px}.grid{display:grid}.gap-2{gap:.5rem}
 </style></head><body><div id="root" data-skin="default">
 <header><div><h1>Player</h1><p>Combat Lv 62</p></div><div><button>S</button></div></header><nav><button>Game</button></nav>
-<div id="zone-bar-panel" class="panel"><div><p>Zone 19: Eternium Verge</p></div><div><button>Zones</button><button>Next Zone</button></div></div>
+<div id="zone-bar-panel" class="panel"><div><p>Zone 18: Kingsfall Citadel</p></div><div><button>Zones</button><button>Next Zone</button></div></div>
 <div id="panel-column" style="display:flex;flex-direction:column;gap:12px"><div class="panel" id="skill-actions"><h2>Skill Actions</h2><div class="compact-panel" id="card">
 <div class="grid grid-cols-[60px_minmax(0,1fr)] gap-2">
 <div><p>💎 Jewelcrafting</p><p>LV 70</p></div>
@@ -51,6 +51,34 @@ try {
   await page.waitForSelector('#card[data-iw-skill-v2="1"]');
   await page.waitForFunction(()=>getComputedStyle(document.querySelector('#action')).backgroundImage.includes('card-v6/action-atlas.png'));
   await page.waitForTimeout(900);
+  assert.equal(await page.locator('html').getAttribute('data-iw-zone-theme'),'runic-arcane','Zone 18 resolves the runic-arcane palette');
+  const colourBalance = async selector => {
+    const png = (await page.locator(selector).screenshot()).toString('base64');
+    return page.evaluate(async source => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${source}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const context = canvas.getContext('2d');
+      context.drawImage(img,0,0);
+      const pixels = context.getImageData(0,0,img.width,img.height).data;
+      let green = 0, violet = 0;
+      for(let i=0;i<pixels.length;i+=4) {
+        const [r,g,b,a] = pixels.subarray(i,i+4);
+        if(a < 128 || Math.max(r,g,b) < 45 || Math.max(r,g,b)-Math.min(r,g,b) < 22) continue;
+        green += Math.max(0,g-(r+b)/2);
+        violet += Math.max(0,(r+b)/2-g);
+      }
+      return {green,violet};
+    },png);
+  };
+  for(const [selector,label] of [['#action','action'],['#prev','navigation']]) {
+    const colour = await colourBalance(selector);
+    assert.ok(colour.green > colour.violet * 1.15,
+      `Zone 18 ${label} art must read green, got green=${colour.green.toFixed(0)} violet=${colour.violet.toFixed(0)}`);
+  }
   const decoded=await page.evaluate(async atlases=>Promise.all(Object.entries(atlases).map(async([kind,size])=>{
     const img=new Image();img.src='/assets/skills-ui/buttons/card-v6/'+kind+'-atlas.png';await img.decode();
     return img.naturalWidth===size.width && img.naturalHeight===size.height;

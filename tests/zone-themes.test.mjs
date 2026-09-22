@@ -19,7 +19,8 @@
 
 import { readFile, access } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { chromium } from 'playwright';
 import { ZONE_THEMES, THEME_NAMES, zoneTheme } from '../src/modules/zoneThemes.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -95,12 +96,12 @@ for (const theme of used) {
   }
   if (await exists(corners)) {
     const dimensions = await imageDimensions(corners);
-    check(`theme "${theme}" corner filigree is physically 2x`, dimensions[0] === 352 && dimensions[1] === 380,
+    check(`theme "${theme}" corner filigree is physically 8x`, dimensions[0] === 1408 && dimensions[1] === 1520,
       `${dimensions.join('x')}`);
   }
   if (await exists(separator)) {
     const dimensions = await imageDimensions(separator);
-    check(`theme "${theme}" separator flourish is physically 2x`, dimensions[0] === 438 && dimensions[1] === 146,
+    check(`theme "${theme}" separator flourish is physically 8x`, dimensions[0] === 1752 && dimensions[1] === 584,
       `${dimensions.join('x')}`);
   }
 }
@@ -159,6 +160,55 @@ if (derived) {
 // that has not resolved yet must still draw a frame, not `unset`.
 for (const tok of ['--iw-th-edge-mid', '--iw-th-edge-soft', '--iw-th-edge-faint']) {
   check(`${tok} has an un-themed :root default`, new RegExp(`${tok}:\\s*#[0-9A-Fa-f]{6}`).test(baseCss));
+}
+
+// 8. The lunar atlas once shipped a nav_frame_idle whose painted frame occupied
+// only 54 of the cell's 80 logical pixels. Inventory's three square tool
+// buttons use that cell directly, so zones 14, 23 and 27 looked horizontally
+// clipped even though the CSS window was correct. Decode the real committed
+// WebP and pin both lunar navigation states to a full, consistent cell.
+const browser = await chromium.launch({ headless: true });
+try {
+  const page = await browser.newPage();
+  await page.goto(pathToFileURL(resolve(ROOT, 'assets/skills-ui/theme_lunar-spectral.webp')).href);
+  const navInk = await page.evaluate(() => {
+    const image = document.querySelector('img');
+    const cells = [
+      { key: 'idle', x: 473, y: 6, width: 80, height: 83 },
+      { key: 'active', x: 559, y: 6, width: 80, height: 83 },
+    ];
+    const density = image.naturalWidth / 860;
+    return cells.map(cell => {
+      const width = cell.width * density;
+      const height = cell.height * density;
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      context.drawImage(image,
+        cell.x * density, cell.y * density, width, height,
+        0, 0, width, height);
+      const pixels = context.getImageData(0, 0, width, height).data;
+      let x0 = width;
+      let x1 = -1;
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          if (pixels[(y * width + x) * 4 + 3] <= 8) continue;
+          x0 = Math.min(x0, x);
+          x1 = Math.max(x1, x);
+        }
+      }
+      return { key: cell.key, logicalWidth: (x1 - x0 + 1) / density };
+    });
+  });
+  const [idleInk, activeInk] = navInk;
+  check('lunar idle navigation frame fills at least 90% of its sprite cell',
+    idleInk.logicalWidth >= 72, `painted width=${idleInk.logicalWidth.toFixed(1)} of 80`);
+  check('lunar navigation states keep consistent painted widths',
+    Math.abs(idleInk.logicalWidth - activeInk.logicalWidth) <= 2,
+    `idle=${idleInk.logicalWidth.toFixed(1)} active=${activeInk.logicalWidth.toFixed(1)}`);
+} finally {
+  await browser.close();
 }
 
 console.log(fail === 0 ? '\nPASS' : `\nFAIL — ${fail} problem(s)`);

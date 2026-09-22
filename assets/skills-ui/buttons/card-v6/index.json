@@ -337,7 +337,7 @@
       "kind": "action",
       "state": "idle",
       "x": 128,
-      "y": 911,
+      "y": 1271,
       "width": 173,
       "height": 168
     },
@@ -346,7 +346,7 @@
       "kind": "action",
       "state": "hover",
       "x": 358,
-      "y": 911,
+      "y": 1271,
       "width": 173,
       "height": 168
     },
@@ -355,7 +355,7 @@
       "kind": "action",
       "state": "clicked",
       "x": 589,
-      "y": 911,
+      "y": 1271,
       "width": 173,
       "height": 168
     },
@@ -364,7 +364,7 @@
       "kind": "nav",
       "state": "idle",
       "x": 58,
-      "y": 822,
+      "y": 1142,
       "width": 252,
       "height": 129
     },
@@ -373,7 +373,7 @@
       "kind": "nav",
       "state": "hover",
       "x": 348,
-      "y": 822,
+      "y": 1142,
       "width": 252,
       "height": 129
     },
@@ -382,7 +382,7 @@
       "kind": "nav",
       "state": "clicked",
       "x": 638,
-      "y": 822,
+      "y": 1142,
       "width": 252,
       "height": 129
     },

@@ -354,6 +354,15 @@ export function decorateWorldBossPanel({ root, heading }) {
       // Only the status title proves ownership, never fighter names/team buttons.
       const team = /red team controls/i.test(label) ? 'red' : /blue team controls/i.test(label) ? 'blue' : 'contested';
       mark(card, 'data-iw-control', team);
+      // The participation roster (a Red Team box and a Blue Team box in one
+      // container) and, while fighting, the action Queue. Unrouted, the card's
+      // two-column grid auto-placed them side by side in whatever order.
+      for (const el of card.children) {
+        if (el.hasAttribute('data-iw-boss-owned') || el === header) continue;
+        const text = norm(el.textContent);
+        if (/Red Team/.test(text) && /Blue Team/.test(text)) mark(el, 'data-iw-boss-role', 'control-teams');
+        else if (/^Queue\b/.test(norm(el.firstElementChild?.textContent))) mark(el, 'data-iw-boss-role', 'control-queue');
+      }
       updateDominion(card, team);
     }
   }

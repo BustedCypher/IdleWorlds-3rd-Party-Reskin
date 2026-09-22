@@ -114,13 +114,6 @@
    ui-system.css. The header is the one panel that did not, which is why its
    frame never matched the rest of the page.
 
-   header_frame.webp cannot be used here, and the reason is in the ART, not the
-   CSS: measured, its corner motif is 107x107 square, it sits 21px from the top
-   of the sheet but 84px from the bottom, and its edge slices are 140px tall
-   with a 44px flourish mid-edge. In a ~195px-tall bar that gives a frame short
-   at the bottom and a flourish crushed 4.7x vertically; masking to the corners
-   instead severs the connecting rule.
-
    panel_corners.webp has none of those problems: its slice consumes the whole
    sheet, so the edge and middle regions are empty by construction and ONLY the
    four corners paint, at a fixed size however wide the header grows. The rule
@@ -166,12 +159,35 @@
 /* ── §3  Identity region ────────────────────────────────────────────────── */
 
 [data-iw-header="identity-region"] {
+  /* Curtis (2026-09-22): the utility buttons run as a vertical column of
+     squares BESIDE the frame, and frame + column read as one large frame.
+       --hd-crest-h   the crest's height
+       --hd-name-size the player name's font size (profile-name reads it), so
+                      the row height below cannot drift from the real name
+       --hd-row-h     the row (= frame) height: the taller of the crest and the
+                      profile stack. The profile is the name's line (size x its
+                      1.04 line-height) plus ~85px for brand, title, meta and
+                      online — measured 106.6px at a 21px name, 113.2px at 1440px
+                      wide — so a fixed crest-based size was 7px short there
+       --hd-seam      the gap between buttons, and between frame and column —
+                      the column gap below (14px) minus the frame's 8px bleed
+       --hd-util      one square: the frame's full height (row + 8px bleed top
+                      and bottom) shared by THREE buttons and two seams. The
+                      game ships three since its 2026-09 header update; with a
+                      different count the buttons flex to fill the same height.
+     The row is `minmax(--hd-row-h, auto)`: content taller than the estimate
+     (an extra profile line) grows the row and the buttons stretch to match,
+     rather than the text escaping the frame. */
+  --hd-crest-h: 106px;
+  --hd-name-size: clamp(21px, 1.9vw, 29px);
+  --hd-row-h: max(var(--hd-crest-h), calc(var(--hd-name-size) * 1.04 + 85px));
+  --hd-seam: 6px;
+  --hd-util: calc((var(--hd-row-h) + 16px - 2 * var(--hd-seam)) / 3);
   display: grid !important;
   isolation: isolate !important;
-  grid-template-columns: 104px minmax(0, 1fr) !important;
-  grid-template-areas:
-    "crest profile"
-    "utilities utilities" !important;
+  grid-template-columns: 104px minmax(0, 1fr) var(--hd-util) !important;
+  grid-template-rows: minmax(var(--hd-row-h), auto) !important;
+  grid-template-areas: "crest profile utilities" !important;
   align-items: center !important;
   /* Hug the player info: `fit-content` sizes the region to its widest line
      (name / title / meta), so the frame is as thin as the content allows and
@@ -180,8 +196,8 @@
      gets real space instead of collapsing to its 0 floor (which happens with a
      bare `max-width` under `justify-self: start`). `max-width` only caps a
      pathologically long name/zone, where the meta line then ellipsises.
-     The resolved width is also the span the utility rail (row 2) spreads
-     across. §9 hands this back to `auto` + stretch below 1280px. */
+     The utility column (§4) is a fixed third track to the right of it.
+     §9 hands this back to `auto` + stretch below 1280px. */
   justify-self: start !important;
   /* Centre the whole cluster (frame row + button rail) in the header's height
      so the space above and below it is equal; the left margin gives it a
@@ -199,12 +215,12 @@
 
 /* The same smoked-glass panel the buff tiles wear on the right
    ([data-iw-header="status-card"], §4b) — translucent dark fill + blur, gold
-   outline + faint glow — drawn behind the crest + profile row ONLY. It is a
-   grid item on row 1 (never row 2), so the utility rail sits BELOW it, and it
-   is a pseudo with negative margins rather than padding on a flow box, so no
-   control is pushed off its baseline. The horizontal bleed matches the utility
-   rail's own negative margin (§4) so the rail's first/last button line up with
-   the frame's left/right edges. */
+   outline + faint glow — drawn behind the crest + profile tracks ONLY, never
+   the utility column in the third track. It is a pseudo with negative margins
+   rather than padding on a flow box, so no control is pushed off its baseline.
+   Its 8px vertical bleed is matched by the utility column's (§4), so the
+   column's top and bottom line up with the frame's; its 8px right bleed into
+   the 14px column gap leaves the 6px seam (--hd-seam) before the column. */
 [data-iw-header="identity-region"]::before {
   content: "" !important;
   grid-column: crest-start / profile-end !important;
@@ -215,7 +231,9 @@
   z-index: 0 !important;
   margin: -8px -8px !important;
   border: 1px solid rgba(201, 162, 77, 0.46) !important;
-  border-radius: 10px !important;
+  /* Right corners sharp: the button column continues the frame on that side
+     and carries its outer right corners (§4c). */
+  border-radius: 10px 0 0 10px !important;
   /* 0.72, not the old 0.42: over the brighter per-zone art the translucent
      fill let the painting read through the type (Curtis, 2026-09). */
   background: rgba(9, 8, 13, 0.72) !important;
@@ -277,7 +295,8 @@
 [data-iw-header="profile-name"] {
   margin: 0 0 2px !important;
   font-family: var(--iw-font-head) !important;
-  font-size: clamp(21px, 1.9vw, 29px) !important;
+  /* Shared with the identity region's row-height estimate (§3). */
+  font-size: var(--hd-name-size, clamp(21px, 1.9vw, 29px)) !important;
   font-weight: 700 !important;
   line-height: 1.04 !important;
   letter-spacing: 0.005em !important;
@@ -322,6 +341,13 @@
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
   color: var(--iw-gold) !important;
+  /* One line, like the meta line below: on phones the utility column (§4)
+     narrows the profile track enough that "CRAFTBOUND INNOVATOR" wrapped to
+     two lines, the row outgrew --hd-row-h and the buttons stopped being
+     square. A long title now ellipsises instead. */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 [data-iw-header="profile-meta"] {
@@ -370,29 +396,39 @@
 
 /* ── §4  Utility buttons ────────────────────────────────────────────────── */
 
-/* The five header utility buttons form a rail on row 2 of the identity region,
-   directly beneath the smoked-glass frame (§3). `space-between` spreads them
-   edge to edge across the frame's span; the -8px horizontal margin matches the
-   frame pseudo's own bleed so the first and last button sit flush with the
-   frame's left and right edges. `gap` is only a collision floor. Below 1280px
-   the frame stretches full-width and §9 drops this back to `flex-start`, where
-   an edge-to-edge spread would leave absurd gaps. */
+/* The header utility buttons: six on 2026-09-21 (Supporter Pack, Mailbox,
+   Invite Friends, Achievements, Notifications, Settings), collapsed by the
+   game's next update to three — Notifications, a "…" menu (presumably
+   holding the rest) and Settings. Until 2026-09-22 they ran as a horizontal rail under the
+   frame. */
+/* 2026-09-22: now a vertical column in the identity region's third track,
+   beside the frame rather than under it (see --hd-util in §3). It stretches to
+   the row and bleeds 8px top and bottom — the frame pseudo's own vertical bleed
+   — so the top button's top edge and the bottom button's bottom edge line up
+   with the frame's. Button shape and corners are §4c. */
 [data-iw-header="utilities"] {
   grid-area: utilities !important;
-  align-self: start !important;
-  display: flex !important;
-  align-items: flex-start !important;
-  justify-content: space-between !important;
-  gap: var(--hd-gap, 8px) !important;
-  margin: 0 -8px !important;
+  align-self: stretch !important;
+  /* Equal grid rows, not a flex column: flex-basis 0 still floors a bare
+     button at its 2px of border while a wrapper floors at 0, which left the
+     wrapped markup's squares 1.3px uneven. `minmax(0, 1fr)` rows are equal
+     whatever each slot's box is. */
+  display: grid !important;
+  grid-template-columns: 100% !important;
+  grid-auto-rows: minmax(0, 1fr) !important;
+  align-content: stretch !important;
+  justify-content: stretch !important;
+  gap: var(--hd-seam, 6px) !important;
+  width: var(--hd-util) !important;
+  margin: -8px 0 !important;
   padding: 0 !important;
 }
 
 [data-iw-header="utility-button"] {
   --b: 9px;
   --i: 3px;
-  /* Curtis (2026-09): flex-grow rather than a fixed 42px square, so the five
-     buttons fill the rail edge to edge with only the small GAP (var(--hd-gap))
+  /* Curtis (2026-09): flex-grow rather than a fixed 42px square, so the
+     buttons (however many the game ships) fill the rail edge to edge with only the small GAP (var(--hd-gap))
      between them, instead of small fixed squares with growing bare space
      between them as `justify-content: space-between` (§4 above) spreads a
      fixed total button width across the identity-region's `fit-content` row.
@@ -436,51 +472,10 @@
     0 0 10px rgba(201, 162, 77, 0.16) !important;
 }
 
-/* ── §4b  Purpose-made plate art ─────────────────────────────────────────
-   assets/header/utility_frame.webp is an octagonal gold plate with star bursts
-   at each corner — drawn for exactly this control. status tiles take
-   zone_button_idle.webp (1335x198), a long plate with gem caps.
-
-   THE SHEET IS NOT THE PLATE. utility_frame.webp is 208x197, but the plate
-   only occupies 180x176 of it, at offset 6,7 — there is a 22px dead column on
-   the right and a 14px dead row at the bottom. Measured, not assumed: the
-   opaque bbox is 6,7 180x176 and the gold rails sit at x 11-12/23-24 and
-   167-168/179-180, so the plate's centre is 95.5,94 against a sheet centre of
-   104,98.5.
-
-   That margin is why this control looked wrong. Any technique that maps the
-   WHOLE SHEET onto the button — `border-image` included, since it stretches
-   the sheet's edge slices, dead pixels and all — draws the plate off-centre
-   and undersized inside its own box. Rendered and measured at 10x, the old
-   `border-image … 50 fill / 11px` put a 35.5x37.1 plate in a 42x42 button with
-   1.5px of slack on the left against 5.0px on the right, and 1.7px against
-   3.2px vertically: the plate's centre landed at 19.25,20.25 while the icon,
-   centred on the BOX, sat at 21,21. Every glyph was 1.75px right and 0.75px
-   below the frame it was supposed to be inside, and the plates were unevenly
-   gapped because each one hugged the left of its slot.
-
-   So crop the dead margin in CSS and paint the plate directly. The button is a
-   fixed 42x42 at every breakpoint, so there is nothing for border-image's
-   stretch machinery to buy here, and a sprite window is what the rest of this
-   codebase already uses (AtlasService, the inventory tool buttons). Mapping
-   source rect 6,7 180x176 onto 42x42 gives scale 42/180 and 42/176, hence
-   background-size 208x0.2333 = 48.53 by 197x0.2386 = 47.01 and an origin of
-   -6x0.2333 = -1.4 by -7x0.2386 = -1.67. The plate's dark well is centred in
-   that crop to within half a source pixel, so a box-centred glyph is now also
-   plate-centred. The 2.3% anisotropy from squaring a 180x176 plate into 42x42
-   is well under the threshold where stretch reads as distortion — and it is
-   what makes the rail read as evenly spaced, because each plate now fills its
-   slot edge to edge.
-
-   status_frame.webp is deliberately NOT used here: its medallion sits ~35% in
-   from the left, which would either eat the tile's text column or smear when
-   the middle stretches. It suits a larger surface. */
-
-/* Matched to the status tiles: the octagonal gold `utility_frame` plate is
-   dropped for the same smoked-glass panel — translucent fill + blur, gold
-   outline + faint glow, no corner flourishes (the `background` shorthand
-   clears §1's bracket gradients). (The sprite-crop note above is kept as
-   history in case the plate is ever wanted back.) */
+/* ── §4b  Utility controls ───────────────────────────────────────────────
+   Matched to the status tiles: utility controls use the same smoked-glass
+   panel — translucent fill + blur, gold outline + faint glow, no corner
+   flourishes. The `background` shorthand clears §1's bracket gradients. */
 [data-iw-header="utility-button"] {
   box-sizing: border-box !important;
   border: 1px solid rgba(201, 162, 77, 0.44) !important;
@@ -509,8 +504,53 @@
 }
 [data-iw-header="utility-button"] { transition: color 120ms ease, filter 120ms ease; }
 
-/* Low-profile status tiles. The ornate marble `zone_button_idle` plate covered
-   most of the (now per-zone) header artwork and read as gaudy; these are a
+/* ── §4c  Utility column: squares that finish the frame ───────────────────
+   Curtis (2026-09-22). Same smoked-glass plate as §4b; only the shape moves:
+   equal squares (--hd-util, §3) stacked down the frame's right side, square
+   corners everywhere EXCEPT the column's two outer corners — the top button's
+   top-right and the bottom button's bottom-right — which take the frame's own
+   10px radius, so frame + column read as one large frame with small seams.
+
+   The game's 2026-09 header update nests some buttons (the bell with its
+   badge, the "…" menu with its dropdown) in wrappers, which is what left
+   Settings stretching alone while the other two stayed narrow. So the slot is
+   whatever sits DIRECTLY in the rail — a bare button or a wrapper holding one
+   — and the button fills its slot. Wrappers get no overflow clipping, so a
+   dropdown or badge positioned outside them still shows. */
+/* Each slot fills one of the column's equal grid rows (§4). */
+[data-iw-header="utilities"] > * {
+  align-self: stretch !important;
+  justify-self: stretch !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+/* A wrapper passes its whole slot to the button inside it. */
+[data-iw-header="utilities"] > :not([data-iw-header="utility-button"]):has([data-iw-header="utility-button"]) {
+  display: flex !important;
+  flex-direction: column !important;
+}
+/* `flex` only matters inside a wrapper; a bare button is stretched by its
+   grid row directly. */
+[data-iw-header="utility-button"] {
+  flex: 1 1 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+}
+[data-iw-header="utilities"] > [data-iw-header="utility-button"]:first-child,
+[data-iw-header="utilities"] > :first-child [data-iw-header="utility-button"] {
+  border-top-right-radius: 10px !important;
+}
+[data-iw-header="utilities"] > [data-iw-header="utility-button"]:last-child,
+[data-iw-header="utilities"] > :last-child [data-iw-header="utility-button"] {
+  border-bottom-right-radius: 10px !important;
+}
+
+/* Low-profile status tiles. An ornate plate covered most of the (now per-zone)
+   header artwork and read as gaudy; these are a
    quiet smoked-glass panel instead — translucent dark fill + blur so the
    values stay legible over bright zone art without hiding it, framed by just a
    gold outline + faint glow. The `background` shorthand deliberately clears
@@ -941,50 +981,24 @@
   [data-iw-header="layout"] { grid-template-columns: minmax(0, 1fr) !important; gap: 12px !important; }
   [data-iw-header="status-grid"] { margin-top: 2px !important; }
   /* Single column now — let the framed identity block span it instead of
-     hugging one edge above a full-width status grid. The utility rail can't
-     spread edge to edge across a bar-wide frame without absurd gaps, so pack
-     it left and drop the frame-matching bleed. */
+     hugging one edge above a full-width status grid. The utility column
+     (§4/§4c) is its own fixed-width track at the frame's right edge, so it
+     needs no override here: it follows the frame wherever that edge lands. */
   [data-iw-header="identity-region"] { justify-self: stretch !important; width: auto !important; max-width: none !important; margin-left: 0 !important; }
-  [data-iw-header="utilities"] { justify-content: flex-start !important; margin: 0 !important; }
-  /* The buttons themselves now flex-grow by default (§4 above) — restore the
-     original fixed 42px square specifically for this band, or growing them
-     across the now bar-wide identity-region would trade "absurd gaps" for
-     "absurdly wide buttons". Below 861px §9's OWN block re-enables flex-grow
-     again, deliberately, because that band's row is tight enough (~350px)
-     for it to look right — see the comment there. */
-  [data-iw-header="utility-button"] { width: 42px !important; min-width: 42px !important; flex: 0 0 auto !important; }
 }
 
 @media (max-width: 860px) {
   [data-iw-header="root"] { padding: 14px !important; }
+  /* The crest grows to 116px here, so the frame does too; --hd-crest-h keeps
+     the utility squares (§3's --hd-util) sized to the taller frame. Same three
+     tracks as desktop — the column stays beside the frame, not under it. */
   [data-iw-header="identity-region"] {
-    grid-template-columns: 108px minmax(0, 1fr) !important;
-    grid-template-areas: "crest profile" "utilities utilities" !important;
+    --hd-crest-h: 116px;
+    grid-template-columns: 108px minmax(0, 1fr) var(--hd-util) !important;
+    grid-template-areas: "crest profile utilities" !important;
     gap: 10px 14px !important;
   }
   .fs-header-crest { width: 108px !important; height: 116px !important; }
-  /* Curtis (2026-09): flush to the frame's edges, buttons wide with only a
-     slight gap — not clustered left with a bare gap on the right. Restore
-     §4's own bleed/spread rather than inventing a new one: the frame pseudo's
-     `margin: -8px -8px` (§3, [data-iw-header="identity-region"]::before) does
-     not change at this breakpoint — only the crest/profile column widths do —
-     so the SAME -8px bleed still lines the row's ends up with the frame's
-     edges. `justify-content` reverts to space-between too, though with the
-     buttons themselves now flex-growing (below) it has nothing left to
-     distribute — kept for the fallback where content is short enough that
-     they don't fill the row. */
-  [data-iw-header="utilities"] { justify-content: space-between !important; margin: 0 -8px !important; }
-  /* §4's flex-grow default was explicitly turned back into a fixed 42px
-     square for the 861-1280px band just above (its row is bar-wide there,
-     and growing across it would produce oversized buttons). Below 861px the
-     row is back to a tight ~350px, so re-enable the default's flex-grow —
-     small GAP (var(--hd-gap), unchanged), wide buttons, no bare space after
-     the last one. */
-  [data-iw-header="utility-button"] {
-    flex: 1 1 0 !important;
-    width: auto !important;
-    min-width: 0 !important;
-  }
   /* Two equal columns, plain auto-flow in DOM order — matches the live game's
      own mobile header (Curtis, 2026-09: reference capture showed gold/XP,
      ATK-DEF-HP/no-ATK-potion, no-DEF-potion/boost, two per row). The desktop

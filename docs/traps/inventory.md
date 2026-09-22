@@ -185,3 +185,21 @@ line yet). At exactly +4 the line is genuine and kept; items with no orb system
 (rings, amulets, trinkets that really can't be upgraded) keep it too, because
 `suppressNotUpgradable` is false for them. `NOT_UPGRADABLE` matches only the
 negative phrasings, so a hypothetical positive "Upgradable" line is untouched.
+
+**Salvaging rows reuse the inventory row, and they are BUTTONS (2026-09-21).**
+The Village route's Salvaging panel lists owned items as whole-row
+`<button class="compact-row">`s (click = select for salvage) in
+`div.grid.gap-2 < div.compact-panel < div.panel` under `<h2>Salvaging</h2>`.
+`resolveInventoryContext` accepts a BUTTON row whose nearest `.panel` carries
+that heading (`findSalvageRoot`); the last page's `div.compact-row` "Empty
+salvage slot" fillers are not buttons and stay unrendered. The overlay is
+appended inside the button, so every click still reaches React. Salvage
+passes `root: null`, so no inventory chrome roles are written in that panel;
+its list wrapper gets its own `data-iw-salvage-list` (recessed frame, gap 0).
+The only per-instance state is the purple `· enchanted · socketed` span, which
+`salvageDetails()` carries as detail chips (rule 5: salvaging destroys them).
+Because the row is a `<button>`, the generic control plate in ui-system.css
+and the base.css radius/shadow/hover chains beat the `.compact-row:has(>
+.fs-inv-row)` shell; they now carry `:not([data-fs-inv])` (the rendered-row
+marker, never set on a real control). The focus-visible outline is deliberately
+NOT excluded. `tests/salvage-rows.test.mjs` pins it, with negative controls.

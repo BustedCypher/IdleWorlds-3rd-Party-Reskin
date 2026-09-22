@@ -43,8 +43,6 @@ const EXCLUDE = [
   /\.md$/i,
   /\.html$/i,
   /(^|\/)prompts?\.(txt|json)$/i,
-  /^assets\/skills-ui\/buttons\/themes-v2\//,
-  /^assets\/skills-ui\/buttons\/source-v4\//,
 ];
 
 async function walk(dir) {

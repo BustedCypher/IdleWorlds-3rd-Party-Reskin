@@ -207,7 +207,7 @@ const PAGE = `<!doctype html><html data-iw-page-hydrated="1"><head><meta charset
             <button>Players online: 141</button>
           </div>
           <div class="flex items-center gap-2">
-            ${['&#9734;', '&#9993;', '+', '1', '&#9881;'].map(g => `<button class="header-icon-btn">${g}</button>`).join('')}
+            ${['&#9734;', '&#9993;', '+', '&#127942;', '1', '&#9881;'].map(g => `<button class="header-icon-btn">${g}</button>`).join('')}
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2 min-w-0">

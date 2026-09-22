@@ -230,7 +230,6 @@ def build():
             index['entries'].append({'key': f'{kind}-{state}', 'x': x,
                                      'y': GAP + row * (AH + GAP), 'width': w,
                                      'height': AH, 'anchor': [w / 2, AH / 2]})
-    metrics = {}
     for theme in themes:
         actions, arrows = generated_states(theme) if theme in GENERATED_THEMES else (main_states(theme), chevron_states(theme))
         actions[1] = shade_hover_text_panel(actions[1])
@@ -240,15 +239,12 @@ def build():
             sprites[f'chevron-next-{state}'] = arrows[i]
             sprites[f'chevron-prev-{state}'] = ImageOps.mirror(arrows[i])
         atlas = Image.new('RGBA', (SHEET_W, SHEET_H))
-        metrics[theme] = {}
         for entry in index['entries']:
             sprite = sprites[entry['key']]
             atlas.alpha_composite(sprite, (entry['x'], entry['y']))
-            metrics[theme][entry['key']] = {'bounds': sprite.getbbox()}
         atlas.save(OUT / f'{theme}.png', optimize=True)
         print(f'{theme}: {atlas.size}, {len(sprites)} registered sprites')
     (OUT / 'index.json').write_text(json.dumps(index, indent=2) + '\n')
-    (OUT / 'registration.json').write_text(json.dumps(metrics, indent=2) + '\n')
 
 
 if __name__ == '__main__':

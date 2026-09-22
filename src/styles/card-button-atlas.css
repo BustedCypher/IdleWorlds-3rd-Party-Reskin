@@ -40,12 +40,12 @@ html[data-iw-zone-theme="lunar-spectral"] {
   --iw-card-nav-clicked: transparent url('../assets/skills-ui/buttons/card-v6/nav-atlas.png') 91.66666666666667% 43.39869281045752% / 376.1904761904762% 1286.046511627907% no-repeat;
 }
 html[data-iw-zone-theme="runic-arcane"] {
-  --iw-card-action-idle: transparent url('../assets/skills-ui/buttons/card-v6/action-atlas.png') 17.92717086834734% 56.72478206724782% / 512.7167630057803% 1055.952380952381% no-repeat;
-  --iw-card-action-hover: transparent url('../assets/skills-ui/buttons/card-v6/action-atlas.png') 50.14005602240896% 56.72478206724782% / 512.7167630057803% 1055.952380952381% no-repeat;
-  --iw-card-action-clicked: transparent url('../assets/skills-ui/buttons/card-v6/action-atlas.png') 82.49299719887955% 56.72478206724782% / 512.7167630057803% 1055.952380952381% no-repeat;
-  --iw-card-nav-idle: transparent url('../assets/skills-ui/buttons/card-v6/nav-atlas.png') 8.333333333333334% 53.72549019607843% / 376.1904761904762% 1286.046511627907% no-repeat;
-  --iw-card-nav-hover: transparent url('../assets/skills-ui/buttons/card-v6/nav-atlas.png') 50% 53.72549019607843% / 376.1904761904762% 1286.046511627907% no-repeat;
-  --iw-card-nav-clicked: transparent url('../assets/skills-ui/buttons/card-v6/nav-atlas.png') 91.66666666666667% 53.72549019607843% / 376.1904761904762% 1286.046511627907% no-repeat;
+  --iw-card-action-idle: transparent url('../assets/skills-ui/buttons/card-v6/action-atlas.png') 17.92717086834734% 79.14072229140723% / 512.7167630057803% 1055.952380952381% no-repeat;
+  --iw-card-action-hover: transparent url('../assets/skills-ui/buttons/card-v6/action-atlas.png') 50.14005602240896% 79.14072229140723% / 512.7167630057803% 1055.952380952381% no-repeat;
+  --iw-card-action-clicked: transparent url('../assets/skills-ui/buttons/card-v6/action-atlas.png') 82.49299719887955% 79.14072229140723% / 512.7167630057803% 1055.952380952381% no-repeat;
+  --iw-card-nav-idle: transparent url('../assets/skills-ui/buttons/card-v6/nav-atlas.png') 8.333333333333334% 74.640522875817% / 376.1904761904762% 1286.046511627907% no-repeat;
+  --iw-card-nav-hover: transparent url('../assets/skills-ui/buttons/card-v6/nav-atlas.png') 50% 74.640522875817% / 376.1904761904762% 1286.046511627907% no-repeat;
+  --iw-card-nav-clicked: transparent url('../assets/skills-ui/buttons/card-v6/nav-atlas.png') 91.66666666666667% 74.640522875817% / 376.1904761904762% 1286.046511627907% no-repeat;
 }
 html[data-iw-zone-theme="tempest-oceanic"] {
   --iw-card-action-idle: transparent url('../assets/skills-ui/buttons/card-v6/action-atlas.png') 17.92717086834734% 67.93275217932752% / 512.7167630057803% 1055.952380952381% no-repeat;

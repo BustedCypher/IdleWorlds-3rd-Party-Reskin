@@ -1,0 +1,2409 @@
+[
+ {
+  "name": "data-fs-action-host",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\inventory.css"
+  ]
+ },
+ {
+  "name": "data-fs-action-kind",
+  "js": [
+   {
+    "file": "src\\modules\\CompactButtons.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\compact-buttons.css",
+   "src\\styles\\inventory.css"
+  ]
+ },
+ {
+  "name": "data-fs-hidden",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-fs-inv",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-fs-preserved-action",
+  "js": [
+   {
+    "file": "src\\modules\\CompactButtons.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\inventory.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-fs-quest",
+  "js": [
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-fs-skill",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-fs-skill-flavour",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-fs-skill-label",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "clear",
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-fs-skill-rune",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-fs-suppressed",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\inventory.css"
+  ]
+ },
+ {
+  "name": "data-iw-atlas",
+  "js": [
+   {
+    "file": "src\\modules\\AtlasService.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-badge",
+  "js": [
+   {
+    "file": "src\\modules\\AtlasService.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-base-exp",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "write",
+     "read",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-boss",
+  "js": [
+   {
+    "file": "src\\modules\\OverlayFramer.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-boss-action-label",
+  "js": [
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write",
+     "clear",
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-boss-action-state",
+  "js": [
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-boss-art-ready",
+  "js": [
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-boss-owned",
+  "js": [
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-boss-role",
+  "js": [
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "clear",
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\base.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-btn-state",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "clear",
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\card-buttons.css",
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-button-atlas",
+  "js": [
+   {
+    "file": "src\\modules\\SkillsArtService.js",
+    "kinds": [
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-chrome",
+  "js": [
+   {
+    "file": "src\\modules\\HeaderChrome.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-clean-text",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "write",
+     "read",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-collapse",
+  "js": [
+   {
+    "file": "src\\modules\\CollapsibleFrames.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\CompactButtons.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\collapsible.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-collapse-head",
+  "js": [
+   {
+    "file": "src\\modules\\CollapsibleFrames.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\collapsible.css"
+  ]
+ },
+ {
+  "name": "data-iw-collapse-spine",
+  "js": [
+   {
+    "file": "src\\modules\\CollapsibleFrames.js",
+    "kinds": [
+     "read",
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\collapsible.css"
+  ]
+ },
+ {
+  "name": "data-iw-collapse-title",
+  "js": [
+   {
+    "file": "src\\modules\\CollapsibleFrames.js",
+    "kinds": [
+     "read",
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\collapsible.css"
+  ]
+ },
+ {
+  "name": "data-iw-collapsed",
+  "js": [
+   {
+    "file": "src\\modules\\CollapsibleFrames.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\collapsible.css",
+   "src\\styles\\skillcard-v2.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-compact-atlas",
+  "js": [
+   {
+    "file": "src\\modules\\SkillsArtService.js",
+    "kinds": [
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\compact-buttons.css"
+  ]
+ },
+ {
+  "name": "data-iw-compact-button",
+  "js": [
+   {
+    "file": "src\\modules\\CompactButtons.js",
+    "kinds": [
+     "clear",
+     "read",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\DOMWatcher.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\compact-buttons.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-compact-layer",
+  "js": [
+   {
+    "file": "src\\modules\\CompactButtons.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\compact-buttons.css"
+  ]
+ },
+ {
+  "name": "data-iw-compact-selected",
+  "js": [
+   {
+    "file": "src\\modules\\CompactButtons.js",
+    "kinds": [
+     "clear",
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\compact-buttons.css"
+  ]
+ },
+ {
+  "name": "data-iw-control",
+  "js": [
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-control-crest",
+  "js": [
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-control-source",
+  "js": [
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-encounter",
+  "js": [
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-header",
+  "js": [
+   {
+    "file": "src\\modules\\HeaderRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\OverlayFramer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\base.css",
+   "src\\styles\\header.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-header-card",
+  "js": [
+   {
+    "file": "src\\modules\\HeaderRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-header-stat",
+  "js": [
+   {
+    "file": "src\\modules\\HeaderRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\header.css"
+  ]
+ },
+ {
+  "name": "data-iw-ingr",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read",
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-ingredient-list-source",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "clear",
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-ingredient-signature",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-ingredient-state",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-inventory-control",
+  "js": [
+   {
+    "file": "src\\modules\\CompactButtons.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\inventory.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-inventory-filter-state",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\compact-buttons.css",
+   "src\\styles\\inventory.css"
+  ]
+ },
+ {
+  "name": "data-iw-inventory-filters",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\inventory.css"
+  ]
+ },
+ {
+  "name": "data-iw-inventory-list",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\inventory.css"
+  ]
+ },
+ {
+  "name": "data-iw-inventory-root",
+  "js": [
+   {
+    "file": "src\\modules\\CollapsibleFrames.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\OverlayFramer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\inventory.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-inventory-title",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\inventory.css"
+  ]
+ },
+ {
+  "name": "data-iw-item",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   },
+   {
+    "file": "src\\modules\\TooltipEngine.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-item-name",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read",
+     "clear",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\TooltipEngine.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-market",
+  "js": [
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-nav-direction",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read",
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\card-buttons.css",
+   "src\\styles\\skillcard-v2.css",
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-nav-link",
+  "js": [
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-order-handle",
+  "js": [],
+  "css": [
+   "src\\styles\\base.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-overlay",
+  "js": [
+   {
+    "file": "src\\modules\\OverlayFramer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   },
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\VillageScene.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\overlay.css"
+  ]
+ },
+ {
+  "name": "data-iw-page-hydrated",
+  "js": [
+   {
+    "file": "src\\modules\\HydrationGate.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\page\\hydration-signal.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-painted",
+  "js": [
+   {
+    "file": "src\\modules\\BackgroundPainter.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-panel",
+  "js": [
+   {
+    "file": "src\\modules\\CollapsibleFrames.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   },
+   {
+    "file": "src\\modules\\VillageScene.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-panel-header",
+  "js": [
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-panel-part",
+  "js": [
+   {
+    "file": "src\\modules\\CompactButtons.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\compact-buttons.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-progress-display",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "write",
+     "read",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-progress-reset",
+  "js": [
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-quest-art-pending",
+  "js": [
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-quest-glyph",
+  "js": [
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-quest-icon",
+  "js": [
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-quest-icon-pending",
+  "js": [
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-quest-percent",
+  "js": [
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "write",
+     "read",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-quest-reward",
+  "js": [
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "write",
+     "read",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-quest-role",
+  "js": [
+   {
+    "file": "src\\modules\\OverlayFramer.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\base.css",
+   "src\\styles\\skillpanel.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-quest-state",
+  "js": [
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-quest-zone",
+  "js": [
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-readout",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read",
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-req-state",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read",
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-art",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-art-pending",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-art-ready",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-boost",
+  "js": [
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "clear",
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-card-design",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\card-buttons.css",
+   "src\\styles\\skillcard-v2-runtime-safe.css",
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-design-toggle",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-glyph",
+  "js": [
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-ingredient-list",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-layout",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\card-buttons.css",
+   "src\\styles\\skillcard-v2.css",
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-layout-shell",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css",
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-role",
+  "js": [
+   {
+    "file": "src\\modules\\OverlayFramer.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\base.css",
+   "src\\styles\\card-buttons.css",
+   "src\\styles\\skillcard-v2.css",
+   "src\\styles\\skillpanel.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\card-buttons.css",
+   "src\\styles\\skillcard-v2-runtime-safe.css",
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-action-glyph",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-action-label",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-action-timer",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-body",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-body-kind",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-body-signature",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "clear",
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-body-state",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-break",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-controls",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-expand",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-fill-reset",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-label-fit",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-level-readout",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-long-action",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "clear",
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-req-note",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-row",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-section",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "clear",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2-runtime-safe.css",
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-state",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-summary",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-summary-state",
+  "js": [],
+  "css": [
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-v2-tab",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-tabs",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skill-v2-type",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css"
+  ]
+ },
+ {
+  "name": "data-iw-skill-zone",
+  "js": [
+   {
+    "file": "src\\modules\\SkillCardDesignController.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillcard-v2.css",
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-skills-atlas",
+  "js": [
+   {
+    "file": "src\\modules\\SkillsArtService.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skills-atlas-index",
+  "js": [
+   {
+    "file": "src\\modules\\SkillsArtService.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-skills-ui-ready",
+  "js": [
+   {
+    "file": "src\\modules\\CollapsibleFrames.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillsArtService.js",
+    "kinds": [
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\card-buttons.css",
+   "src\\styles\\skillpanel.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-state",
+  "js": [
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\compact-buttons.css",
+   "src\\styles\\header.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-style",
+  "js": [
+   {
+    "file": "src\\modules\\StyleInjector.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-tab",
+  "js": [
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-tooltip-trigger",
+  "js": [
+   {
+    "file": "src\\modules\\InventoryRenderer.js",
+    "kinds": [
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\NameScanner.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\QuestPanelRenderer.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\TooltipEngine.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\WorldBossPanels.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\skillpanel.css"
+  ]
+ },
+ {
+  "name": "data-iw-ui",
+  "js": [
+   {
+    "file": "src\\modules\\CollapsibleFrames.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\CompactButtons.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\HeaderChrome.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\HeaderRenderer.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\OverlayFramer.js",
+    "kinds": [
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\SkillPanelRenderer.js",
+    "kinds": [
+     "clear",
+     "write"
+    ]
+   },
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   },
+   {
+    "file": "src\\modules\\VillageScene.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\base.css",
+   "src\\styles\\compact-buttons.css",
+   "src\\styles\\header.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-village",
+  "js": [
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\VillageScene.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-village-action",
+  "js": [
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-village-art",
+  "js": [
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-village-ledger",
+  "js": [
+   {
+    "file": "src\\modules\\VillageLedger.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\village-scene.css"
+  ]
+ },
+ {
+  "name": "data-iw-village-owned",
+  "js": [
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-village-pip",
+  "js": [
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-village-role",
+  "js": [
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\VillageScene.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\base.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-village-scene",
+  "js": [
+   {
+    "file": "src\\modules\\VillageScene.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-village-scene-owned",
+  "js": [
+   {
+    "file": "src\\modules\\VillageScene.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-village-state",
+  "js": [
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   },
+   {
+    "file": "src\\modules\\VillageScene.js",
+    "kinds": [
+     "read"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-village-tier",
+  "js": [
+   {
+    "file": "src\\modules\\VillagePanels.js",
+    "kinds": [
+     "write",
+     "read"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-village-totals",
+  "js": [
+   {
+    "file": "src\\modules\\VillageLedger.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-vs-entry",
+  "js": [
+   {
+    "file": "src\\modules\\VillageLedger.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-vs-open",
+  "js": [
+   {
+    "file": "src\\modules\\VillageLedger.js",
+    "kinds": [
+     "read",
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\village-scene.css"
+  ]
+ },
+ {
+  "name": "data-iw-vs-slot-state",
+  "js": [
+   {
+    "file": "src\\modules\\VillageLedger.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\village-scene.css"
+  ]
+ },
+ {
+  "name": "data-iw-vs-stat-kind",
+  "js": [
+   {
+    "file": "src\\modules\\VillageLedger.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\village-scene.css"
+  ]
+ },
+ {
+  "name": "data-iw-vs-toggle",
+  "js": [
+   {
+    "file": "src\\modules\\VillageLedger.js",
+    "kinds": [
+     "write"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-zone",
+  "js": [
+   {
+    "file": "src\\modules\\HeaderRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": []
+ },
+ {
+  "name": "data-iw-zone-action",
+  "js": [
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\header.css"
+  ]
+ },
+ {
+  "name": "data-iw-zone-link",
+  "js": [
+   {
+    "file": "src\\modules\\UIFoundation.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\base.css",
+   "src\\styles\\header.css",
+   "src\\styles\\ui-system.css"
+  ]
+ },
+ {
+  "name": "data-iw-zone-theme",
+  "js": [
+   {
+    "file": "src\\modules\\HeaderRenderer.js",
+    "kinds": [
+     "read",
+     "write",
+     "clear"
+    ]
+   }
+  ],
+  "css": [
+   "src\\styles\\base.css",
+   "src\\styles\\card-button-atlas.css",
+   "src\\styles\\card-buttons.css",
+   "src\\styles\\skillpanel.css"
+  ]
+ }
+]

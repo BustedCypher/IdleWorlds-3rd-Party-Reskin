@@ -425,8 +425,8 @@ h1:not(:where([data-iw-header="profile-name"])), h2, h3 {
   border-radius: var(--iw-r-panel) !important;
 }
 
-button:not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-order-handle]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-order-handle]) {
+button:not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-order-handle]):not([data-fs-inv]):not([data-iw-header="utility-button"]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-order-handle]):not([data-fs-inv]) {
   border-radius: var(--iw-r-control) !important;
 }
 
@@ -505,16 +505,16 @@ textarea {
    a faint second frame just outside the sprite ("a sprite frame on a button
    means the button's own plate must go"). The skill nav/action buttons are
    safe unlisted only because styleButton() writes their plate inline. */
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-order-handle]):not([data-iw-zone-link]),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-order-handle]):not([data-iw-zone-link]) {
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-order-handle]):not([data-fs-inv]):not([data-iw-zone-link]),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([class*="decoration-dotted"]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not(.iw-boss-reward):not([data-iw-order-handle]):not([data-fs-inv]):not([data-iw-zone-link]) {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.028),
     0 1px 0 rgba(0,0,0,.65) !important;
   transition: color .12s ease, border-color .12s ease, background-color .12s ease, filter .12s ease !important;
 }
 
-button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-order-handle]):hover:not(:disabled),
-[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-order-handle]):hover {
+button:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-order-handle]):not([data-fs-inv]):hover:not(:disabled),
+[role="button"]:not(.iw-item-ref):not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-skill-role="level-progress"]):not([data-iw-order-handle]):not([data-fs-inv]):hover {
   filter: brightness(1.08);
 }
 
@@ -548,7 +548,7 @@ textarea::placeholder {
    selected colour, but make the rail read like game tabs instead of pills. */
 nav button,
 nav [role="button"],
-header button:not([class*="chat-name-"]):not([class*="hover:underline"]),
+header button:not([class*="chat-name-"]):not([class*="hover:underline"]):not([data-iw-header="utility-button"]),
 [class*="tab"] button {
   border-radius: var(--iw-r-control) !important;
   font-weight: 700 !important;
