@@ -160,6 +160,12 @@ function detectSkillType(panel, precomputed) {
     return 'unknown';
   }
 
+  // Every skill card carries a control (a locked card's is disabled). A
+  // control-less stat block such as Character Stats' Lifetime Stats would
+  // otherwise trip the label fallback below — "Wood Chopped" matches ^wood —
+  // and be painted as a Woodcutting card.
+  if (!buttonEls.length) return 'unknown';
+
   // Specific verbs are authoritative. GATHER/HARVEST are deferred because
   // Spellcraft currently reuses those verbs for mana harvesting.
   if (hasAction('fight'))                    return 'combat';

@@ -213,6 +213,18 @@ negative control, and teardown removes all three semantic hooks. This keeps the
 fix scoped to the role the game itself expresses structurally rather than to
 one currently reported string.
 
+**Lifetime Stats was being skinned as a Woodcutting card (2026-09-22).** The
+same block reaches `iw:skill-panel` because it is a `.compact-panel`, and
+`DOMWatcher.detectSkillType`'s anchored label fallback matched the stat label
+"Wood Chopped" against `^wood\s`. SkillPanelRenderer then gave it the skill
+accent and ground, and promoted "Wood Chopped" to the card title, which is
+why that one label rendered larger and underlined. Active Buffs, identical
+markup with no skill word in it, stayed `unknown` and looked right. The fix
+is structural: every skill card carries a control (a locked card's is
+disabled), so a panel with no `<button>` returns `unknown` before any label
+is read. `tests/stat-block-not-skill.test.mjs` pins it with the deployed
+markup, plus Chop and label-only Woodcutting cards as positive controls.
+
 **Verified against the app's real palette:** the requirement met/unmet test
 (`/\btext-(?:red|rose|orange|amber|yellow)-\d/`) is correct. The app's full
 `text-*` colour set is amber, blue, cyan, emerald, fuchsia, green, orange,
