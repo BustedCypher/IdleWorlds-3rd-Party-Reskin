@@ -1,0 +1,206 @@
+{
+  "generatedBy": "handoff/native-render-migration/tools/export-theme-css.mjs",
+  "assetBase": "/fantasy-skin/",
+  "note": "Link these files in this order, AFTER every stylesheet the game itself ships. Do not edit, reorder, merge differently or re-minify them.",
+  "sheets": [
+    {
+      "order": 1,
+      "file": "01-base.css",
+      "extensionStyleId": "base",
+      "sources": [
+        "src/styles/base.css"
+      ],
+      "bytes": 17215,
+      "sha256": "e787642657e03277cb501a8fb2fa60cd253f39a746dfd74f9fa3ee3dc3cbe03d"
+    },
+    {
+      "order": 2,
+      "file": "02-tooltip-engine.css",
+      "extensionStyleId": "tooltip-engine",
+      "sources": [
+        "src/styles/tooltip-engine.css"
+      ],
+      "bytes": 7218,
+      "sha256": "8a9fe8902c91f74b67cce1dcdd8f65dd7e3b348379f8fe89a5432d70534f4f0b"
+    },
+    {
+      "order": 3,
+      "file": "03-inventory.css",
+      "extensionStyleId": "inventory",
+      "sources": [
+        "src/styles/inventory.css"
+      ],
+      "bytes": 18618,
+      "sha256": "50d93597dba7150bde65d00c15df0dfcd0de5eb8a68a80903039cd72cef728ca"
+    },
+    {
+      "order": 4,
+      "file": "04-skillpanel.css",
+      "extensionStyleId": "skillpanel",
+      "sources": [
+        "src/styles/skillpanel.css",
+        "src/styles/skillcard-v2.css",
+        "src/styles/skillcard-v2-runtime-safe.css",
+        "src/styles/card-button-atlas.css",
+        "src/styles/card-buttons.css"
+      ],
+      "bytes": 182069,
+      "sha256": "5e526877ad948719e0adfea856afdbe5558f0f9ad595665c2d6eb53ea64c7b23"
+    },
+    {
+      "order": 5,
+      "file": "05-header.css",
+      "extensionStyleId": "header",
+      "sources": [
+        "src/styles/header.css"
+      ],
+      "bytes": 22820,
+      "sha256": "69041fb7bdbdf5131b1d28b82903eee298f9099fcbef54e891723a9c987bcf81"
+    },
+    {
+      "order": 6,
+      "file": "06-overlay.css",
+      "extensionStyleId": "overlay",
+      "sources": [
+        "src/styles/overlay.css"
+      ],
+      "bytes": 1685,
+      "sha256": "845c3d1842402c227b59a00327204cd8e59b27dd396580540964ec1150e7d45a"
+    },
+    {
+      "order": 7,
+      "file": "07-ui-system.css",
+      "extensionStyleId": "ui-system",
+      "sources": [
+        "src/styles/ui-system.css",
+        "src/styles/compact-buttons.css",
+        "src/styles/village-scene.css",
+        "src/styles/collapsible.css"
+      ],
+      "bytes": 88390,
+      "sha256": "4354a18e021653a5f22f9e7dcf08c6296233faebce356c53656a20a0518b25be"
+    }
+  ],
+  "assets": [
+    {
+      "path": "assets/fonts/barlow-400.woff2",
+      "present": true
+    },
+    {
+      "path": "assets/fonts/barlow-500.woff2",
+      "present": true
+    },
+    {
+      "path": "assets/fonts/barlow-600.woff2",
+      "present": true
+    },
+    {
+      "path": "assets/fonts/barlow-700.woff2",
+      "present": true
+    },
+    {
+      "path": "assets/fonts/cinzel-variable.woff2",
+      "present": true
+    },
+    {
+      "path": "assets/fonts/crimson-text-italic.woff2",
+      "present": true
+    },
+    {
+      "path": "assets/inventory/panel_corners.webp",
+      "present": true
+    },
+    {
+      "path": "assets/inventory/separator_flourish.webp",
+      "present": true
+    },
+    {
+      "path": "assets/quest-frames/approved-frames.png",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/alchemy.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/combat.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/construction.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/gathering.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/jewelcrafting.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/mining.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/smithing.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/spellcrafting.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/tailoring.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/action-icons/woodcutting.svg",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/buttons/card-v6/action-atlas.png",
+      "present": true
+    },
+    {
+      "path": "assets/skills-ui/buttons/card-v6/nav-atlas.png",
+      "present": true
+    },
+    {
+      "path": "assets/skills_panel_texture.webp",
+      "present": true
+    },
+    {
+      "path": "assets/skills_ui_atlas.webp",
+      "present": true
+    },
+    {
+      "path": "assets/village/cobblestone.png",
+      "present": true
+    },
+    {
+      "path": "assets/world-boss/world_boss_fighting-v3.png",
+      "present": true
+    },
+    {
+      "path": "assets/world-boss/world_boss_join-v2.png",
+      "present": true
+    },
+    {
+      "path": "assets/world-boss/world_boss_join_hover-v2.png",
+      "present": true
+    },
+    {
+      "path": "assets/world-boss/world_boss_prejoined-v2.png",
+      "present": true
+    },
+    {
+      "path": "assets/world-bosses/encounters.png",
+      "present": true
+    },
+    {
+      "path": "assets/world-bosses/zone-control-contested-v3.png",
+      "present": true
+    }
+  ]
+}

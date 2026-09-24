@@ -1,0 +1,38 @@
+{
+  "attributes": {
+    "data-iw-skill-card-design": "new",
+    "data-iw-zone-theme": "voidborn",
+    "data-iw-compact-atlas": "compact-ghost-v3",
+    "data-iw-button-atlas": "revised-v5"
+  },
+  "inlineStyle": {
+    "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_voidborn.webp\")",
+    "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_voidborn.webp\")",
+    "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_voidborn.webp\")",
+    "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/voidborn.png\")",
+    "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+    "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+    "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+    "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+    "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+    "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+    "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+    "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+    "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+    "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+    "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+    "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+    "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+  }
+}

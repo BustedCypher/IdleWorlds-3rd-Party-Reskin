@@ -1,5 +1,11 @@
 # Handoff package
 
+> **Porting the whole theme into the game's own render?** Start with
+> [`native-render-migration/`](native-render-migration/README.md): the
+> per-surface DOM contract, the exported stylesheets, precomputed values,
+> golden before/after markup, and the parity tools that prove a native render
+> is pixel-identical to the extension.
+
 Two features, built and shipped inside the IdleWorlds Fantasy Skin browser
 extension, written up so they can be rebuilt inside IdleWorlds itself.
 

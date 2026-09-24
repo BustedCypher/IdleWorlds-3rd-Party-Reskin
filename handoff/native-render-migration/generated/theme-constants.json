@@ -1,0 +1,3536 @@
+{
+  "generatedBy": "handoff/native-render-migration/tools/export-theme-constants.mjs",
+  "assetBase": "/fantasy-skin/",
+  "readme": "Values the extension computes at runtime, precomputed. Emit them verbatim. Keys are referenced by chapter from handoff/native-render-migration/.",
+  "htmlRoot": {
+    "default": {
+      "visualButtonTheme": "forged-metal",
+      "attributes": {
+        "data-iw-zone-theme": "default",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/forged-metal.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    },
+    "celestial": {
+      "visualButtonTheme": "celestial",
+      "attributes": {
+        "data-iw-zone-theme": "celestial",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_celestial.webp\")",
+        "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_celestial.webp\")",
+        "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_celestial.webp\")",
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/celestial.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/celestial.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    },
+    "forged-metal": {
+      "visualButtonTheme": "forged-metal",
+      "attributes": {
+        "data-iw-zone-theme": "forged-metal",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_forged-metal.webp\")",
+        "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_forged-metal.webp\")",
+        "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_forged-metal.webp\")",
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/forged-metal.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/forged-metal.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    },
+    "glacial": {
+      "visualButtonTheme": "glacial",
+      "attributes": {
+        "data-iw-zone-theme": "glacial",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_glacial.webp\")",
+        "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_glacial.webp\")",
+        "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_glacial.webp\")",
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/glacial.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/glacial.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    },
+    "infernal": {
+      "visualButtonTheme": "infernal",
+      "attributes": {
+        "data-iw-zone-theme": "infernal",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_infernal.webp\")",
+        "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_infernal.webp\")",
+        "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_infernal.webp\")",
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/infernal.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/infernal.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    },
+    "lunar-spectral": {
+      "visualButtonTheme": "lunar-spectral",
+      "attributes": {
+        "data-iw-zone-theme": "lunar-spectral",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_lunar-spectral.webp\")",
+        "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_lunar-spectral.webp\")",
+        "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_lunar-spectral.webp\")",
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/lunar-spectral.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/lunar-spectral.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    },
+    "runic-arcane": {
+      "visualButtonTheme": "runic-arcane",
+      "attributes": {
+        "data-iw-zone-theme": "runic-arcane",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_runic-arcane.webp\")",
+        "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_runic-arcane.webp\")",
+        "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_runic-arcane.webp\")",
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/runic-arcane.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/runic-arcane.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    },
+    "tempest-oceanic": {
+      "visualButtonTheme": "tempest-oceanic",
+      "attributes": {
+        "data-iw-zone-theme": "tempest-oceanic",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_tempest-oceanic.webp\")",
+        "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_tempest-oceanic.webp\")",
+        "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_tempest-oceanic.webp\")",
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/tempest-oceanic.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/tempest-oceanic.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    },
+    "verdant": {
+      "visualButtonTheme": "verdant",
+      "attributes": {
+        "data-iw-zone-theme": "verdant",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_verdant.webp\")",
+        "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_verdant.webp\")",
+        "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_verdant.webp\")",
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/verdant.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/verdant.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    },
+    "voidborn": {
+      "visualButtonTheme": "voidborn",
+      "attributes": {
+        "data-iw-zone-theme": "voidborn",
+        "data-iw-compact-atlas": "compact-ghost-v3",
+        "data-iw-button-atlas": "revised-v5",
+        "data-iw-skill-card-design": "new"
+      },
+      "inlineStyle": {
+        "--iw-zone-atlas": "url(\"/fantasy-skin/assets/skills-ui/theme_voidborn.webp\")",
+        "--iw-corner-filigree": "url(\"/fantasy-skin/assets/skills-ui/panel_corners_voidborn.webp\")",
+        "--iw-zone-separator": "url(\"/fantasy-skin/assets/skills-ui/separator_flourish_voidborn.webp\")",
+        "--iw-compact-atlas": "url(\"/fantasy-skin/assets/skills-ui/buttons/compact-ghost-v3/voidborn.png\")",
+        "--iw-action-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-action-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-action-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-action-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-action-secondary-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 2.4096385542168677% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-action-secondary-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 50% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-action-secondary-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-action-secondary-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 50% 97.59036144578313% / 140.15151515151516% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-chevron-prev-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 1.2307692307692308% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-chevron-prev-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 1.2307692307692308% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-prev-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-chevron-prev-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 1.2307692307692308% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-idle": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-chevron-next-idle-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 98.76923076923077% 2.4096385542168677% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-hover": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-chevron-next-hover-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 98.76923076923077% 50% / 822.2222222222222% 321.3333333333333% no-repeat",
+        "--iw-chevron-next-clicked": "url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\")",
+        "--iw-chevron-next-clicked-paint": "transparent url(\"/fantasy-skin/assets/skills-ui/buttons/revised-v5/voidborn.png\") 98.76923076923077% 97.59036144578313% / 822.2222222222222% 321.3333333333333% no-repeat"
+      }
+    }
+  },
+  "zoneThemes": {
+    "byZone": {
+      "1": "verdant",
+      "2": "forged-metal",
+      "3": "verdant",
+      "4": "infernal",
+      "5": "forged-metal",
+      "6": "celestial",
+      "7": "voidborn",
+      "8": "runic-arcane",
+      "9": "infernal",
+      "10": "celestial",
+      "11": "voidborn",
+      "12": "celestial",
+      "13": "infernal",
+      "14": "lunar-spectral",
+      "15": "infernal",
+      "16": "infernal",
+      "17": "tempest-oceanic",
+      "18": "runic-arcane",
+      "19": "voidborn",
+      "20": "voidborn",
+      "21": "runic-arcane",
+      "22": "glacial",
+      "23": "lunar-spectral",
+      "24": "forged-metal",
+      "25": "celestial",
+      "26": "infernal",
+      "27": "lunar-spectral",
+      "28": "runic-arcane",
+      "29": "infernal",
+      "30": "voidborn",
+      "31": "tempest-oceanic",
+      "32": "infernal",
+      "33": "glacial",
+      "34": "verdant"
+    },
+    "themes": [
+      "celestial",
+      "forged-metal",
+      "glacial",
+      "infernal",
+      "lunar-spectral",
+      "runic-arcane",
+      "tempest-oceanic",
+      "verdant",
+      "voidborn"
+    ],
+    "fallbackVisualButtonTheme": "forged-metal"
+  },
+  "header": {
+    "crest": {
+      "--iw-header-crest": "url(\"/fantasy-skin/assets/header/header_crest.webp\")"
+    },
+    "zoneBarScene": {
+      "--iw-zone-scene": "url(\"/fantasy-skin/assets/header/header_surface.webp\")"
+    },
+    "fallbackSurface": {
+      "--iw-header-surface": "url(\"/fantasy-skin/assets/header/header_surface.webp\")",
+      "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/header_surface.webp\")"
+    },
+    "zoneSurfaces": {
+      "1": {
+        "theme": "verdant",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_1.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_1_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "2": {
+        "theme": "forged-metal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_2.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_2_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "3": {
+        "theme": "verdant",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_3.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_3_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "4": {
+        "theme": "infernal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_4.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_4_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "5": {
+        "theme": "forged-metal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_5.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_5_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "6": {
+        "theme": "celestial",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_6.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_6_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "7": {
+        "theme": "voidborn",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_7.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_7_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "8": {
+        "theme": "runic-arcane",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_8.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_8_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "9": {
+        "theme": "infernal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_9.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_9_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "10": {
+        "theme": "celestial",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_10.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_10_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "11": {
+        "theme": "voidborn",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_11.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_11_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "12": {
+        "theme": "celestial",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_12.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_12_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "13": {
+        "theme": "infernal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_13.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_13_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "14": {
+        "theme": "lunar-spectral",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_14.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_14_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "15": {
+        "theme": "infernal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_15.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_15_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "16": {
+        "theme": "infernal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_16.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_16_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "17": {
+        "theme": "tempest-oceanic",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_17.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_17_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "18": {
+        "theme": "runic-arcane",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_18.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_18_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "19": {
+        "theme": "voidborn",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_19.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_19_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "20": {
+        "theme": "voidborn",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_20.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_20_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "21": {
+        "theme": "runic-arcane",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_21.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_21_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "22": {
+        "theme": "glacial",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_22.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_22_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "23": {
+        "theme": "lunar-spectral",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_23.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_23_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "24": {
+        "theme": "forged-metal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_24.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_24_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "25": {
+        "theme": "celestial",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_25.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_25_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "26": {
+        "theme": "infernal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_26.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_26_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "27": {
+        "theme": "lunar-spectral",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_27.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_27_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "28": {
+        "theme": "runic-arcane",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_28.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_28_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "29": {
+        "theme": "infernal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_29.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_29_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "30": {
+        "theme": "voidborn",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_30.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_30_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "31": {
+        "theme": "tempest-oceanic",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_31.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_31_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "32": {
+        "theme": "infernal",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_32.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_32_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "33": {
+        "theme": "glacial",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_33.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_33_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      },
+      "34": {
+        "theme": "verdant",
+        "--iw-header-surface": "url(\"/fantasy-skin/assets/header/zones/zone_34.webp\")",
+        "--iw-header-surface-mobile": "url(\"/fantasy-skin/assets/header/zones/zone_34_mobile.webp\")",
+        "fileExists": {
+          "wide": true,
+          "mobile": true
+        }
+      }
+    }
+  },
+  "skillsUi": {
+    "attribute": {
+      "data-iw-skills-ui-ready": "1"
+    },
+    "inlineStyle": {
+      "--fs-skills-panel-texture": "url(\"/fantasy-skin/assets/skills_panel_texture.webp\")",
+      "--fs-skills-ui-atlas": "var(--iw-zone-atlas, url(\"/fantasy-skin/assets/skills_ui_atlas.webp\"))",
+      "--fs-skills-nav-prev": "url(\"/fantasy-skin/assets/skills_nav_prev.svg\")",
+      "--fs-skills-nav-next": "url(\"/fantasy-skin/assets/skills_nav_next.svg\")",
+      "--fs-ui-medallion-frame-size": "671.875% 333.09352517985616%",
+      "--fs-ui-medallion-frame-position": "0.819672131147541% 1.8518518518518516%",
+      "--fs-ui-nav-idle-size": "1075% 557.8313253012049%",
+      "--fs-ui-nav-idle-position": "60.641025641025635% 1.5789473684210527%",
+      "--fs-ui-nav-active-size": "1075% 557.8313253012049%",
+      "--fs-ui-nav-active-position": "71.66666666666667% 1.5789473684210527%",
+      "--fs-ui-action-idle-size": "325.75757575757575% 617.3333333333333%",
+      "--fs-ui-action-idle-position": "12.080536912751679% 64.69072164948454%",
+      "--fs-ui-action-idle-cap-size": "1433.3333333333335% 617.3333333333333%",
+      "--fs-ui-action-idle-cap-l-position": "9% 64.69072164948454%",
+      "--fs-ui-action-idle-cap-r-position": "34.5% 64.69072164948454%",
+      "--fs-ui-action-idle-mid-size": "597.2222222222223% 617.3333333333333%",
+      "--fs-ui-action-idle-mid-position": "18.435754189944134% 64.69072164948454%",
+      "--fs-ui-action-cap-ratio": "0.8",
+      "--fs-ui-action-disabled-size": "325.75757575757575% 617.3333333333333%",
+      "--fs-ui-action-disabled-position": "57.38255033557047% 64.69072164948454%",
+      "--fs-ui-action-disabled-cap-size": "1433.3333333333335% 617.3333333333333%",
+      "--fs-ui-action-disabled-cap-l-position": "42.75% 64.69072164948454%",
+      "--fs-ui-action-disabled-cap-r-position": "68.25% 64.69072164948454%",
+      "--fs-ui-action-disabled-mid-size": "597.2222222222223% 617.3333333333333%",
+      "--fs-ui-action-disabled-mid-position": "56.14525139664804% 64.69072164948454%",
+      "--fs-ui-corner-size": "977.2727272727274% 487.36842105263156%",
+      "--fs-ui-corner-position": "0.7772020725388601% 98.36956521739131%",
+      "--fs-ui-xp-plaque-size": "286.6666666666667% 463%",
+      "--fs-ui-xp-plaque-position": "98.92857142857143% 98.34710743801654%",
+      "--fs-ui-separator-size": "328.2442748091603% 1361.764705882353%",
+      "--fs-ui-separator-position": "47.15719063545151% 84.38228438228438%",
+      "--fs-ui-flourish-size": "392.69406392694066% 634.2465753424658%",
+      "--fs-ui-flourish-position": "38.68954758190328% 1.5384615384615385%"
+    }
+  },
+  "skillIcons": {
+    "combat": {
+      "cell": "combat",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "0% 0%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "0"
+      }
+    },
+    "mining": {
+      "cell": "mining",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "20% 0%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "1"
+      }
+    },
+    "smithing": {
+      "cell": "smithing",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "40% 0%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "2"
+      }
+    },
+    "gathering": {
+      "cell": "gathering",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "60% 0%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "3"
+      }
+    },
+    "alchemy": {
+      "cell": "alchemy",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "80% 0%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "4"
+      }
+    },
+    "jewelcrafting": {
+      "cell": "jewelcrafting",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "100% 0%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "5"
+      }
+    },
+    "spellcrafting": {
+      "cell": "spellcrafting",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "0% 100%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "6"
+      }
+    },
+    "tailoring": {
+      "cell": "tailoring",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "20% 100%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "7"
+      }
+    },
+    "woodcutting": {
+      "cell": "gathering",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "60% 0%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "3"
+      }
+    },
+    "construction": {
+      "cell": "crafting",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "40% 100%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "8"
+      }
+    },
+    "crafting": {
+      "cell": "crafting",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "40% 100%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "8"
+      }
+    },
+    "fishing": {
+      "cell": "fishing",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "60% 100%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "9"
+      }
+    },
+    "locked": {
+      "cell": "locked",
+      "inlineStyle": {
+        "background-image": "url(\"/fantasy-skin/assets/skills_icons_atlas.webp\")",
+        "background-size": "600% 200%",
+        "background-position": "80% 100%",
+        "background-repeat": "no-repeat"
+      },
+      "attributes": {
+        "data-iw-skills-atlas": "skills_icons_atlas.webp",
+        "data-iw-skills-atlas-index": "10"
+      }
+    }
+  },
+  "itemAtlases": {
+    "gear": {
+      "image": "url(\"/fantasy-skin/assets/gear_icons_atlas.png\")",
+      "cols": 10,
+      "rows": 153,
+      "cell": 128,
+      "icons": 1148
+    },
+    "item": {
+      "image": "url(\"/fantasy-skin/assets/item_icons_atlas.png\")",
+      "cols": 10,
+      "rows": 48,
+      "cell": 128,
+      "icons": 1269
+    },
+    "formula": "atlasW = cols*cell; atlasH = rows*cell; background-size = `${atlasW/w*100}% ${atlasH/h*100}%`; background-position = `${(x/(atlasW-w)*100).toFixed(6)}% ${(y/(atlasH-h)*100).toFixed(6)}%` (0 when atlasW<=w / atlasH<=h); background-repeat: no-repeat. Resolution order: AtlasService.resolve()."
+  },
+  "skillMeta": {
+    "combat": {
+      "label": "Combat",
+      "labels": [
+        "Combat"
+      ],
+      "glyph": "⚔︎",
+      "actions": [
+        "fight"
+      ]
+    },
+    "mining": {
+      "label": "Mining",
+      "labels": [
+        "Mine",
+        "Mining"
+      ],
+      "glyph": "⛏︎",
+      "actions": [
+        "mine"
+      ]
+    },
+    "smithing": {
+      "label": "Smithing",
+      "labels": [
+        "Smith",
+        "Smithing"
+      ],
+      "glyph": "⚒︎",
+      "actions": [
+        "smelt",
+        "forge"
+      ],
+      "titleActions": [
+        "smelt",
+        "forge",
+        "craft"
+      ]
+    },
+    "gathering": {
+      "label": "Herbalism",
+      "labels": [
+        "Herbalism",
+        "Herb",
+        "Gathering"
+      ],
+      "glyph": "❧",
+      "actions": [
+        "gather",
+        "harvest"
+      ]
+    },
+    "alchemy": {
+      "label": "Alchemy",
+      "labels": [
+        "Alchemy"
+      ],
+      "glyph": "⚗︎",
+      "actions": [
+        "brew"
+      ]
+    },
+    "jewelcrafting": {
+      "label": "Jewelcrafting",
+      "labels": [
+        "Jewel",
+        "Jewelcrafting"
+      ],
+      "glyph": "◆",
+      "actions": [
+        "prospect",
+        "cut"
+      ]
+    },
+    "spellcrafting": {
+      "label": "Spellcrafting",
+      "labels": [
+        "Spellcraft",
+        "Spellcrafting"
+      ],
+      "glyph": "✧",
+      "actions": [
+        "enchant",
+        "gather",
+        "harvest",
+        "craft"
+      ],
+      "titleActions": [
+        "enchant",
+        "harvest",
+        "craft"
+      ],
+      "details": [
+        {
+          "regex": "from the ether$",
+          "flags": "i"
+        }
+      ]
+    },
+    "tailoring": {
+      "label": "Tailoring",
+      "labels": [
+        "Tailor",
+        "Tailoring"
+      ],
+      "glyph": "⋈",
+      "actions": [
+        "tailor",
+        "sew",
+        "weave",
+        "craft"
+      ],
+      "details": [
+        {
+          "regex": "^missing materials\\b",
+          "flags": "i"
+        }
+      ]
+    },
+    "woodcutting": {
+      "label": "Woodcutting",
+      "labels": [
+        "Wood",
+        "Woodcutting"
+      ],
+      "glyph": "⋔",
+      "actions": [
+        "chop"
+      ]
+    },
+    "construction": {
+      "label": "Construction",
+      "labels": [
+        "Build",
+        "Construction"
+      ],
+      "glyph": "⌂",
+      "actions": [
+        "craft parts",
+        "build",
+        "craft"
+      ],
+      "titleActions": [
+        "craft",
+        "build"
+      ]
+    },
+    "crafting": {
+      "label": "Crafting",
+      "labels": [
+        "Craft",
+        "Crafting"
+      ],
+      "glyph": "✦",
+      "actions": [
+        "craft"
+      ]
+    },
+    "fishing": {
+      "label": "Fishing",
+      "labels": [
+        "Fish",
+        "Fishing"
+      ],
+      "glyph": "⌁",
+      "actions": [
+        "fish"
+      ]
+    },
+    "locked": {
+      "label": "Coming Soon",
+      "labels": [
+        "Coming Soon"
+      ],
+      "glyph": "◇",
+      "actions": [],
+      "titleActions": [
+        "upcoming skill"
+      ],
+      "details": [
+        {
+          "regex": "^unlock in a future update$",
+          "flags": "i"
+        }
+      ]
+    }
+  },
+  "skillButtonInlineStyles": {
+    "FORGE": {
+      "bg": "linear-gradient(180deg, #100E0A, #0A0907)",
+      "border": "1px solid var(--iw-th-edge-faint, #2A241A)",
+      "shadow": "inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)",
+      "liveBg": "linear-gradient(180deg, #1B150B, #120E07)",
+      "liveBorder": "1px solid var(--iw-th-brass, #8A6B2E)",
+      "liveTint": "var(--fs-skill-accent, #D8791F)",
+      "liveShadow": "inset 0 0 12px -2px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 55%, transparent), inset 0 1px 0 rgba(255, 216, 150, .18), 0 0 0 1px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 16%, transparent)"
+    },
+    "BUTTON_STYLES": {
+      "base": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "12px",
+        "font-weight": "700",
+        "letter-spacing": "0.09em",
+        "text-transform": "uppercase",
+        "border-radius": "2px",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "32px",
+        "min-height": "32px",
+        "flex-shrink": "0"
+      },
+      "primary": {
+        "background": "linear-gradient(180deg, #1B150B, #120E07)",
+        "border": "1px solid var(--iw-th-brass, #8A6B2E)",
+        "color": "#F3E3C0",
+        "text-shadow": "0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 48%, transparent)",
+        "padding": "0 17px",
+        "min-width": "96px",
+        "cursor": "pointer",
+        "box-shadow": "inset 0 0 12px -2px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 55%, transparent), inset 0 1px 0 rgba(255, 216, 150, .18), 0 0 0 1px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 16%, transparent)"
+      },
+      "secondary": {
+        "background": "linear-gradient(180deg, #100E0A, #0A0907)",
+        "border": "1px solid var(--iw-th-edge-faint, #2A241A)",
+        "color": "var(--iw-text, #DDD6C6)",
+        "text-shadow": "none",
+        "padding": "0 13px",
+        "min-width": "72px",
+        "cursor": "pointer",
+        "box-shadow": "inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)"
+      },
+      "disabled": {
+        "background": "linear-gradient(180deg, #100E0A, #0A0907)",
+        "border": "1px solid var(--iw-th-edge-faint, #2A241A)",
+        "color": "var(--iw-faint, #666052)",
+        "text-shadow": "none",
+        "padding": "0 15px",
+        "min-width": "96px",
+        "cursor": "not-allowed",
+        "box-shadow": "inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)"
+      },
+      "icon": {
+        "background": "linear-gradient(180deg, #100E0A, #0A0907)",
+        "border": "1px solid var(--iw-th-edge-faint, #2A241A)",
+        "color": "var(--iw-gold-dim, #9D8458)",
+        "text-shadow": "none",
+        "padding": "0",
+        "min-width": "30px",
+        "cursor": "pointer",
+        "box-shadow": "inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)"
+      }
+    },
+    "ACTION_ART": {
+      "idle": {
+        "background": "var(--fs-button-background, transparent var(--fs-skills-ui-atlas) var(--fs-ui-action-idle-position) / var(--fs-ui-action-idle-size) no-repeat)",
+        "border": "0",
+        "box-shadow": "none",
+        "text-shadow": "0 1px 0 rgba(0, 0, 0, .85), 0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 42%, transparent)"
+      },
+      "disabled": {
+        "background": "var(--fs-button-background, transparent var(--fs-skills-ui-atlas) var(--fs-ui-action-disabled-position) / var(--fs-ui-action-disabled-size) no-repeat)",
+        "border": "0",
+        "box-shadow": "none",
+        "text-shadow": "0 1px 0 rgba(0, 0, 0, .85)"
+      }
+    },
+    "NAV_BUTTON_W": "26px"
+  },
+  "skillButtonFinalInline": {
+    "note": "Every value is written inline with !important (chapter 3 §3.8). data-iw-btn-state = the state key. The XP readout button (role level-progress) takes NONE of these; it takes skillReadoutInlineStyle instead.",
+    "action-button": {
+      "primary": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "var(--iw-skill-v2-btn-font, 0px)",
+        "font-weight": "700",
+        "letter-spacing": "var(--iw-skill-v2-btn-tracking, 0.09em)",
+        "text-transform": "uppercase",
+        "border-radius": "8px",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "var(--iw-skill-v2-btn-h, 94px)",
+        "min-height": "var(--iw-skill-v2-btn-h, 94px)",
+        "flex-shrink": "0",
+        "background": "var(--fs-button-background, transparent var(--fs-skills-ui-atlas) var(--fs-ui-action-idle-position) / var(--fs-ui-action-idle-size) no-repeat)",
+        "border": "var(--fs-button-border, 3px double #96bddf)",
+        "color": "#F3E3C0",
+        "text-shadow": "0 1px 0 rgba(0, 0, 0, .85), 0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 42%, transparent)",
+        "padding": "var(--iw-skill-v2-btn-pad, 44px 4px 8px)",
+        "min-width": "var(--iw-skill-v2-btn-w, 90px)",
+        "cursor": "pointer",
+        "box-shadow": "var(--fs-button-shadow, none)",
+        "width": "var(--iw-skill-v2-btn-w, 90px)"
+      },
+      "disabled": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "var(--iw-skill-v2-btn-font, 0px)",
+        "font-weight": "700",
+        "letter-spacing": "var(--iw-skill-v2-btn-tracking, 0.09em)",
+        "text-transform": "uppercase",
+        "border-radius": "8px",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "var(--iw-skill-v2-btn-h, 94px)",
+        "min-height": "var(--iw-skill-v2-btn-h, 94px)",
+        "flex-shrink": "0",
+        "background": "var(--fs-button-background, transparent var(--fs-skills-ui-atlas) var(--fs-ui-action-disabled-position) / var(--fs-ui-action-disabled-size) no-repeat)",
+        "border": "var(--fs-button-border, 3px double #96bddf)",
+        "color": "var(--iw-faint, #666052)",
+        "text-shadow": "0 1px 0 rgba(0, 0, 0, .85)",
+        "padding": "var(--iw-skill-v2-btn-pad, 44px 4px 8px)",
+        "min-width": "var(--iw-skill-v2-btn-w, 90px)",
+        "cursor": "not-allowed",
+        "box-shadow": "var(--fs-button-shadow, none)",
+        "width": "var(--iw-skill-v2-btn-w, 90px)"
+      }
+    },
+    "nav-button": {
+      "icon": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "0",
+        "font-weight": "700",
+        "letter-spacing": "0.09em",
+        "text-transform": "uppercase",
+        "border-radius": "var(--iw-skill-v2-nav-radius, 2px)",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "var(--iw-skill-v2-nav-h, 22px)",
+        "min-height": "var(--iw-skill-v2-nav-h, 22px)",
+        "flex-shrink": "0",
+        "background": "var(--fs-button-background, linear-gradient(180deg, #100E0A, #0A0907))",
+        "border": "var(--fs-button-border, 1px solid var(--iw-th-edge-faint, #2A241A))",
+        "color": "transparent",
+        "text-shadow": "none",
+        "padding": "0",
+        "min-width": "var(--iw-skill-v2-nav-w, 39px)",
+        "cursor": "pointer",
+        "box-shadow": "var(--fs-button-shadow, inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95))",
+        "width": "var(--iw-skill-v2-nav-w, 39px)"
+      },
+      "secondary": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "0",
+        "font-weight": "700",
+        "letter-spacing": "0.09em",
+        "text-transform": "uppercase",
+        "border-radius": "var(--iw-skill-v2-nav-radius, 2px)",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "var(--iw-skill-v2-nav-h, 22px)",
+        "min-height": "var(--iw-skill-v2-nav-h, 22px)",
+        "flex-shrink": "0",
+        "background": "var(--fs-button-background, linear-gradient(180deg, #100E0A, #0A0907))",
+        "border": "var(--fs-button-border, 1px solid var(--iw-th-edge-faint, #2A241A))",
+        "color": "transparent",
+        "text-shadow": "none",
+        "padding": "0",
+        "min-width": "var(--iw-skill-v2-nav-w, 39px)",
+        "cursor": "pointer",
+        "box-shadow": "var(--fs-button-shadow, inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95))",
+        "width": "var(--iw-skill-v2-nav-w, 39px)"
+      },
+      "primary": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "0",
+        "font-weight": "700",
+        "letter-spacing": "0.09em",
+        "text-transform": "uppercase",
+        "border-radius": "var(--iw-skill-v2-nav-radius, 2px)",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "var(--iw-skill-v2-nav-h, 22px)",
+        "min-height": "var(--iw-skill-v2-nav-h, 22px)",
+        "flex-shrink": "0",
+        "background": "var(--fs-button-background, linear-gradient(180deg, #100E0A, #0A0907))",
+        "border": "var(--fs-button-border, 1px solid var(--iw-th-edge-faint, #2A241A))",
+        "color": "transparent",
+        "text-shadow": "0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 48%, transparent)",
+        "padding": "0",
+        "min-width": "var(--iw-skill-v2-nav-w, 39px)",
+        "cursor": "pointer",
+        "box-shadow": "var(--fs-button-shadow, inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95))",
+        "width": "var(--iw-skill-v2-nav-w, 39px)"
+      },
+      "disabled": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "0",
+        "font-weight": "700",
+        "letter-spacing": "0.09em",
+        "text-transform": "uppercase",
+        "border-radius": "var(--iw-skill-v2-nav-radius, 2px)",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "var(--iw-skill-v2-nav-h, 22px)",
+        "min-height": "var(--iw-skill-v2-nav-h, 22px)",
+        "flex-shrink": "0",
+        "background": "var(--fs-button-background, linear-gradient(180deg, #100E0A, #0A0907))",
+        "border": "var(--fs-button-border, 1px solid var(--iw-th-edge-faint, #2A241A))",
+        "color": "transparent",
+        "text-shadow": "none",
+        "padding": "0",
+        "min-width": "var(--iw-skill-v2-nav-w, 39px)",
+        "cursor": "not-allowed",
+        "box-shadow": "var(--fs-button-shadow, inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95))",
+        "width": "var(--iw-skill-v2-nav-w, 39px)"
+      }
+    },
+    "other": {
+      "secondary": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "12px",
+        "font-weight": "700",
+        "letter-spacing": "0.09em",
+        "text-transform": "uppercase",
+        "border-radius": "2px",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "32px",
+        "min-height": "32px",
+        "flex-shrink": "0",
+        "background": "linear-gradient(180deg, #100E0A, #0A0907)",
+        "border": "1px solid var(--iw-th-edge-faint, #2A241A)",
+        "color": "var(--iw-text, #DDD6C6)",
+        "text-shadow": "none",
+        "padding": "0 13px",
+        "min-width": "72px",
+        "cursor": "pointer",
+        "box-shadow": "inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)"
+      },
+      "primary": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "12px",
+        "font-weight": "700",
+        "letter-spacing": "0.09em",
+        "text-transform": "uppercase",
+        "border-radius": "2px",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "32px",
+        "min-height": "32px",
+        "flex-shrink": "0",
+        "background": "linear-gradient(180deg, #1B150B, #120E07)",
+        "border": "1px solid var(--iw-th-brass, #8A6B2E)",
+        "color": "#F3E3C0",
+        "text-shadow": "0 0 8px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 48%, transparent)",
+        "padding": "0 17px",
+        "min-width": "96px",
+        "cursor": "pointer",
+        "box-shadow": "inset 0 0 12px -2px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 55%, transparent), inset 0 1px 0 rgba(255, 216, 150, .18), 0 0 0 1px color-mix(in srgb, var(--fs-skill-accent, #D8791F) 16%, transparent)"
+      },
+      "disabled": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "12px",
+        "font-weight": "700",
+        "letter-spacing": "0.09em",
+        "text-transform": "uppercase",
+        "border-radius": "2px",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "32px",
+        "min-height": "32px",
+        "flex-shrink": "0",
+        "background": "linear-gradient(180deg, #100E0A, #0A0907)",
+        "border": "1px solid var(--iw-th-edge-faint, #2A241A)",
+        "color": "var(--iw-faint, #666052)",
+        "text-shadow": "none",
+        "padding": "0 15px",
+        "min-width": "96px",
+        "cursor": "not-allowed",
+        "box-shadow": "inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)"
+      },
+      "icon": {
+        "font-family": "'Barlow', system-ui, sans-serif",
+        "font-size": "12px",
+        "font-weight": "700",
+        "letter-spacing": "0.09em",
+        "text-transform": "uppercase",
+        "border-radius": "2px",
+        "transition": "var(--fs-button-transition, background .13s, border-color .13s, color .13s, box-shadow .13s)",
+        "align-self": "center",
+        "height": "32px",
+        "min-height": "32px",
+        "flex-shrink": "0",
+        "background": "linear-gradient(180deg, #100E0A, #0A0907)",
+        "border": "1px solid var(--iw-th-edge-faint, #2A241A)",
+        "color": "var(--iw-gold-dim, #9D8458)",
+        "text-shadow": "none",
+        "padding": "0",
+        "min-width": "30px",
+        "cursor": "pointer",
+        "box-shadow": "inset 0 1px 0 rgba(255, 255, 255, .035), inset 0 -7px 10px -8px rgba(0, 0, 0, .95)"
+      }
+    }
+  },
+  "skillReadoutInlineStyle": {
+    "background": "none",
+    "border": "none",
+    "border-radius": "0",
+    "outline": "none",
+    "box-shadow": "none",
+    "padding": "0",
+    "margin": "0",
+    "width": "auto",
+    "min-width": "0",
+    "height": "auto",
+    "min-height": "0",
+    "max-height": "none"
+  },
+  "skillIngredientInlineStyle": {
+    "background": "none",
+    "border": "none",
+    "border-radius": "0",
+    "padding": "0",
+    "box-shadow": "none"
+  },
+  "skillPatterns": {
+    "LEVEL_PROGRESS_PATTERN": {
+      "regex": "^lv\\s*\\d+(?:\\s*\\+\\s*\\d+)?(?:\\s*[-\\u2013]\\s*\\d+(?:\\.\\d+)?%\\s*[\\u2022\\u00b7]\\s*[\\d,]+\\s+(?:xp\\s+)?to\\s+go|\\s*[\\u2022\\u00b7]\\s*[\\d,]+\\s*\\/\\s*[\\d,]+\\s*xp)$",
+      "flags": "i"
+    },
+    "LEVEL_READOUT_LOOSE": {
+      "regex": "^lv\\s*\\d+(?:\\s*\\+\\s*\\d+)?\\s*[-\\u2013\\u2014\\u2022\\u00b7:|]\\s*\\S.*(?:xp|to\\s+go|%)$",
+      "flags": "i"
+    },
+    "XP_READOUT_TITLE": {
+      "regex": "\\bxp display\\b",
+      "flags": "i"
+    },
+    "INGR_PATTERN": {
+      "regex": "^(?!.*\\bxp\\b).{0,80}\\b\\d+\\s*\\/\\s*\\d+\\b",
+      "flags": "i"
+    },
+    "UNMET_CLASS": {
+      "regex": "\\btext-(?:red|rose|orange|amber|yellow)-\\d|\\b(?:text-danger|text-warning)\\b",
+      "flags": ""
+    }
+  },
+  "skillCardV2": {
+    "FRAME_SECTIONS": [
+      "materials",
+      "sources",
+      "details"
+    ],
+    "LABEL_CEILING_PX": 9.5,
+    "LABEL_FLOOR_PX": 4,
+    "LONG_ACTION_SECONDS": 11
+  },
+  "questDiscipline": {
+    "table": [
+      [
+        {
+          "regex": "\\bcombat\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#B84A20",
+          "glyph": "⚔"
+        }
+      ],
+      [
+        {
+          "regex": "\\bmining\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#84919B",
+          "glyph": "⛏"
+        }
+      ],
+      [
+        {
+          "regex": "\\bsmithing\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#B28A2A",
+          "glyph": "⚒"
+        }
+      ],
+      [
+        {
+          "regex": "\\b(?:gathering|herbalism)\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#579A5D",
+          "glyph": "❧"
+        }
+      ],
+      [
+        {
+          "regex": "\\balchemy\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#9271B2",
+          "glyph": "⚗"
+        }
+      ],
+      [
+        {
+          "regex": "\\bjewel(?:crafting)?\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#4E9FB8",
+          "glyph": "◆"
+        }
+      ],
+      [
+        {
+          "regex": "\\bspell(?:crafting)?\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#8B6FC3",
+          "glyph": "✧"
+        }
+      ],
+      [
+        {
+          "regex": "\\btailoring\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#A56E86",
+          "glyph": "⋈"
+        }
+      ],
+      [
+        {
+          "regex": "\\bwood(?:cutting)?\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#8B6A3A",
+          "glyph": "⋔"
+        }
+      ],
+      [
+        {
+          "regex": "\\bconstruction\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#5F7F72",
+          "glyph": "⌂"
+        }
+      ],
+      [
+        {
+          "regex": "\\bcrafting\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#5E8FB7",
+          "glyph": "✦"
+        }
+      ],
+      [
+        {
+          "regex": "\\bfishing\\b",
+          "flags": "i"
+        },
+        {
+          "accent": "#478FA8",
+          "glyph": "⌁"
+        }
+      ]
+    ],
+    "generic": {
+      "accent": "#C9A66A",
+      "glyph": "❖"
+    }
+  },
+  "navigation": {
+    "NAV_LABELS": [
+      "game",
+      "market",
+      "leaderboards",
+      "village",
+      "dungeon"
+    ],
+    "NAV_ROUTE_KEYS": {
+      "village": "housing"
+    },
+    "SECTION_FRAME_NAMES": {
+      "regex": "^(inventory|market|leaderboards|quests|world bosses|village|salvaging|skill actions|zone selector)$",
+      "flags": "i"
+    },
+    "ACTIVITY_PANELS": {
+      "current action": "current-action",
+      "action log": "action-log",
+      "world chat": "world-chat"
+    },
+    "DAILY_BOOST": {
+      "regex": "^daily\\s+xp\\s+boost\\b.*\\+\\s*\\d+(?:\\.\\d+)?\\s*%\\s*xp",
+      "flags": "i"
+    },
+    "TOOLKIT_URL": "https://idleworldstoolkit.com"
+  },
+  "worldBosses": [
+    {
+      "key": "ancient_treant",
+      "name": "Ancient Treant",
+      "ids": [
+        "miners_gloves",
+        "herbalists_gloves",
+        "blacksmiths_gloves",
+        "alchemists_gloves",
+        "jewelcrafters_gloves",
+        "spellcrafters_gloves",
+        "tailors_gloves",
+        "woodcutters_gloves",
+        "builders_gloves"
+      ]
+    },
+    {
+      "key": "abyssal_behemoth",
+      "name": "Abyssal Behemoth",
+      "ids": [
+        "invisibility_ring"
+      ]
+    },
+    {
+      "key": "world_eater",
+      "name": "World Eater",
+      "ids": [
+        "worldbreaker"
+      ]
+    }
+  ],
+  "itemDisplay": {
+    "TIER_BANDS": [
+      {
+        "max": 5,
+        "cls": "tier-common"
+      },
+      {
+        "max": 11,
+        "cls": "tier-uncommon"
+      },
+      {
+        "max": 17,
+        "cls": "tier-rare"
+      },
+      {
+        "max": 23,
+        "cls": "tier-epic"
+      },
+      {
+        "max": 29,
+        "cls": "tier-legendary"
+      },
+      {
+        "max": null,
+        "cls": "tier-mythic"
+      }
+    ],
+    "CATEGORY_CLASS": {
+      "equipment": "fs-cat-gear",
+      "consumable": "fs-cat-consumable",
+      "processed": "fs-cat-processed",
+      "resource": "fs-cat-resource",
+      "trade good": "fs-cat-trade"
+    },
+    "CONSUMABLE_SUB_CLASS": {
+      "potion": "fs-cat-potion",
+      "enchant scroll": "fs-cat-enchant",
+      "xp scroll": "fs-cat-xpscroll",
+      "xp shard": "fs-cat-xpscroll",
+      "supply cache": "fs-cat-cache"
+    }
+  },
+  "village": {
+    "buildings": {
+      "training yard": {
+        "tier": 1,
+        "name": "Training Yard",
+        "file": "village/building_1.webp"
+      },
+      "ironfang palisade": {
+        "tier": 2,
+        "name": "Ironfang Palisade",
+        "file": "village/building_2.webp"
+      },
+      "silverroot infirmary": {
+        "tier": 3,
+        "name": "Silverroot Infirmary",
+        "file": "village/building_3.webp"
+      },
+      "goldfire scriptorium": {
+        "tier": 4,
+        "name": "Goldfire Scriptorium",
+        "file": "village/building_4.webp"
+      },
+      "mythril countinghouse": {
+        "tier": 5,
+        "name": "Mythril Countinghouse",
+        "file": "village/building_5.webp"
+      },
+      "starsteel trophy hall": {
+        "tier": 6,
+        "name": "Starsteel Trophy Hall",
+        "file": "village/building_6.webp"
+      },
+      "obsidian greenhouse": {
+        "tier": 7,
+        "name": "Obsidian Greenhouse",
+        "file": "village/building_7.webp"
+      },
+      "runite war college": {
+        "tier": 8,
+        "name": "Runite War College",
+        "file": "village/building_8.webp"
+      },
+      "dragonfall rampart": {
+        "tier": 9,
+        "name": "Dragonfall Rampart",
+        "file": "village/building_9.webp"
+      },
+      "aether sanatorium": {
+        "tier": 10,
+        "name": "Aether Sanatorium",
+        "file": "village/building_10.webp"
+      },
+      "voidiron archive": {
+        "tier": 11,
+        "name": "Voidiron Archive",
+        "file": "village/building_11.webp"
+      },
+      "celestial exchange": {
+        "tier": 12,
+        "name": "Celestial Exchange",
+        "file": "village/building_12.webp"
+      },
+      "bloodstone reliquary": {
+        "tier": 13,
+        "name": "Bloodstone Reliquary",
+        "file": "village/building_13.webp"
+      },
+      "moonsteel arboretum": {
+        "tier": 14,
+        "name": "Moonsteel Arboretum",
+        "file": "village/building_14.webp"
+      },
+      "sunforge arena": {
+        "tier": 15,
+        "name": "Sunforge Arena",
+        "file": "village/building_15.webp"
+      },
+      "nethergate bastion": {
+        "tier": 16,
+        "name": "Nethergate Bastion",
+        "file": "village/building_16.webp"
+      },
+      "stormglass chapel of healing": {
+        "tier": 17,
+        "name": "Stormglass Chapel of Healing",
+        "file": "village/building_17.webp"
+      },
+      "kingsfall grand library": {
+        "tier": 18,
+        "name": "Kingsfall Grand Library",
+        "file": "village/building_18.webp"
+      },
+      "eternium treasury": {
+        "tier": 19,
+        "name": "Eternium Treasury",
+        "file": "village/building_19.webp"
+      },
+      "astral museum": {
+        "tier": 20,
+        "name": "Astral Museum",
+        "file": "village/building_20.webp"
+      },
+      "gravite botanical dome": {
+        "tier": 21,
+        "name": "Gravite Botanical Dome",
+        "file": "village/building_21.webp"
+      },
+      "frostiron warfront hall": {
+        "tier": 22,
+        "name": "Frostiron Warfront Hall",
+        "file": "village/building_22.webp"
+      },
+      "dusksteel citadel wall": {
+        "tier": 23,
+        "name": "Dusksteel Citadel Wall",
+        "file": "village/building_23.webp"
+      },
+      "titanium grand infirmary": {
+        "tier": 24,
+        "name": "Titanium Grand Infirmary",
+        "file": "village/building_24.webp"
+      },
+      "skysteel observatory": {
+        "tier": 25,
+        "name": "Skysteel Observatory",
+        "file": "village/building_25.webp"
+      },
+      "emberium mint": {
+        "tier": 26,
+        "name": "Emberium Mint",
+        "file": "village/building_26.webp"
+      },
+      "soulsteel vault of relics": {
+        "tier": 27,
+        "name": "Soulsteel Vault of Relics",
+        "file": "village/building_27.webp"
+      },
+      "chronite greenhouse spire": {
+        "tier": 28,
+        "name": "Chronite Greenhouse Spire",
+        "file": "village/building_28.webp"
+      },
+      "worldforge coliseum": {
+        "tier": 29,
+        "name": "Worldforge Coliseum",
+        "file": "village/building_29.webp"
+      },
+      "voidglass bulwark": {
+        "tier": 30,
+        "name": "Voidglass Bulwark",
+        "file": "village/building_30.webp"
+      },
+      "thalassic sanctum of tides": {
+        "tier": 31,
+        "name": "Thalassic Sanctum of Tides",
+        "file": "village/building_31.webp"
+      },
+      "ashspire hall of records": {
+        "tier": 32,
+        "name": "Ashspire Hall of Records",
+        "file": "village/building_32.webp"
+      },
+      "glacirite royal treasury": {
+        "tier": 33,
+        "name": "Glacirite Royal Treasury",
+        "file": "village/building_33.webp"
+      },
+      "primordial wonder": {
+        "tier": 34,
+        "name": "Primordial Wonder",
+        "file": "village/building_34.webp"
+      }
+    },
+    "houses": {
+      "camp": {
+        "tier": 1,
+        "name": "Camp",
+        "file": "village/house_1.webp"
+      },
+      "cottage": {
+        "tier": 2,
+        "name": "Cottage",
+        "file": "village/house_2.webp"
+      },
+      "villa": {
+        "tier": 3,
+        "name": "Villa",
+        "file": "village/house_3.webp"
+      },
+      "manor": {
+        "tier": 4,
+        "name": "Manor",
+        "file": "village/house_4.webp"
+      },
+      "citadel": {
+        "tier": 5,
+        "name": "Citadel",
+        "file": "village/house_5.webp"
+      }
+    }
+  },
+  "progressCadence": {
+    "PROGRESS_EPSILON": 0.05,
+    "PROGRESS_LEAD_BIAS": 1.12,
+    "PROGRESS_DURATION_EPSILON_MS": 15
+  },
+  "runtimeAssets": {
+    "count": 194,
+    "bytes": 96273271,
+    "files": [
+      {
+        "path": "assets/fonts/barlow-400.woff2",
+        "bytes": 22196,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/fonts/barlow-500.woff2",
+        "bytes": 22008,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/fonts/barlow-600.woff2",
+        "bytes": 22772,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/fonts/barlow-700.woff2",
+        "bytes": 22788,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/fonts/cinzel-variable.woff2",
+        "bytes": 25904,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/fonts/crimson-text-italic.woff2",
+        "bytes": 26052,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/gear_icons_atlas.png",
+        "bytes": 25920306,
+        "usedBy": [
+          "item icons"
+        ]
+      },
+      {
+        "path": "assets/gear_icons_manifest.json",
+        "bytes": 221376,
+        "usedBy": [
+          "index (only if you port the resolver code verbatim)"
+        ]
+      },
+      {
+        "path": "assets/header/header_crest.webp",
+        "bytes": 220662,
+        "usedBy": [
+          "header crest"
+        ]
+      },
+      {
+        "path": "assets/header/header_surface.webp",
+        "bytes": 262818,
+        "usedBy": [
+          "header fallback / zone bar scene"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_1_mobile.webp",
+        "bytes": 134224,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_1.webp",
+        "bytes": 185706,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_10_mobile.webp",
+        "bytes": 116140,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_10.webp",
+        "bytes": 159940,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_11_mobile.webp",
+        "bytes": 36524,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_11.webp",
+        "bytes": 113564,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_12_mobile.webp",
+        "bytes": 112370,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_12.webp",
+        "bytes": 181162,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_13_mobile.webp",
+        "bytes": 82150,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_13.webp",
+        "bytes": 129432,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_14_mobile.webp",
+        "bytes": 115832,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_14.webp",
+        "bytes": 167392,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_15_mobile.webp",
+        "bytes": 87222,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_15.webp",
+        "bytes": 141764,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_16_mobile.webp",
+        "bytes": 68374,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_16.webp",
+        "bytes": 125086,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_17_mobile.webp",
+        "bytes": 95992,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_17.webp",
+        "bytes": 122052,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_18_mobile.webp",
+        "bytes": 98374,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_18.webp",
+        "bytes": 167842,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_19_mobile.webp",
+        "bytes": 105880,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_19.webp",
+        "bytes": 158740,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_2_mobile.webp",
+        "bytes": 119808,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_2.webp",
+        "bytes": 162994,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_20_mobile.webp",
+        "bytes": 75218,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_20.webp",
+        "bytes": 166656,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_21_mobile.webp",
+        "bytes": 155494,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_21.webp",
+        "bytes": 180532,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_22_mobile.webp",
+        "bytes": 105194,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_22.webp",
+        "bytes": 164798,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_23_mobile.webp",
+        "bytes": 77394,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_23.webp",
+        "bytes": 120290,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_24_mobile.webp",
+        "bytes": 84428,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_24.webp",
+        "bytes": 172408,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_25_mobile.webp",
+        "bytes": 88836,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_25.webp",
+        "bytes": 136432,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_26_mobile.webp",
+        "bytes": 82750,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_26.webp",
+        "bytes": 153080,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_27_mobile.webp",
+        "bytes": 56454,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_27.webp",
+        "bytes": 132034,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_28_mobile.webp",
+        "bytes": 145488,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_28.webp",
+        "bytes": 183760,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_29_mobile.webp",
+        "bytes": 82122,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_29.webp",
+        "bytes": 135458,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_3_mobile.webp",
+        "bytes": 151954,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_3.webp",
+        "bytes": 212146,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_30_mobile.webp",
+        "bytes": 69828,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_30.webp",
+        "bytes": 133828,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_31_mobile.webp",
+        "bytes": 75476,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_31.webp",
+        "bytes": 139966,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_32_mobile.webp",
+        "bytes": 73196,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_32.webp",
+        "bytes": 128358,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_33_mobile.webp",
+        "bytes": 78050,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_33.webp",
+        "bytes": 145406,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_34_mobile.webp",
+        "bytes": 108396,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_34.webp",
+        "bytes": 165460,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_4_mobile.webp",
+        "bytes": 122462,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_4.webp",
+        "bytes": 180946,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_5_mobile.webp",
+        "bytes": 110226,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_5.webp",
+        "bytes": 181998,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_6_mobile.webp",
+        "bytes": 69560,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_6.webp",
+        "bytes": 160190,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_7_mobile.webp",
+        "bytes": 63964,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_7.webp",
+        "bytes": 119214,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_8_mobile.webp",
+        "bytes": 82614,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_8.webp",
+        "bytes": 170990,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_9_mobile.webp",
+        "bytes": 90718,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/header/zones/zone_9.webp",
+        "bytes": 124086,
+        "usedBy": [
+          "header zone art"
+        ]
+      },
+      {
+        "path": "assets/inventory/panel_corners.webp",
+        "bytes": 34536,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/inventory/separator_flourish.webp",
+        "bytes": 16840,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/item_icons_atlas.png",
+        "bytes": 12229070,
+        "usedBy": [
+          "item icons"
+        ]
+      },
+      {
+        "path": "assets/item_icons_index.csv",
+        "bytes": 222532,
+        "usedBy": [
+          "index (only if you port the resolver code verbatim)"
+        ]
+      },
+      {
+        "path": "assets/quest-frames/approved-frames.png",
+        "bytes": 1611028,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills_icons_atlas.webp",
+        "bytes": 70882,
+        "usedBy": [
+          "skill medallion"
+        ]
+      },
+      {
+        "path": "assets/skills_icons_index.json",
+        "bytes": 2590,
+        "usedBy": [
+          "index (only if you port the resolver code verbatim)"
+        ]
+      },
+      {
+        "path": "assets/skills_nav_next.svg",
+        "bytes": 1370,
+        "usedBy": [
+          "skills-ui vars"
+        ]
+      },
+      {
+        "path": "assets/skills_nav_prev.svg",
+        "bytes": 1370,
+        "usedBy": [
+          "skills-ui vars"
+        ]
+      },
+      {
+        "path": "assets/skills_panel_texture.webp",
+        "bytes": 2208,
+        "usedBy": [
+          "css",
+          "skills-ui vars"
+        ]
+      },
+      {
+        "path": "assets/skills_ui_atlas.webp",
+        "bytes": 90246,
+        "usedBy": [
+          "css",
+          "skills-ui vars"
+        ]
+      },
+      {
+        "path": "assets/skills_ui_index.json",
+        "bytes": 1811,
+        "usedBy": [
+          "index (only if you port the resolver code verbatim)"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/alchemy.svg",
+        "bytes": 5811,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/combat.svg",
+        "bytes": 3667,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/construction.svg",
+        "bytes": 9412,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/gathering.svg",
+        "bytes": 5772,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/jewelcrafting.svg",
+        "bytes": 4498,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/mining.svg",
+        "bytes": 2921,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/smithing.svg",
+        "bytes": 2367,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/spellcrafting.svg",
+        "bytes": 1821,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/tailoring.svg",
+        "bytes": 3318,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/action-icons/woodcutting.svg",
+        "bytes": 4056,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/card-v6/action-atlas.png",
+        "bytes": 1402909,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/card-v6/nav-atlas.png",
+        "bytes": 2326393,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/compact-ghost-v3/celestial.png",
+        "bytes": 260607,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/compact-ghost-v3/forged-metal.png",
+        "bytes": 304007,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/compact-ghost-v3/glacial.png",
+        "bytes": 275878,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/compact-ghost-v3/infernal.png",
+        "bytes": 268053,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/compact-ghost-v3/lunar-spectral.png",
+        "bytes": 269352,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/compact-ghost-v3/runic-arcane.png",
+        "bytes": 276974,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/compact-ghost-v3/tempest-oceanic.png",
+        "bytes": 270292,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/compact-ghost-v3/verdant.png",
+        "bytes": 295670,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/compact-ghost-v3/voidborn.png",
+        "bytes": 252430,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/celestial.png",
+        "bytes": 901781,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/forged-metal.png",
+        "bytes": 941759,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/glacial.png",
+        "bytes": 1050574,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/index.json",
+        "bytes": 1991,
+        "usedBy": [
+          "index (only if you port the resolver code verbatim)"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/infernal.png",
+        "bytes": 1000181,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/lunar-spectral.png",
+        "bytes": 992180,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/runic-arcane.png",
+        "bytes": 1118172,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/tempest-oceanic.png",
+        "bytes": 1042488,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/verdant.png",
+        "bytes": 1093403,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/buttons/revised-v5/voidborn.png",
+        "bytes": 1095901,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/panel_corners_celestial.webp",
+        "bytes": 1216910,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/panel_corners_forged-metal.webp",
+        "bytes": 1146138,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/panel_corners_glacial.webp",
+        "bytes": 1839930,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/panel_corners_infernal.webp",
+        "bytes": 1171186,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/panel_corners_lunar-spectral.webp",
+        "bytes": 1297540,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/panel_corners_runic-arcane.webp",
+        "bytes": 1159538,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/panel_corners_tempest-oceanic.webp",
+        "bytes": 1108072,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/panel_corners_verdant.webp",
+        "bytes": 1438934,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/panel_corners_voidborn.webp",
+        "bytes": 1068696,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/separator_flourish_celestial.webp",
+        "bytes": 417874,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/separator_flourish_forged-metal.webp",
+        "bytes": 400832,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/separator_flourish_glacial.webp",
+        "bytes": 543122,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/separator_flourish_infernal.webp",
+        "bytes": 462242,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/separator_flourish_lunar-spectral.webp",
+        "bytes": 401348,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/separator_flourish_runic-arcane.webp",
+        "bytes": 475684,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/separator_flourish_tempest-oceanic.webp",
+        "bytes": 461124,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/separator_flourish_verdant.webp",
+        "bytes": 576676,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/separator_flourish_voidborn.webp",
+        "bytes": 453364,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/theme_celestial.webp",
+        "bytes": 715648,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/theme_forged-metal.webp",
+        "bytes": 653140,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/theme_glacial.webp",
+        "bytes": 691698,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/theme_infernal.webp",
+        "bytes": 619304,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/theme_lunar-spectral.webp",
+        "bytes": 630696,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/theme_runic-arcane.webp",
+        "bytes": 688036,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/theme_tempest-oceanic.webp",
+        "bytes": 688304,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/theme_verdant.webp",
+        "bytes": 706342,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/skills-ui/theme_voidborn.webp",
+        "bytes": 598422,
+        "usedBy": [
+          "html-root"
+        ]
+      },
+      {
+        "path": "assets/village/building_1.webp",
+        "bytes": 15432,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_10.webp",
+        "bytes": 22880,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_11.webp",
+        "bytes": 15048,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_12.webp",
+        "bytes": 23516,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_13.webp",
+        "bytes": 11186,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_14.webp",
+        "bytes": 24884,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_15.webp",
+        "bytes": 14630,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_16.webp",
+        "bytes": 11768,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_17.webp",
+        "bytes": 14494,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_18.webp",
+        "bytes": 14636,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_19.webp",
+        "bytes": 22356,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_2.webp",
+        "bytes": 20274,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_20.webp",
+        "bytes": 21538,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_21.webp",
+        "bytes": 21350,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_22.webp",
+        "bytes": 17710,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_23.webp",
+        "bytes": 14272,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_24.webp",
+        "bytes": 20866,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_25.webp",
+        "bytes": 12568,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_26.webp",
+        "bytes": 18988,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_27.webp",
+        "bytes": 19030,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_28.webp",
+        "bytes": 13342,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_29.webp",
+        "bytes": 26418,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_3.webp",
+        "bytes": 19144,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_30.webp",
+        "bytes": 16236,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_31.webp",
+        "bytes": 17480,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_32.webp",
+        "bytes": 15898,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_33.webp",
+        "bytes": 23802,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_34.webp",
+        "bytes": 23076,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_4.webp",
+        "bytes": 15234,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_5.webp",
+        "bytes": 19670,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_6.webp",
+        "bytes": 14462,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_7.webp",
+        "bytes": 16382,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_8.webp",
+        "bytes": 15472,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/building_9.webp",
+        "bytes": 18742,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/cobblestone.png",
+        "bytes": 3098230,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/village/house_1.webp",
+        "bytes": 21948,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/house_2.webp",
+        "bytes": 18928,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/house_3.webp",
+        "bytes": 37226,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/house_4.webp",
+        "bytes": 19664,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/village/house_5.webp",
+        "bytes": 18644,
+        "usedBy": [
+          "village art"
+        ]
+      },
+      {
+        "path": "assets/world-boss/world_boss_fighting-v3.png",
+        "bytes": 34250,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/world-boss/world_boss_join_hover-v2.png",
+        "bytes": 50024,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/world-boss/world_boss_join-v2.png",
+        "bytes": 41502,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/world-boss/world_boss_prejoined-v2.png",
+        "bytes": 40176,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/world-bosses/encounters.png",
+        "bytes": 3056349,
+        "usedBy": [
+          "css"
+        ]
+      },
+      {
+        "path": "assets/world-bosses/zone-control-contested-v3.png",
+        "bytes": 2610321,
+        "usedBy": [
+          "css"
+        ]
+      }
+    ]
+  },
+  "skinAttributes": {
+    "note": "usedByCss: a shipped stylesheet selects on the name, so it must be emitted exactly. bookkeeping: written by the extension for its own caching/state and selected by no stylesheet; never needed natively (diff-parity.mjs ignores them).",
+    "usedByCss": [
+      "data-fs-action-host",
+      "data-fs-action-kind",
+      "data-fs-inv",
+      "data-fs-preserved-action",
+      "data-fs-suppressed",
+      "data-iw-boss",
+      "data-iw-boss-action-state",
+      "data-iw-boss-action-team",
+      "data-iw-boss-owned",
+      "data-iw-boss-role",
+      "data-iw-btn-state",
+      "data-iw-button-atlas",
+      "data-iw-chrome",
+      "data-iw-clean-text",
+      "data-iw-collapse",
+      "data-iw-collapse-head",
+      "data-iw-collapse-spine",
+      "data-iw-collapse-title",
+      "data-iw-collapsed",
+      "data-iw-compact-atlas",
+      "data-iw-compact-button",
+      "data-iw-compact-layer",
+      "data-iw-compact-selected",
+      "data-iw-control",
+      "data-iw-encounter",
+      "data-iw-header",
+      "data-iw-header-stat",
+      "data-iw-ingr",
+      "data-iw-ingredient-list-source",
+      "data-iw-ingredient-state",
+      "data-iw-inventory-control",
+      "data-iw-inventory-filter-state",
+      "data-iw-inventory-filters",
+      "data-iw-inventory-list",
+      "data-iw-inventory-root",
+      "data-iw-inventory-title",
+      "data-iw-market",
+      "data-iw-nav-direction",
+      "data-iw-nav-link",
+      "data-iw-overlay",
+      "data-iw-overlay-content",
+      "data-iw-overlay-host",
+      "data-iw-overlay-role",
+      "data-iw-panel",
+      "data-iw-panel-header",
+      "data-iw-panel-part",
+      "data-iw-progress-display",
+      "data-iw-progress-reset",
+      "data-iw-quest-glyph",
+      "data-iw-quest-icon",
+      "data-iw-quest-reward",
+      "data-iw-quest-role",
+      "data-iw-quest-state",
+      "data-iw-quest-zone",
+      "data-iw-readout",
+      "data-iw-req-state",
+      "data-iw-salvage-list",
+      "data-iw-skill-art-ready",
+      "data-iw-skill-boost",
+      "data-iw-skill-card-design",
+      "data-iw-skill-layout",
+      "data-iw-skill-layout-shell",
+      "data-iw-skill-role",
+      "data-iw-skill-v2",
+      "data-iw-skill-v2-action-timer",
+      "data-iw-skill-v2-body-kind",
+      "data-iw-skill-v2-body-state",
+      "data-iw-skill-v2-fill-reset",
+      "data-iw-skill-v2-level-readout",
+      "data-iw-skill-v2-long-action",
+      "data-iw-skill-v2-section",
+      "data-iw-skill-v2-state",
+      "data-iw-skill-v2-type",
+      "data-iw-skill-v2-xp",
+      "data-iw-skill-zone",
+      "data-iw-skills-ui-ready",
+      "data-iw-state",
+      "data-iw-tooltip-trigger",
+      "data-iw-ui",
+      "data-iw-village",
+      "data-iw-village-action",
+      "data-iw-village-art",
+      "data-iw-village-ledger",
+      "data-iw-village-pip",
+      "data-iw-village-role",
+      "data-iw-village-state",
+      "data-iw-vs-open",
+      "data-iw-vs-slot-state",
+      "data-iw-vs-stat-kind",
+      "data-iw-zone-action",
+      "data-iw-zone-link",
+      "data-iw-zone-theme"
+    ],
+    "presenceOnly": [
+      "data-fs-inv",
+      "data-iw-boss-owned",
+      "data-iw-collapse",
+      "data-iw-collapse-head",
+      "data-iw-collapse-spine",
+      "data-iw-collapse-title",
+      "data-iw-ingr",
+      "data-iw-progress-reset",
+      "data-iw-readout",
+      "data-iw-skill-v2-action-timer",
+      "data-iw-skill-v2-fill-reset",
+      "data-iw-skill-v2-level-readout",
+      "data-iw-skill-v2-section",
+      "data-iw-skill-v2-xp",
+      "data-iw-tooltip-trigger",
+      "data-iw-village-ledger",
+      "data-iw-zone-link"
+    ],
+    "bookkeeping": [
+      "data-fs-hidden",
+      "data-fs-quest",
+      "data-fs-skill",
+      "data-fs-skill-flavour",
+      "data-fs-skill-label",
+      "data-fs-skill-rune",
+      "data-iw-atlas",
+      "data-iw-badge",
+      "data-iw-base-exp",
+      "data-iw-boss-action-label",
+      "data-iw-boss-art-ready",
+      "data-iw-control-crest",
+      "data-iw-control-source",
+      "data-iw-header-card",
+      "data-iw-ingredient-signature",
+      "data-iw-item",
+      "data-iw-item-name",
+      "data-iw-page-hydrated",
+      "data-iw-painted",
+      "data-iw-quest-art-pending",
+      "data-iw-quest-icon-pending",
+      "data-iw-quest-percent",
+      "data-iw-skill",
+      "data-iw-skill-art",
+      "data-iw-skill-art-pending",
+      "data-iw-skill-design-toggle",
+      "data-iw-skill-glyph",
+      "data-iw-skill-ingredient-list",
+      "data-iw-skill-v2-action-glyph",
+      "data-iw-skill-v2-action-label",
+      "data-iw-skill-v2-body",
+      "data-iw-skill-v2-body-signature",
+      "data-iw-skill-v2-break",
+      "data-iw-skill-v2-controls",
+      "data-iw-skill-v2-expand",
+      "data-iw-skill-v2-label-fit",
+      "data-iw-skill-v2-req-note",
+      "data-iw-skill-v2-row",
+      "data-iw-skill-v2-summary",
+      "data-iw-skill-v2-tab",
+      "data-iw-skill-v2-tabs",
+      "data-iw-skills-atlas",
+      "data-iw-skills-atlas-index",
+      "data-iw-style",
+      "data-iw-tab",
+      "data-iw-village-owned",
+      "data-iw-village-scene",
+      "data-iw-village-scene-owned",
+      "data-iw-village-tier",
+      "data-iw-village-totals",
+      "data-iw-vs-entry",
+      "data-iw-vs-toggle",
+      "data-iw-zone"
+    ]
+  },
+  "backgroundRepaint": {
+    "surfaceSelector": ".compact-panel, .compact-row, [class*=\"item-row\"], [role=\"dialog\"], [role=\"menu\"], [role=\"listbox\"], main, section, article, aside, header, nav",
+    "backgroundColorMap": {
+      "#0f172a": "#191711",
+      "#111827": "#191711",
+      "#131d28": "#191711",
+      "#131e28": "#191711",
+      "#131d27": "#191711",
+      "#141e28": "#1E1B15",
+      "#121d27": "#191711",
+      "#121c27": "#191711",
+      "#121d28": "#191711",
+      "#1a2030": "#1E1B15",
+      "#1b231f": "#1E1B15",
+      "#191f1d": "#1E1B15",
+      "#162920": "#1E1B15",
+      "#111c24": "#191711",
+      "#0f1923": "#191711",
+      "#111926": "#191711",
+      "#0d1a24": "#191711",
+      "#131b26": "#191711",
+      "#12202d": "#1E1B15",
+      "#1c2940": "#1E1B15"
+    },
+    "borderColorForAnyNavySide": "#342D20",
+    "priority": "important"
+  },
+  "warnings": []
+}

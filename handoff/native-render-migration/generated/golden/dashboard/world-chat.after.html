@@ -1,0 +1,34 @@
+<div class="panel p-3.5" id="g-world-chat" data-iw-ui="section-frame" data-iw-panel="world-chat">
+  <div class="flex items-center justify-between" data-iw-panel-part="header" data-iw-collapse-head="1">
+    <div data-iw-collapse-spine="1">
+      <h2 data-iw-ui="section-title" data-iw-collapse-title="1" data-iw-collapse-spine="1">World Chat</h2>
+      <p>Showing the latest 100 messages.</p>
+    </div>
+    <div>
+      <button aria-label="Favourite chat">☆</button>
+      <button aria-label="Chat settings">⚙</button>
+    </div>
+    <button type="button" data-iw-collapse="1" aria-expanded="true" aria-label="Collapse World Chat" title="Collapse World Chat"></button>
+  </div>
+  <div data-iw-panel-part="feed">
+    <div data-iw-panel-part="feed-row">
+      <span>12:00:01</span>
+      <button class="chat-name-3 hover:underline">Kaelen</button>
+      <span>hello</span>
+    </div>
+    <div data-iw-panel-part="feed-row">
+      <span>12:00:02</span>
+      <button class="chat-name-1 hover:underline">Mira</button>
+      <span>hi</span>
+    </div>
+  </div>
+  <form class="flex gap-2" data-iw-panel-part="composer">
+    <input placeholder="Message World Chat" data-iw-panel-part="chat-input">
+    <button data-iw-panel-part="send" data-iw-compact-button="text">
+      Send
+      <span data-iw-compact-layer="idle" aria-hidden="true"></span>
+      <span data-iw-compact-layer="hover" aria-hidden="true"></span>
+      <span data-iw-compact-layer="clicked" aria-hidden="true"></span>
+    </button>
+  </form>
+</div>
