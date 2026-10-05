@@ -159,3 +159,13 @@ storage round trip and the kill-switch teardown. Both negative controls on the
 geometry are verified: drop the head's `padding-right` and the toggle covers a
 game control on two panels; drop `:not([data-iw-collapse-head])` from the fold
 rule and a collapsed panel loses its own title.
+
+**The control's NAME is the title's own text; its KEY is not (2026-09-28).**
+The name went through `labelText(title)`, a `textContent` read, and Action
+Log's title is a button holding "Action Log" plus a nested "view all" span:
+the control said "Collapse Action Logview all" (CLAUDE.md's textContent
+trap). `nameText` reads the title's own text nodes and falls back to
+`labelText` when it has none. The storage key still comes from `frameKey`
+(`panel:<slug>`, or `title:` + `labelText`), so no saved fold is orphaned;
+`tests/activity-panel-states.test.mjs` folds two panels and reads the saved
+keys back.

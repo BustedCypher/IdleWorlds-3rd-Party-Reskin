@@ -247,7 +247,11 @@ function updateDominion(card, team) {
 }
 
 function rewards(card, boss) {
-  const signature = `${boss.key}:${ItemDatabase.revision()}:${AtlasService.isReady()}`;
+  // The atlas REVISION, not isReady(): isReady() turns true once EITHER atlas
+  // has loaded, so when the gear atlas won the race the key never changed again
+  // and the item-atlas rewards (Trader Token, the upgrade orb) kept their "◆"
+  // placeholder for the whole session (tests/boss-reward-icons.test.mjs).
+  const signature = `${boss.key}:${ItemDatabase.revision()}:${AtlasService.revision()}`;
   let section = card.querySelector('.iw-boss-rewards');
   if (section && signatures.get(card) === signature) return;
   const ids = [...new Set([...boss.ids, ...ItemDatabase.all().filter(item => item.acquisition_type === 'BossDrop' && `${item.acquisition_summary} ${item.acquisition_detail}`.includes(boss.name)).map(item => item.item_id), 'trader_token', 'boss_upgrade_orb'])];
@@ -309,18 +313,21 @@ export function decorateWorldBossPanel({ root, heading }) {
       const actionText = norm(action.textContent);
       // The game's copy: "Prejoin" / "⏳ Prejoined" in a boss's prejoin window,
       // "Fight Boss" / "Fighting" / "Defeated" otherwise, and Zone Control's
-      // "⚔️ Fight for Red!" / "⚔️ Fight for Blue!" / "Fighting". Every offer to
-      // enter a fight takes the JOIN art; "Defeated" has no art and stays a
-      // text plate (`idle`), because painting JOIN over it would lie (rule 5).
+      // "⚔️ Join Red!" / "⚔️ Join Blue!" (live 2026-09-27; formerly "⚔️ Fight
+      // for Red!" / "⚔️ Fight for Blue!") / "Fighting". Every offer to enter a
+      // fight takes the JOIN art; "Defeated" has no art and stays a text plate
+      // (`idle`), because painting JOIN over it would lie (rule 5).
       const actionState =
         /fighting/i.test(actionText) ? 'fighting' :
         /prejoined/i.test(actionText) ? 'prejoined' :
         /\b(?:prejoin|join|fight)\b/i.test(actionText) ? 'join' :
         'idle';
       mark(action, 'data-iw-boss-action-state', actionState);
-      // "Fight for Red/Blue" names the player's team; the JOIN art hides the
-      // words, so the team survives as the plate's glow colour instead.
-      const team = actionState === 'join' && /fight for (red|blue)/i.exec(actionText)?.[1].toLowerCase();
+      // "Join Blue!" / "Fight for Blue" names the player's team; the JOIN art
+      // hides the words, so the team survives as the plate's glow colour
+      // instead. Reading only the old "Fight for" wording lost the team the
+      // day the game changed its copy (rule 5).
+      const team = actionState === 'join' && /\b(?:fight for|join) (red|blue)\b/i.exec(actionText)?.[1].toLowerCase();
       if (team) mark(action, 'data-iw-boss-action-team', team);
       else if (action.hasAttribute('data-iw-boss-action-team')) action.removeAttribute('data-iw-boss-action-team');
       if (action.hasAttribute('data-iw-boss-action-label')) action.removeAttribute('data-iw-boss-action-label');

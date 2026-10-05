@@ -221,6 +221,9 @@ const BOSS_CARDS = [
 const ZONE_CARDS = [
   { want: 'join', team: 'red', html: gameZoneCard('<button>⚔️ Fight for Red!</button>') },
   { want: 'join', team: 'blue', html: gameZoneCard('<button>⚔️ Fight for Blue!</button>') },
+  // the live copy since 2026-09-27: a bare label, "Join <team>!"
+  { want: 'join', team: 'blue', html: gameZoneCard('<button class="px-3 py-2 text-[11px] button-secondary">⚔️ Join Blue!</button>') },
+  { want: 'join', team: 'red', html: gameZoneCard('<button class="px-3 py-2 text-[11px] button-secondary">⚔️ Join Red!</button>') },
   { want: 'fighting', team: null, html: gameZoneCard('<button>Fighting</button><div class="h-1 w-full" style="height:4px;width:100%"><div style="width:30%;height:4px"></div></div>') },
 ];
 const place = async (width, cards, sheet = css.join('\n')) => {
@@ -289,8 +292,9 @@ assert.ok(revertedWrapped.length === 2 && revertedWrapped.every(r => r.rightGap 
 console.log('  boss action: right edge, centred on the portrait, both game shapes, 761-1440px  ok');
 
 /* Zone Control: the same art and sizes, at the right of the title row and
-   centred on it; both "Fight for Red" and "Fight for Blue" keep their team
-   as data while sharing the JOIN artwork. */
+   centred on it; "Join Red!" / "Join Blue!" (the live copy) and the older
+   "Fight for Red" / "Fight for Blue" keep their team as data while sharing
+   the JOIN artwork. */
 for (const width of [1440, 1100, 761, 390]) {
   const rows = await place(width, ZONE_CARDS);
   rows.forEach((r, i) => {

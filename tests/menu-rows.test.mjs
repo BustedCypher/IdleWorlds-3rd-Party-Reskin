@@ -108,7 +108,8 @@ const MEASURE = () => {
     const parent = items[0]?.parentElement.getBoundingClientRect();
     return { n: items.length, rows: rowCount(items.map(el => el.getBoundingClientRect())),
       clipped: clipped.map(el => el.textContent.trim()), inside: items.every(el => el.getBoundingClientRect().right <= parent.right + 0.5),
-      font: items[0] && getComputedStyle(items[0]).fontSize };
+      font: items[0] && getComputedStyle(items[0]).fontSize,
+      widthFactor: items[0] && getComputedStyle(items[0]).getPropertyValue('--iw-nav-k') };
   };
   const rail = document.querySelector('[data-iw-nav-link="toolkit"]');
   /* The zone controls, once the Toolkit link is out of their row: three equal
@@ -139,7 +140,7 @@ for (const width of [320, 360, 390, 430, 767, 768, 900, 1100]) {
   const m = await tab.evaluate(MEASURE);
   console.log(`\nGame route, ${width}px`);
   check(`${width}: the nav rail is one row`, m.nav.n >= 5 && m.nav.rows === 1 && m.nav.inside, JSON.stringify(m.nav));
-  check(`${width}: no nav label is clipped`, m.nav.clipped.length === 0, m.nav.clipped.join(', '));
+  check(`${width}: no nav label is clipped`, m.nav.clipped.length === 0, JSON.stringify(m.nav));
   check(`${width}: the filter tabs are one row`, m.filters.n === 5 && m.filters.rows === 1 && m.filters.inside, JSON.stringify(m.filters));
   check(`${width}: no filter label is clipped`, m.filters.clipped.length === 0, m.filters.clipped.join(', '));
   if (width <= 767) {

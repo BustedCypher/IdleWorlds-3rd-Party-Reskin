@@ -102,6 +102,20 @@ async function run(react) {
     check('whitespace-free quest card rendered', state.quest);
     check('inventory row overlay rendered', state.invOverlay);
     check('bundled font resolves through web_accessible_resources', fontOk === true, String(state.font));
+    if (react) {
+      await tab.emulateMedia({ reducedMotion: 'reduce' });
+      await tab.locator('[data-iw-nav-link="arcane-cache"]').click();
+      await tab.locator('.scene[data-phase="waiting"]').waitFor({ timeout: 10000 });
+      const chestUrl = await tab.locator('.chest-closed').evaluate(el => getComputedStyle(el).backgroundImage);
+      check('cache chest loads from the real extension with its shadow styles',
+        chestUrl.includes('chrome-extension://') && chestUrl.includes('arcane-cache/chest-states.png'), chestUrl);
+      await tab.locator('.open-cache').click();
+      await tab.locator('.scene[data-phase="revealed"]').waitFor();
+      check('real extension renders the three sample rewards', await tab.locator('.reward').count() === 3);
+      await tab.keyboard.press('Escape');
+      check('cache closes without removing native controls',
+        await tab.locator('dialog[data-iw-arcane-cache]').count() === 0 && await tab.locator('nav > button:not([data-iw-cache-trigger])').count() === 4);
+    }
     check('extension assets load and none fail', assets > 0 && !errors.some(e => e.startsWith('asset failed')),
       `${assets} loaded; ${errors.filter(e => e.startsWith('asset')).slice(0, 2).join(' | ')}`);
     check('no page errors', !errors.some(e => !e.startsWith('asset')), errors.slice(0, 3).join(' | '));

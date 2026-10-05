@@ -51,6 +51,7 @@ const FRAMED_SURFACE = [
 // Elements the skin already owns or that another classifier frames — never a
 // generic overlay, and framing one would double-draw or fight a writer.
 const SKIN_OWNED = [
+  '[data-iw-arcane-cache]',
   '.iw-tip', '#iw-tip',
   '[data-iw-inventory-root]',
   '[data-iw-ui]',

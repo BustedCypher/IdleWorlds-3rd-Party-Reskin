@@ -10,6 +10,7 @@ const OUTFILE = path.join(DIST, 'content.bundle.js');
 const allowMissingAssets = process.argv.includes('--allow-missing-assets');
 
 const REQUIRED_ASSETS = [
+  'arcane-cache/chest-states.png',
   'gear_icons_atlas.png',
   'gear_icons_manifest.json',
   'item_icons_atlas.png',

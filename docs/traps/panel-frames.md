@@ -92,3 +92,25 @@ bonus (`+N% XP`), so a "no boost today" wording is never painted as satisfied,
 and it frames the boost line alone, not the "Resets in" timer beside it. Note
 for the test: a block whose text wraps fills its available width, so "the
 frame hugs its text" is only measurable on one line.
+
+**An activity panel's host never climbs past its own `.panel` (2026-09-28).**
+`findActivityPanelHost` walked up from the label until a candidate matched,
+and Current Action matches on "holds a progress bar". With no action
+running (every new player, and anyone whose queue ends) the panel has none,
+so the walk climbed to the COLUMN, which holds the skill cards' bars. The
+column became `data-iw-panel="current-action"`, Current Action and Action Log
+its split header (`header-title` / `header-tools`), a skill card's XP bar its
+`progress`, the Daily XP Boost lost its mark, and at 390px Current Action was
+a sliver beside the log. The walk now stops at the label's own `.panel`
+(which the old fallback already used when nothing matched).
+
+**Feed rows are found by timestamp, and the game prints the BROWSER's clock.**
+`toLocaleTimeString` gives "11:47:02 AM" in a 12-hour locale; the rule wanted
+a bare "11:47:02", so there the `system` fallback made rows of the "system"
+lines only and a "combat", "zone control" or "world boss" line kept the
+game's look (an all-combat log had no rows). `FEED_TIME` takes an optional
+AM/PM. World Chat carries its messages twice (the `xl:hidden` preview and
+the `xl:block` list), so timestamps from both meet only at the panel; that
+now takes the no-marker fallback (the preview is the feed) instead of
+leaving the chat with no feed, which 24-hour clocks used to get.
+`tests/activity-panel-states.test.mjs` pins both, on both clocks and widths.

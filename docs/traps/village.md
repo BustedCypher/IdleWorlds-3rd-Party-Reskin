@@ -284,3 +284,14 @@ stats card gets `flex:1`. That makes the card's bottom inherit the scene's
 actual bottom at every side-by-side width. Wrapped ledgers stay natural-height;
 a fixed `min-height` would leave dead space on those narrow layouts and drift
 as soon as the scene height changes.
+
+**The Install picker's icons read their own icon as the name (2026-09-28).**
+`decorateSlot` found each option's building from the name line's
+`firstChild`, and once painted that child IS the `.iw-village-option-art`
+it prepends. The next pass (live: the one after items.json lands, at the
+page's next tick) read "", resolved nothing and removed the icon: measured
+on the kit's housing page, all three added at 447 ms and removed at 629 ms.
+It reads the line's own text nodes now. CLAUDE.md's rule about appended
+nodes and classifier sweeps, applied to a node the SAME module appended.
+`tests/village-option-art.test.mjs` serves items.json late and ticks once;
+its negative control (the firstChild read) loses all three icons.

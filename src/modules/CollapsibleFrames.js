@@ -45,6 +45,16 @@ function labelText(el) {
   return normText(el?.textContent).replace(/^[^\p{L}\p{N}]+/u, '');
 }
 
+/** The name the control SAYS ("Collapse Action Log"): the title's own text
+ *  when it has any. Action Log's title is a button whose text "Action Log"
+ *  sits beside a nested "view all" span, and textContent joins the two with
+ *  no separator ("Action Logview all"). The storage KEY still reads
+ *  labelText (frameKey), so no saved fold is orphaned. */
+function nameText(el) {
+  const own = [...(el?.childNodes || [])].filter(n => n.nodeType === 3).map(n => n.data).join('');
+  return labelText({ textContent: own }) || labelText(el);
+}
+
 /**
  * The frame's own heading. `data-iw-ui="section-title"` is the classified one;
  * `[role="heading"]` catches the skin's own frames (the Village scene builds a
@@ -250,7 +260,7 @@ export function decorateCollapsibleFrames(root = document) {
     if (!key || !head) continue;
     if (head.dataset.iwCollapseHead !== '1') head.dataset.iwCollapseHead = '1';
     markSpine(head, title);
-    const name = labelText(title) || 'section';
+    const name = nameText(title) || 'section';
     const button = ensureToggle(head, target, key, name);
     live.add(button);
     applyState(target, button, key, name);

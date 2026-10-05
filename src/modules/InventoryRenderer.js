@@ -338,6 +338,32 @@ function setAttr(el, name, value) {
  */
 const chromeSweptThisFlush = new Set();
 
+const FILTER_LABEL = /^(all|gear|materials|consumables|drops)$/;
+
+/**
+ * The filter tabs' row: the parent holding the most DISTINCT tab labels (the
+ * first on a tie). The label alone is not enough. The game's Filter menu
+ * (mounted only while open) has a Tier row and a Type row that both start
+ * with "All", and the Type row also holds "Consumables" and "Drops". Taking
+ * those for tabs painted three of the menu's pills as tab plates, and, since
+ * the tabs then no longer shared one parent, unmarked the real row, so below
+ * 1280px it wrapped. It stayed wrapped after the menu closed, until the next
+ * inventory row change swept the panel again.
+ * tests/inventory-filter-menu.test.mjs pins it.
+ */
+function filterTabRow(buttons, labelOf) {
+  const rows = new Map();
+  for (const button of buttons) {
+    const label = labelOf(button);
+    if (!FILTER_LABEL.test(label) || !button.parentElement) continue;
+    if (!rows.has(button.parentElement)) rows.set(button.parentElement, new Set());
+    rows.get(button.parentElement).add(label);
+  }
+  let best = null, most = 0;
+  for (const [row, labels] of rows) if (labels.size > most) { best = row; most = labels.size; }
+  return best;
+}
+
 function classifyInventoryChromeOnce(root) {
   if (!root || chromeSweptThisFlush.has(root)) return;
   if (!chromeSweptThisFlush.size) queueMicrotask(() => chromeSweptThisFlush.clear());
@@ -362,10 +388,13 @@ function classifyInventoryChrome(root) {
   // Controls inside item rows are excluded by the selector itself; the ItemRow
   // action model owns those independently.
   const buttons = [...root.querySelectorAll(notInRow('button, a, [role="button"]'))];
+  const labelOf = button => String(button.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const tabRow = filterTabRow(buttons, labelOf);
   for (const button of buttons) {
-    const text = String(button.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const text = labelOf(button);
     let role = '';
-    if (/^(all|gear|materials|consumables|drops)$/.test(text)) role = 'filter';
+    // A tab label outside the tab row (the open Filter menu) is not a tab.
+    if (FILTER_LABEL.test(text)) { if (button.parentElement === tabRow) role = 'filter'; }
     else if (/^(prev|previous|next)$/.test(text)) role = 'page';
     // An icon control carries no label of its own and draws an <svg>. Both
     // conditions are required: a bare text-free anchor is not a tool button.
@@ -388,16 +417,12 @@ function classifyInventoryChrome(root) {
     }
   }
 
-  // Mark the filter tabs' shared row. Only when every tab has the SAME parent:
-  // a layout the game splits is not one row to hold together. The last marked
-  // row is remembered per root, so a settled page neither searches nor writes.
-  const filters = buttons.filter(b => b.getAttribute(INVENTORY_CONTROL_ATTR) === 'filter');
-  const filterRow = filters.length && filters.every(b => b.parentElement === filters[0].parentElement)
-    ? filters[0].parentElement : null;
+  // Mark the filter tabs' shared row. The last marked row is remembered per
+  // root, so a settled page neither searches nor writes.
   const previousRow = filterRows.get(root);
-  if (previousRow && previousRow !== filterRow) previousRow.removeAttribute(INVENTORY_FILTERS_ATTR);
-  if (filterRow && !filterRow.hasAttribute(INVENTORY_FILTERS_ATTR)) filterRow.setAttribute(INVENTORY_FILTERS_ATTR, '1');
-  if (filterRow) filterRows.set(root, filterRow); else filterRows.delete(root);
+  if (previousRow && previousRow !== tabRow) previousRow.removeAttribute(INVENTORY_FILTERS_ATTR);
+  if (tabRow && !tabRow.hasAttribute(INVENTORY_FILTERS_ATTR)) tabRow.setAttribute(INVENTORY_FILTERS_ATTR, '1');
+  if (tabRow) filterRows.set(root, tabRow); else filterRows.delete(root);
 
   // The tool row ends with a bare <svg class="lucide lucide-package … text-ember">
   // that is NOT a control: `cursor: auto`, no role, no tabindex, no aria-label,

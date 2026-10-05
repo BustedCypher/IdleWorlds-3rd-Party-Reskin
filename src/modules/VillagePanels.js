@@ -219,9 +219,12 @@ function decorateSlot(card) {
     if (option.closest('[data-iw-village-owned]')) continue;
     const optionName = option.querySelector(':scope > p');
     if (!optionName) continue;
-    // "Celestial Exchange ×2" — the count lives in its own <span>, so strip the
-    // span's text rather than guessing at a separator.
-    const bare = label(optionName.firstChild?.textContent ?? optionName.textContent);
+    // "Celestial Exchange ×2" — the count lives in its own <span>, so read the
+    // name from the <p>'s OWN text nodes. Not `firstChild`: once painted, the
+    // first child is our own `.iw-village-option-art`, so the next pass (the
+    // one items.json triggers) read "" and removed the art it had just drawn
+    // (native kit decision 14; measured: added at 447 ms, removed at 629 ms).
+    const bare = label([...optionName.childNodes].filter(n => n.nodeType === 3).map(n => n.data).join(''));
     const match = resolveBuilding(bare);
     mark(option, 'data-iw-village-role', option.tagName === 'BUTTON' ? 'option' : 'option-owned');
     mark(optionName, 'data-iw-village-role', 'option-name');

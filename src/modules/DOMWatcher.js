@@ -140,6 +140,19 @@ function detectSkillTypeCached(panel) {
   return type;
 }
 
+/** A card on the Guild route, or inside a raid panel wherever one renders.
+ *  Read here rather than from GuildPanels' marks: this runs in the flush that
+ *  first discovers the card, before UIFoundation's classify pass has tagged
+ *  anything, and the skill-type cache keys on content, so a wrong first answer
+ *  would stick until the card's text changed. */
+function isGuildSurface(panel) {
+  if (/^\/guild(?:\/|$)/i.test(location.pathname || '')) return true;
+  if (panel.closest('.raid-battle-backdrop')) return true;
+  const host = panel.parentElement?.closest('.panel');
+  const heading = host?.querySelector('h1,h2,h3');
+  return !!heading && /^raid dungeon$/i.test(normaliseSkillSignal(heading.firstElementChild?.textContent || heading.textContent).replace(/^[^a-z0-9]+/i, ''));
+}
+
 function detectSkillType(panel, precomputed) {
   // Positive identification only. .compact-panel is reused across quests,
   // bosses, village and other systems, so searching arbitrary panel body text
@@ -159,6 +172,14 @@ function detectSkillType(panel, precomputed) {
       [...panel.querySelectorAll('p,div,span')].some(el => /^reward\s*:/i.test(el.textContent.trim()))) {
     return 'unknown';
   }
+
+  // Guild route / raid cards. The raid lobby's Members card prints each
+  // member's "Combat 66" chip and lend-skill lines ("Mining · Lv48"), so the
+  // anchored label fallback below read it as a Combat skill card and the skin
+  // rebuilt it as one (names turned into skill plates, a guest row into an
+  // empty medallion). Skill cards only live on the Game route, and the raid
+  // panel's own title is the second, route-independent proof.
+  if (isGuildSurface(panel)) return 'unknown';
 
   // Every skill card carries a control (a locked card's is disabled). A
   // control-less stat block such as Character Stats' Lifetime Stats would

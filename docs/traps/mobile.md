@@ -56,6 +56,9 @@ header.
   paddings, gaps and anything else of fixed width. Leaving flex-shrink to do it
   instead clips labels, and not evenly: shrink is proportional to size, so the
   WIDEST label absorbs the whole shortfall.
+- **Six route tabs since Guild (2026-10-05).** The phone rail with the Guild
+  tab runs 5px padding and a 4px gap to stay above the 7.5px floor at 320px;
+  see [guild.md](guild.md) for the measurement and why scrollWidth missed it.
 - **Count every fixed pixel.** The filter formula first left out the tabs'
   1px plate borders (ten pixels across five tabs) and "Consumables" clipped at
   320px while every other width passed. The nav tabs have no border.

@@ -76,6 +76,22 @@ classification; after classification the popup must be topmost. The unit test
 also rejects a hidden popup, an ordinary absolute child, `.iw-tip`, and the
 existing viewport-scrim path remains independent.
 
+**The menu's pills are not filter tabs (2026-09-28).** Its Tier and Type rows
+both start with `All`, and the Type row also holds `Consumables` and `Drops`:
+three of the five tab labels. `classifyInventoryChrome` gave a button the
+`filter` role by its label alone, so whenever the panel was swept with the
+menu open (on boot, or on an inventory row's slow path, which live means
+any gathered item), those pills became tab plates beside the game's plain
+pills for every other type. The tabs then no longer shared one parent, so
+the real row lost `data-iw-inventory-filters` and, below 1280px, its one-row
+sizing: at 390px `Drops` wrapped under the menu, and it STAYED wrapped after
+the menu closed, until the next row change swept the panel again. The tab
+row is now the parent holding the most distinct tab labels
+(`filterTabRow`), and a tab label anywhere else gets no role.
+`tests/inventory-filter-menu.test.mjs` pins it: menu open at boot at three
+widths, then opened, closed and reopened on a live page. Its negative control
+(the old rule) fails 13 checks.
+
 **The inventory tool row is three controls and ONE ORNAMENT.** Live DOM:
 
 ```

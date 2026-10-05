@@ -358,3 +358,20 @@ source v2 manifest coordinates and the source audit's RGBA SHA-256 before
 copying into the two unused legacy cells, and `--check` verifies the committed
 destination still carries those same pixels. If the source manifest/audit does
 not contain the documented cells, stop the import instead of guessing.
+
+**The two atlases load separately, and `isReady()` means EITHER (2026-09-28).**
+`AtlasService.isReady()` is true once the gear manifest OR the item index has
+loaded; only `isComplete()` means both. The World Boss rewards list cached
+itself on `isReady()`, so when the gear atlas won the race the list was built
+with the gloves, ring and sword painted and Trader Token and the Upgrade Orb
+(item atlas) as the "◆" placeholder, and when the item atlas landed the key was
+still `true`: they stayed "◆" for the session. A late atlas also changes no
+DOM, so no flush follows it. Key such a cache on `AtlasService.revision()`
+(bumped on every load), and re-run on `iw:atlas-updated`; UIFoundation now
+re-decorates the resolved boss panels on that event and on
+`iw:item-db-updated`. Found by the native kit's verify-kit: the extension's own
+reference render froze 6 of 17 icons at random. `tests/boss-reward-icons.test.mjs`
+serves the item index 1.5 s late; either half of the fix alone leaves the 6
+placeholders. (QuestPanelRenderer's medallion also gates on `isReady()`; it
+falls back to the discipline glyph, and the next quest render repaints it.
+Not reproduced.)

@@ -14,15 +14,21 @@ import { getLayoutEpoch, pickRendered, preferRendered } from './Viewport.js';
 import { decorateWorldBossPanel, clearWorldBossPanel } from './WorldBossPanels.js';
 import { decorateVillagePanel, clearVillagePanel } from './VillagePanels.js';
 import { reconcileVillageScene, clearVillageScene } from './VillageScene.js';
+import { decorateGuildPanel, clearGuildPanel } from './GuildPanels.js';
 import { decorateCollapsibleFrames, clearCollapsibleFrames } from './CollapsibleFrames.js';
 import { classifyHeaderChrome, clearHeaderChrome } from './HeaderChrome.js';
+import { ensureArcaneCacheButton, clearArcaneCacheDemo } from './ArcaneCacheDemo.js';
 import css from '../styles/ui-system.css';
 import villageSceneCss from '../styles/village-scene.css';
 import collapsibleCss from '../styles/collapsible.css';
+import guildCss from '../styles/guild.css';
 import compactCss from '../styles/compact-buttons.css';
 import { decorateCompactButtons, clearCompactButtons } from './CompactButtons.js';
 
-const NAV_LABELS = ['game', 'market', 'leaderboards', 'village', 'dungeon'];
+// Guild arrived 2026-10-05, between Village and Dungeon. Without it here the
+// tab stayed vanilla inside the skinned rail (the "rim skips that one button"
+// shape navLabelText documents).
+const NAV_LABELS = ['game', 'market', 'leaderboards', 'village', 'guild', 'dungeon'];
 const NAV_ROUTE_KEYS = Object.freeze({ village: 'housing' });
 /**
  * Controls the SKIN appended into a game node, and the game-control selector
@@ -315,12 +321,14 @@ function classifyMainNav() {
   if (mainNavResolution && mainNavResolutionValid(mainNavResolution)) {
     applyMainNavState(mainNavResolution.tabs);
     ensureToolkitLink(mainNavResolution.track);
+    ensureArcaneCacheButton(mainNavResolution.track);
     return;
   }
   mainNavResolution = resolveMainNav();
   if (!mainNavResolution) return;
   applyMainNavState(mainNavResolution.tabs);
   ensureToolkitLink(mainNavResolution.track);
+  ensureArcaneCacheButton(mainNavResolution.track);
 }
 
 // Once a zone-bar host is resolved, WHICH element plays the role never
@@ -907,6 +915,35 @@ function classifyVillagePanels() {
   }
 }
 
+/**
+ * Guild route: every framed leaf panel on `/guild`, plus a raid panel wherever
+ * else one renders (its own "Raid Dungeon" title). GuildPanels owns every
+ * `data-iw-guild*` role inside.
+ *
+ * Read from `sectionFrameResolutions`, which classifySectionFrames rebuilt (or
+ * validated) earlier in this same pass, so this adds no document sweep. Not
+ * cached separately: the frame list IS the cache, and recomputing the subset
+ * per pass is what keeps a route swap or a resize from stranding the marks —
+ * the vacuous-`[].every()` freeze classifyMarket documents cannot happen to a
+ * list that is never trusted across passes.
+ */
+let guildRoots = new Set();
+
+function classifyGuildPanels() {
+  const onRoute = /^\/guild(?:\/|$)/i.test(location.pathname || '');
+  const next = new Set();
+  for (const { frame, heading } of sectionFrameResolutions || []) {
+    if (!frame.isConnected || !frame.classList.contains('panel')) continue;
+    if (frame.querySelector(':scope > [data-iw-ui="nav-tab"], .panel')) continue;
+    const title = heading ? normText(heading.firstElementChild?.textContent || heading.textContent).replace(/^[^a-z0-9]+/i, '') : '';
+    if (!onRoute && !/^raid dungeon$/i.test(title)) continue;
+    next.add(frame);
+    decorateGuildPanel({ root: frame, heading });
+  }
+  for (const root of guildRoots) if (!next.has(root)) clearGuildPanel(root);
+  guildRoots = next;
+}
+
 function findCurrentActionProgress(root) {
   const semantic = root.querySelector('[role="progressbar"], [aria-valuenow][aria-valuemax]');
   if (semantic) return semantic;
@@ -1018,9 +1055,17 @@ function panelHostMatches(candidate, panel, heading) {
 }
 
 function findActivityPanelHost(heading, panel) {
+  // Never climb past the label's own `.panel`: a panel is a panel. With no
+  // action running, Current Action has no progress bar, and the walk used to
+  // climb on until it found one: the whole column, skill cards and all. The
+  // column then became "current-action", Current Action and Action Log its
+  // split header, a skill card's XP bar its progress, and the Daily XP Boost
+  // lost its mark (tests/activity-panel-states.test.mjs).
+  const ownPanel = heading.closest?.('.panel') || null;
   let cur = heading.parentElement;
   for (let depth = 0; cur && cur !== document.body && depth < 6; depth += 1, cur = cur.parentElement) {
     if (panelHostMatches(cur, panel, heading)) return cur;
+    if (cur === ownPanel) break;
   }
   // The structural matchers miss when the game concatenates the header with the
   // feed: Action Log glues "…XP/hr" onto "System…" (kills the rate regex) and
@@ -1064,14 +1109,27 @@ function classifyPanelHeader(host, heading) {
   }
 }
 
+/* A feed line's timestamp. The game prints it with the BROWSER's clock
+   (toLocaleTimeString), so a 12-hour locale adds "AM"/"PM" ("11:47:02 AM",
+   "11:47:02 a.m."). Without the suffix only 24-hour clocks matched, and the
+   'system' fallback below then found only the lines whose channel reads
+   "system": a "combat", "zone control" or "world boss" line lost the row
+   treatment, and a log of nothing but combat had no rows at all. */
+const FEED_TIME = /^\d{1,2}:\d{2}:\d{2}(?:\s?[ap]\.?\s?m\.?)?$/i;
+
 function classifyFeed(host) {
-  let markers = matchingLeaves(host, text => /^\d{1,2}:\d{2}:\d{2}$/.test(text));
+  let markers = matchingLeaves(host, text => FEED_TIME.test(text));
   if (!markers.length) markers = matchingLeaves(host, text => text === 'system');
   let feed = markers.length > 1
     ? commonAncestor(markers)
     : markers.length === 1
       ? directChildUnder(markers[0], host)
       : null;
+  // World Chat renders its messages twice, in the phone preview (`xl:hidden`)
+  // and in the desktop list (`xl:block`); their timestamps meet only at the
+  // panel itself. That is no feed, so take the fallback below, as a chat with
+  // no timestamp match always has.
+  if (feed === host) { feed = null; markers = []; }
   if (!feed) {
     feed = [...host.children].find(child =>
       child.dataset.iwPanelPart !== 'header' &&
@@ -1395,6 +1453,8 @@ function queueClassify() {
     guard('ui:boss-cards', classifyBossCards);
     guard('ui:market', classifyMarket);
     guard('ui:village', classifyVillagePanels);
+    // Reads sectionFrameResolutions, so after classifySectionFrames.
+    guard('ui:guild', classifyGuildPanels);
     // `guard` only catches SYNCHRONOUSLY; this pass awaits a network read, so
     // the rejection has to be caught on the promise or a failed read surfaces
     // as an unhandled rejection in the game's own console.
@@ -1410,6 +1470,7 @@ function queueClassify() {
 
 /** Remove every semantic role attribute this module applied. Kill switch. */
 export function clearUIFoundation() {
+  clearArcaneCacheDemo();
   clearHeaderChrome();
   clearCollapsibleFrames(document);
   clearVillageScene();
@@ -1423,6 +1484,8 @@ export function clearUIFoundation() {
   clearVillagePanel(document.body);
   villageResolutions = null;
   villageSeen = new Set();
+  clearGuildPanel(document.body);
+  guildRoots = new Set();
   mainNavResolution = null;
   // The skin's own appended control: removed outright, not just stripped of
   // its attributes, so the kill switch leaves the rail exactly as React wrote it.
@@ -1457,7 +1520,7 @@ export function clearUIFoundation() {
 // Both activation and standalone initialization must install the same complete
 // sheet. StyleInjector keeps the first sheet for an id and ignores later calls.
 export function injectUIFoundationStyles() {
-  inject('ui-system', css + '\n' + compactCss + '\n' + villageSceneCss + '\n' + collapsibleCss);
+  inject('ui-system', css + '\n' + compactCss + '\n' + villageSceneCss + '\n' + collapsibleCss + '\n' + guildCss);
 }
 
 export function initUIFoundation() {
@@ -1472,5 +1535,15 @@ export function initUIFoundation() {
       bossPanelResolutionValid(entry) && entry.root.contains(panel));
     if (entry) guard('ui:boss-state', () => decorateWorldBossPanel(entry));
   });
+  // The boss rewards' art and names come from the icon atlases and items.json,
+  // which can finish loading after the panel was decorated, with no DOM change
+  // to trigger another pass. Re-run the resolved boss panels when either lands.
+  const redecorateBosses = () => {
+    for (const entry of bossPanelResolutions || []) {
+      if (bossPanelResolutionValid(entry)) guard('ui:boss-state', () => decorateWorldBossPanel(entry));
+    }
+  };
+  on('iw:atlas-updated', redecorateBosses);
+  on('iw:item-db-updated', redecorateBosses);
   queueClassify();
 }

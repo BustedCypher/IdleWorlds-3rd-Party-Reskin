@@ -155,6 +155,16 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   document-wide `[data-iw-collapse]` sweep can never adopt them, and choices
   persist in `iw-village-ledger`. Scene and ledger wrap rather than squeeze —
   see [docs/traps/village.md](docs/traps/village.md).
+- `src/modules/GuildPanels.js` — the **Guild** route (`/guild`) and its raid:
+  lobby cards (ready check, boss picker, leaderboard, members, lend, potions,
+  loadout, ready toggle, chat) and the fight (`.raid-battle-backdrop`).
+  `UIFoundation.classifyGuildPanels` picks every leaf frame on `/guild` (or a
+  "Raid Dungeon" panel elsewhere) from `sectionFrameResolutions`. Roles live in
+  `data-iw-guild*`; colours the game uses as state are read into
+  `data-iw-guild-tone/-state`, never repainted uniformly. `DOMWatcher` answers
+  'unknown' for these cards (the Members card's "Combat 66" chips used to make
+  it a Combat skill card). `src/styles/guild.css` rides the `ui-system`
+  injection. See [docs/traps/guild.md](docs/traps/guild.md).
 - `src/modules/CollapsibleFrames.js` — per-panel collapse on every parent
   frame (Skills, Inventory, Quests, Village, World Bosses, Current Action,
   Action Log, World Chat, Zone Control and the Village scene). The World Boss
@@ -248,6 +258,9 @@ here. Add a line to this list only when a lesson applies across surfaces.
 - A cached classifier with an EMPTY resolution never re-runs, because
   `[].every()` is true; validate coverage too. A cache key must not include
   live content, such as ticking digits, that the cached work does not depend on.
+  It MUST include every input that can change without a DOM change: key on
+  `AtlasService.revision()`, never `isReady()` (true once EITHER atlas loads),
+  and re-run on `iw:atlas-updated` ([sprites-and-buttons](docs/traps/sprites-and-buttons.md)).
 - Nor button `disabled` state: the game disables every button during any
   request, and a strip-then-rederive pass that reads layout makes Chrome's
   scroll anchoring jump the window.
@@ -313,6 +326,7 @@ here. Add a line to this list only when a lesson applies across surfaces.
 | [inventory.md](docs/traps/inventory.md) | list frame, tool row, row colour, upgrade-roll line |
 | [test-harness.md](docs/traps/test-harness.md) | fixture and render-harness traps |
 | [mobile.md](docs/traps/mobile.md) | the mobile audit harness, single-row menus, the phone Toolkit slot, phone-width fixes |
+| [guild.md](docs/traps/guild.md) | Guild route + raid: skill-detection guard, state tones, the game's sans-skin rules, six-tab rail |
 
 Bundle size is a **soft budget of 300,000 bytes**, not a hard gate: both
 `build-tools/build.mjs` and `static-invariants` only `console.warn` past it —
