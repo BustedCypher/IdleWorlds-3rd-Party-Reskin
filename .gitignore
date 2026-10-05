@@ -1,5 +1,8 @@
 node_modules/
 
+# Local brainstorming screens and session credentials.
+.superpowers/
+
 # A real browser profile, created by the header live-audit tooling. It holds
 # "Login Data", "Web Data", "Secure Preferences" and a BraveWallet directory —
 # saved passwords, autofill and wallet state. It is 114 MB and this repo is
@@ -23,3 +26,9 @@ tmp/
 
 # Release zips. `npm run package` rebuilds them from an allowlist.
 release/
+
+# Developer handoff material (native-render kit, technical handover, feature
+# packages, spec PDFs, bug reports). Kept locally, never in the repository:
+# the reskin's main stays the extension only (Curtis, 2026-10-05). The live
+# native-render workspace is Desktop/idleworlds-native-handoff.
+dev-handoff/

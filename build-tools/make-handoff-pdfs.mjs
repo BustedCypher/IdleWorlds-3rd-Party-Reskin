@@ -1,5 +1,5 @@
 /**
- * Render handoff/*.spec.js to PDF.
+ * Render dev-handoff/*.spec.js to PDF.
  *
  * The PDFs are DERIVED from the spec files, never written alongside them, so
  * the two cannot drift. Editing a spec and re-running this is the only way to
@@ -17,7 +17,7 @@ import { dirname, resolve, basename } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
-const DIR = resolve(ROOT, 'handoff');
+const DIR = resolve(ROOT, 'dev-handoff');
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -162,7 +162,7 @@ ${out.join('\n')}`;
 
 const files = (await readdir(DIR)).filter(f => f.endsWith('.spec.js')).sort();
 if (!files.length) {
-  console.error('no handoff/*.spec.js files found');
+  console.error('no dev-handoff/*.spec.js files found');
   process.exit(1);
 }
 
@@ -200,7 +200,7 @@ for (const file of files) {
     margin: { top: '18mm', bottom: '20mm', left: '16mm', right: '16mm' },
   });
   await page.close();
-  console.log(`wrote handoff/${name}.pdf`);
+  console.log(`wrote dev-handoff/${name}.pdf`);
 }
 
 await browser.close();
