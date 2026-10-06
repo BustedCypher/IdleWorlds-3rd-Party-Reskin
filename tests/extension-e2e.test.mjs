@@ -25,7 +25,7 @@
  *   IW_EXTENSION_DIR=<unzipped folder> node tests/extension-e2e.test.mjs
  */
 import { chromium } from 'playwright';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -43,6 +43,7 @@ const page = react => `<!doctype html><html><head><meta charset="utf-8"><title>I
 <body><div id="root"><div class="app"><header><div><h1>BustedCypher</h1><p>⚔ Combat Lv 62</p></div><div><button>☆</button><button>⚙</button></div><div id="status-grid"><div>💰 515,686</div><div>⚔ ATK 292 · DEF 252</div></div></header><nav><button>Game</button><button>Market</button><button>Leaderboards</button><button>Village</button></nav><div id="zone-bar-panel" class="panel"><div><p>🧭 Zone 19: Eternium Verge</p></div><div><button>🌐 Zones</button><button>Next Zone</button></div></div><div style="display:flex;flex-direction:column;gap:12px"><div class="panel"><div><h2>Quests</h2></div><div class="compact-panel" id="quest"><div><p>Smithing Work Order</p><p>Iron Gloves+3 0/1</p><p>Reward: +2,100g • +900 smithing XP</p></div><div><button>Turn In</button><button>Skip</button></div><div>0% complete</div></div></div><h2>Inventory</h2><section aria-label="Inventory" class="panel"><div class="space-y-1.5"><div class="compact-row"><div><span>Iron Sword</span><span>+2</span></div><div><span>Tier 4 · Weapon</span></div><div><span>x1</span></div><button>Equip</button><button>List</button></div></div></section></div></div></div></body></html>`;
 
 const ITEMS = JSON.stringify({ generatedAt: 'e2e', items: [{ item_id: 'iron_sword', name: 'Iron Sword', category: 'Equipment', tier: 4 }] });
+const raidPage=react=>page(react).replace('</div></div></body>',`<section><div class="panel"><h2>Raid Dungeon</h2><div class="raid-battle-backdrop" style="--raid-bg-image:url(/raid-backgrounds/boss-ashmaw.png)"><div class="raid-readable-panel">Claw Rake in 10s</div><div><span>Ashmaw, the Cinder Tyrant</span><div><img alt="Ashmaw, the Cinder Tyrant" src="/raid-sprites/boss-ashmaw.png"></div><div style="height:10px"><div style="width:49%;height:100%;background:#da5b55"></div></div><p>10,352 / 21,000 HP</p></div><div class="raid-readable-panel"><button id="raid-skills" onclick="window.raidClicks=(window.raidClicks||0)+1">Raid skills</button><p>Ward active +27 fire resistance</p></div><div class="raid-arena-floor"><button disabled>BustedCypher · Jewelcrafting</button></div><button class="raid-readable-panel">Combat Log</button><p>Charging your action bar…</p></div></div></section></div></div></body>`);
 
 let failures = 0;
 const check = (label, ok, detail = '') => {
@@ -69,6 +70,8 @@ async function run(react) {
     await context.route('https://idleworlds.com/**', route => {
       const { pathname } = new URL(route.request().url());
       if (pathname === '/game') return route.fulfill({ contentType: 'text/html; charset=utf-8', body: page(react) });
+      if (pathname === '/guild') return route.fulfill({ contentType: 'text/html; charset=utf-8', body: raidPage(react) });
+      if (pathname.startsWith('/raid-')) return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="#943b20"/></svg>'});
       if (pathname === '/items.json') return route.fulfill({ contentType: 'application/json', body: ITEMS });
       return route.fulfill({ status: 404, body: '' });
     });
@@ -115,6 +118,47 @@ async function run(react) {
       await tab.keyboard.press('Escape');
       check('cache closes without removing native controls',
         await tab.locator('dialog[data-iw-arcane-cache]').count() === 0 && await tab.locator('nav > button:not([data-iw-cache-trigger])').count() === 4);
+      await tab.goto('https://idleworlds.com/guild');
+      await tab.locator('[data-iw-raid-scene="ashmaw"] [data-iw-animated]').waitFor({timeout:10000});
+      await tab.locator('.raid-battle-backdrop').scrollIntoViewIfNeeded();
+      const arenaArt=await tab.locator('[data-iw-art="environment"]').getAttribute('src');
+      check('live Guild raid uses the approved bundled arena',arenaArt.startsWith('chrome-extension://')&&arenaArt.endsWith('/assets/raids/ashmaw/arena.png'),arenaArt);
+      check('live Guild mounts one separate animated backdrop',await tab.locator('[data-iw-ashmaw-art]').count()===1);
+      // The live game wraps its log button; grid placement belongs to that
+      // native wrapper, while interaction and panel styling stay on the button.
+      await tab.locator('[data-iw-guild-role="combat-log"]').evaluate(log=>{const wrapper=document.createElement('div');log.replaceWith(wrapper);wrapper.append(log);});
+      await tab.waitForTimeout(250);
+      await tab.locator('.raid-arena-floor').evaluate(floor=>{
+        // Native layout and realistic party capacity; the skin never builds
+        // these controls, this fixture simulates the game's roster update.
+        floor.style.cssText='display:flex;flex-wrap:wrap;gap:8px';
+        for(let i=1;i<12;i++){const player=floor.firstElementChild.cloneNode(true);player.textContent=`Raider ${i} · Woodcutting`;floor.append(player);}
+      });
+      await tab.locator('#raid-skills').evaluate(button=>{
+        const expanded=document.createElement('div');expanded.id='expanded-skills';
+        for(let i=0;i<12;i++){const row=document.createElement('p');row.textContent=`Raider ${i}: War Cry ready`;expanded.append(row);}
+        button.parentElement.append(expanded);
+      });
+      await tab.waitForTimeout(250);
+      for(const width of [1440,900,390,320]){
+        await tab.setViewportSize({width,height:900});
+        const layout=await tab.locator('.raid-battle-backdrop').evaluate(arena=>{
+          const log=arena.querySelector('[data-iw-guild-role="combat-log"]');
+          const item=log.parentElement===arena?log:log.parentElement;
+          const floor=arena.querySelector('.raid-arena-floor');
+          const rect=arena.getBoundingClientRect();
+          const expanded=arena.querySelector('#expanded-skills').getBoundingClientRect();
+          return {row:getComputedStyle(item).gridRowStart,column:getComputedStyle(item).gridColumnEnd,below:item.getBoundingClientRect().top>=floor.getBoundingClientRect().bottom,overflow:rect.left<0||rect.right>innerWidth+1,expanded:expanded.bottom<=floor.getBoundingClientRect().top,party:floor.children.length};
+        });
+        check(`native wrapped combat log is below the party at ${width}px`,layout.row==='6'&&layout.column==='-1'&&layout.below&&!layout.overflow,JSON.stringify(layout));
+        check(`expanded native skills and twelve raiders fit at ${width}px`,layout.expanded&&layout.party===12&&!layout.overflow,JSON.stringify(layout));
+      }
+      await tab.locator('#expanded-skills').evaluate(el=>el.remove());
+      await tab.setViewportSize({width:1280,height:900});
+      await tab.locator('#raid-skills').click();check('native live raid handler survives the art layer',await tab.evaluate(()=>window.raidClicks)===1);
+      await tab.emulateMedia({reducedMotion:'no-preference'});await tab.waitForTimeout(150);
+      check('real extension pixels animate and remain CORS-clean',await tab.locator('canvas').evaluate(async c=>{const before=c.toDataURL();await new Promise(r=>setTimeout(r,180));return before!==c.toDataURL();}));
+      mkdirSync('output/ashmaw-live',{recursive:true});await tab.locator('.raid-battle-backdrop').screenshot({path:'output/ashmaw-live/unpacked-raid.png'});
     }
     check('extension assets load and none fail', assets > 0 && !errors.some(e => e.startsWith('asset failed')),
       `${assets} loaded; ${errors.filter(e => e.startsWith('asset')).slice(0, 2).join(' | ')}`);

@@ -43,7 +43,7 @@
   color: var(--iw-dim) !important;
   font-size: 11px !important;
 }
-:root [data-iw-guild="root"] [data-iw-guild-role="subtitle"] > span { color: var(--iw-text-hi) !important; }
+:root [data-iw-guild="root"] [data-iw-guild-role="subtitle"] > span:not([data-iw-guild-role]) { color: var(--iw-text-hi) !important; }
 :root [data-iw-guild="root"] [data-iw-guild-role="badge"] {
   padding: 2px 6px !important;
   border: 1px solid color-mix(in srgb, var(--iw-guild-good-rail) 55%, transparent) !important;
@@ -329,7 +329,7 @@
   box-shadow: inset 0 2px 7px rgba(0,0,0,.48) !important;
 }
 /* "Set" and "Send": the page's forward moves, the shared ember CTA. */
-:root [data-iw-guild="root"] [data-iw-guild-role="cta"] {
+:root [data-iw-guild="root"] :is([data-iw-guild-role="cta"], [data-iw-guild-role="start"]) {
   min-height: 32px !important;
   padding: 0 16px !important;
   border: 1px solid var(--iw-th-cta-hi) !important;
@@ -341,8 +341,8 @@
   font-weight: 700 !important;
   text-shadow: 0 1px 0 #3A1005 !important;
 }
-:root [data-iw-guild="root"] [data-iw-guild-role="cta"]:hover:not(:disabled) { filter: brightness(1.12) !important; }
-:root [data-iw-guild="root"] [data-iw-guild-role="cta"]:disabled { filter: saturate(.45) brightness(.7) !important; }
+:root [data-iw-guild="root"] :is([data-iw-guild-role="cta"], [data-iw-guild-role="start"]):hover:not(:disabled) { filter: brightness(1.12) !important; }
+:root [data-iw-guild="root"] :is([data-iw-guild-role="cta"], [data-iw-guild-role="start"]):disabled { filter: saturate(.45) brightness(.7) !important; }
 /* Not ready yet: the toggle is the page's call to action. Ready: the game's
    emerald, kept as a lit green plate. */
 :root [data-iw-guild="root"] [data-iw-guild-role="ready-toggle"] {
@@ -384,22 +384,123 @@
 :root [data-iw-guild="root"] [data-iw-guild-role="chat-feed"] > :last-child { border-bottom: 0 !important; }
 :root [data-iw-guild="root"] [data-iw-guild-role="chat-feed"] > * > span:last-child { color: var(--iw-text) !important; }
 :root [data-iw-guild="root"] [data-iw-guild-role="composer"] { gap: 8px !important; }
-:root [data-iw-guild="root"] [data-iw-guild-role="chat-input"] {
+:root [data-iw-guild="root"] :is([data-iw-guild-role="chat-input"], [data-iw-guild-role="field"]) {
   min-height: 32px !important;
   border: 1px solid var(--iw-th-edge-mid) !important;
   border-radius: 2px !important;
   background: #080A09 !important;
   box-shadow: inset 0 2px 7px rgba(0,0,0,.48) !important;
 }
-:root [data-iw-guild="root"] [data-iw-guild-role="chat-input"]:focus {
+:root [data-iw-guild="root"] :is([data-iw-guild-role="chat-input"], [data-iw-guild-role="field"]):focus {
   outline: 1px solid rgba(197,145,67,.5) !important;
   outline-offset: 1px !important;
   border-color: var(--iw-th-brass) !important;
 }
 
+/* ── The guild's own page: leader lobby and the guildless directory ── */
+/* The leader's ready card: "Start Raid" is the page's forward move, so a
+   not-yet-ready toggle beside it steps down to a plain forged plate. Ready
+   stays the lit green plate (the rule above), so the two states still differ. */
+:root [data-iw-guild="root"] [data-iw-guild-role="start"] {
+  min-height: 38px !important;
+  font-size: 14px !important;
+  letter-spacing: .06em !important;
+}
+:root [data-iw-guild-card="ready"]:has([data-iw-guild-role="start"]) [data-iw-guild-role="ready-toggle"]:not([data-iw-guild-state="ready"]) {
+  border-color: var(--iw-th-edge) !important;
+  background: var(--iw-guild-plate) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
+  color: var(--iw-text) !important;
+  text-shadow: 0 1px 0 #000 !important;
+}
+/* Pickup Raid Group: a title over a note, the CTA at the row's end. These
+   notes are the card's instructions (who can be invited, what a pickup group
+   costs), so they read at the dim ink, not the faint one. */
+:root [data-iw-guild="root"] :is([data-iw-guild-card="pickup"], [data-iw-guild-card="form"], [data-iw-guild-card="directory"]) [data-iw-guild-role="note"] {
+  color: var(--iw-dim) !important;
+  font-size: 10.5px !important;
+  line-height: 1.4 !important;
+}
+:root [data-iw-guild-card="pickup"] [data-iw-guild-role="note"] { margin-top: 3px !important; }
+:root [data-iw-guild-card="form"] [data-iw-guild-role="card-count"] { color: var(--iw-dim) !important; font-variant-numeric: tabular-nums !important; }
+/* A leader's row controls. "✕" is a quiet text control until hovered; its
+   hover ink is the game's rose intent, re-voiced. */
+:root [data-iw-guild="root"] [data-iw-guild-role="kick"] {
+  min-height: 0 !important;
+  padding: 0 2px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--iw-faint) !important;
+}
+:root [data-iw-guild="root"] [data-iw-guild-role="kick"]:hover { color: var(--iw-guild-bad) !important; filter: none !important; }
+/* The Combat chip in the game's tone (an under-level chip is a warning). */
+:root [data-iw-guild="root"] [data-iw-guild-role="chip"][data-iw-guild-tone] {
+  border-color: color-mix(in srgb, var(--iw-guild-rail) 70%, transparent) !important;
+  color: var(--iw-guild-ink) !important;
+}
+/* Directory: the head is a disclosure button wearing no plate. */
+:root [data-iw-guild="root"] :is([data-iw-guild-role="disclosure"], [data-iw-guild-role="guild-name"]) {
+  min-height: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+:root [data-iw-guild="root"] [data-iw-guild-role="disclosure"]:hover [data-iw-guild-role="card-title"] { color: #FFF0DA !important; }
+:root [data-iw-guild="root"] [data-iw-guild-role="disclosure-hint"] {
+  color: var(--iw-th-accent-dim) !important;
+  font-size: 10px !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+:root [data-iw-guild="root"] [data-iw-guild-role="directory"] {
+  border: 1px solid var(--iw-th-edge-mid) !important;
+  border-radius: 2px !important;
+  background: #0B0C0A !important;
+  box-shadow: inset 0 0 18px rgba(0,0,0,.24) !important;
+  padding: 2px !important;
+  scrollbar-color: var(--iw-th-edge-mid) #11110E !important;
+  scrollbar-width: thin !important;
+}
+:root [data-iw-guild="root"] [data-iw-guild-role="directory"] > * + * { margin-top: 0 !important; }
+:root [data-iw-guild="root"] [data-iw-guild-role="guild-row"] {
+  border-bottom: 1px solid var(--iw-th-edge-faint) !important;
+  border-radius: 0 !important;
+}
+:root [data-iw-guild="root"] [data-iw-guild-role="guild-row"]:last-child { border-bottom: 0 !important; }
+:root [data-iw-guild="root"] [data-iw-guild-role="guild-row"]:hover { background: rgba(255,255,255,.025) !important; }
+:root [data-iw-guild="root"] [data-iw-guild-role="guild-row"][data-iw-guild-state="open"] {
+  background: color-mix(in srgb, var(--iw-th-cta) 8%, #0E0E0B) !important;
+  box-shadow: inset 2px 0 0 var(--iw-th-cta-hi) !important;
+}
+:root [data-iw-guild="root"] [data-iw-guild-role="guild-name"] { color: var(--iw-dim) !important; }
+:root [data-iw-guild="root"] [data-iw-guild-role="guild-name"] > span:last-child {
+  color: var(--iw-text-hi) !important;
+  font-family: var(--iw-font-ui) !important;
+  font-weight: 700 !important;
+}
+:root [data-iw-guild="root"] [data-iw-guild-role="guild-name"]:hover > span:last-child { color: #FFF0DA !important; }
+:root [data-iw-guild="root"] [data-iw-guild-role="capacity"] { color: var(--iw-dim) !important; font-variant-numeric: tabular-nums !important; }
+/* Apply: a small plate in the game's tone (emerald: open to apply). */
+:root [data-iw-guild="root"] [data-iw-guild-role="apply"] {
+  min-height: 20px !important;
+  padding: 0 8px !important;
+  border: 1px solid var(--iw-guild-rail, var(--iw-th-edge)) !important;
+  border-radius: 2px !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--iw-guild-rail, var(--iw-th-edge)) 30%, #15130F), color-mix(in srgb, var(--iw-guild-rail, var(--iw-th-edge)) 10%, #0B0C0A)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+  color: var(--iw-guild-ink, var(--iw-text)) !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+:root [data-iw-guild="root"] [data-iw-guild-role="apply"]:hover:not(:disabled) { filter: brightness(1.15) !important; }
+:root [data-iw-guild="root"] [data-iw-guild-role="apply"]:disabled { opacity: .5 !important; }
+
 /* ── The fight ────────────────────────────────────────────────────── */
-/* The backdrop is the game's own boss art (--raid-bg-image) and embers: it is
-   framed, never repainted. */
+/* Other encounters retain native art. Ashmaw opts into the owned scene only
+   after both painted assets load; a failed load leaves the native scene intact. */
 :root [data-iw-guild="root"] [data-iw-guild-role="arena"] {
   border: 1px solid var(--iw-th-edge) !important;
   border-radius: 3px !important;
@@ -408,6 +509,70 @@
     inset 0 0 0 3px color-mix(in srgb, var(--iw-th-edge) 35%, transparent),
     inset 0 0 40px rgba(0,0,0,.45),
     0 4px 14px rgba(0,0,0,.35) !important;
+}
+
+:root [data-iw-guild="root"] [data-iw-raid-scene="ashmaw"] {
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+  background: #160706 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  grid-template-rows: auto auto auto minmax(120px, 1fr) auto auto auto;
+  gap: 12px !important;
+  min-height: clamp(640px, 52vw, 760px);
+}
+:root [data-iw-raid-scene="ashmaw"]::before,
+:root [data-iw-raid-scene="ashmaw"]::after,
+:root [data-iw-raid-scene="ashmaw"] > .raid-ember { display: none !important; }
+:root [data-iw-ashmaw-art] {
+  display: none;
+  position: absolute !important;
+  inset: 0;
+  margin: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden;
+  z-index: 0;
+  contain: strict;
+}
+:root [data-iw-raid-scene="ashmaw"] > [data-iw-ashmaw-art] { display: block; }
+:root [data-iw-raid-scene="ashmaw"] > :not([data-iw-ashmaw-art]):not(.raid-ember) {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 3px #000, 0 0 8px #000;
+  min-width: 0;
+  margin: 0 !important;
+}
+:root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="boss-summary"] { grid-column: 1; grid-row: 1; }
+:root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="telegraph"] { grid-column: 1; grid-row: 2; }
+:root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="effects"] { grid-column: 1; grid-row: 3; }
+:root [data-iw-raid-scene="ashmaw"] > .raid-arena-floor { grid-column: 1 / -1; grid-row: 5; }
+:root [data-iw-raid-scene="ashmaw"] > :is([data-iw-guild-role="combat-log"], [data-iw-guild-role="combat-log-region"]) { grid-column: 1 / -1; grid-row: 6; }
+:root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="status"] { grid-column: 1 / -1; grid-row: 7; }
+:root [data-iw-ashmaw-art] + :not(.raid-ember) { margin-top: 0 !important; }
+:root [data-iw-ashmaw-art] > canvas,
+:root [data-iw-ashmaw-art] > [data-iw-art="environment"] {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%;
+}
+:root [data-iw-ashmaw-art]::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(8,7,5,.25), transparent 35%, transparent 55%, rgba(8,7,5,.6));
+}
+:root [data-iw-ashmaw-art] > canvas { display: none; }
+:root [data-iw-ashmaw-art][data-iw-animated] > canvas { display: block; }
+:root [data-iw-ashmaw-art][data-iw-animated] > img { display: none; }
+:root [data-iw-raid-boss-stage="ashmaw"] {
+  display: none !important;
+}
+:root [data-iw-raid-boss-stage="ashmaw"] > img { visibility: hidden !important; }
+@media (max-width: 700px) {
+  :root [data-iw-guild="root"] [data-iw-raid-scene="ashmaw"] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(190px, 1fr) auto auto auto auto auto;
+    min-height: 840px;
+  }
+  :root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="telegraph"] { grid-row: 3; }
+  :root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="effects"] { grid-row: 4; }
 }
 :root [data-iw-guild="root"] :is([data-iw-guild-role="telegraph"], [data-iw-guild-role="effects"], [data-iw-guild-role="combat-log"]) {
   border: 1px solid var(--iw-th-edge-mid) !important;

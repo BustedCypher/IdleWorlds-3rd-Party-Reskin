@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "purpose": "Transparent painterly smoke texture reused by the approved live Ashmaw arena.",
+  "layers": [
+    {
+      "name": "smoke",
+      "prompt": "Use case: stylized-concept.\nAsset type: one isolated transparent smoke VFX texture for an animated painterly fantasy raid boss portrait.\nPrimary request: a single beautiful billowing volcanic smoke cloud, a horizontally flowing wisp with irregular swirling curls and layered vapor, charcoal/burgundy shadows and muted warm copper/orange lava light beneath. Smoke ONLY; no dragon, creature, fire, architecture, ground, scenery, particles, text or grid.\nStyle: premium hand-painted detailed fantasy illustration, rich soft volumetric smoke, intricate natural eddies and wisps, matches a dark crimson molten dragon's volcanic fortress. Not a flat gradient or cartoon, not opaque white steam, not photographic.\nComposition: one irregular elongated cloud in the center of a wide landscape canvas; roughly two times wider than tall; curl gently upward at the left and taper into wispy thin translucent edges at both ends. Leave generous completely transparent padding all around it so no smoke touches the canvas boundaries. Soft layered semi-transparent gray-burgundy smoke with amber under-light; holes and thinner areas through the center, organic asymmetrical silhouette. True RGBA transparency, no checkerboard painted into the artwork, no solid background or vignette. This is one reusable cloud cutout for a looping smoke animation, not a sprite sheet.",
+      "asset": "smoke.png",
+      "transparent_background": true
+    }
+  ]
+}

@@ -2,11 +2,17 @@
 
 `GuildPanels.js` + `src/styles/guild.css`, added 2026-10-05 from two
 skin-off snapshots: a raid lobby seen as a guest, and an active fight. The
-guild's own page (what "View my guild" opens) has not been seen yet, so cards
-there fall back to `data-iw-guild-card="generic"` and the frame/ground every
-`.compact-panel` already gets. Ask for a snapshot before styling it.
+guild's own page followed the same day (v0.2.0+2026-10-05.16): a leader in a
+guild, and a player with no guild. See "The guild's own page" below. The
+in-fight view as a member, and an OPEN All Guilds row (its member list), are
+still unseen; a card the module does not recognise falls back to
+`data-iw-guild-card="generic"` and the frame/ground every `.compact-panel`
+already gets. Ask for a snapshot before styling either.
 
-`tmp/guild-snap/render.mjs` renders snapshots with the saved game stylesheet
+`tmp/guild-snap/render-pages.mjs` renders the two page snapshots (each
+carries the game's CSS inlined) on Legacy or `--game-skin sans`, stock and
+skinned, and prints every card's kind, its roles and any button left
+unmarked. `tmp/guild-snap/render.mjs` renders the older snapshots with the saved game stylesheet
 (`tmp/native-snap/game-52dc34e0.css`) stock and skinned at any widths, with
 `--eval <probe.js>` and `--game-skin sans|default`. That stylesheet predates
 the raid: its `raid-*` rules are a hand-written stand-in, so the battle scene
@@ -57,9 +63,73 @@ is checked against an approximation of the game's own raid CSS.
   min-content (`min-w-0` on the flex item does not change the container's
   contribution). At 320px that held the panel 57px wider than the screen in
   the STOCK game too; `main` clipped it, along with the collapse toggle.
-- **The backdrop is the game's art.** `.raid-battle-backdrop` (its
-  `--raid-bg-image`, embers, sprites) is framed, never repainted. `raid-*` are
-  the only stable hooks on the route; GuildPanels keys the fight on them.
+- **Ashmaw has an owned animated backdrop.** `AshmawScene.js` detects the
+  native boss image and `--raid-bg-image`, and adds a pointer-transparent
+  decorative layer. Only after the bundled arena painting loads does the arena
+  opt into `data-iw-raid-scene="ashmaw"`. The original boss image is hidden
+  with CSS, preserving its node. CSS grid positions the native boss summary,
+  telegraph, skills, party and log above the background without reparenting.
+  The live combat-log button sits inside a native wrapper: mark that wrapper
+  `combat-log-region` for grid row 6. Styling only the inner button places the
+  unmarked wrapper in the first available cell and covers the boss. The
+  unpacked-extension test checks both shapes at 1440/900/390/320px, with an
+  expanded skills panel and twelve native party controls.
+  Other encounters keep the game's backdrop. A failed image load leaves
+  native art; optional smoke failure still renders the arena. Unavailable
+  Canvas 2D or a mask error uses the approved painting as a still fallback.
+  The approved 16-second arena scene keeps Ashmaw and the ground fixed while
+  rolling clouds, lava light, jaw/shoulder smoke, steam, eye embers and drifting
+  ash animate. Battle hazards are disabled. `AshmawArenaRenderer.js` is shared
+  with the standalone preview, capped at 1440 × 720 for live rendering. All
+  clocks use integer harmonics of one repeating phase. No per-frame DOM writes.
+  Drawing pauses offscreen, in hidden tabs, and for reduced motion; cleanup
+  cancels RAF, disconnects observers, releases canvas buffers and removes owned
+  art on route removal/disable. A replaced boss wrapper or removed decoration
+  remounts the scene. Rebuild `dist` after changes; a stale bundle can silently
+  show the previous scene instead of the approved arena.
+
+## The guild's own page
+
+Measured on the two snapshots with `render-pages.mjs` before any change, with
+today's module:
+
+- **Inputs are not chat.** "Invite Player", "🤝 Invite a Raid Guest" and
+  "Create a Guild" each have an input, and `cardKind` tested for an input
+  FIRST, so all three were chat. Chat takes the card's first `> p` as its
+  title; in the invite cards the real title sits in a head row beside the
+  "7/12" count, so the first `> p` is the HELP sentence, and it rendered as a
+  13px small-caps heading. They are `form` cards now, named by their title
+  before the input test. A new card with an input must be named the same way,
+  or it is chat.
+- **A row's buttons are not all names.** A guest sees one button per member
+  row (the name). A leader also gets the lend-skill PICKER (a sky
+  `border-sky-*` button with ▾, where a guest saw a static `lend-pill` div)
+  and a "✕" kick (`title="Kick …"`). Every row button was `member-name`.
+  They are `member-name` / `picker` / `kick` (+ `option` for a menu the
+  picker opens inside its own `.relative` box; not in the snapshots).
+- **Two buttons in the ready card.** The leader's card holds "✓ Ready" and
+  "⚔️ Start Raid (7)", and `kind = ready` required exactly one button, so it
+  went generic and lost the ready state (rule 5). Start is role `start`
+  (the CTA). Beside it, a NOT-ready toggle steps down to a plain plate
+  (`:has([data-iw-guild-role="start"])`), otherwise two ember buttons sit side
+  by side. Ready / not ready / Start must stay three different edges; the
+  backgrounds alone differ by a 58% vs 62% colour mix, which a string compare
+  calls different and the eye does not.
+- **Directory.** "🏰 All Guilds" (collapsed, "show ▾") and "🏰 Find a Guild"
+  (open) are one shape: a `> button` holding the title `p` is the
+  disclosure, then a note and an `overflow-y-auto` list of rows
+  (▸ · #rank · name button, ⭐ points, "8/12", "Apply"). Apply keeps the game's
+  emerald as `data-iw-guild-tone`; a row gets `data-iw-guild-state="open"`
+  when its class list grows or it gains children (the open shape is a guess
+  until seen).
+- **Pickup Raid Group** is `pickup`: title, note, CTA.
+- The **Combat chip** was repainted dim for everyone; it now carries the
+  game's tone, so an under-level (rose) chip stays different from a met one.
+- The **subtitle** "woof • 7/12 members • ⭐ 1 guild points" marks its points
+  span `points`; the generic `subtitle > span` rule skips marked spans.
+
+The five boss tabs wrap to two rows at 390px (Skarth alone on the second).
+That is the existing boss-tab design, not part of this change.
 
 ## Six-tab rail
 
@@ -84,3 +154,10 @@ down to 68.
 pair above, raider plates, the ready check and Set against the game's sans
 rules, the nav tab, 320/390px rail and panel width, and the kill-switch round
 trip. Its five negative controls are listed in its header; each was run.
+
+`tests/guild-pages.test.mjs`: the guild's own page, on the game's sans skin:
+form vs chat and the invite title, member-name / picker / kick, the
+three-way ready card, Pickup, the directory rows and Apply's tone, the chip
+tone, and the kill switch. Its four negative controls (listed in its header)
+were run by patching each fix out of a copy of the built bundle; each made the
+suite fail.

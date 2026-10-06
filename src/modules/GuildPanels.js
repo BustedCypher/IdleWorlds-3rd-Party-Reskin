@@ -36,6 +36,25 @@
  *       p "Charging your action bar…"
  *     .compact-panel  "💬 Raid Chat"
  *
+ * THE GUILD'S OWN PAGE (two more snapshots, v0.2.0+2026-10-05.16: a leader in
+ * a guild, and a player with no guild). Same panel, same head row — its
+ * subtitle is "woof • 7/12 members • ⭐ 1 guild points" (or a one-line pitch),
+ * its one link "Leave Guild". Cards the guest lobby did not have:
+ *     .compact-panel  "⚔️ Pickup Raid Group" + note | button-primary
+ *     .compact-panel  "Invite Player" · "7/12" | note | input + "Invite"
+ *     .compact-panel  "🤝 Invite a Raid Guest" · "0/7" | note | input + "Invite"
+ *     .compact-panel  "✓ Ready" toggle beside "⚔️ Start Raid (7)" (leader)
+ *     .compact-panel  button > p "🏰 All Guilds" · "show ▾"   (collapsed)
+ *   NO GUILD
+ *     .compact-panel  "Create a Guild" | input + "Create"
+ *     .compact-panel  button > p "🏰 Find a Guild" | note | scroll list of
+ *                     guild rows: button (▸ · #1 · name), ⭐ points, "8/12",
+ *                     "Apply" (emerald)
+ * A leader's member rows also carry a lend-skill PICKER (a sky button, ▾)
+ * where a guest saw a static pill, and a "✕" kick button (title "Kick …").
+ * The invite and create cards have an input, so they must be named BEFORE the
+ * chat test — as chat, their help sentence took the card-title role.
+ *
  * Every card is the shared `.compact-panel`, so the roles live in their OWN
  * `data-iw-guild*` namespace (CLAUDE.md, ownership). DOMWatcher also answers
  * 'unknown' for these cards, because the Members card's "Combat 66" chips used
@@ -54,9 +73,12 @@
  * opts out of the generic plate through `:not([data-iw-guild-role])`.
  *
  * Cost: one pass per flush over the resolved panels only, every write compared
- * first (`mark`), nothing appended into game nodes — so a settled page writes
- * nothing, and a ticking fight writes only when a raider's state flips.
+ * first (`mark`). Ashmaw adds one owned decorative canvas layer, reconciled
+ * idempotently; animation draws pixels without per-frame DOM writes. Native
+ * gameplay nodes remain owned by React.
  */
+
+import { reconcileAshmawScene, clearAshmawScenes, pruneAshmawScenes } from './AshmawScene.js';
 
 const norm = value => String(value || '').replace(/\s+/g, ' ').trim();
 /** Labels lead with an emoji run ("⚔️ Ready check", "🧪 Pre-raid prep"). */
@@ -114,6 +136,10 @@ function decorateHead(root, heading) {
   for (const p of head.querySelectorAll('p')) {
     if (!heading.contains(p)) role(p, 'subtitle');
   }
+  // "⭐ 1 guild points" in a member's subtitle.
+  for (const span of head.querySelectorAll('span[title]')) {
+    if (/guild points/i.test(span.title)) role(span, 'points');
+  }
   // "View my guild (Omen)" / "Leave guest spot": text links wearing <button>.
   for (const button of head.querySelectorAll('button')) {
     if (button.hasAttribute('data-iw-collapse')) continue;
@@ -124,9 +150,17 @@ function decorateHead(root, heading) {
 
 /* ------------------------------------------------------------ the cards -- */
 
+const READY_LABEL = /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up)$/i;
+
 function cardKind(card) {
-  if (card.querySelector('input:not([type="checkbox"]):not([type="radio"]), textarea')) return 'chat';
   const first = firstLine(card);
+  const field = card.querySelector('input:not([type="checkbox"]):not([type="radio"]), textarea');
+  if (field && /^(?:invite\b|create a guild$)/i.test(first)) return 'form';
+  if (field) return 'chat';
+  if (/^pickup raid group$/i.test(first)) return 'pickup';
+  // A directory heads itself with its own disclosure button ("All Guilds",
+  // collapsed; "Find a Guild", open with its list).
+  if (/^(?:all guilds|find a guild)$/i.test(first) && card.querySelector(':scope > button p')) return 'directory';
   if (/^ready check\b/i.test(first)) return 'ready-check';
   if (card.querySelector('select')) return 'loadout';
   if (/^lend a tradeskill$/i.test(first)) return 'lend';
@@ -134,8 +168,10 @@ function cardKind(card) {
   if (/^leaderboard\b/i.test(first)) return 'leaderboard';
   if (/^members$/i.test(first)) return 'members';
   if ([...card.querySelectorAll('button[title]')].filter(b => /,\s*the\s/i.test(b.title)).length >= 2) return 'boss';
+  // The ready toggle, alone (a member) or beside "Start Raid (7)" (the leader).
   const buttons = [...card.querySelectorAll('button')];
-  if (buttons.length === 1 && /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up)$/i.test(label(buttons[0].textContent))) return 'ready';
+  const toggles = buttons.filter(b => READY_LABEL.test(label(b.textContent)));
+  if (toggles.length === 1 && buttons.every(b => toggles.includes(b) || /^start raid\b/i.test(label(b.textContent)))) return 'ready';
   return 'generic';
 }
 
@@ -188,10 +224,21 @@ function decorateRosterRow(row) {
       role(el, 'dot');
       mark(el, 'data-iw-guild-state', toneOf(el) === 'good' ? 'online' : null);
     } else if (/guild points/i.test(el.title)) role(el, 'points');
-    else if (/skill level/i.test(el.title)) role(el, 'chip');
+    else if (/skill level/i.test(el.title)) { role(el, 'chip'); tone(el); }
     else if (el.tagName === 'DIV' && /\bborder-sky-/.test(cls) && /\brounded-lg\b/.test(cls)) role(el, 'lend-pill');
   }
-  for (const button of row.querySelectorAll('button')) role(button, 'member-name');
+  // A guest sees one control per row (the name). A leader also gets the
+  // lend-skill picker (the sky button, the static pill's interactive twin;
+  // its open menu's options follow it in the same `.relative` box) and "✕".
+  for (const button of row.querySelectorAll('button')) {
+    const picker = button.closest('.relative')?.querySelector('button');
+    if (/^kick\b/i.test(button.title)) role(button, 'kick');
+    else if (picker && picker !== button) {
+      role(button, 'option');
+      mark(button, 'data-iw-guild-state', toneOf(button) === 'info' || button.getAttribute('aria-selected') === 'true' ? 'selected' : null);
+    } else if (/\bborder-sky-/.test(String(button.className))) role(button, 'picker');
+    else role(button, 'member-name');
+  }
 }
 
 function decorateMembers(card) {
@@ -244,10 +291,61 @@ function decorateLoadout(card) {
 }
 
 function decorateReady(card) {
-  const button = card.querySelector('button');
-  role(button, 'ready-toggle');
-  mark(button, 'data-iw-guild-state', toneOf(button) === 'good' ? 'ready' : null);
+  for (const button of card.querySelectorAll('button')) {
+    if (!READY_LABEL.test(label(button.textContent))) { role(button, 'start'); continue; }
+    role(button, 'ready-toggle');
+    mark(button, 'data-iw-guild-state', toneOf(button) === 'good' ? 'ready' : null);
+  }
   for (const p of card.querySelectorAll(':scope > p')) role(p, 'note');
+}
+
+/** Invite Player / Invite a Raid Guest (title · "7/12" count, note) and
+ *  Create a Guild (title only): one field and its submit. */
+function decorateForm(card) {
+  const field = card.querySelector('input, textarea');
+  const head = card.querySelector(':scope > div:first-child');
+  if (head && !head.contains(field)) {
+    role(head, 'card-head');
+    role(head.querySelector('p'), 'card-title');
+    for (const span of head.querySelectorAll(':scope > span')) role(span, 'card-count');
+  } else role(card.querySelector(':scope > p'), 'card-title');
+  for (const p of card.querySelectorAll(':scope > p')) if (!p.hasAttribute(ROLE)) role(p, 'note');
+  role(field, 'field');
+  const composer = [...card.querySelectorAll(':scope > div')].find(div => div.contains(field) && div.querySelector('button'));
+  role(composer, 'composer');
+  for (const button of composer ? composer.querySelectorAll('button') : []) role(button, 'cta');
+}
+
+function decoratePickup(card) {
+  const ps = card.querySelectorAll('p');
+  role(ps[0], 'card-title');
+  for (const p of [...ps].slice(1)) role(p, 'note');
+  for (const button of card.querySelectorAll('button')) role(button, 'cta');
+}
+
+/** "All Guilds" / "Find a Guild": a disclosure head, then (open) a note and
+ *  the ranked list. Apply keeps the game's tone: it is the one action here. */
+function decorateDirectory(card) {
+  const toggle = card.querySelector(':scope > button');
+  role(toggle, 'disclosure');
+  role(toggle?.querySelector('p'), 'card-title');
+  for (const span of toggle ? toggle.querySelectorAll(':scope > span') : []) role(span, 'disclosure-hint');
+  for (const p of card.querySelectorAll(':scope > p')) role(p, 'note');
+  const list = [...card.querySelectorAll(':scope > div')].find(div => /\boverflow-y-auto\b/.test(String(div.className)));
+  role(list, 'directory');
+  for (const row of list ? list.children : []) {
+    role(row, 'guild-row');
+    // The row's own class list grows when it is opened to show its members.
+    mark(row, 'data-iw-guild-state', /\S\s+\S/.test(String(row.className).trim()) || row.children.length > 1 ? 'open' : null);
+    const line = row.firstElementChild;
+    for (const button of line ? line.querySelectorAll(':scope > button') : []) {
+      if (button.querySelector('span')) role(button, 'guild-name');
+      else { role(button, 'apply'); tone(button); }
+    }
+    for (const span of line ? line.querySelectorAll(':scope > span') : []) {
+      role(span, /guild points/i.test(span.title) ? 'points' : 'capacity');
+    }
+  }
 }
 
 function decorateReadyCheck(card) {
@@ -285,6 +383,9 @@ const DECORATORS = {
   ready: decorateReady,
   'ready-check': decorateReadyCheck,
   chat: decorateChat,
+  form: decorateForm,
+  pickup: decoratePickup,
+  directory: decorateDirectory,
 };
 
 /* ----------------------------------------------------------- the fight -- */
@@ -297,8 +398,16 @@ function isTrack(el) {
 
 function decorateArena(arena) {
   role(arena, 'arena');
+  reconcileAshmawScene(arena);
+  const boss=arena.querySelector('img[src*="boss-"],img[alt^="Ashmaw"]');
+  if(boss?.parentElement?.parentElement!==arena)role(boss?.parentElement?.parentElement,'boss-summary');
   for (const panel of arena.querySelectorAll('.raid-readable-panel')) {
-    if (panel.tagName === 'BUTTON') { role(panel, 'combat-log'); continue; }
+    if (panel.tagName === 'BUTTON') {
+      role(panel, 'combat-log');
+      // React owns the live log wrapper. Place it without moving its button.
+      if (panel.parentElement !== arena && panel.parentElement?.parentElement === arena) role(panel.parentElement, 'combat-log-region');
+      continue;
+    }
     role(panel, panel.querySelector('button') ? 'effects' : 'telegraph');
     tone(panel, panel.querySelector('button') ? 'info' : toneOf(panel));
     for (const button of panel.querySelectorAll('button')) role(button, 'effects-toggle');
@@ -330,6 +439,7 @@ const signatures = new WeakMap();
  * carries ~100 lines, and nothing in it changes between messages.
  */
 export function decorateGuildPanel({ root, heading }) {
+  pruneAshmawScenes();
   mark(root, 'data-iw-guild', 'root');
   decorateHead(root, heading);
   for (const card of root.querySelectorAll('.compact-panel')) {
@@ -348,6 +458,7 @@ export function decorateGuildPanel({ root, heading }) {
 
 export function clearGuildPanel(root) {
   if (!root) return;
+  clearAshmawScenes(root);
   for (const attr of ATTRS) {
     if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
     root.querySelectorAll(`[${attr}]`).forEach(el => el.removeAttribute(attr));

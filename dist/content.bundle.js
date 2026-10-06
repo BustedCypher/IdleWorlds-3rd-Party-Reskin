@@ -6193,6 +6193,470 @@
     anchorEpoch = -1;
   }
 
+  // src/modules/AshmawArenaRenderer.js
+  var ARENA_PERIOD = 16;
+  var BATTLE_EFFECTS_ENABLED = false;
+  var TAU = Math.PI * 2;
+  var frac = (x) => x - Math.floor(x);
+  var smooth = (a, b, x) => {
+    const u = Math.max(0, Math.min(1, (x - a) / (b - a)));
+    return u * u * (3 - 2 * u);
+  };
+  var envelope = (t, a, b, c, d) => smooth(a, b, t) * (1 - smooth(c, d, t));
+  function getArenaCue(seconds, battle = true) {
+    const t = frac(seconds / ARENA_PERIOD) * ARENA_PERIOD;
+    return {
+      t,
+      warning: battle ? envelope(t, 4.6, 5.3, 6, 6.2) : 0,
+      rupture: battle ? envelope(t, 6.05, 6.22, 6.6, 7.8) : 0,
+      debris: battle ? envelope(t, 6.25, 6.45, 7.7, 9.5) : 0
+    };
+  }
+  function createArenaScene(canvas, { background, smoke, ruptureOverlay, maxWidth } = {}) {
+    const sourceWidth = background.naturalWidth || background.width, sourceHeight = background.naturalHeight || background.height;
+    const scale = Math.min(1, (maxWidth || sourceWidth) / sourceWidth);
+    const width = Math.round(sourceWidth * scale), height = Math.round(sourceHeight * scale);
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) return null;
+    const buffers = [];
+    let destroyed = false;
+    const layer = (w, h) => {
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      buffers.push(c);
+      return c;
+    };
+    if (scale < 1) {
+      const scaled = layer(width, height);
+      scaled.getContext("2d").drawImage(background, 0, 0, width, height);
+      background = scaled;
+    }
+    let seed = 491;
+    const random = () => {
+      seed = Math.imul(seed, 1664525) + 1013904223 >>> 0;
+      return seed / 4294967296;
+    };
+    const dust = Array.from({ length: 140 }, () => ({ x: random(), offset: random(), s: 0.7 + random() * 1.8, drift: random() * 2 - 1 }));
+    const debris = Array.from({ length: 26 }, () => ({ x: random(), v: random(), s: 2 + random() * 5, spin: random() * 2 - 1, delay: random() * 0.3 }));
+    const skyLayers = [
+      { points: [[0.225, 0], [0.61, 0], [0.602, 0.065], [0.582, 0.1], [0.57, 0.15], [0.495, 0.15], [0.43, 0.11], [0.41, 0.085], [0.37, 0.1], [0.32, 0.07], [0.225, 0.07]], dx: 100, dy: 28, offset: 0, alpha: 0.96 },
+      { points: [[0.4, 0], [0.588, 0], [0.588, 0.067], [0.572, 0.13], [0.52, 0.16], [0.45, 0.12], [0.4, 0.075]], dx: -72, dy: 32, offset: 0.65, alpha: 0.88 },
+      { points: [[0, 0], [0.23, 0], [0.22, 0.057], [0.18, 0.06], [0.145, 0.02], [0.1, 0.01], [0.072, 0.035], [0.045, 0.08], [0, 0.085]], dx: 80, dy: 16, offset: 1.4, alpha: 0.84 }
+    ].map((f) => {
+      const x = Math.max(0, Math.floor(Math.min(...f.points.map((p) => p[0])) * width) - 39), y = 0;
+      const w = Math.min(width, Math.ceil(Math.max(...f.points.map((p) => p[0])) * width) + 39) - x;
+      const h = Math.ceil(Math.max(...f.points.map((p) => p[1])) * height) + 39;
+      const mask = layer(w, h), mc = mask.getContext("2d");
+      mc.filter = "blur(13px)";
+      mc.fillStyle = "#fff";
+      mc.beginPath();
+      f.points.forEach(([a, b], i) => i ? mc.lineTo(a * width - x, b * height - y) : mc.moveTo(a * width - x, b * height - y));
+      mc.closePath();
+      mc.fill();
+      const source = layer(w, h), sourceCtx = source.getContext("2d");
+      sourceCtx.drawImage(background, -x, -y);
+      sourceCtx.globalCompositeOperation = "destination-in";
+      sourceCtx.drawImage(mask, 0, 0);
+      const surface = layer(w, h);
+      return { ...f, x, y, w, h, mask, source, surface, sc: surface.getContext("2d") };
+    });
+    const skySmoke = layer(512, 256), ss = skySmoke.getContext("2d");
+    if (smoke) {
+      ss.drawImage(smoke, 0, 0, 512, 256);
+      const p = ss.getImageData(0, 0, 512, 256);
+      for (let i = 0; i < p.data.length; i += 4) {
+        const tone2 = p.data[i] * 0.3 + p.data[i + 1] * 0.5 + p.data[i + 2] * 0.2;
+        p.data[i] = tone2 * 0.76 + 29;
+        p.data[i + 1] = tone2 * 0.53 + 17;
+        p.data[i + 2] = tone2 * 0.47 + 18;
+      }
+      ss.putImageData(p, 0, 0);
+    }
+    function paintedClouds(phase2) {
+      ctx.save();
+      for (const [index, f] of skyLayers.entries()) {
+        const a = TAU * phase2 * 2 + f.offset, x = f.dx * Math.sin(a), y = f.dy * Math.sin(a + 0.7);
+        const sc = f.sc;
+        sc.globalCompositeOperation = "source-over";
+        sc.clearRect(0, 0, f.w, f.h);
+        if (index !== 2) {
+          sc.save();
+          sc.translate(f.w * 0.5 + x, f.h * 0.35 + y);
+          sc.rotate(0.055 * Math.sin(a + 0.4));
+          sc.scale(1.1 + 0.09 * Math.sin(a), 1.16 + 0.13 * Math.sin(a + 1.1));
+          sc.drawImage(f.source, -f.w * 0.5, -f.h * 0.35);
+          sc.restore();
+        }
+        for (let i = 0; i < 7; i++) {
+          const u = frac(phase2 * 4 + i / 7 + index * 0.17), fade = Math.sin(Math.PI * u) ** 2;
+          const px = width * ((index === 2 ? -0.08 : 0.18) + i * 0.055 + u * 0.18) - f.x, py = height * (0.015 + i % 3 * 0.033 - u * 0.044) - f.y;
+          const w = width * (0.14 + u * 0.15), h = height * (0.1 + u * 0.11);
+          sc.save();
+          sc.globalAlpha = fade * (index === 1 ? 0.38 : 0.52);
+          sc.translate(px, py);
+          sc.rotate(-0.24 + 0.55 * u);
+          sc.scale(i % 2 ? -1 : 1, 1);
+          sc.drawImage(skySmoke, -w / 2, -h / 2, w, h);
+          sc.restore();
+        }
+        f.sc.globalCompositeOperation = "destination-in";
+        f.sc.drawImage(f.mask, 0, 0);
+        ctx.globalAlpha = f.alpha;
+        ctx.drawImage(f.surface, f.x, f.y);
+      }
+      ctx.restore();
+    }
+    const furnace = layer(width, height), fc = furnace.getContext("2d", { willReadFrequently: true });
+    fc.drawImage(background, 0, 0);
+    const heat = fc.getImageData(0, 0, width, height);
+    const hotAreas = [
+      { x: 0.621, y: 0.217, rx: 0.018, ry: 0.022 },
+      { x: 0.632, y: 0.278, rx: 0.041, ry: 0.049 },
+      { x: 0.7, y: 0.3, rx: 0.069, ry: 0.065 },
+      { x: 0.766, y: 0.264, rx: 0.059, ry: 0.058 }
+    ];
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4, d = heat.data;
+      let shape = 0;
+      for (const f of hotAreas) {
+        const distance = Math.hypot((x / width - f.x) / f.rx, (y / height - f.y) / f.ry);
+        shape = Math.max(shape, 1 - smooth(0.6, 1, distance));
+      }
+      const hot = shape * smooth(170, 240, d[i]) * smooth(75, 155, d[i + 1]) * smooth(40, 115, d[i] - d[i + 2]);
+      d[i] = 255;
+      d[i + 1] = 128;
+      d[i + 2] = 36;
+      d[i + 3] = Math.round(hot * 190);
+    }
+    fc.putImageData(heat, 0, 0);
+    const furnaceX = Math.floor(width * 0.59), furnaceY = Math.floor(height * 0.12), furnaceW = Math.ceil(width * 0.24), furnaceH = Math.ceil(height * 0.26);
+    const furnacePatch = layer(furnaceW, furnaceH);
+    furnacePatch.getContext("2d").drawImage(furnace, -furnaceX, -furnaceY);
+    function furnaceBreathing(phase2) {
+      const lift = (0.5 - 0.5 * Math.cos(TAU * phase2 * 2)) ** 1.35;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = 0.1 + 0.4 * lift;
+      ctx.drawImage(furnacePatch, furnaceX, furnaceY);
+      ctx.restore();
+      for (let i = 0; i < 4; i++) {
+        const u = frac(phase2 * 4 + i / 4 + 0.07), fade = Math.sin(Math.PI * u) ** 2;
+        cloud(width * (0.618 - u * 0.09), height * (0.28 - u * 0.083), width * (0.035 + u * 0.14), height * (0.024 + u * 0.1), fade * (0.18 + 0.17 * lift), u, i % 2 === 1);
+      }
+      for (let i = 0; i < 3; i++) {
+        const u = frac(phase2 * 2 + i / 3 + 0.31), fade = Math.sin(Math.PI * u) ** 2;
+        cloud(width * (0.71 + i * 0.027 - u * 0.055), height * (0.355 - u * 0.08), width * (0.12 + u * 0.13), height * (0.06 + u * 0.075), fade * 0.23, u, i % 2 === 1);
+      }
+    }
+    function eyeStreaming(phase2) {
+      const x = width * 0.626, y = height * 0.219, breath = 0.5 - 0.5 * Math.cos(TAU * phase2 * 2);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      glow(x, y, width * 9e-3, height * 0.013, "255,143,46", 0.09 + 0.07 * breath);
+      for (let i = 0; i < 3; i++) {
+        const a = TAU * phase2 * 2 + i * 1.7, length = width * (0.018 + 7e-3 * Math.sin(a)), rise = height * (0.01 + 4e-3 * Math.cos(a));
+        const g = ctx.createLinearGradient(x, y, x + length, y - rise);
+        g.addColorStop(0, `rgba(255,184,82,${0.2 + 0.12 * breath})`);
+        g.addColorStop(0.3, "rgba(246,133,43,.13)");
+        g.addColorStop(1, "rgba(220,87,20,0)");
+        ctx.strokeStyle = g;
+        ctx.lineWidth = i === 0 ? 1.2 : 0.7;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.bezierCurveTo(x + length * 0.28, y - rise * 0.2 + i * 0.8, x + length * 0.65, y - rise * 1.4 + Math.sin(a) * 3, x + length, y - rise);
+        ctx.stroke();
+      }
+      for (let i = 0; i < 6; i++) {
+        const u = frac(phase2 * 4 + i / 6), fade = Math.sin(Math.PI * u) ** 2;
+        const px = x + width * 0.03 * u, py = y - height * 0.016 * u + Math.sin(u * Math.PI * 2 + i) * 1.3 * u;
+        glow(px, py, 1.6, 1.1, "255,164,57", fade * 0.28);
+      }
+      ctx.restore();
+    }
+    const tile = layer(256, 256), tc = tile.getContext("2d"), tp = tc.createImageData(256, 256);
+    for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
+      const v = 0.5 + 0.5 * Math.sin(TAU * y / 256 + 0.45 * Math.sin(TAU * x / 256));
+      tp.data.set([255, 125, 32, Math.round(10 + v * v * v * 105)], (y * 256 + x) * 4);
+    }
+    tc.putImageData(tp, 0, 0);
+    const regions = [
+      { points: [[0.469, 0.371], [0.509, 0.372], [0.502, 0.568], [0.462, 0.568]], d: [0, 1], cycles: 16 },
+      { points: [[0.898, 0.302], [0.943, 0.31], [0.938, 0.618], [0.891, 0.617]], d: [0, 1], cycles: 16 },
+      { points: [[0.435, 0.541], [0.584, 0.551], [0.799, 0.588], [0.799, 0.633], [0.576, 0.587], [0.43, 0.578]], d: [1, 0.1], cycles: 2 },
+      { points: [[0.787, 0.584], [0.916, 0.627], [0.974, 0.702], [0.974, 0.77], [0.915, 0.68], [0.785, 0.627]], d: [0.75, 0.66], cycles: 2 },
+      { points: [[0.916, 0.697], [0.974, 0.718], [0.942, 0.794], [0.757, 0.917], [0.743, 0.875], [0.919, 0.753]], d: [-0.88, 0.48], cycles: 2 },
+      { points: [[0.743, 0.857], [0.793, 0.92], [0.556, 1], [0.446, 1], [0.477, 0.954]], d: [-0.88, 0.48], cycles: 2 }
+    ];
+    const flows = regions.map(({ points, d, cycles }) => {
+      const px = points.map(([x2, y2]) => [Math.round(x2 * width), Math.round(y2 * height)]);
+      const x = Math.min(...px.map((p) => p[0])), y = Math.min(...px.map((p) => p[1]));
+      const w = Math.max(...px.map((p) => p[0])) - x, h = Math.max(...px.map((p) => p[1])) - y;
+      const mask = layer(w, h), mc = mask.getContext("2d", { willReadFrequently: true });
+      mc.drawImage(background, -x, -y);
+      const pixels = mc.getImageData(0, 0, w, h);
+      for (let i = 0; i < pixels.data.length; i += 4) {
+        const p = pixels.data, k = smooth(166, 232, p[i]) * smooth(72, 155, p[i + 1]) * smooth(18, 80, p[i] - p[i + 2]);
+        p[i] = p[i + 1] = p[i + 2] = 255;
+        p[i + 3] = Math.round(k * 220);
+      }
+      mc.putImageData(pixels, 0, 0);
+      mc.globalCompositeOperation = "destination-in";
+      mc.beginPath();
+      px.forEach(([a, b], i) => i ? mc.lineTo(a - x, b - y) : mc.moveTo(a - x, b - y));
+      mc.closePath();
+      mc.fill();
+      const flow = layer(w, h), fc2 = flow.getContext("2d"), pattern = fc2.createPattern(tile, "repeat");
+      const length = Math.hypot(...d);
+      return { x, y, w, h, mask, flow, fc: fc2, pattern, dx: d[0] / length, dy: d[1] / length, cycles };
+    });
+    function lavaLight(phase2) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      for (const f of flows) {
+        const travel = phase2 * 256 * f.cycles * (f.cycles === 16 ? 1 : 2);
+        f.pattern.setTransform(new DOMMatrix([-f.dy, f.dx, f.dx, f.dy, -f.x + travel * f.dx, -f.y + travel * f.dy]));
+        f.fc.globalCompositeOperation = "source-over";
+        f.fc.clearRect(0, 0, f.w, f.h);
+        f.fc.drawImage(f.mask, 0, 0);
+        f.fc.globalCompositeOperation = "source-in";
+        f.fc.fillStyle = f.pattern;
+        f.fc.fillRect(0, 0, f.w, f.h);
+        ctx.drawImage(f.flow, f.x, f.y);
+      }
+      ctx.restore();
+    }
+    function cloud(x, y, w, h, alpha, u, flip = false) {
+      if (!smoke || alpha <= 0) return;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(x, y);
+      ctx.rotate(0.11 * Math.sin(TAU * u));
+      ctx.scale(flip ? -1 : 1, 1);
+      ctx.drawImage(smoke, -w / 2, -h / 2, w, h);
+      ctx.restore();
+    }
+    function glow(x, y, rx, ry, color, alpha) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(rx, ry);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      g.addColorStop(0, `rgba(${color},${alpha})`);
+      g.addColorStop(1, `rgba(${color},0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(-1, -1, 2, 2);
+      ctx.restore();
+    }
+    function hazards(cue) {
+      const t = cue.t;
+      if (ruptureOverlay) {
+        ctx.save();
+        ctx.globalAlpha = cue.warning * 0.14 + cue.rupture * 0.79 + cue.debris * 0.13;
+        ctx.drawImage(ruptureOverlay, 0, 0, width, height);
+        ctx.restore();
+      }
+      if (cue.rupture > 0) {
+        glow(width * 0.46, height * 0.745, width * 0.26, height * 0.21, "255,105,26", cue.rupture * 0.09);
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        for (let i = 0; i < 30; i++) {
+          const age = t - 6.08 - i % 7 * 0.035, u = age / 1.3;
+          if (u < 0 || u > 1) continue;
+          const alpha = cue.rupture * Math.sin(Math.PI * u) ** 2;
+          const x = width * (0.446 + i % 5 * 9e-3) + (i % 2 ? 1 : -1) * u * (10 + i % 6 * 5);
+          const y = height * 0.762 - height * (0.16 + i % 3 * 0.025) * u * (1 - u);
+          ctx.fillStyle = `rgba(245,${145 + i % 4 * 15},54,${alpha * 0.7})`;
+          ctx.fillRect(x, y, 1.2 + i % 3 * 0.4, 2.5 + i % 4);
+        }
+        ctx.restore();
+      }
+      for (const p of debris) {
+        const age = t - 6.25 - p.delay;
+        if (age < 0 || age > 2.4) continue;
+        const u = age / 2.4, alpha = cue.debris * (1 - smooth(0.65, 1, u));
+        const x = width * (0.46 + (p.x - 0.5) * 0.19 * age), y = height * (0.755 - (0.07 + p.v * 0.055) * age + 0.055 * age * age);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(x, y);
+        ctx.rotate(age * p.spin * 3);
+        ctx.fillStyle = "#241817";
+        ctx.strokeStyle = "#be5328";
+        ctx.lineWidth = 0.65;
+        ctx.beginPath();
+        ctx.moveTo(-p.s, -p.s * 0.6);
+        ctx.lineTo(p.s * 0.4, -p.s);
+        ctx.lineTo(p.s, p.s * 0.6);
+        ctx.lineTo(-p.s * 0.5, p.s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+      if (cue.debris > 0) {
+        const u = (t - 6.25) / 3.25;
+        cloud(width * 0.48 + u * width * 0.03, height * 0.72 - u * height * 0.08, width * (0.32 + u * 0.09), height * (0.16 + u * 0.07), cue.debris * 0.24, u);
+      }
+    }
+    function render2(seconds, { battle = false, ambient = true, lava = true, atmosphere = true, cloudMotion = true, bossMotion = true, eyeLight = true } = {}) {
+      if (destroyed) return getArenaCue(seconds, false);
+      const phase2 = frac(seconds / ARENA_PERIOD), battleActive = battle && BATTLE_EFFECTS_ENABLED, cue = getArenaCue(seconds, battleActive);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(background, 0, 0);
+      if (ambient && cloudMotion) paintedClouds(phase2);
+      if (ambient && lava) lavaLight(phase2);
+      if (ambient && bossMotion) furnaceBreathing(phase2);
+      if (ambient && eyeLight) eyeStreaming(phase2);
+      if (ambient && atmosphere) {
+        for (let i = 0; i < 7; i++) {
+          const u = frac(phase2 * 2 + i / 7), fade = Math.sin(Math.PI * u) ** 2;
+          cloud(
+            width * (0.12 + i * 0.12) - u * width * 0.1,
+            height * (0.56 + i % 2 * 0.025) - u * height * 0.09,
+            width * (0.25 + u * 0.14),
+            height * (0.13 + u * 0.065),
+            fade * 0.25,
+            u,
+            i % 2 === 1
+          );
+        }
+        for (const [x, y] of [[0.485, 0.565], [0.921, 0.617]]) for (let i = 0; i < 4; i++) {
+          const u = frac(phase2 * 4 + i / 4 + x), fade = Math.sin(Math.PI * u) ** 2;
+          cloud(width * (x - u * 0.052), height * (y - u * 0.16), width * (0.045 + u * 0.16), height * (0.032 + u * 0.14), fade * 0.31, u, i % 2 === 1);
+        }
+        for (let i = 0; i < 4; i++) {
+          const u = frac(phase2 * 2 + i / 4 + 0.23), fade = Math.sin(Math.PI * u) ** 2;
+          cloud(width * (0.08 + i * 0.28) + u * width * 0.1, height * 0.98 - u * height * 0.075, width * (0.28 + u * 0.12), height * 0.16, fade * 0.23, u, i % 2 === 1);
+        }
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        for (const p of dust) {
+          const u = frac(phase2 * 3 + p.offset), alpha = Math.sin(Math.PI * u) ** 2 * 0.52;
+          const x = p.x * width + p.drift * u * width * 0.12, y = height * (1.04 - u * 1.12);
+          ctx.fillStyle = `rgba(228,128,65,${alpha})`;
+          ctx.fillRect(x, y, p.s, p.s * 1.4);
+        }
+        ctx.restore();
+      }
+      if (battleActive) hazards(cue);
+      return cue;
+    }
+    return { render: render2, width, height, period: ARENA_PERIOD, destroy() {
+      destroyed = true;
+      for (const c of buffers) c.width = c.height = 1;
+      canvas.width = canvas.height = 1;
+    } };
+  }
+
+  // src/modules/AshmawScene.js
+  var scenes = /* @__PURE__ */ new Map();
+  function createAshmawRenderer(canvas, environment, smoke, options = {}) {
+    return createArenaScene(canvas, { background: environment, smoke, ...options });
+  }
+  function clearAshmawScene(arena) {
+    const state = scenes.get(arena);
+    if (!state) return;
+    state.disposed = true;
+    cancelAnimationFrame(state.frame);
+    state.visible?.disconnect();
+    state.renderer?.destroy();
+    state.renderer = null;
+    document.removeEventListener("visibilitychange", state.resume);
+    state.motion.removeEventListener("change", state.resume);
+    state.art.remove();
+    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    arena.removeAttribute("data-iw-raid-scene");
+    scenes.delete(arena);
+  }
+  function reconcileAshmawScene(arena) {
+    pruneAshmawScenes();
+    const boss = arena.querySelector('img[src*="boss-ashmaw"],img[alt^="Ashmaw"]');
+    const nativeBackground = arena.style.getPropertyValue("--raid-bg-image");
+    if (!boss || nativeBackground && !/ashmaw/i.test(nativeBackground)) {
+      clearAshmawScene(arena);
+      return;
+    }
+    const current = scenes.get(arena);
+    if (current) {
+      if (current.art.parentElement === arena && current.stage === boss.parentElement) return;
+      clearAshmawScene(arena);
+    }
+    const art2 = document.createElement("div");
+    art2.setAttribute("data-iw-ashmaw-art", "");
+    art2.setAttribute("aria-hidden", "true");
+    const env = new Image(), smoke = new Image(), canvas = document.createElement("canvas");
+    env.crossOrigin = smoke.crossOrigin = "anonymous";
+    env.setAttribute("data-iw-art", "environment");
+    art2.append(env, canvas);
+    arena.append(art2);
+    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes.set(arena, state);
+    const start2 = performance.now();
+    let last = 0;
+    state.resume = () => {
+      cancelAnimationFrame(state.frame);
+      state.frame = 0;
+      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
+      if (state.motion.matches) {
+        state.renderer.render(0);
+        return;
+      }
+      state.frame = requestAnimationFrame(tick);
+    };
+    function tick(now) {
+      if (!arena.isConnected) {
+        clearAshmawScene(arena);
+        return;
+      }
+      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (now - last >= 1e3 / 30) {
+        state.renderer.render((now - start2) / 1e3);
+        last = now;
+      }
+      state.frame = requestAnimationFrame(tick);
+    }
+    document.addEventListener("visibilitychange", state.resume);
+    state.motion.addEventListener("change", state.resume);
+    const load2 = (img) => new Promise((resolve2, reject) => {
+      img.onload = () => resolve2(img);
+      img.onerror = () => reject(new Error("Raid art unavailable"));
+    });
+    const loaded = Promise.all([load2(env), load2(smoke).catch(() => null)]);
+    env.src = assetUrl("assets/raids/ashmaw/arena.png");
+    smoke.src = assetUrl("assets/raids/ashmaw/smoke.png");
+    loaded.then(([background, plumes]) => {
+      if (state.disposed || !arena.isConnected) return;
+      arena.setAttribute("data-iw-raid-scene", "ashmaw");
+      state.stage.setAttribute("data-iw-raid-boss-stage", "ashmaw");
+      try {
+        state.renderer = createAshmawRenderer(canvas, background, plumes, { maxWidth: 1440 });
+      } catch {
+      }
+      if (!state.renderer) return;
+      art2.setAttribute("data-iw-animated", "");
+      state.renderer.render(0);
+      if (typeof IntersectionObserver === "function") {
+        state.visible = new IntersectionObserver(([entry2]) => {
+          state.onScreen = entry2.isIntersecting;
+          state.resume();
+        });
+        state.visible.observe(arena);
+      }
+      state.resume();
+    }).catch(() => {
+      if (!state.disposed) clearAshmawScene(arena);
+    });
+  }
+  function clearAshmawScenes(root) {
+    for (const arena of scenes.keys()) if (root === arena || root.contains(arena) || !arena.isConnected) clearAshmawScene(arena);
+  }
+  function pruneAshmawScenes() {
+    for (const arena of scenes.keys()) if (!arena.isConnected) clearAshmawScene(arena);
+  }
+
   // src/modules/GuildPanels.js
   var norm3 = (value) => String(value || "").replace(/\s+/g, " ").trim();
   var label2 = (value) => norm3(value).replace(/^[^\p{L}\p{N}]+/u, "");
@@ -6236,15 +6700,23 @@
     for (const p of head.querySelectorAll("p")) {
       if (!heading.contains(p)) role(p, "subtitle");
     }
+    for (const span of head.querySelectorAll("span[title]")) {
+      if (/guild points/i.test(span.title)) role(span, "points");
+    }
     for (const button2 of head.querySelectorAll("button")) {
       if (button2.hasAttribute("data-iw-collapse")) continue;
       role(button2, "head-link");
       mark3(button2, "data-iw-guild-tone", /^(leave|disband|kick|decline)\b/i.test(label2(button2.textContent)) ? "bad" : null);
     }
   }
+  var READY_LABEL = /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up)$/i;
   function cardKind(card) {
-    if (card.querySelector('input:not([type="checkbox"]):not([type="radio"]), textarea')) return "chat";
     const first = firstLine(card);
+    const field = card.querySelector('input:not([type="checkbox"]):not([type="radio"]), textarea');
+    if (field && /^(?:invite\b|create a guild$)/i.test(first)) return "form";
+    if (field) return "chat";
+    if (/^pickup raid group$/i.test(first)) return "pickup";
+    if (/^(?:all guilds|find a guild)$/i.test(first) && card.querySelector(":scope > button p")) return "directory";
     if (/^ready check\b/i.test(first)) return "ready-check";
     if (card.querySelector("select")) return "loadout";
     if (/^lend a tradeskill$/i.test(first)) return "lend";
@@ -6253,7 +6725,8 @@
     if (/^members$/i.test(first)) return "members";
     if ([...card.querySelectorAll("button[title]")].filter((b) => /,\s*the\s/i.test(b.title)).length >= 2) return "boss";
     const buttons = [...card.querySelectorAll("button")];
-    if (buttons.length === 1 && /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up)$/i.test(label2(buttons[0].textContent))) return "ready";
+    const toggles = buttons.filter((b) => READY_LABEL.test(label2(b.textContent)));
+    if (toggles.length === 1 && buttons.every((b) => toggles.includes(b) || /^start raid\b/i.test(label2(b.textContent)))) return "ready";
     return "generic";
   }
   function decorateBoss(card) {
@@ -6310,10 +6783,20 @@
         role(el, "dot");
         mark3(el, "data-iw-guild-state", toneOf(el) === "good" ? "online" : null);
       } else if (/guild points/i.test(el.title)) role(el, "points");
-      else if (/skill level/i.test(el.title)) role(el, "chip");
-      else if (el.tagName === "DIV" && /\bborder-sky-/.test(cls) && /\brounded-lg\b/.test(cls)) role(el, "lend-pill");
+      else if (/skill level/i.test(el.title)) {
+        role(el, "chip");
+        tone(el);
+      } else if (el.tagName === "DIV" && /\bborder-sky-/.test(cls) && /\brounded-lg\b/.test(cls)) role(el, "lend-pill");
     }
-    for (const button2 of row.querySelectorAll("button")) role(button2, "member-name");
+    for (const button2 of row.querySelectorAll("button")) {
+      const picker = button2.closest(".relative")?.querySelector("button");
+      if (/^kick\b/i.test(button2.title)) role(button2, "kick");
+      else if (picker && picker !== button2) {
+        role(button2, "option");
+        mark3(button2, "data-iw-guild-state", toneOf(button2) === "info" || button2.getAttribute("aria-selected") === "true" ? "selected" : null);
+      } else if (/\bborder-sky-/.test(String(button2.className))) role(button2, "picker");
+      else role(button2, "member-name");
+    }
   }
   function decorateMembers(card) {
     const head = card.querySelector(":scope > div");
@@ -6361,10 +6844,59 @@
     for (const button2 of card.querySelectorAll("button")) role(button2, "cta");
   }
   function decorateReady(card) {
-    const button2 = card.querySelector("button");
-    role(button2, "ready-toggle");
-    mark3(button2, "data-iw-guild-state", toneOf(button2) === "good" ? "ready" : null);
+    for (const button2 of card.querySelectorAll("button")) {
+      if (!READY_LABEL.test(label2(button2.textContent))) {
+        role(button2, "start");
+        continue;
+      }
+      role(button2, "ready-toggle");
+      mark3(button2, "data-iw-guild-state", toneOf(button2) === "good" ? "ready" : null);
+    }
     for (const p of card.querySelectorAll(":scope > p")) role(p, "note");
+  }
+  function decorateForm(card) {
+    const field = card.querySelector("input, textarea");
+    const head = card.querySelector(":scope > div:first-child");
+    if (head && !head.contains(field)) {
+      role(head, "card-head");
+      role(head.querySelector("p"), "card-title");
+      for (const span of head.querySelectorAll(":scope > span")) role(span, "card-count");
+    } else role(card.querySelector(":scope > p"), "card-title");
+    for (const p of card.querySelectorAll(":scope > p")) if (!p.hasAttribute(ROLE)) role(p, "note");
+    role(field, "field");
+    const composer = [...card.querySelectorAll(":scope > div")].find((div) => div.contains(field) && div.querySelector("button"));
+    role(composer, "composer");
+    for (const button2 of composer ? composer.querySelectorAll("button") : []) role(button2, "cta");
+  }
+  function decoratePickup(card) {
+    const ps = card.querySelectorAll("p");
+    role(ps[0], "card-title");
+    for (const p of [...ps].slice(1)) role(p, "note");
+    for (const button2 of card.querySelectorAll("button")) role(button2, "cta");
+  }
+  function decorateDirectory(card) {
+    const toggle = card.querySelector(":scope > button");
+    role(toggle, "disclosure");
+    role(toggle?.querySelector("p"), "card-title");
+    for (const span of toggle ? toggle.querySelectorAll(":scope > span") : []) role(span, "disclosure-hint");
+    for (const p of card.querySelectorAll(":scope > p")) role(p, "note");
+    const list = [...card.querySelectorAll(":scope > div")].find((div) => /\boverflow-y-auto\b/.test(String(div.className)));
+    role(list, "directory");
+    for (const row of list ? list.children : []) {
+      role(row, "guild-row");
+      mark3(row, "data-iw-guild-state", /\S\s+\S/.test(String(row.className).trim()) || row.children.length > 1 ? "open" : null);
+      const line = row.firstElementChild;
+      for (const button2 of line ? line.querySelectorAll(":scope > button") : []) {
+        if (button2.querySelector("span")) role(button2, "guild-name");
+        else {
+          role(button2, "apply");
+          tone(button2);
+        }
+      }
+      for (const span of line ? line.querySelectorAll(":scope > span") : []) {
+        role(span, /guild points/i.test(span.title) ? "points" : "capacity");
+      }
+    }
   }
   function decorateReadyCheck(card) {
     mark3(card, "data-iw-guild-tone", toneOf(card) || "warn");
@@ -6400,7 +6932,10 @@
     loadout: decorateLoadout,
     ready: decorateReady,
     "ready-check": decorateReadyCheck,
-    chat: decorateChat
+    chat: decorateChat,
+    form: decorateForm,
+    pickup: decoratePickup,
+    directory: decorateDirectory
   };
   function isTrack(el) {
     const fill = el.children.length === 1 ? el.firstElementChild : null;
@@ -6408,9 +6943,13 @@
   }
   function decorateArena(arena) {
     role(arena, "arena");
+    reconcileAshmawScene(arena);
+    const boss = arena.querySelector('img[src*="boss-"],img[alt^="Ashmaw"]');
+    if (boss?.parentElement?.parentElement !== arena) role(boss?.parentElement?.parentElement, "boss-summary");
     for (const panel of arena.querySelectorAll(".raid-readable-panel")) {
       if (panel.tagName === "BUTTON") {
         role(panel, "combat-log");
+        if (panel.parentElement !== arena && panel.parentElement?.parentElement === arena) role(panel.parentElement, "combat-log-region");
         continue;
       }
       role(panel, panel.querySelector("button") ? "effects" : "telegraph");
@@ -6434,6 +6973,7 @@
   }
   var signatures2 = /* @__PURE__ */ new WeakMap();
   function decorateGuildPanel({ root, heading }) {
+    pruneAshmawScenes();
     mark3(root, "data-iw-guild", "root");
     decorateHead(root, heading);
     for (const card of root.querySelectorAll(".compact-panel")) {
@@ -6449,6 +6989,7 @@
   }
   function clearGuildPanel(root) {
     if (!root) return;
+    clearAshmawScenes(root);
     for (const attr of ATTRS) {
       if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
       root.querySelectorAll(`[${attr}]`).forEach((el) => el.removeAttribute(attr));
@@ -7259,7 +7800,7 @@
   var collapsible_default = '[data-iw-collapse-head]{position:relative!important;padding-right:30px!important}[data-iw-collapse]{position:absolute!important;top:50%!important;right:0!important;transform:translateY(-50%)!important;z-index:3!important;display:grid!important;place-items:center!important;width:22px!important;height:22px!important;padding:0!important;margin:0!important;border:1px solid var(--iw-th-edge-faint, #4B3D26)!important;border-radius:3px!important;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.34))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;color:var(--iw-th-accent, #C9A24D)!important;cursor:pointer!important;line-height:0!important;-webkit-appearance:none!important;appearance:none!important}[data-iw-collapse]::after{content:""!important;width:6px!important;height:6px!important;border-right:1.5px solid currentColor!important;border-bottom:1.5px solid currentColor!important;transform:translateY(1px) rotate(-135deg)!important;transition:transform .16s ease!important}[data-iw-collapse][aria-expanded=false]::after{transform:translateY(-2px) rotate(45deg)!important}@media(pointer:coarse){[data-iw-collapse]::before{content:""!important;position:absolute!important;inset:-5px!important}}[data-iw-collapse]:hover{border-color:var(--iw-th-brass, #8A6A2C)!important;box-shadow:inset 0 0 9px -3px var(--iw-th-cta, #D8791F)!important}[data-iw-collapse]:focus-visible{outline:2px solid var(--iw-th-accent, #C9A24D)!important;outline-offset:2px!important}[data-iw-collapsed="1"]>*:not([data-iw-collapse]):not([data-iw-collapse-head]){display:none!important}[data-iw-collapsed="1"]{--iw-frame-pad-y: 7px;--iw-frame-pad-mobile-y: 7px;--iw-frame-pad-x: 22px;--iw-frame-pad-mobile-x: 16px}[data-iw-collapsed="1"] [data-iw-collapse-head]{min-height:0!important;margin:0!important;padding-top:0!important;padding-bottom:0!important;padding-left:22px!important;gap:0!important}[data-iw-collapsed="1"] [data-iw-collapse-head] *:not([data-iw-collapse-spine]):not([data-iw-collapse]){display:none!important}[data-iw-collapsed="1"] [data-iw-collapse-spine]{display:block!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}[data-iw-collapsed="1"] [data-iw-collapse-title]{font-family:var(--iw-font-head, "Cinzel", Georgia, serif)!important;font-size:14px!important;font-weight:600!important;line-height:20px!important;letter-spacing:.08em!important;text-transform:none!important;text-align:left!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}[data-iw-collapsed="1"]::after{content:""!important;position:absolute!important;inset:-3px -1px!important;z-index:0!important;pointer-events:none!important;border-style:solid!important;border-width:34px 0 0 32px!important;border-color:transparent!important;border-image:var(--iw-corner-filigree) 50% / 34px 0 0 32px / 0 stretch!important}@media(prefers-reduced-motion:reduce){[data-iw-collapse]::after{transition:none!important}}\n';
 
   // src/styles/guild.css
-  var guild_default = ':root [data-iw-guild=root]{min-width:0!important;--iw-guild-good: #91cba4;--iw-guild-good-rail: #67ab83;--iw-guild-warn: #e0bd78;--iw-guild-warn-rail: #c08a3a;--iw-guild-bad: #dc8a80;--iw-guild-bad-rail: #b4554a;--iw-guild-info: #8fc3da;--iw-guild-info-rail: #4f86a3;--iw-guild-plate: linear-gradient(180deg, rgba(255,255,255,.022), rgba(0,0,0,.18)), #100F0C}:root [data-iw-guild=root] [data-iw-guild-role=head]{gap:14px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]{margin-top:5px!important;color:var(--iw-dim)!important;font-size:11px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]>span{color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=badge]{padding:2px 6px!important;border:1px solid color-mix(in srgb,var(--iw-guild-good-rail) 55%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-good-rail) 14%,transparent)!important;color:var(--iw-guild-good)!important;font-family:var(--iw-font-ui)!important;font-size:9px!important;letter-spacing:.14em!important;text-shadow:none!important;vertical-align:middle}:root [data-iw-guild=root] [data-iw-guild-role=head-link],:root [data-iw-guild=root] [data-iw-guild-role=effects-toggle]{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-dim)!important;font-size:10.5px!important;text-decoration:underline dotted color-mix(in srgb,currentColor 55%,transparent)!important;text-underline-offset:3px!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link]:hover{color:var(--iw-text-hi)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]{color:color-mix(in srgb,var(--iw-guild-bad) 62%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]:hover{color:var(--iw-guild-bad)!important}:root [data-iw-guild-card]{position:relative!important}:root [data-iw-guild-card]::before{content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:1px!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.8!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title],:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name],:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{font-family:var(--iw-font-head)!important;font-weight:700!important;letter-spacing:.03em!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]{font-size:13px!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]>span{font-family:var(--iw-font-ui)!important;color:var(--iw-dim)!important;font-size:11px!important;letter-spacing:0!important}:root [data-iw-guild=root] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-size:11px!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=note]{color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=subhead]{color:var(--iw-th-accent-dim)!important;font-size:9.5px!important;letter-spacing:.16em!important}:root [data-iw-guild=root] [data-iw-guild-role=guests]{border-top-color:var(--iw-th-edge-faint)!important}:root [data-iw-guild=root] [data-iw-guild-tone=good]{--iw-guild-ink: var(--iw-guild-good);--iw-guild-rail: var(--iw-guild-good-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=warn]{--iw-guild-ink: var(--iw-guild-warn);--iw-guild-rail: var(--iw-guild-warn-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=bad]{--iw-guild-ink: var(--iw-guild-bad);--iw-guild-rail: var(--iw-guild-bad-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=info]{--iw-guild-ink: var(--iw-guild-info);--iw-guild-rail: var(--iw-guild-info-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=accent]{--iw-guild-ink: var(--iw-th-accent);--iw-guild-rail: var(--iw-th-cta-hi)}:root [data-iw-guild=root] :is([data-iw-guild-role=line],[data-iw-guild-role=rc-roster] span,[data-iw-guild-card=ready-check] span)[data-iw-guild-tone]{color:var(--iw-guild-ink)!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,var(--iw-th-edge))!important;border-left:3px solid var(--iw-guild-rail)!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-rail) 16%,transparent),transparent 70%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important;background-blend-mode:normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 14px -6px var(--iw-guild-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink, var(--iw-text-hi))!important;font-size:13px!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-timer]{color:var(--iw-guild-ink, var(--iw-dim))!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]>span{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action]{min-height:28px!important;padding:0 12px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action][data-iw-guild-tone]{border-color:var(--iw-guild-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail) 34%,#15130F),color-mix(in srgb,var(--iw-guild-rail) 14%,#0B0C0A))!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tabs]{gap:0!important;padding-bottom:0!important;margin-bottom:8px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.28)!important;overflow:hidden}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]{flex:1 1 auto!important;min-height:28px!important;padding:0 10px!important;border:0!important;border-right:1px solid var(--iw-th-edge-soft)!important;border-radius:0!important;background:linear-gradient(180deg,#211E18,#16140F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.022)!important;color:#AAA291!important;font-size:11px!important;font-weight:700!important;letter-spacing:.04em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:last-child{border-right:0!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:hover{color:var(--iw-text-hi)!important;filter:brightness(1.12)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab][data-iw-guild-state=selected],:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{color:#FFE8CB!important;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%),linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 52%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,226,191,.13),inset 0 -2px 0 rgba(55,16,4,.58)!important;text-shadow:0 1px 0 rgba(40,10,2,.8)!important}:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name]{font-size:15px!important}:root [data-iw-guild=root] [data-iw-guild-role=lore]{font-family:var(--iw-font-flav)!important;font-size:13px!important;line-height:1.35!important;color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]){color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]) span{color:var(--iw-text-hi)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=difficulties]{gap:4px!important;padding-top:6px!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]{min-height:28px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-dim)!important;font-size:10.5px!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]:hover{border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{border-color:var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=locked]{border-style:dashed!important;color:var(--iw-faint)!important;background:rgba(0,0,0,.24)!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]{border:1px solid var(--iw-th-edge-faint)!important;border-left:2px solid var(--iw-guild-rail, var(--iw-th-rule))!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 12%,rgba(0,0,0,.25))!important;color:var(--iw-text)!important;padding:7px 10px!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>.font-semibold{color:var(--iw-guild-ink, var(--iw-text-hi))!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>span:not(.font-semibold){color:var(--iw-faint)!important;opacity:1!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]{min-height:26px!important;padding:3px 8px!important;border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]:hover{background:rgba(255,255,255,.03)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:first-child:not([data-iw-guild-tone]){color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>[data-iw-guild-tone=accent]{color:var(--iw-th-accent)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:last-child{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=member],[data-iw-guild-role=guest],[data-iw-guild-role=potion]){border:1px solid var(--iw-th-edge-faint)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),inset 0 -6px 10px -8px rgba(0,0,0,.8)!important}:root [data-iw-guild=root] [data-iw-guild-role=guest]{border-left:2px solid var(--iw-guild-info-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=member-name]{font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=dot][data-iw-guild-state=online]{box-shadow:0 0 5px color-mix(in srgb,var(--iw-guild-good) 70%,transparent)!important}:root [data-iw-guild=root] [data-iw-guild-role=points]{color:var(--iw-th-accent-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=chip]{border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.3)!important;color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]){border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 70%,transparent)!important;border-left-width:2px!important;border-radius:2px!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-info-rail) 20%,#0B0C0A),color-mix(in srgb,var(--iw-guild-info-rail) 6%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-guild-info)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]) [class*=text-sky-300]{color:color-mix(in srgb,var(--iw-guild-info) 60%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=picker]:hover{border-color:var(--iw-guild-info)!important;filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=option]{border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:#0E0E0B!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=option]:hover,:root [data-iw-guild=root] [data-iw-guild-role=option][data-iw-guild-state=selected]{background:color-mix(in srgb,var(--iw-guild-info-rail) 18%,#0E0E0B)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-badge]{border:1px solid color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 80%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 18%,#0B0C0A)!important;color:var(--iw-guild-ink, var(--iw-guild-good))!important;letter-spacing:.12em!important;box-shadow:0 0 8px -3px var(--iw-guild-rail, var(--iw-guild-good-rail))!important}:root [data-iw-guild=root] [data-iw-guild-role=not-ready]{color:var(--iw-faint)!important;font-style:italic!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span>span{color:var(--iw-faint)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=drink]{min-height:24px!important;padding:0 11px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:linear-gradient(180deg,#242018,#15130F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;color:var(--iw-text)!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=select]{min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] [data-iw-guild-role=cta]{min-height:32px!important;padding:0 16px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 62%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-weight:700!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] [data-iw-guild-role=cta]:hover:not(:disabled){filter:brightness(1.12)!important}:root [data-iw-guild=root] [data-iw-guild-role=cta]:disabled{filter:saturate(.45) brightness(.7)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]{min-height:38px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 58%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-size:14px!important;letter-spacing:.06em!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle][data-iw-guild-state=ready]{border-color:var(--iw-guild-good-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-good-rail) 38%,#15130F),color-mix(in srgb,var(--iw-guild-good-rail) 14%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(200,255,220,.08),0 0 12px -4px var(--iw-guild-good-rail)!important;color:var(--iw-guild-good)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]:hover:not(:disabled){filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A linear-gradient(180deg,rgba(255,255,255,.018),transparent 22%)!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*{margin:0!important;padding:3px 4px!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;line-height:1.35!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*>span:last-child{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=composer]{gap:8px!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-input]{min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-input]:focus{outline:1px solid rgba(197,145,67,.5)!important;outline-offset:1px!important;border-color:var(--iw-th-brass)!important}:root [data-iw-guild=root] [data-iw-guild-role=arena]{border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 0 3px color-mix(in srgb,var(--iw-th-edge) 35%,transparent),inset 0 0 40px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=telegraph],[data-iw-guild-role=effects],[data-iw-guild-role=combat-log]){border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background-color:rgba(8,8,6,.74)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 2px 8px rgba(0,0,0,.4)!important}:root [data-iw-guild=root] [data-iw-guild-role=telegraph]{border-top:1px solid var(--iw-th-hairline)!important;color:var(--iw-text-hi)!important;font-family:var(--iw-font-head)!important;letter-spacing:.03em!important}:root [data-iw-guild=root] [data-iw-guild-role=telegraph][data-iw-guild-tone]{border-color:var(--iw-guild-rail)!important;color:var(--iw-guild-ink)!important;box-shadow:0 0 12px -4px var(--iw-guild-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=effects]{border-color:color-mix(in srgb,var(--iw-guild-info-rail) 60%,var(--iw-th-edge-mid))!important}:root [data-iw-guild=root] [data-iw-guild-role=effects-toggle]{color:var(--iw-guild-info)!important;font-size:12px!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]{color:var(--iw-text)!important;font-family:var(--iw-font-ui)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]:hover{border-color:var(--iw-th-rule)!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]>:first-child>:first-child{color:var(--iw-th-accent-dim)!important;letter-spacing:.14em!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]>:first-child>:last-child{color:var(--iw-faint)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=boss-hp],[data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge]){border:1px solid var(--iw-th-edge-mid)!important;border-radius:1px!important;background:#070806!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.85)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-hp]{height:12px!important;border-color:var(--iw-th-edge)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=boss-hp],[data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge])>*{border-radius:0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -2px 0 rgba(0,0,0,.25)!important}:root [data-iw-guild=root] [data-iw-guild-role=raider]{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;filter:none!important;opacity:1!important}:root [data-iw-guild=root] [data-iw-guild-role=raider-name]{border:1px solid var(--iw-th-edge-soft)!important;border-radius:1px!important;background-color:rgba(8,8,6,.82)!important;font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=raider-skill]{text-shadow:0 1px 2px #000!important}:root [data-iw-guild=root] [data-iw-guild-role=status]{color:var(--iw-dim)!important;font-style:italic!important;text-shadow:0 1px 2px #000!important}\n';
+  var guild_default = ':root [data-iw-guild=root]{min-width:0!important;--iw-guild-good: #91cba4;--iw-guild-good-rail: #67ab83;--iw-guild-warn: #e0bd78;--iw-guild-warn-rail: #c08a3a;--iw-guild-bad: #dc8a80;--iw-guild-bad-rail: #b4554a;--iw-guild-info: #8fc3da;--iw-guild-info-rail: #4f86a3;--iw-guild-plate: linear-gradient(180deg, rgba(255,255,255,.022), rgba(0,0,0,.18)), #100F0C}:root [data-iw-guild=root] [data-iw-guild-role=head]{gap:14px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]{margin-top:5px!important;color:var(--iw-dim)!important;font-size:11px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]>span:not([data-iw-guild-role]){color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=badge]{padding:2px 6px!important;border:1px solid color-mix(in srgb,var(--iw-guild-good-rail) 55%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-good-rail) 14%,transparent)!important;color:var(--iw-guild-good)!important;font-family:var(--iw-font-ui)!important;font-size:9px!important;letter-spacing:.14em!important;text-shadow:none!important;vertical-align:middle}:root [data-iw-guild=root] [data-iw-guild-role=head-link],:root [data-iw-guild=root] [data-iw-guild-role=effects-toggle]{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-dim)!important;font-size:10.5px!important;text-decoration:underline dotted color-mix(in srgb,currentColor 55%,transparent)!important;text-underline-offset:3px!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link]:hover{color:var(--iw-text-hi)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]{color:color-mix(in srgb,var(--iw-guild-bad) 62%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]:hover{color:var(--iw-guild-bad)!important}:root [data-iw-guild-card]{position:relative!important}:root [data-iw-guild-card]::before{content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:1px!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.8!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title],:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name],:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{font-family:var(--iw-font-head)!important;font-weight:700!important;letter-spacing:.03em!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]{font-size:13px!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]>span{font-family:var(--iw-font-ui)!important;color:var(--iw-dim)!important;font-size:11px!important;letter-spacing:0!important}:root [data-iw-guild=root] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-size:11px!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=note]{color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=subhead]{color:var(--iw-th-accent-dim)!important;font-size:9.5px!important;letter-spacing:.16em!important}:root [data-iw-guild=root] [data-iw-guild-role=guests]{border-top-color:var(--iw-th-edge-faint)!important}:root [data-iw-guild=root] [data-iw-guild-tone=good]{--iw-guild-ink: var(--iw-guild-good);--iw-guild-rail: var(--iw-guild-good-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=warn]{--iw-guild-ink: var(--iw-guild-warn);--iw-guild-rail: var(--iw-guild-warn-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=bad]{--iw-guild-ink: var(--iw-guild-bad);--iw-guild-rail: var(--iw-guild-bad-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=info]{--iw-guild-ink: var(--iw-guild-info);--iw-guild-rail: var(--iw-guild-info-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=accent]{--iw-guild-ink: var(--iw-th-accent);--iw-guild-rail: var(--iw-th-cta-hi)}:root [data-iw-guild=root] :is([data-iw-guild-role=line],[data-iw-guild-role=rc-roster] span,[data-iw-guild-card=ready-check] span)[data-iw-guild-tone]{color:var(--iw-guild-ink)!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,var(--iw-th-edge))!important;border-left:3px solid var(--iw-guild-rail)!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-rail) 16%,transparent),transparent 70%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important;background-blend-mode:normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 14px -6px var(--iw-guild-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink, var(--iw-text-hi))!important;font-size:13px!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-timer]{color:var(--iw-guild-ink, var(--iw-dim))!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]>span{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action]{min-height:28px!important;padding:0 12px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action][data-iw-guild-tone]{border-color:var(--iw-guild-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail) 34%,#15130F),color-mix(in srgb,var(--iw-guild-rail) 14%,#0B0C0A))!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tabs]{gap:0!important;padding-bottom:0!important;margin-bottom:8px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.28)!important;overflow:hidden}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]{flex:1 1 auto!important;min-height:28px!important;padding:0 10px!important;border:0!important;border-right:1px solid var(--iw-th-edge-soft)!important;border-radius:0!important;background:linear-gradient(180deg,#211E18,#16140F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.022)!important;color:#AAA291!important;font-size:11px!important;font-weight:700!important;letter-spacing:.04em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:last-child{border-right:0!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:hover{color:var(--iw-text-hi)!important;filter:brightness(1.12)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab][data-iw-guild-state=selected],:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{color:#FFE8CB!important;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%),linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 52%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,226,191,.13),inset 0 -2px 0 rgba(55,16,4,.58)!important;text-shadow:0 1px 0 rgba(40,10,2,.8)!important}:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name]{font-size:15px!important}:root [data-iw-guild=root] [data-iw-guild-role=lore]{font-family:var(--iw-font-flav)!important;font-size:13px!important;line-height:1.35!important;color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]){color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]) span{color:var(--iw-text-hi)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=difficulties]{gap:4px!important;padding-top:6px!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]{min-height:28px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-dim)!important;font-size:10.5px!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]:hover{border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{border-color:var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=locked]{border-style:dashed!important;color:var(--iw-faint)!important;background:rgba(0,0,0,.24)!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]{border:1px solid var(--iw-th-edge-faint)!important;border-left:2px solid var(--iw-guild-rail, var(--iw-th-rule))!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 12%,rgba(0,0,0,.25))!important;color:var(--iw-text)!important;padding:7px 10px!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>.font-semibold{color:var(--iw-guild-ink, var(--iw-text-hi))!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>span:not(.font-semibold){color:var(--iw-faint)!important;opacity:1!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]{min-height:26px!important;padding:3px 8px!important;border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]:hover{background:rgba(255,255,255,.03)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:first-child:not([data-iw-guild-tone]){color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>[data-iw-guild-tone=accent]{color:var(--iw-th-accent)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:last-child{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=member],[data-iw-guild-role=guest],[data-iw-guild-role=potion]){border:1px solid var(--iw-th-edge-faint)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),inset 0 -6px 10px -8px rgba(0,0,0,.8)!important}:root [data-iw-guild=root] [data-iw-guild-role=guest]{border-left:2px solid var(--iw-guild-info-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=member-name]{font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=dot][data-iw-guild-state=online]{box-shadow:0 0 5px color-mix(in srgb,var(--iw-guild-good) 70%,transparent)!important}:root [data-iw-guild=root] [data-iw-guild-role=points]{color:var(--iw-th-accent-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=chip]{border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.3)!important;color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]){border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 70%,transparent)!important;border-left-width:2px!important;border-radius:2px!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-info-rail) 20%,#0B0C0A),color-mix(in srgb,var(--iw-guild-info-rail) 6%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-guild-info)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]) [class*=text-sky-300]{color:color-mix(in srgb,var(--iw-guild-info) 60%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=picker]:hover{border-color:var(--iw-guild-info)!important;filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=option]{border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:#0E0E0B!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=option]:hover,:root [data-iw-guild=root] [data-iw-guild-role=option][data-iw-guild-state=selected]{background:color-mix(in srgb,var(--iw-guild-info-rail) 18%,#0E0E0B)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-badge]{border:1px solid color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 80%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 18%,#0B0C0A)!important;color:var(--iw-guild-ink, var(--iw-guild-good))!important;letter-spacing:.12em!important;box-shadow:0 0 8px -3px var(--iw-guild-rail, var(--iw-guild-good-rail))!important}:root [data-iw-guild=root] [data-iw-guild-role=not-ready]{color:var(--iw-faint)!important;font-style:italic!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span>span{color:var(--iw-faint)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=drink]{min-height:24px!important;padding:0 11px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:linear-gradient(180deg,#242018,#15130F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;color:var(--iw-text)!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=select]{min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]){min-height:32px!important;padding:0 16px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 62%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-weight:700!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):hover:not(:disabled){filter:brightness(1.12)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):disabled{filter:saturate(.45) brightness(.7)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]{min-height:38px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 58%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-size:14px!important;letter-spacing:.06em!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle][data-iw-guild-state=ready]{border-color:var(--iw-guild-good-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-good-rail) 38%,#15130F),color-mix(in srgb,var(--iw-guild-good-rail) 14%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(200,255,220,.08),0 0 12px -4px var(--iw-guild-good-rail)!important;color:var(--iw-guild-good)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]:hover:not(:disabled){filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A linear-gradient(180deg,rgba(255,255,255,.018),transparent 22%)!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*{margin:0!important;padding:3px 4px!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;line-height:1.35!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*>span:last-child{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=composer]{gap:8px!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]){min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]):focus{outline:1px solid rgba(197,145,67,.5)!important;outline-offset:1px!important;border-color:var(--iw-th-brass)!important}:root [data-iw-guild=root] [data-iw-guild-role=start]{min-height:38px!important;font-size:14px!important;letter-spacing:.06em!important}:root [data-iw-guild-card=ready]:has([data-iw-guild-role=start]) [data-iw-guild-role=ready-toggle]:not([data-iw-guild-state=ready]){border-color:var(--iw-th-edge)!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-text)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] :is([data-iw-guild-card=pickup],[data-iw-guild-card=form],[data-iw-guild-card=directory]) [data-iw-guild-role=note]{color:var(--iw-dim)!important;font-size:10.5px!important;line-height:1.4!important}:root [data-iw-guild-card=pickup] [data-iw-guild-role=note]{margin-top:3px!important}:root [data-iw-guild-card=form] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]{min-height:0!important;padding:0 2px!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]:hover{color:var(--iw-guild-bad)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=chip][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,transparent)!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=disclosure],[data-iw-guild-role=guild-name]){min-height:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure]:hover [data-iw-guild-role=card-title]{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure-hint]{color:var(--iw-th-accent-dim)!important;font-size:10px!important;letter-spacing:.08em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;padding:2px!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]>*+*{margin-top:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]{border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:hover{background:rgba(255,255,255,.025)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row][data-iw-guild-state=open]{background:color-mix(in srgb,var(--iw-th-cta) 8%,#0E0E0B)!important;box-shadow:inset 2px 0 0 var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]>span:last-child{color:var(--iw-text-hi)!important;font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]:hover>span:last-child{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=capacity]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]{min-height:20px!important;padding:0 8px!important;border:1px solid var(--iw-guild-rail, var(--iw-th-edge))!important;border-radius:2px!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 30%,#15130F),color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 10%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;color:var(--iw-guild-ink, var(--iw-text))!important;letter-spacing:.06em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:hover:not(:disabled){filter:brightness(1.15)!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=arena]{border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 0 3px color-mix(in srgb,var(--iw-th-edge) 35%,transparent),inset 0 0 40px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35)!important}:root [data-iw-guild=root] [data-iw-raid-scene=ashmaw]{position:relative!important;isolation:isolate;overflow:hidden!important;background:#160706!important;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-rows:auto auto auto minmax(120px,1fr) auto auto auto;gap:12px!important;min-height:clamp(640px,52vw,760px)}:root [data-iw-raid-scene=ashmaw]::before,:root [data-iw-raid-scene=ashmaw]::after,:root [data-iw-raid-scene=ashmaw]>.raid-ember{display:none!important}:root [data-iw-ashmaw-art]{display:none;position:absolute!important;inset:0;margin:0!important;pointer-events:none!important;overflow:hidden;z-index:0;contain:strict}:root [data-iw-raid-scene=ashmaw]>[data-iw-ashmaw-art]{display:block}:root [data-iw-raid-scene=ashmaw]>:not([data-iw-ashmaw-art]):not(.raid-ember){position:relative;z-index:1;text-shadow:0 1px 3px #000,0 0 8px #000;min-width:0;margin:0!important}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=boss-summary]{grid-column:1;grid-row:1}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=telegraph]{grid-column:1;grid-row:2}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=effects]{grid-column:1;grid-row:3}:root [data-iw-raid-scene=ashmaw]>.raid-arena-floor{grid-column:1 / -1;grid-row:5}:root [data-iw-raid-scene=ashmaw]>:is([data-iw-guild-role=combat-log],[data-iw-guild-role=combat-log-region]){grid-column:1 / -1;grid-row:6}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=status]{grid-column:1 / -1;grid-row:7}:root [data-iw-ashmaw-art]+:not(.raid-ember){margin-top:0!important}:root [data-iw-ashmaw-art]>canvas,:root [data-iw-ashmaw-art]>[data-iw-art=environment]{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:70% 50%}:root [data-iw-ashmaw-art]::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,7,5,.25),transparent 35%,transparent 55%,rgba(8,7,5,.6))}:root [data-iw-ashmaw-art]>canvas{display:none}:root [data-iw-ashmaw-art][data-iw-animated]>canvas{display:block}:root [data-iw-ashmaw-art][data-iw-animated]>img{display:none}:root [data-iw-raid-boss-stage=ashmaw]{display:none!important}:root [data-iw-raid-boss-stage=ashmaw]>img{visibility:hidden!important}@media(max-width:700px){:root [data-iw-guild=root] [data-iw-raid-scene=ashmaw]{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(190px,1fr) auto auto auto auto auto;min-height:840px}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=telegraph]{grid-row:3}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=effects]{grid-row:4}}:root [data-iw-guild=root] :is([data-iw-guild-role=telegraph],[data-iw-guild-role=effects],[data-iw-guild-role=combat-log]){border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background-color:rgba(8,8,6,.74)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 2px 8px rgba(0,0,0,.4)!important}:root [data-iw-guild=root] [data-iw-guild-role=telegraph]{border-top:1px solid var(--iw-th-hairline)!important;color:var(--iw-text-hi)!important;font-family:var(--iw-font-head)!important;letter-spacing:.03em!important}:root [data-iw-guild=root] [data-iw-guild-role=telegraph][data-iw-guild-tone]{border-color:var(--iw-guild-rail)!important;color:var(--iw-guild-ink)!important;box-shadow:0 0 12px -4px var(--iw-guild-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=effects]{border-color:color-mix(in srgb,var(--iw-guild-info-rail) 60%,var(--iw-th-edge-mid))!important}:root [data-iw-guild=root] [data-iw-guild-role=effects-toggle]{color:var(--iw-guild-info)!important;font-size:12px!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]{color:var(--iw-text)!important;font-family:var(--iw-font-ui)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]:hover{border-color:var(--iw-th-rule)!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]>:first-child>:first-child{color:var(--iw-th-accent-dim)!important;letter-spacing:.14em!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]>:first-child>:last-child{color:var(--iw-faint)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=boss-hp],[data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge]){border:1px solid var(--iw-th-edge-mid)!important;border-radius:1px!important;background:#070806!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.85)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-hp]{height:12px!important;border-color:var(--iw-th-edge)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=boss-hp],[data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge])>*{border-radius:0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -2px 0 rgba(0,0,0,.25)!important}:root [data-iw-guild=root] [data-iw-guild-role=raider]{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;filter:none!important;opacity:1!important}:root [data-iw-guild=root] [data-iw-guild-role=raider-name]{border:1px solid var(--iw-th-edge-soft)!important;border-radius:1px!important;background-color:rgba(8,8,6,.82)!important;font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=raider-skill]{text-shadow:0 1px 2px #000!important}:root [data-iw-guild=root] [data-iw-guild-role=status]{color:var(--iw-dim)!important;font-style:italic!important;text-shadow:0 1px 2px #000!important}\n';
 
   // src/styles/compact-buttons.css
   var compact_buttons_default = '[data-iw-compact-layer]{display:none}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-compact-button]{--iw-compact-cap: 10px;position:relative!important;isolation:isolate!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;filter:none!important;transform:none!important;transition:color 180ms ease-out!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-ui=nav-tab]{--iw-compact-cap: 12px}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-panel-part=send]{--iw-compact-cap: 14px}html[data-iw-compact-atlas=compact-ghost-v3]{--iw-compact-mid-size: 150% 326.6666666666667%;--iw-compact-mid-x: 21.428571428571427%;--iw-compact-cap-size: 1680% 326.6666666666667%;--iw-compact-left-x: 1.2658227848101267%;--iw-compact-right-x: 78.48101265822785%;--iw-compact-icon-size: 560% 326.6666666666667%;--iw-compact-icon-x: 98.55072463768116%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-layer=idle]{--iw-compact-y: 2.9411764705882355%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-layer=hover]{--iw-compact-y: 50%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-layer=clicked]{--iw-compact-y: 97.05882352941177%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]{display:block!important;position:absolute!important;inset:0!important;box-sizing:border-box!important;margin:0!important;border:0!important;border-radius:0!important;width:auto!important;height:auto!important;padding:0 var(--iw-compact-cap)!important;pointer-events:none!important;background-image:var(--iw-compact-atlas)!important;background-size:var(--iw-compact-mid-size)!important;background-position:var(--iw-compact-mid-x) var(--iw-compact-y)!important;background-repeat:no-repeat!important;background-origin:content-box!important;background-clip:content-box!important;opacity:1;z-index:-3}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::before,html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::after{content:""!important;position:absolute!important;top:0!important;bottom:0!important;width:var(--iw-compact-cap)!important;background-image:var(--iw-compact-atlas)!important;background-size:var(--iw-compact-cap-size)!important;background-position:var(--iw-compact-left-x) var(--iw-compact-y)!important;background-repeat:no-repeat!important;pointer-events:none!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::before{left:0!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::after{right:0!important;background-position:var(--iw-compact-right-x) var(--iw-compact-y)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button=icon]>[data-iw-compact-layer]{padding:0!important;background-size:var(--iw-compact-icon-size)!important;background-position:var(--iw-compact-icon-x) var(--iw-compact-y)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button=icon]>[data-iw-compact-layer]::before,html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button=icon]>[data-iw-compact-layer]::after{content:none!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer=hover]{opacity:0;z-index:-2;transition:opacity 180ms ease-out}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer=clicked]{opacity:0;z-index:-1;transition:opacity 70ms ease-out}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:not(:disabled):not([aria-disabled=true]):is(:hover,:focus-visible,:active)>[data-iw-compact-layer=hover],html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:not(:disabled):not([aria-disabled=true]):active>[data-iw-compact-layer=clicked]{opacity:1}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is([data-iw-inventory-filter-state=active],[data-iw-compact-selected=true],[data-fs-action-kind=equipped]){box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-fs-action-kind=equipped]{box-shadow:inset 0 -2px var(--iw-good, #80b38a)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is([data-iw-inventory-filter-state=active],[data-iw-compact-selected=true])>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-fs-action-kind=equipped]>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-good, #80b38a)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-compact-selected=true]{color:var(--iw-text-hi, #fff0dc)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-ui=nav-tab][data-iw-state=active]{color:var(--iw-text-hi, #fff0dc)!important;-webkit-text-fill-color:currentColor!important;opacity:1!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-ui=nav-tab][data-iw-state=active] :not([data-iw-compact-layer]){color:inherit!important;-webkit-text-fill-color:currentColor!important;opacity:1!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:focus-visible{outline:2px solid var(--iw-th-accent, #5dbbd0)!important;outline-offset:2px!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is(:disabled,[aria-disabled=true])>[data-iw-compact-layer]:not([data-iw-compact-layer=idle]){opacity:0!important;transition:none!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is(:disabled,[aria-disabled=true]){opacity:.45!important}@media(prefers-reduced-motion:reduce){html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button],html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]{transition:none!important}}\n';

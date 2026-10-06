@@ -43,6 +43,10 @@ const EXCLUDE = [
   /\.md$/i,
   /\.html$/i,
   /(^|\/)prompts?\.(txt|json)$/i,
+  // The earlier Ashmaw sprite/portrait studies are retained in the workspace.
+  // Live raids use only the approved arena and smoke; the studies add ~190 MB.
+  /^assets\/raids\/ashmaw\/(?:sprites(?:-v\d+)?|portrait)\//i,
+  /^assets\/raids\/ashmaw\/(?:environment|dragon)\.png$/i,
 ];
 
 async function walk(dir) {
