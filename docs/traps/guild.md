@@ -335,6 +335,13 @@ Curtis). It applies to EVERY raid arena, painted scene or not.
   Raid skills lines (`War Cry active … — 3s left`) applied to every standing
   raider. The tank's timer: `X is tanking … — 21s left`. An effect with no kit
   art still shows with the game's emoji; nothing hides behind `+N`.
+- **The "who has what?" list is not an effect line (2026-10-07).** Opened,
+  the game puts the lenders' list (`div` of `<p>`: "X — War Cry: Unlocks …")
+  among the Raid skills lines; read as a line it matched `/war\s*cry/`, so
+  every standing raider got a second War Cry chip and the list a
+  `data-iw-raid-fx-kind`. `readRaidEffects` skips a child holding `<p>` lines.
+  `tests/raid-hud.test.mjs` opens the list (negative control: without the
+  guard, "2,2,2,2" War Cry chips). Native kit: decision 16.
 - **"You" is the nameplate's sky class, never a sky match on the whole
   raider:** every lend line is `text-sky-200`, and a `:has(> [class*=text-sky])`
   order rule pinned all seven frames to `order:-1` (measured).
@@ -382,6 +389,21 @@ Curtis). It applies to EVERY raid arena, painted scene or not.
   (Attack) keeps an ember rule drawn on the plate's LAYERS: on the button
   itself it painted under them and only the corners showed. Disabled stays
   dimmed (game state).
+- **The result card is a banner when its headline parses (2026-10-07).**
+  The game renders `<p>🏆 Victory! <boss>.</p>` (or `💀 Wipe. <boss>.`), an
+  optional loot `<p>` and Close, in emerald or rose classes (game source).
+  `RaidHud.decorateOutcome` splits the headline into
+  `data-iw-raid-result-glyph` (on the card), `-word` and `-boss` (on the
+  <p>), and `data-iw-raid-result` = victory/wipe/other from the card's own
+  tone. guild.css draws: card ::before a sunburst (rotates; still under
+  reduced motion), card ::after the glyph in a medallion breaking the top
+  rule, headline ::before the word in gilt (background-clip text), ::after
+  the boss between rules, loot line ::before a diamond. The <p> keeps its
+  text at font-size 0, so the words stay readable to assistive tech. An
+  unparsed headline keeps the framed card. Close joins the compact plate.
+  On phones the banner sits at the hero's foot so the medallion overhang
+  lands on the painting. Negative control: drop the decorateOutcome call
+  and both banner checks fail.
 - **Every raid panel wears the skin's shared forged frame (2026-10-07):**
   Curtis rejected the kit's `personal-hud.png` / `utility-panel.png` frames
   ("don't suit the theme, are inconsistent, don't fit all the info and cannot

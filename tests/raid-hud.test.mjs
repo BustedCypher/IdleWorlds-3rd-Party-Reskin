@@ -317,6 +317,30 @@ const cb = await tab.evaluate(() => {
     gap: +((r.top - channelBottom) / hp.width).toFixed(3), h: Math.round(r.height) };
 });
 check('the cast bar hangs slim under the health channel, filled to its countdown', cb.fill === '40%' && cb.near && Math.abs(cb.left) <= 2 && Math.abs(cb.right) <= 2 && cb.gap >= .03 && cb.gap <= .07 && cb.h <= 28, JSON.stringify(cb));
+// "(who has what?)" opened (game JSX, chunk 7027): the toggle reads "(hide)" and
+// the lenders' list follows it. It names War Cry; it is not a War Cry line.
+// Negative control: drop the list guard in RaidHud.readRaidEffects and every
+// raider carries two War Cry chips, the list a data-iw-raid-fx-kind.
+const who = await tab.evaluate(async () => {
+  const toggle = document.querySelector('#arena [data-iw-guild-role="effects-toggle"]');
+  toggle.querySelector('span').textContent = '(hide)';
+  const list = document.createElement('div');
+  list.id = 'lenders';
+  list.className = 'mt-1.5 space-y-0.5 border-t border-sky-400/15 pt-1.5 text-left';
+  list.innerHTML = '<p class="text-[11px]"><span class="font-semibold text-white">Noook</span> — Challenge: Unlocks Challenge (taunt)</p>'
+    + '<p class="text-[11px]"><span class="font-semibold text-white">Oat</span> — Veil: Unlocks Veil — +68% chance to dodge</p>'
+    + '<p class="text-[11px]"><span class="font-semibold text-white">Xanthippe</span> — War Cry: Unlocks War Cry — +15% raid ATK while active</p>';
+  toggle.after(list);
+  await new Promise(r => setTimeout(r, 500));
+  const counts = [...document.querySelectorAll('[data-iw-guild-role="raider"]')].map(r => r.querySelectorAll('.iw-raid-chip[data-iw-raid-art="war-cry"]').length);
+  const out = { counts: counts.join(','), kind: list.getAttribute('data-iw-raid-fx-kind') };
+  list.remove();
+  toggle.querySelector('span').textContent = '(who has what?)';
+  await new Promise(r => setTimeout(r, 300));
+  return out;
+});
+check('the opened "who has what?" list adds no effect to the raiders', /^1(,1)*$/.test(who.counts) && who.kind === null, JSON.stringify(who));
+
 await tab.evaluate(() => {
   const fill = [...document.querySelectorAll('[data-iw-guild-role="raider"]')].find(r => /BustedCypher/.test(r.textContent)).querySelector('[data-iw-guild-role="raider-hp"] > *');
   fill.className = 'h-full transition-all duration-500 bg-rose-500'; fill.style.width = '20%';
@@ -346,11 +370,31 @@ const w = await tab.evaluate(() => {
     close: card.querySelector('button').getAttribute('data-iw-guild-role'),
     between: r.top >= cast.bottom && r.bottom <= floor.top, h: Math.round(r.height),
     curseBar: !!document.querySelector('.iw-raid-timer[data-iw-raid-timer="debuff:Cursed"]'),
-    framed: /panel_corners/.test(getComputedStyle(card).borderImageSource) && !/ui-kit/.test(getComputedStyle(card).borderImageSource),
+    // The result banner (2026-10-07): the game's headline split into glyph,
+    // word and boss, drawn as medallion, gilded word and subtitle.
+    banner: (() => { const head = card.querySelector('p'), cs = getComputedStyle(head, '::before');
+      return [card.getAttribute('data-iw-raid-result'), card.getAttribute('data-iw-raid-result-glyph'), head.getAttribute('data-iw-raid-result-word'),
+        head.getAttribute('data-iw-raid-result-boss'), cs.content, getComputedStyle(head).fontSize, getComputedStyle(card, '::after').content].join('|'); })(),
+    closePlate: card.querySelector('button').getAttribute('data-iw-compact-button'),
     down: me.getAttribute('data-iw-raid-down'), downLabel: getComputedStyle(me, '::after').content,
     leads: getComputedStyle(me).order === '-1' && [...me.parentElement.children].filter(x => x !== me).every(x => getComputedStyle(x).order !== '-1') };
 });
-check('the wipe card is the result banner, toned bad, between cast and party', w.role === 'outcome' && w.tone === 'bad' && w.close === 'outcome-close' && w.between && w.framed && w.h < 160, JSON.stringify(w));
+check('the wipe card is the result banner, toned bad, between cast and party', w.role === 'outcome' && w.tone === 'bad' && w.close === 'outcome-close' && w.between && w.h < 260, JSON.stringify(w));
+check('the wipe reads as a banner: the game\'s glyph, word and boss', w.banner === 'wipe|💀|Wipe|Ashmaw, the Cinder Tyrant|"Wipe"|0px|"💀"' && w.closePlate === 'text', JSON.stringify(w));
+// The same card as a kill (the game's emerald classes and its loot line).
+const v = await tab.evaluate(async () => {
+  const card = document.getElementById('outcome');
+  card.className = 'relative rounded-lg p-2.5 text-[11px] border border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+  card.querySelector('p').textContent = '🏆 Victory! Ashmaw, the Cinder Tyrant.';
+  const loot = document.createElement('p'); loot.className = 'mt-1 text-[10px] opacity-80';
+  loot.textContent = 'Practice clear — Practice never drops loot, and your weekly loot is untouched.';
+  card.querySelector('p').after(loot);
+  await new Promise(r => setTimeout(r, 500));
+  const head = card.querySelector('p');
+  return { kind: card.getAttribute('data-iw-raid-result'), word: getComputedStyle(head, '::before').content, glyph: getComputedStyle(card, '::after').content,
+    gild: getComputedStyle(head, '::before').backgroundImage, loot: getComputedStyle(loot).fontStyle, text: card.textContent.includes('Victory! Ashmaw') };
+});
+check('a kill reads Victory in gilt over the game\'s loot line, text intact', v.kind === 'victory' && v.word === '"Victory"' && v.glyph === '"🏆"' && /255, 242, 200/.test(v.gild) && v.loot === 'italic' && v.text, JSON.stringify(v));
 check('a downed raider\'s curse leaves the timers', w.curseBar === false, String(w.curseBar));
 check('a raider at 0 HP is marked down and says so', w.down === '1' && /Down/.test(w.downLabel), `${w.down} ${w.downLabel}`);
 check('your frame still leads the row when it turns critical / down', w.leads, JSON.stringify(w));

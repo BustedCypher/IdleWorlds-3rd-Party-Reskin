@@ -70,6 +70,7 @@ const HUD_ATTRS = [
   'data-iw-raid-cast-urgency', 'data-iw-raid-cast-step', 'data-iw-raid-skill', 'data-iw-raid-hp',
   'data-iw-raid-frame', 'data-iw-raid-self', 'data-iw-raid-down', 'data-iw-raid-resist', 'data-iw-raid-resist-step',
   'data-iw-raid-fx-kind', 'data-iw-raid-scene-less', 'data-iw-raid-party', 'data-iw-raid-fold', 'data-iw-raid-timer',
+  'data-iw-raid-result', 'data-iw-raid-result-glyph', 'data-iw-raid-result-word', 'data-iw-raid-result-boss',
 ];
 
 const castMax = new Map();
@@ -147,6 +148,30 @@ function decorateBoss(arena) {
   set(text, 'data-iw-raid-pct', pct == null ? null : `${pct}%`);
 }
 
+/* ----------------------------------------------------------- result -- */
+
+/**
+ * The fight's result card ("🏆 Victory! Ashmaw, the Cinder Tyrant." /
+ * "💀 Wipe. …", game source chunk 7027) as a banner: the headline is split
+ * into the game's glyph, its word and the boss, which guild.css draws as a
+ * medallion, a large gilded word and a subtitle. The game's text stays in
+ * the DOM (the <p> only sets font-size 0). Victory or wipe comes from the
+ * card's own colour classes, already read into data-iw-guild-tone (rule 5).
+ * A headline this does not parse keeps the plain framed card.
+ */
+function decorateOutcome(arena) {
+  const card = arena.querySelector(':scope > [data-iw-guild-role="outcome"]');
+  if (!card) return;
+  const head = card.querySelector(':scope > p');
+  const m = /^([^\p{L}\p{N}]*)([\p{L}][^.!]*)[.!]\s*(.*?)\.?$/u.exec(norm(head?.textContent));
+  const tone = card.getAttribute('data-iw-guild-tone');
+  const kind = !m ? null : tone === 'good' ? 'victory' : tone === 'bad' ? 'wipe' : 'other';
+  set(card, 'data-iw-raid-result', kind);
+  set(card, 'data-iw-raid-result-glyph', m ? m[1].trim() || null : null); // the medallion is the card's ::after
+  set(head, 'data-iw-raid-result-word', m ? m[2].trim() : null);
+  set(head, 'data-iw-raid-result-boss', m ? m[3].trim() || null : null);
+}
+
 /* ------------------------------------------------------------- cast -- */
 
 function decorateCast(arena) {
@@ -179,6 +204,10 @@ function readRaidEffects(arena) {
   let tank = null;
   let resist = null;
   for (const line of arena.querySelectorAll('[data-iw-guild-role="effects"] > div')) {
+    // "(who has what?)" opened: the lenders' list, one <p> per raider ("X —
+    // War Cry: Unlocks …"). It names effects, it is not one: read as a line,
+    // it put a second War Cry chip on every standing raider.
+    if (line.querySelector(':scope > p')) { set(line, 'data-iw-raid-fx-kind', null); continue; }
     const text = norm(line.textContent);
     const left = /(\d+)\s*s\s*left/i.exec(text);
     const tanking = /^\W*(.+?)\s+is\s+tanking\b/i.exec(text);
@@ -559,6 +588,7 @@ export function decorateRaidHud(arena) {
   set(arena, 'data-iw-raid-scene-less', arena.hasAttribute('data-iw-raid-scene') ? null : '1');
   decorateBoss(arena);
   decorateCast(arena);
+  decorateOutcome(arena);
   const raid = readRaidEffects(arena);
   // TESTING FEATURE: the "🧪 Effects" toggle's test buffs/debuffs, as raid-wide
   // effects (RaidPartyPreview.js). Empty unless the toggle is on.

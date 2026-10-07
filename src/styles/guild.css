@@ -1057,13 +1057,104 @@
 :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-guild-tone="bad"] > p { color: var(--iw-raid-bad) !important; }
 :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-guild-tone="good"] > p { color: var(--iw-raid-good) !important; }
 :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-guild-tone="warn"] > p { color: #e8c27a !important; }
+/* Close wears the standard compact plate (CompactButtons.js); caps a third
+   of the height, as for the action buttons. */
 :root [data-iw-guild="root"] [data-iw-raid-hud] [data-iw-guild-role="outcome-close"] {
-  margin: 0 !important; min-height: 32px !important; padding: 0 22px !important;
-  border: 1px solid #6f5631 !important; border-radius: 2px !important;
-  background: linear-gradient(180deg, #2a241a, #13110d) !important; box-shadow: inset 0 1px 0 rgba(255,230,180,.12) !important;
-  font: 700 12px/1 var(--iw-font-head) !important; letter-spacing: .08em; color: var(--iw-raid-ivory) !important;
+  --iw-compact-cap: 11px;
+  margin: 0 !important; height: 32px !important; min-height: 0 !important; padding: 0 26px !important;
+  border: 0 !important; border-radius: 0 !important;
+  font: 700 12px/1 var(--iw-font-head) !important; letter-spacing: .1em; text-transform: uppercase; color: var(--iw-raid-ivory) !important;
+  text-shadow: 0 1px 2px #000 !important;
 }
-:root [data-iw-guild="root"] [data-iw-raid-hud] [data-iw-guild-role="outcome-close"]:hover { filter: brightness(1.15) !important; }
+
+/* ── Result banner (Curtis, 2026-10-07: "something more interesting") ──
+   When RaidHud parses the game's headline ("🏆 Victory! <boss>." / "💀 Wipe.
+   <boss>.") the plaque becomes a banner: the game's glyph in a gilded
+   medallion breaking the top rule, a slow sunburst behind it, the game's
+   word set large in gilt, the boss between two rules, and the game's loot
+   line as an italic note. Every word is the game's; the <p> keeps its text
+   (font-size 0) and the pseudos draw the parts from attributes. Victory and
+   wipe are the game's own colour (rule 5): gold for a kill, ember red and ash
+   for a wipe. An unparsed headline keeps the framed card above.
+   Pseudos: card ::before sunburst, card ::after medallion, headline ::before
+   word, ::after boss, loot line ::before a diamond. */
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] {
+  --iw-res-hi: #fff2c8; --iw-res-mid: #e8b44c; --iw-res-lo: #87561a;
+  --iw-res-ring: #d6a64a; --iw-res-ray: rgba(255, 204, 110, .15); --iw-res-glow: rgba(255, 186, 76, .42);
+  --iw-res-band: rgba(13, 10, 6, .9); --iw-res-warm: rgba(255, 186, 76, .16); --iw-res-ink: #f1e4c2;
+  isolation: isolate; overflow: visible !important;
+  width: min(100%, 540px); gap: 12px;
+  padding: 54px 40px 24px !important;
+  border: 0 !important; border-image: none !important; border-radius: 0 !important;
+  background:
+    linear-gradient(90deg, transparent, var(--iw-res-ring) 22%, var(--iw-res-hi) 50%, var(--iw-res-ring) 78%, transparent) center top / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent, var(--iw-res-ring) 22%, var(--iw-res-hi) 50%, var(--iw-res-ring) 78%, transparent) center bottom / 100% 1px no-repeat,
+    radial-gradient(ellipse 60% 75% at 50% 28%, var(--iw-res-warm), transparent 70%),
+    linear-gradient(90deg, transparent, var(--iw-res-band) 16%, var(--iw-res-band) 84%, transparent) !important;
+  box-shadow: none !important; filter: none !important;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] { animation: iw-res-in .7s cubic-bezier(.2, .9, .3, 1.15) both; }
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result]::before { animation: iw-res-spin 80s linear infinite; }
+}
+@keyframes iw-res-in { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes iw-res-spin { to { transform: rotate(1turn); } }
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result="wipe"] {
+  --iw-res-hi: #f4c7b8; --iw-res-mid: #c44430; --iw-res-lo: #4c0e09;
+  --iw-res-ring: #9e3d2d; --iw-res-ray: rgba(205, 64, 44, .12); --iw-res-glow: rgba(220, 72, 50, .38);
+  --iw-res-band: rgba(14, 7, 6, .9); --iw-res-warm: rgba(196, 58, 40, .14); --iw-res-ink: #e9d0c7;
+}
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result="other"] {
+  --iw-res-hi: #f4f0e6; --iw-res-mid: #b9b2a2; --iw-res-lo: #4d4a42;
+  --iw-res-ring: #8f8877; --iw-res-ray: rgba(230, 224, 210, .08); --iw-res-glow: rgba(230, 224, 210, .25);
+  --iw-res-warm: rgba(230, 224, 210, .08); --iw-res-ink: #ece6d8;
+}
+/* Sunburst behind the medallion and the word. */
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result]::before {
+  content: ''; position: absolute; z-index: -1; left: 50%; top: 0; width: 380px; height: 380px; margin: -190px 0 0 -190px;
+  border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, var(--iw-res-ray) 0deg 5deg, transparent 5deg 15deg);
+  -webkit-mask: radial-gradient(circle, #000 14%, transparent 66%); mask: radial-gradient(circle, #000 14%, transparent 66%);
+}
+/* The game's glyph in a gilded medallion breaking the top rule. */
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result]::after {
+  content: attr(data-iw-raid-result-glyph); position: absolute; z-index: 1; left: 50%; top: 0; transform: translate(-50%, -50%);
+  display: grid; place-items: center; width: 68px; height: 68px; border-radius: 50%; pointer-events: none;
+  font-size: 31px; line-height: 1;
+  background: radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--iw-res-lo) 55%, #2a1d0c), #0d0905 72%);
+  border: 2px solid var(--iw-res-ring);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, .6), 0 0 0 5px var(--iw-res-lo), 0 0 26px var(--iw-res-glow), inset 0 2px 7px color-mix(in srgb, var(--iw-res-hi) 30%, transparent);
+}
+/* The headline: the word large in gilt, the boss between rules. */
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] > p:first-of-type {
+  display: flex !important; flex-direction: column; align-items: center; gap: 10px;
+  font-size: 0 !important; line-height: 0 !important; text-shadow: none !important;
+}
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] > p:first-of-type::before {
+  content: attr(data-iw-raid-result-word); padding: 0 .12em;
+  font: 700 clamp(36px, 4.4vw, 52px)/1 var(--iw-font-head); letter-spacing: .14em; text-transform: uppercase;
+  background: linear-gradient(180deg, var(--iw-res-hi) 8%, var(--iw-res-mid) 52%, var(--iw-res-lo) 96%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .85)) drop-shadow(0 0 16px var(--iw-res-glow));
+}
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] > p:first-of-type::after {
+  content: attr(data-iw-raid-result-boss); padding: 0 58px;
+  font: 700 12px/1.2 var(--iw-font-ui); letter-spacing: .3em; text-transform: uppercase; color: var(--iw-res-ink);
+  text-shadow: 0 1px 3px #000;
+  background:
+    linear-gradient(90deg, transparent, var(--iw-res-ring)) left center / 46px 1px no-repeat,
+    linear-gradient(90deg, var(--iw-res-ring), transparent) right center / 46px 1px no-repeat;
+}
+/* The game's loot line ("Practice clear — …", "Your loot: …"). */
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] > p + p {
+  max-width: 42ch; margin: 2px 0 4px !important;
+  font: italic 500 13px/1.5 var(--iw-font-ui) !important; letter-spacing: .01em; text-transform: none;
+  color: var(--iw-res-ink) !important; opacity: .88; text-shadow: 0 1px 2px #000 !important;
+}
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] > p + p::before {
+  content: ''; display: block; width: 7px; height: 7px; margin: 0 auto 12px; transform: rotate(45deg);
+  background: var(--iw-res-ring); box-shadow: 0 0 8px var(--iw-res-glow);
+}
 
 /* ── The dock: combat log + Raid skills, after Raid Chat ──────────────
    RaidHud's own panels (the game's are hidden in the arena), stacked and
@@ -1268,6 +1359,14 @@
   :root [data-iw-raid-hud] > [data-iw-guild-role="actions"] { width: 100%; }
 
   :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"] { padding: 18px 20px 16px !important; }
+  /* Foot of the hero, so the medallion's overhang lands on the painting, not
+     on the boss name band above it. */
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] { align-self: end; padding: 44px 18px 18px !important; gap: 10px; }
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result]::before { width: 280px; height: 280px; margin: -140px 0 0 -140px; }
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result]::after { width: 56px; height: 56px; font-size: 26px; }
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] > p:first-of-type::before { font-size: clamp(28px, 9vw, 36px); }
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] > p:first-of-type::after { padding: 0 40px; font-size: 10.5px; letter-spacing: .22em; background-size: 30px 1px; }
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-raid-result] > p + p { font-size: 12px !important; }
 }
 
 /* Skarth: cold flooded court, identical HUD layout and native ownership. */
