@@ -1,0 +1,9 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "heldBody": {
+    "prompt": "Use case: precise-object-edit / traditional animation held cel.\nEdit target: attached Ashmaw drawing. Make ONE transparent held BODY cel for frame-by-frame drawn animation. REMOVE ONLY the large foreground wing above the back; leave its small shoulder attachment underneath. Also REMOVE ONLY the curled TAIL behind the left hind leg, leaving a short base/stump underneath the hindquarter. These two moving appendages will be drawn on separate animation cels. Preserve the head, skull, horns, neck, plated throat, torso, armor scale patterns, molten cracks, all four legs and claws EXACTLY unchanged in shape, size, rendering, colors and placement. DO NOT recenter or enlarge the remaining body. Keep the original 3:2 full canvas composition with the empty upper-left area and empty left side where wing and tail were removed. Inpaint the narrow rear torso surfaces uncovered by appendage removal so they read as complete solid armor. Native sharp painted fantasy artwork. Transparent background absolutely everywhere beyond the dragon body, no haze, ground, glow cloud, labels or grid. This is a held cel, NOT a rig and not a new pose. Only remove the foreground wing and tail; no other redesign.",
+    "path": "C:\\Users\\curti\\.codex\\generated_images\\01a10b45-add7-7193-8da4-2d274c2f4b8f\\exec-66b26671-7a22-4a77-8d6f-cee9551a90cf.png"
+  },
+  "drawnAppendages": "24 authored drawings from ../sprites-v3/idle-24.png; generation prompts archived in ../sprites-v3/prompts.json",
+  "composition": "Single fixed body cel. Drawn wing/tail cels are registered with a uniform scale and translation; no bones, deformation, rotation, frame interpolation or generated in-between poses."
+}

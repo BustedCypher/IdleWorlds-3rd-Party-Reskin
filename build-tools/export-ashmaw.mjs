@@ -1,13 +1,14 @@
 // Generates a portable looping preview and a one-cycle WebM from the same
 // renderer used by the extension. Run with --video to refresh the video export.
 import { build } from 'esbuild';
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, copyFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import http from 'node:http';
 import path from 'node:path';
 
 const root=path.resolve('.');
 await mkdir('output/ashmaw',{recursive:true});
+for(const name of ['arena','clouds','furnace-smoke','steam'])await copyFile('assets/raids/ashmaw/'+name+'.png','output/ashmaw/'+name+'.png');
 await build({entryPoints:['src/modules/AshmawScene.js'],bundle:true,format:'iife',globalName:'Ashmaw',outfile:'output/ashmaw/scene.js'});
 await writeFile('output/ashmaw/index.html',`<!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -31,8 +32,8 @@ button{color:#f6d3b6;border:1px solid #8e5135;background:#180b08b8;border-radius
 <div class="error" id="error"></div></main><script src="scene.js"></script><script>
 const canvas=document.querySelector('#scene'),button=document.querySelector('#pause');
 const load=src=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=src;});
-Promise.all([load('../../assets/raids/ashmaw/arena.png'),load('../../assets/raids/ashmaw/smoke.png')]).then(([env,smoke])=>{
-  const renderer=Ashmaw.createAshmawRenderer(canvas,env,smoke);
+Promise.all(['arena','clouds','furnace-smoke','steam'].map(n=>load(n+'.png'))).then(([env,cloudAtlas,smokeAtlas,steamAtlas])=>{
+  const renderer=Ashmaw.createAshmawRenderer(canvas,env,null,{cloudAtlas,smokeAtlas,steamAtlas,maxWidth:1440});
   if(!renderer)throw new Error('Canvas is required for this animated preview.');
   window.ashmawRenderer=renderer;
   const motion=matchMedia('(prefers-reduced-motion: reduce)');let paused=motion.matches,seconds=0,last=performance.now();

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ashen Iron · Raid UI kit</title>
+<link rel="stylesheet" href="atlas.css">
+<link rel="stylesheet" href="preview.css">
+<body>
+<header class="workbench">
+  <div><span class="eyebrow">IDLEWORLDS · ASHEN IRON</span><h1>Raid interface</h1><p>Reusable atlas artwork with live text, bars, and status labels.</p></div>
+  <nav aria-label="Preview size"><button data-view="desktop" aria-pressed="true">Desktop</button><button data-view="tablet" aria-pressed="false">Tablet</button><button data-view="portrait" aria-pressed="false">Portrait tablet</button><button data-view="mobile" aria-pressed="false">Mobile</button><a href="raid-ui-atlas.png">Atlas PNG</a><a href="index.json">Sprite map</a></nav>
+</header>
+<main>
+<section class="scene" data-view="desktop" aria-label="Thessaly raid interface concept">
+  <div class="scene-vignette"></div>
+  <header class="boss">
+    <div class="boss-identity">
+    <p class="boss-kicker">THE PLAGUE WARDEN</p><h2>Thessaly</h2>
+    <div class="boss-meta"><span class="standing"><i></i> 7 / 7 standing</span><span>Raid encounter</span></div>
+    </div>
+    <div class="boss-bars">
+    <div class="boss-health raid-art" data-sprite="boss-health">
+      <div class="boss-health-content"><div class="bar-fill boss-fill" style="--value:49.3%"></div><span class="boss-hp">10,352 <em>/ 21,000 HP</em></span><strong class="boss-percent">49%</strong></div>
+    </div>
+    <div class="boss-cast raid-art" data-sprite="boss-cast"><div class="cast-content"><div class="bar-fill cast-fill" style="--value:82%"></div><span><b>CLAW RAKE</b><em>Single target</em></span><strong>10.0<span>s</span></strong></div></div>
+    </div>
+  </header>
+  <footer class="combat-dock">
+    <div class="party-heading"><span>RAID PARTY</span><span>7 allies · <em>all standing</em></span></div>
+    <div class="party" aria-label="Player raid frames"></div>
+    <div class="lower-dock">
+      <details class="utility log" open><summary>Combat log <span>⌃</span></summary><div class="utility-content"><p><span class="hit">✦</span> Xanthippe hits for <b>249</b>.</p><p><span class="hit">✦</span> Guest 63AC hits for <b>323</b>.</p><p><span class="hit">✦</span> <strong>BustedCypher</strong> hits for <b>221</b>.</p></div></details>
+      <section class="player-hud raid-art" data-sprite="personal-hud" aria-label="Your health and action charge">
+        <div class="hud-inner"><header><span class="raid-art hud-skill" data-sprite="skill-jewelcrafting" aria-hidden="true"></span><div><h3>BustedCypher <span>YOU</span></h3><p>Jewelcrafting</p></div><div class="hud-status"><span><i class="raid-art" data-sprite="shield"></i>126 shield</span><span class="curse-label"><i class="raid-art" data-sprite="curse"></i>Reduced healing</span></div></header>
+        <div class="hud-bar health"><div class="bar-fill" style="--value:52%"></div><span>Health</span><b>52%</b></div>
+        <div class="hud-bar charge"><div class="bar-fill" style="--value:55%"></div><span>Action charge</span><b>55%</b></div><p class="hud-caption">Charging your next action…</p></div>
+      </section>
+      <details class="utility skills" open><summary>Raid skills <span>⌃</span></summary><div class="utility-content"><p><i class="raid-art" data-sprite="taunt"></i><span><b>Noook</b> is tanking</span><time>21s</time></p><p><i class="raid-art" data-sprite="war-cry"></i><span>War Cry <em>+15% ATK</em></span><time>3s</time></p><p><i class="raid-art" data-sprite="ward"></i><span>Ward <em>+27 fire resist</em></span><time>13s</time></p><div class="resist"><span>Fire resistance <b>27 / 60</b></span><div><i style="width:45%"></i></div></div></div></details>
+    </div>
+  </footer>
+</section>
+<section class="controls"><label>Boss HP <input id="boss-hp" type="range" min="0" max="100" step="0.1" value="49.3"></label><label>Your HP <input id="your-hp" type="range" min="0" max="100" value="52"></label><button id="more-effects" aria-pressed="false">Show additional effects</button><span>Hover or focus status icons for their meaning. Select a raider to inspect the frame highlight.</span></section>
+<section class="atlas-gallery"><h2>Atlas contents</h2><p>Empty chrome, status symbols, and the project’s original skill glyphs. Text and progress remain separate.</p><div id="gallery"></div></section>
+</main>
+<script src="index.js"></script><script src="preview.js"></script>
+</body></html>

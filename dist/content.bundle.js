@@ -99,7 +99,7 @@
     (document.head || document.documentElement).appendChild(style);
   }
   function removeAll() {
-    document.querySelectorAll("style[data-iw-style]").forEach((el) => el.remove());
+    document.querySelectorAll("style[data-iw-style]").forEach((el2) => el2.remove());
     _injected.clear();
   }
 
@@ -109,12 +109,12 @@
   var TIMEOUT_MS = 4e3;
   var POLL_MS = 50;
   function waitForPageHydration({
-    enabled = HYDRATION_GATE_ENABLED,
+    enabled: enabled2 = HYDRATION_GATE_ENABLED,
     timeoutMs = TIMEOUT_MS,
     pollMs = POLL_MS,
     root = document.documentElement
   } = {}) {
-    if (!enabled || !root) return Promise.resolve({ state: "disabled", waitedMs: 0 });
+    if (!enabled2 || !root) return Promise.resolve({ state: "disabled", waitedMs: 0 });
     const started = performance.now();
     return new Promise((resolve2) => {
       const finish = (state) => {
@@ -135,10 +135,10 @@
   }
 
   // src/modules/Viewport.js
-  function isRendered(el) {
-    if (!el?.isConnected) return false;
-    if (typeof el.checkVisibility === "function") return el.checkVisibility();
-    const rect = el.getBoundingClientRect?.();
+  function isRendered(el2) {
+    if (!el2?.isConnected) return false;
+    if (typeof el2.checkVisibility === "function") return el2.checkVisibility();
+    const rect = el2.getBoundingClientRect?.();
     return !!rect && (rect.width > 0 || rect.height > 0);
   }
   function pickRendered(candidates) {
@@ -183,10 +183,10 @@
   function isElement(node2) {
     return !!node2 && node2.nodeType === 1;
   }
-  function nearest(el, selector) {
-    if (!isElement(el)) return null;
-    if (el.matches?.(selector)) return el;
-    return el.closest?.(selector) || null;
+  function nearest(el2, selector) {
+    if (!isElement(el2)) return null;
+    if (el2.matches?.(selector)) return el2;
+    return el2.closest?.(selector) || null;
   }
   var skillTypeCache = /* @__PURE__ */ new WeakMap();
   function normaliseSkillSignal(value) {
@@ -209,11 +209,11 @@
   };
   function skillIdentitySignals(panel) {
     const signals = /* @__PURE__ */ new Set();
-    for (const el of panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span,p,strong')) {
-      if (el.closest("button,a")) continue;
-      const explicitHeading = /^H[1-4]$/.test(el.tagName) || /skill-name/i.test(String(el.className || ""));
-      if (!explicitHeading && el.childElementCount) continue;
-      const text = normaliseSkillSignal(el.textContent).replace(/^[^a-z0-9]+/i, "");
+    for (const el2 of panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span,p,strong')) {
+      if (el2.closest("button,a")) continue;
+      const explicitHeading = /^H[1-4]$/.test(el2.tagName) || /skill-name/i.test(String(el2.className || ""));
+      if (!explicitHeading && el2.childElementCount) continue;
+      const text = normaliseSkillSignal(el2.textContent).replace(/^[^a-z0-9]+/i, "");
       if (text && text.length <= 32) signals.add(text);
     }
     return [...signals];
@@ -227,8 +227,8 @@
   function lockedCopySignal(panel) {
     let hasLabel = false;
     let hasUnlock = false;
-    for (const el of panel.querySelectorAll("div,span,p,strong")) {
-      const text = normaliseSkillSignal(el.textContent);
+    for (const el2 of panel.querySelectorAll("div,span,p,strong")) {
+      const text = normaliseSkillSignal(el2.textContent);
       if (!text || text.length > 96) continue;
       if (text.includes("coming soon") || text.includes("upcoming skill")) hasLabel = true;
       if (text.includes("unlock in a future update")) hasUnlock = true;
@@ -263,7 +263,7 @@
     const actionTexts = buttons.filter(Boolean);
     const hasAction = (...names) => actionTexts.some((text) => names.includes(text));
     const hasTurnInOrSkip = actionTexts.some((text) => /^turn in$/.test(text) || /^skip(?:\s*\(\d+\))?$/.test(text));
-    if (hasTurnInOrSkip && [...panel.querySelectorAll("p,div,span")].some((el) => /^reward\s*:/i.test(el.textContent.trim()))) {
+    if (hasTurnInOrSkip && [...panel.querySelectorAll("p,div,span")].some((el2) => /^reward\s*:/i.test(el2.textContent.trim()))) {
       return "unknown";
     }
     if (isGuildSurface(panel)) return "unknown";
@@ -302,37 +302,38 @@
   var pendingSkills = /* @__PURE__ */ new Set();
   var pendingBgRoots = /* @__PURE__ */ new Set();
   var pendingNameRoots = /* @__PURE__ */ new Set();
+  var pendingTextParents = /* @__PURE__ */ new Set();
   var flushQueued = false;
-  function addIfConnected(set, el) {
-    if (isElement(el)) set.add(el);
+  function addIfConnected(set2, el2) {
+    if (isElement(el2)) set2.add(el2);
   }
-  function addNameRoot(el) {
-    if (!isElement(el)) return;
-    for (let node2 = el; node2; node2 = node2.parentElement) {
+  function addNameRoot(el2) {
+    if (!isElement(el2)) return;
+    for (let node2 = el2; node2; node2 = node2.parentElement) {
       if (pendingNameRoots.has(node2)) return;
     }
-    pendingNameRoots.add(el);
+    pendingNameRoots.add(el2);
   }
-  function queueContext(el, reason = "update", opts = {}) {
-    if (!isElement(el)) return;
+  function queueContext(el2, reason = "update", opts = {}) {
+    if (!isElement(el2)) return;
     const {
       inventory = true,
       skill = true,
       names = true,
       background = true
     } = opts;
-    if (inventory) addIfConnected(pendingInventory, nearest(el, SEL_INV_ROW));
-    if (skill) addIfConnected(pendingSkills, nearest(el, SEL_SKILL_PANEL));
-    if (names) addNameRoot(el);
-    if (background) addIfConnected(pendingBgRoots, el);
+    if (inventory) addIfConnected(pendingInventory, nearest(el2, SEL_INV_ROW));
+    if (skill) addIfConnected(pendingSkills, nearest(el2, SEL_SKILL_PANEL));
+    if (names) addNameRoot(el2);
+    if (background) addIfConnected(pendingBgRoots, el2);
     scheduleFlush(reason);
   }
   function discover(root, reason = "mount") {
     if (!isElement(root)) return;
     if (root.matches?.(SEL_INV_ROW)) addIfConnected(pendingInventory, root);
-    root.querySelectorAll?.(SEL_INV_ROW).forEach((el) => addIfConnected(pendingInventory, el));
+    root.querySelectorAll?.(SEL_INV_ROW).forEach((el2) => addIfConnected(pendingInventory, el2));
     if (root.matches?.(SEL_SKILL_PANEL)) addIfConnected(pendingSkills, root);
-    root.querySelectorAll?.(SEL_SKILL_PANEL).forEach((el) => addIfConnected(pendingSkills, el));
+    root.querySelectorAll?.(SEL_SKILL_PANEL).forEach((el2) => addIfConnected(pendingSkills, el2));
     addNameRoot(root);
     addIfConnected(pendingBgRoots, root);
     scheduleFlush(reason);
@@ -342,22 +343,22 @@
     flushQueued = true;
     raf(flushPending);
   }
-  function takeConnected(set) {
-    for (const el of set) {
-      set.delete(el);
-      if (el?.isConnected) return el;
+  function takeConnected(set2) {
+    for (const el2 of set2) {
+      set2.delete(el2);
+      if (el2?.isConnected) return el2;
     }
     return null;
   }
-  function takeNameRoot(set, taken) {
-    for (const el of set) {
-      set.delete(el);
-      if (!el?.isConnected) continue;
+  function takeNameRoot(set2, taken) {
+    for (const el2 of set2) {
+      set2.delete(el2);
+      if (!el2?.isConnected) continue;
       let covered = false;
-      for (let node2 = el.parentElement; node2 && !covered; node2 = node2.parentElement) {
-        covered = set.has(node2) || taken.has(node2);
+      for (let node2 = el2.parentElement; node2 && !covered; node2 = node2.parentElement) {
+        covered = set2.has(node2) || taken.has(node2);
       }
-      if (!covered) return el;
+      if (!covered) return el2;
     }
     return null;
   }
@@ -372,17 +373,17 @@
     const takenNameRoots = /* @__PURE__ */ new Set();
     let cursor = 0, idle = 0, remaining = budget;
     while (remaining > 0 && idle < groups.length) {
-      const [key, set] = groups[cursor];
+      const [key, set2] = groups[cursor];
       cursor = (cursor + 1) % groups.length;
-      let el;
-      if (set === pendingNameRoots) {
-        el = takeNameRoot(set, takenNameRoots);
-        if (el) takenNameRoots.add(el);
+      let el2;
+      if (set2 === pendingNameRoots) {
+        el2 = takeNameRoot(set2, takenNameRoots);
+        if (el2) takenNameRoots.add(el2);
       } else {
-        el = takeConnected(set);
+        el2 = takeConnected(set2);
       }
-      if (el) {
-        out[key].push(el);
+      if (el2) {
+        out[key].push(el2);
         remaining -= 1;
         idle = 0;
       } else idle += 1;
@@ -396,6 +397,11 @@
     guardEach("emit:skill-panel", skills, (panel) => emit("iw:skill-panel", { panel, skill: detectSkillTypeCached(panel), reason: "reconcile" }));
     if (bgRoots.length) guard("emit:dom-flush", () => emit("iw:dom-flush", { roots: bgRoots }));
     if (nameRoots.length) guard("emit:name-scan-flush", () => emit("iw:name-scan-flush", { roots: nameRoots }));
+    if (pendingTextParents.size) {
+      const parents = [...pendingTextParents].filter((el2) => el2.isConnected);
+      pendingTextParents.clear();
+      if (parents.length) guard("emit:text-flush", () => emit("iw:text-flush", { parents }));
+    }
     if (pendingInventory.size || pendingSkills.size || pendingBgRoots.size || pendingNameRoots.size) {
       scheduleFlush();
     }
@@ -418,11 +424,13 @@
           for (const n of m.addedNodes) {
             if (isElement(n)) discover(n, "mount");
             else if (n.nodeType === 3 && n.parentElement) {
+              pendingTextParents.add(n.parentElement);
               queueContext(n.parentElement, "text", { background: false });
             }
           }
         } else if (m.type === "characterData") {
           if (m.target.parentElement) {
+            pendingTextParents.add(m.target.parentElement);
             queueContext(m.target.parentElement, "text", { background: false });
           }
         } else if (m.type === "attributes") {
@@ -465,6 +473,7 @@
     pendingSkills.clear();
     pendingBgRoots.clear();
     pendingNameRoots.clear();
+    pendingTextParents.clear();
   }
   function getScanRoots(root = document) {
     const target = root?.body || root;
@@ -517,8 +526,8 @@
   var ITEM_INDEX_URL = assetUrl("assets/item_icons_index.csv");
   var ITEM_ATLAS_URL = assetUrl("assets/item_icons_atlas.png");
   var REQUIRED_ITEM_COLUMNS = ["item_id", "name", "x", "y", "width", "height"];
-  function setAttr(el, name, value) {
-    if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+  function setAttr(el2, name, value) {
+    if (el2.getAttribute(name) !== value) el2.setAttribute(name, value);
   }
   var pendingBadgeHosts = /* @__PURE__ */ new Set();
   var badgeHostCheckQueued = false;
@@ -777,7 +786,7 @@
       return true;
     }
     /** Paint one manifest/index entry from either atlas into any sized element. */
-    _applySprite(el, atlas, entry2) {
+    _applySprite(el2, atlas, entry2) {
       const isGear = atlas === "gear";
       const atlasUrl = isGear ? GEAR_ATLAS_URL : ITEM_ATLAS_URL;
       const dims = isGear ? this._gearDims : this._itemDims;
@@ -790,10 +799,10 @@
       const h = Number(entry2.height) || cell;
       const xPct = atlasW > w ? x / (atlasW - w) * 100 : 0;
       const yPct = atlasH > h ? y / (atlasH - h) * 100 : 0;
-      el.style.backgroundImage = `url("${atlasUrl}")`;
-      el.style.backgroundSize = `${atlasW / w * 100}% ${atlasH / h * 100}%`;
-      el.style.backgroundPosition = `${xPct.toFixed(6)}% ${yPct.toFixed(6)}%`;
-      el.style.backgroundRepeat = "no-repeat";
+      el2.style.backgroundImage = `url("${atlasUrl}")`;
+      el2.style.backgroundSize = `${atlasW / w * 100}% ${atlasH / h * 100}%`;
+      el2.style.backgroundPosition = `${xPct.toFixed(6)}% ${yPct.toFixed(6)}%`;
+      el2.style.backgroundRepeat = "no-repeat";
     }
     /**
      * Paint the dedicated gear-atlas enhancement art. The current manifest keeps
@@ -1355,11 +1364,11 @@
     const rect = anchor2.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const el = STATE.el;
-    el.style.visibility = "hidden";
-    el.style.display = "flex";
-    const tw = el.offsetWidth;
-    const th = el.offsetHeight;
+    const el2 = STATE.el;
+    el2.style.visibility = "hidden";
+    el2.style.display = "flex";
+    const tw = el2.offsetWidth;
+    const th = el2.offsetHeight;
     let x = rect.left;
     let y = rect.bottom + EDGE_GAP;
     if (y + th + EDGE_MARGIN > vh) {
@@ -1368,9 +1377,9 @@
     if (x + tw + EDGE_MARGIN > vw) x = vw - tw - EDGE_MARGIN;
     if (x < EDGE_MARGIN) x = EDGE_MARGIN;
     if (y < EDGE_MARGIN) y = EDGE_MARGIN;
-    el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
-    el.style.visibility = "visible";
+    el2.style.left = `${x}px`;
+    el2.style.top = `${y}px`;
+    el2.style.visibility = "visible";
   }
   function clearShowTimer() {
     if (STATE.showTimer) clearTimeout(STATE.showTimer);
@@ -1721,10 +1730,10 @@
   function sameMatches(a, b) {
     return a.length === b.length && a.every((m, i) => m.start === b[i].start && m.end === b[i].end && m.item === b[i].item);
   }
-  function shouldSkipParent(el) {
-    if (!el) return true;
-    if (SKIP_TAGS.has(el.tagName)) return true;
-    if (el.closest?.(SKIP_CONTAINERS)) return true;
+  function shouldSkipParent(el2) {
+    if (!el2) return true;
+    if (SKIP_TAGS.has(el2.tagName)) return true;
+    if (el2.closest?.(SKIP_CONTAINERS)) return true;
     return false;
   }
   function findMatches(text, trie) {
@@ -1815,14 +1824,14 @@
     }
     return null;
   }
-  function textPaintedAt(node2, el) {
+  function textPaintedAt(node2, el2) {
     const host = node2.parentElement;
-    return !!host && (host === el || host.contains(el));
+    return !!host && (host === el2 || host.contains(el2));
   }
-  function hitInTextNode(node2, x, y, el) {
+  function hitInTextNode(node2, x, y, el2) {
     const matches = matchIndex.get(node2)?.matches;
     if (!matches?.length) return null;
-    if (!textPaintedAt(node2, el)) return null;
+    if (!textPaintedAt(node2, el2)) return null;
     const len = node2.nodeValue ? node2.nodeValue.length : 0;
     for (const m of matches) {
       if (m.end > len) continue;
@@ -1840,11 +1849,11 @@
     return null;
   }
   function hitTest(x, y) {
-    const el = document.elementFromPoint(x, y);
-    if (!el || shouldSkipParent(el)) return null;
+    const el2 = document.elementFromPoint(x, y);
+    if (!el2 || shouldSkipParent(el2)) return null;
     const precise = pointTextNode(x, y);
     if (precise && !shouldSkipParent(precise.parentElement)) {
-      const hit = hitInTextNode(precise, x, y, el);
+      const hit = hitInTextNode(precise, x, y, el2);
       if (hit) return hit;
     }
     const seen = /* @__PURE__ */ new Set();
@@ -1855,22 +1864,22 @@
         candidates.push(node3);
       }
     };
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const walker = document.createTreeWalker(el2, NodeFilter.SHOW_TEXT);
     let node2;
     while (node2 = walker.nextNode()) add(node2);
-    let cur = el;
+    let cur = el2;
     for (let depth = 0; cur && depth < 5; depth += 1, cur = cur.parentElement) {
       for (const child of cur.childNodes) add(child);
     }
     for (const candidate of candidates) {
-      const hit = hitInTextNode(candidate, x, y, el);
+      const hit = hitInTextNode(candidate, x, y, el2);
       if (hit) return hit;
     }
     return null;
   }
   function pointerInsideTooltip(x, y) {
-    const el = document.elementFromPoint(x, y);
-    return !!el?.closest?.(".iw-tip");
+    const el2 = document.elementFromPoint(x, y);
+    return !!el2?.closest?.(".iw-tip");
   }
   function isTouchLike() {
     return matchMedia("(hover: none), (pointer: coarse)").matches;
@@ -2146,39 +2155,39 @@
     const refByElement = /* @__PURE__ */ new WeakMap();
     const weakTracking = typeof WeakRef === "function" && typeof FinalizationRegistry === "function";
     const finalizer = weakTracking ? new FinalizationRegistry((ref) => tracked.delete(ref)) : null;
-    function track(el) {
-      if (refByElement.has(el)) return;
-      const ref = weakTracking ? new WeakRef(el) : el;
-      refByElement.set(el, ref);
+    function track(el2) {
+      if (refByElement.has(el2)) return;
+      const ref = weakTracking ? new WeakRef(el2) : el2;
+      refByElement.set(el2, ref);
       tracked.add(ref);
-      finalizer?.register(el, ref, ref);
+      finalizer?.register(el2, ref, ref);
     }
-    function untrack(el) {
-      const ref = refByElement.get(el);
+    function untrack(el2) {
+      const ref = refByElement.get(el2);
       if (!ref) return;
       tracked.delete(ref);
       finalizer?.unregister(ref);
-      refByElement.delete(el);
+      refByElement.delete(el2);
     }
     function trackedElements() {
       const live2 = [];
       for (const ref of [...tracked]) {
-        const el = weakTracking ? ref.deref() : ref;
-        if (el) live2.push(el);
+        const el2 = weakTracking ? ref.deref() : ref;
+        if (el2) live2.push(el2);
         else tracked.delete(ref);
       }
       return live2;
     }
-    function stateFor(el, prop) {
-      let props = states.get(el);
+    function stateFor(el2, prop) {
+      let props = states.get(el2);
       if (!props) {
         props = /* @__PURE__ */ new Map();
-        states.set(el, props);
-        track(el);
+        states.set(el2, props);
+        track(el2);
       }
       let state = props.get(prop);
-      const currentValue = el.style.getPropertyValue(prop);
-      const currentPriority = el.style.getPropertyPriority(prop);
+      const currentValue = el2.style.getPropertyValue(prop);
+      const currentPriority = el2.style.getPropertyPriority(prop);
       if (!state) {
         state = {
           nativeValue: currentValue,
@@ -2193,45 +2202,45 @@
       }
       return state;
     }
-    function set(el, prop, value, priority = "important") {
-      if (!el?.style) return false;
-      const state = stateFor(el, prop);
-      const beforeValue = el.style.getPropertyValue(prop);
-      const beforePriority = el.style.getPropertyPriority(prop);
-      el.style.setProperty(prop, value, priority);
-      const afterValue = el.style.getPropertyValue(prop);
-      const afterPriority = el.style.getPropertyPriority(prop);
+    function set2(el2, prop, value, priority = "important") {
+      if (!el2?.style) return false;
+      const state = stateFor(el2, prop);
+      const beforeValue = el2.style.getPropertyValue(prop);
+      const beforePriority = el2.style.getPropertyPriority(prop);
+      el2.style.setProperty(prop, value, priority);
+      const afterValue = el2.style.getPropertyValue(prop);
+      const afterPriority = el2.style.getPropertyPriority(prop);
       state.appliedValue = afterValue;
       state.appliedPriority = afterPriority;
       return beforeValue !== afterValue || beforePriority !== afterPriority;
     }
-    function restoreElement(el) {
-      const props = states.get(el);
+    function restoreElement(el2) {
+      const props = states.get(el2);
       if (!props) return;
       for (const [prop, state] of props) {
-        const currentValue = el.style.getPropertyValue(prop);
-        const currentPriority = el.style.getPropertyPriority(prop);
+        const currentValue = el2.style.getPropertyValue(prop);
+        const currentPriority = el2.style.getPropertyPriority(prop);
         const stillOurs = currentValue === state.appliedValue && currentPriority === state.appliedPriority;
         if (!stillOurs) continue;
         if (state.nativeValue) {
-          el.style.setProperty(prop, state.nativeValue, state.nativePriority || "");
+          el2.style.setProperty(prop, state.nativeValue, state.nativePriority || "");
         } else {
-          el.style.removeProperty(prop);
+          el2.style.removeProperty(prop);
         }
       }
-      states.delete(el);
-      untrack(el);
+      states.delete(el2);
+      untrack(el2);
     }
     function restoreWithin(root) {
       if (!root) return;
-      for (const el of trackedElements()) {
-        if (el === root || root.contains?.(el)) restoreElement(el);
+      for (const el2 of trackedElements()) {
+        if (el2 === root || root.contains?.(el2)) restoreElement(el2);
       }
     }
     function restoreAll() {
-      for (const el of trackedElements()) restoreElement(el);
+      for (const el2 of trackedElements()) restoreElement(el2);
     }
-    return { set, restoreElement, restoreWithin, restoreAll };
+    return { set: set2, restoreElement, restoreWithin, restoreAll };
   }
 
   // src/styles/inventory.css
@@ -2276,18 +2285,18 @@
   function esc2(s) {
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
-  function isInsideNativeControl(el, row) {
-    const control = el.closest?.(INTERACTIVE_SELECTOR);
+  function isInsideNativeControl(el2, row) {
+    const control = el2.closest?.(INTERACTIVE_SELECTOR);
     return !!(control && control !== row && row.contains(control));
   }
   function leafTexts(row) {
     const seen = /* @__PURE__ */ new Set();
     const out = [];
-    for (const el of row.querySelectorAll("span, div, p")) {
-      if (el.closest(".fs-inv-row") || isInsideNativeControl(el, row)) continue;
-      const nearLeaf = el.childElementCount > 0 && el.childElementCount <= 3 && el.textContent.trim().length <= 120 && !el.querySelector(INTERACTIVE_SELECTOR) && [...el.children].every((c) => c.childElementCount === 0);
-      if (el.childElementCount !== 0 && !nearLeaf) continue;
-      const text = el.textContent.trim();
+    for (const el2 of row.querySelectorAll("span, div, p")) {
+      if (el2.closest(".fs-inv-row") || isInsideNativeControl(el2, row)) continue;
+      const nearLeaf = el2.childElementCount > 0 && el2.childElementCount <= 3 && el2.textContent.trim().length <= 120 && !el2.querySelector(INTERACTIVE_SELECTOR) && [...el2.children].every((c) => c.childElementCount === 0);
+      if (el2.childElementCount !== 0 && !nearLeaf) continue;
+      const text = el2.textContent.trim();
       if (!text || seen.has(text)) continue;
       seen.add(text);
       out.push(text);
@@ -2297,11 +2306,11 @@
   function detailTexts(row, displayName = "") {
     const interesting = /loadout|requires?|needs\b|upgrad|set bonus|sunstone|moonstone|gem(?:stone)?|socketed|cut\s+[a-z]|:\s*[+-]?\d|🎲/i;
     const records = [];
-    for (const el of row.querySelectorAll("span, div, p, li")) {
-      if (el.closest(".fs-inv-row") || isInsideNativeControl(el, row)) continue;
-      const text = String(el.textContent || "").replace(/\s+/g, " ").trim();
+    for (const el2 of row.querySelectorAll("span, div, p, li")) {
+      if (el2.closest(".fs-inv-row") || isInsideNativeControl(el2, row)) continue;
+      const text = String(el2.textContent || "").replace(/\s+/g, " ").trim();
       if (!text || text.length > 220 || !interesting.test(text)) continue;
-      records.push({ el, text, key: text.toLowerCase() });
+      records.push({ el: el2, text, key: text.toLowerCase() });
     }
     const deNested = records.filter((rec, idx) => !records.some(
       (other, j) => idx !== j && rec.key === other.key && rec.el.contains(other.el)
@@ -2340,8 +2349,8 @@
     }
     return { name, qty: guessQuantity(texts), detailTexts: detailTexts(row, name), enhancement };
   }
-  function headingIsInventory(el) {
-    return String(el.textContent || "").trim().toLowerCase() === "inventory";
+  function headingIsInventory(el2) {
+    return String(el2.textContent || "").trim().toLowerCase() === "inventory";
   }
   function findInventoryRoot(row) {
     let cur = row;
@@ -2371,7 +2380,7 @@
     return null;
   }
   function resolveInventoryContext(row) {
-    const controls = [...row.querySelectorAll('button, [role="button"]')].map((el) => String(el.textContent || "").trim().toLowerCase()).filter(Boolean);
+    const controls = [...row.querySelectorAll('button, [role="button"]')].map((el2) => String(el2.textContent || "").trim().toLowerCase()).filter(Boolean);
     const equipShortcut = controls.some((t) => /^(equip|equipped|unequip|list)$/.test(t));
     const root = findInventoryRoot(row);
     if (equipShortcut || root) return { inContext: true, root, salvage: null };
@@ -2391,8 +2400,8 @@
     }
     if (anchorChild.nextElementSibling !== rule) anchorChild.after(rule);
   }
-  function setAttr2(el, name, value) {
-    if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+  function setAttr2(el2, name, value) {
+    if (el2.getAttribute(name) !== value) el2.setAttribute(name, value);
   }
   var chromeSweptThisFlush = /* @__PURE__ */ new Set();
   var FILTER_LABEL = /^(all|gear|materials|consumables|drops)$/;
@@ -2467,9 +2476,9 @@
         setAttr2(child, INVENTORY_CONTROL_ATTR, "glyph");
       }
     }
-    for (const el of root.querySelectorAll(notInRow("span, div, p"))) {
-      const text = String(el.textContent || "").trim();
-      if (/^\d+\s*\/\s*\d+$/.test(text)) setAttr2(el, INVENTORY_CONTROL_ATTR, "page-count");
+    for (const el2 of root.querySelectorAll(notInRow("span, div, p"))) {
+      const text = String(el2.textContent || "").trim();
+      if (/^\d+\s*\/\s*\d+$/.test(text)) setAttr2(el2, INVENTORY_CONTROL_ATTR, "page-count");
     }
     classifyRowList(root);
   }
@@ -2478,8 +2487,8 @@
     const list = rows.length ? rows[0].parentElement : null;
     const ok = list && list !== root && root.contains(list) && rows.every((r) => r.parentElement === list) && // never the wrapper that also holds the title or a pager/filter control
     !list.querySelector(`[${INVENTORY_TITLE_ATTR}], [${INVENTORY_CONTROL_ATTR}]`);
-    root.querySelectorAll(`[${INVENTORY_LIST_ATTR}]`).forEach((el) => {
-      if (el !== list) el.removeAttribute(INVENTORY_LIST_ATTR);
+    root.querySelectorAll(`[${INVENTORY_LIST_ATTR}]`).forEach((el2) => {
+      if (el2 !== list) el2.removeAttribute(INVENTORY_LIST_ATTR);
     });
     if (ok) setAttr2(list, INVENTORY_LIST_ATTR, "1");
   }
@@ -2507,46 +2516,46 @@
     const m = String(name || "").match(/^(.*?)\s+lv\.?\s*(\d+)\s*$/i);
     return m ? { base: m[1].trim(), level: m[2] } : { base: name, level: null };
   }
-  function isInteractiveHost(el) {
-    return !!(el.matches?.(INTERACTIVE_SELECTOR) || el.querySelector?.(INTERACTIVE_SELECTOR));
+  function isInteractiveHost(el2) {
+    return !!(el2.matches?.(INTERACTIVE_SELECTOR) || el2.querySelector?.(INTERACTIVE_SELECTOR));
   }
-  function restoreDisplay(el) {
-    displayStyleOwner.restoreElement(el);
+  function restoreDisplay(el2) {
+    displayStyleOwner.restoreElement(el2);
   }
-  function suppressDisplayBranch(el) {
-    setAttr2(el, SUPPRESSED_ATTR, "1");
-    el.removeAttribute(ACTION_ATTR);
-    el.removeAttribute(ACTION_HOST_ATTR);
-    displayStyleOwner.set(el, "display", "none", "");
+  function suppressDisplayBranch(el2) {
+    setAttr2(el2, SUPPRESSED_ATTR, "1");
+    el2.removeAttribute(ACTION_ATTR);
+    el2.removeAttribute(ACTION_HOST_ATTR);
+    displayStyleOwner.set(el2, "display", "none", "");
   }
-  function classifyActionControl(el) {
-    const text = String(el.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+  function classifyActionControl(el2) {
+    const text = String(el2.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
     if (/^equipped$|^unequip$/.test(text)) return "equipped";
     if (/^equip$/.test(text)) return "equip";
     if (/set bonus/.test(text)) return "set";
     if (/^list$|^sell$|^use$|^deposit$|^withdraw$/.test(text)) return "secondary";
-    if (/^lock$|^unlock$/.test(text) || !text && el.querySelector?.("svg")) return "icon";
+    if (/^lock$|^unlock$/.test(text) || !text && el2.querySelector?.("svg")) return "icon";
     return "secondary";
   }
-  function preserveInteractiveTree(el) {
-    if (!el) return;
-    if (el.matches?.(INTERACTIVE_SELECTOR)) {
-      setAttr2(el, ACTION_ATTR, "control");
-      setAttr2(el, ACTION_KIND_ATTR, classifyActionControl(el));
-      el.removeAttribute(ACTION_HOST_ATTR);
-      el.removeAttribute(SUPPRESSED_ATTR);
-      restoreDisplay(el);
+  function preserveInteractiveTree(el2) {
+    if (!el2) return;
+    if (el2.matches?.(INTERACTIVE_SELECTOR)) {
+      setAttr2(el2, ACTION_ATTR, "control");
+      setAttr2(el2, ACTION_KIND_ATTR, classifyActionControl(el2));
+      el2.removeAttribute(ACTION_HOST_ATTR);
+      el2.removeAttribute(SUPPRESSED_ATTR);
+      restoreDisplay(el2);
       return;
     }
-    if (!isInteractiveHost(el)) {
-      suppressDisplayBranch(el);
+    if (!isInteractiveHost(el2)) {
+      suppressDisplayBranch(el2);
       return;
     }
-    setAttr2(el, ACTION_ATTR, "host");
-    setAttr2(el, ACTION_HOST_ATTR, "1");
-    el.removeAttribute(SUPPRESSED_ATTR);
-    restoreDisplay(el);
-    [...el.children].forEach((child) => preserveInteractiveTree(child));
+    setAttr2(el2, ACTION_ATTR, "host");
+    setAttr2(el2, ACTION_HOST_ATTR, "1");
+    el2.removeAttribute(SUPPRESSED_ATTR);
+    restoreDisplay(el2);
+    [...el2.children].forEach((child) => preserveInteractiveTree(child));
   }
   function hideOriginalChildren(row, overlay) {
     [...row.children].forEach((child) => {
@@ -2557,16 +2566,16 @@
   }
   function restoreOriginalChildren(row) {
     displayStyleOwner.restoreWithin(row);
-    row.querySelectorAll(`[${HIDDEN_ATTR}], [${ACTION_ATTR}], [${ACTION_HOST_ATTR}], [${SUPPRESSED_ATTR}]`).forEach((el) => {
-      el.removeAttribute(HIDDEN_ATTR);
-      el.removeAttribute(ACTION_ATTR);
-      el.removeAttribute(ACTION_HOST_ATTR);
-      el.removeAttribute(SUPPRESSED_ATTR);
-      el.removeAttribute(ACTION_KIND_ATTR);
+    row.querySelectorAll(`[${HIDDEN_ATTR}], [${ACTION_ATTR}], [${ACTION_HOST_ATTR}], [${SUPPRESSED_ATTR}]`).forEach((el2) => {
+      el2.removeAttribute(HIDDEN_ATTR);
+      el2.removeAttribute(ACTION_ATTR);
+      el2.removeAttribute(ACTION_HOST_ATTR);
+      el2.removeAttribute(SUPPRESSED_ATTR);
+      el2.removeAttribute(ACTION_KIND_ATTR);
     });
   }
   function clearRenderedRow(row) {
-    row.querySelectorAll(":scope > .fs-inv-row").forEach((el) => el.remove());
+    row.querySelectorAll(":scope > .fs-inv-row").forEach((el2) => el2.remove());
     restoreOriginalChildren(row);
     row.removeAttribute(RENDERED_ATTR);
   }
@@ -2639,7 +2648,7 @@
   }
   function syncRowState(row, overlay) {
     if (!overlay) return;
-    const kinds = [...row.querySelectorAll(`[${ACTION_ATTR}="control"]`)].map((el) => el.getAttribute(ACTION_KIND_ATTR));
+    const kinds = [...row.querySelectorAll(`[${ACTION_ATTR}="control"]`)].map((el2) => el2.getAttribute(ACTION_KIND_ATTR));
     overlay.classList.toggle("is-equipped", kinds.includes("equipped"));
     overlay.classList.toggle("has-set-action", kinds.includes("set"));
   }
@@ -2733,21 +2742,21 @@
         contextCache.delete(row);
       }
     );
-    document.querySelectorAll(`[${INVENTORY_ROOT_ATTR}]`).forEach((el) => {
-      el.removeAttribute(INVENTORY_ROOT_ATTR);
+    document.querySelectorAll(`[${INVENTORY_ROOT_ATTR}]`).forEach((el2) => {
+      el2.removeAttribute(INVENTORY_ROOT_ATTR);
     });
-    document.querySelectorAll(`[${INVENTORY_LIST_ATTR}], [${INVENTORY_FILTERS_ATTR}], [${SALVAGE_LIST_ATTR}]`).forEach((el) => {
-      el.removeAttribute(INVENTORY_LIST_ATTR);
-      el.removeAttribute(INVENTORY_FILTERS_ATTR);
-      el.removeAttribute(SALVAGE_LIST_ATTR);
+    document.querySelectorAll(`[${INVENTORY_LIST_ATTR}], [${INVENTORY_FILTERS_ATTR}], [${SALVAGE_LIST_ATTR}]`).forEach((el2) => {
+      el2.removeAttribute(INVENTORY_LIST_ATTR);
+      el2.removeAttribute(INVENTORY_FILTERS_ATTR);
+      el2.removeAttribute(SALVAGE_LIST_ATTR);
     });
-    document.querySelectorAll(".fs-inv-rule").forEach((el) => el.remove());
+    document.querySelectorAll(".fs-inv-rule").forEach((el2) => el2.remove());
     document.querySelectorAll(
       `[${INVENTORY_CONTROL_ATTR}], [${INVENTORY_TITLE_ATTR}], [${INVENTORY_FILTER_STATE_ATTR}]`
-    ).forEach((el) => {
-      el.removeAttribute(INVENTORY_CONTROL_ATTR);
-      el.removeAttribute(INVENTORY_TITLE_ATTR);
-      el.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
+    ).forEach((el2) => {
+      el2.removeAttribute(INVENTORY_CONTROL_ATTR);
+      el2.removeAttribute(INVENTORY_TITLE_ATTR);
+      el2.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
     });
     displayStyleOwner.restoreAll();
   }
@@ -2975,8 +2984,8 @@
   function setVar(panel, name, value) {
     panel.style.setProperty(name, value);
   }
-  function setData(el, key, value) {
-    if (el.dataset[key] !== value) el.dataset[key] = value;
+  function setData(el2, key, value) {
+    if (el2.dataset[key] !== value) el2.dataset[key] = value;
   }
   function clearThemeVariables(host) {
     if (!host?.style) return;
@@ -3137,8 +3146,8 @@
     fishing: { label: "Fishing", labels: ["Fish", "Fishing"], glyph: "⌁", actions: ["fish"] },
     locked: { label: "Coming Soon", labels: ["Coming Soon"], glyph: "◇", actions: [], titleActions: ["upcoming skill"], details: [/^unlock in a future update$/i] }
   };
-  function setOwnedStyle(owner, el, prop, value, priority = "important") {
-    return owner.set(el, prop, value, priority);
+  function setOwnedStyle(owner, el2, prop, value, priority = "important") {
+    return owner.set(el2, prop, value, priority);
   }
   function normText(value) {
     return String(value || "").replace(/\s+/g, " ").trim();
@@ -3309,10 +3318,10 @@
     return LEVEL_PROGRESS_PATTERN.test(text) || LEVEL_READOUT_LOOSE.test(text);
   }
   function findHookedReadout(panel) {
-    for (const el of panel.querySelectorAll("[title]")) {
-      if (!XP_READOUT_TITLE.test(el.getAttribute("title") || "")) continue;
-      if (el.closest(`[${XP_LINE_ATTR}], [data-iw-skill-v2-level-readout]`)) continue;
-      return el;
+    for (const el2 of panel.querySelectorAll("[title]")) {
+      if (!XP_READOUT_TITLE.test(el2.getAttribute("title") || "")) continue;
+      if (el2.closest(`[${XP_LINE_ATTR}], [data-iw-skill-v2-level-readout]`)) continue;
+      return el2;
     }
     return null;
   }
@@ -3337,14 +3346,14 @@
     "min-height": "0",
     "max-height": "none"
   };
-  function readoutCursor(el) {
-    return el.matches?.('button, a, [role="button"], [tabindex]:not([tabindex="-1"])') ? "pointer" : "default";
+  function readoutCursor(el2) {
+    return el2.matches?.('button, a, [role="button"], [tabindex]:not([tabindex="-1"])') ? "pointer" : "default";
   }
-  function sameTextShellChain(el, panel) {
-    if (!el) return [];
-    const text = normText(el.textContent);
-    const chain = [el];
-    let cur = el;
+  function sameTextShellChain(el2, panel) {
+    if (!el2) return [];
+    const text = normText(el2.textContent);
+    const chain = [el2];
+    let cur = el2;
     for (let depth = 0; depth < 8; depth += 1) {
       const parent = cur.parentElement;
       if (!parent || parent === panel) break;
@@ -3355,15 +3364,15 @@
     }
     return chain;
   }
-  function outerSameTextShell(el, panel) {
-    const chain = sameTextShellChain(el, panel);
-    return chain[chain.length - 1] || el;
+  function outerSameTextShell(el2, panel) {
+    const chain = sameTextShellChain(el2, panel);
+    return chain[chain.length - 1] || el2;
   }
-  function readoutBranch(el, panel) {
-    if (!el) return [];
-    const branch = [el];
-    const readoutText = normText(el.textContent);
-    let cur = el;
+  function readoutBranch(el2, panel) {
+    if (!el2) return [];
+    const branch = [el2];
+    const readoutText = normText(el2.textContent);
+    let cur = el2;
     for (let depth = 0; depth < 10; depth += 1) {
       const parent = cur.parentElement;
       if (!parent || parent === panel) break;
@@ -3371,11 +3380,11 @@
       const parentText = normText(parent.textContent);
       if (!parentText.includes(readoutText)) break;
       const ownsOtherRole = [...parent.querySelectorAll(`[${ROLE_ATTR}]`)].some((node2) => {
-        if (node2 === el || branch.includes(node2)) return false;
+        if (node2 === el2 || branch.includes(node2)) return false;
         const role2 = node2.getAttribute(ROLE_ATTR);
         return role2 && role2 !== "level-progress";
       });
-      const ownsOtherControl = [...parent.querySelectorAll('button,a,input,select,textarea,[role="button"]')].some((control) => control !== el && !branch.includes(control));
+      const ownsOtherControl = [...parent.querySelectorAll('button,a,input,select,textarea,[role="button"]')].some((control) => control !== el2 && !branch.includes(control));
       if (ownsOtherRole || ownsOtherControl) break;
       branch.push(parent);
       cur = parent;
@@ -3386,9 +3395,9 @@
     const previouslyMarked = [...panel.querySelectorAll("[data-iw-readout]")];
     let readout = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
     if (!readout) {
-      readout = [...panel.querySelectorAll("div,span,p,strong")].find((el) => {
-        if (el.closest('button,a,[role="button"]')) return false;
-        return isLevelReadoutText(normText(el.textContent));
+      readout = [...panel.querySelectorAll("div,span,p,strong")].find((el2) => {
+        if (el2.closest('button,a,[role="button"]')) return false;
+        return isLevelReadoutText(normText(el2.textContent));
       }) || null;
     }
     if (!readout) {
@@ -3541,7 +3550,7 @@
   }
   function updateIngredientHighlights(panel) {
     if (!supportsIngredientHighlights()) return;
-    const hosts = [...panel.querySelectorAll("[data-iw-ingr]")].filter((el) => !el.parentElement?.closest?.("[data-iw-ingr]"));
+    const hosts = [...panel.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
     ingredientHighlightRanges.set(panel, hosts.flatMap(completedIngredientRanges));
     rebuildIngredientHighlight();
   }
@@ -3558,7 +3567,7 @@
     ingredientLists.delete(source);
   }
   function updateIngredientLists(panel) {
-    const sources = [...panel.querySelectorAll("[data-iw-ingr]")].filter((el) => !el.parentElement?.closest?.("[data-iw-ingr]"));
+    const sources = [...panel.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
     const current = new Set(sources);
     for (const [source, list] of [...ingredientLists.entries()]) {
       if (!source.isConnected || source.closest(".compact-panel") === panel && !current.has(source)) {
@@ -3605,29 +3614,29 @@
       }
     }
     const root = panel || document;
-    root.querySelectorAll("[data-iw-ingredient-list-source]").forEach((el) => {
-      delete el.dataset.iwIngredientListSource;
+    root.querySelectorAll("[data-iw-ingredient-list-source]").forEach((el2) => {
+      delete el2.dataset.iwIngredientListSource;
     });
-    root.querySelectorAll("[data-iw-skill-ingredient-list]").forEach((el) => el.remove());
+    root.querySelectorAll("[data-iw-skill-ingredient-list]").forEach((el2) => el2.remove());
   }
   function neutraliseIngredients(panel) {
     const readouts = [...panel.querySelectorAll(`[${ROLE_ATTR}="level-progress"], [${XP_LINE_ATTR}]`)];
-    for (const el of panel.querySelectorAll("div, span, p")) {
-      if (el.closest('[data-iw-skill-ingredient-list="1"]')) continue;
-      if (el.closest("[data-iw-skill-v2-summary], [data-iw-skill-v2-body], [data-iw-skill-v2-controls]")) continue;
-      if (el.tagName === "BUTTON" || el.closest('button, a, [role="button"]')) continue;
-      if (el.childElementCount > 3) continue;
-      const text = normText(el.textContent);
-      const matches = INGR_PATTERN.test(text) && !readouts.some((readout) => el.contains(readout) || readout.contains(el));
+    for (const el2 of panel.querySelectorAll("div, span, p")) {
+      if (el2.closest('[data-iw-skill-ingredient-list="1"]')) continue;
+      if (el2.closest("[data-iw-skill-v2-summary], [data-iw-skill-v2-body], [data-iw-skill-v2-controls]")) continue;
+      if (el2.tagName === "BUTTON" || el2.closest('button, a, [role="button"]')) continue;
+      if (el2.childElementCount > 3) continue;
+      const text = normText(el2.textContent);
+      const matches = INGR_PATTERN.test(text) && !readouts.some((readout) => el2.contains(readout) || readout.contains(el2));
       if (!matches) {
-        if (el.dataset.iwIngr) {
-          ingredientStyleOwner.restoreElement(el);
-          delete el.dataset.iwIngr;
+        if (el2.dataset.iwIngr) {
+          ingredientStyleOwner.restoreElement(el2);
+          delete el2.dataset.iwIngr;
         }
-        ingredientStyleSnapshots.delete(el);
+        ingredientStyleSnapshots.delete(el2);
         continue;
       }
-      const chain = sameTextShellChain(el, panel);
+      const chain = sameTextShellChain(el2, panel);
       for (const target of chain) {
         const currentStyle = target.getAttribute("style") || "";
         if (ingredientStyleSnapshots.get(target) === currentStyle && target.dataset.iwIngr === "1") continue;
@@ -3641,23 +3650,23 @@
     updateIngredientHighlights(panel);
     updateIngredientLists(panel);
   }
-  function setRole(el, role2) {
-    if (el && el.getAttribute(ROLE_ATTR) !== role2) el.setAttribute(ROLE_ATTR, role2);
-    return el;
+  function setRole(el2, role2) {
+    if (el2 && el2.getAttribute(ROLE_ATTR) !== role2) el2.setAttribute(ROLE_ATTR, role2);
+    return el2;
   }
   function clearStructureRoles(panel) {
-    panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction], [data-iw-req-state]`).forEach((el) => {
-      el.removeAttribute(ROLE_ATTR);
-      el.removeAttribute(ZONE_ATTR);
-      el.removeAttribute(SHELL_ATTR);
-      el.removeAttribute("data-iw-req-state");
-      delete el.dataset.iwNavDirection;
+    panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction], [data-iw-req-state]`).forEach((el2) => {
+      el2.removeAttribute(ROLE_ATTR);
+      el2.removeAttribute(ZONE_ATTR);
+      el2.removeAttribute(SHELL_ATTR);
+      el2.removeAttribute("data-iw-req-state");
+      delete el2.dataset.iwNavDirection;
     });
     delete panel.dataset.iwSkillLayout;
   }
-  function childUnder(container, el) {
-    if (!container || !el || !container.contains(el)) return null;
-    let cur = el;
+  function childUnder(container, el2) {
+    if (!container || !el2 || !container.contains(el2)) return null;
+    let cur = el2;
     while (cur && cur.parentElement !== container) cur = cur.parentElement;
     return cur?.parentElement === container ? cur : null;
   }
@@ -3671,33 +3680,33 @@
     }
     return panel;
   }
-  function isPresentationHidden(el) {
-    if (!el || el.hidden || el.getAttribute?.("aria-hidden") === "true") return true;
+  function isPresentationHidden(el2) {
+    if (!el2 || el2.hidden || el2.getAttribute?.("aria-hidden") === "true") return true;
     try {
-      const cs = getComputedStyle(el);
+      const cs = getComputedStyle(el2);
       return cs.display === "none" || cs.visibility === "hidden" || cs.contentVisibility === "hidden";
     } catch {
       return false;
     }
   }
   function visibleFirst(elements) {
-    return elements.map((el) => [el, isPresentationHidden(el)]).sort((a, b) => Number(a[1]) - Number(b[1])).map(([el]) => el);
+    return elements.map((el2) => [el2, isPresentationHidden(el2)]).sort((a, b) => Number(a[1]) - Number(b[1])).map(([el2]) => el2);
   }
   var lastCandidatePanel = null;
   var lastCandidates = null;
   function textCandidates(panel) {
     if (lastCandidatePanel === panel) return lastCandidates;
-    const candidates = visibleFirst([...panel.querySelectorAll("h1,h2,h3,h4,div,span,p")].filter((el) => !el.closest("button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body], [data-iw-skill-v2-action-label], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-level-readout], [data-iw-skill-v2-xp]")).filter((el) => normText(el.textContent).length <= 130));
+    const candidates = visibleFirst([...panel.querySelectorAll("h1,h2,h3,h4,div,span,p")].filter((el2) => !el2.closest("button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body], [data-iw-skill-v2-action-label], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-level-readout], [data-iw-skill-v2-xp]")).filter((el2) => normText(el2.textContent).length <= 130));
     lastCandidatePanel = panel;
     lastCandidates = candidates;
     return candidates;
   }
   function findBestText(panel, predicate) {
     const candidates = textCandidates(panel);
-    const exactOwn = candidates.find((el) => predicate(normText(el.childElementCount ? "" : el.textContent), el));
+    const exactOwn = candidates.find((el2) => predicate(normText(el2.childElementCount ? "" : el2.textContent), el2));
     if (exactOwn) return exactOwn;
-    const matches = candidates.filter((el) => predicate(normText(el.textContent), el));
-    return matches.find((el) => !matches.some((inner) => inner !== el && el.contains(inner))) || matches[0] || null;
+    const matches = candidates.filter((el2) => predicate(normText(el2.textContent), el2));
+    return matches.find((el2) => !matches.some((inner) => inner !== el2 && el2.contains(inner))) || matches[0] || null;
   }
   function findProgress(panel) {
     const semantic = panel.querySelector('[role="progressbar"]');
@@ -3705,16 +3714,16 @@
       const fill = semantic.firstElementChild || null;
       return { track: semantic, fill };
     }
-    for (const el of panel.querySelectorAll("div")) {
-      if (el.children.length !== 1) continue;
-      const child = el.firstElementChild;
-      const cls = `${el.className || ""} ${child?.className || ""}`;
+    for (const el2 of panel.querySelectorAll("div")) {
+      if (el2.children.length !== 1) continue;
+      const child = el2.firstElementChild;
+      const cls = `${el2.className || ""} ${child?.className || ""}`;
       const widthStyle = child?.style?.width || "";
       const likelyClass = /progress|h-(?:1|1\.5|2|2\.5)|bg-(?:orange|green|emerald|primary|accent)/i.test(cls);
       if (!likelyClass && !/%$/.test(widthStyle)) continue;
-      const rect = el.getBoundingClientRect?.();
+      const rect = el2.getBoundingClientRect?.();
       if (rect && (rect.height < 2 || rect.height > 14 || rect.width < 100)) continue;
-      return { track: el, fill: child };
+      return { track: el2, fill: child };
     }
     return { track: null, fill: null };
   }
@@ -3732,7 +3741,7 @@
   var UNMET_CLASS = /\btext-(?:red|rose|orange|amber|yellow)-\d|\b(?:text-danger|text-warning)\b/;
   function syncRequirementState(panel) {
     panel.querySelectorAll(`[${ROLE_ATTR}="requirement"]`).forEach((shell) => {
-      const classes = [shell, ...shell.querySelectorAll("*")].map((el) => typeof el.className === "string" ? el.className : "").join(" ");
+      const classes = [shell, ...shell.querySelectorAll("*")].map((el2) => typeof el2.className === "string" ? el2.className : "").join(" ");
       const state = UNMET_CLASS.test(classes) ? "unmet" : "met";
       if (shell.getAttribute("data-iw-req-state") !== state) shell.setAttribute("data-iw-req-state", state);
     });
@@ -3752,8 +3761,8 @@
       });
     }
     if (!identity) {
-      identity = textCandidates(panel).find((el) => {
-        const directText = [...el.childNodes].map((node2) => normText(node2.textContent)).filter(Boolean).join(" ");
+      identity = textCandidates(panel).find((el2) => {
+        const directText = [...el2.childNodes].map((node2) => normText(node2.textContent)).filter(Boolean).join(" ");
         const clean = textWithoutLeadingGlyph(directText).toLowerCase();
         return identityLabels.some((label4) => clean === label4 || clean.startsWith(`${label4} `));
       }) || null;
@@ -3764,10 +3773,10 @@
     }
     const actionWord = (meta.titleActions || meta.actions).join("|");
     const actionTitleRe = new RegExp(`^(?:${actionWord})\\b`, "i");
-    let actionTitle = findBestText(panel, (text, el) => {
+    let actionTitle = findBestText(panel, (text, el2) => {
       if (!text || text.length > 90 || !actionTitleRe.test(textWithoutLeadingGlyph(text))) return false;
-      if (el.closest(".iw-item-ref")) return false;
-      if (el.matches?.(`[${ROLE_ATTR}="identity"]`) || el.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
+      if (el2.closest(".iw-item-ref")) return false;
+      if (el2.matches?.(`[${ROLE_ATTR}="identity"]`) || el2.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
       return true;
     });
     if (actionTitle) setRole(outerSameTextShell(actionTitle, panel), "action-title");
@@ -3826,11 +3835,11 @@
       );
       if (actionSignal && actionSignal.length <= 32) {
         const needle = actionSignal.toLowerCase();
-        actionTitle = findBestText(panel, (text, el) => {
+        actionTitle = findBestText(panel, (text, el2) => {
           const clean = textWithoutLeadingGlyph(text).toLowerCase();
           if (!(clean === needle || clean.startsWith(`${needle} `))) return false;
-          if (el.closest(".iw-item-ref")) return false;
-          if (el.matches?.(`[${ROLE_ATTR}="identity"]`) || el.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
+          if (el2.closest(".iw-item-ref")) return false;
+          if (el2.matches?.(`[${ROLE_ATTR}="identity"]`) || el2.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
           return true;
         });
         if (actionTitle) setRole(outerSameTextShell(actionTitle, panel), "action-title");
@@ -3887,34 +3896,34 @@
     const identityZone = supportedShell ? childUnder(layoutShell, identityRole) : null;
     const contentZone = supportedShell ? childUnder(layoutShell, titleRole) : null;
     const commandZone = supportedShell ? childUnder(layoutShell, actionRole) : null;
-    const shellChildren = supportedShell ? [...layoutShell.children].filter((el) => !el.classList.contains("fs-skill-header")) : [];
+    const shellChildren = supportedShell ? [...layoutShell.children].filter((el2) => !el2.classList.contains("fs-skill-header")) : [];
     const distinctZones = identityZone && contentZone && commandZone && (/* @__PURE__ */ new Set([identityZone, contentZone, commandZone])).size === 3;
     if (distinctZones) {
       if (layoutShell !== panel) layoutShell.setAttribute(SHELL_ATTR, "1");
       identityZone.setAttribute(ZONE_ATTR, "identity");
       contentZone.setAttribute(ZONE_ATTR, "content");
       commandZone.setAttribute(ZONE_ATTR, "commands");
-      const identityLeaves = [...identityZone.querySelectorAll("span,div,p,strong")].filter((el) => el.childElementCount === 0);
-      const identityLevel = identityLeaves.find((el) => /^(?:lv|level)\s*(?:\d+|[—–-])/i.test(normText(el.textContent))) || null;
+      const identityLeaves = [...identityZone.querySelectorAll("span,div,p,strong")].filter((el2) => el2.childElementCount === 0);
+      const identityLevel = identityLeaves.find((el2) => /^(?:lv|level)\s*(?:\d+|[—–-])/i.test(normText(el2.textContent))) || null;
       if (identityLevel) setRole(identityLevel, "identity-level");
-      const identityIcon = identityLeaves.find((el) => {
-        if (el === identity || el === identityLevel || el.closest(`[${ROLE_ATTR}="identity"]`)) return false;
-        const text = normText(el.textContent);
+      const identityIcon = identityLeaves.find((el2) => {
+        if (el2 === identity || el2 === identityLevel || el2.closest(`[${ROLE_ATTR}="identity"]`)) return false;
+        const text = normText(el2.textContent);
         return text && text.length <= 4 && /[^a-z0-9]/i.test(text);
       }) || null;
       if (identityIcon) setRole(identityIcon, "identity-icon");
       const functionalZones = /* @__PURE__ */ new Set([identityZone, contentZone, commandZone]);
-      const unexpectedFlowChild = shellChildren.some((el) => {
-        if (functionalZones.has(el)) return false;
-        if (el.matches?.(`[${ROLE_ATTR}="progress-track"]`) || el.querySelector?.(`[${ROLE_ATTR}="progress-track"]`)) return false;
-        if (el.matches?.("[data-iw-skill-v2-row]")) return false;
-        if (el.matches?.("[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label]")) return false;
+      const unexpectedFlowChild = shellChildren.some((el2) => {
+        if (functionalZones.has(el2)) return false;
+        if (el2.matches?.(`[${ROLE_ATTR}="progress-track"]`) || el2.querySelector?.(`[${ROLE_ATTR}="progress-track"]`)) return false;
+        if (el2.matches?.("[data-iw-skill-v2-row]")) return false;
+        if (el2.matches?.("[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label]")) return false;
         try {
-          const cs = getComputedStyle(el);
+          const cs = getComputedStyle(el2);
           if (cs.display === "none" || cs.visibility === "hidden" || cs.position === "absolute" || cs.position === "fixed") return false;
         } catch {
         }
-        const rect = el.getBoundingClientRect?.();
+        const rect = el2.getBoundingClientRect?.();
         return !rect || rect.width > 2 && rect.height > 2;
       });
       if (!unexpectedFlowChild) panel.dataset.iwSkillLayout = "three-zone";
@@ -3998,11 +4007,11 @@
     else SkillsArtService.ready().then(paint2).catch(() => {
     });
   }
-  function setOwnText(el, value) {
-    if (el && el.textContent !== value) el.textContent = value;
+  function setOwnText(el2, value) {
+    if (el2 && el2.textContent !== value) el2.textContent = value;
   }
-  function setOwnData(el, key, value) {
-    if (el.dataset[key] !== value) el.dataset[key] = value;
+  function setOwnData(el2, key, value) {
+    if (el2.dataset[key] !== value) el2.dataset[key] = value;
   }
   function ensureSkillPresentation(panel, meta) {
     ensureSkillActionsFrame(panel);
@@ -4017,17 +4026,17 @@
     const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
     if (identityZone) {
       const percentValue = progressPercent(panel);
-      let percent = identityZone.querySelector(":scope > .fs-skill-identity-percent");
+      let percent2 = identityZone.querySelector(":scope > .fs-skill-identity-percent");
       if (percentValue) {
-        if (!percent) {
-          percent = document.createElement("span");
-          percent.className = "fs-skill-identity-percent";
-          percent.setAttribute("aria-hidden", "true");
-          identityZone.appendChild(percent);
+        if (!percent2) {
+          percent2 = document.createElement("span");
+          percent2.className = "fs-skill-identity-percent";
+          percent2.setAttribute("aria-hidden", "true");
+          identityZone.appendChild(percent2);
         }
-        setOwnText(percent, displayPercent(percentValue));
+        setOwnText(percent2, displayPercent(percentValue));
       } else {
-        percent?.remove();
+        percent2?.remove();
       }
       let progress = identityZone.querySelector(":scope > .fs-skill-identity-progress");
       if (!progress) {
@@ -4072,13 +4081,13 @@
     buttonStyleOwner.restoreWithin(panel);
     readoutStyleOwner.restoreWithin(panel);
     ingredientStyleOwner.restoreWithin(panel);
-    panel.querySelectorAll("[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]").forEach((el) => {
-      delete el.dataset.iwReadout;
-      delete el.dataset.iwIngr;
-      delete el.dataset.iwBtnState;
-      buttonStyleSnapshots.delete(el);
-      readoutStyleSnapshots.delete(el);
-      ingredientStyleSnapshots.delete(el);
+    panel.querySelectorAll("[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]").forEach((el2) => {
+      delete el2.dataset.iwReadout;
+      delete el2.dataset.iwIngr;
+      delete el2.dataset.iwBtnState;
+      buttonStyleSnapshots.delete(el2);
+      readoutStyleSnapshots.delete(el2);
+      ingredientStyleSnapshots.delete(el2);
     });
   }
   function ownsPanel(panel) {
@@ -4090,11 +4099,11 @@
     clearIngredientLists(panel);
     clearPanelInlineTreatment(panel);
     SkillsArtService.clearPanel(panel);
-    panel.querySelectorAll(".fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp").forEach((el) => el.remove());
-    panel.querySelectorAll("[data-iw-clean-text], [data-iw-base-exp], [data-iw-progress-display]").forEach((el) => {
-      delete el.dataset.iwCleanText;
-      delete el.dataset.iwBaseExp;
-      delete el.dataset.iwProgressDisplay;
+    panel.querySelectorAll(".fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp").forEach((el2) => el2.remove());
+    panel.querySelectorAll("[data-iw-clean-text], [data-iw-base-exp], [data-iw-progress-display]").forEach((el2) => {
+      delete el2.dataset.iwCleanText;
+      delete el2.dataset.iwBaseExp;
+      delete el2.dataset.iwProgressDisplay;
     });
     clearStructureRoles(panel);
     panel.classList.remove("fs-skill-panel", ...SKILL_CLASSES);
@@ -4139,10 +4148,10 @@
     ingredientStyleOwner.restoreAll();
     clearIngredientHighlights();
     clearIngredientLists();
-    document.querySelectorAll("[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]").forEach((el) => {
-      delete el.dataset.iwReadout;
-      delete el.dataset.iwIngr;
-      delete el.dataset.iwBtnState;
+    document.querySelectorAll("[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]").forEach((el2) => {
+      delete el2.dataset.iwReadout;
+      delete el2.dataset.iwIngr;
+      delete el2.dataset.iwBtnState;
     });
   }
   function initSkillPanelRenderer() {
@@ -4205,13 +4214,13 @@
   var FRAME_SECTIONS = ["materials", "sources", "details"];
   var bound = false;
   var active = false;
-  function setData2(el, key, value) {
-    if (!el) return;
+  function setData2(el2, key, value) {
+    if (!el2) return;
     const next = String(value);
-    if (el.dataset[key] !== next) el.dataset[key] = next;
+    if (el2.dataset[key] !== next) el2.dataset[key] = next;
   }
-  function setText(el, value) {
-    if (el && el.textContent !== value) el.textContent = value;
+  function setText(el2, value) {
+    if (el2 && el2.textContent !== value) el2.textContent = value;
   }
   function markSections(panel) {
     const desired = /* @__PURE__ */ new Map();
@@ -4220,26 +4229,26 @@
       ["materials", "[data-iw-skill-ingredient-list],.fs-skill-ingredient-grid"],
       ["details", '[data-iw-skill-role="action-detail"]'],
       ["rewards", '[data-iw-skill-role="reward"]']
-    ]) panel.querySelectorAll(selector).forEach((el) => desired.set(el, name));
+    ]) panel.querySelectorAll(selector).forEach((el2) => desired.set(el2, name));
     const content = panel.querySelector('[data-iw-skill-zone="content"]');
-    content?.querySelectorAll("p,span").forEach((el) => {
-      if (el.closest('[class*="iw-skill-v2"],.fs-skill-ingredient-grid,button,a,[data-iw-skill-role="level-progress"]')) return;
-      if (el.querySelector("p,span,button,a")) return;
-      const text = (el.textContent || "").trim();
-      if (/missing materials|will queue|queued|queue first/i.test(text)) desired.set(el, "queue");
-      else if (/^(?:gather|harvest|obtain|found|source).*\b(?:from|in|at)\b/i.test(text) && !el.matches('[data-iw-skill-role="action-title"]')) desired.set(el, "sources");
+    content?.querySelectorAll("p,span").forEach((el2) => {
+      if (el2.closest('[class*="iw-skill-v2"],.fs-skill-ingredient-grid,button,a,[data-iw-skill-role="level-progress"]')) return;
+      if (el2.querySelector("p,span,button,a")) return;
+      const text = (el2.textContent || "").trim();
+      if (/missing materials|will queue|queued|queue first/i.test(text)) desired.set(el2, "queue");
+      else if (/^(?:gather|harvest|obtain|found|source).*\b(?:from|in|at)\b/i.test(text) && !el2.matches('[data-iw-skill-role="action-title"]')) desired.set(el2, "sources");
     });
-    desired.forEach((name, el) => {
-      if (name === "details" && /queue|missing materials/i.test(el.textContent || "")) desired.set(el, "queue");
+    desired.forEach((name, el2) => {
+      if (name === "details" && /queue|missing materials/i.test(el2.textContent || "")) desired.set(el2, "queue");
     });
-    panel.querySelectorAll("[data-iw-skill-v2-section]").forEach((el) => {
-      const next = desired.get(el);
-      if (!next) delete el.dataset.iwSkillV2Section;
-      else if (el.dataset.iwSkillV2Section !== next) el.dataset.iwSkillV2Section = next;
-      desired.delete(el);
+    panel.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => {
+      const next = desired.get(el2);
+      if (!next) delete el2.dataset.iwSkillV2Section;
+      else if (el2.dataset.iwSkillV2Section !== next) el2.dataset.iwSkillV2Section = next;
+      desired.delete(el2);
     });
-    desired.forEach((name, el) => {
-      el.dataset.iwSkillV2Section = name;
+    desired.forEach((name, el2) => {
+      el2.dataset.iwSkillV2Section = name;
     });
   }
   function levelReadout(panel) {
@@ -4301,7 +4310,7 @@
     setText(line, value);
   }
   function removeRetiredNodes(panel) {
-    panel.querySelectorAll("[data-iw-skill-v2-summary], [data-iw-skill-v2-break], [data-iw-skill-v2-expand], [data-iw-skill-v2-tabs]").forEach((el) => el.remove());
+    panel.querySelectorAll("[data-iw-skill-v2-summary], [data-iw-skill-v2-break], [data-iw-skill-v2-expand], [data-iw-skill-v2-tabs]").forEach((el2) => el2.remove());
   }
   function ensureActionGlyph(panel) {
     const zone = panel.querySelector('[data-iw-skill-zone="commands"]');
@@ -4309,8 +4318,8 @@
     const btn = zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
     const host = btn?.parentElement;
     if (!host) return null;
-    panel.querySelectorAll("[data-iw-skill-v2-action-glyph]").forEach((el) => {
-      if (el.parentElement !== host) el.remove();
+    panel.querySelectorAll("[data-iw-skill-v2-action-glyph]").forEach((el2) => {
+      if (el2.parentElement !== host) el2.remove();
     });
     const existing = host.querySelector(":scope > [data-iw-skill-v2-action-glyph]");
     if (existing) return existing;
@@ -4326,9 +4335,9 @@
     const host = btn?.parentElement;
     if (!host) return null;
     const labels = [...panel.querySelectorAll("[data-iw-skill-v2-action-label]")];
-    let label4 = labels.find((el) => el.parentElement === host) || null;
-    labels.forEach((el) => {
-      if (el !== label4) el.remove();
+    let label4 = labels.find((el2) => el2.parentElement === host) || null;
+    labels.forEach((el2) => {
+      if (el2 !== label4) el2.remove();
     });
     if (!label4) {
       label4 = document.createElement("span");
@@ -4391,9 +4400,9 @@
   function currentActionRemaining() {
     const host = pickRendered([...document.querySelectorAll(CURRENT_ACTION_HOSTS)]);
     if (!host) return null;
-    for (const el of host.querySelectorAll("time,span,p,strong,div")) {
-      if (el.childElementCount || el.closest('[data-iw-panel-part="progress"]')) continue;
-      const text = (el.textContent || "").replace(/\s+/g, " ").trim();
+    for (const el2 of host.querySelectorAll("time,span,p,strong,div")) {
+      if (el2.childElementCount || el2.closest('[data-iw-panel-part="progress"]')) continue;
+      const text = (el2.textContent || "").replace(/\s+/g, " ").trim();
       const seconds = durationSeconds(text);
       if (seconds !== null) return { text, seconds };
     }
@@ -4475,29 +4484,29 @@
     }
     const selected = FRAME_SECTIONS.flatMap((name) => {
       const sections = [...panel.querySelectorAll(`[data-iw-skill-v2-section="${name}"]`)];
-      const grid = sections.find((el) => el.classList.contains("fs-skill-ingredient-grid"));
-      return grid ? [grid] : sections.filter((el) => !sections.some((other) => other !== el && other.contains(el)));
+      const grid = sections.find((el2) => el2.classList.contains("fs-skill-ingredient-grid"));
+      return grid ? [grid] : sections.filter((el2) => !sections.some((other) => other !== el2 && other.contains(el2)));
     });
     if (!selected.length) {
       if (body.childElementCount) body.replaceChildren();
       delete body.dataset.iwSkillV2BodySignature;
       return body;
     }
-    const rows = selected.flatMap((section) => section.classList.contains("fs-skill-ingredient-grid") ? [...section.querySelectorAll(".fs-skill-ingredient-item")].map((el) => ({
-      text: (el.textContent || "").replace(/\s+/g, " ").trim(),
-      state: el.dataset.iwIngredientState || "",
+    const rows = selected.flatMap((section) => section.classList.contains("fs-skill-ingredient-grid") ? [...section.querySelectorAll(".fs-skill-ingredient-item")].map((el2) => ({
+      text: (el2.textContent || "").replace(/\s+/g, " ").trim(),
+      state: el2.dataset.iwIngredientState || "",
       kind: "material"
     })) : [{ text: (section.textContent || "").replace(/\s+/g, " ").trim(), state: "", kind: "" }]);
     const signature2 = rows.map((r) => `${r.kind}:${r.state}:${r.text}`).join(String.fromCharCode(31));
     if (body.dataset.iwSkillV2BodySignature === signature2) return body;
     const frag = document.createDocumentFragment();
     for (const row of rows) {
-      const el = document.createElement("span");
-      el.className = "iw-skill-v2-body-row";
-      if (row.state) el.dataset.iwSkillV2BodyState = row.state;
+      const el2 = document.createElement("span");
+      el2.className = "iw-skill-v2-body-row";
+      if (row.state) el2.dataset.iwSkillV2BodyState = row.state;
       const parts = row.kind === "material" ? MATERIAL_PARTS.exec(row.text) : null;
       if (parts) {
-        el.dataset.iwSkillV2BodyKind = "material";
+        el2.dataset.iwSkillV2BodyKind = "material";
         const name = document.createElement("span");
         name.className = "iw-skill-v2-body-name";
         name.textContent = parts[1];
@@ -4515,11 +4524,11 @@
         } else {
           count.textContent = parts[2];
         }
-        el.append(name, count);
+        el2.append(name, count);
       } else {
-        el.textContent = row.text;
+        el2.textContent = row.text;
       }
-      frag.appendChild(el);
+      frag.appendChild(el2);
     }
     body.replaceChildren(frag);
     body.dataset.iwSkillV2BodySignature = signature2;
@@ -4539,7 +4548,7 @@
     return row;
   }
   function syncRequirementNote(panel) {
-    const unmet = [...new Set([...panel.querySelectorAll('[data-iw-skill-v2-section="requirements"][data-iw-req-state="unmet"]')].map((el) => (el.textContent || "").replace(/\s+/g, " ").trim()).filter(Boolean))];
+    const unmet = [...new Set([...panel.querySelectorAll('[data-iw-skill-v2-section="requirements"][data-iw-req-state="unmet"]')].map((el2) => (el2.textContent || "").replace(/\s+/g, " ").trim()).filter(Boolean))];
     const existing = panel.querySelector("[data-iw-skill-v2-controls]");
     if (!unmet.length) {
       existing?.remove();
@@ -4578,8 +4587,8 @@
   }
   function clearSkillCardV2(panel) {
     if (!panel) return;
-    panel.querySelectorAll("[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-xp],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]").forEach((el) => el.remove());
-    panel.querySelectorAll("[data-iw-skill-v2-section]").forEach((el) => delete el.dataset.iwSkillV2Section);
+    panel.querySelectorAll("[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-xp],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]").forEach((el2) => el2.remove());
+    panel.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => delete el2.dataset.iwSkillV2Section);
     panel.style.removeProperty("--iw-skill-v2-progress");
     panel.style.removeProperty("--iw-skill-v2-btn-font");
     panel.style.removeProperty("--iw-skill-v2-action-label-font");
@@ -4620,12 +4629,12 @@
     }));
     const root = document.documentElement;
     if (root && root.getAttribute(DESIGN_ATTR) !== "new") root.setAttribute(DESIGN_ATTR, "new");
-    document.querySelectorAll("[data-iw-skill-design-toggle]").forEach((el) => el.remove());
+    document.querySelectorAll("[data-iw-skill-design-toggle]").forEach((el2) => el2.remove());
   }
   function clearSkillCardDesignController() {
     active = false;
     document.documentElement?.removeAttribute(DESIGN_ATTR);
-    document.querySelectorAll("[data-iw-skill-design-toggle]").forEach((el) => el.remove());
+    document.querySelectorAll("[data-iw-skill-design-toggle]").forEach((el2) => el2.remove());
     document.querySelectorAll(".compact-panel[data-iw-skill-v2]").forEach(clearSkillCardV2);
   }
 
@@ -4656,9 +4665,9 @@
     return String(value || "").replace(/\s+/g, " ").trim();
   }
   function textLeaves(root) {
-    return [...root.querySelectorAll("p,span,div,strong,em,h1,h2,h3,h4")].filter((el) => !el.closest('button,a,[role="button"],.fs-quest-sigil')).filter((el) => {
-      const own2 = [...el.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
-      return own2 && normText2(el.textContent).length <= 220;
+    return [...root.querySelectorAll("p,span,div,strong,em,h1,h2,h3,h4")].filter((el2) => !el2.closest('button,a,[role="button"],.fs-quest-sigil')).filter((el2) => {
+      const own2 = [...el2.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
+      return own2 && normText2(el2.textContent).length <= 220;
     });
   }
   function questButtons(card) {
@@ -4678,37 +4687,37 @@
     const bulk = card.textContent || "";
     if (!/turn\s*in/i.test(bulk) && !/\d+%\s*complete/i.test(bulk)) return false;
     const leaves = textLeaves(card);
-    const hasReward = leaves.some((el) => /^reward\s*:/i.test(normText2(el.textContent)));
+    const hasReward = leaves.some((el2) => /^reward\s*:/i.test(normText2(el2.textContent)));
     if (!hasReward) return false;
     const { turnIn, skip } = questButtons(card);
-    const hasPercent = leaves.some((el) => /\d+%\s*complete\b/i.test(normText2(el.textContent)));
+    const hasPercent = leaves.some((el2) => /\d+%\s*complete\b/i.test(normText2(el2.textContent)));
     return !!(turnIn || skip || hasPercent);
   }
   function findProgress2(card) {
-    for (const el of card.querySelectorAll("div")) {
-      if (el.children.length !== 1) continue;
-      const fill = el.firstElementChild;
+    for (const el2 of card.querySelectorAll("div")) {
+      if (el2.children.length !== 1) continue;
+      const fill = el2.firstElementChild;
       const width = String(fill?.style?.width || "").trim();
       if (!/%$/.test(width)) continue;
-      const cls = `${el.className || ""} ${fill.className || ""}`;
+      const cls = `${el2.className || ""} ${fill.className || ""}`;
       if (!/rounded-full|progress|bg-white\/10|bg-white\/5|\bh-1(?:\.5)?\b|\bh-2\b/i.test(cls)) continue;
-      if (el.closest('button,a,[role="button"]')) continue;
-      return { track: el, fill };
+      if (el2.closest('button,a,[role="button"]')) continue;
+      return { track: el2, fill };
     }
     return { track: null, fill: null };
   }
-  function setRole2(el, role2) {
-    if (el && el.getAttribute(ROLE_ATTR2) !== role2) el.setAttribute(ROLE_ATTR2, role2);
-    return el;
+  function setRole2(el2, role2) {
+    if (el2 && el2.getAttribute(ROLE_ATTR2) !== role2) el2.setAttribute(ROLE_ATTR2, role2);
+    return el2;
   }
-  function setZone(el, zone) {
-    if (el && el.getAttribute(ZONE_ATTR2) !== zone) el.setAttribute(ZONE_ATTR2, zone);
-    return el;
+  function setZone(el2, zone) {
+    if (el2 && el2.getAttribute(ZONE_ATTR2) !== zone) el2.setAttribute(ZONE_ATTR2, zone);
+    return el2;
   }
   function clearRoles(card) {
-    card.querySelectorAll(`[${ROLE_ATTR2}],[${ZONE_ATTR2}]`).forEach((el) => {
-      el.removeAttribute(ROLE_ATTR2);
-      el.removeAttribute(ZONE_ATTR2);
+    card.querySelectorAll(`[${ROLE_ATTR2}],[${ZONE_ATTR2}]`).forEach((el2) => {
+      el2.removeAttribute(ROLE_ATTR2);
+      el2.removeAttribute(ZONE_ATTR2);
     });
   }
   function structureSignature2(card) {
@@ -4721,12 +4730,12 @@
     return GENERIC_STYLE;
   }
   function objectiveItemRef(card) {
-    const el = card.querySelector(`[${ROLE_ATTR2}="objective"]`);
-    if (!el) return null;
-    const name = normText2(el.textContent).replace(/^[^A-Za-z]+/, "").replace(/\s+[\d,]+\s*\/\s*[\d,]+.*$/, "").trim();
-    if (name.length < 2) return { el, name: "", item: null, id: null };
+    const el2 = card.querySelector(`[${ROLE_ATTR2}="objective"]`);
+    if (!el2) return null;
+    const name = normText2(el2.textContent).replace(/^[^A-Za-z]+/, "").replace(/\s+[\d,]+\s*\/\s*[\d,]+.*$/, "").trim();
+    if (name.length < 2) return { el: el2, name: "", item: null, id: null };
     const item = ItemDatabase.getByName(name);
-    return { el, name, item, id: item && item.item_id != null ? String(item.item_id) : null };
+    return { el: el2, name, item, id: item && item.item_id != null ? String(item.item_id) : null };
   }
   var TRIGGER_ATTRS = [
     "data-iw-item",
@@ -4737,41 +4746,41 @@
     "aria-controls",
     "aria-expanded"
   ];
-  function clearObjectiveTrigger(el) {
-    if (!el) return;
-    for (const attr of TRIGGER_ATTRS) el.removeAttribute(attr);
+  function clearObjectiveTrigger(el2) {
+    if (!el2) return;
+    for (const attr of TRIGGER_ATTRS) el2.removeAttribute(attr);
   }
   function ensureObjectiveTrigger(ref) {
     if (!ref || !ref.el) return;
-    const el = ref.el;
+    const el2 = ref.el;
     if (!ref.item) {
-      clearObjectiveTrigger(el);
+      clearObjectiveTrigger(el2);
       return;
     }
     if (ref.id) {
-      if (el.getAttribute("data-iw-item") !== ref.id) el.setAttribute("data-iw-item", ref.id);
-      el.removeAttribute("data-iw-item-name");
+      if (el2.getAttribute("data-iw-item") !== ref.id) el2.setAttribute("data-iw-item", ref.id);
+      el2.removeAttribute("data-iw-item-name");
     } else {
-      if (el.getAttribute("data-iw-item-name") !== ref.name) el.setAttribute("data-iw-item-name", ref.name);
-      el.removeAttribute("data-iw-item");
+      if (el2.getAttribute("data-iw-item-name") !== ref.name) el2.setAttribute("data-iw-item-name", ref.name);
+      el2.removeAttribute("data-iw-item");
     }
-    if (el.dataset.iwTooltipTrigger !== "1") el.dataset.iwTooltipTrigger = "1";
-    if (el.getAttribute("tabindex") !== "0") el.setAttribute("tabindex", "0");
-    if (el.getAttribute("aria-haspopup") !== "dialog") el.setAttribute("aria-haspopup", "dialog");
-    if (el.getAttribute("aria-controls") !== "iw-tip") el.setAttribute("aria-controls", "iw-tip");
-    if (!el.hasAttribute("aria-expanded")) el.setAttribute("aria-expanded", "false");
+    if (el2.dataset.iwTooltipTrigger !== "1") el2.dataset.iwTooltipTrigger = "1";
+    if (el2.getAttribute("tabindex") !== "0") el2.setAttribute("tabindex", "0");
+    if (el2.getAttribute("aria-haspopup") !== "dialog") el2.setAttribute("aria-haspopup", "dialog");
+    if (el2.getAttribute("aria-controls") !== "iw-tip") el2.setAttribute("aria-controls", "iw-tip");
+    if (!el2.hasAttribute("aria-expanded")) el2.setAttribute("aria-expanded", "false");
   }
   function annotateStructure2(card) {
     const sig = structureSignature2(card);
     if (structureSignatures2.get(card) === sig) return;
     clearRoles(card);
     const leaves = textLeaves(card);
-    const reward2 = leaves.find((el) => /^reward\s*:/i.test(normText2(el.textContent))) || null;
-    const objective = leaves.find((el) => /\d+\s*\/\s*\d+/.test(normText2(el.textContent)) && !/^reward\s*:/i.test(normText2(el.textContent)) && !/%\s*complete\b/i.test(normText2(el.textContent))) || null;
-    const progressLabel = leaves.find((el) => /\d+%\s*complete\b/i.test(normText2(el.textContent))) || null;
-    const skipNote = leaves.find((el) => /^out of skips\b/i.test(normText2(el.textContent))) || null;
+    const reward2 = leaves.find((el2) => /^reward\s*:/i.test(normText2(el2.textContent))) || null;
+    const objective = leaves.find((el2) => /\d+\s*\/\s*\d+/.test(normText2(el2.textContent)) && !/^reward\s*:/i.test(normText2(el2.textContent)) && !/%\s*complete\b/i.test(normText2(el2.textContent))) || null;
+    const progressLabel = leaves.find((el2) => /\d+%\s*complete\b/i.test(normText2(el2.textContent))) || null;
+    const skipNote = leaves.find((el2) => /^out of skips\b/i.test(normText2(el2.textContent))) || null;
     const column = reward2?.parentElement || objective?.parentElement || card;
-    const columnLeaves = leaves.filter((el) => column.contains(el) && el !== reward2 && el !== objective && el !== progressLabel && el !== skipNote);
+    const columnLeaves = leaves.filter((el2) => column.contains(el2) && el2 !== reward2 && el2 !== objective && el2 !== progressLabel && el2 !== skipNote);
     columnLeaves.sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
     let cursor = 0;
     if (columnLeaves.length >= 2 && /\bwork order\b/i.test(normText2(columnLeaves[0].textContent))) {
@@ -4781,7 +4790,7 @@
     const title = columnLeaves[cursor] || null;
     const briefs = columnLeaves.slice(cursor + 1);
     if (title) setRole2(title, "title");
-    briefs.forEach((el) => setRole2(el, "brief"));
+    briefs.forEach((el2) => setRole2(el2, "brief"));
     if (objective) setRole2(objective, "objective");
     if (reward2) {
       setRole2(reward2, "reward");
@@ -4933,10 +4942,10 @@
     structureSignatures2.delete(card);
     clearObjectiveTrigger(card.querySelector(`[${ROLE_ATTR2}="objective"]`));
     clearRoles(card);
-    card.querySelectorAll(".fs-quest-sigil, .fs-quest-sigil-pct, .fs-quest-sigil-icon").forEach((el) => el.remove());
-    card.querySelectorAll("[data-iw-quest-reward], [data-iw-quest-percent]").forEach((el) => {
-      delete el.dataset.iwQuestReward;
-      delete el.dataset.iwQuestPercent;
+    card.querySelectorAll(".fs-quest-sigil, .fs-quest-sigil-pct, .fs-quest-sigil-icon").forEach((el2) => el2.remove());
+    card.querySelectorAll("[data-iw-quest-reward], [data-iw-quest-percent]").forEach((el2) => {
+      delete el2.dataset.iwQuestReward;
+      delete el2.dataset.iwQuestPercent;
     });
     card.classList.remove(PANEL_CLASS);
     card.style.removeProperty("--fs-quest-accent");
@@ -5088,50 +5097,50 @@
   var impactAnimations = /* @__PURE__ */ new WeakMap();
   var impactCleanup = /* @__PURE__ */ new WeakMap();
   var norm = (value) => String(value || "").replace(/\s+/g, " ").trim();
-  function mark(el, key, value) {
-    if (el && el.getAttribute(key) !== value) el.setAttribute(key, value);
+  function mark(el2, key, value) {
+    if (el2 && el2.getAttribute(key) !== value) el2.setAttribute(key, value);
   }
-  function setText2(el, value) {
-    if (el && el.textContent !== value) el.textContent = value;
+  function setText2(el2, value) {
+    if (el2 && el2.textContent !== value) el2.textContent = value;
   }
   function owned(tag, className, text) {
-    const el = document.createElement(tag);
-    el.className = className;
-    el.dataset.iwBossOwned = "1";
-    if (text) el.textContent = text;
-    return el;
+    const el2 = document.createElement(tag);
+    el2.className = className;
+    el2.dataset.iwBossOwned = "1";
+    if (text) el2.textContent = text;
+    return el2;
   }
   function controlProgress(card) {
-    for (const el of card.children) {
-      if (el.hasAttribute("data-iw-boss-owned")) continue;
-      const fill = el.children.length === 1 ? el.firstElementChild : null;
+    for (const el2 of card.children) {
+      if (el2.hasAttribute("data-iw-boss-owned")) continue;
+      const fill = el2.children.length === 1 ? el2.firstElementChild : null;
       const width = String(fill?.style?.width || "").trim();
-      if (fill && /^\d+(?:\.\d+)?%$/.test(width)) return { track: el, percent: Math.max(0, Math.min(100, Number.parseFloat(width))) };
+      if (fill && /^\d+(?:\.\d+)?%$/.test(width)) return { track: el2, percent: Math.max(0, Math.min(100, Number.parseFloat(width))) };
     }
     return { track: null, percent: null };
   }
   function strengthTeam(row) {
-    const classes = [row, ...row.querySelectorAll("*")].map((el) => `${el.className || ""} ${el.getAttribute?.("style") || ""}`).join(" ");
+    const classes = [row, ...row.querySelectorAll("*")].map((el2) => `${el2.className || ""} ${el2.getAttribute?.("style") || ""}`).join(" ");
     const red = /(?:^|[\s:_-])(?:red|rose|pink|crimson)(?:[\s:_-]|$)/i.test(classes);
     const blue = /(?:^|[\s:_-])(?:blue|sky|cyan|azure)(?:[\s:_-]|$)/i.test(classes);
     if (red !== blue) return red ? "red" : "blue";
     return null;
   }
   function controlStrengths(card) {
-    const candidates = [...card.querySelectorAll("p, span, strong")].filter((el) => !el.childElementCount && !el.closest("[data-iw-boss-owned]")).map((el) => {
-      const raw = norm(el.textContent);
+    const candidates = [...card.querySelectorAll("p, span, strong")].filter((el2) => !el2.childElementCount && !el2.closest("[data-iw-boss-owned]")).map((el2) => {
+      const raw = norm(el2.textContent);
       if (!/^\d[\d,]*(?:\.\d+)?$/.test(raw)) return null;
       const value = Number(raw.replaceAll(",", ""));
       if (!Number.isFinite(value)) return null;
-      let row = el.parentElement;
+      let row = el2.parentElement;
       let team = null;
-      let strengthRow = el.parentElement;
+      let strengthRow = el2.parentElement;
       while (row && row !== card && !team) {
         team = strengthTeam(row);
         if (team) strengthRow = row;
         row = row.parentElement;
       }
-      return { el, row: strengthRow, raw, value, team };
+      return { el: el2, row: strengthRow, raw, value, team };
     }).filter(Boolean);
     let red = candidates.find((entry2) => entry2.team === "red");
     let blue = candidates.find((entry2) => entry2.team === "blue");
@@ -5224,13 +5233,13 @@
   function updateDominion(card, team) {
     const panel = ensureDominion(card);
     ensureCrestLayers(panel.querySelector(".iw-control-crest"));
-    const hp = [...card.querySelectorAll("p")].find((el) => !el.closest("[data-iw-boss-owned]") && /\b[\d,.]+(?:\s*\/\s*[\d,.]+)?\s*HP\b/i.test(norm(el.textContent)));
+    const hp = [...card.querySelectorAll("p")].find((el2) => !el2.closest("[data-iw-boss-owned]") && /\b[\d,.]+(?:\s*\/\s*[\d,.]+)?\s*HP\b/i.test(norm(el2.textContent)));
     const progress = controlProgress(card);
     const nativeStrengths = controlStrengths(card);
     const strengths = team === "contested" ? nativeStrengths : null;
     const totalStrength = strengths ? strengths.red.value + strengths.blue.value : 0;
     const split = totalStrength > 0 ? strengths.red.value / totalStrength * 100 : 50;
-    const percent = progress.percent;
+    const percent2 = progress.percent;
     const value = strengths ? `${strengths.red.raw} · ${strengths.blue.raw}` : hp ? norm(hp.textContent) : team === "contested" ? "Under siege" : "Fortified";
     const state = team === "red" ? "Crimson Dominion" : team === "blue" ? "Azure Dominion" : "Ward contested";
     card.querySelectorAll('[data-iw-boss-role="control-strength"]').forEach((row) => row.removeAttribute("data-iw-boss-role"));
@@ -5257,7 +5266,7 @@
       strengthHistory.delete(card);
       stopStrengthImpact(panel);
       delete meter.dataset.iwControlSource;
-      fill.style.width = `${percent ?? 100}%`;
+      fill.style.width = `${percent2 ?? 100}%`;
     }
     const track = panel.querySelector(".iw-control-meter-track");
     track.setAttribute("aria-label", strengths ? "Ward strength balance" : "Ward integrity");
@@ -5266,7 +5275,7 @@
       track.setAttribute("aria-valuemax", "100");
       track.setAttribute("aria-valuenow", String(Number(split.toFixed(1))));
       track.setAttribute("aria-valuetext", `Crimson ${strengths.red.raw}, Azure ${strengths.blue.raw}`);
-    } else if (percent == null) {
+    } else if (percent2 == null) {
       track.removeAttribute("aria-valuenow");
       track.removeAttribute("aria-valuemin");
       track.removeAttribute("aria-valuemax");
@@ -5274,7 +5283,7 @@
     } else {
       track.setAttribute("aria-valuemin", "0");
       track.setAttribute("aria-valuemax", "100");
-      track.setAttribute("aria-valuenow", String(percent));
+      track.setAttribute("aria-valuenow", String(percent2));
       track.removeAttribute("aria-valuetext");
     }
   }
@@ -5320,7 +5329,7 @@
     }
     for (const card of root.querySelectorAll(".compact-panel")) {
       if (card.querySelector(".compact-panel")) continue;
-      const header = [...card.children].find((el) => !el.hasAttribute("data-iw-boss-owned"));
+      const header = [...card.children].find((el2) => !el2.hasAttribute("data-iw-boss-owned"));
       const title = header?.querySelector("p") || (header?.matches("p") ? header : null);
       const label4 = norm(title?.textContent);
       const boss = BOSSES.find((entry2) => label4.includes(entry2.name));
@@ -5334,7 +5343,7 @@
         art2.setAttribute("aria-hidden", "true");
         card.appendChild(art2);
       }
-      const action = [...header.querySelectorAll("button")].find((el) => /prejoin|fight|defeated|join/i.test(norm(el.textContent)));
+      const action = [...header.querySelectorAll("button")].find((el2) => /prejoin|fight|defeated|join/i.test(norm(el2.textContent)));
       mark(action, "data-iw-boss-role", "action");
       if (action) {
         const actionText = norm(action.textContent);
@@ -5345,7 +5354,7 @@
         else if (action.hasAttribute("data-iw-boss-action-team")) action.removeAttribute("data-iw-boss-action-team");
         if (action.hasAttribute("data-iw-boss-action-label")) action.removeAttribute("data-iw-boss-action-label");
       }
-      const participation = [...card.querySelectorAll("button, p")].find((el) => /world boss participation|players? currently fighting world boss|last battle participants/i.test(norm(el.textContent)));
+      const participation = [...card.querySelectorAll("button, p")].find((el2) => /world boss participation|players? currently fighting world boss|last battle participants/i.test(norm(el2.textContent)));
       mark(participation, "data-iw-boss-role", "participation");
       let status = null;
       for (const p of card.querySelectorAll("p")) {
@@ -5359,24 +5368,24 @@
         }
       }
       mark(status, "data-iw-boss-role", "status");
-      for (const el of card.children) {
-        if (el.hasAttribute("data-iw-boss-owned") || el === header || el === status || el === participation) continue;
-        const fill = el.children.length === 1 ? el.firstElementChild : null;
-        if (fill && /%$/.test(String(fill.style?.width || "")) && /h-1|progress|rounded-full/i.test(`${el.className} ${fill.className}`)) {
-          mark(el, "data-iw-boss-role", "progress");
-        } else if (/Top Fighters|Last Kill Participants/i.test(norm(el.textContent))) {
-          mark(el, "data-iw-boss-role", "details");
+      for (const el2 of card.children) {
+        if (el2.hasAttribute("data-iw-boss-owned") || el2 === header || el2 === status || el2 === participation) continue;
+        const fill = el2.children.length === 1 ? el2.firstElementChild : null;
+        if (fill && /%$/.test(String(fill.style?.width || "")) && /h-1|progress|rounded-full/i.test(`${el2.className} ${fill.className}`)) {
+          mark(el2, "data-iw-boss-role", "progress");
+        } else if (/Top Fighters|Last Kill Participants/i.test(norm(el2.textContent))) {
+          mark(el2, "data-iw-boss-role", "details");
         }
       }
       if (boss) rewards(card, boss);
       else {
         const team = /red team controls/i.test(label4) ? "red" : /blue team controls/i.test(label4) ? "blue" : "contested";
         mark(card, "data-iw-control", team);
-        for (const el of card.children) {
-          if (el.hasAttribute("data-iw-boss-owned") || el === header) continue;
-          const text = norm(el.textContent);
-          if (/Red Team/.test(text) && /Blue Team/.test(text)) mark(el, "data-iw-boss-role", "control-teams");
-          else if (/^Queue\b/.test(norm(el.firstElementChild?.textContent))) mark(el, "data-iw-boss-role", "control-queue");
+        for (const el2 of card.children) {
+          if (el2.hasAttribute("data-iw-boss-owned") || el2 === header) continue;
+          const text = norm(el2.textContent);
+          if (/Red Team/.test(text) && /Blue Team/.test(text)) mark(el2, "data-iw-boss-role", "control-teams");
+          else if (/^Queue\b/.test(norm(el2.firstElementChild?.textContent))) mark(el2, "data-iw-boss-role", "control-queue");
         }
         updateDominion(card, team);
       }
@@ -5385,9 +5394,9 @@
   function clearWorldBossPanel(root) {
     root.querySelectorAll('[data-iw-encounter="zone"]').forEach((card) => strengthHistory.delete(card));
     root.querySelectorAll(".iw-control-dominion").forEach(stopStrengthImpact);
-    root.querySelectorAll("[data-iw-boss-owned]").forEach((el) => el.remove());
+    root.querySelectorAll("[data-iw-boss-owned]").forEach((el2) => el2.remove());
     for (const attr of ["data-iw-encounter", "data-iw-control", "data-iw-boss-role", "data-iw-boss-action-state", "data-iw-boss-action-team", "data-iw-boss-action-label", "data-iw-boss-art-ready"]) {
-      root.querySelectorAll(`[${attr}]`).forEach((el) => el.removeAttribute(attr));
+      root.querySelectorAll(`[${attr}]`).forEach((el2) => el2.removeAttribute(attr));
     }
   }
 
@@ -5443,21 +5452,21 @@
   var houseSignatures = /* @__PURE__ */ new WeakMap();
   var norm2 = (value) => String(value || "").replace(/\s+/g, " ").trim();
   var label = (value) => norm2(value).replace(/^[^\p{L}\p{N}]+/u, "");
-  function mark2(el, key, value) {
-    if (el && el.getAttribute(key) !== value) el.setAttribute(key, value);
+  function mark2(el2, key, value) {
+    if (el2 && el2.getAttribute(key) !== value) el2.setAttribute(key, value);
   }
-  function unmark(el, key) {
-    if (el && el.hasAttribute(key)) el.removeAttribute(key);
+  function unmark(el2, key) {
+    if (el2 && el2.hasAttribute(key)) el2.removeAttribute(key);
   }
   function owned2(tag, className, text) {
-    const el = document.createElement(tag);
-    el.className = className;
-    el.dataset.iwVillageOwned = "1";
-    if (text) el.textContent = text;
-    return el;
+    const el2 = document.createElement(tag);
+    el2.className = className;
+    el2.dataset.iwVillageOwned = "1";
+    if (text) el2.textContent = text;
+    return el2;
   }
-  function nativeChildren(el) {
-    return el ? [...el.children].filter((child) => !child.hasAttribute("data-iw-village-owned")) : [];
+  function nativeChildren(el2) {
+    return el2 ? [...el2.children].filter((child) => !child.hasAttribute("data-iw-village-owned")) : [];
   }
   function ensureArt(card, entry2, kind2) {
     let art2 = card.querySelector(":scope > .iw-village-art");
@@ -5478,21 +5487,21 @@
   function resolveBuilding(name) {
     return VILLAGE_BUILDINGS[norm2(name).toLowerCase()] || null;
   }
-  function ensureTrigger(el, name) {
-    if (!el) return;
+  function ensureTrigger(el2, name) {
+    if (!el2) return;
     const item = name && ItemDatabase.isReady() ? ItemDatabase.find({ name }) : null;
     if (!item) {
-      clearTrigger(el);
+      clearTrigger(el2);
       return;
     }
-    mark2(el, "data-iw-item-name", item.name);
-    mark2(el, "data-iw-tooltip-trigger", "1");
-    mark2(el, "tabindex", "0");
-    mark2(el, "aria-haspopup", "dialog");
-    mark2(el, "aria-controls", "iw-tip");
-    if (!el.hasAttribute("aria-expanded")) el.setAttribute("aria-expanded", "false");
+    mark2(el2, "data-iw-item-name", item.name);
+    mark2(el2, "data-iw-tooltip-trigger", "1");
+    mark2(el2, "tabindex", "0");
+    mark2(el2, "aria-haspopup", "dialog");
+    mark2(el2, "aria-controls", "iw-tip");
+    if (!el2.hasAttribute("aria-expanded")) el2.setAttribute("aria-expanded", "false");
   }
-  function clearTrigger(el) {
+  function clearTrigger(el2) {
     for (const attr of [
       "data-iw-item-name",
       "data-iw-item",
@@ -5501,15 +5510,15 @@
       "aria-haspopup",
       "aria-controls",
       "aria-expanded"
-    ]) unmark(el, attr);
+    ]) unmark(el2, attr);
   }
   function decorateSlot(card) {
     const head = nativeChildren(card)[0] || null;
     const copy = head ? nativeChildren(head)[0] : null;
-    const lines = copy ? [...copy.children].filter((el) => el.tagName === "P") : [];
-    const index = lines.find((el) => /^slot\s+\d+$/i.test(label(el.textContent))) || null;
-    const rest = lines.filter((el) => el !== index);
-    const vacant = rest.find((el) => /^empty slot$/i.test(label(el.textContent))) || null;
+    const lines = copy ? [...copy.children].filter((el2) => el2.tagName === "P") : [];
+    const index = lines.find((el2) => /^slot\s+\d+$/i.test(label(el2.textContent))) || null;
+    const rest = lines.filter((el2) => el2 !== index);
+    const vacant = rest.find((el2) => /^empty slot$/i.test(label(el2.textContent))) || null;
     const name = vacant ? null : rest[0] || null;
     const effects = vacant ? null : rest[1] || null;
     const buildingName = name ? label(name.textContent) : "";
@@ -5571,7 +5580,7 @@
   }
   function undecorateSlot(card) {
     removeArt(card);
-    card.querySelectorAll("[data-iw-village-owned]").forEach((el) => el.remove());
+    card.querySelectorAll("[data-iw-village-owned]").forEach((el2) => el2.remove());
     card.querySelectorAll("[data-iw-tooltip-trigger]").forEach(clearTrigger);
     clearTrigger(card);
     for (const attr of [
@@ -5582,7 +5591,7 @@
       "data-iw-village-art"
     ]) {
       unmark(card, attr);
-      card.querySelectorAll(`[${attr}]`).forEach((el) => el.removeAttribute(attr));
+      card.querySelectorAll(`[${attr}]`).forEach((el2) => el2.removeAttribute(attr));
     }
     cardSignatures.delete(card);
   }
@@ -5592,7 +5601,7 @@
     return `${norm2(head?.textContent)} ${controls} ${nativeChildren(card).length} ${ItemDatabase.revision()}`;
   }
   function houseTier(card, nameEl) {
-    const tierLine = [...card.querySelectorAll("p")].map((el) => norm2(el.textContent)).find((text) => /^current tier\s*:/i.test(text));
+    const tierLine = [...card.querySelectorAll("p")].map((el2) => norm2(el2.textContent)).find((text) => /^current tier\s*:/i.test(text));
     const digits = tierLine ? /^current tier\s*:\s*(\d+)/i.exec(tierLine) : null;
     if (digits) return Number(digits[1]) || null;
     const named = VILLAGE_HOUSES[label(nameEl?.textContent).toLowerCase()];
@@ -5615,7 +5624,7 @@
   function decorateHousing(root) {
     const card = root.querySelector(".compact-panel");
     if (!card) return false;
-    const lines = [...card.children].filter((el) => el.tagName === "P");
+    const lines = [...card.children].filter((el2) => el2.tagName === "P");
     const nameEl = lines[0] || null;
     if (!nameEl) return false;
     const tier = houseTier(card, nameEl);
@@ -5648,7 +5657,7 @@
       return;
     }
     mark2(root, "data-iw-village", "addons");
-    const intro = [...root.children].find((el) => el.tagName === "P");
+    const intro = [...root.children].find((el2) => el2.tagName === "P");
     mark2(intro, "data-iw-village-role", "intro");
     for (const card of root.querySelectorAll(".compact-panel")) {
       if (card.querySelector(".compact-panel")) continue;
@@ -5665,7 +5674,7 @@
   function clearVillagePanel(root) {
     if (!root) return;
     root.querySelectorAll(".compact-panel").forEach(undecorateSlot);
-    root.querySelectorAll("[data-iw-village-owned]").forEach((el) => el.remove());
+    root.querySelectorAll("[data-iw-village-owned]").forEach((el2) => el2.remove());
     root.querySelectorAll("[data-iw-tooltip-trigger]").forEach(clearTrigger);
     for (const attr of [
       "data-iw-village",
@@ -5677,7 +5686,7 @@
       "data-iw-village-pip"
     ]) {
       if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
-      root.querySelectorAll(`[${attr}]`).forEach((el) => el.removeAttribute(attr));
+      root.querySelectorAll(`[${attr}]`).forEach((el2) => el2.removeAttribute(attr));
     }
   }
 
@@ -5997,11 +6006,11 @@
     return { tier, capacity: addons.totalSlots, slots };
   }
   function own(tag, cls, text) {
-    const el = document.createElement(tag);
-    el.className = cls;
-    el.dataset.iwVillageSceneOwned = "1";
-    if (text) el.textContent = text;
-    return el;
+    const el2 = document.createElement(tag);
+    el2.className = cls;
+    el2.dataset.iwVillageSceneOwned = "1";
+    if (text) el2.textContent = text;
+    return el2;
   }
   function art(file, fallback2) {
     if (!file) return own("span", "iw-vs-placeholder", fallback2);
@@ -6212,7 +6221,7 @@
       debris: battle ? envelope(t, 6.25, 6.45, 7.7, 9.5) : 0
     };
   }
-  function createArenaScene(canvas, { background, smoke, ruptureOverlay, maxWidth } = {}) {
+  function createArenaScene(canvas, { background, ruptureOverlay, maxWidth, cloudAtlas, smokeAtlas, steamAtlas, strength = 0.75 } = {}) {
     const sourceWidth = background.naturalWidth || background.width, sourceHeight = background.naturalHeight || background.height;
     const scale = Math.min(1, (maxWidth || sourceWidth) / sourceWidth);
     const width = Math.round(sourceWidth * scale), height = Math.round(sourceHeight * scale);
@@ -6241,14 +6250,45 @@
     };
     const dust = Array.from({ length: 140 }, () => ({ x: random(), offset: random(), s: 0.7 + random() * 1.8, drift: random() * 2 - 1 }));
     const debris = Array.from({ length: 26 }, () => ({ x: random(), v: random(), s: 2 + random() * 5, spin: random() * 2 - 1, delay: random() * 0.3 }));
+    const atlas = (image) => Array.from({ length: 4 }, (_, index) => {
+      const c = layer(384, 256), cx = c.getContext("2d", { willReadFrequently: true });
+      if (!image) return { image: c, x: 0, y: 0, w: 384, h: 256 };
+      const iw = (image.naturalWidth || image.width) / 2, ih = (image.naturalHeight || image.height) / 2;
+      cx.drawImage(image, index % 2 * iw, Math.floor(index / 2) * ih, iw, ih, 0, 0, 384, 256);
+      const data = cx.getImageData(0, 0, 384, 256);
+      let left = 384, top = 256, right = 0, bottom = 0;
+      for (let y = 0; y < 256; y++) for (let x = 0; x < 384; x++) {
+        const k = (y * 384 + x) * 4 + 3, edge = Math.min(x, y, 383 - x, 255 - y) / 16;
+        data.data[k] *= Math.min(1, Math.max(0, edge));
+        if (data.data[k] > 16) {
+          left = Math.min(left, x);
+          top = Math.min(top, y);
+          right = Math.max(right, x);
+          bottom = Math.max(bottom, y);
+        }
+      }
+      cx.putImageData(data, 0, 0);
+      if (left > right) return { image: c, x: 0, y: 0, w: 384, h: 256 };
+      return { image: c, x: Math.max(0, left - 8), y: Math.max(0, top - 8), w: Math.min(384, right + 9) - Math.max(0, left - 8), h: Math.min(256, bottom + 9) - Math.max(0, top - 8) };
+    });
+    const clouds = atlas(cloudAtlas), breath = atlas(smokeAtlas), steam = atlas(steamAtlas);
+    const plume = (target, sprite, x, y, w, h, alpha, angle = 0, flip = false) => {
+      if (alpha < 1e-3) return;
+      target.save();
+      target.globalAlpha = alpha * strength;
+      target.translate(x, y);
+      target.rotate(angle);
+      target.scale(flip ? -1 : 1, 1);
+      target.drawImage(sprite.image, sprite.x, sprite.y, sprite.w, sprite.h, -w / 2, -h / 2, w, h);
+      target.restore();
+    };
     const skyLayers = [
       { points: [[0.225, 0], [0.61, 0], [0.602, 0.065], [0.582, 0.1], [0.57, 0.15], [0.495, 0.15], [0.43, 0.11], [0.41, 0.085], [0.37, 0.1], [0.32, 0.07], [0.225, 0.07]], dx: 100, dy: 28, offset: 0, alpha: 0.96 },
       { points: [[0.4, 0], [0.588, 0], [0.588, 0.067], [0.572, 0.13], [0.52, 0.16], [0.45, 0.12], [0.4, 0.075]], dx: -72, dy: 32, offset: 0.65, alpha: 0.88 },
       { points: [[0, 0], [0.23, 0], [0.22, 0.057], [0.18, 0.06], [0.145, 0.02], [0.1, 0.01], [0.072, 0.035], [0.045, 0.08], [0, 0.085]], dx: 80, dy: 16, offset: 1.4, alpha: 0.84 }
     ].map((f) => {
       const x = Math.max(0, Math.floor(Math.min(...f.points.map((p) => p[0])) * width) - 39), y = 0;
-      const w = Math.min(width, Math.ceil(Math.max(...f.points.map((p) => p[0])) * width) + 39) - x;
-      const h = Math.ceil(Math.max(...f.points.map((p) => p[1])) * height) + 39;
+      const w = Math.min(width, Math.ceil(Math.max(...f.points.map((p) => p[0])) * width) + 39) - x, h = Math.ceil(Math.max(...f.points.map((p) => p[1])) * height) + 39;
       const mask = layer(w, h), mc = mask.getContext("2d");
       mc.filter = "blur(13px)";
       mc.fillStyle = "#fff";
@@ -6256,59 +6296,46 @@
       f.points.forEach(([a, b], i) => i ? mc.lineTo(a * width - x, b * height - y) : mc.moveTo(a * width - x, b * height - y));
       mc.closePath();
       mc.fill();
-      const source = layer(w, h), sourceCtx = source.getContext("2d");
-      sourceCtx.drawImage(background, -x, -y);
-      sourceCtx.globalCompositeOperation = "destination-in";
-      sourceCtx.drawImage(mask, 0, 0);
       const surface = layer(w, h);
-      return { ...f, x, y, w, h, mask, source, surface, sc: surface.getContext("2d") };
+      return { ...f, x, y, w, h, mask, surface, sc: surface.getContext("2d") };
     });
-    const skySmoke = layer(512, 256), ss = skySmoke.getContext("2d");
-    if (smoke) {
-      ss.drawImage(smoke, 0, 0, 512, 256);
-      const p = ss.getImageData(0, 0, 512, 256);
-      for (let i = 0; i < p.data.length; i += 4) {
-        const tone2 = p.data[i] * 0.3 + p.data[i + 1] * 0.5 + p.data[i + 2] * 0.2;
-        p.data[i] = tone2 * 0.76 + 29;
-        p.data[i + 1] = tone2 * 0.53 + 17;
-        p.data[i + 2] = tone2 * 0.47 + 18;
-      }
-      ss.putImageData(p, 0, 0);
-    }
     function paintedClouds(phase2) {
       ctx.save();
       for (const [index, f] of skyLayers.entries()) {
-        const a = TAU * phase2 * 2 + f.offset, x = f.dx * Math.sin(a), y = f.dy * Math.sin(a + 0.7);
-        const sc = f.sc;
+        const a = TAU * phase2 * 2 + f.offset, sc = f.sc;
         sc.globalCompositeOperation = "source-over";
         sc.clearRect(0, 0, f.w, f.h);
-        if (index !== 2) {
-          sc.save();
-          sc.translate(f.w * 0.5 + x, f.h * 0.35 + y);
-          sc.rotate(0.055 * Math.sin(a + 0.4));
-          sc.scale(1.1 + 0.09 * Math.sin(a), 1.16 + 0.13 * Math.sin(a + 1.1));
-          sc.drawImage(f.source, -f.w * 0.5, -f.h * 0.35);
-          sc.restore();
+        for (let i = 0; i < 4; i++) {
+          const u = frac(phase2 * 2 + i / 4 + index * 0.17), fade3 = Math.sin(Math.PI * u) ** 2;
+          const px = width * ((index === 2 ? -0.05 : 0.21) + i * 0.065 + u * 0.12) - f.x + f.dx * Math.sin(a) * 0.35;
+          const py = height * (0.016 + i % 2 * 0.037 - u * 0.025) - f.y + f.dy * Math.sin(a + 0.7) * 0.25;
+          plume(sc, clouds[(i + index) % 4], px, py, width * (0.18 + u * 0.07), height * (0.12 + u * 0.04), fade3 * 0.38, -0.035 + 0.055 * Math.sin(a + i));
         }
-        for (let i = 0; i < 7; i++) {
-          const u = frac(phase2 * 4 + i / 7 + index * 0.17), fade = Math.sin(Math.PI * u) ** 2;
-          const px = width * ((index === 2 ? -0.08 : 0.18) + i * 0.055 + u * 0.18) - f.x, py = height * (0.015 + i % 3 * 0.033 - u * 0.044) - f.y;
-          const w = width * (0.14 + u * 0.15), h = height * (0.1 + u * 0.11);
-          sc.save();
-          sc.globalAlpha = fade * (index === 1 ? 0.38 : 0.52);
-          sc.translate(px, py);
-          sc.rotate(-0.24 + 0.55 * u);
-          sc.scale(i % 2 ? -1 : 1, 1);
-          sc.drawImage(skySmoke, -w / 2, -h / 2, w, h);
-          sc.restore();
-        }
-        f.sc.globalCompositeOperation = "destination-in";
-        f.sc.drawImage(f.mask, 0, 0);
+        sc.globalCompositeOperation = "destination-in";
+        sc.drawImage(f.mask, 0, 0);
         ctx.globalAlpha = f.alpha;
         ctx.drawImage(f.surface, f.x, f.y);
       }
       ctx.restore();
     }
+    const cinders = Array.from({ length: 4 }, (_, i) => {
+      const c = layer(24, 24), x = c.getContext("2d"), g = x.createRadialGradient(12, 12, 0, 12, 12, 11);
+      g.addColorStop(0, "rgba(255,163,63,.55)");
+      g.addColorStop(0.35, "rgba(221,83,26,.22)");
+      g.addColorStop(1, "rgba(215,75,22,0)");
+      x.fillStyle = g;
+      x.fillRect(0, 0, 24, 24);
+      x.fillStyle = i % 2 ? "#e29b59" : "#dc7841";
+      x.beginPath();
+      x.moveTo(11, 6 + i);
+      x.lineTo(14 + i % 2, 10);
+      x.lineTo(13, 16);
+      x.lineTo(9, 14);
+      x.lineTo(10, 9);
+      x.closePath();
+      x.fill();
+      return c;
+    });
     const furnace = layer(width, height), fc = furnace.getContext("2d", { willReadFrequently: true });
     fc.drawImage(background, 0, 0);
     const heat = fc.getImageData(0, 0, width, height);
@@ -6343,23 +6370,23 @@
       ctx.drawImage(furnacePatch, furnaceX, furnaceY);
       ctx.restore();
       for (let i = 0; i < 4; i++) {
-        const u = frac(phase2 * 4 + i / 4 + 0.07), fade = Math.sin(Math.PI * u) ** 2;
-        cloud(width * (0.618 - u * 0.09), height * (0.28 - u * 0.083), width * (0.035 + u * 0.14), height * (0.024 + u * 0.1), fade * (0.18 + 0.17 * lift), u, i % 2 === 1);
+        const u = frac(phase2 * 4 + i / 4 + 0.07), fade3 = Math.sin(Math.PI * u) ** 2;
+        cloud(width * (0.618 - u * 0.09), height * (0.28 - u * 0.083), width * (0.035 + u * 0.14), height * (0.024 + u * 0.1), fade3 * (0.18 + 0.17 * lift), u, i % 2 === 1, "smoke", i);
       }
       for (let i = 0; i < 3; i++) {
-        const u = frac(phase2 * 2 + i / 3 + 0.31), fade = Math.sin(Math.PI * u) ** 2;
-        cloud(width * (0.71 + i * 0.027 - u * 0.055), height * (0.355 - u * 0.08), width * (0.12 + u * 0.13), height * (0.06 + u * 0.075), fade * 0.23, u, i % 2 === 1);
+        const u = frac(phase2 * 2 + i / 3 + 0.31), fade3 = Math.sin(Math.PI * u) ** 2;
+        cloud(width * (0.71 + i * 0.027 - u * 0.055), height * (0.355 - u * 0.08), width * (0.12 + u * 0.13), height * (0.06 + u * 0.075), fade3 * 0.23, u, i % 2 === 1, "smoke", i + 2);
       }
     }
     function eyeStreaming(phase2) {
-      const x = width * 0.626, y = height * 0.219, breath = 0.5 - 0.5 * Math.cos(TAU * phase2 * 2);
+      const x = width * 0.626, y = height * 0.219, breath2 = 0.5 - 0.5 * Math.cos(TAU * phase2 * 2);
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      glow(x, y, width * 9e-3, height * 0.013, "255,143,46", 0.09 + 0.07 * breath);
+      glow(x, y, width * 9e-3, height * 0.013, "255,143,46", 0.09 + 0.07 * breath2);
       for (let i = 0; i < 3; i++) {
         const a = TAU * phase2 * 2 + i * 1.7, length = width * (0.018 + 7e-3 * Math.sin(a)), rise = height * (0.01 + 4e-3 * Math.cos(a));
         const g = ctx.createLinearGradient(x, y, x + length, y - rise);
-        g.addColorStop(0, `rgba(255,184,82,${0.2 + 0.12 * breath})`);
+        g.addColorStop(0, `rgba(255,184,82,${0.2 + 0.12 * breath2})`);
         g.addColorStop(0.3, "rgba(246,133,43,.13)");
         g.addColorStop(1, "rgba(220,87,20,0)");
         ctx.strokeStyle = g;
@@ -6370,9 +6397,9 @@
         ctx.stroke();
       }
       for (let i = 0; i < 6; i++) {
-        const u = frac(phase2 * 4 + i / 6), fade = Math.sin(Math.PI * u) ** 2;
+        const u = frac(phase2 * 4 + i / 6), fade3 = Math.sin(Math.PI * u) ** 2;
         const px = x + width * 0.03 * u, py = y - height * 0.016 * u + Math.sin(u * Math.PI * 2 + i) * 1.3 * u;
-        glow(px, py, 1.6, 1.1, "255,164,57", fade * 0.28);
+        glow(px, py, 1.6, 1.1, "255,164,57", fade3 * 0.28);
       }
       ctx.restore();
     }
@@ -6428,15 +6455,9 @@
       }
       ctx.restore();
     }
-    function cloud(x, y, w, h, alpha, u, flip = false) {
-      if (!smoke || alpha <= 0) return;
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.translate(x, y);
-      ctx.rotate(0.11 * Math.sin(TAU * u));
-      ctx.scale(flip ? -1 : 1, 1);
-      ctx.drawImage(smoke, -w / 2, -h / 2, w, h);
-      ctx.restore();
+    function cloud(x, y, w, h, alpha, u, flip = false, material = "smoke", part = 0) {
+      const sprites = material === "steam" ? steam : breath;
+      plume(ctx, sprites[part % 4], x, y, w, h, alpha, 0.11 * Math.sin(TAU * u), flip);
     }
     function glow(x, y, rx, ry, color, alpha) {
       ctx.save();
@@ -6512,32 +6533,38 @@
       if (ambient && eyeLight) eyeStreaming(phase2);
       if (ambient && atmosphere) {
         for (let i = 0; i < 7; i++) {
-          const u = frac(phase2 * 2 + i / 7), fade = Math.sin(Math.PI * u) ** 2;
+          const u = frac(phase2 * 2 + i / 7), fade3 = Math.sin(Math.PI * u) ** 2;
           cloud(
             width * (0.12 + i * 0.12) - u * width * 0.1,
             height * (0.56 + i % 2 * 0.025) - u * height * 0.09,
             width * (0.25 + u * 0.14),
             height * (0.13 + u * 0.065),
-            fade * 0.25,
+            fade3 * 0.25,
             u,
-            i % 2 === 1
+            i % 2 === 1,
+            "steam",
+            i % 2
           );
         }
         for (const [x, y] of [[0.485, 0.565], [0.921, 0.617]]) for (let i = 0; i < 4; i++) {
-          const u = frac(phase2 * 4 + i / 4 + x), fade = Math.sin(Math.PI * u) ** 2;
-          cloud(width * (x - u * 0.052), height * (y - u * 0.16), width * (0.045 + u * 0.16), height * (0.032 + u * 0.14), fade * 0.31, u, i % 2 === 1);
+          const u = frac(phase2 * 4 + i / 4 + x), fade3 = Math.sin(Math.PI * u) ** 2;
+          cloud(width * (x - u * 0.052), height * (y - u * 0.16), width * (0.045 + u * 0.16), height * (0.032 + u * 0.14), fade3 * 0.31, u, i % 2 === 1, "steam", 2 + i % 2);
         }
         for (let i = 0; i < 4; i++) {
-          const u = frac(phase2 * 2 + i / 4 + 0.23), fade = Math.sin(Math.PI * u) ** 2;
-          cloud(width * (0.08 + i * 0.28) + u * width * 0.1, height * 0.98 - u * height * 0.075, width * (0.28 + u * 0.12), height * 0.16, fade * 0.23, u, i % 2 === 1);
+          const u = frac(phase2 * 2 + i / 4 + 0.23), fade3 = Math.sin(Math.PI * u) ** 2;
+          cloud(width * (0.08 + i * 0.28) + u * width * 0.1, height * 0.98 - u * height * 0.075, width * (0.28 + u * 0.12), height * 0.16, fade3 * 0.23, u, i % 2 === 1, "steam", i % 2);
         }
         ctx.save();
         ctx.globalCompositeOperation = "lighter";
-        for (const p of dust) {
+        for (const [i, p] of dust.entries()) {
           const u = frac(phase2 * 3 + p.offset), alpha = Math.sin(Math.PI * u) ** 2 * 0.52;
           const x = p.x * width + p.drift * u * width * 0.12, y = height * (1.04 - u * 1.12);
-          ctx.fillStyle = `rgba(228,128,65,${alpha})`;
-          ctx.fillRect(x, y, p.s, p.s * 1.4);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.translate(x, y);
+          ctx.rotate(p.drift * 0.4 + phase2 * TAU);
+          ctx.drawImage(cinders[i % 4], -p.s * 1.8, -p.s * 2.2, p.s * 3.6, p.s * 4.4);
+          ctx.restore();
         }
         ctx.restore();
       }
@@ -6553,6 +6580,7 @@
 
   // src/modules/AshmawScene.js
   var scenes = /* @__PURE__ */ new Map();
+  var bossSelector = 'img[src*="boss-ashmaw"],img[alt^="Ashmaw"]';
   function createAshmawRenderer(canvas, environment, smoke, options = {}) {
     return createArenaScene(canvas, { background: environment, smoke, ...options });
   }
@@ -6573,7 +6601,7 @@
   }
   function reconcileAshmawScene(arena) {
     pruneAshmawScenes();
-    const boss = arena.querySelector('img[src*="boss-ashmaw"],img[alt^="Ashmaw"]');
+    const boss = arena.querySelector(bossSelector);
     const nativeBackground = arena.style.getPropertyValue("--raid-bg-image");
     if (!boss || nativeBackground && !/ashmaw/i.test(nativeBackground)) {
       clearAshmawScene(arena);
@@ -6587,8 +6615,8 @@
     const art2 = document.createElement("div");
     art2.setAttribute("data-iw-ashmaw-art", "");
     art2.setAttribute("aria-hidden", "true");
-    const env = new Image(), smoke = new Image(), canvas = document.createElement("canvas");
-    env.crossOrigin = smoke.crossOrigin = "anonymous";
+    const env = new Image(), textures = { cloudAtlas: new Image(), smokeAtlas: new Image(), steamAtlas: new Image() }, canvas = document.createElement("canvas");
+    for (const image of [env, ...Object.values(textures)]) image.crossOrigin = "anonymous";
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
@@ -6624,20 +6652,28 @@
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
     });
-    const loaded = Promise.all([load2(env), load2(smoke).catch(() => null)]);
+    const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
     env.src = assetUrl("assets/raids/ashmaw/arena.png");
-    smoke.src = assetUrl("assets/raids/ashmaw/smoke.png");
-    loaded.then(([background, plumes]) => {
+    for (const [key, name] of Object.entries({ cloudAtlas: "clouds", smokeAtlas: "furnace-smoke", steamAtlas: "steam" })) textures[key].src = assetUrl("assets/raids/ashmaw/" + name + ".png");
+    loaded.then(([background, cloudAtlas, smokeAtlas, steamAtlas]) => {
       if (state.disposed || !arena.isConnected) return;
+      const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
+      if (arena.querySelector(bossSelector) !== boss || boss.parentElement !== state.stage || nativeBackground2 && !/ashmaw/i.test(nativeBackground2)) {
+        clearAshmawScene(arena);
+        return;
+      }
       arena.setAttribute("data-iw-raid-scene", "ashmaw");
       state.stage.setAttribute("data-iw-raid-boss-stage", "ashmaw");
       try {
-        state.renderer = createAshmawRenderer(canvas, background, plumes, { maxWidth: 1440 });
+        state.renderer = createAshmawRenderer(canvas, background, null, { cloudAtlas, smokeAtlas, steamAtlas, maxWidth: 1440 });
+        if (!state.renderer) return;
+        state.renderer.render(0);
       } catch {
+        state.renderer?.destroy();
+        state.renderer = null;
+        return;
       }
-      if (!state.renderer) return;
       art2.setAttribute("data-iw-animated", "");
-      state.renderer.render(0);
       if (typeof IntersectionObserver === "function") {
         state.visible = new IntersectionObserver(([entry2]) => {
           state.onScreen = entry2.isIntersecting;
@@ -6657,22 +6693,2174 @@
     for (const arena of scenes.keys()) if (!arena.isConnected) clearAshmawScene(arena);
   }
 
-  // src/modules/GuildPanels.js
-  var norm3 = (value) => String(value || "").replace(/\s+/g, " ").trim();
-  var label2 = (value) => norm3(value).replace(/^[^\p{L}\p{N}]+/u, "");
-  var ROLE = "data-iw-guild-role";
-  var ATTRS = ["data-iw-guild", "data-iw-guild-card", ROLE, "data-iw-guild-tone", "data-iw-guild-state"];
-  function mark3(el, key, value) {
-    if (!el) return;
-    if (value == null) {
-      if (el.hasAttribute(key)) el.removeAttribute(key);
+  // src/modules/ThessalyArenaRenderer.js
+  var THESSALY_PERIOD = 16;
+  var TAU2 = Math.PI * 2;
+  var frac2 = (x) => x - Math.floor(x);
+  function createThessalyArenaScene(canvas, { background, clouds: cloudArt, mist, hair, body, maxWidth } = {}) {
+    const sw = background.naturalWidth || background.width, sh = background.naturalHeight || background.height;
+    const scale = Math.min(1, (maxWidth || sw) / sw), width = Math.round(sw * scale), height = Math.round(sh * scale);
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) return null;
+    const buffers = [];
+    let destroyed = false;
+    const layer = (w, h) => {
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      buffers.push(c);
+      return c;
+    };
+    if (scale < 1) {
+      const c = layer(width, height);
+      c.getContext("2d").drawImage(background, 0, 0, width, height);
+      background = c;
+    }
+    const atlas = (image) => Array.from({ length: 4 }, (_, index) => {
+      const c = layer(384, 384), cx = c.getContext("2d");
+      if (!image) return c;
+      const w = (image.naturalWidth || image.width) / 2, h = (image.naturalHeight || image.height) / 2;
+      cx.drawImage(image, index % 2 * w, Math.floor(index / 2) * h, w, h, 0, 0, 384, 384);
+      const p = cx.getImageData(0, 0, 384, 384);
+      for (let y = 0; y < 384; y++) for (let x = 0; x < 384; x++) {
+        const edge = Math.min(x, y, 383 - x, 383 - y), i = (y * 384 + x) * 4 + 3;
+        p.data[i] *= Math.min(1, edge / 18);
+      }
+      cx.putImageData(p, 0, 0);
+      return c;
+    });
+    const storm = atlas(cloudArt), fog = atlas(mist), bodyParts = atlas(body);
+    const hairTexture = layer(768, 384);
+    if (hair) hairTexture.getContext("2d").drawImage(hair, 0, 0, 768, 384);
+    const clouds = [
+      { points: [[0.17, 0], [0.67, 0], [0.67, 0.17], [0.56, 0.235], [0.48, 0.255], [0.47, 0.095], [0.36, 0.095], [0.35, 0.23], [0.3, 0.26], [0.22, 0.23], [0.17, 0.08]] }
+    ].map((f) => {
+      const x = Math.max(0, Math.floor(Math.min(...f.points.map((p) => p[0])) * width) - 36), w = Math.min(width, Math.ceil(Math.max(...f.points.map((p) => p[0])) * width) + 36) - x;
+      const h = Math.ceil(Math.max(...f.points.map((p) => p[1])) * height) + 36, mask = layer(w, h), mc = mask.getContext("2d");
+      mc.filter = "blur(12px)";
+      mc.fillStyle = "#fff";
+      mc.beginPath();
+      f.points.forEach(([a, b], i) => i ? mc.lineTo(a * width - x, b * height) : mc.moveTo(a * width - x, b * height));
+      mc.closePath();
+      mc.fill();
+      mc.filter = "none";
+      mc.clearRect(width * 0.383 - x, height * 0.135, width * 0.057, height * 0.21);
+      const surface = layer(w, h);
+      return { ...f, x, w, h, mask, surface, sc: surface.getContext("2d") };
+    });
+    let seed = 723;
+    const random = () => {
+      seed = Math.imul(seed, 1664525) + 1013904223 >>> 0;
+      return seed / 4294967296;
+    };
+    const spores = Array.from({ length: 110 }, () => ({ x: random(), offset: random(), size: 0.6 + random() * 1.5, drift: random() * 2 - 1 }));
+    const banks = [
+      { x: 0.02, y: 0.69, w: 0.24, h: 0.16, flow: 0.03, rise: 0.05, cycles: 1, alpha: 0.22 },
+      { x: 0.17, y: 0.59, w: 0.3, h: 0.09, flow: 0.055, rise: 0.025, cycles: 2, alpha: 0.17 },
+      { x: 0.31, y: 0.56, w: 0.21, h: 0.17, flow: -0.025, rise: 0.075, cycles: 1, alpha: 0.23 },
+      { x: 0.48, y: 0.6, w: 0.34, h: 0.065, flow: 0.04, rise: 0.014, cycles: 2, alpha: 0.15 },
+      { x: 0.63, y: 0.54, w: 0.21, h: 0.16, flow: 0.025, rise: 0.08, cycles: 2, alpha: 0.22 },
+      { x: 0.81, y: 0.57, w: 0.28, h: 0.095, flow: 0.07, rise: 0.035, cycles: 3, alpha: 0.16 },
+      { x: 0.96, y: 0.66, w: 0.24, h: 0.18, flow: -0.045, rise: 0.055, cycles: 1, alpha: 0.22 },
+      { x: 1, y: 0.79, w: 0.3, h: 0.08, flow: -0.075, rise: 0.018, cycles: 2, alpha: 0.17 },
+      ...Array.from({ length: 4 }, (_, i) => ({ x: -0.04 + i * 0.35, y: 1.01, w: 0.36, h: i % 2 ? 0.07 : 0.12, flow: 0.065, rise: 0.035, cycles: i % 2 + 1, alpha: 0.14 })),
+      { x: 0.68, y: 0.575, w: 0.24, h: 0.18, flow: 0.05, rise: 0.1, cycles: 1, alpha: 0.22 },
+      { x: 0.75, y: 0.54, w: 0.17, h: 0.105, flow: 0.07, rise: 0.065, cycles: 2, alpha: 0.16 }
+    ];
+    const fogPuffs = banks.flatMap((b) => Array.from({ length: 3 }, () => ({
+      ...b,
+      x: b.x + (random() - 0.5) * 0.025,
+      y: b.y + (random() - 0.5) * 0.018,
+      w: b.w * (0.78 + random() * 0.44),
+      h: b.h * (0.72 + random() * 0.5),
+      offset: random(),
+      angle: (random() - 0.5) * 0.22,
+      grow: 0.1 + random() * 0.35,
+      alpha: b.alpha * (0.68 + random() * 0.32) * 0.5,
+      flip: random() < 0.5
+    })));
+    const skyPuffs = [
+      { x: 0.22, y: 5e-3, w: 0.25, h: 0.21, offset: 0.07, variant: 0, alpha: 0.21, flow: 0.052 },
+      { x: 0.46, y: 0.055, w: 0.28, h: 0.22, offset: 0.36, variant: 1, alpha: 0.19, flow: 0.055 },
+      { x: 0.32, y: 0.2, w: 0.23, h: 0.17, offset: 0.64, variant: 2, alpha: 0.14, flow: 0.044 },
+      { x: 0.63, y: 3e-3, w: 0.22, h: 0.2, offset: 0.84, variant: 3, alpha: 0.17, flow: 0.04 }
+    ];
+    const hazeMask = layer(width, height), hmc = hazeMask.getContext("2d");
+    hmc.drawImage(background, 0, 0);
+    const hazePixels = hmc.getImageData(0, 0, width, height), clamp = (v) => Math.max(0, Math.min(1, v));
+    for (let i = 0; i < hazePixels.data.length; i += 4) {
+      const y = Math.floor(i / 4 / width) / height, r = hazePixels.data[i], g = hazePixels.data[i + 1], b = hazePixels.data[i + 2];
+      const strength = clamp((g - (r + b) * 0.5 - 5) / 15) * clamp((g - b - 2) / 12) * clamp((y - 0.5) / 0.06);
+      hazePixels.data[i] = hazePixels.data[i + 1] = hazePixels.data[i + 2] = 255;
+      hazePixels.data[i + 3] = Math.round(strength * 255);
+    }
+    hmc.putImageData(hazePixels, 0, 0);
+    const hazeFeather = layer(width, height), hfc = hazeFeather.getContext("2d");
+    hfc.filter = "blur(5px)";
+    hfc.drawImage(hazeMask, 0, 0);
+    const hazeSurface = layer(width, height), hsc = hazeSurface.getContext("2d");
+    const hazeSources = [[0.025, 0.68], [0.13, 0.66], [0.24, 0.65], [0.42, 0.64], [0.57, 0.64], [0.7, 0.63], [0.84, 0.66], [0.96, 0.7], [0.055, 0.82], [0.955, 0.83]];
+    const hazeWisps = hazeSources.flatMap(([x, y], index) => Array.from({ length: 3 }, () => ({ x, y, offset: random(), flow: (x < 0.5 ? 1 : -1) * (0.035 + random() * 0.04), rise: 0.018 + random() * 0.03, w: 0.085 + random() * 0.08, h: 0.025 + random() * 0.025, flip: random() < 0.5, cycles: index % 3 === 0 ? 2 : 1 })));
+    function plume(target, texture, x, y, w, h, alpha, u, flip = false, angle = 0, turn = 0.09) {
+      if (alpha <= 0) return;
+      target.save();
+      target.globalAlpha = alpha;
+      target.translate(x, y);
+      target.rotate(angle + turn * Math.sin(TAU2 * u));
+      target.scale(flip ? -1 : 1, 1);
+      target.drawImage(texture, -w / 2, -h / 2, w, h);
+      target.restore();
+    }
+    function glow(x, y, rx, ry, color, alpha) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(rx, ry);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      g.addColorStop(0, `rgba(${color},${alpha})`);
+      g.addColorStop(1, `rgba(${color},0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(-1, -1, 2, 2);
+      ctx.restore();
+    }
+    function sky(phase2) {
+      for (const f of clouds) {
+        const sc = f.sc;
+        sc.globalCompositeOperation = "source-over";
+        sc.clearRect(0, 0, f.w, f.h);
+        for (const p of skyPuffs) {
+          const u = frac2(phase2 + p.offset), fade3 = Math.sin(Math.PI * u) ** 2, swell = 1 + 0.04 * u;
+          plume(sc, storm[p.variant], width * (p.x + p.flow * (u - 0.5)) - f.x, height * (p.y - u * 9e-3), width * p.w * swell, height * p.h * swell, p.alpha * fade3, u, false, 0, 0);
+        }
+        sc.globalCompositeOperation = "destination-in";
+        sc.drawImage(f.mask, 0, 0);
+        ctx.drawImage(f.surface, f.x, 0);
+      }
+    }
+    function miasma(phase2) {
+      for (const [index, p] of fogPuffs.entries()) {
+        const u = frac2(phase2 * p.cycles + p.offset), fade3 = Math.sin(Math.PI * u) ** 2;
+        plume(ctx, fog[index % 4], width * (p.x + p.flow * u), height * (p.y - p.rise * u), width * p.w * (0.86 + p.grow * u), height * p.h * (0.9 + p.grow * u), fade3 * p.alpha, u, p.flip, p.angle, 0.035);
+      }
+    }
+    function courtyardHaze(phase2) {
+      hsc.globalCompositeOperation = "source-over";
+      hsc.clearRect(0, 0, width, height);
+      for (const [index, p] of hazeWisps.entries()) {
+        const u = frac2(phase2 * p.cycles + p.offset), fade3 = Math.sin(Math.PI * u) ** 2;
+        const x = width * (p.x + p.flow * u), y = height * (p.y - p.rise * u);
+        plume(hsc, fog[index % 4], x, y, width * p.w * (1 + 0.45 * u), height * p.h * (1 + 0.5 * u), fade3 * 0.26, u, p.flip, 0, 0.018);
+      }
+      hsc.globalCompositeOperation = "destination-in";
+      hsc.drawImage(hazeFeather, 0, 0);
+      ctx.drawImage(hazeSurface, 0, 0);
+    }
+    function aura(phase2) {
+      const breath = 0.5 - 0.5 * Math.cos(TAU2 * phase2 * 2);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      for (const [x, y] of [[0.696, 0.079], [0.703, 0.078]]) {
+        glow(width * x, height * y, width * 7e-3, height * 0.012, "151,210,227", 0.055 + 0.07 * breath);
+        for (let i = 0; i < 3; i++) {
+          const u = frac2(phase2 * 2 + i / 3 + x), fade3 = Math.sin(Math.PI * u) ** 2;
+          glow(width * (x + u * 0.023), height * (y - u * 0.028), width * 12e-4, height * 2e-3, "157,208,228", fade3 * 0.25);
+        }
+      }
+      for (const [x, y, side] of [[0.563, 0.282, -1], [0.841, 0.35, 1]]) {
+        glow(width * x, height * y, width * 0.026, height * 0.03, "109,161,185", 0.02 + 0.026 * breath);
+        for (let i = 0; i < 4; i++) {
+          const u = frac2(phase2 * 2 + i / 4 + 0.19), fade3 = Math.sin(Math.PI * u) ** 2;
+          const startX = width * x, startY = height * y, endX = startX + width * 0.041 * u * side, endY = startY - height * 0.071 * u;
+          const g = ctx.createLinearGradient(startX, startY, endX || startX + 1, endY);
+          g.addColorStop(0, "rgba(149,189,213,0)");
+          g.addColorStop(0.6, `rgba(149,189,213,${fade3 * 0.12})`);
+          g.addColorStop(1, "rgba(149,189,213,0)");
+          ctx.strokeStyle = g;
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.bezierCurveTo(startX - width * 0.02 * side, startY - height * 0.04 * u, endX + width * 0.01 * side, endY, endX, endY);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+      for (const [x, y, side] of [[0.563, 0.282, -1], [0.841, 0.35, 1]]) for (let i = 0; i < 3; i++) {
+        const u = frac2(phase2 * 2 + i / 3 + x), fade3 = Math.sin(Math.PI * u) ** 2;
+        plume(ctx, storm[i % 4], width * (x + side * u * 0.07), height * (y - u * 0.055), width * (0.025 + u * 0.065), height * (0.02 + u * 0.045), fade3 * 0.12, u, i % 2 === 1);
+      }
+    }
+    const cloudRig = [
+      { part: 3, x: 0.708, y: 0.476, w: 0.235, h: 0.245, joint: "waist", angle: 0, alpha: 0.16 },
+      { part: 2, x: 0.698, y: 0.404, w: 0.245, h: 0.185, joint: "waist", angle: -0.1, alpha: 0.18 },
+      { part: 1, x: 0.714, y: 0.3, w: 0.17, h: 0.24, joint: "shoulder", angle: 0.12, alpha: 0.14 },
+      { part: 0, x: 0.752, y: 0.235, w: 0.145, h: 0.17, joint: "shoulder", angle: -0.1, alpha: 0.13 },
+      { part: 0, x: 0.645, y: 0.204, w: 0.12, h: 0.14, joint: "shoulder", angle: 0.16, alpha: 0.11 }
+    ];
+    function cloudBody(phase2) {
+      const a = TAU2 * phase2, waist = 6e-3 * Math.sin(a), shoulder = waist + 5e-3 * Math.sin(a - 0.65);
+      for (const p of cloudRig) {
+        const joint = p.joint === "waist" ? waist : shoulder, pivotX = width * 0.705, pivotY = height * (p.joint === "waist" ? 0.47 : 0.38);
+        ctx.save();
+        ctx.translate(pivotX + width * 11e-4 * Math.sin(a), pivotY);
+        ctx.rotate(joint);
+        plume(ctx, bodyParts[p.part], width * p.x - pivotX, height * p.y - pivotY + height * 15e-4 * Math.sin(a - 0.4), width * p.w, height * p.h, p.alpha, phase2, false, p.angle, 0);
+        ctx.restore();
+      }
+    }
+    function windHair(phase2) {
+      const a = TAU2 * phase2, x = width * 0.711, y = height * 2e-3, w = width * 0.282, h = height * 0.157, segments = 40;
+      const bend = (u) => u * u * height * (7e-3 * Math.sin(a * 2 - u * 4) + 35e-4 * Math.sin(a * 3 - u * 6));
+      ctx.save();
+      ctx.globalAlpha = 0.36;
+      for (let i = 0; i < segments; i++) {
+        const u = i / segments, v = (i + 1) / segments, dx = w * u, dw = w / segments, dy = bend(u), slope = (bend(v) - dy) / dw;
+        ctx.setTransform(1, slope, 0, 1, x + dx, y + dy);
+        ctx.drawImage(hairTexture, 768 * u, 0, 768 / segments, 384, 0, 0, dw + 0.2, h);
+      }
+      ctx.restore();
+      for (let i = 0; i < 14; i++) {
+        const sx = width * (0.729 + i % 3 * 6e-3), sy = height * (0.047 + i * 64e-4), length = width * (0.168 + i % 5 * 0.012);
+        const wave = Math.sin(a * 2 - i * 0.36), tipY = sy - height * (0.018 + i * 1e-3) + height * 0.01 * wave;
+        const g = ctx.createLinearGradient(sx, sy, sx + length, tipY);
+        g.addColorStop(0, "rgba(185,206,211,0)");
+        g.addColorStop(0.26, "rgba(185,206,211,.18)");
+        g.addColorStop(1, "rgba(185,206,211,0)");
+        ctx.strokeStyle = g;
+        ctx.lineWidth = width * (38e-5 + i % 3 * 16e-5);
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.bezierCurveTo(sx + length * 0.3, sy + height * 9e-3 * Math.sin(a * 2 - i * 0.36 - 0.8), sx + length * 0.65, tipY + height * 0.02 * Math.sin(a * 2 - i * 0.36 - 0.5), sx + length, tipY);
+        ctx.stroke();
+      }
+    }
+    const arcPaths = [
+      [[0.66, 0.175], [0.633, 0.153], [0.605, 0.128], [0.562, 0.101], [0.535, 0.052]],
+      [[0.553, 0.29], [0.529, 0.267], [0.501, 0.278], [0.478, 0.235], [0.456, 0.221]],
+      [[0.65, 0.397], [0.616, 0.421], [0.576, 0.403], [0.552, 0.435], [0.521, 0.478]],
+      [[0.838, 0.355], [0.863, 0.367], [0.88, 0.348], [0.914, 0.389], [0.945, 0.412]],
+      [[0.854, 0.253], [0.874, 0.219], [0.902, 0.228], [0.93, 0.18], [0.964, 0.15]],
+      [[0.848, 0.151], [0.884, 0.146], [0.907, 0.107], [0.947, 0.087], [0.97, 0.037]],
+      [[0.81, 0.46], [0.843, 0.484], [0.871, 0.477], [0.894, 0.509], [0.939, 0.52]],
+      [[0.64, 0.475], [0.609, 0.49], [0.591, 0.522], [0.555, 0.511], [0.54, 0.552]]
+    ];
+    const roughen = (points) => {
+      const out = [points[0]];
+      for (let i = 1; i < points.length; i++) {
+        const [x, y] = points[i - 1], [ex, ey] = points[i];
+        for (let j = 1; j <= 3; j++) out.push(j === 3 ? [ex, ey] : [x + (ex - x) * j / 3 + (random() - 0.5) * 7e-3, y + (ey - y) * j / 3 + (random() - 0.5) * 0.014]);
+      }
+      return out;
+    };
+    const starts = [0.38, 1.91, 3.06, 4.62, 5.87, 7.11, 8.35, 10.18];
+    const bolts = arcPaths.flatMap((points, index) => [0, 1].map((pass) => {
+      const path = roughen(points), [x, y] = path[6], side = index < 3 || index === 7 ? -1 : 1;
+      const branch = roughen([[x, y], [x + side * 0.02, y + 0.015], [x + side * 0.032, y + 0.04]]);
+      return { path, branch, start: pass === 1 ? index === 0 ? 15.86 : frac2((starts[index] + 6.3) / 16) * 16 : starts[index], duration: 0.32 + random() * 0.18 };
+    }));
+    function electricity(phase2) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      for (const bolt of bolts) {
+        const elapsed = frac2(phase2 - bolt.start / THESSALY_PERIOD) * THESSALY_PERIOD;
+        if (elapsed >= bolt.duration) continue;
+        const u = elapsed / bolt.duration, pulse = Math.sin(Math.PI * u) ** 2 * (0.62 + 0.38 * Math.sin(TAU2 * u * 2) ** 2);
+        for (const [branch, points] of [[false, bolt.path], [true, bolt.branch]]) {
+          const strength = pulse * (branch ? 0.55 : 1);
+          for (const [thickness, alpha] of [[27e-4, 0.11], [7e-4, 0.72]]) {
+            ctx.strokeStyle = `rgba(162,220,243,${strength * alpha})`;
+            ctx.lineWidth = width * thickness;
+            ctx.beginPath();
+            points.forEach(([x2, y2], i) => i ? ctx.lineTo(x2 * width, y2 * height) : ctx.moveTo(x2 * width, y2 * height));
+            ctx.stroke();
+          }
+        }
+        const [x, y] = bolt.path[0];
+        glow(width * x, height * y, width * 0.015, height * 0.027, "125,190,220", pulse * 0.13);
+      }
+      ctx.restore();
+    }
+    function motes(phase2) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      for (const s of spores) {
+        const u = frac2(phase2 * 2 + s.offset), fade3 = Math.sin(Math.PI * u) ** 2 * 0.32;
+        const x = width * (s.x + s.drift * u * 0.1), y = height * (1.04 - u * 1.12);
+        ctx.fillStyle = `rgba(142,175,107,${fade3})`;
+        ctx.fillRect(x, y, s.size, s.size);
+      }
+      ctx.restore();
+    }
+    function render2(seconds, { ambient = true, cloudMotion = true, atmosphere = true, courtyardMist = true, bossMotion = true, bodyClouds = true, hairMotion = true, spectralWisps = true, lightning = true, spores: drift = true } = {}) {
+      const phase2 = frac2(seconds / THESSALY_PERIOD), cue = { t: phase2 * THESSALY_PERIOD, battle: false };
+      if (destroyed) return cue;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(background, 0, 0);
+      if (ambient && cloudMotion) sky(phase2);
+      if (ambient && bossMotion) {
+        if (bodyClouds) cloudBody(phase2);
+        if (hairMotion) windHair(phase2);
+        if (spectralWisps) aura(phase2);
+      }
+      if (ambient && atmosphere) miasma(phase2);
+      if (ambient && courtyardMist) courtyardHaze(phase2);
+      if (ambient && lightning) electricity(phase2);
+      if (ambient && drift) motes(phase2);
+      return cue;
+    }
+    return { render: render2, width, height, period: THESSALY_PERIOD, destroy() {
+      destroyed = true;
+      for (const c of buffers) c.width = c.height = 1;
+      canvas.width = canvas.height = 1;
+    } };
+  }
+
+  // src/modules/ThessalyScene.js
+  var scenes2 = /* @__PURE__ */ new Map();
+  function createThessalyRenderer(canvas, environment, assets = {}, options = {}) {
+    return createThessalyArenaScene(canvas, { background: environment, ...assets, ...options });
+  }
+  function clearThessalyScene(arena) {
+    const state = scenes2.get(arena);
+    if (!state) return;
+    state.disposed = true;
+    cancelAnimationFrame(state.frame);
+    state.visible?.disconnect();
+    state.renderer?.destroy();
+    state.renderer = null;
+    document.removeEventListener("visibilitychange", state.resume);
+    state.motion.removeEventListener("change", state.resume);
+    state.art.remove();
+    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    arena.removeAttribute("data-iw-raid-scene");
+    scenes2.delete(arena);
+  }
+  function reconcileThessalyScene(arena) {
+    pruneThessalyScenes();
+    const boss = arena.querySelector('img[src*="boss-thessaly"],img[alt^="Thessaly"]');
+    const nativeBackground = arena.style.getPropertyValue("--raid-bg-image");
+    if (!boss || nativeBackground && !/thessaly/i.test(nativeBackground)) {
+      clearThessalyScene(arena);
       return;
     }
-    if (el.getAttribute(key) !== value) el.setAttribute(key, value);
+    const current = scenes2.get(arena);
+    if (current) {
+      if (current.art.parentElement === arena && current.stage === boss.parentElement) return;
+      clearThessalyScene(arena);
+    }
+    const art2 = document.createElement("div");
+    art2.setAttribute("data-iw-thessaly-art", "");
+    art2.setAttribute("aria-hidden", "true");
+    const env = new Image(), textures = Object.fromEntries(["clouds", "mist", "hair", "body"].map((key) => [key, new Image()])), canvas = document.createElement("canvas");
+    for (const image of [env, ...Object.values(textures)]) image.crossOrigin = "anonymous";
+    env.setAttribute("data-iw-art", "environment");
+    art2.append(env, canvas);
+    arena.append(art2);
+    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes2.set(arena, state);
+    const start2 = performance.now();
+    let last = 0;
+    state.resume = () => {
+      cancelAnimationFrame(state.frame);
+      state.frame = 0;
+      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
+      if (state.motion.matches) {
+        state.renderer.render(0);
+        return;
+      }
+      state.frame = requestAnimationFrame(tick);
+    };
+    function tick(now) {
+      if (!arena.isConnected) {
+        clearThessalyScene(arena);
+        return;
+      }
+      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (now - last >= 1e3 / 30) {
+        state.renderer.render((now - start2) / 1e3);
+        last = now;
+      }
+      state.frame = requestAnimationFrame(tick);
+    }
+    document.addEventListener("visibilitychange", state.resume);
+    state.motion.addEventListener("change", state.resume);
+    const load2 = (img) => new Promise((resolve2, reject) => {
+      img.onload = () => resolve2(img);
+      img.onerror = () => reject(new Error("Raid art unavailable"));
+    });
+    const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
+    env.src = assetUrl("assets/raids/thessaly/arena-storm.png");
+    for (const [key, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist", hair: "hair-wisps", body: "body-clouds" })) textures[key].src = assetUrl("assets/raids/thessaly/" + name + ".png");
+    loaded.then(([background, ...images]) => {
+      if (state.disposed || !arena.isConnected) return;
+      arena.setAttribute("data-iw-raid-scene", "thessaly");
+      state.stage.setAttribute("data-iw-raid-boss-stage", "thessaly");
+      const assets = Object.fromEntries(Object.keys(textures).map((key, index) => [key, images[index]]));
+      try {
+        state.renderer = createThessalyRenderer(canvas, background, assets, { maxWidth: 1440 });
+      } catch {
+      }
+      if (!state.renderer) return;
+      art2.setAttribute("data-iw-animated", "");
+      state.renderer.render(0);
+      if (typeof IntersectionObserver === "function") {
+        state.visible = new IntersectionObserver(([entry2]) => {
+          state.onScreen = entry2.isIntersecting;
+          state.resume();
+        });
+        state.visible.observe(arena);
+      }
+      state.resume();
+    }).catch(() => {
+      if (!state.disposed) clearThessalyScene(arena);
+    });
   }
-  var role = (el, value) => mark3(el, ROLE, value);
-  function toneOf(el) {
-    const cls = String(el?.className || "");
+  function clearThessalyScenes(root) {
+    for (const arena of scenes2.keys()) if (root === arena || root.contains(arena) || !arena.isConnected) clearThessalyScene(arena);
+  }
+  function pruneThessalyScenes() {
+    for (const arena of scenes2.keys()) if (!arena.isConnected) clearThessalyScene(arena);
+  }
+
+  // src/modules/MorwennaArenaRenderer.js
+  var MORWENNA_PERIOD = 24;
+  var TAU3 = Math.PI * 2;
+  var frac3 = (value) => value - Math.floor(value);
+  var envelope2 = (u) => Math.sin(Math.PI * u) ** 2;
+  function createMorwennaArenaScene(canvas, { background, clouds, mist, maxWidth } = {}) {
+    const sw = background.naturalWidth || background.width;
+    const sh = background.naturalHeight || background.height;
+    const scale = Math.min(1, (maxWidth || sw) / sw);
+    const width = Math.round(sw * scale), height = Math.round(sh * scale);
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) throw new Error("Unable to create the Morwenna scene canvas");
+    const buffers = [];
+    let destroyed = false;
+    const layer = (w, h) => {
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      buffers.push(c);
+      return c;
+    };
+    const painting = layer(width, height);
+    painting.getContext("2d").drawImage(background, 0, 0, width, height);
+    const atlas = (image) => Array.from({ length: 4 }, (_, index) => {
+      const c = layer(512, 256), cx = c.getContext("2d");
+      if (!image) return c;
+      const w = (image.naturalWidth || image.width) / 2;
+      const h = (image.naturalHeight || image.height) / 2;
+      cx.drawImage(image, index % 2 * w, Math.floor(index / 2) * h, w, h, 0, 0, 512, 256);
+      const p = cx.getImageData(0, 0, 512, 256);
+      for (let y = 0; y < 256; y++) for (let x = 0; x < 512; x++) {
+        const edge = Math.min(x, y, 511 - x, 255 - y);
+        p.data[(y * 512 + x) * 4 + 3] *= Math.min(1, edge / 22);
+      }
+      cx.putImageData(p, 0, 0);
+      return c;
+    });
+    const storm = atlas(clouds), fog = atlas(mist);
+    const skyMask = layer(width, Math.ceil(height * 0.5));
+    const sm = skyMask.getContext("2d");
+    const skyZones = [
+      [[0.237, 0], [0.726, 0], [0.699, 0.104], [0.649, 0.178], [0.603, 0.274], [0.565, 0.392], [0.54, 0.468], [0.481, 0.422], [0.472, 0.35], [0.439, 0.312], [0.42, 0.28], [0.409, 0.19], [0.385, 0.104], [0.364, 0.079], [0.348, 0.086], [0.331, 0.191], [0.305, 0.218], [0.286, 0.233], [0.254, 0.196], [0.242, 0.093]],
+      [[0.875, 0], [0.963, 0], [0.945, 0.134], [0.92, 0.169], [0.9, 0.12]]
+    ];
+    sm.filter = "blur(" + Math.max(5, width * 6e-3) + "px)";
+    sm.fillStyle = "#fff";
+    for (const points of skyZones) {
+      sm.beginPath();
+      points.forEach(([x, y], i) => i ? sm.lineTo(x * width, y * height) : sm.moveTo(x * width, y * height));
+      sm.closePath();
+      sm.fill();
+    }
+    sm.filter = "none";
+    sm.clearRect(width * 0.302, height * 0.082, width * 0.116, height * 0.305);
+    sm.clearRect(0, 0, width * 0.235, skyMask.height);
+    const skyLayer = layer(width, skyMask.height), sc = skyLayer.getContext("2d");
+    const skyBanks = [
+      { x: 0.37, y: 0.027, w: 0.35, h: 0.23, flow: 0.092, alpha: 0.23, offset: 0.03, part: 0 },
+      { x: 0.55, y: 0.105, w: 0.37, h: 0.29, flow: 0.083, alpha: 0.21, offset: 0.42, part: 1 },
+      { x: 0.49, y: 0.284, w: 0.29, h: 0.24, flow: 0.072, alpha: 0.15, offset: 0.69, part: 2 },
+      { x: 0.62, y: 0.028, w: 0.3, h: 0.2, flow: 0.098, alpha: 0.18, offset: 0.84, part: 3 },
+      { x: 0.86, y: 0.075, w: 0.22, h: 0.17, flow: 0.075, alpha: 0.14, offset: 0.22, part: 0 }
+    ];
+    const fogBanks = [
+      { x: 0.1, y: 0.604, w: 0.28, h: 0.072, alpha: 0.14, flow: 0.085, offset: 0.13 },
+      { x: 0.29, y: 0.606, w: 0.28, h: 0.082, alpha: 0.19, flow: 0.07, offset: 0.61 },
+      { x: 0.44, y: 0.624, w: 0.31, h: 0.055, alpha: 0.16, flow: 0.09, offset: 0.32 },
+      { x: 0.58, y: 0.631, w: 0.27, h: 0.07, alpha: 0.17, flow: 0.065, offset: 0.81 },
+      { x: 0.73, y: 0.64, w: 0.24, h: 0.073, alpha: 0.15, flow: 0.08, offset: 0.04 },
+      { x: 0.87, y: 0.615, w: 0.27, h: 0.08, alpha: 0.12, flow: 0.075, offset: 0.48 },
+      { x: 5e-3, y: 0.782, w: 0.22, h: 0.12, alpha: 0.09, flow: 0.055, offset: 0.24 },
+      { x: 0.96, y: 0.835, w: 0.22, h: 0.08, alpha: 0.08, flow: 0.06, offset: 0.74 }
+    ].flatMap((p, index) => [{ ...p, part: index % 4 }, { ...p, x: p.x - 0.045, y: p.y + 0.013, w: p.w * 0.78, h: p.h * 0.72, alpha: p.alpha * 0.58, offset: frac3(p.offset + 0.47), part: (index + 2) % 4 }]);
+    const shroudWisps = [
+      { x: 0.593, y: 0.451, w: 0.09, h: 0.058, offset: 0.04, alpha: 0.085, angle: -0.8 },
+      { x: 0.553, y: 0.566, w: 0.105, h: 0.06, offset: 0.42, alpha: 0.08, angle: -0.55 },
+      { x: 0.88, y: 0.437, w: 0.095, h: 0.057, offset: 0.72, alpha: 0.075, angle: -0.6 },
+      { x: 0.846, y: 0.584, w: 0.08, h: 0.055, offset: 0.25, alpha: 0.095, angle: -0.85 },
+      { x: 0.773, y: 0.565, w: 0.042, h: 0.054, offset: 0.56, alpha: 0.065, angle: -1.12 }
+    ];
+    const strings = [
+      [[0.653, 0.23], [0.691, 0.488]],
+      [[0.674, 0.229], [0.717, 0.41]],
+      [[0.686, 0.237], [0.721, 0.4]],
+      [[0.818, 0.282], [0.775, 0.418]],
+      [[0.829, 0.275], [0.819, 0.384]]
+    ];
+    let seed = 8143;
+    const random = () => {
+      seed = Math.imul(seed, 1664525) + 1013904223 >>> 0;
+      return seed / 4294967296;
+    };
+    const motes = Array.from({ length: 34 }, () => ({ x: 0.56 + random() * 0.36, y: 0.56 + random() * 0.12, offset: random(), rise: 0.05 + random() * 0.11, flow: 0.013 + random() * 0.03, size: 0.6 + random() * 1.1 }));
+    const nearMist = [
+      { x: 0.035, y: 0.892, w: 0.37, h: 0.11, flow: 0.16, alpha: 0.22, offset: 0.14, part: 3 },
+      { x: 0.32, y: 0.986, w: 0.47, h: 0.115, flow: 0.2, alpha: 0.25, offset: 0.61, part: 0 },
+      { x: 0.66, y: 0.93, w: 0.4, h: 0.081, flow: 0.19, alpha: 0.19, offset: 0.32, part: 1 },
+      { x: 0.94, y: 0.845, w: 0.3, h: 0.092, flow: 0.14, alpha: 0.2, offset: 0.83, part: 2 }
+    ];
+    const nearAsh = Array.from({ length: 28 }, () => ({
+      x: -0.06 + random() * 1.02,
+      y: 0.94 + random() * 0.14,
+      offset: random(),
+      rise: 0.1 + random() * 0.14,
+      flow: 0.08 + random() * 0.08,
+      size: 1.1 + random() * 1.6,
+      tilt: random() * TAU3,
+      warm: random() < 0.32
+    }));
+    const emberSprite = layer(32, 32), ec = emberSprite.getContext("2d");
+    const eg = ec.createRadialGradient(16, 16, 0, 16, 16, 16);
+    eg.addColorStop(0, "rgba(255,204,138,.7)");
+    eg.addColorStop(0.18, "rgba(233,134,60,.4)");
+    eg.addColorStop(1, "rgba(193,84,34,0)");
+    ec.fillStyle = eg;
+    ec.fillRect(0, 0, 32, 32);
+    function plume(target, texture, x, y, w, h, alpha, angle = 0) {
+      if (alpha < 1e-5) return;
+      target.save();
+      target.globalAlpha = alpha;
+      target.translate(x, y);
+      target.rotate(angle);
+      target.drawImage(texture, -w / 2, -h / 2, w, h);
+      target.restore();
+    }
+    function glow(x, y, rx, ry, color, alpha) {
+      ctx.save();
+      ctx.translate(x * width, y * height);
+      ctx.scale(rx * width, ry * height);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      g.addColorStop(0, `rgba(${color},${alpha})`);
+      g.addColorStop(1, `rgba(${color},0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(-1, -1, 2, 2);
+      ctx.restore();
+    }
+    function drawClouds(phase2) {
+      sc.globalCompositeOperation = "source-over";
+      sc.clearRect(0, 0, skyLayer.width, skyLayer.height);
+      for (const p of skyBanks) {
+        const u = frac3(phase2 + p.offset), growth = 1 + u * 0.035;
+        plume(sc, storm[p.part], width * (p.x + p.flow * (u - 0.5)), height * (p.y - 8e-3 * u), width * p.w * growth, height * p.h * growth, p.alpha * envelope2(u));
+      }
+      sc.globalCompositeOperation = "destination-in";
+      sc.drawImage(skyMask, 0, 0);
+      ctx.drawImage(skyLayer, 0, 0);
+    }
+    function drawMist(phase2) {
+      for (const p of fogBanks) {
+        const u = frac3(phase2 + p.offset), growth = 1 + 0.15 * u;
+        plume(ctx, fog[p.part], width * (p.x + p.flow * (u - 0.5)), height * (p.y - 0.013 * u), width * p.w * growth, height * p.h * (1 + 0.2 * u), p.alpha * envelope2(u));
+      }
+    }
+    function drawShroud(phase2) {
+      for (const [index, p] of shroudWisps.entries()) {
+        const u = frac3(phase2 * 2 + p.offset);
+        plume(ctx, fog[(index + 1) % 4], width * (p.x + 0.018 * u), height * (p.y - 0.052 * u), width * p.w * (0.8 + 0.3 * u), height * p.h * (0.7 + 0.3 * u), p.alpha * envelope2(u), p.angle);
+      }
+      for (const [index, [x, y, side]] of [[0.604, 0.353, -1], [0.584, 0.462, -1], [0.87, 0.371, 1], [0.854, 0.48, 1]].entries()) {
+        const a = TAU3 * phase2 * 2 - index * 0.8, length = height * 0.09, tip = width * 4e-3 * Math.sin(a);
+        const g = ctx.createLinearGradient(x * width, y * height, x * width + side * width * 0.027, y * height + length);
+        g.addColorStop(0, "rgba(148,128,151,0)");
+        g.addColorStop(0.35, "rgba(148,128,151,.10)");
+        g.addColorStop(1, "rgba(148,128,151,0)");
+        ctx.strokeStyle = g;
+        ctx.lineWidth = width * 65e-5;
+        ctx.beginPath();
+        ctx.moveTo(x * width, y * height);
+        ctx.bezierCurveTo(x * width + side * width * 7e-3, y * height + length * 0.32, x * width + side * width * 0.015 + tip, y * height + length * 0.65, x * width + side * width * 0.027 + tip, y * height + length);
+        ctx.stroke();
+      }
+    }
+    function drawCurse(phase2) {
+      const breath = 0.5 - 0.5 * Math.cos(TAU3 * phase2 * 3);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      glow(0.749, 0.447, 0.014, 0.028, "229,133,71", 0.055 + 0.045 * breath);
+      glow(0.744, 0.11, 3e-3, 0.013, "240,153,77", 0.065 + 0.075 * breath);
+      glow(0.755, 0.11, 3e-3, 0.013, "240,153,77", 0.065 + 0.075 * breath);
+      glow(0.674, 0.362, 9e-3, 0.016, "164,103,200", 0.026 + 0.035 * (1 - breath));
+      for (const [index, [start2, end]] of strings.entries()) {
+        const point = (v) => [width * (start2[0] + (end[0] - start2[0]) * v), height * (start2[1] + (end[1] - start2[1]) * v)];
+        const trace = (from, to, style, lineWidth) => {
+          ctx.strokeStyle = style;
+          ctx.lineWidth = Math.max(0.5, width * lineWidth);
+          ctx.beginPath();
+          ctx.moveTo(...from);
+          ctx.lineTo(...to);
+          ctx.stroke();
+        };
+        const pulse = 0.5 - 0.5 * Math.cos(TAU3 * phase2 * 3 - index * 0.7);
+        trace(point(0), point(1), `rgba(162,103,201,${0.055 + 0.075 * pulse})`, 11e-4);
+        for (let packet = 0; packet < 2; packet++) {
+          const u = frac3(phase2 * 3 + index * 0.213 + packet * 0.5), fade3 = envelope2(u);
+          const from = point(Math.max(0, u - 0.19)), to = point(Math.min(1, u + 0.1)), center = point(u);
+          const gradient = (color, alpha) => {
+            const g = ctx.createLinearGradient(...from, ...to);
+            g.addColorStop(0, `rgba(${color},0)`);
+            g.addColorStop(0.65, `rgba(${color},${alpha * fade3})`);
+            g.addColorStop(1, `rgba(${color},0)`);
+            return g;
+          };
+          trace(from, to, gradient("169,89,220", 0.23), 4e-3);
+          trace(from, to, gradient("215,157,250", 0.7), 15e-4);
+          trace(from, to, gradient("240,210,255", 0.9), 65e-5);
+          glow(center[0] / width, center[1] / height, 4e-3, 7e-3, "182,105,230", 0.25 * fade3);
+          for (let spark = 0; spark < 2; spark++) {
+            const v = u - spark * 0.029;
+            if (v < 0) continue;
+            const p = point(v), size = width * (spark ? 4e-4 : 65e-5);
+            ctx.fillStyle = `rgba(242,217,255,${fade3 * (spark ? 0.48 : 0.82)})`;
+            ctx.beginPath();
+            ctx.arc(p[0], p[1], Math.max(0.6, size), 0, TAU3);
+            ctx.fill();
+          }
+        }
+      }
+      glow(0.887, 0.638, 0.034, 9e-3, "205,116,58", 0.022 + 0.02 * breath);
+      ctx.restore();
+    }
+    function drawEmbers(phase2) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      for (const p of motes) {
+        const u = frac3(phase2 * 2 + p.offset), size = p.size * width / 1774;
+        ctx.globalAlpha = 0.28 * envelope2(u);
+        ctx.drawImage(emberSprite, width * (p.x + p.flow * u) - size * 3, height * (p.y - p.rise * u) - size * 3, size * 6, size * 6);
+      }
+      ctx.restore();
+    }
+    function drawForeground(phase2) {
+      for (const p of nearMist) {
+        const u = frac3(phase2 + p.offset), growth = 1 + 0.16 * u;
+        plume(ctx, fog[p.part], width * (p.x + p.flow * (u - 0.5)), height * (p.y - 0.019 * u), width * p.w * growth, height * p.h * (1 + 0.12 * u), p.alpha * envelope2(u));
+      }
+      ctx.save();
+      for (const p of nearAsh) {
+        const u = frac3(phase2 * 3 + p.offset), alpha = envelope2(u), size = p.size * width / 1774;
+        ctx.save();
+        ctx.translate(width * (p.x + p.flow * u), height * (p.y - p.rise * u));
+        ctx.rotate(p.tilt + u * 2.6);
+        ctx.globalAlpha = alpha * (p.warm ? 0.37 : 0.35);
+        ctx.fillStyle = p.warm ? "#bc835a" : "#8e829a";
+        const thin = 0.28 + 0.42 * Math.abs(Math.sin(p.tilt + TAU3 * u));
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * thin, size, 0, 0, TAU3);
+        ctx.fill();
+        if (p.warm) {
+          ctx.globalAlpha = alpha * 0.17;
+          ctx.drawImage(emberSprite, -size * 3, -size * 3, size * 6, size * 6);
+        }
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    function render2(seconds, { ambient = true, clouds: clouds2 = true, mist: mist2 = true, shroud = true, curse = true, embers = true, foreground = true } = {}) {
+      if (destroyed) return { t: 0 };
+      const t = Math.round((seconds % MORWENNA_PERIOD + MORWENNA_PERIOD) % MORWENNA_PERIOD * 1e9) / 1e9;
+      const phase2 = t / MORWENNA_PERIOD;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(painting, 0, 0);
+      if (ambient) {
+        if (clouds2) drawClouds(phase2);
+        if (shroud) drawShroud(phase2);
+        if (curse) drawCurse(phase2);
+        if (mist2) drawMist(phase2);
+        if (embers) drawEmbers(phase2);
+        if (foreground) drawForeground(phase2);
+      }
+      return { t };
+    }
+    return { render: render2, period: MORWENNA_PERIOD, destroy() {
+      if (destroyed) return;
+      destroyed = true;
+      for (const c of buffers) c.width = c.height = 1;
+      canvas.width = canvas.height = 1;
+    } };
+  }
+
+  // src/modules/MorwennaScene.js
+  var scenes3 = /* @__PURE__ */ new Map();
+  var bossSelector2 = 'img[src*="boss-morwenna"],img[alt^="Morwenna"]';
+  function createMorwennaRenderer(canvas, environment, assets = {}, options = {}) {
+    return createMorwennaArenaScene(canvas, { background: environment, ...assets, ...options });
+  }
+  function clearMorwennaScene(arena) {
+    const state = scenes3.get(arena);
+    if (!state) return;
+    state.disposed = true;
+    cancelAnimationFrame(state.frame);
+    state.visible?.disconnect();
+    state.renderer?.destroy();
+    state.renderer = null;
+    document.removeEventListener("visibilitychange", state.resume);
+    state.motion.removeEventListener("change", state.resume);
+    state.art.remove();
+    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    arena.removeAttribute("data-iw-raid-scene");
+    scenes3.delete(arena);
+  }
+  function reconcileMorwennaScene(arena) {
+    pruneMorwennaScenes();
+    const boss = arena.querySelector(bossSelector2);
+    const nativeBackground = arena.style.getPropertyValue("--raid-bg-image");
+    if (!boss || nativeBackground && !/morwenna/i.test(nativeBackground)) {
+      clearMorwennaScene(arena);
+      return;
+    }
+    const current = scenes3.get(arena);
+    if (current) {
+      if (current.art.parentElement === arena && current.stage === boss.parentElement) return;
+      clearMorwennaScene(arena);
+    }
+    const art2 = document.createElement("div");
+    art2.setAttribute("data-iw-morwenna-art", "");
+    art2.setAttribute("aria-hidden", "true");
+    const env = new Image(), textures = { clouds: new Image(), mist: new Image() }, canvas = document.createElement("canvas");
+    for (const image of [env, ...Object.values(textures)]) image.crossOrigin = "anonymous";
+    env.setAttribute("data-iw-art", "environment");
+    art2.append(env, canvas);
+    arena.append(art2);
+    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes3.set(arena, state);
+    const start2 = performance.now();
+    let last = 0;
+    state.resume = () => {
+      cancelAnimationFrame(state.frame);
+      state.frame = 0;
+      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
+      if (state.motion.matches) {
+        state.renderer.render(0);
+        return;
+      }
+      state.frame = requestAnimationFrame(tick);
+    };
+    function tick(now) {
+      if (!arena.isConnected) {
+        clearMorwennaScene(arena);
+        return;
+      }
+      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (now - last >= 1e3 / 30) {
+        state.renderer.render((now - start2) / 1e3);
+        last = now;
+      }
+      state.frame = requestAnimationFrame(tick);
+    }
+    document.addEventListener("visibilitychange", state.resume);
+    state.motion.addEventListener("change", state.resume);
+    const load2 = (img) => new Promise((resolve2, reject) => {
+      img.onload = () => resolve2(img);
+      img.onerror = () => reject(new Error("Raid art unavailable"));
+    });
+    const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
+    env.src = assetUrl("assets/raids/morwenna/arena.png");
+    for (const [key, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key].src = assetUrl("assets/raids/morwenna/" + name + ".png");
+    loaded.then(([background, clouds, mist]) => {
+      if (state.disposed || !arena.isConnected) return;
+      const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
+      if (arena.querySelector(bossSelector2) !== boss || boss.parentElement !== state.stage || nativeBackground2 && !/morwenna/i.test(nativeBackground2)) {
+        clearMorwennaScene(arena);
+        return;
+      }
+      arena.setAttribute("data-iw-raid-scene", "morwenna");
+      state.stage.setAttribute("data-iw-raid-boss-stage", "morwenna");
+      try {
+        state.renderer = createMorwennaRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
+        state.renderer.render(0);
+      } catch {
+        state.renderer?.destroy();
+        state.renderer = null;
+        return;
+      }
+      art2.setAttribute("data-iw-animated", "");
+      if (typeof IntersectionObserver === "function") {
+        state.visible = new IntersectionObserver(([entry2]) => {
+          state.onScreen = entry2.isIntersecting;
+          state.resume();
+        });
+        state.visible.observe(arena);
+      }
+      state.resume();
+    }).catch(() => {
+      if (!state.disposed) clearMorwennaScene(arena);
+    });
+  }
+  function clearMorwennaScenes(root) {
+    for (const arena of scenes3.keys()) if (root === arena || root.contains(arena) || !arena.isConnected) clearMorwennaScene(arena);
+  }
+  function pruneMorwennaScenes() {
+    for (const arena of scenes3.keys()) if (!arena.isConnected) clearMorwennaScene(arena);
+  }
+
+  // src/modules/GrimjawArenaRenderer.js
+  var GRIMJAW_PERIOD = 72;
+  var TAU4 = Math.PI * 2;
+  var frac4 = (value) => value - Math.floor(value);
+  var fade = (u) => Math.sin(Math.PI * u) ** 2;
+  function createGrimjawArenaScene(canvas, { background, clouds, mist, maxWidth = 1774 }) {
+    const sw = background.naturalWidth || background.width;
+    const sh = background.naturalHeight || background.height;
+    const width = Math.round(Math.min(sw, maxWidth)), height = Math.round(sh * width / sw);
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) throw new Error("Unable to create the Grimjaw canvas");
+    const buffers = [];
+    let destroyed = false;
+    const buffer = (w, h) => {
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      buffers.push(c);
+      return c;
+    };
+    const painting = buffer(width, height);
+    painting.getContext("2d").drawImage(background, 0, 0, width, height);
+    const atlas = (image) => Array.from({ length: 4 }, (_, index) => {
+      const c = buffer(512, 256), cx = c.getContext("2d");
+      if (!image) return c;
+      const w = (image.naturalWidth || image.width) / 2, h = (image.naturalHeight || image.height) / 2;
+      cx.drawImage(image, index % 2 * w, Math.floor(index / 2) * h, w, h, 0, 0, 512, 256);
+      const pixels = cx.getImageData(0, 0, 512, 256);
+      for (let y = 0; y < 256; y++) for (let x = 0; x < 512; x++) {
+        const distance = ((x - 255.5) / 255.5) ** 2 + ((y - 127.5) / 127.5) ** 2;
+        const rim = Math.max(0, Math.min(1, (1 - distance) / 0.55));
+        pixels.data[(y * 512 + x) * 4 + 3] *= rim * rim * (3 - 2 * rim);
+      }
+      cx.putImageData(pixels, 0, 0);
+      return c;
+    });
+    const storm = atlas(clouds), fog = atlas(mist);
+    const sky = buffer(width, height), sc = sky.getContext("2d");
+    const skyMask = buffer(width, height), sm = skyMask.getContext("2d");
+    const polygon = (target, points) => {
+      target.beginPath();
+      points.forEach(([x, y], i) => i ? target.lineTo(x * width, y * height) : target.moveTo(x * width, y * height));
+      target.closePath();
+      target.fill();
+    };
+    sm.filter = `blur(${width * 6e-3}px)`;
+    sm.fillStyle = "#fff";
+    polygon(sm, [[0.233, 0], [0.681, 0], [0.659, 0.12], [0.636, 0.27], [0.605, 0.42], [0.545, 0.49], [0.237, 0.49]]);
+    polygon(sm, [[0.829, 0], [0.976, 0], [0.955, 0.34], [0.891, 0.29], [0.862, 0.16]]);
+    sm.globalCompositeOperation = "destination-out";
+    polygon(sm, [[0.309, 0.33], [0.324, 0.225], [0.35, 0.201], [0.369, 0.143], [0.389, 0.1], [0.432, 0.127], [0.433, 0.241], [0.478, 0.279], [0.478, 0.43], [0.303, 0.43]]);
+    sm.filter = "none";
+    const skyBanks = [
+      { x: 0.34, y: 0.08, w: 0.36, h: 0.21, flow: -0.18, alpha: 0.31, offset: 0.11, part: 0 },
+      { x: 0.51, y: 0.18, w: 0.35, h: 0.25, flow: -0.16, alpha: 0.29, offset: 0.56, part: 1 },
+      { x: 0.6, y: 0.04, w: 0.32, h: 0.17, flow: -0.2, alpha: 0.23, offset: 0.79, part: 2 },
+      { x: 0.49, y: 0.38, w: 0.3, h: 0.19, flow: -0.14, alpha: 0.18, offset: 0.31, part: 3 },
+      { x: 0.9, y: 0.09, w: 0.23, h: 0.19, flow: -0.15, alpha: 0.22, offset: 0.47, part: 0 }
+    ];
+    const ground = [
+      { x: 0.12, y: 0.643, w: 0.3, h: 0.074, flow: -0.12, alpha: 0.16, offset: 0.12, part: 0, speed: 1 },
+      { x: 0.32, y: 0.657, w: 0.32, h: 0.066, flow: -0.1, alpha: 0.18, offset: 0.63, part: 1, speed: 1 },
+      { x: 0.49, y: 0.668, w: 0.29, h: 0.08, flow: -0.13, alpha: 0.15, offset: 0.33, part: 3, speed: 1 },
+      { x: 0.67, y: 0.692, w: 0.26, h: 0.071, flow: -0.09, alpha: 0.15, offset: 0.82, part: 0, speed: 2 },
+      { x: 0.79, y: 0.704, w: 0.28, h: 0.071, flow: -0.1, alpha: 0.17, offset: 0.05, part: 2, speed: 2 },
+      { x: 0.94, y: 0.652, w: 0.25, h: 0.085, flow: -0.12, alpha: 0.14, offset: 0.49, part: 1, speed: 1 }
+    ];
+    const near = [
+      { x: 0.1, y: 0.884, w: 0.48, h: 0.12, flow: -0.7, alpha: 0.33, offset: 0.23, part: 3, speed: 4 },
+      { x: 0.48, y: 0.958, w: 0.57, h: 0.14, flow: -0.82, alpha: 0.36, offset: 0.65, part: 0, speed: 6 },
+      { x: 0.9, y: 0.861, w: 0.49, h: 0.11, flow: -0.76, alpha: 0.3, offset: 0.39, part: 1, speed: 4 }
+    ];
+    const squalls = [
+      { x: 0.4, y: 0.34, w: 0.72, h: 0.14, flow: -0.86, alpha: 0.19, offset: 0.11, part: 0, speed: 6 },
+      { x: 0.67, y: 0.49, w: 0.83, h: 0.17, flow: -0.94, alpha: 0.25, offset: 0.61, part: 2, speed: 6 },
+      { x: 0.26, y: 0.61, w: 0.68, h: 0.12, flow: -1.02, alpha: 0.32, offset: 0.36, part: 1, speed: 8 },
+      { x: 0.81, y: 0.69, w: 0.79, h: 0.17, flow: -0.87, alpha: 0.31, offset: 0.84, part: 3, speed: 6 },
+      { x: 0.45, y: 0.78, w: 0.9, h: 0.09, flow: -1.12, alpha: 0.32, offset: 0.52, part: 0, speed: 8 }
+    ];
+    let seed = 7301;
+    const random = () => {
+      seed = Math.imul(seed, 1664525) + 1013904223 >>> 0;
+      return seed / 4294967296;
+    };
+    const flakes = [
+      { count: 900, speed: 12, size: 0.65, spread: 1, alpha: 0.38, fall: 1.24, travel: 0.68, stretch: 2 },
+      { count: 240, speed: 18, size: 1.3, spread: 1.5, alpha: 0.54, fall: 1.3, travel: 0.85, stretch: 3 },
+      { count: 84, speed: 24, size: 2.3, spread: 2.2, alpha: 0.66, fall: 1.38, travel: 1.05, stretch: 4.4 }
+    ].flatMap((layer) => Array.from({ length: layer.count }, () => ({
+      x: -0.3 + random() * 1.9,
+      offset: random(),
+      dx: layer.travel * (0.76 + random() * 0.48),
+      fall: layer.fall * (0.86 + random() * 0.28),
+      speed: layer.speed,
+      size: layer.size + random() * layer.spread,
+      alpha: layer.alpha + random() * 0.13,
+      stretch: layer.stretch * (0.7 + random() * 0.6)
+    })));
+    const handMotes = Array.from({ length: 22 }, () => ({ offset: random(), x: 0.845 + random() * 0.012, rise: 0.07 + random() * 0.11, drift: -0.016 + random() * 0.026, size: 0.6 + random() * 1.2 }));
+    const snowSprite = buffer(32, 32), sn = snowSprite.getContext("2d");
+    const sg = sn.createRadialGradient(16, 16, 0, 16, 16, 16);
+    sg.addColorStop(0, "rgba(231,243,250,1)");
+    sg.addColorStop(0.35, "rgba(231,243,250,.72)");
+    sg.addColorStop(1, "rgba(231,243,250,0)");
+    sn.fillStyle = sg;
+    sn.fillRect(0, 0, 32, 32);
+    const whiteout = buffer(width, height), wc = whiteout.getContext("2d");
+    const veil = wc.createLinearGradient(0, 0, 0, height);
+    veil.addColorStop(0, "rgba(193,213,227,.05)");
+    veil.addColorStop(0.45, "rgba(204,223,235,.14)");
+    veil.addColorStop(0.7, "rgba(204,223,235,.17)");
+    veil.addColorStop(1, "rgba(193,213,227,.02)");
+    wc.fillStyle = veil;
+    wc.fillRect(0, 0, width, height);
+    function plume(target, image, x, y, w, h, alpha, angle = 0) {
+      target.save();
+      target.globalAlpha = alpha;
+      target.translate(x * width, y * height);
+      target.rotate(angle);
+      target.drawImage(image, -w * width / 2, -h * height / 2, w * width, h * height);
+      target.restore();
+    }
+    function mistBanks(banks, phase2) {
+      for (const p of banks) {
+        const u = frac4(phase2 * p.speed + p.offset);
+        plume(ctx, fog[p.part], p.x + p.flow * (u - 0.5), p.y - 0.012 * u, p.w * (1 + 0.12 * u), p.h * (1 + 0.18 * u), p.alpha * fade(u));
+      }
+    }
+    function drawClouds(phase2) {
+      sc.globalCompositeOperation = "source-over";
+      sc.clearRect(0, 0, width, height);
+      for (const p of skyBanks) {
+        const u = frac4(phase2 * 4 + p.offset);
+        plume(sc, storm[p.part], p.x + p.flow * (u - 0.5), p.y - 0.012 * u, p.w * (1 + 0.07 * u), p.h * (1 + 0.12 * u), p.alpha * fade(u));
+      }
+      sc.globalCompositeOperation = "destination-in";
+      sc.drawImage(skyMask, 0, 0);
+      ctx.drawImage(sky, 0, 0);
+    }
+    function drawBoss(phase2) {
+      for (let i = 0; i < 3; i++) {
+        const u = frac4(phase2 * 6 + i / 3);
+        plume(ctx, fog[(i + 3) % 4], 0.738 - 0.04 * u, 0.168 - 0.011 * u, 0.016 + 0.05 * u, 9e-3 + 0.017 * u, 0.22 * fade(u), -0.08);
+      }
+      for (let i = 0; i < 5; i++) {
+        const v = frac4(phase2 * 9 + i / 5 + 0.17);
+        plume(ctx, fog[i % 4], 0.85 - 0.027 * v + 5e-3 * Math.sin(TAU4 * phase2 * 3 + i) * v, 0.364 - 0.163 * v, 0.028 + 0.056 * v, 0.036 + 0.068 * v, 0.28 * fade(v), -1.1);
+      }
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const pulse = 0.5 - 0.5 * Math.cos(TAU4 * phase2 * 6);
+      const x = 0.847 * width, y = 0.371 * height;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, width * 0.017);
+      g.addColorStop(0, `rgba(126,205,234,${0.08 + 0.05 * pulse})`);
+      g.addColorStop(1, "rgba(126,205,234,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(x - width * 0.017, y - width * 0.017, width * 0.034, width * 0.034);
+      for (let i = 0; i < 4; i++) {
+        const u = frac4(phase2 * 9 + i / 4), length = 0.025 + 0.16 * u, root = 0.849 + (i - 1.5) * 25e-4;
+        const path = () => {
+          ctx.beginPath();
+          for (let j = 0; j <= 24; j++) {
+            const q = j / 24, px = (root - 0.018 * u * q + 6e-3 * Math.sin(TAU4 * phase2 * 3 + i * 1.3 + q * 6) * q) * width;
+            const py = (0.365 - length * q) * height;
+            j ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+          }
+        };
+        const cg = ctx.createLinearGradient(root * width, 0.365 * height, root * width, (0.365 - length) * height);
+        cg.addColorStop(0, "rgba(116,205,240,0)");
+        cg.addColorStop(0.24, `rgba(116,205,240,${0.25 * fade(u)})`);
+        cg.addColorStop(0.72, `rgba(190,234,255,${0.35 * fade(u)})`);
+        cg.addColorStop(1, "rgba(190,234,255,0)");
+        ctx.strokeStyle = cg;
+        ctx.lineCap = "round";
+        ctx.lineWidth = width * 2e-3;
+        ctx.globalAlpha = 0.25;
+        path();
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = Math.max(0.7, width * 65e-5);
+        path();
+        ctx.stroke();
+      }
+      for (const p of handMotes) {
+        const u = frac4(phase2 * 6 + p.offset), s = p.size * width / 1774;
+        ctx.globalAlpha = 0.43 * fade(u);
+        ctx.fillStyle = "#b8e9fa";
+        ctx.beginPath();
+        ctx.arc((p.x + p.drift * u) * width, (0.362 - p.rise * u) * height, s, 0, TAU4);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    function drawSnow(phase2) {
+      ctx.save();
+      ctx.globalAlpha = 0.78 + 0.2 * Math.sin(TAU4 * phase2 * 4);
+      ctx.drawImage(whiteout, 0, 0);
+      ctx.globalAlpha = 1;
+      mistBanks(squalls, phase2);
+      for (const p of flakes) {
+        const u = frac4(phase2 * p.speed + p.offset), s = p.size * width / 1774;
+        const gustPhase = TAU4 * phase2 * 6 + p.offset * TAU4;
+        const gust = 0.018 * Math.sin(gustPhase);
+        const vx = (-p.dx * p.speed + 0.018 * TAU4 * 6 * Math.cos(gustPhase)) * width;
+        const vy = p.fall * p.speed * height;
+        const tilt = Math.atan2(-vx, vy);
+        ctx.save();
+        ctx.globalAlpha = p.alpha * fade(u);
+        ctx.translate((p.x - p.dx * (u - 0.5) + gust) * width, (-0.12 + p.fall * u) * height);
+        ctx.rotate(tilt);
+        ctx.drawImage(snowSprite, -s * 0.85, -s * p.stretch, s * 1.7, s * p.stretch * 2);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    function render2(seconds, { clouds: clouds2 = true, mist: mist2 = true, boss = true, snow = true, foreground = true, ambient = true } = {}) {
+      if (destroyed) return { t: 0 };
+      const t = Math.round((seconds % GRIMJAW_PERIOD + GRIMJAW_PERIOD) % GRIMJAW_PERIOD * 1e9) / 1e9, phase2 = t / GRIMJAW_PERIOD;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(painting, 0, 0);
+      if (ambient) {
+        if (clouds2) drawClouds(phase2);
+        if (boss) drawBoss(phase2);
+        if (mist2) mistBanks(ground, phase2);
+        if (foreground) mistBanks(near, phase2);
+        if (snow) drawSnow(phase2);
+      }
+      return { t };
+    }
+    return { render: render2, period: GRIMJAW_PERIOD, destroy() {
+      if (destroyed) return;
+      destroyed = true;
+      for (const c of buffers) c.width = c.height = 1;
+      canvas.width = canvas.height = 1;
+    } };
+  }
+
+  // src/modules/GrimjawScene.js
+  var scenes4 = /* @__PURE__ */ new Map();
+  var bossSelector3 = 'img[src*="boss-grimjaw"],img[alt^="Grimjaw"]';
+  function createGrimjawRenderer(canvas, environment, assets = {}, options = {}) {
+    return createGrimjawArenaScene(canvas, { background: environment, ...assets, ...options });
+  }
+  function clearGrimjawScene(arena) {
+    const state = scenes4.get(arena);
+    if (!state) return;
+    state.disposed = true;
+    cancelAnimationFrame(state.frame);
+    state.visible?.disconnect();
+    state.renderer?.destroy();
+    state.renderer = null;
+    document.removeEventListener("visibilitychange", state.resume);
+    state.motion.removeEventListener("change", state.resume);
+    state.art.remove();
+    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    arena.removeAttribute("data-iw-raid-scene");
+    scenes4.delete(arena);
+  }
+  function reconcileGrimjawScene(arena) {
+    pruneGrimjawScenes();
+    const boss = arena.querySelector(bossSelector3);
+    const nativeBackground = arena.style.getPropertyValue("--raid-bg-image");
+    if (!boss || nativeBackground && !/grimjaw/i.test(nativeBackground)) {
+      clearGrimjawScene(arena);
+      return;
+    }
+    const current = scenes4.get(arena);
+    if (current) {
+      if (current.art.parentElement === arena && current.stage === boss.parentElement) return;
+      clearGrimjawScene(arena);
+    }
+    const art2 = document.createElement("div");
+    art2.setAttribute("data-iw-grimjaw-art", "");
+    art2.setAttribute("aria-hidden", "true");
+    const env = new Image(), textures = { clouds: new Image(), mist: new Image() }, canvas = document.createElement("canvas");
+    for (const image of [env, ...Object.values(textures)]) image.crossOrigin = "anonymous";
+    env.setAttribute("data-iw-art", "environment");
+    art2.append(env, canvas);
+    arena.append(art2);
+    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes4.set(arena, state);
+    const start2 = performance.now();
+    let last = 0;
+    state.resume = () => {
+      cancelAnimationFrame(state.frame);
+      state.frame = 0;
+      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
+      if (state.motion.matches) {
+        state.renderer.render(0);
+        return;
+      }
+      state.frame = requestAnimationFrame(tick);
+    };
+    function tick(now) {
+      if (!arena.isConnected) {
+        clearGrimjawScene(arena);
+        return;
+      }
+      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (now - last >= 1e3 / 30) {
+        state.renderer.render((now - start2) / 1e3);
+        last = now;
+      }
+      state.frame = requestAnimationFrame(tick);
+    }
+    document.addEventListener("visibilitychange", state.resume);
+    state.motion.addEventListener("change", state.resume);
+    const load2 = (img) => new Promise((resolve2, reject) => {
+      img.onload = () => resolve2(img);
+      img.onerror = () => reject(new Error("Raid art unavailable"));
+    });
+    const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
+    env.src = assetUrl("assets/raids/grimjaw/arena.png");
+    for (const [key, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key].src = assetUrl("assets/raids/grimjaw/" + name + ".png");
+    loaded.then(([background, clouds, mist]) => {
+      if (state.disposed || !arena.isConnected) return;
+      const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
+      if (arena.querySelector(bossSelector3) !== boss || boss.parentElement !== state.stage || nativeBackground2 && !/grimjaw/i.test(nativeBackground2)) {
+        clearGrimjawScene(arena);
+        return;
+      }
+      arena.setAttribute("data-iw-raid-scene", "grimjaw");
+      state.stage.setAttribute("data-iw-raid-boss-stage", "grimjaw");
+      try {
+        state.renderer = createGrimjawRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
+        state.renderer.render(0);
+      } catch {
+        state.renderer?.destroy();
+        state.renderer = null;
+        return;
+      }
+      art2.setAttribute("data-iw-animated", "");
+      if (typeof IntersectionObserver === "function") {
+        state.visible = new IntersectionObserver(([entry2]) => {
+          state.onScreen = entry2.isIntersecting;
+          state.resume();
+        });
+        state.visible.observe(arena);
+      }
+      state.resume();
+    }).catch(() => {
+      if (!state.disposed) clearGrimjawScene(arena);
+    });
+  }
+  function clearGrimjawScenes(root) {
+    for (const arena of scenes4.keys()) if (root === arena || root.contains(arena) || !arena.isConnected) clearGrimjawScene(arena);
+  }
+  function pruneGrimjawScenes() {
+    for (const arena of scenes4.keys()) if (!arena.isConnected) clearGrimjawScene(arena);
+  }
+
+  // src/modules/SkarthArenaRenderer.js
+  var SKARTH_PERIOD = 72;
+  var TAU5 = Math.PI * 2;
+  var frac5 = (n) => n - Math.floor(n);
+  var fade2 = (u) => Math.sin(Math.PI * u) ** 2;
+  function createSkarthArenaScene(canvas, { background, atmosphere, ice, water, maxWidth = 1774 }) {
+    const sw = background.naturalWidth || background.width, sh = background.naturalHeight || background.height;
+    const width = Math.round(Math.min(sw, maxWidth)), height = Math.round(sh * width / sw);
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) throw new Error("Unable to create the Skarth canvas");
+    const buffers = [];
+    let destroyed = false;
+    const buffer = (w, h) => {
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      buffers.push(c);
+      return c;
+    };
+    const painting = buffer(width, height);
+    painting.getContext("2d").drawImage(background, 0, 0, width, height);
+    const atlas = (image) => Array.from({ length: 4 }, (_, part) => {
+      const cell = buffer(384, 384), cx = cell.getContext("2d", { willReadFrequently: true });
+      if (!image) return { image: cell, x: 0, y: 0, w: 384, h: 384 };
+      const w = (image.naturalWidth || image.width) / 2, h = (image.naturalHeight || image.height) / 2;
+      cx.drawImage(image, part % 2 * w, Math.floor(part / 2) * h, w, h, 0, 0, 384, 384);
+      const pixels = cx.getImageData(0, 0, 384, 384);
+      let x0 = 384, y0 = 384, x1 = 0, y1 = 0;
+      for (let y = 0; y < 384; y++) for (let x = 0; x < 384; x++) {
+        const i = (y * 384 + x) * 4 + 3, edge = Math.min(x, y, 383 - x, 383 - y) / 12;
+        pixels.data[i] *= Math.min(1, Math.max(0, edge));
+        if (pixels.data[i] > 12) {
+          x0 = Math.min(x0, x);
+          y0 = Math.min(y0, y);
+          x1 = Math.max(x1, x);
+          y1 = Math.max(y1, y);
+        }
+      }
+      cx.putImageData(pixels, 0, 0);
+      return x0 > x1 ? { image: cell, x: 0, y: 0, w: 384, h: 384 } : { image: cell, x: Math.max(0, x0 - 5), y: Math.max(0, y0 - 5), w: Math.min(384, x1 + 6) - Math.max(0, x0 - 5), h: Math.min(384, y1 + 6) - Math.max(0, y0 - 5) };
+    });
+    const air = atlas(atmosphere), floes = atlas(ice), foam = atlas(water);
+    const sky = buffer(width, height), sc = sky.getContext("2d"), surface = buffer(width, height), wc = surface.getContext("2d");
+    const mask = (points, holes = []) => {
+      const c = buffer(width, height), m = c.getContext("2d");
+      const poly = (p) => {
+        m.beginPath();
+        p.forEach(([x, y], i) => i ? m.lineTo(x * width, y * height) : m.moveTo(x * width, y * height));
+        m.closePath();
+        m.fill();
+      };
+      m.filter = `blur(${width * 5e-3}px)`;
+      m.fillStyle = "#fff";
+      poly(points);
+      m.globalCompositeOperation = "destination-out";
+      for (const p of holes) poly(p);
+      m.filter = "none";
+      return c;
+    };
+    const skyMask = mask([[0.095, 0], [0.974, 0], [0.962, 0.29], [0.945, 0.37], [0.87, 0.39], [0.64, 0.29], [0.59, 0.27], [0.49, 0.27], [0.46, 0.31], [0.27, 0.28], [0.095, 0.24]], [
+      [[0.61, 0.28], [0.637, 0.18], [0.685, 0.14], [0.7, 0.095], [0.76, 0.028], [0.85, 5e-3], [0.9, 0.09], [0.913, 0.33], [0.94, 0.45], [0.82, 0.59], [0.69, 0.55], [0.62, 0.4]],
+      [[0.115, 0.14], [0.15, 0.135], [0.152, 0.067], [0.177, 0.06], [0.18, 0.035], [0.205, 0.03], [0.207, 0.135], [0.245, 0.155], [0.265, 0.19], [0.3, 0.2], [0.309, 0.23], [0.31, 0.3], [0.12, 0.3]]
+    ]);
+    const waterMask = mask([[0.12, 0.505], [0.34, 0.525], [0.49, 0.54], [0.65, 0.568], [0.76, 0.6], [0.915, 0.602], [0.942, 0.67], [0.923, 0.78], [0.76, 0.88], [0.65, 0.91], [0.49, 0.81], [0.31, 0.74], [0.18, 0.66], [0.1, 0.565]]);
+    const plume = (target, sprite, x, y, w, h, alpha, angle = 0) => {
+      if (alpha < 1e-3) return;
+      target.save();
+      target.globalAlpha = alpha;
+      target.translate(x * width, y * height);
+      target.rotate(angle);
+      target.drawImage(sprite.image, sprite.x, sprite.y, sprite.w, sprite.h, -w * width / 2, -h * height / 2, w * width, h * height);
+      target.restore();
+    };
+    const reset = (target) => {
+      target.setTransform(1, 0, 0, 1, 0, 0);
+      target.globalAlpha = 1;
+      target.globalCompositeOperation = "source-over";
+      target.clearRect(0, 0, width, height);
+    };
+    const cloudBanks = [
+      { x: 0.32, y: 0.08, w: 0.37, h: 0.19, flow: -0.19, alpha: 0.23, offset: 0.16, part: 0 },
+      { x: 0.51, y: 0.12, w: 0.32, h: 0.14, flow: -0.16, alpha: 0.25, offset: 0.65, part: 1 },
+      { x: 0.6, y: 0.015, w: 0.3, h: 0.18, flow: -0.18, alpha: 0.2, offset: 0.85, part: 0 },
+      { x: 0.37, y: 0.22, w: 0.29, h: 0.13, flow: -0.14, alpha: 0.17, offset: 0.41, part: 1 },
+      { x: 0.95, y: 0.085, w: 0.24, h: 0.19, flow: -0.15, alpha: 0.19, offset: 0.5, part: 1 }
+    ];
+    const mistBanks = [
+      { x: 0.24, y: 0.53, w: 0.3, h: 0.048, flow: -0.15, offset: 0.15, alpha: 0.14, part: 2 },
+      { x: 0.49, y: 0.573, w: 0.31, h: 0.05, flow: -0.12, offset: 0.55, alpha: 0.17, part: 3 },
+      { x: 0.75, y: 0.617, w: 0.37, h: 0.055, flow: -0.13, offset: 0.3, alpha: 0.16, part: 2 },
+      { x: 0.51, y: 0.725, w: 0.38, h: 0.06, flow: -0.2, offset: 0.83, alpha: 0.16, part: 3 }
+    ];
+    let seed = 6207;
+    const random = () => {
+      seed = Math.imul(seed, 1664525) + 1013904223 >>> 0;
+      return seed / 4294967296;
+    };
+    const driftingIce = Array.from({ length: 13 }, (_, i) => {
+      const depth = i / 12;
+      return { x: 0.24 + random() * 0.62, y: 0.585 + depth * 0.245, w: 0.013 + depth * 0.04, h: 7e-3 + depth * 0.02, flow: -0.12 - depth * 0.055, offset: random(), part: i % 4, bob: random() * TAU5, turn: (random() - 0.5) * 0.1 };
+    });
+    const breaches = [{ x: 0.185, y: 0.505, w: 0.19 }, { x: 0.34, y: 0.523, w: 0.18 }, { x: 0.52, y: 0.546, w: 0.28 }, { x: 0.72, y: 0.586, w: 0.18 }, { x: 0.84, y: 0.596, w: 0.26 }];
+    const droplets = breaches.flatMap((b, j) => Array.from({ length: 14 }, () => ({ x: b.x + (random() - 0.5) * b.w * 0.62, y: b.y - 6e-3, offset: random(), rise: 8e-3 + random() * 0.029, drift: -0.012 - random() * 0.015, size: 0.45 + random() * 0.9, speed: 12 + j % 3 * 6 })));
+    const snow = [
+      { count: 680, speed: 12, size: 0.6, spread: 0.8, alpha: 0.35, fall: 1.25, travel: 0.67, stretch: 2 },
+      { count: 200, speed: 18, size: 1.2, spread: 1.4, alpha: 0.52, fall: 1.32, travel: 0.86, stretch: 3 },
+      { count: 70, speed: 24, size: 2.1, spread: 1.8, alpha: 0.62, fall: 1.38, travel: 1.03, stretch: 4 }
+    ].flatMap((layer) => Array.from({ length: layer.count }, () => ({ x: -0.3 + random() * 1.9, offset: random(), dx: layer.travel * (0.75 + random() * 0.5), fall: layer.fall * (0.86 + random() * 0.28), speed: layer.speed, size: layer.size + random() * layer.spread, alpha: layer.alpha + random() * 0.1, stretch: layer.stretch * (0.7 + random() * 0.6) })));
+    const snowSprite = buffer(32, 32), sn = snowSprite.getContext("2d");
+    const sg = sn.createRadialGradient(16, 16, 0, 16, 16, 16);
+    sg.addColorStop(0, "rgba(227,242,250,1)");
+    sg.addColorStop(0.35, "rgba(227,242,250,.72)");
+    sg.addColorStop(1, "rgba(227,242,250,0)");
+    sn.fillStyle = sg;
+    sn.fillRect(0, 0, 32, 32);
+    const veil = buffer(width, height), vc = veil.getContext("2d"), vg = vc.createLinearGradient(0, 0, 0, height);
+    vg.addColorStop(0, "rgba(175,200,221,.02)");
+    vg.addColorStop(0.52, "rgba(186,210,228,.13)");
+    vg.addColorStop(1, "rgba(175,200,221,.015)");
+    vc.fillStyle = vg;
+    vc.fillRect(0, 0, width, height);
+    function drawClouds(phase2) {
+      reset(sc);
+      for (const p of cloudBanks) {
+        const u = frac5(phase2 * 2 + p.offset);
+        plume(sc, air[p.part], p.x + p.flow * (u - 0.5), p.y - 6e-3 * u, p.w * (1 + 0.07 * u), p.h * (1 + 0.09 * u), p.alpha * fade2(u));
+      }
+      sc.globalCompositeOperation = "destination-in";
+      sc.drawImage(skyMask, 0, 0);
+      ctx.drawImage(sky, 0, 0);
+    }
+    function drawMist(phase2) {
+      for (const p of mistBanks) {
+        const u = frac5(phase2 * 3 + p.offset);
+        plume(ctx, air[p.part], p.x + p.flow * (u - 0.5), p.y - 6e-3 * u, p.w * (1 + 0.12 * u), p.h * (1 + 0.2 * u), p.alpha * fade2(u));
+      }
+      for (let i = 0; i < 3; i++) {
+        const u = frac5(phase2 * 6 + i / 3);
+        plume(ctx, air[3], 0.625 - 0.045 * u, 0.259 - 0.018 * u, 0.014 + 0.065 * u, 8e-3 + 0.025 * u, 0.18 * fade2(u), -0.16);
+      }
+    }
+    function drawIce(phase2) {
+      for (const p of driftingIce) {
+        const u = frac5(phase2 + p.offset), bob = Math.sin(TAU5 * phase2 * 12 + p.bob);
+        const x = p.x + p.flow * (u - 0.5), y = p.y + bob * 2e-3;
+        plume(wc, floes[p.part], x, y + 6e-3, p.w, p.h * 0.65, 0.13 * fade2(u), p.turn + Math.sin(TAU5 * phase2 * 2 + p.bob) * 0.015);
+        plume(wc, floes[p.part], x, y, p.w, p.h, 0.68 * fade2(u), p.turn + Math.sin(TAU5 * phase2 * 2 + p.bob) * 0.015);
+        plume(wc, foam[1], x + 8e-3, y + 0.011, p.w * 1.7, 0.01, 0.17 * fade2(u));
+      }
+    }
+    function drawWater(phase2) {
+      for (let j = 0; j < breaches.length; j++) {
+        const b = breaches[j];
+        for (let i = 0; i < 3; i++) {
+          const u = frac5(phase2 * 9 + i / 3 + j * 0.13);
+          plume(wc, foam[i % 2], b.x - 0.015 * u, b.y + 5e-3 + 0.025 * u, b.w * (0.66 + 0.7 * u), 0.012 + 0.025 * u, 0.37 * fade2(u));
+        }
+      }
+      wc.save();
+      wc.lineCap = "round";
+      for (let i = 0; i < 24; i++) {
+        const u = frac5(phase2 * 3 + i * 0.617), y = 0.57 + i % 8 * 0.032, x = 0.17 + i % 6 * 0.13 - 0.08 * u;
+        wc.strokeStyle = `rgba(175,206,224,${0.065 * fade2(u)})`;
+        wc.lineWidth = Math.max(0.6, width * 6e-4);
+        wc.beginPath();
+        wc.moveTo(x * width, y * height);
+        wc.quadraticCurveTo((x + 0.023) * width, (y + 3e-3 * Math.sin(TAU5 * phase2 * 6 + i)) * height, (x + 0.043) * width, y * height);
+        wc.stroke();
+      }
+      wc.restore();
+    }
+    function drawSpray(phase2) {
+      for (let j = 0; j < breaches.length; j++) {
+        const b = breaches[j];
+        for (let i = 0; i < 2; i++) {
+          const u = frac5(phase2 * 12 + i / 2 + j * 0.19), h = 0.018 + 0.034 * Math.sin(Math.PI * u);
+          plume(ctx, foam[2 + (j + i) % 2], b.x - 0.011 * u, b.y - h * 0.33, b.w * (0.27 + 0.25 * u), h, 0.29 * fade2(u));
+        }
+      }
+      ctx.save();
+      ctx.fillStyle = "#c1dce9";
+      for (const p of droplets) {
+        const u = frac5(phase2 * p.speed + p.offset), s = p.size * width / 1774;
+        ctx.globalAlpha = 0.42 * fade2(u);
+        ctx.beginPath();
+        ctx.ellipse((p.x + p.drift * u) * width, (p.y - p.rise * 4 * u * (1 - u) + 8e-3 * u) * height, s * 0.6, s, 0, 0, TAU5);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    function drawSnow(phase2) {
+      ctx.save();
+      ctx.globalAlpha = 0.65 + 0.15 * Math.sin(TAU5 * phase2 * 4);
+      ctx.drawImage(veil, 0, 0);
+      for (const p of snow) {
+        const u = frac5(phase2 * p.speed + p.offset), s = p.size * width / 1774, g = TAU5 * phase2 * 6 + p.offset * TAU5;
+        const vx = (-p.dx * p.speed + 0.018 * TAU5 * 6 * Math.cos(g)) * width, vy = p.fall * p.speed * height;
+        ctx.save();
+        ctx.globalAlpha = p.alpha * fade2(u);
+        ctx.translate((p.x - p.dx * (u - 0.5) + 0.018 * Math.sin(g)) * width, (-0.12 + p.fall * u) * height);
+        ctx.rotate(Math.atan2(-vx, vy));
+        ctx.drawImage(snowSprite, -s * 0.85, -s * p.stretch, s * 1.7, s * p.stretch * 2);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    function drawForeground(phase2) {
+      for (let i = 0; i < 3; i++) {
+        const u = frac5(phase2 * 6 + i / 3 + 0.24);
+        plume(ctx, air[2 + i % 2], 0.25 + i * 0.3 - 0.65 * (u - 0.5), 0.93 - i * 0.018, 0.52, 0.07 + 0.025 * u, 0.17 * fade2(u), -0.04);
+      }
+      for (let i = 0; i < 2; i++) {
+        const u = frac5(phase2 * 6 + i / 2 + 0.12);
+        plume(ctx, air[3], 0.54 - 0.72 * (u - 0.5), 0.68 + i * 0.1, 0.73, 0.045, 0.13 * fade2(u), -0.09);
+      }
+    }
+    function render2(seconds, { clouds = true, mist = true, ice: ice2 = true, water: water2 = true, snow: snow2 = true, foreground = true, ambient = true } = {}) {
+      if (destroyed) return { t: 0 };
+      const t = Math.round((seconds % SKARTH_PERIOD + SKARTH_PERIOD) % SKARTH_PERIOD * 1e9) / 1e9, phase2 = t / SKARTH_PERIOD;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(painting, 0, 0);
+      if (ambient) {
+        if (clouds) drawClouds(phase2);
+        if (ice2 || water2) {
+          reset(wc);
+          if (water2) drawWater(phase2);
+          if (ice2) drawIce(phase2);
+          wc.globalCompositeOperation = "destination-in";
+          wc.drawImage(waterMask, 0, 0);
+          ctx.drawImage(surface, 0, 0);
+        }
+        if (water2) drawSpray(phase2);
+        if (mist) drawMist(phase2);
+        if (snow2) drawSnow(phase2);
+        if (foreground) drawForeground(phase2);
+      }
+      return { t };
+    }
+    return { render: render2, period: SKARTH_PERIOD, destroy() {
+      if (destroyed) return;
+      destroyed = true;
+      for (const c of buffers) c.width = c.height = 1;
+      canvas.width = canvas.height = 1;
+    } };
+  }
+
+  // src/modules/SkarthScene.js
+  var scenes5 = /* @__PURE__ */ new Map();
+  var bossSelector4 = 'img[src*="boss-skarth"],img[alt^="Skarth"]';
+  function createSkarthRenderer(canvas, environment, assets = {}, options = {}) {
+    return createSkarthArenaScene(canvas, { background: environment, ...assets, ...options });
+  }
+  function clearSkarthScene(arena) {
+    const state = scenes5.get(arena);
+    if (!state) return;
+    state.disposed = true;
+    cancelAnimationFrame(state.frame);
+    state.visible?.disconnect();
+    state.renderer?.destroy();
+    state.renderer = null;
+    document.removeEventListener("visibilitychange", state.resume);
+    state.motion.removeEventListener("change", state.resume);
+    state.art.remove();
+    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    arena.removeAttribute("data-iw-raid-scene");
+    scenes5.delete(arena);
+  }
+  function reconcileSkarthScene(arena) {
+    pruneSkarthScenes();
+    const boss = arena.querySelector(bossSelector4);
+    const nativeBackground = arena.style.getPropertyValue("--raid-bg-image");
+    if (!boss || nativeBackground && !/skarth/i.test(nativeBackground)) {
+      clearSkarthScene(arena);
+      return;
+    }
+    const current = scenes5.get(arena);
+    if (current) {
+      if (current.art.parentElement === arena && current.stage === boss.parentElement) return;
+      clearSkarthScene(arena);
+    }
+    const art2 = document.createElement("div");
+    art2.setAttribute("data-iw-skarth-art", "");
+    art2.setAttribute("aria-hidden", "true");
+    const env = new Image(), textures = { atmosphere: new Image(), ice: new Image(), water: new Image() }, canvas = document.createElement("canvas");
+    for (const image of [env, ...Object.values(textures)]) image.crossOrigin = "anonymous";
+    env.setAttribute("data-iw-art", "environment");
+    art2.append(env, canvas);
+    arena.append(art2);
+    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes5.set(arena, state);
+    const start2 = performance.now();
+    let last = 0;
+    state.resume = () => {
+      cancelAnimationFrame(state.frame);
+      state.frame = 0;
+      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
+      if (state.motion.matches) {
+        state.renderer.render(0);
+        return;
+      }
+      state.frame = requestAnimationFrame(tick);
+    };
+    function tick(now) {
+      if (!arena.isConnected) {
+        clearSkarthScene(arena);
+        return;
+      }
+      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (now - last >= 1e3 / 30) {
+        state.renderer.render((now - start2) / 1e3);
+        last = now;
+      }
+      state.frame = requestAnimationFrame(tick);
+    }
+    document.addEventListener("visibilitychange", state.resume);
+    state.motion.addEventListener("change", state.resume);
+    const load2 = (img) => new Promise((resolve2, reject) => {
+      img.onload = () => resolve2(img);
+      img.onerror = () => reject(new Error("Raid art unavailable"));
+    });
+    const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
+    env.src = assetUrl("assets/raids/skarth/arena.png");
+    for (const [key, name] of Object.entries({ atmosphere: "atmosphere", ice: "ice", water: "water" })) textures[key].src = assetUrl("assets/raids/skarth/" + name + ".png");
+    loaded.then(([background, atmosphere, ice, water]) => {
+      if (state.disposed || !arena.isConnected) return;
+      const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
+      if (arena.querySelector(bossSelector4) !== boss || boss.parentElement !== state.stage || nativeBackground2 && !/skarth/i.test(nativeBackground2)) {
+        clearSkarthScene(arena);
+        return;
+      }
+      arena.setAttribute("data-iw-raid-scene", "skarth");
+      state.stage.setAttribute("data-iw-raid-boss-stage", "skarth");
+      try {
+        state.renderer = createSkarthRenderer(canvas, background, { atmosphere, ice, water }, { maxWidth: 1440 });
+        state.renderer.render(0);
+      } catch {
+        state.renderer?.destroy();
+        state.renderer = null;
+        return;
+      }
+      art2.setAttribute("data-iw-animated", "");
+      if (typeof IntersectionObserver === "function") {
+        state.visible = new IntersectionObserver(([entry2]) => {
+          state.onScreen = entry2.isIntersecting;
+          state.resume();
+        });
+        state.visible.observe(arena);
+      }
+      state.resume();
+    }).catch(() => {
+      if (!state.disposed) clearSkarthScene(arena);
+    });
+  }
+  function clearSkarthScenes(root) {
+    for (const arena of scenes5.keys()) if (root === arena || root.contains(arena) || !arena.isConnected) clearSkarthScene(arena);
+  }
+  function pruneSkarthScenes() {
+    for (const arena of scenes5.keys()) if (!arena.isConnected) clearSkarthScene(arena);
+  }
+
+  // src/modules/RaidPartyPreview.js
+  var DUMMY = "data-iw-raid-dummy";
+  var TEST = "data-iw-raid-test";
+  var FULL_PARTY = 8;
+  var ROSTER = [
+    { name: "Test Tank", skill: "Combat (Tank)", hp: 100, charge: 80, status: [["🎯", "Tanking"], ["🛡️", "220 shield"]] },
+    { name: "Test Smith", skill: "Smithing", hp: 41, charge: 20, status: [["🩸", "Cursed — reduced healing"]] },
+    { name: "Test Weaver", skill: "Tailoring", hp: 18, charge: 90 },
+    { name: "Test Mason", skill: "Construction", hp: 0, charge: 0 },
+    { name: "Test Alchemist", skill: "Alchemy", hp: 88, charge: 35, status: [["🛡️", "140 shield"]] },
+    { name: "Test Miner", skill: "Mining", hp: 64, charge: 60 },
+    { name: "Test Forester", skill: "Woodcutting", hp: 76, charge: 45 },
+    { name: "Test Spellwright", skill: "Spellcrafting", hp: 95, charge: 70, status: [["🛡️", "96 shield"]] }
+  ];
+  var HP_FILL = /(?:^|\s)bg-(?:emerald|green|amber|yellow|orange|rose|red)-\d+(?:\/\d+)?(?=\s|$)/g;
+  var enabled = false;
+  var isTrack = (el2) => el2?.children.length === 1 && /%$/.test(String(el2.firstElementChild.style?.width || ""));
+  function cleanClone(raider) {
+    const copy = raider.cloneNode(true);
+    copy.querySelectorAll("[data-iw-raid-owned]").forEach((node2) => node2.remove());
+    for (const node2 of [copy, ...copy.querySelectorAll("*")]) {
+      for (const attr of [...node2.attributes]) if (attr.name.startsWith("data-iw-") || attr.name === "id") node2.removeAttribute(attr.name);
+    }
+    return copy;
+  }
+  function buildDummy(template, spec) {
+    const dummy = cleanClone(template);
+    dummy.setAttribute(DUMMY, "1");
+    dummy.setAttribute("aria-label", `${spec.name} (test dummy)`);
+    dummy.classList.toggle("opacity-35", spec.hp === 0);
+    const [nameEl, skillEl] = dummy.querySelectorAll(":scope > p");
+    if (nameEl) {
+      nameEl.textContent = spec.name;
+      nameEl.className = nameEl.className.replace(/(?:^|\s)text-sky-\d+(?:\/\d+)?/g, " ").trim() + " text-white";
+    }
+    if (skillEl) skillEl.textContent = spec.skill;
+    const [hpTrack, chargeTrack] = [...dummy.querySelectorAll(":scope > div")].filter(isTrack);
+    const hpFill = hpTrack?.firstElementChild;
+    if (hpFill) {
+      hpFill.style.width = `${spec.hp}%`;
+      const toneClass = spec.hp <= 25 ? "bg-rose-500" : spec.hp <= 50 ? "bg-amber-400" : "bg-emerald-400";
+      hpFill.className = `${hpFill.className.replace(HP_FILL, " ").trim()} ${toneClass}`;
+    }
+    const chargeFill = chargeTrack?.firstElementChild;
+    if (chargeFill) chargeFill.style.width = `${spec.charge}%`;
+    dummy.querySelectorAll("[title]").forEach((span) => span.remove());
+    const spriteBox = dummy.firstElementChild;
+    for (const [glyph, title] of spec.status || []) {
+      const span = document.createElement("span");
+      span.className = "absolute -top-1 left-0 text-[10px]";
+      span.title = title;
+      span.textContent = glyph;
+      spriteBox?.append(span);
+    }
+    return dummy;
+  }
+  function syncPartyPreview(arena) {
+    const floor = arena.querySelector(":scope > .raid-arena-floor");
+    if (!floor) return;
+    const dummies = [...floor.querySelectorAll(`:scope > [${DUMMY}]`)];
+    const real = [...floor.querySelectorAll(":scope > button, :scope > div")].filter((r) => !r.hasAttribute(DUMMY));
+    const want = enabled && real.length ? Math.max(0, Math.min(ROSTER.length, FULL_PARTY - real.length)) : 0;
+    if (dummies.length === want) return;
+    dummies.forEach((dummy) => dummy.remove());
+    if (!want) return;
+    const template = real.find((r) => !/(?:^|\s)opacity-35(?:\s|$)/.test(r.className)) || real[0];
+    floor.append(...ROSTER.slice(0, want).map((spec) => buildDummy(template, spec)));
+  }
+  var EFFECT_STEPS = [0, 2, 4, 6];
+  var TEST_BUFFS = [
+    { art: "war-cry", name: "Battle Hymn", glyph: "⚔️", dur: 12, title: "Battle Hymn (test) — raid ATK up" },
+    { art: "ward", name: "Aegis", glyph: "💠", dur: 18, title: "Aegis (test) — fire resist up" },
+    { art: "shield", name: "Barrier", glyph: "🛡️", dur: 9, title: "Barrier (test) — absorbs damage" },
+    { art: null, name: "Haste", glyph: "⚡", dur: 7, title: "Haste (test) — action speed up" },
+    { art: null, name: "Regrowth", glyph: "💚", dur: 15, title: "Regrowth (test) — heal over time" },
+    { art: null, name: "Mistveil", glyph: "💨", dur: 5, title: "Mistveil (test) — dodge up" }
+  ];
+  var TEST_DEBUFFS = [
+    { art: "curse", name: "Hex", glyph: "🩸", dur: 14, title: "Hex (test) — reduced healing" },
+    { art: "bleed", name: "Rend", glyph: "🩸", dur: 8, title: "Rend (test) — bleeding" },
+    { art: null, name: "Scorch", glyph: "🔥", dur: 6, title: "Scorch (test) — burn damage" },
+    { art: null, name: "Venom", glyph: "☠️", dur: 11, title: "Venom (test) — poison damage" },
+    { art: null, name: "Slowed", glyph: "🐌", dur: 4, title: "Slowed (test) — reduced action speed" },
+    { art: null, name: "Weakened", glyph: "🪶", dur: 10, title: "Weakened (test) — reduced damage" }
+  ];
+  var effectCount = 0;
+  function previewEffects() {
+    if (!effectCount) return [];
+    const now = Math.floor(Date.now() / 1e3);
+    return [...TEST_BUFFS.slice(0, effectCount), ...TEST_DEBUFFS.slice(0, effectCount)].map(({ dur, ...e }) => ({ ...e, value: `${dur - now % dur}s` }));
+  }
+  var TOGGLES = {
+    party: {
+      title: "Testing feature: fill the raid party with dummy frames",
+      advance: () => {
+        enabled = !enabled;
+      },
+      text: () => enabled ? "🧪 Test: hide dummies" : "🧪 Test: full party",
+      pressed: () => enabled
+    },
+    effects: {
+      title: "Testing feature: add test buffs and debuffs (cycles 2 / 4 / 6 of each, then off)",
+      advance: () => {
+        effectCount = EFFECT_STEPS[(EFFECT_STEPS.indexOf(effectCount) + 1) % EFFECT_STEPS.length];
+      },
+      text: () => effectCount ? `🧪 Effects: ${effectCount} + ${effectCount}` : "🧪 Effects: off",
+      pressed: () => effectCount > 0
+    }
+  };
+  function syncPartyPreviewToggle(root, head, redecorate) {
+    const arenas = () => [...root.querySelectorAll(".raid-battle-backdrop")];
+    const live2 = !!head && arenas().length > 0;
+    for (const [key, spec] of Object.entries(TOGGLES)) {
+      let toggle = head?.querySelector(`:scope > [${TEST}="${key}"]`);
+      if (!live2) {
+        toggle?.remove();
+        continue;
+      }
+      if (!toggle) {
+        toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.setAttribute(TEST, key);
+        toggle.title = spec.title;
+        toggle.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          spec.advance();
+          updateToggle(toggle, spec);
+          for (const arena of arenas()) redecorate(arena);
+        });
+        head.append(toggle);
+      }
+      updateToggle(toggle, spec);
+    }
+  }
+  function updateToggle(toggle, spec) {
+    const text = spec.text();
+    if (toggle.textContent !== text) toggle.textContent = text;
+    const pressed = String(spec.pressed());
+    if (toggle.getAttribute("aria-pressed") !== pressed) toggle.setAttribute("aria-pressed", pressed);
+  }
+  function clearRaidPartyPreview(root) {
+    if (!root) return;
+    root.querySelectorAll(`[${DUMMY}], [${TEST}]`).forEach((node2) => node2.remove());
+  }
+
+  // src/modules/RaidHud.js
+  var norm3 = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  var stripGlyph = (value) => norm3(value).replace(/^[^\p{L}\p{N}]+/u, "");
+  var SKILLS = ["combat", "jewelcrafting", "tailoring", "construction", "mining", "woodcutting", "alchemy", "gathering", "smithing", "spellcrafting"];
+  var SKILL_ALIASES = { herbalism: "gathering", fishing: "gathering", crafting: "smithing" };
+  var EFFECT_ART = [
+    [/war\s*cry/i, "war-cry", "War Cry"],
+    [/\bward\b/i, "ward", "Ward"],
+    [/shield/i, "shield", "Shield"],
+    [/tank|taunt|challenge/i, "taunt", "Tanking"],
+    [/curse/i, "curse", "Cursed"],
+    [/bleed|rend/i, "bleed", "Bleeding"]
+  ];
+  var OWNED = "data-iw-raid-owned";
+  var HUD_ATTRS = [
+    "data-iw-raid-encounter",
+    "data-iw-raid-hud",
+    "data-iw-raid-boss",
+    "data-iw-raid-epithet",
+    "data-iw-raid-pct",
+    "data-iw-raid-cast",
+    "data-iw-raid-cast-name",
+    "data-iw-raid-cast-scope",
+    "data-iw-raid-cast-secs",
+    "data-iw-raid-cast-urgency",
+    "data-iw-raid-cast-step",
+    "data-iw-raid-skill",
+    "data-iw-raid-hp",
+    "data-iw-raid-frame",
+    "data-iw-raid-self",
+    "data-iw-raid-down",
+    "data-iw-raid-resist",
+    "data-iw-raid-resist-step",
+    "data-iw-raid-fx-kind",
+    "data-iw-raid-scene-less",
+    "data-iw-raid-party",
+    "data-iw-raid-fold",
+    "data-iw-raid-timer"
+  ];
+  var castMax = /* @__PURE__ */ new Map();
+  var strips = /* @__PURE__ */ new WeakMap();
+  var timerMax = /* @__PURE__ */ new Map();
+  var timerSets = /* @__PURE__ */ new WeakMap();
+  var folds = /* @__PURE__ */ new Map();
+  function set(el2, key, value) {
+    if (!el2) return;
+    if (value == null || value === false) {
+      if (el2.hasAttribute(key)) el2.removeAttribute(key);
+      return;
+    }
+    const v = String(value);
+    if (el2.getAttribute(key) !== v) el2.setAttribute(key, v);
+  }
+  function el(tag, className, text) {
+    const node2 = document.createElement(tag);
+    if (className) node2.className = className;
+    node2.setAttribute(OWNED, "1");
+    if (text != null) node2.textContent = text;
+    return node2;
+  }
+  function percent(fill) {
+    const w = parseFloat(fill?.style?.width);
+    return Number.isFinite(w) ? Math.max(0, Math.min(100, Math.round(w))) : null;
+  }
+  function fillTone(fill) {
+    const cls = String(fill?.className || "");
+    if (/(?:^|\s)bg-(?:rose|red)-/.test(cls)) return "bad";
+    if (/(?:^|\s)bg-(?:amber|yellow|orange)-/.test(cls)) return "warn";
+    return "good";
+  }
+  function skillKey(text) {
+    const t = stripGlyph(text).toLowerCase();
+    for (const key of SKILLS) if (t.startsWith(key)) return key;
+    for (const [alias, key] of Object.entries(SKILL_ALIASES)) if (t.startsWith(alias)) return key;
+    return null;
+  }
+  function artFor(text) {
+    for (const [re, art2, name] of EFFECT_ART) if (re.test(text)) return { art: art2, name };
+    return null;
+  }
+  function glyphOf(text) {
+    const m = /^[^\p{L}\p{N}]+/u.exec(norm3(text));
+    return m ? m[0].trim() : "";
+  }
+  function decorateBoss(arena) {
+    const summary = arena.querySelector('[data-iw-guild-role="boss-summary"]');
+    if (!summary) {
+      set(arena, "data-iw-raid-encounter", null);
+      return;
+    }
+    const nameEl = summary.querySelector(".font-semibold") || summary.querySelector("span");
+    if (nameEl) {
+      const raw = stripGlyph(nameEl.textContent);
+      const comma = raw.indexOf(",");
+      const boss = (comma > 0 ? raw.slice(0, comma) : raw).trim().toLowerCase();
+      set(arena, "data-iw-raid-encounter", ["ashmaw", "thessaly", "morwenna", "grimjaw", "skarth"].includes(boss) ? boss : null);
+      set(nameEl, "data-iw-raid-boss", comma > 0 ? raw.slice(0, comma).trim() : raw);
+      set(nameEl, "data-iw-raid-epithet", comma > 0 ? raw.slice(comma + 1).trim() : "");
+    } else set(arena, "data-iw-raid-encounter", null);
+    const fill = summary.querySelector('[data-iw-guild-role="boss-hp"] > *');
+    const text = [...summary.querySelectorAll(":scope > p")].find((p) => /hp/i.test(p.textContent));
+    const pct = percent(fill);
+    set(text, "data-iw-raid-pct", pct == null ? null : `${pct}%`);
+  }
+  function decorateCast(arena) {
+    const tg = arena.querySelector('[data-iw-guild-role="telegraph"]');
+    if (!tg) return;
+    const text = norm3(tg.textContent);
+    const m = /^(.+?)\s*(?:\(([^)]*)\))?\s+in\s+(\d+(?:\.\d+)?)\s*s(?:ec(?:onds?)?)?\.?$/i.exec(text);
+    if (!m) {
+      for (const key of ["data-iw-raid-cast", "data-iw-raid-cast-name", "data-iw-raid-cast-scope", "data-iw-raid-cast-secs", "data-iw-raid-cast-urgency", "data-iw-raid-cast-step"]) set(tg, key, null);
+      return;
+    }
+    const name = m[1].trim();
+    const secs = Number(m[3]);
+    const max = Math.max(secs, castMax.get(name) || 0);
+    castMax.set(name, max);
+    set(tg, "data-iw-raid-cast", "1");
+    set(tg, "data-iw-raid-cast-name", name);
+    set(tg, "data-iw-raid-cast-scope", m[2] ? m[2].replace(/^./, (c) => c.toUpperCase()) : "");
+    set(tg, "data-iw-raid-cast-secs", `${Number.isInteger(secs) ? secs : secs.toFixed(1)}s`);
+    set(tg, "data-iw-raid-cast-urgency", secs <= 2 ? "now" : secs <= 5 ? "near" : "calm");
+    set(tg, "data-iw-raid-cast-step", String(max > 0 ? Math.round(10 * secs / max) : 10));
+  }
+  function readRaidEffects(arena) {
+    const shared = [];
+    let tank = null;
+    let resist = null;
+    for (const line of arena.querySelectorAll('[data-iw-guild-role="effects"] > div')) {
+      const text = norm3(line.textContent);
+      const left = /(\d+)\s*s\s*left/i.exec(text);
+      const tanking = /^\W*(.+?)\s+is\s+tanking\b/i.exec(text);
+      const res = /=\s*(\d+)\s*\/\s*(\d+)\s*needed/i.exec(text);
+      if (res) {
+        resist = { have: +res[1], need: +res[2], glyph: glyphOf(text) };
+        set(line, "data-iw-raid-fx-kind", "resist");
+        set(line, "data-iw-raid-resist", `${res[1]} / ${res[2]}`);
+        set(line, "data-iw-raid-resist-step", String(Math.min(10, Math.round(10 * res[1] / Math.max(1, res[2])))));
+        continue;
+      }
+      if (tanking) {
+        tank = { name: tanking[1].trim(), secs: left ? `${left[1]}s` : "" };
+        set(line, "data-iw-raid-fx-kind", "taunt");
+        continue;
+      }
+      const art2 = artFor(text);
+      set(line, "data-iw-raid-fx-kind", art2 ? art2.art : "other");
+      shared.push({ art: art2?.art || null, name: art2?.name || stripGlyph(text).replace(/\s+active\b.*$/i, ""), glyph: glyphOf(text), value: left ? `${left[1]}s` : "", title: text });
+    }
+    return { shared, tank, resist };
+  }
+  function readOwnEffects(raider) {
+    const own2 = [];
+    for (const span of raider.querySelectorAll("[title]")) {
+      if (span.closest(`[${OWNED}]`)) continue;
+      const title = norm3(span.title);
+      const art2 = artFor(title);
+      const num = /^(\d[\d,]*)\s+/.exec(title);
+      own2.push({ art: art2?.art || null, name: art2?.name || title, glyph: norm3(span.textContent), value: art2?.art === "shield" && num ? num[1] : "", title });
+    }
+    return own2;
+  }
+  function chip(effect, withLabel) {
+    const node2 = el("span", "iw-raid-chip");
+    if (effect.art) node2.dataset.iwRaidArt = effect.art;
+    if (effect.tone) node2.dataset.iwRaidTone = effect.tone;
+    node2.title = effect.title || effect.name;
+    node2.setAttribute("aria-label", `${effect.name}${effect.value ? ` ${effect.value}` : ""}`);
+    const icon2 = el("i", "iw-raid-chip-icon", effect.art ? null : effect.glyph || "•");
+    icon2.setAttribute("aria-hidden", "true");
+    node2.append(icon2);
+    if (withLabel) node2.append(el("span", "iw-raid-chip-name", effect.name));
+    if (effect.value) node2.append(el("b", "iw-raid-chip-value", effect.value));
+    return node2;
+  }
+  var DEBUFF = /* @__PURE__ */ new Set(["curse", "bleed"]);
+  var toneOf = (e) => DEBUFF.has(e.art) || /curse|bleed|poison|burn|reduced/i.test(e.title || "") ? "debuff" : "buff";
+  function decorateRaiders(arena, raid) {
+    const party = [];
+    let count = 0;
+    let downed = 0;
+    for (const raider of arena.querySelectorAll('[data-iw-guild-role="raider"]')) {
+      const nameEl = raider.querySelector('[data-iw-guild-role="raider-name"]');
+      const name = norm3(nameEl?.textContent);
+      const skillText = norm3(raider.querySelector('[data-iw-guild-role="raider-skill"]')?.textContent);
+      const hpFill = raider.querySelector('[data-iw-guild-role="raider-hp"] > *');
+      const hp = percent(hpFill);
+      const tone2 = fillTone(hpFill);
+      const self = /(?:^|\s)text-sky-/.test(String(nameEl?.className || ""));
+      const down = hp === 0;
+      count += 1;
+      if (down) downed += 1;
+      set(raider, "data-iw-raid-skill", skillKey(skillText));
+      set(raider, "data-iw-raid-hp", hp == null ? null : `${hp}%`);
+      set(raider, "data-iw-raid-frame", down || tone2 === "bad" ? "critical" : self ? "self" : "normal");
+      set(raider, "data-iw-raid-down", down ? "1" : null);
+      set(raider, "data-iw-raid-self", self ? "1" : null);
+      const effects = readOwnEffects(raider);
+      if (raid.tank && raid.tank.name === name) {
+        const taunt = effects.find((e) => e.art === "taunt");
+        if (taunt) taunt.value = raid.tank.secs;
+        else effects.push({ art: "taunt", name: "Tanking", glyph: "🎯", value: raid.tank.secs, title: `${name} is tanking` });
+      }
+      if (!down) for (const e of raid.shared) effects.push({ ...e });
+      for (const e of effects) e.tone = toneOf(e);
+      effects.sort((a, b) => (a.tone === "debuff") - (b.tone === "debuff"));
+      const sig = JSON.stringify(effects.map((e) => [e.art, e.name, e.value, e.glyph, e.tone]));
+      let strip = raider.querySelector(`:scope > .iw-raid-fx[${OWNED}]`);
+      if (!strip || strips.get(raider) !== sig) {
+        if (!strip) {
+          strip = el("span", "iw-raid-fx");
+          strip.setAttribute("role", "list");
+          raider.append(strip);
+        }
+        strip.replaceChildren(...effects.map((e) => {
+          const c = chip(e, false);
+          c.setAttribute("role", "listitem");
+          return c;
+        }));
+        strips.set(raider, sig);
+      }
+      party.push({ name, down, effects });
+    }
+    const floor = arena.querySelector(":scope > .raid-arena-floor");
+    set(floor, "data-iw-raid-party", count ? `${count} raider${count === 1 ? "" : "s"} · ${downed ? `${downed} down` : "all standing"}` : null);
+    return party;
+  }
+  var secsOf = (text) => {
+    const m = /(\d+)\s*s\b/.exec(text || "");
+    return m ? Number(m[1]) : null;
+  };
+  function timerSpecs(raid, party) {
+    const specs = [];
+    for (const e of raid.shared) {
+      const secs = secsOf(e.value);
+      if (secs == null) continue;
+      specs.push({ key: `raid:${e.name}`, art: e.art, glyph: e.glyph, name: e.name, who: "Raid", secs, tone: toneOf(e) });
+    }
+    const tankSecs = secsOf(raid.tank?.secs);
+    if (tankSecs != null) specs.push({ key: "tank", art: "taunt", glyph: "🎯", name: "Tanking", who: raid.tank.name, secs: tankSecs, tone: "buff" });
+    const debuffs = /* @__PURE__ */ new Map();
+    for (const member of party) {
+      if (member.down) continue;
+      for (const e of member.effects) {
+        if (e.tone !== "debuff" || raid.shared.some((r) => r.name === e.name)) continue;
+        const entry2 = debuffs.get(e.name) || { key: `debuff:${e.name}`, art: e.art, glyph: e.glyph, name: e.name, who: [], secs: null, tone: "debuff" };
+        entry2.who.push(member.name);
+        const secs = secsOf(e.title);
+        if (secs != null) entry2.secs = Math.max(entry2.secs ?? 0, secs);
+        debuffs.set(e.name, entry2);
+      }
+    }
+    for (const entry2 of debuffs.values()) specs.push({ ...entry2, who: entry2.who.join(", ") });
+    specs.sort((x, y) => (x.tone === "debuff") - (y.tone === "debuff"));
+    return specs;
+  }
+  function buildTimer(spec) {
+    const bar = el("div", "iw-raid-timer");
+    const icon2 = el("i", "iw-raid-chip-icon", spec.art ? null : spec.glyph || "•");
+    bar.append(el("i", "iw-raid-timer-fill"), icon2, el("span", "iw-raid-timer-name"), el("span", "iw-raid-timer-who"), el("b", "iw-raid-timer-secs"));
+    return bar;
+  }
+  function setText3(node2, value) {
+    if (node2.textContent !== value) node2.textContent = value;
+  }
+  function updateTimer(bar, spec) {
+    const [fill, , name, who, secs] = bar.children;
+    set(bar, "data-iw-raid-art", spec.art);
+    set(bar, "data-iw-raid-tone", spec.tone);
+    set(bar, "data-iw-raid-timer", spec.key);
+    setText3(name, spec.name);
+    setText3(who, spec.who);
+    setText3(secs, spec.secs == null ? "" : `${spec.secs}s`);
+    let width = 100;
+    if (spec.secs != null) {
+      const max = Math.max(spec.secs, timerMax.get(spec.key) || 0);
+      timerMax.set(spec.key, max);
+      width = max > 0 ? Math.round(100 * spec.secs / max) : 100;
+    }
+    if (fill.style.width !== `${width}%`) fill.style.width = `${width}%`;
+  }
+  function decorateTimers(arena, raid, party) {
+    const specs = timerSpecs(raid, party);
+    let row = arena.querySelector(`:scope > .iw-raid-timers[${OWNED}]`);
+    if (!specs.length) {
+      row?.remove();
+      return;
+    }
+    if (!row) {
+      row = el("div", "iw-raid-timers");
+      row.setAttribute("aria-hidden", "true");
+      arena.append(row);
+    }
+    const keys = specs.map((spec) => spec.key).join("|");
+    if (timerSets.get(row) !== keys) {
+      row.replaceChildren(...specs.map(buildTimer));
+      timerSets.set(row, keys);
+    }
+    specs.forEach((spec, i) => updateTimer(row.children[i], spec));
+  }
+  var docks = /* @__PURE__ */ new WeakMap();
+  var dockSigs = /* @__PURE__ */ new WeakMap();
+  function gameLog(arena) {
+    return arena.querySelector('[data-iw-guild-role="combat-log"]');
+  }
+  function gameSkills(arena) {
+    return arena.querySelector(':scope > [data-iw-guild-role="effects"]');
+  }
+  function logLines(log) {
+    if (!log) return [];
+    if (log.tagName === "BUTTON") return [...log.querySelectorAll(":scope > p")].reverse().map((p) => norm3(p.textContent));
+    const list = [...log.children].at(-1);
+    return [...list?.querySelectorAll(":scope > p") || []].map((p) => norm3(p.textContent));
+  }
+  function copyOf(node2) {
+    const copy = node2.cloneNode(true);
+    for (const elx of [copy, ...copy.querySelectorAll("*")]) {
+      for (const attr of [...elx.attributes]) if (attr.name.startsWith("data-iw-") || attr.name === "id") elx.removeAttribute(attr.name);
+      elx.setAttribute(OWNED, "1");
+    }
+    return copy;
+  }
+  function onDockHead(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const head = event.currentTarget;
+    const panel = head.parentElement;
+    const dock = panel.parentElement;
+    const arena = docks.get(dock);
+    const key = panel.dataset.iwRaidDock;
+    const open = folds.get(key) !== true;
+    folds.set(key, open);
+    syncDockPanel(panel, open);
+    if (!arena) return;
+    decorateDock(arena);
+    if (key !== "log") return;
+    const log = gameLog(arena);
+    if (open && log?.tagName === "BUTTON") log.click();
+    if (!open && log && log.tagName !== "BUTTON") [...log.querySelectorAll("button")].find((b) => /close/i.test(b.textContent))?.click();
+  }
+  function onDockToggle(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const arena = docks.get(event.currentTarget.closest(".iw-raid-dock"));
+    gameSkills(arena)?.querySelector('[data-iw-guild-role="effects-toggle"]')?.click();
+  }
+  function syncDockPanel(panel, open) {
+    set(panel, "data-iw-raid-fold", open ? "open" : "closed");
+    const head = panel.firstElementChild;
+    set(head, "aria-expanded", String(open));
+  }
+  function dockPanel(key, title, glyph) {
+    const panel = el("section", "iw-raid-dock-panel");
+    panel.dataset.iwRaidDock = key;
+    const head = el("button", "iw-raid-dock-head");
+    head.type = "button";
+    if (glyph) head.append(el("span", "iw-raid-dock-glyph", glyph));
+    head.append(el("span", "iw-raid-dock-title", title), el("i", "iw-raid-dock-chevron"));
+    head.addEventListener("click", onDockHead);
+    panel.append(head, el("div", "iw-raid-dock-body"));
+    return panel;
+  }
+  function fillLog(panel, arena) {
+    const lines = logLines(gameLog(arena));
+    const sig = lines.join("\n");
+    if (dockSigs.get(panel) === sig) return;
+    dockSigs.set(panel, sig);
+    const body = panel.lastElementChild;
+    const pinned = !body.firstChild || body.scrollHeight - body.scrollTop - body.clientHeight < 12;
+    const top = body.scrollTop;
+    body.replaceChildren(...(lines.length ? lines : ["The fight begins…"]).map((line) => el("p", "iw-raid-dock-line", line)));
+    body.scrollTop = pinned ? body.scrollHeight : top;
+  }
+  function fillSkills(panel, arena) {
+    const skills = gameSkills(arena);
+    const toggle = skills?.querySelector('[data-iw-guild-role="effects-toggle"]');
+    const rows = skills ? [...skills.children].filter((c) => c !== toggle && !c.hasAttribute(OWNED)) : [];
+    const sig = `${toggle ? norm3(toggle.textContent) : ""}\0${rows.map((r) => `${r.className}|${r.textContent}`).join("")}`;
+    if (dockSigs.get(panel) === sig) return;
+    dockSigs.set(panel, sig);
+    const body = panel.lastElementChild;
+    const kids = rows.map((row) => {
+      const copy = copyOf(row);
+      for (const attr of ["data-iw-raid-fx-kind", "data-iw-raid-resist-step"]) if (row.hasAttribute(attr)) copy.setAttribute(attr, row.getAttribute(attr));
+      return copy;
+    });
+    if (toggle) {
+      const more = el("button", "iw-raid-dock-more", norm3(toggle.querySelector("span")?.textContent || toggle.textContent).replace(/^\(|\)$/g, ""));
+      more.type = "button";
+      more.addEventListener("click", onDockToggle);
+      kids.push(more);
+    }
+    body.replaceChildren(...kids);
+  }
+  function dockAnchor(arena) {
+    for (let sib = arena.nextElementSibling; sib; sib = sib.nextElementSibling) {
+      if (sib.matches('[data-iw-guild-card="chat"]')) return sib;
+    }
+    return arena;
+  }
+  function decorateDock(arena) {
+    const parent = arena.parentElement;
+    if (!parent) return;
+    const hasLog = !!gameLog(arena);
+    const hasSkills = !!gameSkills(arena);
+    let dock = [...parent.querySelectorAll(`:scope > .iw-raid-dock[${OWNED}]`)].find((d) => docks.get(d) === arena);
+    if (!hasLog && !hasSkills) {
+      dock?.remove();
+      return;
+    }
+    if (!dock) {
+      dock = el("div", "iw-raid-dock");
+      dock.append(dockPanel("log", "Combat log"), dockPanel("skills", "Raid skills", "⚡"));
+      docks.set(dock, arena);
+    }
+    const anchor2 = dockAnchor(arena);
+    if (anchor2.nextElementSibling !== dock) anchor2.after(dock);
+    const [logPanel, skillsPanel] = dock.children;
+    for (const [panel, present, fill] of [[logPanel, hasLog, fillLog], [skillsPanel, hasSkills, fillSkills]]) {
+      const open = folds.get(panel.dataset.iwRaidDock) === true;
+      set(panel, "hidden", present ? null : "");
+      syncDockPanel(panel, open);
+      if (present && open) fill(panel, arena);
+    }
+  }
+  function pruneRaidDocks(root) {
+    for (const dock of root?.querySelectorAll?.(`.iw-raid-dock[${OWNED}]`) || []) {
+      const arena = docks.get(dock);
+      if (!arena || !arena.isConnected || !root.contains(arena)) dock.remove();
+    }
+  }
+  function decorateRaidHud(arena) {
+    set(arena, "data-iw-raid-hud", "1");
+    set(arena, "data-iw-raid-scene-less", arena.hasAttribute("data-iw-raid-scene") ? null : "1");
+    decorateBoss(arena);
+    decorateCast(arena);
+    const raid = readRaidEffects(arena);
+    raid.shared.push(...previewEffects());
+    const party = decorateRaiders(arena, raid);
+    decorateTimers(arena, raid, party);
+    decorateDock(arena);
+  }
+  function refreshRaidText(parents) {
+    const arenas = /* @__PURE__ */ new Set();
+    for (const parent of parents) {
+      const arena = parent?.closest?.("[data-iw-raid-hud]");
+      if (arena && !parent.closest(`[${OWNED}]`)) arenas.add(arena);
+    }
+    for (const arena of arenas) decorateRaidHud(arena);
+  }
+  function clearRaidHud(root) {
+    if (!root) return;
+    root.querySelectorAll(`[${OWNED}]`).forEach((node2) => node2.remove());
+    for (const attr of HUD_ATTRS) {
+      if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
+      root.querySelectorAll(`[${attr}]`).forEach((node2) => node2.removeAttribute(attr));
+    }
+  }
+
+  // src/modules/GuildPanels.js
+  var norm4 = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  var label2 = (value) => norm4(value).replace(/^[^\p{L}\p{N}]+/u, "");
+  var ROLE = "data-iw-guild-role";
+  var ATTRS = ["data-iw-guild", "data-iw-guild-card", ROLE, "data-iw-guild-tone", "data-iw-guild-state"];
+  function mark3(el2, key, value) {
+    if (!el2) return;
+    if (value == null) {
+      if (el2.hasAttribute(key)) el2.removeAttribute(key);
+      return;
+    }
+    if (el2.getAttribute(key) !== value) el2.setAttribute(key, value);
+  }
+  var role = (el2, value) => mark3(el2, ROLE, value);
+  function toneOf2(el2) {
+    const cls = String(el2?.className || "");
     if (/(?:^|\s)(?:[a-z]+:)?(?:bg|border|text)-(?:emerald|green|lime)-/.test(cls)) return "good";
     if (/(?:^|\s)(?:[a-z]+:)?(?:bg|border|text)-(?:rose|red)-/.test(cls)) return "bad";
     if (/(?:^|\s)(?:bg|border|text)-(?:amber|yellow|orange)-/.test(cls)) return "warn";
@@ -6680,9 +8868,9 @@
     if (/(?:^|\s)(?:bg|border|text)-ember\b/.test(cls)) return "accent";
     return null;
   }
-  var tone = (el, value = toneOf(el)) => mark3(el, "data-iw-guild-tone", value);
-  function selectedBy(el, pattern) {
-    return pattern.test(String(el?.className || ""));
+  var tone = (el2, value = toneOf2(el2)) => mark3(el2, "data-iw-guild-tone", value);
+  function selectedBy(el2, pattern) {
+    return pattern.test(String(el2?.className || ""));
   }
   function firstLine(card) {
     const p = card.querySelector("p");
@@ -6695,7 +8883,7 @@
     if (head.parentElement !== root) return;
     role(head, "head");
     for (const span of heading.querySelectorAll(":scope > span")) {
-      if (/^(beta|alpha|new)$/i.test(norm3(span.textContent))) role(span, "badge");
+      if (/^(beta|alpha|new)$/i.test(norm4(span.textContent))) role(span, "badge");
     }
     for (const p of head.querySelectorAll("p")) {
       if (!heading.contains(p)) role(p, "subtitle");
@@ -6703,6 +8891,7 @@
     for (const span of head.querySelectorAll("span[title]")) {
       if (/guild points/i.test(span.title)) role(span, "points");
     }
+    syncPartyPreviewToggle(root, head, decorateArena);
     for (const button2 of head.querySelectorAll("button")) {
       if (button2.hasAttribute("data-iw-collapse")) continue;
       role(button2, "head-link");
@@ -6729,7 +8918,7 @@
     if (toggles.length === 1 && buttons.every((b) => toggles.includes(b) || /^start raid\b/i.test(label2(b.textContent)))) return "ready";
     return "generic";
   }
-  function decorateBoss(card) {
+  function decorateBoss2(card) {
     const pills = [...card.querySelectorAll("button[title]")].filter((b) => /,\s*the\s/i.test(b.title));
     role(pills[0]?.parentElement, "boss-tabs");
     for (const pill of pills) {
@@ -6772,28 +8961,28 @@
     }
   }
   function decorateRosterRow(row) {
-    for (const el of row.querySelectorAll("span, div")) {
-      const text = label2(el.textContent);
-      const cls = String(el.className || "");
-      if (!el.childElementCount && /^ready$/i.test(text)) {
-        role(el, "ready-badge");
-        tone(el);
-      } else if (!el.childElementCount && /^not ready$/i.test(text)) role(el, "not-ready");
-      else if (!el.childElementCount && !text && /\brounded-full\b/.test(cls) && /\bh-1\.5\b/.test(cls)) {
-        role(el, "dot");
-        mark3(el, "data-iw-guild-state", toneOf(el) === "good" ? "online" : null);
-      } else if (/guild points/i.test(el.title)) role(el, "points");
-      else if (/skill level/i.test(el.title)) {
-        role(el, "chip");
-        tone(el);
-      } else if (el.tagName === "DIV" && /\bborder-sky-/.test(cls) && /\brounded-lg\b/.test(cls)) role(el, "lend-pill");
+    for (const el2 of row.querySelectorAll("span, div")) {
+      const text = label2(el2.textContent);
+      const cls = String(el2.className || "");
+      if (!el2.childElementCount && /^ready$/i.test(text)) {
+        role(el2, "ready-badge");
+        tone(el2);
+      } else if (!el2.childElementCount && /^not ready$/i.test(text)) role(el2, "not-ready");
+      else if (!el2.childElementCount && !text && /\brounded-full\b/.test(cls) && /\bh-1\.5\b/.test(cls)) {
+        role(el2, "dot");
+        mark3(el2, "data-iw-guild-state", toneOf2(el2) === "good" ? "online" : null);
+      } else if (/guild points/i.test(el2.title)) role(el2, "points");
+      else if (/skill level/i.test(el2.title)) {
+        role(el2, "chip");
+        tone(el2);
+      } else if (el2.tagName === "DIV" && /\bborder-sky-/.test(cls) && /\brounded-lg\b/.test(cls)) role(el2, "lend-pill");
     }
     for (const button2 of row.querySelectorAll("button")) {
       const picker = button2.closest(".relative")?.querySelector("button");
       if (/^kick\b/i.test(button2.title)) role(button2, "kick");
       else if (picker && picker !== button2) {
         role(button2, "option");
-        mark3(button2, "data-iw-guild-state", toneOf(button2) === "info" || button2.getAttribute("aria-selected") === "true" ? "selected" : null);
+        mark3(button2, "data-iw-guild-state", toneOf2(button2) === "info" || button2.getAttribute("aria-selected") === "true" ? "selected" : null);
       } else if (/\bborder-sky-/.test(String(button2.className))) role(button2, "picker");
       else role(button2, "member-name");
     }
@@ -6824,12 +9013,12 @@
     role(buttons[0], "picker");
     for (const option of buttons.slice(1)) {
       role(option, "option");
-      mark3(option, "data-iw-guild-state", toneOf(option) === "info" || option.getAttribute("aria-selected") === "true" ? "selected" : null);
+      mark3(option, "data-iw-guild-state", toneOf2(option) === "info" || option.getAttribute("aria-selected") === "true" ? "selected" : null);
     }
   }
   function decoratePrep(card) {
     role(card.querySelector(":scope > p"), "card-title");
-    for (const p of card.querySelectorAll(":scope > p")) if (toneOf(p)) {
+    for (const p of card.querySelectorAll(":scope > p")) if (toneOf2(p)) {
       role(p, "line");
       tone(p);
     }
@@ -6850,7 +9039,7 @@
         continue;
       }
       role(button2, "ready-toggle");
-      mark3(button2, "data-iw-guild-state", toneOf(button2) === "good" ? "ready" : null);
+      mark3(button2, "data-iw-guild-state", toneOf2(button2) === "good" ? "ready" : null);
     }
     for (const p of card.querySelectorAll(":scope > p")) role(p, "note");
   }
@@ -6899,13 +9088,13 @@
     }
   }
   function decorateReadyCheck(card) {
-    mark3(card, "data-iw-guild-tone", toneOf(card) || "warn");
+    mark3(card, "data-iw-guild-tone", toneOf2(card) || "warn");
     const head = card.querySelector(":scope > div");
     role(head, "card-head");
     role(head?.querySelector("p"), "rc-title");
     role(head?.querySelector("span"), "rc-timer");
     for (const p of card.querySelectorAll(":scope > p")) role(p, "rc-roster");
-    for (const el of card.querySelectorAll(":scope > div:not(:first-child) span")) tone(el);
+    for (const el2 of card.querySelectorAll(":scope > div:not(:first-child) span")) tone(el2);
     for (const button2 of card.querySelectorAll("button")) {
       role(button2, "rc-action");
       tone(button2);
@@ -6924,7 +9113,7 @@
     }
   }
   var DECORATORS = {
-    boss: decorateBoss,
+    boss: decorateBoss2,
     leaderboard: decorateLeaderboard,
     members: decorateMembers,
     lend: decorateLend,
@@ -6937,32 +9126,38 @@
     pickup: decoratePickup,
     directory: decorateDirectory
   };
-  function isTrack(el) {
-    const fill = el.children.length === 1 ? el.firstElementChild : null;
+  function isTrack2(el2) {
+    const fill = el2.children.length === 1 ? el2.firstElementChild : null;
     return !!fill && /%$/.test(String(fill.style?.width || ""));
   }
   function decorateArena(arena) {
     role(arena, "arena");
     reconcileAshmawScene(arena);
-    const boss = arena.querySelector('img[src*="boss-"],img[alt^="Ashmaw"]');
+    reconcileThessalyScene(arena);
+    reconcileMorwennaScene(arena);
+    reconcileGrimjawScene(arena);
+    reconcileSkarthScene(arena);
+    const boss = arena.querySelector('img[src*="boss-"],img[alt^="Ashmaw"],img[alt^="Thessaly"],img[alt^="Morwenna"],img[alt^="Grimjaw"],img[alt^="Skarth"]');
     if (boss?.parentElement?.parentElement !== arena) role(boss?.parentElement?.parentElement, "boss-summary");
     for (const panel of arena.querySelectorAll(".raid-readable-panel")) {
-      if (panel.tagName === "BUTTON") {
+      if (panel.tagName === "BUTTON" || panel.parentElement !== arena && panel.parentElement?.parentElement === arena) {
         role(panel, "combat-log");
         if (panel.parentElement !== arena && panel.parentElement?.parentElement === arena) role(panel.parentElement, "combat-log-region");
         continue;
       }
-      role(panel, panel.querySelector("button") ? "effects" : "telegraph");
-      tone(panel, panel.querySelector("button") ? "info" : toneOf(panel));
-      for (const button2 of panel.querySelectorAll("button")) role(button2, "effects-toggle");
+      const gameButtons = panel.querySelectorAll("button:not([data-iw-raid-owned])");
+      role(panel, gameButtons.length ? "effects" : "telegraph");
+      tone(panel, gameButtons.length ? "info" : toneOf2(panel));
+      for (const button2 of gameButtons) role(button2, "effects-toggle");
     }
     for (const track of arena.querySelectorAll("div")) {
-      if (!isTrack(track) || track.closest(".raid-arena-floor")) continue;
+      if (!isTrack2(track) || track.closest(".raid-arena-floor")) continue;
       role(track, "boss-hp");
     }
+    syncPartyPreview(arena);
     for (const raider of arena.querySelectorAll(".raid-arena-floor > button, .raid-arena-floor > div")) {
       role(raider, "raider");
-      const tracks = [...raider.querySelectorAll(":scope > div")].filter(isTrack);
+      const tracks = [...raider.querySelectorAll(":scope > div")].filter(isTrack2);
       role(tracks[0], "raider-hp");
       role(tracks[1], "raider-charge");
       const plates = raider.querySelectorAll(":scope > p");
@@ -6970,15 +9165,35 @@
       role(plates[1], "raider-skill");
     }
     for (const p of arena.querySelectorAll(":scope > p")) role(p, "status");
+    for (const box of arena.querySelectorAll(":scope > div:not(.raid-arena-floor):not([data-iw-raid-owned])")) {
+      const current = box.getAttribute(ROLE);
+      if (current && current !== "actions" && current !== "outcome") continue;
+      if (box.matches("[data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]")) continue;
+      const kids = [...box.children];
+      if (kids.length && kids.every((k) => k.tagName === "BUTTON")) {
+        role(box, "actions");
+        tone(box, null);
+        for (const button2 of kids) role(button2, "action");
+      } else if (box.querySelector(":scope > p")) {
+        role(box, "outcome");
+        tone(box);
+        for (const button2 of box.querySelectorAll(":scope > button")) role(button2, "outcome-close");
+      }
+    }
+    decorateRaidHud(arena);
   }
   var signatures2 = /* @__PURE__ */ new WeakMap();
   function decorateGuildPanel({ root, heading }) {
     pruneAshmawScenes();
+    pruneThessalyScenes();
+    pruneMorwennaScenes();
+    pruneGrimjawScenes();
+    pruneSkarthScenes();
     mark3(root, "data-iw-guild", "root");
     decorateHead(root, heading);
     for (const card of root.querySelectorAll(".compact-panel")) {
       if (card.querySelector(".compact-panel")) continue;
-      const sig = `${card.textContent}\0${[...card.querySelectorAll('button, span, div[class*="border"]')].map((el) => el.className).join("|")}`;
+      const sig = `${card.textContent}\0${[...card.querySelectorAll('button, span, div[class*="border"]')].map((el2) => el2.className).join("|")}`;
       if (signatures2.get(card) === sig && card.hasAttribute("data-iw-guild-card")) continue;
       signatures2.set(card, sig);
       const kind2 = cardKind(card);
@@ -6986,13 +9201,20 @@
       DECORATORS[kind2]?.(card);
     }
     for (const arena of root.querySelectorAll(".raid-battle-backdrop")) decorateArena(arena);
+    pruneRaidDocks(root);
   }
   function clearGuildPanel(root) {
     if (!root) return;
     clearAshmawScenes(root);
+    clearThessalyScenes(root);
+    clearMorwennaScenes(root);
+    clearGrimjawScenes(root);
+    clearSkarthScenes(root);
+    clearRaidPartyPreview(root);
+    clearRaidHud(root);
     for (const attr of ATTRS) {
       if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
-      root.querySelectorAll(`[${attr}]`).forEach((el) => el.removeAttribute(attr));
+      root.querySelectorAll(`[${attr}]`).forEach((el2) => el2.removeAttribute(attr));
     }
   }
 
@@ -7005,23 +9227,23 @@
   function normText3(value) {
     return String(value || "").replace(/\s+/g, " ").trim();
   }
-  function labelText(el) {
-    return normText3(el?.textContent).replace(/^[^\p{L}\p{N}]+/u, "");
+  function labelText(el2) {
+    return normText3(el2?.textContent).replace(/^[^\p{L}\p{N}]+/u, "");
   }
-  function nameText(el) {
-    const own2 = [...el?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
-    return labelText({ textContent: own2 }) || labelText(el);
+  function nameText(el2) {
+    const own2 = [...el2?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
+    return labelText({ textContent: own2 }) || labelText(el2);
   }
   function frameTitle(frame2, found = frameLandmarks(frame2)) {
     return found.sectionTitle || found.roleHeading || found.heading;
   }
   function frameLandmarks(frame2) {
     const found = { sectionTitle: null, roleHeading: null, heading: null, panel: null };
-    for (const el of frame2.querySelectorAll('[data-iw-ui="section-title"], [role="heading"], h1, h2, h3, h4, [data-iw-panel]')) {
-      if (!found.sectionTitle && el.getAttribute("data-iw-ui") === "section-title") found.sectionTitle = el;
-      if (!found.roleHeading && el.getAttribute("role") === "heading") found.roleHeading = el;
-      if (!found.heading && /^H[1-4]$/.test(el.tagName)) found.heading = el;
-      if (!found.panel && el.hasAttribute("data-iw-panel")) found.panel = el;
+    for (const el2 of frame2.querySelectorAll('[data-iw-ui="section-title"], [role="heading"], h1, h2, h3, h4, [data-iw-panel]')) {
+      if (!found.sectionTitle && el2.getAttribute("data-iw-ui") === "section-title") found.sectionTitle = el2;
+      if (!found.roleHeading && el2.getAttribute("role") === "heading") found.roleHeading = el2;
+      if (!found.heading && /^H[1-4]$/.test(el2.tagName)) found.heading = el2;
+      if (!found.panel && el2.hasAttribute("data-iw-panel")) found.panel = el2;
     }
     return found;
   }
@@ -7130,9 +9352,9 @@
       if (head) {
         delete head.dataset.iwCollapseHead;
         spines.delete(head);
-        head.querySelectorAll("[data-iw-collapse-spine], [data-iw-collapse-title]").forEach((el) => {
-          delete el.dataset.iwCollapseSpine;
-          delete el.dataset.iwCollapseTitle;
+        head.querySelectorAll("[data-iw-collapse-spine], [data-iw-collapse-title]").forEach((el2) => {
+          delete el2.dataset.iwCollapseSpine;
+          delete el2.dataset.iwCollapseTitle;
         });
       }
       const frame2 = head?.parentElement;
@@ -7140,20 +9362,20 @@
     }
   }
   function clearCollapsibleFrames(root = document) {
-    root.querySelectorAll("[data-iw-collapse]").forEach((el) => {
-      el.remove();
+    root.querySelectorAll("[data-iw-collapse]").forEach((el2) => {
+      el2.remove();
     });
-    root.querySelectorAll("[data-iw-collapsed]").forEach((el) => {
-      delete el.dataset.iwCollapsed;
+    root.querySelectorAll("[data-iw-collapsed]").forEach((el2) => {
+      delete el2.dataset.iwCollapsed;
     });
-    root.querySelectorAll("[data-iw-collapse-head]").forEach((el) => {
-      delete el.dataset.iwCollapseHead;
+    root.querySelectorAll("[data-iw-collapse-head]").forEach((el2) => {
+      delete el2.dataset.iwCollapseHead;
     });
-    root.querySelectorAll("[data-iw-collapse-spine]").forEach((el) => {
-      delete el.dataset.iwCollapseSpine;
+    root.querySelectorAll("[data-iw-collapse-spine]").forEach((el2) => {
+      delete el2.dataset.iwCollapseSpine;
     });
-    root.querySelectorAll("[data-iw-collapse-title]").forEach((el) => {
-      delete el.dataset.iwCollapseTitle;
+    root.querySelectorAll("[data-iw-collapse-title]").forEach((el2) => {
+      delete el2.dataset.iwCollapseTitle;
     });
     preferences = null;
     loading2 = null;
@@ -7164,19 +9386,19 @@
   var ROLE2 = "data-iw-chrome";
   var MAX_NOTICE_CHARS = 260;
   var resolution = null;
-  function setRole3(el, role2) {
-    if (el.getAttribute(ROLE2) !== role2) el.setAttribute(ROLE2, role2);
+  function setRole3(el2, role2) {
+    if (el2.getAttribute(ROLE2) !== role2) el2.setAttribute(ROLE2, role2);
   }
   function clearMarks() {
-    document.querySelectorAll(`[${ROLE2}]`).forEach((el) => {
-      el.removeAttribute(ROLE2);
+    document.querySelectorAll(`[${ROLE2}]`).forEach((el2) => {
+      el2.removeAttribute(ROLE2);
     });
   }
-  function norm4(text) {
+  function norm5(text) {
     return (text || "").replace(/\s+/g, " ").trim();
   }
-  function looksLikeShell(el) {
-    return !!el && el.querySelector(":scope > header");
+  function looksLikeShell(el2) {
+    return !!el2 && el2.querySelector(":scope > header");
   }
   function resolutionValid() {
     if (!resolution) return false;
@@ -7188,8 +9410,8 @@
     if (zone.getAttribute(ROLE2) !== "zone-bar") return false;
     return true;
   }
-  function elementChildren(el) {
-    return [...el.children];
+  function elementChildren(el2) {
+    return [...el2.children];
   }
   function resolve() {
     const zoneCandidates = [...document.querySelectorAll('[data-iw-ui="zone-bar"]')];
@@ -7240,7 +9462,7 @@
         resolution = null;
         return;
       }
-      const text = norm4(notice.textContent);
+      const text = norm5(notice.textContent);
       if (!text || text.length > MAX_NOTICE_CHARS) {
         clearMarks();
         resolution = null;
@@ -7268,10 +9490,10 @@
       [zoneActions, "zone-actions"]
     ]);
     if (notice) roles.set(notice, "notice");
-    document.querySelectorAll(`[${ROLE2}]`).forEach((el) => {
-      if (!roles.has(el)) el.removeAttribute(ROLE2);
+    document.querySelectorAll(`[${ROLE2}]`).forEach((el2) => {
+      if (!roles.has(el2)) el2.removeAttribute(ROLE2);
     });
-    roles.forEach((role2, el) => setRole3(el, role2));
+    roles.forEach((role2, el2) => setRole3(el2, role2));
     resolution = { shell, nav, notice, zone, zoneText, zoneActions };
   }
   function classifyHeaderChrome() {
@@ -7366,10 +9588,10 @@
 
   // src/modules/ArcaneCacheLootView.js
   var node = (tag, className, text) => {
-    const el = document.createElement(tag);
-    el.className = className;
-    if (text !== void 0) el.textContent = text;
-    return el;
+    const el2 = document.createElement(tag);
+    el2.className = className;
+    if (text !== void 0) el2.textContent = text;
+    return el2;
   };
   var number = (value) => value.toLocaleString("en-US");
   function createCacheLootView(announce) {
@@ -7407,8 +9629,8 @@
     let page = 0, pageSize = narrow.matches ? 1 : 3, disposed = false;
     const refresh = () => {
       if (disposed) return;
-      for (const { el, entry: entry2 } of icons) {
-        if (entry2.kind !== "currency" && AtlasService.paint(el, entry2.icon)) el.textContent = "";
+      for (const { el: el2, entry: entry2 } of icons) {
+        if (entry2.kind !== "currency" && AtlasService.paint(el2, entry2.icon)) el2.textContent = "";
       }
       for (const { entry: entry2, description, requirement } of detailNodes) {
         const details = cacheItemDetails(entry2, ItemDatabase.find(entry2.icon));
@@ -7532,16 +9754,16 @@
   var toolbarButton = null;
   var bulkButton = null;
   var make = (tag, className, text) => {
-    const el = document.createElement(tag);
-    if (className) el.className = className;
-    if (text !== void 0) el.textContent = text;
-    return el;
+    const el2 = document.createElement(tag);
+    if (className) el2.className = className;
+    if (text !== void 0) el2.textContent = text;
+    return el2;
   };
   var button = (className, label4, action) => {
-    const el = make("button", className, label4);
-    el.type = "button";
-    el.addEventListener("click", action);
-    return el;
+    const el2 = make("button", className, label4);
+    el2.type = "button";
+    el2.addEventListener("click", action);
+    return el2;
   };
   function later(run, delay, action) {
     const timer = setTimeout(() => {
@@ -7769,13 +9991,13 @@
     toolbarButton?.remove();
     bulkButton?.remove();
     const trigger = (label4, key, count) => {
-      const el = button("", label4, (event) => showArcaneCacheDemo(event.currentTarget, count));
-      el.dataset.iwNavLink = key;
-      el.dataset.iwCacheTrigger = "1";
-      el.dataset.iwUi = "nav-tab";
-      el.title = `Preview ${count === 1 ? "one cache" : "20–100 caches"} (demo rewards)`;
-      el.setAttribute("aria-haspopup", "dialog");
-      return el;
+      const el2 = button("", label4, (event) => showArcaneCacheDemo(event.currentTarget, count));
+      el2.dataset.iwNavLink = key;
+      el2.dataset.iwCacheTrigger = "1";
+      el2.dataset.iwUi = "nav-tab";
+      el2.title = `Preview ${count === 1 ? "one cache" : "20–100 caches"} (demo rewards)`;
+      el2.setAttribute("aria-haspopup", "dialog");
+      return el2;
     };
     toolbarButton = trigger("Arcane Cache", "arcane-cache", 1);
     bulkButton = trigger("Caches ×20", "arcane-cache-bulk", 20);
@@ -7785,13 +10007,13 @@
   }
   function clearArcaneCacheDemo() {
     close();
-    document.querySelectorAll(TRIGGER).forEach((el) => el.remove());
+    document.querySelectorAll(TRIGGER).forEach((el2) => el2.remove());
     toolbarButton = null;
     bulkButton = null;
   }
 
   // src/styles/ui-system.css
-  var ui_system_default = ':root{--iw-space-1: 4px;--iw-space-2: 6px;--iw-space-3: 9px;--iw-space-4: 12px;--iw-space-5: 16px;--iw-control-h: 32px;--iw-control-h-lg: 36px;--iw-frame-title-size: 18px;--iw-frame-edge: var(--iw-th-edge);--iw-frame-inner: #19150F;--iw-steel: #26231D}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-chrome=nav]){position:relative!important;isolation:isolate!important;border:1px solid var(--iw-th-edge)!important;border-radius:4px!important;padding:var(--iw-frame-pad-y, 26px) var(--iw-frame-pad-x, 22px)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 5px 18px rgba(0,0,0,.24)!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-chrome=nav])::before{content:""!important;position:absolute!important;z-index:0!important;pointer-events:none!important;left:12px!important;right:12px!important;top:0!important;height:1px!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent)!important;opacity:.78!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"]):not(:has([data-iw-ui=nav-tab]))::after{content:""!important;position:absolute!important;inset:-3px -1px!important;z-index:0!important;pointer-events:none!important;border-style:solid!important;border-width:34px 32px!important;border-color:transparent!important;border-image:var(--iw-corner-filigree) 50% / 34px 32px / 0 stretch!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"])))>*{position:relative;z-index:1}@media(max-width:1024px){:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-chrome=nav]){padding:var(--iw-frame-pad-mobile-y, var(--iw-frame-pad-y, 20px)) var(--iw-frame-pad-mobile-x, var(--iw-frame-pad-x, 16px))!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"]):not(:has([data-iw-ui=nav-tab]))::after{border-width:27px 25px!important;border-image-width:27px 25px!important}}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):has([data-iw-ui=nav-tab]){--iw-frame-pad-y: 6px;--iw-frame-pad-x: 16px;--iw-frame-pad-mobile-y: 6px;--iw-frame-pad-mobile-x: 12px}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"])){border:0!important;border-radius:0!important;padding:0!important;background:none!important;box-shadow:none!important;isolation:auto!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))::before,:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))::after{content:none!important;display:none!important;border:0!important;background:none!important}[data-iw-ui=section-title]{font-family:var(--iw-font-head)!important;font-size:var(--iw-frame-title-size)!important;letter-spacing:.035em!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important}[data-iw-skill-boost="1"]{display:block!important;width:fit-content!important;max-width:100%!important;margin-block:4px!important;padding:4px 9px!important;border:1px solid var(--iw-th-edge-faint)!important;border-left:2px solid #67ab83!important;border-radius:3px!important;background:color-mix(in srgb,var(--iw-th-edge-soft) 33%,transparent)!important;color:#91cba4!important}[data-iw-skill-boost="1"] *{color:inherit!important}[data-iw-panel]{--iw-frame-pad-y: 18px;--iw-frame-pad-x: 20px;--iw-frame-pad-mobile-y: 16px;--iw-frame-pad-mobile-x: 14px;display:flex!important;flex-direction:column!important;gap:10px!important;min-width:0!important;font-family:var(--iw-font-ui)!important;color:var(--iw-text)!important}[data-iw-panel] *,[data-iw-panel] *::before,[data-iw-panel] *::after{box-sizing:border-box}[data-iw-panel][data-iw-panel-header=split]{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important}[data-iw-panel][data-iw-panel-header=split]>*{grid-column:1 / -1}[data-iw-panel][data-iw-panel-header=split]>[data-iw-panel-part=header-title]{grid-column:1!important;grid-row:1!important;min-width:0!important}[data-iw-panel][data-iw-panel-header=split]>[data-iw-panel-part=header-tools]{grid-column:2!important;grid-row:1!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:4px!important}[data-iw-panel] [data-iw-ui=section-title]{margin:0!important;font-size:var(--iw-frame-title-size)!important;font-weight:700!important;line-height:1.15!important}[data-iw-panel-part=header]{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;min-width:0!important;margin:0!important}[data-iw-panel-part=header]>*{min-width:0}:is([data-iw-panel-part=header],[data-iw-panel-part=header-title]) p{margin:4px 0 0!important;color:var(--iw-faint)!important;font-size:11px!important;line-height:1.25!important}:is([data-iw-panel-part=header],[data-iw-panel-part=header-tools]) button:not([data-iw-collapse]),[data-iw-panel-part=panel-control]{min-width:30px!important;min-height:30px!important;padding:0 9px!important;border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;background:linear-gradient(180deg,#242018,#15130F)!important;color:var(--iw-dim)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;font-family:var(--iw-font-ui)!important}:is([data-iw-panel-part=header],[data-iw-panel-part=header-tools]) button:not([data-iw-collapse]):hover,[data-iw-panel-part=panel-control]:hover{border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}[data-iw-panel-part=panel-control]{width:auto!important;min-height:24px!important;margin-left:8px!important;padding:0 7px!important;font-size:10px!important;font-weight:700!important;letter-spacing:.12em!important;text-transform:uppercase!important}[data-iw-panel=action-log][data-iw-ui=section-frame] [data-iw-ui=section-title]{min-width:0!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;color:var(--iw-text-hi)!important;font-family:var(--iw-font-head)!important;text-align:left!important;cursor:pointer!important}[data-iw-panel=action-log][data-iw-ui=section-frame] [data-iw-ui=section-title]:hover{border-color:transparent!important;color:var(--iw-text-hi)!important}[data-iw-panel=action-log][data-iw-ui=section-frame] [data-iw-ui=section-title]>*{color:var(--iw-gold-dim)!important;font-family:var(--iw-font-ui)!important;font-size:11px!important;font-weight:600!important;letter-spacing:.08em!important;text-transform:uppercase!important;text-decoration:underline!important;text-underline-offset:2px!important;text-shadow:none!important}[data-iw-panel=action-log][data-iw-ui=section-frame] [data-iw-ui=section-title]:hover>*{color:var(--iw-gold)!important}@media(min-width:641px){[data-iw-panel=action-log] [data-iw-panel-part=header]>:first-child{display:flex!important;align-items:center!important;gap:8px!important}}[data-iw-panel=current-action]>div:not([data-iw-panel-part]),[data-iw-panel=current-action]>strong{font-size:15px!important;font-weight:700!important;color:var(--iw-text-hi)!important}[data-iw-panel=current-action]>p{margin:-2px 0 2px!important;color:var(--iw-faint)!important;font-size:11.5px!important;line-height:1.3!important}[data-iw-panel-part=progress]{position:relative!important;width:100%!important;height:18px!important;min-height:18px!important;overflow:hidden!important;border:1px solid color-mix(in srgb,var(--iw-th-accent) 48%,var(--iw-th-edge))!important;border-radius:2px!important;background:linear-gradient(#080807,#14120e)!important;box-shadow:inset 0 3px 8px #000d,0 0 0 1px #000,0 0 8px color-mix(in srgb,var(--iw-th-accent) 12%,transparent)!important}[data-iw-panel-part=progress]::before,[data-iw-panel-part=progress]::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none}[data-iw-panel-part=progress]::before{background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(0,0,0,.72) calc(10% - 1px) 10%)}[data-iw-panel-part=progress]::after{inset:3px 5px auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.48),transparent)}[data-iw-panel-part=progress]>*{position:relative!important;height:100%!important;min-height:100%!important;overflow:hidden!important;border-radius:0!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-accent) 70%,#fff) 0%,var(--iw-th-accent) 38%,color-mix(in srgb,var(--iw-th-accent-dim) 76%,#17130d) 100%)!important;box-shadow:0 0 9px color-mix(in srgb,var(--iw-th-accent) 32%,transparent)!important;transition:width var(--iw-progress-duration, var(--iw-action-tick, 1s)) linear!important;will-change:width!important}[data-iw-panel-part=progress]>*::before{content:"";position:absolute;inset:0 auto 0 -40%;width:40%;background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--iw-th-accent) 64%,rgba(255,255,255,.82)),transparent);animation:iw-control-meter-current 5.7s ease-in-out -2s infinite;pointer-events:none}[data-iw-panel-part=progress][data-iw-progress-reset]>*{transition:none!important}@media(prefers-reduced-motion:reduce){[data-iw-panel-part=progress]>*{transition:none!important}[data-iw-panel-part=progress]>*::before{animation:none!important}}[data-iw-panel-part=queue]{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:4px 10px!important;min-width:0!important;padding:10px 12px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:3px!important;background:linear-gradient(180deg,rgba(255,255,255,.022),transparent 45%),rgba(12,12,10,.76)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.34)!important}[data-iw-panel-part=queue]>:first-child{grid-column:1!important;color:var(--iw-faint)!important;font-size:9.5px!important;font-weight:700!important;letter-spacing:.16em!important;text-transform:uppercase!important}[data-iw-panel-part=queue]>button{grid-column:2!important;grid-row:1 / span 2!important;width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;padding:0!important;border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;background:linear-gradient(180deg,#26221B,#15130F)!important;color:var(--iw-dim)!important}[data-iw-panel-part=feed]{min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:3px!important;background-color:#0B0C0A!important;background-image:linear-gradient(180deg,rgba(255,255,255,.018),transparent 22%)!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}[data-iw-panel=action-log] [data-iw-panel-part=feed]{max-height:300px!important}[data-iw-panel=world-chat] [data-iw-panel-part=feed]{max-height:min(46vh,430px)!important}[data-iw-panel-part=feed] *:has([data-iw-panel-part=feed-row]){background:transparent!important;box-shadow:none!important}[data-iw-panel=action-log] [data-iw-panel-part=feed]{background:transparent!important;box-shadow:none!important}[data-iw-panel-part=feed-row]{display:block!important;min-width:0!important;margin:0!important;padding:8px 12px!important;border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:transparent!important;font-size:12px!important;line-height:1.3!important}[data-iw-panel-part=feed-row]:last-child{border-bottom:0!important}[data-iw-panel-part=feed-row]>*{margin:0!important}[data-iw-panel-part=feed-row]>*+*{margin-top:3px!important}[data-iw-panel-part=feed-row]>:first-child{display:flex!important;align-items:baseline!important;justify-content:space-between!important;gap:10px!important}[data-iw-panel-part=feed-row] time{flex:0 0 auto!important;color:#6F6A60!important;font-size:10px!important;font-variant-numeric:tabular-nums!important}[data-iw-panel=action-log] [data-iw-panel-part=feed-row]>:first-child>:first-child{color:var(--iw-faint)!important;font-size:9.5px!important;font-weight:700!important;letter-spacing:.15em!important;text-transform:uppercase!important}[data-iw-panel=action-log] [data-iw-panel-part=feed-row]>:last-child{color:#82BBD0!important;font-size:11px!important}[data-iw-panel=world-chat] .feed-panel{background:#0B0C0A!important;border-color:var(--iw-th-edge-faint)!important}[data-iw-panel=action-log] .feed-panel{background:transparent!important;border-color:var(--iw-th-edge-faint)!important}[data-iw-panel=world-chat] [data-iw-panel-part=feed-row] strong{color:#8CC8E0!important;font-weight:700!important}[data-iw-panel=world-chat] [data-iw-panel-part=feed-row] b{color:#D9D0BE!important;font-weight:700!important}[data-iw-panel-part=composer]{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:10px!important;width:100%!important;min-width:0!important;margin:2px 0 0!important}[data-iw-panel-part=chat-input]{width:100%!important;min-width:0!important;height:42px!important;padding:0 13px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:3px!important;background:#080A09!important;color:var(--iw-text)!important;font-family:var(--iw-font-ui)!important;font-size:13px!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}[data-iw-panel-part=chat-input]::placeholder{color:#6F685A!important}[data-iw-panel-part=chat-input]:focus{outline:1px solid rgba(197,145,67,.5)!important;outline-offset:1px!important;border-color:var(--iw-th-brass)!important}[data-iw-panel-part=send]{min-width:104px!important;height:42px!important;padding:0 18px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:3px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 62%,#000))!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-size:13px!important;font-weight:700!important;letter-spacing:.025em!important;text-shadow:0 1px 0 #3A1005!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important}[data-iw-panel-part=send]:hover:not(:disabled){filter:brightness(1.12)}@media(max-width:640px){[data-iw-panel]{gap:8px!important}[data-iw-panel-part=feed-row]{padding:8px 9px!important;font-size:11.5px!important}}@media(max-width:430px){[data-iw-panel-part=composer]{grid-template-columns:minmax(0,1fr)!important;gap:7px!important}[data-iw-panel-part=send]{width:100%!important;min-width:0!important}[data-iw-panel-part=feed-row]>:first-child{flex-wrap:wrap!important;gap:2px 8px!important}}[data-iw-ui=main-nav-shell]{margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}[data-iw-ui=main-nav]{display:flex!important;align-items:stretch!important;flex-wrap:wrap!important;gap:0!important;width:max-content!important;max-width:100%!important;min-height:0!important;margin:0!important;padding:0!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:3px!important;background:#11100D!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.52)!important;overflow:visible!important}[data-iw-ui=nav-tab]{position:relative!important;min-height:var(--iw-control-h)!important;height:var(--iw-control-h)!important;margin:0!important;padding:0 16px!important;border:0!important;border-right:1px solid var(--iw-th-edge-soft)!important;border-radius:0!important;background:linear-gradient(180deg,#211E18,#16140F)!important;color:#AAA291!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.022)!important;font-family:var(--iw-font-ui)!important;font-size:11.5px!important;font-weight:700!important;letter-spacing:.025em!important;text-transform:uppercase!important;line-height:1!important}[data-iw-ui=nav-tab]:last-of-type{border-right:0!important}[data-iw-ui=nav-tab]:hover:not(:disabled){z-index:1;background:linear-gradient(180deg,#29241C,#1A1711)!important;color:var(--iw-text-hi)!important;filter:none!important}[data-iw-ui=nav-tab][data-iw-state=active]{z-index:2;color:#FFE8CB!important;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%),linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 52%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,226,191,.13),inset 0 -2px 0 rgba(55,16,4,.58)!important}[data-iw-ui=nav-tab][data-iw-state=active]::after{content:"";position:absolute;left:9px;right:9px;bottom:-4px;height:2px;background:var(--iw-ember-hi);box-shadow:0 0 6px rgba(209,90,34,.28)}[data-iw-nav-link=toolkit]{box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;gap:5px!important;margin-left:10px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:3px!important;color:var(--iw-th-accent)!important;text-decoration:none!important;cursor:pointer}[data-iw-nav-link=toolkit]::after{content:"↗";font-size:.82em;line-height:1;opacity:.68}[data-iw-nav-link=toolkit]:hover{color:var(--iw-text-hi)!important;border-color:var(--iw-th-brass)!important;background:linear-gradient(180deg,#29241C,#1A1711)!important}[data-iw-cache-trigger]{flex:0 0 auto!important;color:#a5dedf!important}@media(max-width:767px){[data-iw-cache-trigger]{display:none!important}}[data-iw-ui=zone-bar]{border-radius:5px!important;padding-top:5px!important;padding-bottom:5px!important;min-height:0!important}[data-iw-ui=zone-title]{color:var(--iw-text-hi)!important;font-weight:700!important}[data-iw-ui=zone-action]{background:linear-gradient(180deg,#242018,#17140F)!important;border:1px solid var(--iw-line-hi)!important;color:var(--iw-text)!important;height:auto!important;min-height:30px!important;min-width:0!important;padding:5px 13px!important;font-size:11px!important;letter-spacing:.025em!important}[data-iw-chrome=shell]{display:grid!important;grid-template-columns:minmax(0,1fr) auto;row-gap:0!important;column-gap:0!important}[data-iw-chrome=shell]>header{grid-row:1;margin-bottom:12px}[data-iw-chrome=shell]>*{grid-column:1 / -1}[data-iw-chrome=zone-bar]~*{margin-top:12px}[data-iw-chrome=zone-bar]{display:contents!important}[data-iw-chrome=zone-bar]::before,[data-iw-chrome=zone-bar]::after{content:none!important}[data-iw-chrome=shell]{--iw-chrome-inset: 14px}[data-iw-chrome=shell] [data-iw-chrome=zone-text]{grid-row:2;grid-column:1;align-self:center;margin:6px 0 9px var(--iw-chrome-inset)!important;padding:0!important;min-width:0}[data-iw-chrome=notice]{grid-row:2;grid-column:2;align-self:center;justify-self:end;margin:6px 14px 9px 20px;max-width:34rem}[data-iw-chrome=nav]{grid-row:3;grid-column:1;align-self:center;margin:9px var(--iw-chrome-inset) 6px var(--iw-chrome-inset)!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important}[data-iw-chrome=zone-actions]{grid-row:3;grid-column:2;align-self:center;justify-self:end;margin:9px 14px 6px 14px}[data-iw-chrome=shell]::before{content:"";grid-row:2 / 4;grid-column:1 / -1;border:1px solid var(--iw-th-edge);border-radius:4px;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow)}[data-iw-chrome=shell]::after{content:"";grid-row:3;grid-column:1 / -1;align-self:start;height:1px;background:var(--iw-th-edge-soft)}@media(max-width:860px){[data-iw-chrome=shell]{grid-template-columns:minmax(0,1fr)}[data-iw-chrome=shell] [data-iw-chrome=zone-text]{grid-row:2;grid-column:1;margin:6px var(--iw-chrome-inset) 8px!important}[data-iw-chrome=notice]{grid-row:3;grid-column:1;justify-self:stretch;max-width:none;margin:0 var(--iw-chrome-inset) 9px}[data-iw-chrome=nav]{grid-row:4;grid-column:1;margin:9px var(--iw-chrome-inset) 6px!important}[data-iw-chrome=shell] [data-iw-chrome=zone-actions]{grid-row:5;grid-column:1;justify-self:stretch;margin:0 var(--iw-chrome-inset) 8px!important}[data-iw-chrome=shell]::before{grid-row:2 / 6}[data-iw-chrome=shell]::after{grid-row:4}}[data-iw-zone-link]{background-color:transparent!important;background-image:none!important;border:0!important;box-shadow:none!important;padding:0!important;border-radius:0!important;cursor:pointer}[data-iw-ui=zone-title] [data-iw-zone-link]{margin-left:8px!important}button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-header=profile-name] button):not([data-iw-order-handle]):not([data-fs-inv]),[role=button]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-header=profile-name] button):not([data-iw-order-handle]):not([data-fs-inv]){border-color:var(--iw-th-edge-faint)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.035),rgba(0,0,0,.28))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.045),inset 0 -7px 10px -8px rgba(0,0,0,.9)!important}button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-order-handle]):not([data-fs-inv]):hover,[role=button]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-order-handle]):not([data-fs-inv]):hover{border-color:var(--iw-line-hot)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.055),inset 0 0 10px -3px rgba(216,121,31,.35)!important}[data-iw-ui=zone-action],.compact-panel.fs-skill-panel button[data-iw-skill-role=action-button],.compact-panel.fs-skill-panel button[data-iw-skill-role=nav-button]{min-height:30px}[data-iw-inventory-control=filter],[data-iw-inventory-control=page]{min-height:26px}button:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-order-handle]):not([data-fs-inv]):disabled,[role=button][aria-disabled=true]:not(.iw-item-ref):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-order-handle]):not([data-fs-inv]){filter:saturate(.58) brightness(.84)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.22)!important}input[type=search],input[placeholder*=Search i]{border:1px solid var(--iw-th-edge-soft)!important;border-bottom-color:var(--iw-line-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,#080A0A,#0D0E0C)!important;box-shadow:inset 0 2px 6px rgba(0,0,0,.72)!important}@media(max-width:768px){[data-iw-ui=main-nav]{width:100%!important}[data-iw-ui=nav-tab]{flex:1 1 auto!important;padding-inline:9px!important;font-size:10.5px!important}[data-iw-nav-link=toolkit]{flex:0 0 auto!important;margin-left:7px!important}}@media(max-width:1279px){:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-gap: 6px;--iw-nav-pad: 12px;--iw-nav-k: 28.1;--iw-nav-fixed: calc(12 * var(--iw-nav-pad) + 5 * var(--iw-nav-gap) + 7px + 5px);container:iw-nav-row / inline-size;flex-wrap:nowrap!important;column-gap:var(--iw-nav-gap)!important}[data-iw-ui=nav-tab]{min-width:0!important;padding-inline:var(--iw-nav-pad, 12px)!important;white-space:nowrap!important;font-size:clamp(7.5px,calc((100cqi - var(--iw-nav-fixed, 186px)) / var(--iw-nav-k, 28.1)),11.5px)!important}}@media(min-width:768px)and (max-width:1279px){:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-nav-link=arcane-cache]){--iw-nav-k: 41.5;--iw-nav-fixed: calc(16 * var(--iw-nav-pad) + 7 * var(--iw-nav-gap) + 7px + 5px)}}@media(min-width:768px)and (max-width:1279px){:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]):has(>[data-iw-tab=guild]){--iw-nav-k: 31;--iw-nav-fixed: calc(14 * var(--iw-nav-pad) + 6 * var(--iw-nav-gap) + 7px + 5px)}:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-nav-link=arcane-cache]):has(>[data-iw-tab=guild]){--iw-nav-k: 44.4;--iw-nav-fixed: calc(18 * var(--iw-nav-pad) + 8 * var(--iw-nav-gap) + 7px + 5px)}}@media(max-width:767px){[data-iw-nav-link=toolkit]{display:none!important}:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-gap: 5px;--iw-nav-pad: 8px;--iw-nav-k: 23.25;--iw-nav-fixed: calc(10 * var(--iw-nav-pad) + 4 * var(--iw-nav-gap))}:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]):has(>[data-iw-tab=guild]){--iw-nav-gap: 4px;--iw-nav-pad: 5px;--iw-nav-k: 26.15;--iw-nav-fixed: calc(12 * var(--iw-nav-pad) + 5 * var(--iw-nav-gap))}}[data-iw-boss=card]{position:relative!important;border:1px solid var(--iw-th-edge)!important;border-radius:4px!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px #0B0A08,inset 0 0 0 2px rgba(143,107,55,.16),inset 0 1px 0 rgba(255,236,190,.035),0 2px 7px rgba(0,0,0,.42)!important}[data-iw-boss=card]::before{content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:1px!important;z-index:2!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.9!important}[data-iw-boss=card]::after{content:""!important;position:absolute!important;inset:4px!important;z-index:0!important;pointer-events:none!important;border:1px solid rgba(133,101,54,.22)!important;border-radius:2px!important;box-shadow:inset 0 0 12px rgba(0,0,0,.26)!important}[data-iw-boss=card]>*:not(button):not(a):not([role=button]):not([data-iw-boss-owned]){background:transparent!important}[data-iw-boss=card] button[class*=decoration-dotted]{background-color:transparent!important;border-color:transparent!important;box-shadow:none!important}[data-iw-boss=card]>*{position:relative;z-index:1}.iw-boss-notice{margin:0 0 10px!important;padding:7px 12px!important;border-left:2px solid #8da97b;background:rgba(91,130,84,.08);color:#bacbb0!important;font-size:12px!important;line-height:1.35!important}[data-iw-encounter]{--iw-boss-accent: #91b780;padding:12px!important;margin-bottom:10px!important;min-width:0}[data-iw-encounter]:not([data-iw-encounter=zone]){display:grid!important;grid-template-columns:104px auto minmax(0,1fr);grid-template-rows:auto auto auto auto auto;column-gap:14px;row-gap:8px}[data-iw-encounter=abyssal_behemoth]{--iw-boss-accent: #77bcd1}[data-iw-encounter=world_eater]{--iw-boss-accent: #b997df}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]{grid-column:2 / -1;grid-row:1;min-height:0;padding-left:0;align-items:center!important;gap:10px!important}[data-iw-encounter=zone]>[data-iw-boss-role=header]{min-height:0;padding:1px 2px 8px;flex-wrap:wrap;align-items:baseline;gap:8px!important;border-bottom:1px solid color-mix(in srgb,var(--iw-boss-accent) 28%,transparent)}[data-iw-encounter=zone]>[data-iw-boss-role=header]>*:first-child:not([data-iw-boss-role=title]){display:flex!important;align-items:baseline;justify-content:space-between;flex-wrap:wrap;flex:1 1 auto;min-width:0;gap:4px 12px}[data-iw-encounter=zone]>[data-iw-boss-role=header]:has([data-iw-boss-role=action]){align-items:center;flex-wrap:nowrap}[data-iw-encounter=zone]>[data-iw-boss-role=header]>:has(>[data-iw-boss-role=action]){position:relative}[data-iw-encounter=zone]>[data-iw-boss-role=header]>:has(>[data-iw-boss-role=action])>[data-iw-boss-role=action]~*{position:absolute!important;top:calc(100% + 3px);right:0;width:100%!important;margin:0!important}[data-iw-encounter=zone]>[data-iw-boss-role=header]:has([data-iw-boss-role=action]~*){padding-bottom:14px!important}[data-iw-encounter]>.iw-boss-art{position:absolute!important;top:12px;left:12px;width:104px;height:104px;box-sizing:border-box;background-image:url(../assets/world-bosses/encounters.png)!important;background-size:200% 200%!important;background-position:0% 0%!important;border:1px solid color-mix(in srgb,var(--iw-boss-accent) 45%,#443622);border-radius:3px;box-shadow:0 5px 20px #0008,inset 0 0 12px #000a;pointer-events:none}[data-iw-encounter]:not([data-iw-encounter=zone])>.iw-boss-art{position:relative!important;inset:auto!important;grid-column:1;grid-row:1 / 4}[data-iw-encounter=abyssal_behemoth]>.iw-boss-art{background-position:100% 0%!important}[data-iw-encounter=world_eater]>.iw-boss-art{background-position:0% 100%!important}[data-iw-encounter=zone]>.iw-boss-art{display:none!important}[data-iw-encounter] [data-iw-boss-role=title]{font-family:var(--iw-font-head)!important;font-size:17px!important;line-height:1.35!important;color:#f2e8d1!important;margin:0!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]>*:first-child{display:grid!important;grid-template-columns:minmax(0,max-content) minmax(0,max-content);grid-template-areas:"title difficulty" "buff buff";align-items:center;column-gap:8px;row-gap:7px}[data-iw-encounter]:not([data-iw-encounter=zone]) [data-iw-boss-role=title]{grid-area:title}[data-iw-encounter] [data-iw-boss-role=difficulty]{display:inline-block;color:var(--iw-boss-accent)!important;font-size:10px!important;letter-spacing:.15em;text-transform:uppercase;border:1px solid color-mix(in srgb,var(--iw-boss-accent) 25%,transparent);padding:2px 6px!important;margin:0!important}[data-iw-encounter]:not([data-iw-encounter=zone]) [data-iw-boss-role=difficulty]{grid-area:difficulty}[data-iw-encounter] [data-iw-boss-role=buff]{color:#b7cfac!important;font-size:12px!important;line-height:1.3}[data-iw-encounter]:not([data-iw-encounter=zone]) [data-iw-boss-role=buff]{grid-area:buff}[data-iw-encounter] [data-iw-boss-role=timer]{color:#aaa596!important;font-size:11px!important;font-variant-numeric:tabular-nums}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=progress]{grid-column:2 / -1;grid-row:2;margin:0!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=participation]{grid-column:2;grid-row:3;align-self:center;justify-self:start;margin:0!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=status]{grid-column:3;grid-row:3;align-self:center;justify-self:stretch;min-width:0;margin:0!important;gap:8px!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=details]{grid-column:1 / -1;grid-row:4;margin:0!important}[data-iw-encounter]{--iw-boss-action-w: 150px}[data-iw-encounter] [data-iw-boss-role=action]{flex:0 0 auto!important;width:var(--iw-boss-action-w)!important;min-width:var(--iw-boss-action-w)!important;max-width:var(--iw-boss-action-w)!important;height:calc(var(--iw-boss-action-w) / 5)!important;min-height:calc(var(--iw-boss-action-w) / 5)!important;max-height:calc(var(--iw-boss-action-w) / 5)!important;padding:0!important;margin:0!important;font:700 11px var(--iw-font-head)!important;letter-spacing:.07em!important;text-transform:uppercase!important;color:transparent!important;font-size:0!important;line-height:0!important;text-shadow:none!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;appearance:none!important;-webkit-appearance:none!important;background-position:center!important;background-repeat:no-repeat!important;background-size:100% 100%!important;overflow:visible!important;animation:none!important;transition:filter 120ms ease!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join]{background-image:url(../assets/world-boss/world_boss_join-v2.png)!important;filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 4px rgba(232,174,84,.42)) drop-shadow(0 0 10px rgba(232,174,84,.20))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join]:hover:not(:disabled){background-image:url(../assets/world-boss/world_boss_join_hover-v2.png)!important;filter:brightness(1.12) saturate(1.08) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 6px rgba(250,196,103,.62)) drop-shadow(0 0 14px rgba(250,196,103,.30))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=prejoined]{background-image:url(../assets/world-boss/world_boss_prejoined-v2.png)!important;filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 5px rgba(72,148,255,.48)) drop-shadow(0 0 12px rgba(72,148,255,.22))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=fighting]{background-image:url(../assets/world-boss/world_boss_fighting-v3.png)!important;filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 5px rgba(255,103,57,.50)) drop-shadow(0 0 12px rgba(255,103,57,.23))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=prejoined]:hover:not(:disabled){filter:brightness(1.04) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 6px rgba(82,158,255,.56)) drop-shadow(0 0 14px rgba(82,158,255,.26))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=fighting]:hover:not(:disabled){filter:brightness(1.04) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 6px rgba(255,116,67,.58)) drop-shadow(0 0 14px rgba(255,116,67,.27))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state]:focus-visible{outline:1px solid #d6aa5d!important;outline-offset:2px!important}[data-iw-encounter] [data-iw-boss-role=action]:disabled{opacity:.5!important;filter:saturate(.35) brightness(.8)!important;cursor:not-allowed!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join][data-iw-boss-action-team=red]{filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 5px rgba(232,82,82,.55)) drop-shadow(0 0 12px rgba(232,82,82,.25))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join][data-iw-boss-action-team=blue]{filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 5px rgba(82,158,255,.55)) drop-shadow(0 0 12px rgba(82,158,255,.25))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join][data-iw-boss-action-team=red]:hover:not(:disabled){filter:brightness(1.12) saturate(1.08) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 7px rgba(244,96,96,.66)) drop-shadow(0 0 15px rgba(244,96,96,.30))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join][data-iw-boss-action-team=blue]:hover:not(:disabled){filter:brightness(1.12) saturate(1.08) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 7px rgba(96,170,255,.66)) drop-shadow(0 0 15px rgba(96,170,255,.30))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=idle]{display:inline-flex!important;align-items:center!important;justify-content:center!important;color:#e9dcc0!important;font-size:11px!important;line-height:1!important;text-shadow:0 1px 2px #000!important;background:linear-gradient(#3a2a1a,#19110b)!important;border:1px solid #8a6a3a!important;border-radius:2px!important}@media(min-width:761px){[data-iw-encounter]:not([data-iw-encounter=zone]){--iw-boss-action-reserve: calc(var(--iw-boss-action-w) + 14px)}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]{position:static!important;padding-right:var(--iw-boss-action-reserve)!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]>*:first-child:not([data-iw-boss-role=action]){position:relative;z-index:1}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=progress]{margin-right:var(--iw-boss-action-reserve)!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header] [data-iw-boss-role=action]{position:absolute!important;top:64px!important;right:12px!important;transform:translateY(-50%)!important;z-index:2!important}}.iw-boss-rewards{margin-top:2px;padding-top:9px;border-top:1px solid #a88d4c35}[data-iw-encounter]:not([data-iw-encounter=zone])>.iw-boss-rewards{grid-column:1 / -1;grid-row:5}[data-iw-encounter] .iw-boss-rewards-title{font:600 10px var(--iw-font-head)!important;color:#cdbb94!important;letter-spacing:.14em;text-transform:uppercase;margin:0 0 7px!important}.iw-boss-reward-list{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}[data-iw-encounter] summary.iw-boss-rewards-title{display:list-item;cursor:pointer;padding:4px 0}[data-iw-encounter] summary.iw-boss-rewards-title::marker{color:#cdbb94}[data-iw-encounter] summary.iw-boss-rewards-title:focus-visible{outline:2px solid #cdbb94;outline-offset:3px}[data-iw-encounter] .iw-boss-rewards:not([open])>.iw-boss-reward-list{display:none}[data-iw-encounter] .iw-boss-rewards:not([open])>summary{margin-bottom:0!important}[data-iw-encounter] button.iw-boss-reward{display:flex!important;flex-direction:column;align-items:center;width:auto!important;min-width:44px!important;min-height:70px!important;padding:5px 2px!important;gap:3px;background:transparent!important;border:1px solid transparent!important;border-radius:2px!important;box-shadow:none!important;color:#d3cbbb!important;cursor:help!important}[data-iw-encounter] button.iw-boss-reward:hover,[data-iw-encounter] button.iw-boss-reward:focus-visible{border-color:var(--iw-boss-accent)!important;background-color:#c4ac7018!important;outline:1px solid var(--iw-boss-accent);outline-offset:1px}.iw-boss-reward-icon{display:block;width:34px;height:34px;flex:0 0 34px}@media(prefers-reduced-motion:no-preference){.iw-boss-reward-icon{transition:transform .24s cubic-bezier(.22,.61,.36,1)}.iw-boss-reward:focus-visible .iw-boss-reward-icon{transform:translateY(-2px)}.compact-panel.fs-quest-panel[data-iw-quest-state=ready] .fs-quest-sigil-icon{animation:iw-quest-ready-settle .85s cubic-bezier(.22,.61,.36,1) both}}@media(hover:hover)and (pointer:fine)and (prefers-reduced-motion:no-preference){.iw-boss-reward:hover .iw-boss-reward-icon{transform:translateY(-2px)}}@keyframes iw-quest-ready-settle{0%{transform:translateY(1px) scale(.97)}42%{transform:translateY(-1px) scale(1.035)}100%{transform:none}}.iw-boss-reward-name{font:500 9px/1.15 var(--iw-font-body, sans-serif)!important;text-align:center;white-space:normal;overflow-wrap:anywhere}[data-iw-control=red]{--iw-boss-accent: #df7777;border-color:#a85050!important}[data-iw-control=blue]{--iw-boss-accent: #75b5eb;border-color:#507ca8!important}[data-iw-control=contested]{--iw-boss-accent: #e6bc65;border-color:#ae8a43!important}[data-iw-encounter=zone]{display:grid!important;grid-template-columns:minmax(0,1fr) auto;overflow:hidden;padding:14px!important;background:radial-gradient(circle at 13% 55%,color-mix(in srgb,var(--iw-boss-accent) 13%,transparent),transparent 27%),linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important}[data-iw-encounter=zone]>[data-iw-boss-role=header]{grid-column:1 / -1;grid-row:1}[data-iw-encounter=zone]>[data-iw-boss-role=title]{letter-spacing:.015em}.iw-control-dominion{display:grid!important;grid-column:1 / -1;grid-row:2;grid-template-columns:174px minmax(0,1fr);grid-template-areas:"crest readout" "crest meter" "crest factions";width:100%;column-gap:18px;row-gap:7px;min-height:174px;padding:10px 4px 5px!important}.iw-control-crest{grid-area:crest;position:relative;align-self:center;width:174px;aspect-ratio:1;isolation:isolate;pointer-events:none}.iw-control-crest::before{content:"";position:absolute;z-index:-1;inset:-18%;border-radius:50%;background:radial-gradient(circle,rgba(var(--iw-control-aura, 230,188,101),.48) 0%,rgba(var(--iw-control-aura, 230,188,101),.25) 28%,rgba(var(--iw-control-aura, 230,188,101),.09) 49%,transparent 72%);opacity:0;transform:scale(.88);animation:iw-control-captured-aura 7.4s ease-in-out infinite;animation-play-state:paused;transition:opacity 1.2s ease-out;will-change:transform,opacity}[data-iw-control=red] .iw-control-crest{--iw-control-aura: 255, 48, 36}[data-iw-control=blue] .iw-control-crest{--iw-control-aura: 36, 142, 255}[data-iw-control=red] .iw-control-crest::before,[data-iw-control=blue] .iw-control-crest::before{opacity:.68;animation-play-state:running}.iw-control-crest-art{position:absolute;inset:0;opacity:0;background-repeat:no-repeat;background-size:contain;background-position:center;transition:opacity 1.2s cubic-bezier(.22,.61,.36,1)}.iw-control-crest-art{background-image:url(../assets/world-bosses/zone-control-contested-v3.png)}.iw-control-crest-art-red{--iw-crystal-light: 255,48,36}.iw-control-crest-art-blue{--iw-crystal-light: 36,142,255}[data-iw-control=red] .iw-control-crest-art-red,[data-iw-control=blue] .iw-control-crest-art-blue,[data-iw-control=contested] .iw-control-crest-art-contested{opacity:1}.iw-control-crest-art:not(.iw-control-crest-art-contested)::after{content:"";position:absolute;inset:0;clip-path:polygon(50% 25%,57% 31%,61% 42%,59% 51%,63% 61%,57% 68%,51% 76%,44% 68%,39% 57%,41% 47%,39% 39%,45% 30%);background:rgb(var(--iw-crystal-light));mix-blend-mode:color;filter:saturate(1.35) brightness(1.15) drop-shadow(0 0 5px rgba(var(--iw-crystal-light),.72));opacity:.72;animation:iw-control-resting-light 7.7s ease-in-out infinite;animation-play-state:paused}[data-iw-control=red] .iw-control-crest-art-red::after,[data-iw-control=blue] .iw-control-crest-art-blue::after{animation-play-state:running}.iw-control-sword-energy,.iw-control-crystal-core,.iw-control-meter-currents{position:absolute;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .85s ease-out,visibility 0s .85s}[data-iw-control=contested] .iw-control-sword-energy,[data-iw-control=contested] .iw-control-crystal-core,[data-iw-control=contested] .iw-control-meter-currents{opacity:.88;visibility:visible;transition-delay:0s}.iw-control-sword-energy{z-index:1;top:50%;left:50%;width:130%;height:10px;overflow:hidden;mix-blend-mode:screen;-webkit-mask:linear-gradient(90deg,transparent 7%,#000 16% 37%,transparent 45% 55%,#000 63% 84%,transparent 93%);mask:linear-gradient(90deg,transparent 7%,#000 16% 37%,transparent 45% 55%,#000 63% 84%,transparent 93%)}.iw-control-sword-energy-red{transform:translate(-50%,-50%) rotate(45deg);--iw-energy-color: 255,70,42}.iw-control-sword-energy-blue{transform:translate(-50%,-50%) rotate(-45deg);--iw-energy-color: 44,171,255}.iw-control-sword-energy::before,.iw-control-sword-energy::after,.iw-control-impact{content:"";position:absolute;inset:0 auto 0 0;width:48%;background:radial-gradient(ellipse at 78% 50%,#fffcefff,rgba(255,245,207,.94) 7%,rgba(var(--iw-energy-color),.92) 22%,rgba(var(--iw-energy-color),.42) 48%,transparent 75%);filter:drop-shadow(0 0 2px rgba(255,248,220,.9)) drop-shadow(0 0 5px rgba(var(--iw-energy-color),.8));opacity:0}.iw-control-sword-energy-red::before{animation:iw-control-filament-red 7.3s cubic-bezier(.35,0,.45,1) -2.1s infinite}.iw-control-sword-energy-blue::before{animation:iw-control-filament-blue 10.9s cubic-bezier(.3,0,.6,1) -5.3s infinite}.iw-control-sword-energy-red::after{animation:iw-control-filament-blue 13.7s ease-in-out -8.4s infinite}.iw-control-sword-energy-blue::after{animation:iw-control-filament-red 17.3s ease-in-out -1.6s infinite}.iw-control-crystal-core{z-index:2;inset:26% 39% 25%;overflow:hidden;clip-path:polygon(50% 0,77% 18%,91% 67%,50% 100%,9% 67%,23% 18%);background:radial-gradient(ellipse at 45% 58%,#fff7b926,#e6a13918 48%,transparent 75%);mix-blend-mode:screen}.iw-control-crystal-core::before,.iw-control-crystal-core::after{content:"";position:absolute;inset:-35% -55%;background:radial-gradient(ellipse at 30% 64%,#fff5ce99,#f5bc424d 22%,transparent 49%),radial-gradient(ellipse at 74% 24%,#82cfff59,transparent 42%);animation:iw-control-crystal-flow 8.3s cubic-bezier(.37,0,.63,1) -3.7s infinite}.iw-control-crystal-core::after{background:radial-gradient(ellipse at 68% 42%,#fff4cb88,#ff704233 27%,transparent 51%);animation:iw-control-crystal-undertow 11.7s ease-in-out -7.2s infinite}.iw-control-sword-energy::before,.iw-control-sword-energy::after,.iw-control-crystal-core::before,.iw-control-crystal-core::after{animation-play-state:paused}[data-iw-control=contested] .iw-control-sword-energy::before,[data-iw-control=contested] .iw-control-sword-energy::after,[data-iw-control=contested] .iw-control-crystal-core::before,[data-iw-control=contested] .iw-control-crystal-core::after{animation-play-state:running}.iw-control-readout{grid-area:readout;align-self:end;min-width:0;padding-bottom:2px}.iw-control-kicker{margin:0 0 2px!important;color:#93866f!important;font:600 9px/1.2 var(--iw-font-head)!important;letter-spacing:.22em;text-transform:uppercase}.iw-control-state{margin:0!important;color:#f3e4c7!important;font:700 20px/1.2 var(--iw-font-head)!important;letter-spacing:.035em;text-shadow:0 2px 5px #000,0 0 12px color-mix(in srgb,var(--iw-boss-accent) 28%,transparent)}.iw-control-meter{grid-area:meter;align-self:center;min-width:0}.iw-control-meter-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:5px}.iw-control-meter-label,.iw-control-meter-value{color:#bdb39e;font:600 10px/1.2 var(--iw-font-body, sans-serif);letter-spacing:.08em;text-transform:uppercase}.iw-control-meter-value{color:var(--iw-boss-accent);font-variant-numeric:tabular-nums;white-space:nowrap}.iw-control-meter-track{position:relative;height:18px;overflow:hidden;border:1px solid color-mix(in srgb,var(--iw-boss-accent) 58%,#3b3023);border-radius:2px;background:linear-gradient(#080807,#14120e)!important;box-shadow:inset 0 3px 8px #000d,0 0 0 1px #000,0 0 9px color-mix(in srgb,var(--iw-boss-accent) 13%,transparent)}.iw-control-meter-track::before,.iw-control-meter-track::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none}.iw-control-meter-track::before{background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(0,0,0,.78) calc(10% - 1px) 10%)}.iw-control-meter-track::after{inset:3px 5px auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent)}.iw-control-meter-fill{position:relative;display:block;height:100%;min-width:0;overflow:hidden;background:linear-gradient(180deg,#ff8b73,#b82d2d 47%,#5f1118)!important;transition:width .6s ease}.iw-control-meter-fill::before{content:"";position:absolute;inset:0 0 0 auto;width:0;background:linear-gradient(180deg,#83d7ff,#297ac3 47%,#123a72);transition:width .7s cubic-bezier(.22,.61,.36,1)}[data-iw-control=blue] .iw-control-meter-fill::before{width:100%}[data-iw-control=contested] .iw-control-meter-fill::before{width:calc(100% - var(--iw-control-split, 50%))}.iw-control-meter-currents{inset:0}.iw-control-current-red,.iw-control-current-blue{position:absolute;top:0;bottom:0;overflow:hidden}.iw-control-current-red{left:0;width:var(--iw-control-split, 50%)}.iw-control-current-blue{right:0;width:calc(100% - var(--iw-control-split, 50%))}.iw-control-current-red::after,.iw-control-current-blue::after{content:"";position:absolute;inset:0 auto 0 -40%;width:40%;background:linear-gradient(100deg,transparent,#ffe7aa44,transparent);animation:iw-control-meter-current 5.7s ease-in-out -2s infinite;animation-play-state:paused}.iw-control-current-blue::after{animation-duration:8.1s;animation-delay:-5.6s;animation-direction:reverse}[data-iw-control=contested] .iw-control-current-red::after,[data-iw-control=contested] .iw-control-current-blue::after{animation-play-state:running}.iw-control-meter-fill::after{content:"";position:absolute;top:0;bottom:0;left:var(--iw-control-split, 50%);width:7px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,#f5d67caa,transparent);opacity:0;transition:opacity .85s ease,left .7s ease}[data-iw-control=contested] .iw-control-meter-fill::after{opacity:.75}.iw-control-factions{grid-area:factions;display:grid!important;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding-top:5px;border-top:1px solid rgba(154,126,75,.2)}.iw-control-faction{font:600 9px/1.2 var(--iw-font-head);letter-spacing:.11em;text-transform:uppercase;opacity:.45}.iw-control-faction-red{color:#ef7777;text-align:left}.iw-control-faction-blue{color:#7abcf0;text-align:right}.iw-control-versus{color:#a98e5c;font-size:10px}[data-iw-control=red] .iw-control-faction-red,[data-iw-control=blue] .iw-control-faction-blue,[data-iw-control=contested] .iw-control-faction{opacity:1;text-shadow:0 0 7px currentColor}@keyframes iw-control-resting-light{0%,100%{opacity:.62;filter:saturate(1.25) brightness(1.06) drop-shadow(0 0 3px rgba(var(--iw-crystal-light),.5))}46%{opacity:.84;filter:saturate(1.45) brightness(1.22) drop-shadow(0 0 7px rgba(var(--iw-crystal-light),.82))}}@keyframes iw-control-captured-aura{0%,100%{transform:scale(.88);filter:brightness(.82)}47%{transform:scale(1.06);filter:brightness(1.2)}}@keyframes iw-control-filament-red{0%,12%{opacity:0;transform:translateX(-110%) scaleX(.6)}24%{opacity:.82;transform:translateX(26%) scaleX(.9)}36%{opacity:.28;transform:translateX(116%) scaleX(.5)}49%{opacity:1;transform:translateX(191%) scaleX(1.2)}65%,100%{opacity:0;transform:translateX(320%) scaleX(.4)}}@keyframes iw-control-filament-blue{0%,21%{opacity:0;transform:translateX(330%) scaleX(.5)}34%{opacity:.74;transform:translateX(205%) scaleX(1.15)}53%{opacity:1;transform:translateX(117%) scaleX(.7)}67%{opacity:.4;transform:translateX(29%) scaleX(1)}81%,100%{opacity:0;transform:translateX(-110%) scaleX(.4)}}@keyframes iw-control-crystal-flow{0%,100%{transform:translate(-9%,13%) rotate(-13deg) scale(.96);opacity:.66}29%{transform:translate(12%,3%) rotate(8deg) scale(1.07);opacity:.82}64%{transform:translate(-2%,-14%) rotate(-5deg) scale(.98);opacity:.72}}@keyframes iw-control-crystal-undertow{0%,100%{transform:translate(13%,-7%) rotate(11deg);opacity:.58}41%{transform:translate(-11%,12%) rotate(-17deg);opacity:.79}73%{transform:translate(5%,5%) rotate(4deg);opacity:.63}}@keyframes iw-control-meter-current{0%,17%{transform:translateX(0);opacity:0}39%{opacity:.65}76%,100%{transform:translateX(350%);opacity:0}}[data-iw-encounter=zone]>[data-iw-boss-role=control-hp],[data-iw-encounter=zone]>[data-iw-boss-role=control-progress],[data-iw-encounter=zone] [data-iw-boss-role=control-strength]{display:none!important}[data-iw-encounter=zone] [data-iw-boss-role=timer]{display:inline-block;margin:0!important;color:#c4b897!important}[data-iw-encounter=zone] [data-iw-boss-role=timer]::before{content:"✧ ";color:var(--iw-boss-accent)}[data-iw-encounter=zone]>[data-iw-boss-role=control-queue]{grid-column:1 / -1;order:1}[data-iw-encounter=zone]>[data-iw-boss-role=control-teams]{grid-column:1 / -1;order:2;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:10px}[data-iw-encounter=zone]>[data-iw-boss-role=control-teams]>*{margin:0!important;min-width:0}[data-iw-encounter=zone]>[data-iw-boss-role=control-teams]>p{grid-column:1 / -1}@media(max-width:480px){[data-iw-encounter=zone]>[data-iw-boss-role=control-teams]{grid-template-columns:minmax(0,1fr)}}[data-iw-encounter=zone]>[data-iw-boss-role=participation]{grid-column:2;grid-row:3;justify-self:end;float:none!important;margin:5px 4px 0 12px!important;color:#aaa18e!important;font-size:10px!important}@media(max-width:760px){[data-iw-encounter]{padding:10px!important}[data-iw-encounter]:not([data-iw-encounter=zone]){grid-template-columns:92px minmax(0,1fr);column-gap:10px}[data-iw-encounter]>.iw-boss-art{width:92px;height:92px;top:10px;left:10px}[data-iw-encounter]:not([data-iw-encounter=zone])>.iw-boss-art{inset:auto!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]{padding-left:0;min-height:0;flex-wrap:wrap;gap:6px!important}[data-iw-encounter] [data-iw-boss-role=title]{font-size:16px!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=status]{grid-column:1 / -1;grid-row:4;padding-left:0}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=details]{grid-row:5}[data-iw-encounter]:not([data-iw-encounter=zone])>.iw-boss-rewards{grid-row:6}[data-iw-encounter=zone]{padding:10px!important}.iw-control-dominion{grid-template-columns:118px minmax(0,1fr);column-gap:10px;min-height:118px;padding-inline:0!important}.iw-control-crest{width:118px}.iw-control-crest::before{inset:-12%}[data-iw-control=red] .iw-control-crest::before,[data-iw-control=blue] .iw-control-crest::before{opacity:.52}.iw-control-sword-energy{height:7px}[data-iw-control=contested] .iw-control-sword-energy-red,[data-iw-control=contested] .iw-control-sword-energy-blue{opacity:.6}[data-iw-control=contested] .iw-control-crystal-core{opacity:.45}.iw-control-sword-energy::after,.iw-control-crystal-core::after{display:none;animation:none}.iw-control-sword-energy-red::before{animation-duration:10.3s}.iw-control-sword-energy-blue::before{animation-duration:14.9s}.iw-control-crystal-core::before{animation-duration:11.3s}.iw-control-state{font-size:15px!important}.iw-control-meter-head{gap:5px}.iw-control-meter-label,.iw-control-meter-value{font-size:9px;letter-spacing:.045em}.iw-control-meter-track{height:15px}.iw-control-factions{gap:5px}.iw-control-faction{font-size:8.5px;letter-spacing:.045em;line-height:1.25}.iw-boss-reward-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}[data-iw-encounter] button.iw-boss-reward{width:auto!important;min-height:72px!important}.iw-boss-reward-name{font-size:10px!important}}@media(max-width:380px){[data-iw-encounter]:not([data-iw-encounter=zone]){grid-template-columns:80px minmax(0,1fr)}[data-iw-encounter]>.iw-boss-art{width:80px;height:80px}[data-iw-encounter]{--iw-boss-action-w: 120px}.iw-control-dominion{grid-template-columns:88px minmax(0,1fr)}.iw-control-crest{width:88px}.iw-control-state{font-size:13px!important}}@media(prefers-reduced-motion:reduce){.iw-control-dominion *,.iw-control-dominion *::before,.iw-control-dominion *::after{animation:none!important;transition:none!important}.iw-control-impact{visibility:hidden!important}}[data-iw-market=row]{border-radius:var(--iw-r-panel)!important;border:1px solid var(--iw-line)!important;background:rgba(7,7,11,.66)!important;backdrop-filter:blur(2px)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.28)!important;transition:border-color .12s,background-color .12s!important}[data-iw-market=row]:hover{border-color:var(--iw-line-hi)!important;background:rgba(12,12,17,.72)!important}[data-iw-market=row][class*=opacity-30]{background:rgba(4,4,7,.6)!important;backdrop-filter:none!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)!important}[data-iw-market=row][class*=opacity-30]:hover{border-color:var(--iw-line)!important;background:rgba(4,4,7,.6)!important}[data-iw-market=namebtn]{background:transparent!important;border-color:transparent!important;box-shadow:none!important}[data-iw-village]{--iw-village-accent: var(--iw-th-accent)}[data-iw-village=addons] [data-iw-village-role=intro]{margin:0 0 12px!important;color:#a49c88!important;font-size:11.5px!important;line-height:1.45!important}[data-iw-village=addons] [data-iw-village-role=note]{margin:10px 0 0!important;padding:8px 11px!important;border-left:2px solid var(--iw-th-edge-mid);background:rgba(0,0,0,.28);color:#9a9280!important;font-family:var(--iw-font-flav)!important;font-size:12.5px!important;font-style:italic;line-height:1.4!important}[data-iw-village=slot]{position:relative!important;display:grid!important;grid-template-columns:var(--iw-village-art-w, 100px) minmax(0,1fr);align-items:center;column-gap:13px;row-gap:10px;padding:12px!important;border:1px solid var(--iw-th-edge)!important;border-radius:var(--iw-r-panel)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(120% 90% at 8% 0%,rgba(255,236,190,.05),transparent 46%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px #0B0A08,inset 0 0 0 2px rgba(143,107,55,.14),inset 0 1px 0 rgba(255,236,190,.035),0 2px 7px rgba(0,0,0,.42)!important}[data-iw-village=slot]::before{content:""!important;position:absolute!important;inset:0 0 auto!important;height:1px!important;z-index:2!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.9!important}[data-iw-village=slot]>*{position:relative;z-index:1}[data-iw-village=slot]>[data-iw-village-role=head]{grid-column:2;min-width:0}[data-iw-village=slot] [data-iw-village-role=copy],[data-iw-village=slot] [data-iw-village-role=actions]{background:transparent!important;min-width:0}[data-iw-village=slot]>[data-iw-village-role=picker]{grid-column:1 / -1;margin-top:0!important;border-top:1px solid var(--iw-th-edge-faint)!important;padding-top:11px!important}[data-iw-village-art]{grid-column:1;grid-row:1;align-self:center;position:relative;width:var(--iw-village-art-w, 100px);height:var(--iw-village-art-w, 100px);border:1px solid color-mix(in srgb,var(--iw-village-accent) 34%,#2A2318);border-radius:2px;background:radial-gradient(66% 30% at 50% 84%,color-mix(in srgb,var(--iw-village-accent) 26%,transparent),transparent 72%),radial-gradient(120% 86% at 50% 6%,rgba(120,140,180,.10),transparent 64%),linear-gradient(180deg,#0C0D11 0%,#07070A 100%);box-shadow:inset 0 0 22px rgba(0,0,0,.62),0 3px 12px rgba(0,0,0,.45);pointer-events:none}[data-iw-village-art]::before{content:"";position:absolute;inset:0;border-radius:inherit;background-image:var(--iw-village-sprite, none);background-repeat:no-repeat;background-position:center 46%;background-size:88% auto;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}[data-iw-village-art=generic]::after,[data-iw-village=slot][data-iw-village-state=vacant] [data-iw-village-art]::after{content:"";position:absolute;inset:52% 24% 22%;border:1px dashed color-mix(in srgb,var(--iw-village-accent) 46%,transparent);border-radius:1px;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-village-accent) 12%,transparent),transparent);box-shadow:0 0 14px color-mix(in srgb,var(--iw-village-accent) 14%,transparent)}[data-iw-village=slot][data-iw-village-state=vacant]{--iw-village-accent: #6E7482;opacity:.92}[data-iw-village=slot][data-iw-village-state=vacant] [data-iw-village-art]{border-style:dashed;box-shadow:inset 0 0 18px rgba(0,0,0,.58)}[data-iw-village=slot][data-iw-village-state=installed]:hover [data-iw-village-art]{border-color:color-mix(in srgb,var(--iw-village-accent) 58%,#2A2318);box-shadow:inset 0 0 22px rgba(0,0,0,.5),0 3px 16px rgba(0,0,0,.5),0 0 0 1px color-mix(in srgb,var(--iw-village-accent) 18%,transparent)}[data-iw-village-role=index]{margin:0 0 3px!important;color:var(--iw-th-accent-dim)!important;font-family:var(--iw-font-ui)!important;font-size:9.5px!important;font-weight:600!important;letter-spacing:.2em!important;text-transform:uppercase}[data-iw-village-role=name]{margin:0!important;color:#EBDCB8!important;font-family:var(--iw-font-head)!important;font-size:15px!important;font-weight:600!important;line-height:1.3!important;text-shadow:0 1px 0 #000,0 0 14px rgba(212,173,99,.12)}[data-iw-village-role=vacant]{margin:0!important;color:#857F72!important;font-family:var(--iw-font-flav)!important;font-size:14px!important;font-style:italic}[data-iw-village-role=effects]{margin:7px 0 0!important;padding:5px 9px!important;border-left:2px solid color-mix(in srgb,var(--iw-village-accent) 52%,transparent);border-radius:0 2px 2px 0;background:rgba(0,0,0,.3);color:#B9C7A8!important;font-size:11.5px!important;line-height:1.5!important}[data-iw-village-role=actions]{display:flex!important;flex-direction:column;flex-shrink:0;gap:6px!important}[data-iw-village-role=action]{min-width:92px;padding:7px 11px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:var(--iw-r-control)!important;background:linear-gradient(180deg,#22211C 0%,#14140F 100%)!important;color:#D6CBB0!important;font-family:var(--iw-font-ui)!important;font-size:11.5px!important;font-weight:600!important;letter-spacing:.05em!important;text-transform:uppercase;box-shadow:inset 0 1px 0 rgba(255,236,190,.05),0 1px 2px rgba(0,0,0,.45)!important;transition:border-color .12s,background-color .12s,color .12s!important}[data-iw-village-role=action]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;color:#F0E6CC!important}[data-iw-village-role=action]:disabled{opacity:.45!important}[data-iw-village-action=install],[data-iw-village-action=upgrade]{border-color:var(--iw-th-cta-hi)!important;background:linear-gradient(180deg,var(--iw-th-cta-hi) 0%,var(--iw-th-cta) 100%)!important;color:#FFF2E2!important}[data-iw-village-action=install]:hover:not(:disabled),[data-iw-village-action=upgrade]:hover:not(:disabled){border-color:#E9743A!important;color:#FFF!important}[data-iw-village-action=destroy]:hover:not(:disabled){border-color:#8E4038!important;color:#E6B4AC!important}[data-iw-village-role=picker]{display:grid;gap:7px}[data-iw-village-role=option]{display:block!important;width:100%!important;padding:8px 10px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:var(--iw-r-control)!important;background:rgba(9,9,12,.55)!important;text-align:left!important;font-size:11.5px!important;transition:border-color .12s,background-color .12s!important}[data-iw-village-role=option]>p:not([data-iw-village-role]),[data-iw-village-role=option-owned]>p:not([data-iw-village-role]){margin:3px 0 0 43px!important;color:#A7B79A!important;font-size:11px!important;line-height:1.4!important}[data-iw-village-role=option-owned]>p:not([data-iw-village-role]){color:#8A8478!important;font-style:italic}[data-iw-village-role=option]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;background:rgba(18,16,12,.7)!important}[data-iw-village-role=option-owned]{padding:8px 10px!important;border:1px dashed var(--iw-th-edge-faint)!important;border-radius:var(--iw-r-control)!important;background:rgba(0,0,0,.3)!important}[data-iw-village-role=option-name]{display:flex!important;align-items:center;gap:9px;margin:0!important;color:#E3D6B6!important;font-family:var(--iw-font-head)!important;font-size:13px!important;line-height:1.25!important}[data-iw-village-role=option-name]>span:not(.iw-village-option-art){color:var(--iw-th-accent-dim)!important;font-family:var(--iw-font-ui)!important;font-size:11px!important}.iw-village-option-art{flex:0 0 auto;width:34px;height:34px;border:1px solid var(--iw-th-edge-soft);border-radius:2px;background-image:var(--iw-village-sprite, none);background-repeat:no-repeat;background-position:center 50%;background-size:84% auto;background-color:#08080B;box-shadow:inset 0 0 10px rgba(0,0,0,.6)}[data-iw-village=house]{position:relative!important;display:grid!important;grid-template-columns:var(--iw-village-house-w, 132px) minmax(0,1fr);column-gap:16px;align-items:start;padding:14px!important;border:1px solid var(--iw-th-edge)!important;border-radius:var(--iw-r-panel)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(90% 120% at 12% 0%,rgba(255,236,190,.06),transparent 52%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px #0B0A08,inset 0 0 0 2px rgba(143,107,55,.16),0 2px 9px rgba(0,0,0,.45)!important}[data-iw-village=house]>*{grid-column:2;position:relative;z-index:1}[data-iw-village=house]>[data-iw-village-art]{grid-column:1;grid-row:1 / span 4;width:var(--iw-village-house-w, 132px);height:var(--iw-village-house-w, 132px)}[data-iw-village-role=house-name]{margin:0 0 2px!important;color:#F0E1BC!important;font-family:var(--iw-font-head)!important;font-size:19px!important;font-weight:600!important;line-height:1.25!important;text-shadow:0 1px 0 #000,0 0 16px rgba(212,173,99,.14)}[data-iw-village-role=house-tier]{margin:0!important;color:var(--iw-th-accent-dim)!important;font-size:11px!important;letter-spacing:.04em!important}[data-iw-village-role=house-note]{color:#8E8878!important;font-family:var(--iw-font-flav)!important;font-size:12.5px!important;font-style:italic;line-height:1.4!important}[data-iw-village-role=house-salvage]{color:#C0B79F!important;font-size:11.5px!important}[data-iw-village=house]>p{margin:6px 0 0!important}[data-iw-village=house]>p:first-of-type{margin-top:0!important}[data-iw-village-role=house-next]{margin-top:9px!important;padding:6px 9px!important;border-left:2px solid color-mix(in srgb,var(--iw-th-cta-hi) 60%,transparent);border-radius:0 2px 2px 0;background:rgba(0,0,0,.3);font-size:11.5px!important;line-height:1.45!important}[data-iw-village-role=house-max]{margin-top:9px!important;font-family:var(--iw-font-head)!important;font-size:12.5px!important;letter-spacing:.04em!important}[data-iw-village=house] [data-iw-village-action=upgrade]{margin-top:11px!important;width:100%}.iw-village-tiers{grid-column:1!important;display:flex;justify-content:center;gap:5px;margin-top:9px}.iw-village-tier-pip{width:9px;height:9px;border:1px solid var(--iw-th-edge-mid);transform:rotate(45deg)}.iw-village-tier-pip[data-iw-village-pip=held]{border-color:var(--iw-th-accent);background:linear-gradient(160deg,var(--iw-th-accent),var(--iw-th-brass));box-shadow:0 0 7px rgba(212,173,99,.35)}@media(max-width:760px){[data-iw-village=slot]{--iw-village-art-w: 76px;column-gap:11px;padding:10px!important}[data-iw-village=slot]>[data-iw-village-role=head]{display:contents!important}[data-iw-village=slot] [data-iw-village-role=copy]{grid-column:2;grid-row:1}[data-iw-village=slot] [data-iw-village-role=actions],[data-iw-village=slot]>[data-iw-village-role=head]>[data-iw-village-role=action]{grid-column:1 / -1;grid-row:2}[data-iw-village-role=actions]{flex-direction:row!important}[data-iw-village-role=action]{flex:1 1 0;min-width:0;padding:8px 9px!important}[data-iw-village=slot]>[data-iw-village-role=picker]{grid-row:3}[data-iw-village-role=name]{font-size:15px!important}[data-iw-village=house]{--iw-village-house-w: 104px;padding:11px!important}[data-iw-village-role=house-name]{font-size:17px!important}}@media(max-width:380px){[data-iw-village=slot]{--iw-village-art-w: 64px}[data-iw-village=house]{--iw-village-house-w: 88px;grid-template-columns:var(--iw-village-house-w) minmax(0,1fr)}}@media(prefers-reduced-motion:reduce){[data-iw-village-role=action],[data-iw-village-role=option],[data-iw-village-art]{transition:none!important}}\n';
+  var ui_system_default = ':root{--iw-space-1: 4px;--iw-space-2: 6px;--iw-space-3: 9px;--iw-space-4: 12px;--iw-space-5: 16px;--iw-control-h: 32px;--iw-control-h-lg: 36px;--iw-frame-title-size: 18px;--iw-frame-edge: var(--iw-th-edge);--iw-frame-inner: #19150F;--iw-steel: #26231D}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-chrome=nav]){position:relative!important;isolation:isolate!important;border:1px solid var(--iw-th-edge)!important;border-radius:4px!important;padding:var(--iw-frame-pad-y, 26px) var(--iw-frame-pad-x, 22px)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 5px 18px rgba(0,0,0,.24)!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-chrome=nav])::before{content:""!important;position:absolute!important;z-index:0!important;pointer-events:none!important;left:12px!important;right:12px!important;top:0!important;height:1px!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent)!important;opacity:.78!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"]):not(:has([data-iw-ui=nav-tab]))::after{content:""!important;position:absolute!important;inset:-3px -1px!important;z-index:0!important;pointer-events:none!important;border-style:solid!important;border-width:34px 32px!important;border-color:transparent!important;border-image:var(--iw-corner-filigree) 50% / 34px 32px / 0 stretch!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"])))>*{position:relative;z-index:1}@media(max-width:1024px){:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-chrome=nav]){padding:var(--iw-frame-pad-mobile-y, var(--iw-frame-pad-y, 20px)) var(--iw-frame-pad-mobile-x, var(--iw-frame-pad-x, 16px))!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):not([data-iw-collapsed="1"]):not(:has([data-iw-ui=nav-tab]))::after{border-width:27px 25px!important;border-image-width:27px 25px!important}}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):not(:has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))):has([data-iw-ui=nav-tab]){--iw-frame-pad-y: 6px;--iw-frame-pad-x: 16px;--iw-frame-pad-mobile-y: 6px;--iw-frame-pad-mobile-x: 12px}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"])){border:0!important;border-radius:0!important;padding:0!important;background:none!important;box-shadow:none!important;isolation:auto!important}:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))::before,:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]):has(:is([data-iw-ui=section-frame],[data-iw-inventory-root="1"],.fs-skills-section-frame[data-iw-skills-ui-ready="1"]))::after{content:none!important;display:none!important;border:0!important;background:none!important}[data-iw-ui=section-title]{font-family:var(--iw-font-head)!important;font-size:var(--iw-frame-title-size)!important;letter-spacing:.035em!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important}[data-iw-skill-boost="1"]{display:block!important;width:fit-content!important;max-width:100%!important;margin-block:4px!important;padding:4px 9px!important;border:1px solid var(--iw-th-edge-faint)!important;border-left:2px solid #67ab83!important;border-radius:3px!important;background:color-mix(in srgb,var(--iw-th-edge-soft) 33%,transparent)!important;color:#91cba4!important}[data-iw-skill-boost="1"] *{color:inherit!important}[data-iw-panel]{--iw-frame-pad-y: 18px;--iw-frame-pad-x: 20px;--iw-frame-pad-mobile-y: 16px;--iw-frame-pad-mobile-x: 14px;display:flex!important;flex-direction:column!important;gap:10px!important;min-width:0!important;font-family:var(--iw-font-ui)!important;color:var(--iw-text)!important}[data-iw-panel] *,[data-iw-panel] *::before,[data-iw-panel] *::after{box-sizing:border-box}[data-iw-panel][data-iw-panel-header=split]{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important}[data-iw-panel][data-iw-panel-header=split]>*{grid-column:1 / -1}[data-iw-panel][data-iw-panel-header=split]>[data-iw-panel-part=header-title]{grid-column:1!important;grid-row:1!important;min-width:0!important}[data-iw-panel][data-iw-panel-header=split]>[data-iw-panel-part=header-tools]{grid-column:2!important;grid-row:1!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:4px!important}[data-iw-panel] [data-iw-ui=section-title]{margin:0!important;font-size:var(--iw-frame-title-size)!important;font-weight:700!important;line-height:1.15!important}[data-iw-panel-part=header]{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;min-width:0!important;margin:0!important}[data-iw-panel-part=header]>*{min-width:0}:is([data-iw-panel-part=header],[data-iw-panel-part=header-title]) p{margin:4px 0 0!important;color:var(--iw-faint)!important;font-size:11px!important;line-height:1.25!important}:is([data-iw-panel-part=header],[data-iw-panel-part=header-tools]) button:not([data-iw-collapse]),[data-iw-panel-part=panel-control]{min-width:30px!important;min-height:30px!important;padding:0 9px!important;border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;background:linear-gradient(180deg,#242018,#15130F)!important;color:var(--iw-dim)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;font-family:var(--iw-font-ui)!important}:is([data-iw-panel-part=header],[data-iw-panel-part=header-tools]) button:not([data-iw-collapse]):hover,[data-iw-panel-part=panel-control]:hover{border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}[data-iw-panel-part=panel-control]{width:auto!important;min-height:24px!important;margin-left:8px!important;padding:0 7px!important;font-size:10px!important;font-weight:700!important;letter-spacing:.12em!important;text-transform:uppercase!important}[data-iw-panel=action-log][data-iw-ui=section-frame] [data-iw-ui=section-title]{min-width:0!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;color:var(--iw-text-hi)!important;font-family:var(--iw-font-head)!important;text-align:left!important;cursor:pointer!important}[data-iw-panel=action-log][data-iw-ui=section-frame] [data-iw-ui=section-title]:hover{border-color:transparent!important;color:var(--iw-text-hi)!important}[data-iw-panel=action-log][data-iw-ui=section-frame] [data-iw-ui=section-title]>*{color:var(--iw-gold-dim)!important;font-family:var(--iw-font-ui)!important;font-size:11px!important;font-weight:600!important;letter-spacing:.08em!important;text-transform:uppercase!important;text-decoration:underline!important;text-underline-offset:2px!important;text-shadow:none!important}[data-iw-panel=action-log][data-iw-ui=section-frame] [data-iw-ui=section-title]:hover>*{color:var(--iw-gold)!important}@media(min-width:641px){[data-iw-panel=action-log] [data-iw-panel-part=header]>:first-child{display:flex!important;align-items:center!important;gap:8px!important}}[data-iw-panel=current-action]>div:not([data-iw-panel-part]),[data-iw-panel=current-action]>strong{font-size:15px!important;font-weight:700!important;color:var(--iw-text-hi)!important}[data-iw-panel=current-action]>p{margin:-2px 0 2px!important;color:var(--iw-faint)!important;font-size:11.5px!important;line-height:1.3!important}[data-iw-panel-part=progress]{position:relative!important;width:100%!important;height:18px!important;min-height:18px!important;overflow:hidden!important;border:1px solid color-mix(in srgb,var(--iw-th-accent) 48%,var(--iw-th-edge))!important;border-radius:2px!important;background:linear-gradient(#080807,#14120e)!important;box-shadow:inset 0 3px 8px #000d,0 0 0 1px #000,0 0 8px color-mix(in srgb,var(--iw-th-accent) 12%,transparent)!important}[data-iw-panel-part=progress]::before,[data-iw-panel-part=progress]::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none}[data-iw-panel-part=progress]::before{background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(0,0,0,.72) calc(10% - 1px) 10%)}[data-iw-panel-part=progress]::after{inset:3px 5px auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.48),transparent)}[data-iw-panel-part=progress]>*{position:relative!important;height:100%!important;min-height:100%!important;overflow:hidden!important;border-radius:0!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-accent) 70%,#fff) 0%,var(--iw-th-accent) 38%,color-mix(in srgb,var(--iw-th-accent-dim) 76%,#17130d) 100%)!important;box-shadow:0 0 9px color-mix(in srgb,var(--iw-th-accent) 32%,transparent)!important;transition:width var(--iw-progress-duration, var(--iw-action-tick, 1s)) linear!important;will-change:width!important}[data-iw-panel-part=progress]>*::before{content:"";position:absolute;inset:0 auto 0 -40%;width:40%;background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--iw-th-accent) 64%,rgba(255,255,255,.82)),transparent);animation:iw-control-meter-current 5.7s ease-in-out -2s infinite;pointer-events:none}[data-iw-panel-part=progress][data-iw-progress-reset]>*{transition:none!important}@media(prefers-reduced-motion:reduce){[data-iw-panel-part=progress]>*{transition:none!important}[data-iw-panel-part=progress]>*::before{animation:none!important}}[data-iw-panel-part=queue]{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:4px 10px!important;min-width:0!important;padding:10px 12px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:3px!important;background:linear-gradient(180deg,rgba(255,255,255,.022),transparent 45%),rgba(12,12,10,.76)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.34)!important}[data-iw-panel-part=queue]>:first-child{grid-column:1!important;color:var(--iw-faint)!important;font-size:9.5px!important;font-weight:700!important;letter-spacing:.16em!important;text-transform:uppercase!important}[data-iw-panel-part=queue]>button{grid-column:2!important;grid-row:1 / span 2!important;width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;padding:0!important;border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;background:linear-gradient(180deg,#26221B,#15130F)!important;color:var(--iw-dim)!important}[data-iw-panel-part=feed]{min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:3px!important;background-color:#0B0C0A!important;background-image:linear-gradient(180deg,rgba(255,255,255,.018),transparent 22%)!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}[data-iw-panel=action-log] [data-iw-panel-part=feed]{max-height:300px!important}[data-iw-panel=world-chat] [data-iw-panel-part=feed]{max-height:min(46vh,430px)!important}[data-iw-panel-part=feed] *:has([data-iw-panel-part=feed-row]){background:transparent!important;box-shadow:none!important}[data-iw-panel=action-log] [data-iw-panel-part=feed]{background:transparent!important;box-shadow:none!important}[data-iw-panel-part=feed-row]{display:block!important;min-width:0!important;margin:0!important;padding:8px 12px!important;border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:transparent!important;font-size:12px!important;line-height:1.3!important}[data-iw-panel-part=feed-row]:last-child{border-bottom:0!important}[data-iw-panel-part=feed-row]>*{margin:0!important}[data-iw-panel-part=feed-row]>*+*{margin-top:3px!important}[data-iw-panel-part=feed-row]>:first-child{display:flex!important;align-items:baseline!important;justify-content:space-between!important;gap:10px!important}[data-iw-panel-part=feed-row] time{flex:0 0 auto!important;color:#6F6A60!important;font-size:10px!important;font-variant-numeric:tabular-nums!important}[data-iw-panel=action-log] [data-iw-panel-part=feed-row]>:first-child>:first-child{color:var(--iw-faint)!important;font-size:9.5px!important;font-weight:700!important;letter-spacing:.15em!important;text-transform:uppercase!important}[data-iw-panel=action-log] [data-iw-panel-part=feed-row]>:last-child{color:#82BBD0!important;font-size:11px!important}[data-iw-panel=world-chat] .feed-panel{background:#0B0C0A!important;border-color:var(--iw-th-edge-faint)!important}[data-iw-panel=action-log] .feed-panel{background:transparent!important;border-color:var(--iw-th-edge-faint)!important}[data-iw-panel=world-chat] [data-iw-panel-part=feed-row] strong{color:#8CC8E0!important;font-weight:700!important}[data-iw-panel=world-chat] [data-iw-panel-part=feed-row] b{color:#D9D0BE!important;font-weight:700!important}[data-iw-panel-part=composer]{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:10px!important;width:100%!important;min-width:0!important;margin:2px 0 0!important}[data-iw-panel-part=chat-input]{width:100%!important;min-width:0!important;height:42px!important;padding:0 13px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:3px!important;background:#080A09!important;color:var(--iw-text)!important;font-family:var(--iw-font-ui)!important;font-size:13px!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}[data-iw-panel-part=chat-input]::placeholder{color:#6F685A!important}[data-iw-panel-part=chat-input]:focus{outline:1px solid rgba(197,145,67,.5)!important;outline-offset:1px!important;border-color:var(--iw-th-brass)!important}[data-iw-panel-part=send]{min-width:104px!important;height:42px!important;padding:0 18px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:3px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 62%,#000))!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-size:13px!important;font-weight:700!important;letter-spacing:.025em!important;text-shadow:0 1px 0 #3A1005!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important}[data-iw-panel-part=send]:hover:not(:disabled){filter:brightness(1.12)}@media(max-width:640px){[data-iw-panel]{gap:8px!important}[data-iw-panel-part=feed-row]{padding:8px 9px!important;font-size:11.5px!important}}@media(max-width:430px){[data-iw-panel-part=composer]{grid-template-columns:minmax(0,1fr)!important;gap:7px!important}[data-iw-panel-part=send]{width:100%!important;min-width:0!important}[data-iw-panel-part=feed-row]>:first-child{flex-wrap:wrap!important;gap:2px 8px!important}}[data-iw-ui=main-nav-shell]{margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}[data-iw-ui=main-nav]{display:flex!important;align-items:stretch!important;flex-wrap:wrap!important;gap:0!important;width:max-content!important;max-width:100%!important;min-height:0!important;margin:0!important;padding:0!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:3px!important;background:#11100D!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.52)!important;overflow:visible!important}[data-iw-ui=nav-tab]{position:relative!important;min-height:var(--iw-control-h)!important;height:var(--iw-control-h)!important;margin:0!important;padding:0 16px!important;border:0!important;border-right:1px solid var(--iw-th-edge-soft)!important;border-radius:0!important;background:linear-gradient(180deg,#211E18,#16140F)!important;color:#AAA291!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.022)!important;font-family:var(--iw-font-ui)!important;font-size:11.5px!important;font-weight:700!important;letter-spacing:.025em!important;text-transform:uppercase!important;line-height:1!important}[data-iw-ui=nav-tab]:last-of-type{border-right:0!important}[data-iw-ui=nav-tab]:hover:not(:disabled){z-index:1;background:linear-gradient(180deg,#29241C,#1A1711)!important;color:var(--iw-text-hi)!important;filter:none!important}[data-iw-ui=nav-tab][data-iw-state=active]{z-index:2;color:#FFE8CB!important;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%),linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 52%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,226,191,.13),inset 0 -2px 0 rgba(55,16,4,.58)!important}[data-iw-ui=nav-tab][data-iw-state=active]::after{content:"";position:absolute;left:9px;right:9px;bottom:-4px;height:2px;background:var(--iw-ember-hi);box-shadow:0 0 6px rgba(209,90,34,.28)}[data-iw-nav-link=toolkit]{box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;gap:5px!important;margin-left:10px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:3px!important;color:var(--iw-th-accent)!important;text-decoration:none!important;cursor:pointer}[data-iw-nav-link=toolkit]::after{content:"↗";font-size:.82em;line-height:1;opacity:.68}[data-iw-nav-link=toolkit]:hover{color:var(--iw-text-hi)!important;border-color:var(--iw-th-brass)!important;background:linear-gradient(180deg,#29241C,#1A1711)!important}[data-iw-cache-trigger]{flex:0 0 auto!important;color:#a5dedf!important}@media(max-width:767px){[data-iw-cache-trigger]{display:none!important}}[data-iw-ui=zone-bar]{border-radius:5px!important;padding-top:5px!important;padding-bottom:5px!important;min-height:0!important}[data-iw-ui=zone-title]{color:var(--iw-text-hi)!important;font-weight:700!important}[data-iw-ui=zone-action]{background:linear-gradient(180deg,#242018,#17140F)!important;border:1px solid var(--iw-line-hi)!important;color:var(--iw-text)!important;height:auto!important;min-height:30px!important;min-width:0!important;padding:5px 13px!important;font-size:11px!important;letter-spacing:.025em!important}[data-iw-chrome=shell]{display:grid!important;grid-template-columns:minmax(0,1fr) auto;row-gap:0!important;column-gap:0!important}[data-iw-chrome=shell]>header{grid-row:1;margin-bottom:12px}[data-iw-chrome=shell]>*{grid-column:1 / -1}[data-iw-chrome=zone-bar]~*{margin-top:12px}[data-iw-chrome=zone-bar]{display:contents!important}[data-iw-chrome=zone-bar]::before,[data-iw-chrome=zone-bar]::after{content:none!important}[data-iw-chrome=shell]{--iw-chrome-inset: 14px}[data-iw-chrome=shell] [data-iw-chrome=zone-text]{grid-row:2;grid-column:1;align-self:center;margin:6px 0 9px var(--iw-chrome-inset)!important;padding:0!important;min-width:0}[data-iw-chrome=notice]{grid-row:2;grid-column:2;align-self:center;justify-self:end;margin:6px 14px 9px 20px;max-width:34rem}[data-iw-chrome=nav]{grid-row:3;grid-column:1;align-self:center;margin:9px var(--iw-chrome-inset) 6px var(--iw-chrome-inset)!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important}[data-iw-chrome=zone-actions]{grid-row:3;grid-column:2;align-self:center;justify-self:end;margin:9px 14px 6px 14px}[data-iw-chrome=shell]::before{content:"";grid-row:2 / 4;grid-column:1 / -1;border:1px solid var(--iw-th-edge);border-radius:4px;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow)}[data-iw-chrome=shell]::after{content:"";grid-row:3;grid-column:1 / -1;align-self:start;height:1px;background:var(--iw-th-edge-soft)}@media(max-width:860px){[data-iw-chrome=shell]{grid-template-columns:minmax(0,1fr)}[data-iw-chrome=shell] [data-iw-chrome=zone-text]{grid-row:2;grid-column:1;margin:6px var(--iw-chrome-inset) 8px!important}[data-iw-chrome=notice]{grid-row:3;grid-column:1;justify-self:stretch;max-width:none;margin:0 var(--iw-chrome-inset) 9px}[data-iw-chrome=nav]{grid-row:4;grid-column:1;margin:9px var(--iw-chrome-inset) 6px!important}[data-iw-chrome=shell] [data-iw-chrome=zone-actions]{grid-row:5;grid-column:1;justify-self:stretch;margin:0 var(--iw-chrome-inset) 8px!important}[data-iw-chrome=shell]::before{grid-row:2 / 6}[data-iw-chrome=shell]::after{grid-row:4}}[data-iw-zone-link]{background-color:transparent!important;background-image:none!important;border:0!important;box-shadow:none!important;padding:0!important;border-radius:0!important;cursor:pointer}[data-iw-ui=zone-title] [data-iw-zone-link]{margin-left:8px!important}button:not(.iw-item-ref):not([data-iw-raid-owned]):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-header=profile-name] button):not([data-iw-order-handle]):not([data-fs-inv]),[role=button]:not(.iw-item-ref):not([data-iw-raid-owned]):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-header=profile-name] button):not([data-iw-order-handle]):not([data-fs-inv]){border-color:var(--iw-th-edge-faint)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.035),rgba(0,0,0,.28))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.045),inset 0 -7px 10px -8px rgba(0,0,0,.9)!important}button:not(.iw-item-ref):not([data-iw-raid-owned]):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-order-handle]):not([data-fs-inv]):hover,[role=button]:not(.iw-item-ref):not([data-iw-raid-owned]):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-order-handle]):not([data-fs-inv]):hover{border-color:var(--iw-line-hot)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.055),inset 0 0 10px -3px rgba(216,121,31,.35)!important}[data-iw-ui=zone-action],.compact-panel.fs-skill-panel button[data-iw-skill-role=action-button],.compact-panel.fs-skill-panel button[data-iw-skill-role=nav-button]{min-height:30px}[data-iw-inventory-control=filter],[data-iw-inventory-control=page]{min-height:26px}button:not(.iw-item-ref):not([data-iw-raid-owned]):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([data-iw-ui=nav-tab]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-order-handle]):not([data-fs-inv]):disabled,[role=button][aria-disabled=true]:not(.iw-item-ref):not([data-iw-raid-owned]):not([data-iw-collapse]):not([data-iw-compact-button]):not([data-iw-inventory-control]):not([data-fs-preserved-action=control]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-skill-role=nav-button]):not([data-iw-skill-role=action-button]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-ui=section-title]):not([data-iw-header=utility-button]):not([data-iw-header=status-card]):not([data-iw-header=profile-online]):not([data-iw-ui=zone-action]):not([data-iw-zone-link]):not([data-iw-panel-part=header-tools] button):not([data-iw-panel-part=panel-control]):not([data-iw-panel-part=queue]>button):not([data-iw-panel-part=send]):not([class*=decoration-dotted]):not([data-iw-market]):not([data-iw-order-handle]):not([data-fs-inv]){filter:saturate(.58) brightness(.84)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.22)!important}input[type=search],input[placeholder*=Search i]{border:1px solid var(--iw-th-edge-soft)!important;border-bottom-color:var(--iw-line-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,#080A0A,#0D0E0C)!important;box-shadow:inset 0 2px 6px rgba(0,0,0,.72)!important}@media(max-width:768px){[data-iw-ui=main-nav]{width:100%!important}[data-iw-ui=nav-tab]{flex:1 1 auto!important;padding-inline:9px!important;font-size:10.5px!important}[data-iw-nav-link=toolkit]{flex:0 0 auto!important;margin-left:7px!important}}@media(max-width:1279px){:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-gap: 6px;--iw-nav-pad: 12px;--iw-nav-k: 28.1;--iw-nav-fixed: calc(12 * var(--iw-nav-pad) + 5 * var(--iw-nav-gap) + 7px + 5px);container:iw-nav-row / inline-size;flex-wrap:nowrap!important;column-gap:var(--iw-nav-gap)!important}[data-iw-ui=nav-tab]{min-width:0!important;padding-inline:var(--iw-nav-pad, 12px)!important;white-space:nowrap!important;font-size:clamp(7.5px,calc((100cqi - var(--iw-nav-fixed, 186px)) / var(--iw-nav-k, 28.1)),11.5px)!important}}@media(min-width:768px)and (max-width:1279px){:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-nav-link=arcane-cache]){--iw-nav-k: 41.5;--iw-nav-fixed: calc(16 * var(--iw-nav-pad) + 7 * var(--iw-nav-gap) + 7px + 5px)}}@media(min-width:768px)and (max-width:1279px){:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]):has(>[data-iw-tab=guild]){--iw-nav-k: 31;--iw-nav-fixed: calc(14 * var(--iw-nav-pad) + 6 * var(--iw-nav-gap) + 7px + 5px)}:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-nav-link=arcane-cache]):has(>[data-iw-tab=guild]){--iw-nav-k: 44.4;--iw-nav-fixed: calc(18 * var(--iw-nav-pad) + 8 * var(--iw-nav-gap) + 7px + 5px)}}@media(max-width:767px){[data-iw-nav-link=toolkit]{display:none!important}:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-gap: 5px;--iw-nav-pad: 8px;--iw-nav-k: 23.25;--iw-nav-fixed: calc(10 * var(--iw-nav-pad) + 4 * var(--iw-nav-gap))}:is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]):has(>[data-iw-tab=guild]){--iw-nav-gap: 4px;--iw-nav-pad: 5px;--iw-nav-k: 26.15;--iw-nav-fixed: calc(12 * var(--iw-nav-pad) + 5 * var(--iw-nav-gap))}}[data-iw-boss=card]{position:relative!important;border:1px solid var(--iw-th-edge)!important;border-radius:4px!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px #0B0A08,inset 0 0 0 2px rgba(143,107,55,.16),inset 0 1px 0 rgba(255,236,190,.035),0 2px 7px rgba(0,0,0,.42)!important}[data-iw-boss=card]::before{content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:1px!important;z-index:2!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.9!important}[data-iw-boss=card]::after{content:""!important;position:absolute!important;inset:4px!important;z-index:0!important;pointer-events:none!important;border:1px solid rgba(133,101,54,.22)!important;border-radius:2px!important;box-shadow:inset 0 0 12px rgba(0,0,0,.26)!important}[data-iw-boss=card]>*:not(button):not(a):not([role=button]):not([data-iw-boss-owned]){background:transparent!important}[data-iw-boss=card] button[class*=decoration-dotted]{background-color:transparent!important;border-color:transparent!important;box-shadow:none!important}[data-iw-boss=card]>*{position:relative;z-index:1}.iw-boss-notice{margin:0 0 10px!important;padding:7px 12px!important;border-left:2px solid #8da97b;background:rgba(91,130,84,.08);color:#bacbb0!important;font-size:12px!important;line-height:1.35!important}[data-iw-encounter]{--iw-boss-accent: #91b780;padding:12px!important;margin-bottom:10px!important;min-width:0}[data-iw-encounter]:not([data-iw-encounter=zone]){display:grid!important;grid-template-columns:104px auto minmax(0,1fr);grid-template-rows:auto auto auto auto auto;column-gap:14px;row-gap:8px}[data-iw-encounter=abyssal_behemoth]{--iw-boss-accent: #77bcd1}[data-iw-encounter=world_eater]{--iw-boss-accent: #b997df}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]{grid-column:2 / -1;grid-row:1;min-height:0;padding-left:0;align-items:center!important;gap:10px!important}[data-iw-encounter=zone]>[data-iw-boss-role=header]{min-height:0;padding:1px 2px 8px;flex-wrap:wrap;align-items:baseline;gap:8px!important;border-bottom:1px solid color-mix(in srgb,var(--iw-boss-accent) 28%,transparent)}[data-iw-encounter=zone]>[data-iw-boss-role=header]>*:first-child:not([data-iw-boss-role=title]){display:flex!important;align-items:baseline;justify-content:space-between;flex-wrap:wrap;flex:1 1 auto;min-width:0;gap:4px 12px}[data-iw-encounter=zone]>[data-iw-boss-role=header]:has([data-iw-boss-role=action]){align-items:center;flex-wrap:nowrap}[data-iw-encounter=zone]>[data-iw-boss-role=header]>:has(>[data-iw-boss-role=action]){position:relative}[data-iw-encounter=zone]>[data-iw-boss-role=header]>:has(>[data-iw-boss-role=action])>[data-iw-boss-role=action]~*{position:absolute!important;top:calc(100% + 3px);right:0;width:100%!important;margin:0!important}[data-iw-encounter=zone]>[data-iw-boss-role=header]:has([data-iw-boss-role=action]~*){padding-bottom:14px!important}[data-iw-encounter]>.iw-boss-art{position:absolute!important;top:12px;left:12px;width:104px;height:104px;box-sizing:border-box;background-image:url(../assets/world-bosses/encounters.png)!important;background-size:200% 200%!important;background-position:0% 0%!important;border:1px solid color-mix(in srgb,var(--iw-boss-accent) 45%,#443622);border-radius:3px;box-shadow:0 5px 20px #0008,inset 0 0 12px #000a;pointer-events:none}[data-iw-encounter]:not([data-iw-encounter=zone])>.iw-boss-art{position:relative!important;inset:auto!important;grid-column:1;grid-row:1 / 4}[data-iw-encounter=abyssal_behemoth]>.iw-boss-art{background-position:100% 0%!important}[data-iw-encounter=world_eater]>.iw-boss-art{background-position:0% 100%!important}[data-iw-encounter=zone]>.iw-boss-art{display:none!important}[data-iw-encounter] [data-iw-boss-role=title]{font-family:var(--iw-font-head)!important;font-size:17px!important;line-height:1.35!important;color:#f2e8d1!important;margin:0!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]>*:first-child{display:grid!important;grid-template-columns:minmax(0,max-content) minmax(0,max-content);grid-template-areas:"title difficulty" "buff buff";align-items:center;column-gap:8px;row-gap:7px}[data-iw-encounter]:not([data-iw-encounter=zone]) [data-iw-boss-role=title]{grid-area:title}[data-iw-encounter] [data-iw-boss-role=difficulty]{display:inline-block;color:var(--iw-boss-accent)!important;font-size:10px!important;letter-spacing:.15em;text-transform:uppercase;border:1px solid color-mix(in srgb,var(--iw-boss-accent) 25%,transparent);padding:2px 6px!important;margin:0!important}[data-iw-encounter]:not([data-iw-encounter=zone]) [data-iw-boss-role=difficulty]{grid-area:difficulty}[data-iw-encounter] [data-iw-boss-role=buff]{color:#b7cfac!important;font-size:12px!important;line-height:1.3}[data-iw-encounter]:not([data-iw-encounter=zone]) [data-iw-boss-role=buff]{grid-area:buff}[data-iw-encounter] [data-iw-boss-role=timer]{color:#aaa596!important;font-size:11px!important;font-variant-numeric:tabular-nums}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=progress]{grid-column:2 / -1;grid-row:2;margin:0!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=participation]{grid-column:2;grid-row:3;align-self:center;justify-self:start;margin:0!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=status]{grid-column:3;grid-row:3;align-self:center;justify-self:stretch;min-width:0;margin:0!important;gap:8px!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=details]{grid-column:1 / -1;grid-row:4;margin:0!important}[data-iw-encounter]{--iw-boss-action-w: 150px}[data-iw-encounter] [data-iw-boss-role=action]{flex:0 0 auto!important;width:var(--iw-boss-action-w)!important;min-width:var(--iw-boss-action-w)!important;max-width:var(--iw-boss-action-w)!important;height:calc(var(--iw-boss-action-w) / 5)!important;min-height:calc(var(--iw-boss-action-w) / 5)!important;max-height:calc(var(--iw-boss-action-w) / 5)!important;padding:0!important;margin:0!important;font:700 11px var(--iw-font-head)!important;letter-spacing:.07em!important;text-transform:uppercase!important;color:transparent!important;font-size:0!important;line-height:0!important;text-shadow:none!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;appearance:none!important;-webkit-appearance:none!important;background-position:center!important;background-repeat:no-repeat!important;background-size:100% 100%!important;overflow:visible!important;animation:none!important;transition:filter 120ms ease!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join]{background-image:url(../assets/world-boss/world_boss_join-v2.png)!important;filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 4px rgba(232,174,84,.42)) drop-shadow(0 0 10px rgba(232,174,84,.20))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join]:hover:not(:disabled){background-image:url(../assets/world-boss/world_boss_join_hover-v2.png)!important;filter:brightness(1.12) saturate(1.08) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 6px rgba(250,196,103,.62)) drop-shadow(0 0 14px rgba(250,196,103,.30))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=prejoined]{background-image:url(../assets/world-boss/world_boss_prejoined-v2.png)!important;filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 5px rgba(72,148,255,.48)) drop-shadow(0 0 12px rgba(72,148,255,.22))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=fighting]{background-image:url(../assets/world-boss/world_boss_fighting-v3.png)!important;filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 5px rgba(255,103,57,.50)) drop-shadow(0 0 12px rgba(255,103,57,.23))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=prejoined]:hover:not(:disabled){filter:brightness(1.04) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 6px rgba(82,158,255,.56)) drop-shadow(0 0 14px rgba(82,158,255,.26))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=fighting]:hover:not(:disabled){filter:brightness(1.04) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 6px rgba(255,116,67,.58)) drop-shadow(0 0 14px rgba(255,116,67,.27))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state]:focus-visible{outline:1px solid #d6aa5d!important;outline-offset:2px!important}[data-iw-encounter] [data-iw-boss-role=action]:disabled{opacity:.5!important;filter:saturate(.35) brightness(.8)!important;cursor:not-allowed!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join][data-iw-boss-action-team=red]{filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 5px rgba(232,82,82,.55)) drop-shadow(0 0 12px rgba(232,82,82,.25))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join][data-iw-boss-action-team=blue]{filter:drop-shadow(0 2px 3px #000b) drop-shadow(0 0 5px rgba(82,158,255,.55)) drop-shadow(0 0 12px rgba(82,158,255,.25))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join][data-iw-boss-action-team=red]:hover:not(:disabled){filter:brightness(1.12) saturate(1.08) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 7px rgba(244,96,96,.66)) drop-shadow(0 0 15px rgba(244,96,96,.30))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=join][data-iw-boss-action-team=blue]:hover:not(:disabled){filter:brightness(1.12) saturate(1.08) drop-shadow(0 2px 4px #000c) drop-shadow(0 0 7px rgba(96,170,255,.66)) drop-shadow(0 0 15px rgba(96,170,255,.30))!important}[data-iw-encounter] [data-iw-boss-role=action][data-iw-boss-action-state=idle]{display:inline-flex!important;align-items:center!important;justify-content:center!important;color:#e9dcc0!important;font-size:11px!important;line-height:1!important;text-shadow:0 1px 2px #000!important;background:linear-gradient(#3a2a1a,#19110b)!important;border:1px solid #8a6a3a!important;border-radius:2px!important}@media(min-width:761px){[data-iw-encounter]:not([data-iw-encounter=zone]){--iw-boss-action-reserve: calc(var(--iw-boss-action-w) + 14px)}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]{position:static!important;padding-right:var(--iw-boss-action-reserve)!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]>*:first-child:not([data-iw-boss-role=action]){position:relative;z-index:1}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=progress]{margin-right:var(--iw-boss-action-reserve)!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header] [data-iw-boss-role=action]{position:absolute!important;top:64px!important;right:12px!important;transform:translateY(-50%)!important;z-index:2!important}}.iw-boss-rewards{margin-top:2px;padding-top:9px;border-top:1px solid #a88d4c35}[data-iw-encounter]:not([data-iw-encounter=zone])>.iw-boss-rewards{grid-column:1 / -1;grid-row:5}[data-iw-encounter] .iw-boss-rewards-title{font:600 10px var(--iw-font-head)!important;color:#cdbb94!important;letter-spacing:.14em;text-transform:uppercase;margin:0 0 7px!important}.iw-boss-reward-list{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}[data-iw-encounter] summary.iw-boss-rewards-title{display:list-item;cursor:pointer;padding:4px 0}[data-iw-encounter] summary.iw-boss-rewards-title::marker{color:#cdbb94}[data-iw-encounter] summary.iw-boss-rewards-title:focus-visible{outline:2px solid #cdbb94;outline-offset:3px}[data-iw-encounter] .iw-boss-rewards:not([open])>.iw-boss-reward-list{display:none}[data-iw-encounter] .iw-boss-rewards:not([open])>summary{margin-bottom:0!important}[data-iw-encounter] button.iw-boss-reward{display:flex!important;flex-direction:column;align-items:center;width:auto!important;min-width:44px!important;min-height:70px!important;padding:5px 2px!important;gap:3px;background:transparent!important;border:1px solid transparent!important;border-radius:2px!important;box-shadow:none!important;color:#d3cbbb!important;cursor:help!important}[data-iw-encounter] button.iw-boss-reward:hover,[data-iw-encounter] button.iw-boss-reward:focus-visible{border-color:var(--iw-boss-accent)!important;background-color:#c4ac7018!important;outline:1px solid var(--iw-boss-accent);outline-offset:1px}.iw-boss-reward-icon{display:block;width:34px;height:34px;flex:0 0 34px}@media(prefers-reduced-motion:no-preference){.iw-boss-reward-icon{transition:transform .24s cubic-bezier(.22,.61,.36,1)}.iw-boss-reward:focus-visible .iw-boss-reward-icon{transform:translateY(-2px)}.compact-panel.fs-quest-panel[data-iw-quest-state=ready] .fs-quest-sigil-icon{animation:iw-quest-ready-settle .85s cubic-bezier(.22,.61,.36,1) both}}@media(hover:hover)and (pointer:fine)and (prefers-reduced-motion:no-preference){.iw-boss-reward:hover .iw-boss-reward-icon{transform:translateY(-2px)}}@keyframes iw-quest-ready-settle{0%{transform:translateY(1px) scale(.97)}42%{transform:translateY(-1px) scale(1.035)}100%{transform:none}}.iw-boss-reward-name{font:500 9px/1.15 var(--iw-font-body, sans-serif)!important;text-align:center;white-space:normal;overflow-wrap:anywhere}[data-iw-control=red]{--iw-boss-accent: #df7777;border-color:#a85050!important}[data-iw-control=blue]{--iw-boss-accent: #75b5eb;border-color:#507ca8!important}[data-iw-control=contested]{--iw-boss-accent: #e6bc65;border-color:#ae8a43!important}[data-iw-encounter=zone]{display:grid!important;grid-template-columns:minmax(0,1fr) auto;overflow:hidden;padding:14px!important;background:radial-gradient(circle at 13% 55%,color-mix(in srgb,var(--iw-boss-accent) 13%,transparent),transparent 27%),linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important}[data-iw-encounter=zone]>[data-iw-boss-role=header]{grid-column:1 / -1;grid-row:1}[data-iw-encounter=zone]>[data-iw-boss-role=title]{letter-spacing:.015em}.iw-control-dominion{display:grid!important;grid-column:1 / -1;grid-row:2;grid-template-columns:174px minmax(0,1fr);grid-template-areas:"crest readout" "crest meter" "crest factions";width:100%;column-gap:18px;row-gap:7px;min-height:174px;padding:10px 4px 5px!important}.iw-control-crest{grid-area:crest;position:relative;align-self:center;width:174px;aspect-ratio:1;isolation:isolate;pointer-events:none}.iw-control-crest::before{content:"";position:absolute;z-index:-1;inset:-18%;border-radius:50%;background:radial-gradient(circle,rgba(var(--iw-control-aura, 230,188,101),.48) 0%,rgba(var(--iw-control-aura, 230,188,101),.25) 28%,rgba(var(--iw-control-aura, 230,188,101),.09) 49%,transparent 72%);opacity:0;transform:scale(.88);animation:iw-control-captured-aura 7.4s ease-in-out infinite;animation-play-state:paused;transition:opacity 1.2s ease-out;will-change:transform,opacity}[data-iw-control=red] .iw-control-crest{--iw-control-aura: 255, 48, 36}[data-iw-control=blue] .iw-control-crest{--iw-control-aura: 36, 142, 255}[data-iw-control=red] .iw-control-crest::before,[data-iw-control=blue] .iw-control-crest::before{opacity:.68;animation-play-state:running}.iw-control-crest-art{position:absolute;inset:0;opacity:0;background-repeat:no-repeat;background-size:contain;background-position:center;transition:opacity 1.2s cubic-bezier(.22,.61,.36,1)}.iw-control-crest-art{background-image:url(../assets/world-bosses/zone-control-contested-v3.png)}.iw-control-crest-art-red{--iw-crystal-light: 255,48,36}.iw-control-crest-art-blue{--iw-crystal-light: 36,142,255}[data-iw-control=red] .iw-control-crest-art-red,[data-iw-control=blue] .iw-control-crest-art-blue,[data-iw-control=contested] .iw-control-crest-art-contested{opacity:1}.iw-control-crest-art:not(.iw-control-crest-art-contested)::after{content:"";position:absolute;inset:0;clip-path:polygon(50% 25%,57% 31%,61% 42%,59% 51%,63% 61%,57% 68%,51% 76%,44% 68%,39% 57%,41% 47%,39% 39%,45% 30%);background:rgb(var(--iw-crystal-light));mix-blend-mode:color;filter:saturate(1.35) brightness(1.15) drop-shadow(0 0 5px rgba(var(--iw-crystal-light),.72));opacity:.72;animation:iw-control-resting-light 7.7s ease-in-out infinite;animation-play-state:paused}[data-iw-control=red] .iw-control-crest-art-red::after,[data-iw-control=blue] .iw-control-crest-art-blue::after{animation-play-state:running}.iw-control-sword-energy,.iw-control-crystal-core,.iw-control-meter-currents{position:absolute;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .85s ease-out,visibility 0s .85s}[data-iw-control=contested] .iw-control-sword-energy,[data-iw-control=contested] .iw-control-crystal-core,[data-iw-control=contested] .iw-control-meter-currents{opacity:.88;visibility:visible;transition-delay:0s}.iw-control-sword-energy{z-index:1;top:50%;left:50%;width:130%;height:10px;overflow:hidden;mix-blend-mode:screen;-webkit-mask:linear-gradient(90deg,transparent 7%,#000 16% 37%,transparent 45% 55%,#000 63% 84%,transparent 93%);mask:linear-gradient(90deg,transparent 7%,#000 16% 37%,transparent 45% 55%,#000 63% 84%,transparent 93%)}.iw-control-sword-energy-red{transform:translate(-50%,-50%) rotate(45deg);--iw-energy-color: 255,70,42}.iw-control-sword-energy-blue{transform:translate(-50%,-50%) rotate(-45deg);--iw-energy-color: 44,171,255}.iw-control-sword-energy::before,.iw-control-sword-energy::after,.iw-control-impact{content:"";position:absolute;inset:0 auto 0 0;width:48%;background:radial-gradient(ellipse at 78% 50%,#fffcefff,rgba(255,245,207,.94) 7%,rgba(var(--iw-energy-color),.92) 22%,rgba(var(--iw-energy-color),.42) 48%,transparent 75%);filter:drop-shadow(0 0 2px rgba(255,248,220,.9)) drop-shadow(0 0 5px rgba(var(--iw-energy-color),.8));opacity:0}.iw-control-sword-energy-red::before{animation:iw-control-filament-red 7.3s cubic-bezier(.35,0,.45,1) -2.1s infinite}.iw-control-sword-energy-blue::before{animation:iw-control-filament-blue 10.9s cubic-bezier(.3,0,.6,1) -5.3s infinite}.iw-control-sword-energy-red::after{animation:iw-control-filament-blue 13.7s ease-in-out -8.4s infinite}.iw-control-sword-energy-blue::after{animation:iw-control-filament-red 17.3s ease-in-out -1.6s infinite}.iw-control-crystal-core{z-index:2;inset:26% 39% 25%;overflow:hidden;clip-path:polygon(50% 0,77% 18%,91% 67%,50% 100%,9% 67%,23% 18%);background:radial-gradient(ellipse at 45% 58%,#fff7b926,#e6a13918 48%,transparent 75%);mix-blend-mode:screen}.iw-control-crystal-core::before,.iw-control-crystal-core::after{content:"";position:absolute;inset:-35% -55%;background:radial-gradient(ellipse at 30% 64%,#fff5ce99,#f5bc424d 22%,transparent 49%),radial-gradient(ellipse at 74% 24%,#82cfff59,transparent 42%);animation:iw-control-crystal-flow 8.3s cubic-bezier(.37,0,.63,1) -3.7s infinite}.iw-control-crystal-core::after{background:radial-gradient(ellipse at 68% 42%,#fff4cb88,#ff704233 27%,transparent 51%);animation:iw-control-crystal-undertow 11.7s ease-in-out -7.2s infinite}.iw-control-sword-energy::before,.iw-control-sword-energy::after,.iw-control-crystal-core::before,.iw-control-crystal-core::after{animation-play-state:paused}[data-iw-control=contested] .iw-control-sword-energy::before,[data-iw-control=contested] .iw-control-sword-energy::after,[data-iw-control=contested] .iw-control-crystal-core::before,[data-iw-control=contested] .iw-control-crystal-core::after{animation-play-state:running}.iw-control-readout{grid-area:readout;align-self:end;min-width:0;padding-bottom:2px}.iw-control-kicker{margin:0 0 2px!important;color:#93866f!important;font:600 9px/1.2 var(--iw-font-head)!important;letter-spacing:.22em;text-transform:uppercase}.iw-control-state{margin:0!important;color:#f3e4c7!important;font:700 20px/1.2 var(--iw-font-head)!important;letter-spacing:.035em;text-shadow:0 2px 5px #000,0 0 12px color-mix(in srgb,var(--iw-boss-accent) 28%,transparent)}.iw-control-meter{grid-area:meter;align-self:center;min-width:0}.iw-control-meter-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:5px}.iw-control-meter-label,.iw-control-meter-value{color:#bdb39e;font:600 10px/1.2 var(--iw-font-body, sans-serif);letter-spacing:.08em;text-transform:uppercase}.iw-control-meter-value{color:var(--iw-boss-accent);font-variant-numeric:tabular-nums;white-space:nowrap}.iw-control-meter-track{position:relative;height:18px;overflow:hidden;border:1px solid color-mix(in srgb,var(--iw-boss-accent) 58%,#3b3023);border-radius:2px;background:linear-gradient(#080807,#14120e)!important;box-shadow:inset 0 3px 8px #000d,0 0 0 1px #000,0 0 9px color-mix(in srgb,var(--iw-boss-accent) 13%,transparent)}.iw-control-meter-track::before,.iw-control-meter-track::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none}.iw-control-meter-track::before{background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(0,0,0,.78) calc(10% - 1px) 10%)}.iw-control-meter-track::after{inset:3px 5px auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent)}.iw-control-meter-fill{position:relative;display:block;height:100%;min-width:0;overflow:hidden;background:linear-gradient(180deg,#ff8b73,#b82d2d 47%,#5f1118)!important;transition:width .6s ease}.iw-control-meter-fill::before{content:"";position:absolute;inset:0 0 0 auto;width:0;background:linear-gradient(180deg,#83d7ff,#297ac3 47%,#123a72);transition:width .7s cubic-bezier(.22,.61,.36,1)}[data-iw-control=blue] .iw-control-meter-fill::before{width:100%}[data-iw-control=contested] .iw-control-meter-fill::before{width:calc(100% - var(--iw-control-split, 50%))}.iw-control-meter-currents{inset:0}.iw-control-current-red,.iw-control-current-blue{position:absolute;top:0;bottom:0;overflow:hidden}.iw-control-current-red{left:0;width:var(--iw-control-split, 50%)}.iw-control-current-blue{right:0;width:calc(100% - var(--iw-control-split, 50%))}.iw-control-current-red::after,.iw-control-current-blue::after{content:"";position:absolute;inset:0 auto 0 -40%;width:40%;background:linear-gradient(100deg,transparent,#ffe7aa44,transparent);animation:iw-control-meter-current 5.7s ease-in-out -2s infinite;animation-play-state:paused}.iw-control-current-blue::after{animation-duration:8.1s;animation-delay:-5.6s;animation-direction:reverse}[data-iw-control=contested] .iw-control-current-red::after,[data-iw-control=contested] .iw-control-current-blue::after{animation-play-state:running}.iw-control-meter-fill::after{content:"";position:absolute;top:0;bottom:0;left:var(--iw-control-split, 50%);width:7px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,#f5d67caa,transparent);opacity:0;transition:opacity .85s ease,left .7s ease}[data-iw-control=contested] .iw-control-meter-fill::after{opacity:.75}.iw-control-factions{grid-area:factions;display:grid!important;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding-top:5px;border-top:1px solid rgba(154,126,75,.2)}.iw-control-faction{font:600 9px/1.2 var(--iw-font-head);letter-spacing:.11em;text-transform:uppercase;opacity:.45}.iw-control-faction-red{color:#ef7777;text-align:left}.iw-control-faction-blue{color:#7abcf0;text-align:right}.iw-control-versus{color:#a98e5c;font-size:10px}[data-iw-control=red] .iw-control-faction-red,[data-iw-control=blue] .iw-control-faction-blue,[data-iw-control=contested] .iw-control-faction{opacity:1;text-shadow:0 0 7px currentColor}@keyframes iw-control-resting-light{0%,100%{opacity:.62;filter:saturate(1.25) brightness(1.06) drop-shadow(0 0 3px rgba(var(--iw-crystal-light),.5))}46%{opacity:.84;filter:saturate(1.45) brightness(1.22) drop-shadow(0 0 7px rgba(var(--iw-crystal-light),.82))}}@keyframes iw-control-captured-aura{0%,100%{transform:scale(.88);filter:brightness(.82)}47%{transform:scale(1.06);filter:brightness(1.2)}}@keyframes iw-control-filament-red{0%,12%{opacity:0;transform:translateX(-110%) scaleX(.6)}24%{opacity:.82;transform:translateX(26%) scaleX(.9)}36%{opacity:.28;transform:translateX(116%) scaleX(.5)}49%{opacity:1;transform:translateX(191%) scaleX(1.2)}65%,100%{opacity:0;transform:translateX(320%) scaleX(.4)}}@keyframes iw-control-filament-blue{0%,21%{opacity:0;transform:translateX(330%) scaleX(.5)}34%{opacity:.74;transform:translateX(205%) scaleX(1.15)}53%{opacity:1;transform:translateX(117%) scaleX(.7)}67%{opacity:.4;transform:translateX(29%) scaleX(1)}81%,100%{opacity:0;transform:translateX(-110%) scaleX(.4)}}@keyframes iw-control-crystal-flow{0%,100%{transform:translate(-9%,13%) rotate(-13deg) scale(.96);opacity:.66}29%{transform:translate(12%,3%) rotate(8deg) scale(1.07);opacity:.82}64%{transform:translate(-2%,-14%) rotate(-5deg) scale(.98);opacity:.72}}@keyframes iw-control-crystal-undertow{0%,100%{transform:translate(13%,-7%) rotate(11deg);opacity:.58}41%{transform:translate(-11%,12%) rotate(-17deg);opacity:.79}73%{transform:translate(5%,5%) rotate(4deg);opacity:.63}}@keyframes iw-control-meter-current{0%,17%{transform:translateX(0);opacity:0}39%{opacity:.65}76%,100%{transform:translateX(350%);opacity:0}}[data-iw-encounter=zone]>[data-iw-boss-role=control-hp],[data-iw-encounter=zone]>[data-iw-boss-role=control-progress],[data-iw-encounter=zone] [data-iw-boss-role=control-strength]{display:none!important}[data-iw-encounter=zone] [data-iw-boss-role=timer]{display:inline-block;margin:0!important;color:#c4b897!important}[data-iw-encounter=zone] [data-iw-boss-role=timer]::before{content:"✧ ";color:var(--iw-boss-accent)}[data-iw-encounter=zone]>[data-iw-boss-role=control-queue]{grid-column:1 / -1;order:1}[data-iw-encounter=zone]>[data-iw-boss-role=control-teams]{grid-column:1 / -1;order:2;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:10px}[data-iw-encounter=zone]>[data-iw-boss-role=control-teams]>*{margin:0!important;min-width:0}[data-iw-encounter=zone]>[data-iw-boss-role=control-teams]>p{grid-column:1 / -1}@media(max-width:480px){[data-iw-encounter=zone]>[data-iw-boss-role=control-teams]{grid-template-columns:minmax(0,1fr)}}[data-iw-encounter=zone]>[data-iw-boss-role=participation]{grid-column:2;grid-row:3;justify-self:end;float:none!important;margin:5px 4px 0 12px!important;color:#aaa18e!important;font-size:10px!important}@media(max-width:760px){[data-iw-encounter]{padding:10px!important}[data-iw-encounter]:not([data-iw-encounter=zone]){grid-template-columns:92px minmax(0,1fr);column-gap:10px}[data-iw-encounter]>.iw-boss-art{width:92px;height:92px;top:10px;left:10px}[data-iw-encounter]:not([data-iw-encounter=zone])>.iw-boss-art{inset:auto!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=header]{padding-left:0;min-height:0;flex-wrap:wrap;gap:6px!important}[data-iw-encounter] [data-iw-boss-role=title]{font-size:16px!important}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=status]{grid-column:1 / -1;grid-row:4;padding-left:0}[data-iw-encounter]:not([data-iw-encounter=zone])>[data-iw-boss-role=details]{grid-row:5}[data-iw-encounter]:not([data-iw-encounter=zone])>.iw-boss-rewards{grid-row:6}[data-iw-encounter=zone]{padding:10px!important}.iw-control-dominion{grid-template-columns:118px minmax(0,1fr);column-gap:10px;min-height:118px;padding-inline:0!important}.iw-control-crest{width:118px}.iw-control-crest::before{inset:-12%}[data-iw-control=red] .iw-control-crest::before,[data-iw-control=blue] .iw-control-crest::before{opacity:.52}.iw-control-sword-energy{height:7px}[data-iw-control=contested] .iw-control-sword-energy-red,[data-iw-control=contested] .iw-control-sword-energy-blue{opacity:.6}[data-iw-control=contested] .iw-control-crystal-core{opacity:.45}.iw-control-sword-energy::after,.iw-control-crystal-core::after{display:none;animation:none}.iw-control-sword-energy-red::before{animation-duration:10.3s}.iw-control-sword-energy-blue::before{animation-duration:14.9s}.iw-control-crystal-core::before{animation-duration:11.3s}.iw-control-state{font-size:15px!important}.iw-control-meter-head{gap:5px}.iw-control-meter-label,.iw-control-meter-value{font-size:9px;letter-spacing:.045em}.iw-control-meter-track{height:15px}.iw-control-factions{gap:5px}.iw-control-faction{font-size:8.5px;letter-spacing:.045em;line-height:1.25}.iw-boss-reward-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}[data-iw-encounter] button.iw-boss-reward{width:auto!important;min-height:72px!important}.iw-boss-reward-name{font-size:10px!important}}@media(max-width:380px){[data-iw-encounter]:not([data-iw-encounter=zone]){grid-template-columns:80px minmax(0,1fr)}[data-iw-encounter]>.iw-boss-art{width:80px;height:80px}[data-iw-encounter]{--iw-boss-action-w: 120px}.iw-control-dominion{grid-template-columns:88px minmax(0,1fr)}.iw-control-crest{width:88px}.iw-control-state{font-size:13px!important}}@media(prefers-reduced-motion:reduce){.iw-control-dominion *,.iw-control-dominion *::before,.iw-control-dominion *::after{animation:none!important;transition:none!important}.iw-control-impact{visibility:hidden!important}}[data-iw-market=row]{border-radius:var(--iw-r-panel)!important;border:1px solid var(--iw-line)!important;background:rgba(7,7,11,.66)!important;backdrop-filter:blur(2px)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.28)!important;transition:border-color .12s,background-color .12s!important}[data-iw-market=row]:hover{border-color:var(--iw-line-hi)!important;background:rgba(12,12,17,.72)!important}[data-iw-market=row][class*=opacity-30]{background:rgba(4,4,7,.6)!important;backdrop-filter:none!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)!important}[data-iw-market=row][class*=opacity-30]:hover{border-color:var(--iw-line)!important;background:rgba(4,4,7,.6)!important}[data-iw-market=namebtn]{background:transparent!important;border-color:transparent!important;box-shadow:none!important}[data-iw-village]{--iw-village-accent: var(--iw-th-accent)}[data-iw-village=addons] [data-iw-village-role=intro]{margin:0 0 12px!important;color:#a49c88!important;font-size:11.5px!important;line-height:1.45!important}[data-iw-village=addons] [data-iw-village-role=note]{margin:10px 0 0!important;padding:8px 11px!important;border-left:2px solid var(--iw-th-edge-mid);background:rgba(0,0,0,.28);color:#9a9280!important;font-family:var(--iw-font-flav)!important;font-size:12.5px!important;font-style:italic;line-height:1.4!important}[data-iw-village=slot]{position:relative!important;display:grid!important;grid-template-columns:var(--iw-village-art-w, 100px) minmax(0,1fr);align-items:center;column-gap:13px;row-gap:10px;padding:12px!important;border:1px solid var(--iw-th-edge)!important;border-radius:var(--iw-r-panel)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(120% 90% at 8% 0%,rgba(255,236,190,.05),transparent 46%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px #0B0A08,inset 0 0 0 2px rgba(143,107,55,.14),inset 0 1px 0 rgba(255,236,190,.035),0 2px 7px rgba(0,0,0,.42)!important}[data-iw-village=slot]::before{content:""!important;position:absolute!important;inset:0 0 auto!important;height:1px!important;z-index:2!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.9!important}[data-iw-village=slot]>*{position:relative;z-index:1}[data-iw-village=slot]>[data-iw-village-role=head]{grid-column:2;min-width:0}[data-iw-village=slot] [data-iw-village-role=copy],[data-iw-village=slot] [data-iw-village-role=actions]{background:transparent!important;min-width:0}[data-iw-village=slot]>[data-iw-village-role=picker]{grid-column:1 / -1;margin-top:0!important;border-top:1px solid var(--iw-th-edge-faint)!important;padding-top:11px!important}[data-iw-village-art]{grid-column:1;grid-row:1;align-self:center;position:relative;width:var(--iw-village-art-w, 100px);height:var(--iw-village-art-w, 100px);border:1px solid color-mix(in srgb,var(--iw-village-accent) 34%,#2A2318);border-radius:2px;background:radial-gradient(66% 30% at 50% 84%,color-mix(in srgb,var(--iw-village-accent) 26%,transparent),transparent 72%),radial-gradient(120% 86% at 50% 6%,rgba(120,140,180,.10),transparent 64%),linear-gradient(180deg,#0C0D11 0%,#07070A 100%);box-shadow:inset 0 0 22px rgba(0,0,0,.62),0 3px 12px rgba(0,0,0,.45);pointer-events:none}[data-iw-village-art]::before{content:"";position:absolute;inset:0;border-radius:inherit;background-image:var(--iw-village-sprite, none);background-repeat:no-repeat;background-position:center 46%;background-size:88% auto;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}[data-iw-village-art=generic]::after,[data-iw-village=slot][data-iw-village-state=vacant] [data-iw-village-art]::after{content:"";position:absolute;inset:52% 24% 22%;border:1px dashed color-mix(in srgb,var(--iw-village-accent) 46%,transparent);border-radius:1px;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-village-accent) 12%,transparent),transparent);box-shadow:0 0 14px color-mix(in srgb,var(--iw-village-accent) 14%,transparent)}[data-iw-village=slot][data-iw-village-state=vacant]{--iw-village-accent: #6E7482;opacity:.92}[data-iw-village=slot][data-iw-village-state=vacant] [data-iw-village-art]{border-style:dashed;box-shadow:inset 0 0 18px rgba(0,0,0,.58)}[data-iw-village=slot][data-iw-village-state=installed]:hover [data-iw-village-art]{border-color:color-mix(in srgb,var(--iw-village-accent) 58%,#2A2318);box-shadow:inset 0 0 22px rgba(0,0,0,.5),0 3px 16px rgba(0,0,0,.5),0 0 0 1px color-mix(in srgb,var(--iw-village-accent) 18%,transparent)}[data-iw-village-role=index]{margin:0 0 3px!important;color:var(--iw-th-accent-dim)!important;font-family:var(--iw-font-ui)!important;font-size:9.5px!important;font-weight:600!important;letter-spacing:.2em!important;text-transform:uppercase}[data-iw-village-role=name]{margin:0!important;color:#EBDCB8!important;font-family:var(--iw-font-head)!important;font-size:15px!important;font-weight:600!important;line-height:1.3!important;text-shadow:0 1px 0 #000,0 0 14px rgba(212,173,99,.12)}[data-iw-village-role=vacant]{margin:0!important;color:#857F72!important;font-family:var(--iw-font-flav)!important;font-size:14px!important;font-style:italic}[data-iw-village-role=effects]{margin:7px 0 0!important;padding:5px 9px!important;border-left:2px solid color-mix(in srgb,var(--iw-village-accent) 52%,transparent);border-radius:0 2px 2px 0;background:rgba(0,0,0,.3);color:#B9C7A8!important;font-size:11.5px!important;line-height:1.5!important}[data-iw-village-role=actions]{display:flex!important;flex-direction:column;flex-shrink:0;gap:6px!important}[data-iw-village-role=action]{min-width:92px;padding:7px 11px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:var(--iw-r-control)!important;background:linear-gradient(180deg,#22211C 0%,#14140F 100%)!important;color:#D6CBB0!important;font-family:var(--iw-font-ui)!important;font-size:11.5px!important;font-weight:600!important;letter-spacing:.05em!important;text-transform:uppercase;box-shadow:inset 0 1px 0 rgba(255,236,190,.05),0 1px 2px rgba(0,0,0,.45)!important;transition:border-color .12s,background-color .12s,color .12s!important}[data-iw-village-role=action]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;color:#F0E6CC!important}[data-iw-village-role=action]:disabled{opacity:.45!important}[data-iw-village-action=install],[data-iw-village-action=upgrade]{border-color:var(--iw-th-cta-hi)!important;background:linear-gradient(180deg,var(--iw-th-cta-hi) 0%,var(--iw-th-cta) 100%)!important;color:#FFF2E2!important}[data-iw-village-action=install]:hover:not(:disabled),[data-iw-village-action=upgrade]:hover:not(:disabled){border-color:#E9743A!important;color:#FFF!important}[data-iw-village-action=destroy]:hover:not(:disabled){border-color:#8E4038!important;color:#E6B4AC!important}[data-iw-village-role=picker]{display:grid;gap:7px}[data-iw-village-role=option]{display:block!important;width:100%!important;padding:8px 10px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:var(--iw-r-control)!important;background:rgba(9,9,12,.55)!important;text-align:left!important;font-size:11.5px!important;transition:border-color .12s,background-color .12s!important}[data-iw-village-role=option]>p:not([data-iw-village-role]),[data-iw-village-role=option-owned]>p:not([data-iw-village-role]){margin:3px 0 0 43px!important;color:#A7B79A!important;font-size:11px!important;line-height:1.4!important}[data-iw-village-role=option-owned]>p:not([data-iw-village-role]){color:#8A8478!important;font-style:italic}[data-iw-village-role=option]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;background:rgba(18,16,12,.7)!important}[data-iw-village-role=option-owned]{padding:8px 10px!important;border:1px dashed var(--iw-th-edge-faint)!important;border-radius:var(--iw-r-control)!important;background:rgba(0,0,0,.3)!important}[data-iw-village-role=option-name]{display:flex!important;align-items:center;gap:9px;margin:0!important;color:#E3D6B6!important;font-family:var(--iw-font-head)!important;font-size:13px!important;line-height:1.25!important}[data-iw-village-role=option-name]>span:not(.iw-village-option-art){color:var(--iw-th-accent-dim)!important;font-family:var(--iw-font-ui)!important;font-size:11px!important}.iw-village-option-art{flex:0 0 auto;width:34px;height:34px;border:1px solid var(--iw-th-edge-soft);border-radius:2px;background-image:var(--iw-village-sprite, none);background-repeat:no-repeat;background-position:center 50%;background-size:84% auto;background-color:#08080B;box-shadow:inset 0 0 10px rgba(0,0,0,.6)}[data-iw-village=house]{position:relative!important;display:grid!important;grid-template-columns:var(--iw-village-house-w, 132px) minmax(0,1fr);column-gap:16px;align-items:start;padding:14px!important;border:1px solid var(--iw-th-edge)!important;border-radius:var(--iw-r-panel)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(90% 120% at 12% 0%,rgba(255,236,190,.06),transparent 52%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px #0B0A08,inset 0 0 0 2px rgba(143,107,55,.16),0 2px 9px rgba(0,0,0,.45)!important}[data-iw-village=house]>*{grid-column:2;position:relative;z-index:1}[data-iw-village=house]>[data-iw-village-art]{grid-column:1;grid-row:1 / span 4;width:var(--iw-village-house-w, 132px);height:var(--iw-village-house-w, 132px)}[data-iw-village-role=house-name]{margin:0 0 2px!important;color:#F0E1BC!important;font-family:var(--iw-font-head)!important;font-size:19px!important;font-weight:600!important;line-height:1.25!important;text-shadow:0 1px 0 #000,0 0 16px rgba(212,173,99,.14)}[data-iw-village-role=house-tier]{margin:0!important;color:var(--iw-th-accent-dim)!important;font-size:11px!important;letter-spacing:.04em!important}[data-iw-village-role=house-note]{color:#8E8878!important;font-family:var(--iw-font-flav)!important;font-size:12.5px!important;font-style:italic;line-height:1.4!important}[data-iw-village-role=house-salvage]{color:#C0B79F!important;font-size:11.5px!important}[data-iw-village=house]>p{margin:6px 0 0!important}[data-iw-village=house]>p:first-of-type{margin-top:0!important}[data-iw-village-role=house-next]{margin-top:9px!important;padding:6px 9px!important;border-left:2px solid color-mix(in srgb,var(--iw-th-cta-hi) 60%,transparent);border-radius:0 2px 2px 0;background:rgba(0,0,0,.3);font-size:11.5px!important;line-height:1.45!important}[data-iw-village-role=house-max]{margin-top:9px!important;font-family:var(--iw-font-head)!important;font-size:12.5px!important;letter-spacing:.04em!important}[data-iw-village=house] [data-iw-village-action=upgrade]{margin-top:11px!important;width:100%}.iw-village-tiers{grid-column:1!important;display:flex;justify-content:center;gap:5px;margin-top:9px}.iw-village-tier-pip{width:9px;height:9px;border:1px solid var(--iw-th-edge-mid);transform:rotate(45deg)}.iw-village-tier-pip[data-iw-village-pip=held]{border-color:var(--iw-th-accent);background:linear-gradient(160deg,var(--iw-th-accent),var(--iw-th-brass));box-shadow:0 0 7px rgba(212,173,99,.35)}@media(max-width:760px){[data-iw-village=slot]{--iw-village-art-w: 76px;column-gap:11px;padding:10px!important}[data-iw-village=slot]>[data-iw-village-role=head]{display:contents!important}[data-iw-village=slot] [data-iw-village-role=copy]{grid-column:2;grid-row:1}[data-iw-village=slot] [data-iw-village-role=actions],[data-iw-village=slot]>[data-iw-village-role=head]>[data-iw-village-role=action]{grid-column:1 / -1;grid-row:2}[data-iw-village-role=actions]{flex-direction:row!important}[data-iw-village-role=action]{flex:1 1 0;min-width:0;padding:8px 9px!important}[data-iw-village=slot]>[data-iw-village-role=picker]{grid-row:3}[data-iw-village-role=name]{font-size:15px!important}[data-iw-village=house]{--iw-village-house-w: 104px;padding:11px!important}[data-iw-village-role=house-name]{font-size:17px!important}}@media(max-width:380px){[data-iw-village=slot]{--iw-village-art-w: 64px}[data-iw-village=house]{--iw-village-house-w: 88px;grid-template-columns:var(--iw-village-house-w) minmax(0,1fr)}}@media(prefers-reduced-motion:reduce){[data-iw-village-role=action],[data-iw-village-role=option],[data-iw-village-art]{transition:none!important}}\n';
 
   // src/styles/village-scene.css
   var village_scene_default = '.iw-village-scene{min-width:0;width:100%;box-sizing:border-box;margin-top:12px}.iw-village-scene *{box-sizing:border-box}.iw-vs-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:15px}.iw-vs-title{font-family:var(--iw-font-display, "Cinzel", serif);color:#eee4cb;font-size:var(--iw-frame-title-size, 18px);font-weight:600}.iw-vs-count{color:#c4b992;font-size:11px}.iw-vs-scene{position:relative;width:100%;container-type:inline-size;container-name:iw-village;isolation:isolate;height:clamp(290px,23vw,320px);max-width:680px;margin:auto;overflow:hidden;border:1px solid #777e5155;border-radius:12px;background:linear-gradient(#0c160c2e,#0c160c4d),url(../assets/village/cobblestone.png) center/100% 100% no-repeat;box-shadow:inset 0 0 45px #09110966}.iw-vs-plot>.iw-vs-name,.iw-vs-plot>.iw-vs-status{position:absolute;left:-7px;right:-7px}.iw-vs-house>strong,.iw-vs-house>.iw-vs-status{position:absolute;left:0;right:0}.iw-vs-plot>.iw-vs-name,.iw-vs-house>strong{bottom:15px}.iw-vs-plot>.iw-vs-status,.iw-vs-house>.iw-vs-status{bottom:0}.iw-vs-house{position:absolute;z-index:1;left:50%;top:0;width:40%;height:52%;transform:translateX(-50%);text-align:center}.iw-vs-sprite{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 10px 10px #0006)}.iw-vs-house>.iw-vs-sprite,.iw-vs-house>.iw-vs-placeholder{width:min(240px,100%);height:100%;margin:0 auto}.iw-vs-house>strong{font-size:14px}.iw-vs-plot{position:absolute;z-index:2;width:27%;height:130px;text-align:center}.iw-vs-plot[data-slot="1"]{left:1%;top:2%}.iw-vs-plot[data-slot="2"]{right:1%;top:2%}.iw-vs-plot[data-slot="3"]{left:3%;bottom:2%}.iw-vs-plot[data-slot="4"]{right:3%;bottom:2%}.iw-vs-plot[data-slot="5"]{left:50%;bottom:0;transform:translateX(-50%)}.iw-vs-plot>.iw-vs-sprite,.iw-vs-plot>.iw-vs-placeholder{width:100%;height:100%}.iw-vs-name{font-size:11px;line-height:1.35;overflow-wrap:anywhere}.iw-vs-status{font-size:10px;line-height:1.35}.iw-vs-scene strong,.iw-vs-scene .iw-vs-status{color:#f3f0df;text-shadow:0 1px 3px #10170c,0 0 7px #10170c}.iw-vs-placeholder{display:grid;place-items:center;padding-bottom:30px;color:#e2dcbbc9;font-size:52px;text-shadow:0 3px 7px #10170c}.iw-vs-house>.iw-vs-placeholder{font-size:64px}.iw-vs-plot[data-plot-state=locked] .iw-vs-placeholder{opacity:.55}.iw-vs-note{margin:13px 0 0;color:#b9b2a0;font-size:11px;line-height:1.6}@container iw-village (max-width: 470px){.iw-vs-plot{width:30%;height:104px}.iw-vs-name{font-size:10px}.iw-vs-status{font-size:9px}.iw-vs-house>.iw-vs-placeholder{font-size:52px}}@media(max-width:480px){.iw-village-scene{--iw-frame-pad-x:12px}}.iw-vs-body{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px;container-type:inline-size;container-name:iw-village-frame}.iw-vs-stage{flex:1 1 330px;min-width:0;display:flex;flex-direction:column}.iw-vs-ledger{flex:1 1 250px;min-width:0;display:flex;flex-direction:column;gap:8px}@container iw-village-frame (min-width:592px){.iw-vs-ledger{max-width:310px}}.iw-vs-ledger-title,.iw-vs-totals-title{font-family:var(--iw-font-display, "Cinzel", serif);color:#eee4cb;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.iw-vs-ledger-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:3px;border-bottom:1px solid #777e5155}.iw-vs-ledger-toggle{flex:0 0 22px;width:22px;height:22px;display:grid;place-items:center;padding:0;color:#c9a24d;cursor:pointer}.iw-vs-ledger-list{display:flex;flex-direction:column;gap:6px}[data-iw-village-ledger][data-iw-vs-open="0"]>.iw-vs-ledger-list{display:none}.iw-vs-entry{display:flex;flex-direction:column}.iw-vs-entry-head{display:flex;align-items:center;gap:8px;width:100%;padding:6px 8px;text-align:left;cursor:pointer}.iw-vs-entry-icon{flex:0 0 26px;height:26px;display:grid;place-items:center;color:#e2dcbbc9;font-size:18px}.iw-vs-entry-sprite{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 3px #0008)}.iw-vs-entry-label{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}.iw-vs-entry-name{color:#f3f0df;font-size:12px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}.iw-vs-entry-meta{color:#b9b2a0;font-size:10px;line-height:1.3}.iw-vs-chevron{flex:0 0 8px;width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(1px) rotate(-135deg);transition:transform .16s ease}.iw-vs-entry-head>.iw-vs-chevron{margin-right:2px;color:#c9a24d}.iw-vs-entry[data-iw-vs-open="0"]>.iw-vs-entry-head>.iw-vs-chevron,[data-iw-village-ledger][data-iw-vs-open="0"]>.iw-vs-ledger-head .iw-vs-chevron{transform:translateY(-2px) rotate(45deg)}.iw-vs-entry[data-iw-vs-open="0"]>.iw-vs-entry-body{display:none}.iw-vs-entry-body{margin:5px 0 3px 12px;padding:0 2px 0 9px;border-left:1px solid #777e5155}.iw-vs-entry-note{margin:4px 0 0;color:#b9b2a0;font-size:10px;line-height:1.5}.iw-vs-entry-body>.iw-vs-stats+.iw-vs-entry-note{margin-top:6px}.iw-vs-stats{margin:0;display:grid;gap:2px}.iw-vs-stat{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:11px;line-height:1.45}.iw-vs-stat dt{color:#c4b992;min-width:0;overflow-wrap:anywhere}.iw-vs-stat dd{margin:0;flex:0 0 auto;color:#f3f0df;font-variant-numeric:tabular-nums}.iw-vs-stat[data-iw-vs-stat-kind=skill-level]{position:relative;isolation:isolate;margin:2px -4px;padding:3px 6px 3px 11px;border:1px solid #c66d2b99;border-radius:6px;background:linear-gradient(90deg,#652b0bb8 0%,#3217099c 58%,#17100bc7 100%);box-shadow:inset 0 0 0 1px #ffb24a14,inset 0 0 10px #ff8a1f16,0 0 8px #e565223d}.iw-vs-stat[data-iw-vs-stat-kind=skill-level]::before{content:"";position:absolute;left:4px;top:50%;width:4px;height:4px;background:#ffad45;box-shadow:0 0 4px #ff8a1f,0 0 8px #e45b20;transform:translateY(-50%) rotate(45deg)}.iw-vs-stat[data-iw-vs-stat-kind=skill-level] dt{color:#efbd7a;text-shadow:0 0 6px #d75b2459}.iw-vs-stat[data-iw-vs-stat-kind=skill-level] dd{color:#ffe0b0;font-weight:700;text-shadow:0 0 5px #ff7a2e8f}.iw-vs-ledger-vacant{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 9px;border:1px dashed #777e5140;border-radius:10px;color:#9e9884;font-size:10px}.iw-vs-ledger-vacant[data-iw-vs-slot-state=locked]{opacity:.72}.iw-vs-totals{margin-top:4px;padding:8px 9px;border:1px solid #777e5155;border-radius:10px;background:linear-gradient(#0c160c3d,#0c160c14)}.iw-vs-totals-title{margin-bottom:5px}.iw-vs-totals-note{margin:7px 0 0;color:#9e9884;font-size:10px;line-height:1.5}@container iw-village-frame (min-width:592px){.iw-vs-ledger[data-iw-vs-open="0"]{align-self:stretch}.iw-vs-ledger[data-iw-vs-open="0"]>.iw-vs-totals{flex:1 1 auto}}@media(prefers-reduced-motion:reduce){.iw-vs-chevron{transition:none}}\n';
@@ -7800,7 +10022,7 @@
   var collapsible_default = '[data-iw-collapse-head]{position:relative!important;padding-right:30px!important}[data-iw-collapse]{position:absolute!important;top:50%!important;right:0!important;transform:translateY(-50%)!important;z-index:3!important;display:grid!important;place-items:center!important;width:22px!important;height:22px!important;padding:0!important;margin:0!important;border:1px solid var(--iw-th-edge-faint, #4B3D26)!important;border-radius:3px!important;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.34))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;color:var(--iw-th-accent, #C9A24D)!important;cursor:pointer!important;line-height:0!important;-webkit-appearance:none!important;appearance:none!important}[data-iw-collapse]::after{content:""!important;width:6px!important;height:6px!important;border-right:1.5px solid currentColor!important;border-bottom:1.5px solid currentColor!important;transform:translateY(1px) rotate(-135deg)!important;transition:transform .16s ease!important}[data-iw-collapse][aria-expanded=false]::after{transform:translateY(-2px) rotate(45deg)!important}@media(pointer:coarse){[data-iw-collapse]::before{content:""!important;position:absolute!important;inset:-5px!important}}[data-iw-collapse]:hover{border-color:var(--iw-th-brass, #8A6A2C)!important;box-shadow:inset 0 0 9px -3px var(--iw-th-cta, #D8791F)!important}[data-iw-collapse]:focus-visible{outline:2px solid var(--iw-th-accent, #C9A24D)!important;outline-offset:2px!important}[data-iw-collapsed="1"]>*:not([data-iw-collapse]):not([data-iw-collapse-head]){display:none!important}[data-iw-collapsed="1"]{--iw-frame-pad-y: 7px;--iw-frame-pad-mobile-y: 7px;--iw-frame-pad-x: 22px;--iw-frame-pad-mobile-x: 16px}[data-iw-collapsed="1"] [data-iw-collapse-head]{min-height:0!important;margin:0!important;padding-top:0!important;padding-bottom:0!important;padding-left:22px!important;gap:0!important}[data-iw-collapsed="1"] [data-iw-collapse-head] *:not([data-iw-collapse-spine]):not([data-iw-collapse]){display:none!important}[data-iw-collapsed="1"] [data-iw-collapse-spine]{display:block!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}[data-iw-collapsed="1"] [data-iw-collapse-title]{font-family:var(--iw-font-head, "Cinzel", Georgia, serif)!important;font-size:14px!important;font-weight:600!important;line-height:20px!important;letter-spacing:.08em!important;text-transform:none!important;text-align:left!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}[data-iw-collapsed="1"]::after{content:""!important;position:absolute!important;inset:-3px -1px!important;z-index:0!important;pointer-events:none!important;border-style:solid!important;border-width:34px 0 0 32px!important;border-color:transparent!important;border-image:var(--iw-corner-filigree) 50% / 34px 0 0 32px / 0 stretch!important}@media(prefers-reduced-motion:reduce){[data-iw-collapse]::after{transition:none!important}}\n';
 
   // src/styles/guild.css
-  var guild_default = ':root [data-iw-guild=root]{min-width:0!important;--iw-guild-good: #91cba4;--iw-guild-good-rail: #67ab83;--iw-guild-warn: #e0bd78;--iw-guild-warn-rail: #c08a3a;--iw-guild-bad: #dc8a80;--iw-guild-bad-rail: #b4554a;--iw-guild-info: #8fc3da;--iw-guild-info-rail: #4f86a3;--iw-guild-plate: linear-gradient(180deg, rgba(255,255,255,.022), rgba(0,0,0,.18)), #100F0C}:root [data-iw-guild=root] [data-iw-guild-role=head]{gap:14px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]{margin-top:5px!important;color:var(--iw-dim)!important;font-size:11px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]>span:not([data-iw-guild-role]){color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=badge]{padding:2px 6px!important;border:1px solid color-mix(in srgb,var(--iw-guild-good-rail) 55%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-good-rail) 14%,transparent)!important;color:var(--iw-guild-good)!important;font-family:var(--iw-font-ui)!important;font-size:9px!important;letter-spacing:.14em!important;text-shadow:none!important;vertical-align:middle}:root [data-iw-guild=root] [data-iw-guild-role=head-link],:root [data-iw-guild=root] [data-iw-guild-role=effects-toggle]{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-dim)!important;font-size:10.5px!important;text-decoration:underline dotted color-mix(in srgb,currentColor 55%,transparent)!important;text-underline-offset:3px!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link]:hover{color:var(--iw-text-hi)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]{color:color-mix(in srgb,var(--iw-guild-bad) 62%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]:hover{color:var(--iw-guild-bad)!important}:root [data-iw-guild-card]{position:relative!important}:root [data-iw-guild-card]::before{content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:1px!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.8!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title],:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name],:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{font-family:var(--iw-font-head)!important;font-weight:700!important;letter-spacing:.03em!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]{font-size:13px!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]>span{font-family:var(--iw-font-ui)!important;color:var(--iw-dim)!important;font-size:11px!important;letter-spacing:0!important}:root [data-iw-guild=root] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-size:11px!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=note]{color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=subhead]{color:var(--iw-th-accent-dim)!important;font-size:9.5px!important;letter-spacing:.16em!important}:root [data-iw-guild=root] [data-iw-guild-role=guests]{border-top-color:var(--iw-th-edge-faint)!important}:root [data-iw-guild=root] [data-iw-guild-tone=good]{--iw-guild-ink: var(--iw-guild-good);--iw-guild-rail: var(--iw-guild-good-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=warn]{--iw-guild-ink: var(--iw-guild-warn);--iw-guild-rail: var(--iw-guild-warn-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=bad]{--iw-guild-ink: var(--iw-guild-bad);--iw-guild-rail: var(--iw-guild-bad-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=info]{--iw-guild-ink: var(--iw-guild-info);--iw-guild-rail: var(--iw-guild-info-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=accent]{--iw-guild-ink: var(--iw-th-accent);--iw-guild-rail: var(--iw-th-cta-hi)}:root [data-iw-guild=root] :is([data-iw-guild-role=line],[data-iw-guild-role=rc-roster] span,[data-iw-guild-card=ready-check] span)[data-iw-guild-tone]{color:var(--iw-guild-ink)!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,var(--iw-th-edge))!important;border-left:3px solid var(--iw-guild-rail)!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-rail) 16%,transparent),transparent 70%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important;background-blend-mode:normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 14px -6px var(--iw-guild-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink, var(--iw-text-hi))!important;font-size:13px!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-timer]{color:var(--iw-guild-ink, var(--iw-dim))!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]>span{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action]{min-height:28px!important;padding:0 12px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action][data-iw-guild-tone]{border-color:var(--iw-guild-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail) 34%,#15130F),color-mix(in srgb,var(--iw-guild-rail) 14%,#0B0C0A))!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tabs]{gap:0!important;padding-bottom:0!important;margin-bottom:8px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.28)!important;overflow:hidden}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]{flex:1 1 auto!important;min-height:28px!important;padding:0 10px!important;border:0!important;border-right:1px solid var(--iw-th-edge-soft)!important;border-radius:0!important;background:linear-gradient(180deg,#211E18,#16140F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.022)!important;color:#AAA291!important;font-size:11px!important;font-weight:700!important;letter-spacing:.04em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:last-child{border-right:0!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:hover{color:var(--iw-text-hi)!important;filter:brightness(1.12)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab][data-iw-guild-state=selected],:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{color:#FFE8CB!important;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%),linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 52%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,226,191,.13),inset 0 -2px 0 rgba(55,16,4,.58)!important;text-shadow:0 1px 0 rgba(40,10,2,.8)!important}:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name]{font-size:15px!important}:root [data-iw-guild=root] [data-iw-guild-role=lore]{font-family:var(--iw-font-flav)!important;font-size:13px!important;line-height:1.35!important;color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]){color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]) span{color:var(--iw-text-hi)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=difficulties]{gap:4px!important;padding-top:6px!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]{min-height:28px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-dim)!important;font-size:10.5px!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]:hover{border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{border-color:var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=locked]{border-style:dashed!important;color:var(--iw-faint)!important;background:rgba(0,0,0,.24)!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]{border:1px solid var(--iw-th-edge-faint)!important;border-left:2px solid var(--iw-guild-rail, var(--iw-th-rule))!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 12%,rgba(0,0,0,.25))!important;color:var(--iw-text)!important;padding:7px 10px!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>.font-semibold{color:var(--iw-guild-ink, var(--iw-text-hi))!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>span:not(.font-semibold){color:var(--iw-faint)!important;opacity:1!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]{min-height:26px!important;padding:3px 8px!important;border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]:hover{background:rgba(255,255,255,.03)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:first-child:not([data-iw-guild-tone]){color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>[data-iw-guild-tone=accent]{color:var(--iw-th-accent)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:last-child{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=member],[data-iw-guild-role=guest],[data-iw-guild-role=potion]){border:1px solid var(--iw-th-edge-faint)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),inset 0 -6px 10px -8px rgba(0,0,0,.8)!important}:root [data-iw-guild=root] [data-iw-guild-role=guest]{border-left:2px solid var(--iw-guild-info-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=member-name]{font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=dot][data-iw-guild-state=online]{box-shadow:0 0 5px color-mix(in srgb,var(--iw-guild-good) 70%,transparent)!important}:root [data-iw-guild=root] [data-iw-guild-role=points]{color:var(--iw-th-accent-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=chip]{border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.3)!important;color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]){border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 70%,transparent)!important;border-left-width:2px!important;border-radius:2px!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-info-rail) 20%,#0B0C0A),color-mix(in srgb,var(--iw-guild-info-rail) 6%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-guild-info)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]) [class*=text-sky-300]{color:color-mix(in srgb,var(--iw-guild-info) 60%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=picker]:hover{border-color:var(--iw-guild-info)!important;filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=option]{border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:#0E0E0B!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=option]:hover,:root [data-iw-guild=root] [data-iw-guild-role=option][data-iw-guild-state=selected]{background:color-mix(in srgb,var(--iw-guild-info-rail) 18%,#0E0E0B)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-badge]{border:1px solid color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 80%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 18%,#0B0C0A)!important;color:var(--iw-guild-ink, var(--iw-guild-good))!important;letter-spacing:.12em!important;box-shadow:0 0 8px -3px var(--iw-guild-rail, var(--iw-guild-good-rail))!important}:root [data-iw-guild=root] [data-iw-guild-role=not-ready]{color:var(--iw-faint)!important;font-style:italic!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span>span{color:var(--iw-faint)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=drink]{min-height:24px!important;padding:0 11px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:linear-gradient(180deg,#242018,#15130F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;color:var(--iw-text)!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=select]{min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]){min-height:32px!important;padding:0 16px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 62%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-weight:700!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):hover:not(:disabled){filter:brightness(1.12)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):disabled{filter:saturate(.45) brightness(.7)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]{min-height:38px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 58%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-size:14px!important;letter-spacing:.06em!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle][data-iw-guild-state=ready]{border-color:var(--iw-guild-good-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-good-rail) 38%,#15130F),color-mix(in srgb,var(--iw-guild-good-rail) 14%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(200,255,220,.08),0 0 12px -4px var(--iw-guild-good-rail)!important;color:var(--iw-guild-good)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]:hover:not(:disabled){filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A linear-gradient(180deg,rgba(255,255,255,.018),transparent 22%)!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*{margin:0!important;padding:3px 4px!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;line-height:1.35!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*>span:last-child{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=composer]{gap:8px!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]){min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]):focus{outline:1px solid rgba(197,145,67,.5)!important;outline-offset:1px!important;border-color:var(--iw-th-brass)!important}:root [data-iw-guild=root] [data-iw-guild-role=start]{min-height:38px!important;font-size:14px!important;letter-spacing:.06em!important}:root [data-iw-guild-card=ready]:has([data-iw-guild-role=start]) [data-iw-guild-role=ready-toggle]:not([data-iw-guild-state=ready]){border-color:var(--iw-th-edge)!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-text)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] :is([data-iw-guild-card=pickup],[data-iw-guild-card=form],[data-iw-guild-card=directory]) [data-iw-guild-role=note]{color:var(--iw-dim)!important;font-size:10.5px!important;line-height:1.4!important}:root [data-iw-guild-card=pickup] [data-iw-guild-role=note]{margin-top:3px!important}:root [data-iw-guild-card=form] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]{min-height:0!important;padding:0 2px!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]:hover{color:var(--iw-guild-bad)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=chip][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,transparent)!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=disclosure],[data-iw-guild-role=guild-name]){min-height:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure]:hover [data-iw-guild-role=card-title]{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure-hint]{color:var(--iw-th-accent-dim)!important;font-size:10px!important;letter-spacing:.08em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;padding:2px!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]>*+*{margin-top:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]{border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:hover{background:rgba(255,255,255,.025)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row][data-iw-guild-state=open]{background:color-mix(in srgb,var(--iw-th-cta) 8%,#0E0E0B)!important;box-shadow:inset 2px 0 0 var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]>span:last-child{color:var(--iw-text-hi)!important;font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]:hover>span:last-child{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=capacity]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]{min-height:20px!important;padding:0 8px!important;border:1px solid var(--iw-guild-rail, var(--iw-th-edge))!important;border-radius:2px!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 30%,#15130F),color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 10%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;color:var(--iw-guild-ink, var(--iw-text))!important;letter-spacing:.06em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:hover:not(:disabled){filter:brightness(1.15)!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=arena]{border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 0 3px color-mix(in srgb,var(--iw-th-edge) 35%,transparent),inset 0 0 40px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35)!important}:root [data-iw-guild=root] [data-iw-raid-scene=ashmaw]{position:relative!important;isolation:isolate;overflow:hidden!important;background:#160706!important;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-rows:auto auto auto minmax(120px,1fr) auto auto auto;gap:12px!important;min-height:clamp(640px,52vw,760px)}:root [data-iw-raid-scene=ashmaw]::before,:root [data-iw-raid-scene=ashmaw]::after,:root [data-iw-raid-scene=ashmaw]>.raid-ember{display:none!important}:root [data-iw-ashmaw-art]{display:none;position:absolute!important;inset:0;margin:0!important;pointer-events:none!important;overflow:hidden;z-index:0;contain:strict}:root [data-iw-raid-scene=ashmaw]>[data-iw-ashmaw-art]{display:block}:root [data-iw-raid-scene=ashmaw]>:not([data-iw-ashmaw-art]):not(.raid-ember){position:relative;z-index:1;text-shadow:0 1px 3px #000,0 0 8px #000;min-width:0;margin:0!important}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=boss-summary]{grid-column:1;grid-row:1}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=telegraph]{grid-column:1;grid-row:2}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=effects]{grid-column:1;grid-row:3}:root [data-iw-raid-scene=ashmaw]>.raid-arena-floor{grid-column:1 / -1;grid-row:5}:root [data-iw-raid-scene=ashmaw]>:is([data-iw-guild-role=combat-log],[data-iw-guild-role=combat-log-region]){grid-column:1 / -1;grid-row:6}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=status]{grid-column:1 / -1;grid-row:7}:root [data-iw-ashmaw-art]+:not(.raid-ember){margin-top:0!important}:root [data-iw-ashmaw-art]>canvas,:root [data-iw-ashmaw-art]>[data-iw-art=environment]{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:70% 50%}:root [data-iw-ashmaw-art]::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,7,5,.25),transparent 35%,transparent 55%,rgba(8,7,5,.6))}:root [data-iw-ashmaw-art]>canvas{display:none}:root [data-iw-ashmaw-art][data-iw-animated]>canvas{display:block}:root [data-iw-ashmaw-art][data-iw-animated]>img{display:none}:root [data-iw-raid-boss-stage=ashmaw]{display:none!important}:root [data-iw-raid-boss-stage=ashmaw]>img{visibility:hidden!important}@media(max-width:700px){:root [data-iw-guild=root] [data-iw-raid-scene=ashmaw]{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(190px,1fr) auto auto auto auto auto;min-height:840px}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=telegraph]{grid-row:3}:root [data-iw-raid-scene=ashmaw]>[data-iw-guild-role=effects]{grid-row:4}}:root [data-iw-guild=root] :is([data-iw-guild-role=telegraph],[data-iw-guild-role=effects],[data-iw-guild-role=combat-log]){border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background-color:rgba(8,8,6,.74)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 2px 8px rgba(0,0,0,.4)!important}:root [data-iw-guild=root] [data-iw-guild-role=telegraph]{border-top:1px solid var(--iw-th-hairline)!important;color:var(--iw-text-hi)!important;font-family:var(--iw-font-head)!important;letter-spacing:.03em!important}:root [data-iw-guild=root] [data-iw-guild-role=telegraph][data-iw-guild-tone]{border-color:var(--iw-guild-rail)!important;color:var(--iw-guild-ink)!important;box-shadow:0 0 12px -4px var(--iw-guild-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=effects]{border-color:color-mix(in srgb,var(--iw-guild-info-rail) 60%,var(--iw-th-edge-mid))!important}:root [data-iw-guild=root] [data-iw-guild-role=effects-toggle]{color:var(--iw-guild-info)!important;font-size:12px!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]{color:var(--iw-text)!important;font-family:var(--iw-font-ui)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]:hover{border-color:var(--iw-th-rule)!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]>:first-child>:first-child{color:var(--iw-th-accent-dim)!important;letter-spacing:.14em!important}:root [data-iw-guild=root] [data-iw-guild-role=combat-log]>:first-child>:last-child{color:var(--iw-faint)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=boss-hp],[data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge]){border:1px solid var(--iw-th-edge-mid)!important;border-radius:1px!important;background:#070806!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.85)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-hp]{height:12px!important;border-color:var(--iw-th-edge)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=boss-hp],[data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge])>*{border-radius:0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -2px 0 rgba(0,0,0,.25)!important}:root [data-iw-guild=root] [data-iw-guild-role=raider]{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;filter:none!important;opacity:1!important}:root [data-iw-guild=root] [data-iw-guild-role=raider-name]{border:1px solid var(--iw-th-edge-soft)!important;border-radius:1px!important;background-color:rgba(8,8,6,.82)!important;font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=raider-skill]{text-shadow:0 1px 2px #000!important}:root [data-iw-guild=root] [data-iw-guild-role=status]{color:var(--iw-dim)!important;font-style:italic!important;text-shadow:0 1px 2px #000!important}\n';
+  var guild_default = ':root [data-iw-guild=root]{min-width:0!important;--iw-guild-good: #91cba4;--iw-guild-good-rail: #67ab83;--iw-guild-warn: #e0bd78;--iw-guild-warn-rail: #c08a3a;--iw-guild-bad: #dc8a80;--iw-guild-bad-rail: #b4554a;--iw-guild-info: #8fc3da;--iw-guild-info-rail: #4f86a3;--iw-guild-plate: linear-gradient(180deg, rgba(255,255,255,.022), rgba(0,0,0,.18)), #100F0C}:root [data-iw-guild=root] [data-iw-guild-role=head]{gap:14px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]{margin-top:5px!important;color:var(--iw-dim)!important;font-size:11px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]>span:not([data-iw-guild-role]){color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=badge]{padding:2px 6px!important;border:1px solid color-mix(in srgb,var(--iw-guild-good-rail) 55%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-good-rail) 14%,transparent)!important;color:var(--iw-guild-good)!important;font-family:var(--iw-font-ui)!important;font-size:9px!important;letter-spacing:.14em!important;text-shadow:none!important;vertical-align:middle}:root [data-iw-guild=root] [data-iw-guild-role=head-link],:root [data-iw-guild=root] [data-iw-guild-role=effects-toggle]{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-dim)!important;font-size:10.5px!important;text-decoration:underline dotted color-mix(in srgb,currentColor 55%,transparent)!important;text-underline-offset:3px!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link]:hover{color:var(--iw-text-hi)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]{color:color-mix(in srgb,var(--iw-guild-bad) 62%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]:hover{color:var(--iw-guild-bad)!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-raid-test]{padding:1px 6px!important;border:1px dashed color-mix(in srgb,#f5b84a 60%,transparent)!important;border-radius:4px!important;color:#f5c76a!important;text-decoration:none!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-raid-test][aria-pressed=true]{background:rgba(245,184,74,.14)!important}:root [data-iw-guild-card]{position:relative!important}:root [data-iw-guild-card]::before{content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:1px!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.8!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title],:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name],:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{font-family:var(--iw-font-head)!important;font-weight:700!important;letter-spacing:.03em!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]{font-size:13px!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]>span{font-family:var(--iw-font-ui)!important;color:var(--iw-dim)!important;font-size:11px!important;letter-spacing:0!important}:root [data-iw-guild=root] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-size:11px!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=note]{color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=subhead]{color:var(--iw-th-accent-dim)!important;font-size:9.5px!important;letter-spacing:.16em!important}:root [data-iw-guild=root] [data-iw-guild-role=guests]{border-top-color:var(--iw-th-edge-faint)!important}:root [data-iw-guild=root] [data-iw-guild-tone=good]{--iw-guild-ink: var(--iw-guild-good);--iw-guild-rail: var(--iw-guild-good-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=warn]{--iw-guild-ink: var(--iw-guild-warn);--iw-guild-rail: var(--iw-guild-warn-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=bad]{--iw-guild-ink: var(--iw-guild-bad);--iw-guild-rail: var(--iw-guild-bad-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=info]{--iw-guild-ink: var(--iw-guild-info);--iw-guild-rail: var(--iw-guild-info-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=accent]{--iw-guild-ink: var(--iw-th-accent);--iw-guild-rail: var(--iw-th-cta-hi)}:root [data-iw-guild=root] :is([data-iw-guild-role=line],[data-iw-guild-role=rc-roster] span,[data-iw-guild-card=ready-check] span)[data-iw-guild-tone]{color:var(--iw-guild-ink)!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,var(--iw-th-edge))!important;border-left:3px solid var(--iw-guild-rail)!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-rail) 16%,transparent),transparent 70%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important;background-blend-mode:normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 14px -6px var(--iw-guild-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink, var(--iw-text-hi))!important;font-size:13px!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-timer]{color:var(--iw-guild-ink, var(--iw-dim))!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]>span{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action]{min-height:28px!important;padding:0 12px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action][data-iw-guild-tone]{border-color:var(--iw-guild-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail) 34%,#15130F),color-mix(in srgb,var(--iw-guild-rail) 14%,#0B0C0A))!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tabs]{gap:0!important;padding-bottom:0!important;margin-bottom:8px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.28)!important;overflow:hidden}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]{flex:1 1 auto!important;min-height:28px!important;padding:0 10px!important;border:0!important;border-right:1px solid var(--iw-th-edge-soft)!important;border-radius:0!important;background:linear-gradient(180deg,#211E18,#16140F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.022)!important;color:#AAA291!important;font-size:11px!important;font-weight:700!important;letter-spacing:.04em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:last-child{border-right:0!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:hover{color:var(--iw-text-hi)!important;filter:brightness(1.12)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab][data-iw-guild-state=selected],:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{color:#FFE8CB!important;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%),linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 52%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,226,191,.13),inset 0 -2px 0 rgba(55,16,4,.58)!important;text-shadow:0 1px 0 rgba(40,10,2,.8)!important}:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name]{font-size:15px!important}:root [data-iw-guild=root] [data-iw-guild-role=lore]{font-family:var(--iw-font-flav)!important;font-size:13px!important;line-height:1.35!important;color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]){color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]) span{color:var(--iw-text-hi)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=difficulties]{gap:4px!important;padding-top:6px!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]{min-height:28px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-dim)!important;font-size:10.5px!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]:hover{border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{border-color:var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=locked]{border-style:dashed!important;color:var(--iw-faint)!important;background:rgba(0,0,0,.24)!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]{border:1px solid var(--iw-th-edge-faint)!important;border-left:2px solid var(--iw-guild-rail, var(--iw-th-rule))!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 12%,rgba(0,0,0,.25))!important;color:var(--iw-text)!important;padding:7px 10px!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>.font-semibold{color:var(--iw-guild-ink, var(--iw-text-hi))!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>span:not(.font-semibold){color:var(--iw-faint)!important;opacity:1!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]{min-height:26px!important;padding:3px 8px!important;border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]:hover{background:rgba(255,255,255,.03)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:first-child:not([data-iw-guild-tone]){color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>[data-iw-guild-tone=accent]{color:var(--iw-th-accent)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:last-child{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=member],[data-iw-guild-role=guest],[data-iw-guild-role=potion]){border:1px solid var(--iw-th-edge-faint)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),inset 0 -6px 10px -8px rgba(0,0,0,.8)!important}:root [data-iw-guild=root] [data-iw-guild-role=guest]{border-left:2px solid var(--iw-guild-info-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=member-name]{font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=dot][data-iw-guild-state=online]{box-shadow:0 0 5px color-mix(in srgb,var(--iw-guild-good) 70%,transparent)!important}:root [data-iw-guild=root] [data-iw-guild-role=points]{color:var(--iw-th-accent-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=chip]{border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.3)!important;color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]){border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 70%,transparent)!important;border-left-width:2px!important;border-radius:2px!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-info-rail) 20%,#0B0C0A),color-mix(in srgb,var(--iw-guild-info-rail) 6%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-guild-info)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]) [class*=text-sky-300]{color:color-mix(in srgb,var(--iw-guild-info) 60%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=picker]:hover{border-color:var(--iw-guild-info)!important;filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=option]{border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:#0E0E0B!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=option]:hover,:root [data-iw-guild=root] [data-iw-guild-role=option][data-iw-guild-state=selected]{background:color-mix(in srgb,var(--iw-guild-info-rail) 18%,#0E0E0B)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-badge]{border:1px solid color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 80%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 18%,#0B0C0A)!important;color:var(--iw-guild-ink, var(--iw-guild-good))!important;letter-spacing:.12em!important;box-shadow:0 0 8px -3px var(--iw-guild-rail, var(--iw-guild-good-rail))!important}:root [data-iw-guild=root] [data-iw-guild-role=not-ready]{color:var(--iw-faint)!important;font-style:italic!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span>span{color:var(--iw-faint)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=drink]{min-height:24px!important;padding:0 11px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:linear-gradient(180deg,#242018,#15130F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;color:var(--iw-text)!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=select]{min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]){min-height:32px!important;padding:0 16px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 62%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-weight:700!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):hover:not(:disabled){filter:brightness(1.12)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):disabled{filter:saturate(.45) brightness(.7)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]{min-height:38px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 58%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-size:14px!important;letter-spacing:.06em!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle][data-iw-guild-state=ready]{border-color:var(--iw-guild-good-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-good-rail) 38%,#15130F),color-mix(in srgb,var(--iw-guild-good-rail) 14%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(200,255,220,.08),0 0 12px -4px var(--iw-guild-good-rail)!important;color:var(--iw-guild-good)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]:hover:not(:disabled){filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A linear-gradient(180deg,rgba(255,255,255,.018),transparent 22%)!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*{margin:0!important;padding:3px 4px!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;line-height:1.35!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*>span:last-child{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=composer]{gap:8px!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]){min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]):focus{outline:1px solid rgba(197,145,67,.5)!important;outline-offset:1px!important;border-color:var(--iw-th-brass)!important}:root [data-iw-guild=root] [data-iw-guild-role=start]{min-height:38px!important;font-size:14px!important;letter-spacing:.06em!important}:root [data-iw-guild-card=ready]:has([data-iw-guild-role=start]) [data-iw-guild-role=ready-toggle]:not([data-iw-guild-state=ready]){border-color:var(--iw-th-edge)!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-text)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] :is([data-iw-guild-card=pickup],[data-iw-guild-card=form],[data-iw-guild-card=directory]) [data-iw-guild-role=note]{color:var(--iw-dim)!important;font-size:10.5px!important;line-height:1.4!important}:root [data-iw-guild-card=pickup] [data-iw-guild-role=note]{margin-top:3px!important}:root [data-iw-guild-card=form] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]{min-height:0!important;padding:0 2px!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]:hover{color:var(--iw-guild-bad)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=chip][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,transparent)!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=disclosure],[data-iw-guild-role=guild-name]){min-height:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure]:hover [data-iw-guild-role=card-title]{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure-hint]{color:var(--iw-th-accent-dim)!important;font-size:10px!important;letter-spacing:.08em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;padding:2px!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]>*+*{margin-top:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]{border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:hover{background:rgba(255,255,255,.025)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row][data-iw-guild-state=open]{background:color-mix(in srgb,var(--iw-th-cta) 8%,#0E0E0B)!important;box-shadow:inset 2px 0 0 var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]>span:last-child{color:var(--iw-text-hi)!important;font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]:hover>span:last-child{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=capacity]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]{min-height:20px!important;padding:0 8px!important;border:1px solid var(--iw-guild-rail, var(--iw-th-edge))!important;border-radius:2px!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 30%,#15130F),color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 10%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;color:var(--iw-guild-ink, var(--iw-text))!important;letter-spacing:.06em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:hover:not(:disabled){filter:brightness(1.15)!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=arena]{border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 0 3px color-mix(in srgb,var(--iw-th-edge) 35%,transparent),inset 0 0 40px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35)!important}:root [data-iw-guild=root] :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth]){position:relative!important;isolation:isolate;overflow:hidden!important;background:#160706!important}:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])::before,:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])::after,:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])>.raid-ember{display:none!important}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art]){display:none;position:absolute!important;inset:0;margin:0!important;pointer-events:none!important;overflow:hidden;z-index:0;contain:strict}:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art]){display:block}:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])>:not(:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])):not(.raid-ember,[data-iw-raid-cast]){position:relative;z-index:1;text-shadow:0 1px 3px #000,0 0 8px #000;min-width:0;margin:0!important}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])+:not(.raid-ember){margin-top:0!important}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>canvas,:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>[data-iw-art=environment]{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:70% 50%}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,7,5,.25),transparent 35%,transparent 55%,rgba(8,7,5,.6))}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>canvas{display:none}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])[data-iw-animated]>canvas{display:block}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])[data-iw-animated]>img{display:none}:root :is([data-iw-raid-boss-stage=ashmaw],[data-iw-raid-boss-stage=thessaly],[data-iw-raid-boss-stage=morwenna],[data-iw-raid-boss-stage=grimjaw],[data-iw-raid-boss-stage=skarth]){display:none!important}:root :is([data-iw-raid-boss-stage=ashmaw],[data-iw-raid-boss-stage=thessaly],[data-iw-raid-boss-stage=morwenna],[data-iw-raid-boss-stage=grimjaw],[data-iw-raid-boss-stage=skarth])>img{visibility:hidden!important}:root [data-iw-guild=root] [data-iw-raid-scene=thessaly]{background:#101017!important}:root [data-iw-thessaly-art]::after{background:linear-gradient(180deg,rgba(9,11,14,.25),transparent 35%,transparent 55%,rgba(9,11,14,.63))}:root [data-iw-guild=root] [data-iw-raid-scene=morwenna]{background:#151019!important}:root [data-iw-morwenna-art]::after{background:linear-gradient(180deg,rgba(13,9,17,.25),transparent 35%,transparent 55%,rgba(13,9,17,.63))}:root [data-iw-guild=root] [data-iw-raid-scene=grimjaw]{background:#111923!important}:root [data-iw-grimjaw-art]::after{background:linear-gradient(180deg,rgba(9,14,22,.25),transparent 35%,transparent 55%,rgba(9,14,22,.63))}:root [data-iw-guild=root] [data-iw-raid-hud]{--iw-raid-brass: #d4ad63;--iw-raid-ivory: #f0e8d6;--iw-raid-read: #b7ad99;--iw-raid-dim: #938a79;--iw-raid-teal: #8fc6dc;--iw-raid-good: #8fd0a3;--iw-raid-bad: #e89aa9;--iw-raid-plate: rgba(9, 9, 7, .82);position:relative!important;isolation:isolate;overflow:hidden!important;display:grid!important;grid-template-columns:minmax(240px,300px) minmax(0,1fr) minmax(240px,300px);grid-template-rows:auto auto minmax(150px,1fr) auto auto auto auto;grid-template-areas:"boss  boss    ." "cast  cast    ." ".      result  ." "timers timers  timers" "party  party   party" ".      status  ." ".      actions .";gap:10px 22px!important;padding:26px 26px 18px!important;min-height:clamp(780px,60vw,900px);font-family:var(--iw-font-ui)!important;color:var(--iw-raid-ivory)}:root [data-iw-raid-hud]>:not(.raid-ember):not([data-iw-ashmaw-art]):not([data-iw-thessaly-art]):not([data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art],[data-iw-raid-cast]){position:relative;z-index:1;min-width:0;margin:0!important}:root [data-iw-raid-hud]>[data-iw-guild-role=boss-summary]{grid-area:boss}:root [data-iw-raid-hud]>[data-iw-guild-role=telegraph]{grid-area:cast}:root [data-iw-raid-hud]>.raid-arena-floor{grid-area:party}:root [data-iw-raid-hud]>:is([data-iw-guild-role=combat-log-region],[data-iw-guild-role=combat-log],[data-iw-guild-role=effects]){display:none!important}:root [data-iw-raid-hud]>.iw-raid-timers{grid-area:timers}:root [data-iw-raid-hud]>[data-iw-guild-role=status]{grid-area:status}:root [data-iw-raid-hud]>[data-iw-guild-role=actions]{grid-area:actions}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{grid-area:result}:root [data-iw-raid-hud] .raid-readable-panel{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}:root [data-iw-raid-hud]>[data-iw-guild-role=boss-summary]{container-type:inline-size;width:min(100%,560px);justify-self:start;text-align:left!important;text-shadow:0 2px 4px #000,0 0 14px rgba(0,0,0,.85)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:4px;font-size:inherit!important}:root [data-iw-raid-hud] [data-iw-raid-boss]{font-size:0!important;line-height:0!important}:root [data-iw-raid-hud] [data-iw-raid-boss]::before{content:attr(data-iw-raid-epithet);display:block;margin-bottom:8px;font:700 11px/1 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-raid-brass)}:root [data-iw-raid-hud] [data-iw-raid-boss]::after{content:attr(data-iw-raid-boss);display:block;font:700 clamp(30px,3.2vw,44px)/1 var(--iw-font-head);letter-spacing:.03em;color:var(--iw-raid-ivory)}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child>:not([data-iw-raid-boss]){font:600 12px/1 var(--iw-font-ui)!important;letter-spacing:.04em;color:var(--iw-raid-good)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child>:not([data-iw-raid-boss])::before{content:"";display:inline-block;width:6px;height:6px;margin-right:7px;vertical-align:1px;background:currentColor;box-shadow:0 0 6px currentColor;transform:rotate(45deg)}:root [data-iw-raid-hud]{--iw-shell-l: 280;--iw-shell-t: 168;--iw-shell-r: 132;--iw-shell-b: 170}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]{position:relative;isolation:isolate;box-sizing:border-box!important;width:100%!important;height:auto!important;aspect-ratio:1216 / 406;margin:2px 0 0 -2%!important;padding:calc(var(--iw-shell-t) * 100% / 1216) calc(var(--iw-shell-r) * 100% / 1216) calc(var(--iw-shell-b) * 100% / 1216) calc(var(--iw-shell-l) * 100% / 1216)!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;background:transparent!important;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:var(--iw-raid-boss-shell, none) center / 100% 100% no-repeat}:root [data-iw-raid-hud][data-iw-raid-encounter=ashmaw]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-ashmaw.png);--iw-shell-l: 270;--iw-shell-t: 158;--iw-shell-r: 82;--iw-shell-b: 156}:root [data-iw-raid-hud][data-iw-raid-encounter=thessaly]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-thessaly.png);--iw-shell-l: 269;--iw-shell-t: 159;--iw-shell-r: 77;--iw-shell-b: 157}:root [data-iw-raid-hud][data-iw-raid-encounter=morwenna]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-morwenna.png);--iw-shell-l: 271;--iw-shell-t: 159;--iw-shell-r: 83;--iw-shell-b: 157}:root [data-iw-raid-hud][data-iw-raid-encounter=grimjaw]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-grimjaw.png);--iw-shell-l: 263;--iw-shell-t: 154;--iw-shell-r: 93;--iw-shell-b: 162}:root [data-iw-raid-hud][data-iw-raid-encounter=skarth]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-skarth.png);--iw-shell-l: 272;--iw-shell-t: 159;--iw-shell-r: 75;--iw-shell-b: 156}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]>*{border-radius:999px!important;transition:width .4s ease-out!important;box-shadow:inset 0 1px 0 rgba(255,190,160,.45),inset 0 -1px 0 rgba(40,6,6,.8),2px 0 7px rgba(231,102,72,.55)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]>[class*=bg-rose],:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]>[class*=bg-red]{background:linear-gradient(180deg,#e0654f 0%,#a92e24 32%,#6d1715 84%,#b9422a)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p{display:flex!important;align-items:center;justify-content:center;position:relative;z-index:2;height:calc((406 - var(--iw-shell-t) - var(--iw-shell-b)) * 100cqw / 1216);margin:calc((var(--iw-shell-t) - 406) * 100cqw / 1216) calc(var(--iw-shell-r) * 100cqw / 1216 + 2cqw) calc(var(--iw-shell-b) * 100cqw / 1216) calc(var(--iw-shell-l) * 100cqw / 1216 - 2cqw)!important;font:700 clamp(12px,2.5cqw,15px)/1 var(--iw-font-ui)!important;letter-spacing:.02em;color:#fff4e6!important;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000,0 0 5px #000!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p[data-iw-raid-pct]::after{content:attr(data-iw-raid-pct);position:absolute;right:2.4cqw;font:800 clamp(11px,2.2cqw,13px)/1 var(--iw-font-ui);color:#ffd8bf}:root [data-iw-raid-hud]>[data-iw-guild-role=telegraph]{justify-self:start;width:min(100%,470px);margin-left:4px!important;border:1px solid rgba(201,162,77,.35)!important;background:var(--iw-raid-plate)!important;font:600 13px/1.3 var(--iw-font-ui)!important;color:var(--iw-raid-ivory)!important;text-align:left!important}:root [data-iw-raid-cast]{--iw-cast-fill: 100%;--iw-cast-ink: linear-gradient(180deg, #d0352c, #9c1a16 55%, #6a0f0d)}:root [data-iw-raid-hud]>[data-iw-raid-cast]{--iw-shell-w: min(100%, 560px);position:relative!important;z-index:1;min-width:0;font-size:0!important;justify-self:start;align-self:start;width:calc(var(--iw-shell-w) * .661184)!important;height:24px;margin:calc(var(--iw-shell-w) * -.09 - 10px) 0 0 calc(var(--iw-shell-w) * .210263)!important;padding:0!important;border:0!important;border-radius:5px!important;background:linear-gradient(90deg,transparent,rgba(255,226,150,.9) 35%,#fff8e0 50%,rgba(255,226,150,.9) 65%,transparent) calc(var(--iw-cast-fill) - 3px) center / 6px 100% no-repeat,var(--iw-cast-ink) left center / var(--iw-cast-fill) 100% no-repeat,linear-gradient(180deg,#1c1714,#0b0908)!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px #4a4540,inset 0 0 0 3px #1a1816,inset 0 3px 4px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.7),0 3px 8px rgba(0,0,0,.55)!important}:root [data-iw-raid-cast]::before,:root [data-iw-raid-cast]::after{position:absolute;top:0;bottom:0;display:flex;align-items:center;font:600 13px/1 var(--iw-font-ui);color:#fff4e6;text-shadow:0 1px 2px #000,0 0 4px #000}:root [data-iw-raid-cast]::before{content:attr(data-iw-raid-cast-name) " · " attr(data-iw-raid-cast-scope);left:10px;right:46px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root [data-iw-raid-cast-scope=""]::before{content:attr(data-iw-raid-cast-name)}:root [data-iw-raid-cast]::after{content:attr(data-iw-raid-cast-secs);right:10px;font-variant-numeric:tabular-nums}:root [data-iw-raid-cast-step="0"]{--iw-cast-fill: 0%}:root [data-iw-raid-cast-step="1"]{--iw-cast-fill: 10%}:root [data-iw-raid-cast-step="2"]{--iw-cast-fill: 20%}:root [data-iw-raid-cast-step="3"]{--iw-cast-fill: 30%}:root [data-iw-raid-cast-step="4"]{--iw-cast-fill: 40%}:root [data-iw-raid-cast-step="5"]{--iw-cast-fill: 50%}:root [data-iw-raid-cast-step="6"]{--iw-cast-fill: 60%}:root [data-iw-raid-cast-step="7"]{--iw-cast-fill: 70%}:root [data-iw-raid-cast-step="8"]{--iw-cast-fill: 80%}:root [data-iw-raid-cast-step="9"]{--iw-cast-fill: 90%}:root [data-iw-raid-cast-step="10"]{--iw-cast-fill: 100%}:root [data-iw-raid-cast-urgency=near]{--iw-cast-ink: linear-gradient(180deg, #e5562f, #b42a17 55%, #7c150c)}:root [data-iw-raid-cast-urgency=now]{--iw-cast-ink: linear-gradient(180deg, #ff7a52, #d63a22 55%, #8e1a0e)}@media(prefers-reduced-motion:no-preference){:root [data-iw-raid-cast-urgency=now]{animation:iw-raid-cast-pulse .7s ease-in-out infinite alternate}}@keyframes iw-raid-cast-pulse{to{filter:drop-shadow(0 0 12px rgba(239,106,75,.75)) brightness(1.12)}}:root [data-iw-raid-hud]>.raid-arena-floor{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch!important;justify-self:center;width:min(100%,860px);gap:8px!important;padding:0!important;background:none!important;text-shadow:none!important}:root [data-iw-raid-hud]>.raid-arena-floor::after{content:none!important;display:none!important}:root [data-iw-raid-hud]>.raid-arena-floor::before{position:static!important;inset:auto!important;transform:none!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;animation:none!important;z-index:auto!important;pointer-events:none;content:"Raid party" " · " attr(data-iw-raid-party);flex:0 0 100%;grid-column:1 / -1;order:-2;text-align:center;margin-bottom:2px;font:700 10px/1 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-raid-brass);text-shadow:0 1px 3px #000}:root [data-iw-raid-hud] [data-iw-guild-role=raider]{--iw-frame-edge: var(--iw-th-edge);--iw-frame-glow: transparent;position:relative!important;display:grid!important;flex:1 1 150px;width:auto!important;max-width:none;min-width:0;grid-template-columns:20px minmax(0,1fr) auto;grid-template-areas:"ico name pct" "ico skill skill" "hp hp hp" "ch ch ch" "fx fx fx";align-items:center;align-content:start;column-gap:7px;row-gap:3px;padding:8px 9px 7px!important;text-align:left!important;border:1px solid var(--iw-frame-edge)!important;border-radius:var(--iw-r-panel, 3px)!important;border-image:none!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent) center top / calc(100% - 16px) 1px no-repeat,linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 0 12px var(--iw-frame-glow),0 4px 10px rgba(0,0,0,.55)!important;filter:none!important;opacity:1!important;cursor:default}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-self]{order:-1}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-frame=self]{--iw-frame-edge: #3d7487;--iw-frame-glow: rgba(111, 179, 201, .28)}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-frame=critical]{--iw-frame-edge: #8a3a2f;--iw-frame-glow: rgba(208, 97, 79, .32)}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-down]{filter:grayscale(.85) brightness(.7)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-down]::after{content:"💀 Down";color:var(--iw-raid-bad);font-size:11px;letter-spacing:.04em}:root .iw-raid-fx:empty{display:none}:root [data-iw-raid-hud] [data-iw-guild-role=raider]>div:not([data-iw-guild-role]){display:none!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::before{content:"";grid-area:ico;align-self:start;width:22px;height:22px;margin-top:1px;background:center / contain no-repeat;opacity:.92}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::after{content:attr(data-iw-raid-hp);grid-area:pct;justify-self:end;font:700 12px/1 var(--iw-font-ui);color:var(--iw-raid-ivory);font-variant-numeric:tabular-nums}:root [data-iw-raid-hud] [data-iw-guild-role=raider-name]{grid-area:name;width:auto!important;padding:0!important;border:0!important;background:none!important;font:700 13px/1.15 var(--iw-font-ui)!important;text-align:left!important;text-shadow:none!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}:root [data-iw-raid-hud] [data-iw-guild-role=raider-name]:not([class*=text-sky]){color:var(--iw-raid-ivory)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-skill]{grid-area:skill;width:auto!important;text-align:left!important;font:500 11px/1.15 var(--iw-font-ui)!important;color:var(--iw-raid-read)!important;text-shadow:none!important}:root [data-iw-raid-hud] :is([data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge]){width:100%!important;margin-top:2px;border:1px solid #3f3a2c!important;border-radius:0!important;background:#050605!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.9)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-hp]{grid-area:hp;height:6px!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-charge]{grid-area:ch;height:4px!important;margin-top:0;border-color:#2e3433!important}:root [data-iw-raid-hud] :is([data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge])>*{border-radius:0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-charge]>*{background:linear-gradient(180deg,#b2d6e4,#4f8aa3)!important}:root .iw-raid-fx{grid-area:fx;display:flex;flex-wrap:wrap;gap:3px 6px;margin-top:3px;min-height:16px}:root .iw-raid-chip{display:inline-flex;align-items:center;gap:2px;white-space:nowrap;font:700 10.5px/14px var(--iw-font-ui);color:var(--iw-raid-ivory, #f0e8d6);font-variant-numeric:tabular-nums}:root .iw-raid-chip[data-iw-raid-tone=debuff]{color:var(--iw-raid-bad, #e89aa9)}:root .iw-raid-chip-icon{display:inline-grid;place-items:center;width:14px;height:14px;flex:none;font-style:normal;font-size:11px;line-height:1;background:center / contain no-repeat;filter:drop-shadow(0 1px 1px #000)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art]>.iw-raid-chip-icon{font-size:0}:root .iw-raid-chip-name{font-weight:600;color:var(--iw-raid-read, #b7ad99)}:root .iw-raid-chip[data-iw-raid-tone=debuff]>.iw-raid-chip-name{color:inherit}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=shield]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/shield.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=ward]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/ward.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=war-cry]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/war-cry.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=curse]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/curse.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=bleed]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/bleed.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=taunt]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/taunt.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=combat]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-combat.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=jewelcrafting]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-jewelcrafting.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=tailoring]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-tailoring.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=construction]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-construction.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=mining]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-mining.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=woodcutting]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-woodcutting.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=alchemy]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-alchemy.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=gathering]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-gathering.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=smithing]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-smithing.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=spellcrafting]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-spellcrafting.png)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome],:root .iw-raid-dock>.iw-raid-dock-panel{--iw-raid-corner-w: 25px 23px;border:1px solid transparent!important;border-radius:var(--iw-r-panel, 3px)!important;border-image:var(--iw-corner-filigree) 50% / var(--iw-raid-corner-w) / 0 stretch!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent) center top / calc(100% - 24px) 1px no-repeat,linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,normal,soft-light,normal!important;box-shadow:0 0 0 1px var(--iw-th-edge),inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 8px 22px rgba(0,0,0,.55)!important;filter:none!important}:root [data-iw-raid-hud]>.iw-raid-timers{justify-self:center;width:min(100%,860px);display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 10px}.iw-raid-timer{position:relative;display:grid;grid-template-columns:16px auto minmax(0,1fr) auto;align-items:center;column-gap:7px;height:26px;padding:0 10px 0 8px;overflow:hidden;border:1px solid #3d7487;border-radius:var(--iw-r-panel, 3px);background:linear-gradient(180deg,#0b0d0d,#050605);box-shadow:inset 0 1px 3px rgba(0,0,0,.9),0 3px 8px rgba(0,0,0,.5);font:700 11px/1 var(--iw-font-ui);color:#fff;text-shadow:0 1px 2px #000,0 0 4px #000}.iw-raid-timer[data-iw-raid-tone=debuff]{border-color:#8a3a2f}.iw-raid-timer-fill{position:absolute;inset:0 auto 0 0;transition:width .9s linear}.iw-raid-timer[data-iw-raid-tone=buff]>.iw-raid-timer-fill{background:linear-gradient(180deg,#74b6dd,#2f6f9c 58%,#1c4568);box-shadow:inset 0 1px 0 rgba(214,238,252,.4)}.iw-raid-timer[data-iw-raid-tone=debuff]>.iw-raid-timer-fill{background:linear-gradient(180deg,#e0786a,#a8352b 58%,#6e1a15);box-shadow:inset 0 1px 0 rgba(255,214,205,.35)}.iw-raid-timer>:not(.iw-raid-timer-fill){position:relative;z-index:1;min-width:0}.iw-raid-timer>.iw-raid-chip-icon{width:16px;height:16px;font-size:12px}.iw-raid-timer-name{letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}.iw-raid-timer-who{font-weight:600;color:#e6ddcb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iw-raid-timer-secs{font-size:13px;font-variant-numeric:tabular-nums}@media(prefers-reduced-motion:reduce){.iw-raid-timer-fill{transition:none}}:root [data-iw-raid-hud]>[data-iw-guild-role=status]{justify-self:center;margin-top:-2px!important;text-align:center;font:italic 500 12px/1.2 var(--iw-font-ui)!important;color:var(--iw-raid-read)!important;text-shadow:0 1px 3px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=actions]{justify-self:center;align-self:start;width:min(100%,540px);display:flex!important;flex-wrap:wrap;gap:10px!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action]{--iw-compact-cap: 15px;flex:1 1 140px;height:44px!important;min-height:0!important;padding:0 24px!important;display:inline-flex!important;align-items:center;justify-content:center;gap:8px;border:0!important;border-radius:0!important;font:700 13px/1 var(--iw-font-head)!important;letter-spacing:.1em;text-transform:uppercase!important;color:var(--iw-raid-ivory)!important;text-shadow:0 1px 2px #000,0 0 4px #000!important;cursor:pointer}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action].button-primary{color:#ffd2ad!important;box-shadow:0 0 16px rgba(217,120,74,.28)!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action].button-primary>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-cta-hi, #d9784a)!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action]:disabled{opacity:.5!important;filter:saturate(.3)!important;cursor:not-allowed}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{justify-self:center;align-self:center;width:min(100%,460px);display:flex!important;flex-direction:column;align-items:center;gap:10px;padding:22px 30px 20px!important;text-align:center}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]>p{margin:0!important;font:700 clamp(17px,1.6vw,21px)/1.25 var(--iw-font-head)!important;letter-spacing:.03em;color:var(--iw-raid-ivory)!important;text-shadow:0 2px 4px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-guild-tone=bad]>p{color:var(--iw-raid-bad)!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-guild-tone=good]>p{color:var(--iw-raid-good)!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-guild-tone=warn]>p{color:#e8c27a!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=outcome-close]{margin:0!important;min-height:32px!important;padding:0 22px!important;border:1px solid #6f5631!important;border-radius:2px!important;background:linear-gradient(180deg,#2a241a,#13110d)!important;box-shadow:inset 0 1px 0 rgba(255,230,180,.12)!important;font:700 12px/1 var(--iw-font-head)!important;letter-spacing:.08em;color:var(--iw-raid-ivory)!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=outcome-close]:hover{filter:brightness(1.15)!important}:root .iw-raid-dock{--iw-raid-brass: #d4ad63;--iw-raid-ivory: #f0e8d6;--iw-raid-read: #b7ad99;--iw-raid-dim: #938a79;display:flex;flex-direction:column;gap:10px;margin-top:12px;font-family:var(--iw-font-ui);color:var(--iw-raid-ivory)}:root .iw-raid-dock>.iw-raid-dock-panel{padding:0!important}:root .iw-raid-dock>.iw-raid-dock-panel[hidden]{display:none!important}.iw-raid-dock-head{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;margin:0;padding:12px 22px 12px 28px;border:0;background:none;box-shadow:none;cursor:pointer;text-align:left;font:700 12px/1 var(--iw-font-head);letter-spacing:.14em;text-transform:uppercase;color:var(--iw-raid-brass)}.iw-raid-dock-head:hover{filter:brightness(1.15)}.iw-raid-dock-head:focus-visible{outline:1px solid var(--iw-raid-brass);outline-offset:-4px}.iw-raid-dock-glyph{font-size:13px;letter-spacing:0}.iw-raid-dock-title{flex:1 1 auto;min-width:0}.iw-raid-dock-chevron{display:grid;place-items:center;width:22px;height:22px;flex:none}.iw-raid-dock-chevron::before{content:"";width:7px;height:7px;border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);transition:transform .15s ease}.iw-raid-dock-head[aria-expanded=true] .iw-raid-dock-chevron::before{transform:translateY(2px) rotate(-135deg)}.iw-raid-dock-panel[data-iw-raid-fold=closed]>.iw-raid-dock-body{display:none}.iw-raid-dock-body{padding:0 26px 18px 28px;text-align:left}.iw-raid-dock-panel[data-iw-raid-dock=log]>.iw-raid-dock-body{max-height:260px;overflow-y:auto;overscroll-behavior:contain;margin-bottom:10px;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:var(--iw-th-edge-mid, #5b4a2e) transparent}.iw-raid-dock-line{margin:0;font:500 12.5px/1.6 var(--iw-font-ui);color:var(--iw-raid-read)}.iw-raid-dock-line:last-child{color:var(--iw-raid-ivory)}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div{margin:0;padding:4px 0 4px 9px;text-align:left;border-left:2px solid currentColor;font:600 12px/1.35 var(--iw-font-ui)}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div+div{margin-top:3px}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div:has(>p){border-left-color:var(--iw-th-edge-mid, #5b4a2e);color:var(--iw-raid-read);font-weight:500}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div>p{margin:0}.iw-raid-dock-more{display:inline-block;margin:10px 0 0;padding:0;border:0;background:none;box-shadow:none;cursor:pointer;font:600 11px/1 var(--iw-font-ui);letter-spacing:.03em;color:var(--iw-raid-dim);text-decoration:underline dotted;text-underline-offset:3px}.iw-raid-dock-more:hover{color:var(--iw-raid-ivory)}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>[data-iw-raid-fx-kind=resist]{--iw-res: 0%;margin-top:8px;padding:7px 0 10px;border-left:0;border-top:1px solid #433722;background:linear-gradient(90deg,#b9612f,#e3a14c) left bottom / var(--iw-res) 3px no-repeat,linear-gradient(#0a0908,#0a0908) left bottom / 100% 3px no-repeat}:root [data-iw-raid-resist-step="0"]{--iw-res: 0%}:root [data-iw-raid-resist-step="1"]{--iw-res: 10%}:root [data-iw-raid-resist-step="2"]{--iw-res: 20%}:root [data-iw-raid-resist-step="3"]{--iw-res: 30%}:root [data-iw-raid-resist-step="4"]{--iw-res: 40%}:root [data-iw-raid-resist-step="5"]{--iw-res: 50%}:root [data-iw-raid-resist-step="6"]{--iw-res: 60%}:root [data-iw-raid-resist-step="7"]{--iw-res: 70%}:root [data-iw-raid-resist-step="8"]{--iw-res: 80%}:root [data-iw-raid-resist-step="9"]{--iw-res: 90%}:root [data-iw-raid-resist-step="10"]{--iw-res: 100%}@media(max-width:1099px){:root [data-iw-guild=root] [data-iw-raid-hud]{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(120px,1fr) auto auto auto auto;grid-template-areas:"boss boss" "cast cast" "result result" "timers timers" "party party" "status status" "actions actions";gap:10px 14px!important;padding:22px 18px 16px!important;min-height:0}:root [data-iw-raid-hud]>.raid-arena-floor{max-width:744px;justify-self:center}:root [data-iw-raid-hud]>.iw-raid-timers{width:min(100%,744px)}}@media(max-width:699px){:root [data-iw-guild=root] [data-iw-raid-hud]{--iw-hero-h: clamp(220px, 74vw, 330px);grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto var(--iw-hero-h) auto auto auto auto auto auto;grid-template-areas:"boss boss" "hero hero" "hp hp" "cast cast" "timers timers" "party party" "status status" "actions actions";gap:10px 8px!important;padding:18px 12px 14px!important;min-height:0}:root [data-iw-guild=root] [data-iw-raid-hud][data-iw-raid-scene]{background:var(--iw-scene-bg, #0d0c0a)!important}:root [data-iw-raid-scene=ashmaw]{--iw-scene-bg: #160706}:root [data-iw-raid-scene=thessaly]{--iw-scene-bg: #101017}:root [data-iw-raid-scene=morwenna]{--iw-scene-bg: #151019}:root [data-iw-raid-scene=grimjaw]{--iw-scene-bg: #111923}:root [data-iw-raid-hud]>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art]){grid-area:hero;inset:-4px -12px!important}:root [data-iw-raid-hud]>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>:is(canvas,img){object-position:97% 50%!important}:root [data-iw-raid-hud]>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])::after{background:linear-gradient(180deg,var(--iw-scene-bg) 0%,transparent 24%,transparent 68%,var(--iw-scene-bg) 100%),linear-gradient(90deg,rgba(0,0,0,.35),transparent 18%,transparent 82%,rgba(0,0,0,.35))!important}:root [data-iw-raid-hud]>[data-iw-guild-role=boss-summary]{display:contents!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>*{position:relative;z-index:1;min-width:0;margin:0!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child{grid-area:boss;align-items:center!important;text-align:center;gap:6px}:root [data-iw-raid-hud] [data-iw-raid-boss]::before{margin-bottom:6px;letter-spacing:.26em}:root [data-iw-raid-hud] [data-iw-raid-boss]::after{font-size:clamp(30px,9vw,38px)}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>div:nth-child(2):not([data-iw-guild-role]){grid-area:hero;align-self:center;justify-self:center}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>div:nth-child(2):not([data-iw-guild-role])>img{height:calc(var(--iw-hero-h) * .62)!important;width:auto!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]{grid-area:hp;width:100%!important;margin:0!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p{grid-area:hp;align-self:stretch;z-index:2;height:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;padding:calc(var(--iw-shell-t) * 100% / 1216) calc(var(--iw-shell-r) * 100% / 1216) calc(var(--iw-shell-b) * 100% / 1216) calc(var(--iw-shell-l) * 100% / 1216)!important;margin:0!important;font-size:14px!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p::before{content:""}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p[data-iw-raid-pct]::after{position:static;justify-self:end;padding-right:4px;font-size:12px}:root [data-iw-raid-hud]>[data-iw-guild-role=telegraph]:not([data-iw-raid-cast]){width:100%;margin-left:0!important;justify-self:stretch}:root [data-iw-raid-hud]>[data-iw-raid-cast]{--iw-shell-w: 100%;height:22px;margin:calc(var(--iw-shell-w) * -.09 - 10px) 0 0 calc(var(--iw-shell-w) * .230263)!important}:root [data-iw-raid-cast]::before{left:8px;right:38px;font-size:11.5px}:root [data-iw-raid-cast]::after{right:8px;font-size:12px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{grid-area:hero;z-index:2;width:calc(100% - 24px)}:root [data-iw-raid-hud]>.raid-arena-floor{display:flex!important;flex-wrap:wrap!important;justify-content:center!important;width:100%;gap:7px 6px!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action]{--iw-compact-cap: 13px;height:40px!important;padding:0 16px!important;font-size:12px!important}:root [data-iw-raid-hud]>.raid-arena-floor::before{content:"Raid party";flex:0 0 calc(50% - 3px);text-align:left;margin:0;order:-4}:root [data-iw-raid-hud]>.raid-arena-floor::after{position:static!important;inset:auto!important;transform:none!important;width:auto!important;height:auto!important;border:0!important;background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;animation:none!important;display:block!important;content:attr(data-iw-raid-party)!important;flex:0 0 calc(50% - 3px);order:-3;text-align:right;font:600 10.5px/1 var(--iw-font-ui);color:var(--iw-raid-dim);text-shadow:0 1px 3px #000}:root [data-iw-raid-hud] [data-iw-guild-role=raider]{flex:0 0 calc((100% - 12px) / 3);max-width:none;padding:7px 6px 6px!important;grid-template-columns:16px minmax(0,1fr) auto;grid-template-columns:14px minmax(0,1fr) auto;grid-template-areas:"ico name name" "skill skill pct" "hp hp hp" "ch ch ch" "fx fx fx";column-gap:4px;row-gap:3px}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::before{width:14px;height:14px;margin-top:0;align-self:center}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::after{font-size:10.5px}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-down]::after{font-size:10px}:root [data-iw-raid-hud] [data-iw-guild-role=raider-name]{font-size:10.5px!important;letter-spacing:-.01em}:root [data-iw-raid-hud] [data-iw-guild-role=raider-skill]{font-size:10px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}:root .iw-raid-fx{gap:2px 5px}:root .iw-raid-chip{font-size:10px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome],:root .iw-raid-dock>.iw-raid-dock-panel{--iw-raid-corner-w: 20px 18px}.iw-raid-dock-head{min-height:42px;padding:10px 16px 10px 22px;font-size:11px;letter-spacing:.1em}.iw-raid-dock-body{padding:0 18px 14px 22px}:root [data-iw-raid-hud]>.iw-raid-timers{width:100%;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px 6px}.iw-raid-timer{height:24px;column-gap:5px;padding:0 7px 0 6px;font-size:10px}.iw-raid-timer-secs{font-size:12px}:root [data-iw-raid-hud]>[data-iw-guild-role=actions]{width:100%}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{padding:18px 20px 16px!important}}:root [data-iw-guild=root] [data-iw-raid-scene=skarth]{background:#111c28!important}:root [data-iw-skarth-art]::after{background:linear-gradient(180deg,transparent 50%,rgba(8,16,25,.65))}@media(max-width:767px){:root [data-iw-raid-scene=skarth]{--iw-scene-bg: #111c28}}\n';
 
   // src/styles/compact-buttons.css
   var compact_buttons_default = '[data-iw-compact-layer]{display:none}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-compact-button]{--iw-compact-cap: 10px;position:relative!important;isolation:isolate!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;filter:none!important;transform:none!important;transition:color 180ms ease-out!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-ui=nav-tab]{--iw-compact-cap: 12px}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-panel-part=send]{--iw-compact-cap: 14px}html[data-iw-compact-atlas=compact-ghost-v3]{--iw-compact-mid-size: 150% 326.6666666666667%;--iw-compact-mid-x: 21.428571428571427%;--iw-compact-cap-size: 1680% 326.6666666666667%;--iw-compact-left-x: 1.2658227848101267%;--iw-compact-right-x: 78.48101265822785%;--iw-compact-icon-size: 560% 326.6666666666667%;--iw-compact-icon-x: 98.55072463768116%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-layer=idle]{--iw-compact-y: 2.9411764705882355%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-layer=hover]{--iw-compact-y: 50%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-layer=clicked]{--iw-compact-y: 97.05882352941177%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]{display:block!important;position:absolute!important;inset:0!important;box-sizing:border-box!important;margin:0!important;border:0!important;border-radius:0!important;width:auto!important;height:auto!important;padding:0 var(--iw-compact-cap)!important;pointer-events:none!important;background-image:var(--iw-compact-atlas)!important;background-size:var(--iw-compact-mid-size)!important;background-position:var(--iw-compact-mid-x) var(--iw-compact-y)!important;background-repeat:no-repeat!important;background-origin:content-box!important;background-clip:content-box!important;opacity:1;z-index:-3}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::before,html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::after{content:""!important;position:absolute!important;top:0!important;bottom:0!important;width:var(--iw-compact-cap)!important;background-image:var(--iw-compact-atlas)!important;background-size:var(--iw-compact-cap-size)!important;background-position:var(--iw-compact-left-x) var(--iw-compact-y)!important;background-repeat:no-repeat!important;pointer-events:none!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::before{left:0!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::after{right:0!important;background-position:var(--iw-compact-right-x) var(--iw-compact-y)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button=icon]>[data-iw-compact-layer]{padding:0!important;background-size:var(--iw-compact-icon-size)!important;background-position:var(--iw-compact-icon-x) var(--iw-compact-y)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button=icon]>[data-iw-compact-layer]::before,html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button=icon]>[data-iw-compact-layer]::after{content:none!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer=hover]{opacity:0;z-index:-2;transition:opacity 180ms ease-out}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer=clicked]{opacity:0;z-index:-1;transition:opacity 70ms ease-out}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:not(:disabled):not([aria-disabled=true]):is(:hover,:focus-visible,:active)>[data-iw-compact-layer=hover],html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:not(:disabled):not([aria-disabled=true]):active>[data-iw-compact-layer=clicked]{opacity:1}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is([data-iw-inventory-filter-state=active],[data-iw-compact-selected=true],[data-fs-action-kind=equipped]){box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-fs-action-kind=equipped]{box-shadow:inset 0 -2px var(--iw-good, #80b38a)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is([data-iw-inventory-filter-state=active],[data-iw-compact-selected=true])>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-fs-action-kind=equipped]>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-good, #80b38a)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-compact-selected=true]{color:var(--iw-text-hi, #fff0dc)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-ui=nav-tab][data-iw-state=active]{color:var(--iw-text-hi, #fff0dc)!important;-webkit-text-fill-color:currentColor!important;opacity:1!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-ui=nav-tab][data-iw-state=active] :not([data-iw-compact-layer]){color:inherit!important;-webkit-text-fill-color:currentColor!important;opacity:1!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:focus-visible{outline:2px solid var(--iw-th-accent, #5dbbd0)!important;outline-offset:2px!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is(:disabled,[aria-disabled=true])>[data-iw-compact-layer]:not([data-iw-compact-layer=idle]){opacity:0!important;transition:none!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is(:disabled,[aria-disabled=true]){opacity:.45!important}@media(prefers-reduced-motion:reduce){html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button],html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]{transition:none!important}}\n';
@@ -7809,60 +10031,60 @@
   var CONTROL = 'button, a[data-iw-ui="nav-tab"], a[data-fs-preserved-action="control"], [role="button"][data-fs-preserved-action="control"]';
   var LAYER = "[data-iw-compact-layer]";
   var decorated = /* @__PURE__ */ new Set();
-  var label3 = (el) => String(el.textContent || "").replace(/\s+/g, " ").trim();
+  var label3 = (el2) => String(el2.textContent || "").replace(/\s+/g, " ").trim();
   var STATES = ["idle", "hover", "clicked"];
-  function loadoutPair(el, text = label3(el)) {
+  function loadoutPair(el2, text = label3(el2)) {
     if (!/^(I|II)$/.test(text)) return false;
-    const peers = [...el.parentElement?.querySelectorAll("button") || []];
+    const peers = [...el2.parentElement?.querySelectorAll("button") || []];
     return peers.length === 2 && peers.some((p) => label3(p) === "I") && peers.some((p) => label3(p) === "II");
   }
-  function kind(el, text) {
-    if (el.matches("[data-iw-collapse]")) return "";
-    if (el.matches('[data-fs-preserved-action="control"]')) {
-      return el.dataset.fsActionKind === "icon" ? "icon" : "text";
+  function kind(el2, text) {
+    if (el2.matches("[data-iw-collapse]")) return "";
+    if (el2.matches('[data-fs-preserved-action="control"]')) {
+      return el2.dataset.fsActionKind === "icon" ? "icon" : "text";
     }
-    if (el.matches('[data-iw-inventory-control="filter"], [data-iw-inventory-control="page"], [data-iw-ui="nav-tab"], [data-iw-ui="zone-action"], [data-iw-panel-part="send"]')) return "text";
-    if (loadoutPair(el, text())) return "icon";
+    if (el2.matches('[data-iw-inventory-control="filter"], [data-iw-inventory-control="page"], [data-iw-ui="nav-tab"], [data-iw-ui="zone-action"], [data-iw-panel-part="send"], [data-iw-guild-role="action"]')) return "text";
+    if (loadoutPair(el2, text())) return "icon";
     if (/^change zone$/i.test(text())) return "text";
-    if ((!text() || /^[⏱⏲⏰⌚︎️]+$/u.test(text())) && [...el.parentElement?.children || []].some((p) => p.matches("button") && /^change zone$/i.test(label3(p)))) return "icon";
+    if ((!text() || /^[⏱⏲⏰⌚︎️]+$/u.test(text())) && [...el2.parentElement?.children || []].some((p) => p.matches("button") && /^change zone$/i.test(label3(p)))) return "icon";
     return "";
   }
-  function clear(el) {
-    el.querySelectorAll(`:scope > ${LAYER}`).forEach((n) => n.remove());
-    delete el.dataset.iwCompactButton;
-    delete el.dataset.iwCompactSelected;
+  function clear(el2) {
+    el2.querySelectorAll(`:scope > ${LAYER}`).forEach((n) => n.remove());
+    delete el2.dataset.iwCompactButton;
+    delete el2.dataset.iwCompactSelected;
   }
   function decorateCompactButtons(root = document) {
     const next = /* @__PURE__ */ new Set();
-    for (const el of root.querySelectorAll(CONTROL)) {
+    for (const el2 of root.querySelectorAll(CONTROL)) {
       let cached;
-      const text = () => cached === void 0 ? cached = label3(el) : cached;
-      const shape = kind(el, text);
+      const text = () => cached === void 0 ? cached = label3(el2) : cached;
+      const shape = kind(el2, text);
       if (!shape) continue;
-      next.add(el);
-      if (el.dataset.iwCompactButton !== shape) el.dataset.iwCompactButton = shape;
-      const nativeSelection = el.getAttribute("aria-pressed") ?? el.getAttribute("aria-selected");
-      const selected = loadoutPair(el, text()) && (nativeSelection !== null ? nativeSelection === "true" : el.dataset.state === "active" || /(?:bg|text|border)-(?:orange|amber|primary|accent|ember)/i.test(String(el.className || "")));
-      if (selected && el.dataset.iwCompactSelected !== "true") el.dataset.iwCompactSelected = "true";
-      if (!selected && el.hasAttribute("data-iw-compact-selected")) delete el.dataset.iwCompactSelected;
+      next.add(el2);
+      if (el2.dataset.iwCompactButton !== shape) el2.dataset.iwCompactButton = shape;
+      const nativeSelection = el2.getAttribute("aria-pressed") ?? el2.getAttribute("aria-selected");
+      const selected = loadoutPair(el2, text()) && (nativeSelection !== null ? nativeSelection === "true" : el2.dataset.state === "active" || /(?:bg|text|border)-(?:orange|amber|primary|accent|ember)/i.test(String(el2.className || "")));
+      if (selected && el2.dataset.iwCompactSelected !== "true") el2.dataset.iwCompactSelected = "true";
+      if (!selected && el2.hasAttribute("data-iw-compact-selected")) delete el2.dataset.iwCompactSelected;
       const present = /* @__PURE__ */ new Set();
-      for (const child of el.children) {
+      for (const child of el2.children) {
         const layerState = child.getAttribute("data-iw-compact-layer");
         if (layerState !== null) present.add(layerState);
       }
       for (const state of STATES) {
         if (present.has(state)) continue;
-        const layer = el.ownerDocument.createElement("span");
+        const layer = el2.ownerDocument.createElement("span");
         layer.dataset.iwCompactLayer = state;
         layer.setAttribute("aria-hidden", "true");
-        el.append(layer);
+        el2.append(layer);
       }
     }
-    for (const el of decorated) if (!next.has(el)) clear(el);
+    for (const el2 of decorated) if (!next.has(el2)) clear(el2);
     decorated = next;
   }
   function clearCompactButtons() {
-    for (const el of decorated) clear(el);
+    for (const el2 of decorated) clear(el2);
     decorated.clear();
   }
 
@@ -7880,17 +10102,17 @@
   function normText4(value) {
     return String(value || "").replace(/\s+/g, " ").trim();
   }
-  function setRole4(el, role2) {
-    if (el && el.dataset.iwUi !== role2) el.dataset.iwUi = role2;
-    return el;
+  function setRole4(el2, role2) {
+    if (el2 && el2.dataset.iwUi !== role2) el2.dataset.iwUi = role2;
+    return el2;
   }
-  function setPanel(el, role2) {
-    if (el && el.dataset.iwPanel !== role2) el.dataset.iwPanel = role2;
-    return el;
+  function setPanel(el2, role2) {
+    if (el2 && el2.dataset.iwPanel !== role2) el2.dataset.iwPanel = role2;
+    return el2;
   }
-  function setPanelPart(el, role2) {
-    if (el && el.dataset.iwPanelPart !== role2) el.dataset.iwPanelPart = role2;
-    return el;
+  function setPanelPart(el2, role2) {
+    if (el2 && el2.dataset.iwPanelPart !== role2) el2.dataset.iwPanelPart = role2;
+    return el2;
   }
   function nearestButtonLabel(btn) {
     return normText4(btn?.textContent).toLowerCase();
@@ -7906,15 +10128,15 @@
     if (!list.length) return null;
     let cur = list[0];
     while (cur && cur !== document.documentElement) {
-      if (list.every((el) => cur === el || cur.contains(el))) return cur;
+      if (list.every((el2) => cur === el2 || cur.contains(el2))) return cur;
       cur = cur.parentElement;
     }
     return null;
   }
-  function sameTextShell(el, stop, maxDepth = 4) {
-    if (!el) return null;
-    const text = normText4(el.textContent);
-    let cur = el;
+  function sameTextShell(el2, stop, maxDepth = 4) {
+    if (!el2) return null;
+    const text = normText4(el2.textContent);
+    let cur = el2;
     for (let depth = 0; depth < maxDepth; depth += 1) {
       const parent = cur.parentElement;
       if (!parent || parent === stop) break;
@@ -7925,10 +10147,10 @@
     return cur;
   }
   function matchingLeaves(root, predicate) {
-    return [...root.querySelectorAll("div,span,p,strong,time")].filter((el) => el.childElementCount === 0 && predicate(normText4(el.textContent).toLowerCase(), el));
+    return [...root.querySelectorAll("div,span,p,strong,time")].filter((el2) => el2.childElementCount === 0 && predicate(normText4(el2.textContent).toLowerCase(), el2));
   }
-  function directChildUnder2(el, ancestor) {
-    let cur = el;
+  function directChildUnder2(el2, ancestor) {
+    let cur = el2;
     while (cur?.parentElement && cur.parentElement !== ancestor) cur = cur.parentElement;
     return cur?.parentElement === ancestor ? cur : null;
   }
@@ -7960,9 +10182,9 @@
     return seen.size;
   }
   var NAV_TRACK_ROLES = ["main-nav", "section-frame"];
-  function setNavRole(el, role2) {
-    if (el?.dataset.iwUi === "section-frame") return el;
-    return setRole4(el, role2);
+  function setNavRole(el2, role2) {
+    if (el2?.dataset.iwUi === "section-frame") return el2;
+    return setRole4(el2, role2);
   }
   function mainNavResolutionValid(entry2) {
     return entry2.epoch === getLayoutEpoch() && entry2.track.isConnected && NAV_TRACK_ROLES.includes(entry2.track.dataset.iwUi) && entry2.tabs.every((btn) => btn.isConnected && btn.dataset.iwUi === "nav-tab") && (entry2.shell === entry2.track || entry2.shell.isConnected && ["main-nav-shell", "section-frame"].includes(entry2.shell.dataset.iwUi)) && // A rail that GAINS a tab after the first classification (Dungeon unlocks,
@@ -8068,9 +10290,9 @@
   function classifyZoneBar() {
     if (zoneBarResolutions && (zoneBarResolutions.length ? zoneBarResolutions.every(zoneBarResolutionValid) : !zoneBarCandidatePresent())) return;
     zoneBarResolutions = [];
-    const zoneLabel = (el) => /^zone\s*\d+\s*:/i.test(normText4(el.textContent).replace(/^[^a-z0-9]+/i, ""));
-    const matches = [...document.querySelectorAll("div,span,p,strong")].filter((el) => zoneLabel(el) && el.childElementCount <= 2);
-    const labels = matches.filter((el) => !matches.some((other) => other !== el && el.contains(other)));
+    const zoneLabel = (el2) => /^zone\s*\d+\s*:/i.test(normText4(el2.textContent).replace(/^[^a-z0-9]+/i, ""));
+    const matches = [...document.querySelectorAll("div,span,p,strong")].filter((el2) => zoneLabel(el2) && el2.childElementCount <= 2);
+    const labels = matches.filter((el2) => !matches.some((other) => other !== el2 && el2.contains(other)));
     for (const label4 of labels) {
       let host = label4.parentElement;
       for (let depth = 0; host && depth < 5; depth += 1, host = host.parentElement) {
@@ -8106,12 +10328,12 @@
   var sectionFrameResolutions = null;
   var sectionFrameSeen = /* @__PURE__ */ new Set();
   var SECTION_FRAME_NAMES = /^(inventory|market|leaderboards|quests|world bosses|village|salvaging|skill actions|zone selector)$/i;
-  function ownedElsewhere(el) {
-    return !!el.closest?.('header, [data-iw-ui="zone-bar"], [data-iw-panel]');
+  function ownedElsewhere(el2) {
+    return !!el2.closest?.('header, [data-iw-ui="zone-bar"], [data-iw-panel]');
   }
-  function inOverlay(el) {
-    if (el.closest?.('[data-iw-overlay="scrim"], [data-iw-overlay="panel"]')) return true;
-    const layer = el.closest?.('[class*="fixed"]');
+  function inOverlay(el2) {
+    if (el2.closest?.('[data-iw-overlay="scrim"], [data-iw-overlay="panel"]')) return true;
+    const layer = el2.closest?.('[class*="fixed"]');
     return !!layer && getComputedStyle(layer).position === "fixed";
   }
   var passToken = 0;
@@ -8261,7 +10483,7 @@
   }
   function untagMarket(entry2) {
     if (entry2.frame.dataset.iwMarket === "root") delete entry2.frame.dataset.iwMarket;
-    for (const el of entry2.frame.querySelectorAll("[data-iw-market]")) delete el.dataset.iwMarket;
+    for (const el2 of entry2.frame.querySelectorAll("[data-iw-market]")) delete el2.dataset.iwMarket;
   }
   function marketTitles() {
     return [...document.querySelectorAll('[data-iw-ui="section-title"]')].filter((title) => /^market$/i.test(normText4(title.textContent)));
@@ -8335,12 +10557,12 @@
   function findCurrentActionProgress(root) {
     const semantic = root.querySelector('[role="progressbar"], [aria-valuenow][aria-valuemax]');
     if (semantic) return semantic;
-    const fill = [...root.querySelectorAll("[style]")].find((el) => /^\d+(?:\.\d+)?%$/.test(el.style.width || "") && el.parentElement !== root);
+    const fill = [...root.querySelectorAll("[style]")].find((el2) => /^\d+(?:\.\d+)?%$/.test(el2.style.width || "") && el2.parentElement !== root);
     return fill?.parentElement || null;
   }
   var progressSamples = /* @__PURE__ */ new WeakMap();
   function progressPercent2(track) {
-    const fill = [...track.querySelectorAll("[style]")].find((el) => /^\d+(?:\.\d+)?%$/.test(el.style.width || ""));
+    const fill = [...track.querySelectorAll("[style]")].find((el2) => /^\d+(?:\.\d+)?%$/.test(el2.style.width || ""));
     if (fill) return parseFloat(fill.style.width);
     const now = parseFloat(track.getAttribute("aria-valuenow"));
     const max = parseFloat(track.getAttribute("aria-valuemax"));
@@ -8373,12 +10595,12 @@
       return !!findCurrentActionProgress(candidate);
     }
     if (panel === "action-log") {
-      const hasControl = [...candidate.querySelectorAll(GAME_CONTROL + ",a")].some((el) => /^view\s+all$/i.test(normText4(el.textContent)));
+      const hasControl = [...candidate.querySelectorAll(GAME_CONTROL + ",a")].some((el2) => /^view\s+all$/i.test(normText4(el2.textContent)));
       const hasRate = /\b[\d,.]+\s*xp\s*\/\s*hr\b/i.test(normText4(candidate.textContent));
       return (hasControl || hasRate) && hasPanelBodyOutsideHeading(candidate, heading);
     }
     if (panel === "world-chat") {
-      return !![...candidate.querySelectorAll("input,textarea")].find((el) => /message\s+world\s+chat/i.test(el.getAttribute("placeholder") || ""));
+      return !![...candidate.querySelectorAll("input,textarea")].find((el2) => /message\s+world\s+chat/i.test(el2.getAttribute("placeholder") || ""));
     }
     return false;
   }
@@ -8442,17 +10664,17 @@
     }
   }
   function classifyActionLog(host) {
-    const control = [...host.querySelectorAll(GAME_CONTROL + ",a")].find((el) => /^view\s+all$/i.test(normText4(el.textContent)));
+    const control = [...host.querySelectorAll(GAME_CONTROL + ",a")].find((el2) => /^view\s+all$/i.test(normText4(el2.textContent)));
     setPanelPart(control, "panel-control");
     classifyFeed(host);
   }
   function classifyWorldChat(host) {
-    const input = [...host.querySelectorAll("input,textarea")].find((el) => /message\s+world\s+chat/i.test(el.getAttribute("placeholder") || ""));
+    const input = [...host.querySelectorAll("input,textarea")].find((el2) => /message\s+world\s+chat/i.test(el2.getAttribute("placeholder") || ""));
     setPanelPart(input, "chat-input");
     if (input) {
       let composer = input.parentElement;
       for (let depth = 0; composer && composer !== host && depth < 3; depth += 1, composer = composer.parentElement) {
-        const send = [...composer.querySelectorAll("button")].find((el) => /^send$/i.test(normText4(el.textContent)));
+        const send = [...composer.querySelectorAll("button")].find((el2) => /^send$/i.test(normText4(el2.textContent)));
         if (!send) continue;
         setPanelPart(composer, "composer");
         setPanelPart(send, "send");
@@ -8475,34 +10697,34 @@
   function activityPanelLabelNodes() {
     const seen = /* @__PURE__ */ new Set();
     const collected = [];
-    const push = (el, panel) => {
-      if (!el || !panel || seen.has(el)) return;
-      seen.add(el);
-      collected.push({ node: el, panel });
+    const push = (el2, panel) => {
+      if (!el2 || !panel || seen.has(el2)) return;
+      seen.add(el2);
+      collected.push({ node: el2, panel });
     };
-    for (const el of document.querySelectorAll('h1,h2,h3,h4,[role="heading"]')) {
-      push(el, ACTIVITY_PANELS.get(normText4(el.textContent).toLowerCase()));
+    for (const el2 of document.querySelectorAll('h1,h2,h3,h4,[role="heading"]')) {
+      push(el2, ACTIVITY_PANELS.get(normText4(el2.textContent).toLowerCase()));
     }
-    for (const el of document.querySelectorAll("p,span,div,strong,b")) {
-      if (el.childElementCount === 0) push(el, ACTIVITY_PANELS.get(normText4(el.textContent).toLowerCase()));
+    for (const el2 of document.querySelectorAll("p,span,div,strong,b")) {
+      if (el2.childElementCount === 0) push(el2, ACTIVITY_PANELS.get(normText4(el2.textContent).toLowerCase()));
     }
     const haveBeforeId = new Set(collected.map((o) => o.panel));
     if (!haveBeforeId.has("current-action")) {
       const byId = pickRendered([...document.querySelectorAll('[id="current-action-panel"]')]);
       if (byId) {
-        const label4 = [...byId.querySelectorAll('h1,h2,h3,h4,[role="heading"],p,span,div,strong,b')].find((el) => el.childElementCount === 0 && normText4(el.textContent).length > 0 && normText4(el.textContent).length <= 40);
+        const label4 = [...byId.querySelectorAll('h1,h2,h3,h4,[role="heading"],p,span,div,strong,b')].find((el2) => el2.childElementCount === 0 && normText4(el2.textContent).length > 0 && normText4(el2.textContent).length <= 40);
         push(label4 || byId, "current-action");
       }
     }
     const have = new Set(collected.map((o) => o.panel));
     if (have.size < ACTIVITY_PANELS.size) {
-      for (const el of document.querySelectorAll("div,header,section,h2,h3,h4,span,p,button,a")) {
-        if (seen.has(el)) continue;
-        for (const n of el.childNodes) {
+      for (const el2 of document.querySelectorAll("div,header,section,h2,h3,h4,span,p,button,a")) {
+        if (seen.has(el2)) continue;
+        for (const n of el2.childNodes) {
           if (n.nodeType !== 3) continue;
           const panel = ACTIVITY_PANELS.get(normText4(n.textContent).toLowerCase());
           if (panel && !have.has(panel)) {
-            push(el, panel);
+            push(el2, panel);
             break;
           }
         }
@@ -8553,12 +10775,12 @@
   }
   var dailyBoostNode = null;
   var DAILY_BOOST = /^daily\s+xp\s+boost\b.*\+\s*\d+(?:\.\d+)?\s*%\s*xp/i;
-  function isDailyBoostText(el) {
-    return DAILY_BOOST.test(normText4(el.textContent).replace(/^[^a-z0-9]+/i, ""));
+  function isDailyBoostText(el2) {
+    return DAILY_BOOST.test(normText4(el2.textContent).replace(/^[^a-z0-9]+/i, ""));
   }
   function clearDailyBoost() {
-    document.querySelectorAll("[data-iw-skill-boost]").forEach((el) => {
-      delete el.dataset.iwSkillBoost;
+    document.querySelectorAll("[data-iw-skill-boost]").forEach((el2) => {
+      delete el2.dataset.iwSkillBoost;
     });
     dailyBoostNode = null;
   }
@@ -8573,7 +10795,7 @@
       while (row.parentElement && row.parentElement !== frame2) row = row.parentElement;
       if (row.parentElement !== frame2) continue;
       const matches = [...row.querySelectorAll("p, div, span")].filter(isDailyBoostText);
-      found = matches.find((el) => !matches.some((other) => other !== el && el.contains(other))) || null;
+      found = matches.find((el2) => !matches.some((other) => other !== el2 && el2.contains(other))) || null;
       if (found) break;
     }
     if (found === dailyBoostNode && found) return;
@@ -8621,8 +10843,8 @@
     clearGuildPanel(document.body);
     guildRoots = /* @__PURE__ */ new Set();
     mainNavResolution = null;
-    document.querySelectorAll("[data-iw-nav-link]").forEach((el) => {
-      el.remove();
+    document.querySelectorAll("[data-iw-nav-link]").forEach((el2) => {
+      el2.remove();
     });
     zoneBarResolutions = null;
     sectionFrameResolutions = null;
@@ -8633,41 +10855,41 @@
     marketSeen = /* @__PURE__ */ new Set();
     activityPanelResolutions = null;
     progressSamples = /* @__PURE__ */ new WeakMap();
-    document.querySelectorAll('[data-iw-panel-part="progress"]').forEach((el) => {
-      el.style.removeProperty("--iw-progress-duration");
+    document.querySelectorAll('[data-iw-panel-part="progress"]').forEach((el2) => {
+      el2.style.removeProperty("--iw-progress-duration");
     });
-    document.querySelectorAll("[data-iw-progress-reset]").forEach((el) => {
-      delete el.dataset.iwProgressReset;
+    document.querySelectorAll("[data-iw-progress-reset]").forEach((el2) => {
+      delete el2.dataset.iwProgressReset;
     });
-    document.querySelectorAll("[data-iw-ui]").forEach((el) => {
-      delete el.dataset.iwUi;
+    document.querySelectorAll("[data-iw-ui]").forEach((el2) => {
+      delete el2.dataset.iwUi;
     });
-    document.querySelectorAll("[data-iw-tab]").forEach((el) => {
-      delete el.dataset.iwTab;
+    document.querySelectorAll("[data-iw-tab]").forEach((el2) => {
+      delete el2.dataset.iwTab;
     });
-    document.querySelectorAll("[data-iw-state]").forEach((el) => {
-      delete el.dataset.iwState;
+    document.querySelectorAll("[data-iw-state]").forEach((el2) => {
+      delete el2.dataset.iwState;
     });
-    document.querySelectorAll("[data-iw-panel]").forEach((el) => {
-      delete el.dataset.iwPanel;
+    document.querySelectorAll("[data-iw-panel]").forEach((el2) => {
+      delete el2.dataset.iwPanel;
     });
-    document.querySelectorAll("[data-iw-panel-part]").forEach((el) => {
-      delete el.dataset.iwPanelPart;
+    document.querySelectorAll("[data-iw-panel-part]").forEach((el2) => {
+      delete el2.dataset.iwPanelPart;
     });
-    document.querySelectorAll("[data-iw-panel-header]").forEach((el) => {
-      delete el.dataset.iwPanelHeader;
+    document.querySelectorAll("[data-iw-panel-header]").forEach((el2) => {
+      delete el2.dataset.iwPanelHeader;
     });
-    document.querySelectorAll("[data-iw-zone-action]").forEach((el) => {
-      delete el.dataset.iwZoneAction;
+    document.querySelectorAll("[data-iw-zone-action]").forEach((el2) => {
+      delete el2.dataset.iwZoneAction;
     });
-    document.querySelectorAll("[data-iw-zone-link]").forEach((el) => {
-      delete el.dataset.iwZoneLink;
+    document.querySelectorAll("[data-iw-zone-link]").forEach((el2) => {
+      delete el2.dataset.iwZoneLink;
     });
-    document.querySelectorAll("[data-iw-boss]").forEach((el) => {
-      delete el.dataset.iwBoss;
+    document.querySelectorAll("[data-iw-boss]").forEach((el2) => {
+      delete el2.dataset.iwBoss;
     });
-    document.querySelectorAll("[data-iw-market]").forEach((el) => {
-      delete el.dataset.iwMarket;
+    document.querySelectorAll("[data-iw-market]").forEach((el2) => {
+      delete el2.dataset.iwMarket;
     });
   }
   function injectUIFoundationStyles() {
@@ -8676,6 +10898,7 @@
   function initUIFoundation() {
     injectUIFoundationStyles();
     on("iw:dom-flush", queueClassify);
+    on("iw:text-flush", (event) => guard("ui:raid-text", () => refreshRaidText(event.detail?.parents || [])));
     on("iw:skill-panel", (event) => {
       const panel = event.detail?.panel;
       if (!panel) return;
@@ -8765,16 +10988,16 @@
     "--iw-corner-filigree",
     "--iw-zone-separator"
   ];
-  var norm5 = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  var norm6 = (value) => String(value || "").replace(/\s+/g, " ").trim();
   var ZONE_SURFACE_DIR = "assets/header/zones";
   var ZONE_SURFACE_MAX = 34;
   var lastZoneNumber = null;
   function currentZoneNumber() {
-    let el = document.querySelector('[data-iw-ui="zone-title"]');
-    if (!el) {
-      el = [...document.querySelectorAll("div,span,p,strong")].find((n) => /^zone\s*\d+\s*:/i.test(norm5(n.textContent).replace(/^[^a-z0-9]+/i, "")));
+    let el2 = document.querySelector('[data-iw-ui="zone-title"]');
+    if (!el2) {
+      el2 = [...document.querySelectorAll("div,span,p,strong")].find((n) => /^zone\s*\d+\s*:/i.test(norm6(n.textContent).replace(/^[^a-z0-9]+/i, "")));
     }
-    const m = el && norm5(el.textContent).replace(/^[^a-z0-9]+/i, "").match(/^zone\s*(\d+)/i);
+    const m = el2 && norm6(el2.textContent).replace(/^[^a-z0-9]+/i, "").match(/^zone\s*(\d+)/i);
     if (m) lastZoneNumber = Number(m[1]);
     return lastZoneNumber;
   }
@@ -8819,22 +11042,22 @@
     }
     SkillsArtService.applyThemeVariables(html, visualTheme);
   }
-  function setRole5(el, role2) {
-    if (el && el.getAttribute(ROLE3) !== role2) el.setAttribute(ROLE3, role2);
-    return el;
+  function setRole5(el2, role2) {
+    if (el2 && el2.getAttribute(ROLE3) !== role2) el2.setAttribute(ROLE3, role2);
+    return el2;
   }
-  function setAssetVar(el, name, key) {
-    if (!el || !HEADER_ASSETS[key]) return;
-    el.style.setProperty(name, `url("${assetUrl(HEADER_ASSETS[key])}")`);
+  function setAssetVar(el2, name, key) {
+    if (!el2 || !HEADER_ASSETS[key]) return;
+    el2.style.setProperty(name, `url("${assetUrl(HEADER_ASSETS[key])}")`);
   }
   function applyHeaderVars(root) {
     setAssetVar(root, "--iw-header-crest", "headerCrest");
   }
-  function applyZoneVars(el) {
-    setAssetVar(el, "--iw-zone-scene", "headerSurface");
+  function applyZoneVars(el2) {
+    setAssetVar(el2, "--iw-zone-scene", "headerSurface");
   }
-  function isVisible(el) {
-    const rect = el.getBoundingClientRect?.();
+  function isVisible(el2) {
+    const rect = el2.getBoundingClientRect?.();
     return !!rect && (rect.width > 0 || rect.height > 0);
   }
   function pickVisible(candidates) {
@@ -8842,7 +11065,7 @@
   }
   function findLiveHeader() {
     const candidates = [...document.querySelectorAll("header")].filter((header) => {
-      const text = norm5(header.textContent);
+      const text = norm6(header.textContent);
       return /combat\s+lv\s*\d+/i.test(text) && /players\s+online\s*:\s*\d+/i.test(text) && /atk\s*\d+.*def\s*\d+.*hp\s*\d+/i.test(text);
     });
     return pickVisible(candidates);
@@ -8866,22 +11089,22 @@
   }
   function classifyProfile(layout) {
     const name = layout.querySelector("h1.header-player-name, h1");
-    const meta = [...layout.querySelectorAll("p,span,div")].find((el) => /combat\s+lv\s*\d+.*zone\s*\d+\s*:/i.test(norm5(el.textContent)) && el.childElementCount <= 1);
-    const online = [...layout.querySelectorAll("button,p,span,div")].find((el) => /^\s*players\s+online\s*:\s*\d+/i.test(norm5(el.textContent)) && el.childElementCount <= 1);
+    const meta = [...layout.querySelectorAll("p,span,div")].find((el2) => /combat\s+lv\s*\d+.*zone\s*\d+\s*:/i.test(norm6(el2.textContent)) && el2.childElementCount <= 1);
+    const online = [...layout.querySelectorAll("button,p,span,div")].find((el2) => /^\s*players\s+online\s*:\s*\d+/i.test(norm6(el2.textContent)) && el2.childElementCount <= 1);
     const profile = name ? name.closest(".min-w-0.overflow-hidden") || directChildContaining(layout, name) : null;
     if (!profile) return { profile: null, region: null };
     setRole5(profile, "profile");
     if (name) setRole5(name, "profile-name");
     if (meta) setRole5(meta, "profile-meta");
     if (online) setRole5(online, "profile-online");
-    const brand = [...profile.children].find((el) => /^idleworlds$/i.test(norm5(el.textContent)));
+    const brand = [...profile.children].find((el2) => /^idleworlds$/i.test(norm6(el2.textContent)));
     if (brand) setRole5(brand, "brand");
     const children = [...profile.children];
     const nameIndex = name ? children.indexOf(name) : -1;
     const metaIndex = meta ? children.indexOf(meta) : -1;
     if (nameIndex >= 0 && metaIndex > nameIndex + 1) {
       for (let i = nameIndex + 1; i < metaIndex; i += 1) {
-        if (norm5(children[i].textContent)) {
+        if (norm6(children[i].textContent)) {
           setRole5(children[i], "profile-title");
           break;
         }
@@ -8897,8 +11120,8 @@
     let utilities = region?.querySelector(":scope > div:has(button.header-icon-btn)") || layout.querySelector("div:has(> button.header-icon-btn)");
     if (!utilities) {
       utilities = [...layout.querySelectorAll("div")].find((div) => {
-        const buttons = [...div.children].filter((el) => el.tagName === "BUTTON");
-        return buttons.length >= 3 && buttons.length === div.childElementCount && buttons.every((btn) => norm5(btn.textContent).length <= 3);
+        const buttons = [...div.children].filter((el2) => el2.tagName === "BUTTON");
+        return buttons.length >= 3 && buttons.length === div.childElementCount && buttons.every((btn) => norm6(btn.textContent).length <= 3);
       }) || null;
     }
     if (!utilities) return null;
@@ -8915,12 +11138,12 @@
     return "other";
   }
   function classifyStatus(layout, region) {
-    const statsAnchor = [...layout.querySelectorAll("button,div")].find((el) => /atk\s*\d+.*def\s*\d+.*hp\s*\d+/i.test(norm5(el.textContent)) && el.childElementCount <= 1);
-    let grid = statsAnchor?.closest(".grid.grid-cols-2") || [...layout.children].find((el) => el !== region && el.querySelector?.(".stat-chip")) || null;
+    const statsAnchor = [...layout.querySelectorAll("button,div")].find((el2) => /atk\s*\d+.*def\s*\d+.*hp\s*\d+/i.test(norm6(el2.textContent)) && el2.childElementCount <= 1);
+    let grid = statsAnchor?.closest(".grid.grid-cols-2") || [...layout.children].find((el2) => el2 !== region && el2.querySelector?.(".stat-chip")) || null;
     if (!grid && statsAnchor) {
       let cur = statsAnchor.parentElement;
       for (let depth = 0; cur && cur !== layout && cur !== region && depth < 4; depth += 1, cur = cur.parentElement) {
-        const cards = [...cur.children].filter((el) => el.matches?.(".stat-chip,button,div"));
+        const cards = [...cur.children].filter((el2) => el2.matches?.(".stat-chip,button,div"));
         if (cards.length >= 3 && cards.includes(directChildContaining(cur, statsAnchor))) {
           grid = cur;
           break;
@@ -8938,7 +11161,7 @@
       setRole5(card, "status-card");
       const cardIndex = String(index + 1);
       if (card.dataset.iwHeaderCard !== cardIndex) card.dataset.iwHeaderCard = cardIndex;
-      const kind2 = statKind(norm5(card.textContent));
+      const kind2 = statKind(norm6(card.textContent));
       if (card.dataset.iwHeaderStat !== kind2) card.dataset.iwHeaderStat = kind2;
     });
   }
@@ -8976,7 +11199,7 @@
       let candidate = shell.nextElementSibling;
       while (candidate && candidate.matches("script,style")) candidate = candidate.nextElementSibling;
       if (!candidate) continue;
-      const text = norm5(candidate.textContent);
+      const text = norm6(candidate.textContent);
       if (!text || text.length > 260 || /zone\s*\d+\s*:/i.test(text)) continue;
       return candidate;
     }
@@ -9013,15 +11236,15 @@
     lastZoneNumber = null;
     delete document.documentElement.dataset.iwZoneTheme;
     SkillsArtService.clearThemeVariables(document.documentElement);
-    document.querySelectorAll(`[${ROLE3}]`).forEach((el) => {
-      el.removeAttribute(ROLE3);
-      delete el.dataset.iwHeaderCard;
-      delete el.dataset.iwHeaderStat;
-      delete el.dataset.iwZone;
+    document.querySelectorAll(`[${ROLE3}]`).forEach((el2) => {
+      el2.removeAttribute(ROLE3);
+      delete el2.dataset.iwHeaderCard;
+      delete el2.dataset.iwHeaderStat;
+      delete el2.dataset.iwZone;
     });
-    document.querySelectorAll(".fs-header-crest").forEach((el) => el.remove());
-    document.querySelectorAll("*").forEach((el) => {
-      ASSET_VARS.forEach((name) => el.style?.removeProperty(name));
+    document.querySelectorAll(".fs-header-crest").forEach((el2) => el2.remove());
+    document.querySelectorAll("*").forEach((el2) => {
+      ASSET_VARS.forEach((name) => el2.style?.removeProperty(name));
     });
   }
   function initHeaderRenderer() {
@@ -9085,44 +11308,44 @@
     const r = parseInt(m[1], 10), g = parseInt(m[2], 10), b = parseInt(m[3], 10);
     return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
   }
-  function ownedTree(el) {
-    return el.closest?.(".fs-inv-row, .fs-skill-header, .iw-tip") || null;
+  function ownedTree(el2) {
+    return el2.closest?.(".fs-inv-row, .fs-skill-header, .iw-tip") || null;
   }
-  function shouldSkip(el) {
-    if (!el || el.nodeType !== 1) return true;
-    if (["SCRIPT", "STYLE", "LINK", "META", "HEAD", "HTML"].includes(el.tagName)) return true;
-    if (el.classList.contains("fs-skill-wrapper")) return true;
-    if (ownedTree(el)) return true;
+  function shouldSkip(el2) {
+    if (!el2 || el2.nodeType !== 1) return true;
+    if (["SCRIPT", "STYLE", "LINK", "META", "HEAD", "HTML"].includes(el2.tagName)) return true;
+    if (el2.classList.contains("fs-skill-wrapper")) return true;
+    if (ownedTree(el2)) return true;
     return false;
   }
-  function isSurfaceCandidate(el) {
-    if (el === document.body) return true;
-    if (el.matches?.(SURFACE_SELECTOR)) return true;
-    const parent = el.parentElement;
+  function isSurfaceCandidate(el2) {
+    if (el2 === document.body) return true;
+    if (el2.matches?.(SURFACE_SELECTOR)) return true;
+    const parent = el2.parentElement;
     if (parent === document.body) return true;
-    if (parent?.parentElement === document.body && el.children.length > 1) return true;
+    if (parent?.parentElement === document.body && el2.children.length > 1) return true;
     return false;
   }
-  function setImportant(el, prop, value) {
-    return styleOwner.set(el, prop, value, "important");
+  function setImportant(el2, prop, value) {
+    return styleOwner.set(el2, prop, value, "important");
   }
-  function paintElement(el) {
-    if (shouldSkip(el) || !isSurfaceCandidate(el)) return false;
+  function paintElement(el2) {
+    if (shouldSkip(el2) || !isSurfaceCandidate(el2)) return false;
     let changed = false;
-    const style = getComputedStyle(el);
+    const style = getComputedStyle(el2);
     const bg = normHex(style.backgroundColor);
     if (bg && GAME_NAVIES.has(bg)) {
-      changed = setImportant(el, "background-color", ourColour(bg)) || changed;
+      changed = setImportant(el2, "background-color", ourColour(bg)) || changed;
     }
     const sides = ["borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor"];
     const sideProps = ["border-top-color", "border-right-color", "border-bottom-color", "border-left-color"];
     for (let i = 0; i < sides.length; i += 1) {
       const hex = normHex(style[sides[i]]);
       if (hex && GAME_NAVIES.has(hex)) {
-        changed = setImportant(el, sideProps[i], "#342D20") || changed;
+        changed = setImportant(el2, sideProps[i], "#342D20") || changed;
       }
     }
-    if (changed && el.dataset.iwPainted !== "1") el.dataset.iwPainted = "1";
+    if (changed && el2.dataset.iwPainted !== "1") el2.dataset.iwPainted = "1";
     return changed;
   }
   function paintBackground(root = document.body) {
@@ -9142,8 +11365,8 @@
   }
   function clearBackgroundPaint() {
     styleOwner.restoreAll();
-    document.querySelectorAll('[data-iw-painted="1"]').forEach((el) => {
-      delete el.dataset.iwPainted;
+    document.querySelectorAll('[data-iw-painted="1"]').forEach((el2) => {
+      delete el2.dataset.iwPainted;
     });
   }
 
@@ -9182,21 +11405,21 @@
   var tagged = /* @__PURE__ */ new Set();
   var popupHosts = /* @__PURE__ */ new Map();
   var normText5 = (value) => String(value || "").replace(/\s+/g, " ").trim();
-  function setData3(el, key, value) {
-    if (el?.dataset && el.dataset[key] !== value) el.dataset[key] = value;
+  function setData3(el2, key, value) {
+    if (el2?.dataset && el2.dataset[key] !== value) el2.dataset[key] = value;
   }
   function clearPlayerStatsSurface(surface) {
     if (!surface) return;
     if (surface.dataset?.iwOverlayContent === PLAYER_STATS) delete surface.dataset.iwOverlayContent;
-    surface.querySelectorAll?.("[data-iw-overlay-role]").forEach((el) => {
-      if ([STAT_LABEL, STAT_VALUE].includes(el.dataset.iwOverlayRole)) delete el.dataset.iwOverlayRole;
+    surface.querySelectorAll?.("[data-iw-overlay-role]").forEach((el2) => {
+      if ([STAT_LABEL, STAT_VALUE].includes(el2.dataset.iwOverlayRole)) delete el2.dataset.iwOverlayRole;
     });
   }
   function findPlayerStatsSurface(card) {
     if (!card) return null;
     for (const surface of card.querySelectorAll(".compact-panel")) {
       const children = [...surface.children];
-      const heading = children.find((el) => normText5(el.textContent).toLowerCase() === "lifetime stats");
+      const heading = children.find((el2) => normText5(el2.textContent).toLowerCase() === "lifetime stats");
       if (!heading) continue;
       const rows = children.filter((row) => {
         const cells = [...row.children];
@@ -9223,32 +11446,32 @@
       keep.add(label4);
       keep.add(value);
     }
-    match.surface.querySelectorAll("[data-iw-overlay-role]").forEach((el) => {
-      if (!keep.has(el) && [STAT_LABEL, STAT_VALUE].includes(el.dataset.iwOverlayRole)) delete el.dataset.iwOverlayRole;
+    match.surface.querySelectorAll("[data-iw-overlay-role]").forEach((el2) => {
+      if (!keep.has(el2) && [STAT_LABEL, STAT_VALUE].includes(el2.dataset.iwOverlayRole)) delete el2.dataset.iwOverlayRole;
     });
   }
-  function visible(el) {
-    if (!el || el.nodeType !== 1) return false;
-    const cs = getComputedStyle(el);
+  function visible(el2) {
+    if (!el2 || el2.nodeType !== 1) return false;
+    const cs = getComputedStyle(el2);
     if (cs.display === "none" || cs.visibility === "hidden" || Number(cs.opacity) === 0) return false;
-    const r = el.getBoundingClientRect();
+    const r = el2.getBoundingClientRect();
     return r.width > 8 && r.height > 8;
   }
-  function area(el) {
-    const r = el.getBoundingClientRect();
+  function area(el2) {
+    const r = el2.getBoundingClientRect();
     return r.width * r.height;
   }
-  function isScrim(el) {
-    const cs = getComputedStyle(el);
+  function isScrim(el2) {
+    const cs = getComputedStyle(el2);
     if (cs.position !== "fixed") return false;
     const z = parseInt(cs.zIndex, 10);
     if (!Number.isFinite(z) || z < 20) return false;
-    const r = el.getBoundingClientRect();
+    const r = el2.getBoundingClientRect();
     const coversW = r.width >= innerWidth * 0.85 && r.left <= innerWidth * 0.15;
     const coversH = r.height >= innerHeight * 0.85 && r.top <= innerHeight * 0.15;
     if (!coversW || !coversH) return false;
-    if (!visible(el)) return false;
-    if (!el.querySelector("*")) return false;
+    if (!visible(el2)) return false;
+    if (!el2.querySelector("*")) return false;
     const bf = `${cs.backdropFilter || ""} ${cs.webkitBackdropFilter || ""}`;
     if (/blur/.test(bf)) return true;
     const m = /rgba?\(([^)]+)\)/.exec(cs.backgroundColor || "");
@@ -9284,12 +11507,12 @@
       classifyOverlayContent(card);
     }
   }
-  function untag(el) {
-    if (el.dataset && el.dataset.iwOverlay) delete el.dataset.iwOverlay;
+  function untag(el2) {
+    if (el2.dataset && el2.dataset.iwOverlay) delete el2.dataset.iwOverlay;
   }
-  function directChildUnder3(frame2, el) {
-    if (!frame2 || !el || frame2 === el) return null;
-    let node2 = el;
+  function directChildUnder3(frame2, el2) {
+    if (!frame2 || !el2 || frame2 === el2) return null;
+    let node2 = el2;
     while (node2?.parentElement && node2.parentElement !== frame2) node2 = node2.parentElement;
     return node2?.parentElement === frame2 ? node2 : null;
   }
@@ -9333,9 +11556,9 @@
     if (!frame2?.matches?.('[data-iw-inventory-root="1"]')) return false;
     const parent = popup.parentElement;
     if (!parent) return false;
-    const trigger = [...parent.children].find((el) => {
-      if (el === popup || !el.matches?.('button, [role="button"]')) return false;
-      const label4 = `${el.getAttribute("aria-label") || ""} ${el.getAttribute("title") || ""}`;
+    const trigger = [...parent.children].find((el2) => {
+      if (el2 === popup || !el2.matches?.('button, [role="button"]')) return false;
+      const label4 = `${el2.getAttribute("aria-label") || ""} ${el2.getAttribute("title") || ""}`;
       return /filter inventory/i.test(label4);
     });
     if (!trigger) return false;
@@ -9380,24 +11603,24 @@
   }
   function frameOverlays() {
     try {
-      for (const el of [...tagged]) {
-        if (!el.isConnected) {
-          if (el.dataset?.iwOverlay === POPUP) clearPopupTag(el);
-          else tagged.delete(el);
+      for (const el2 of [...tagged]) {
+        if (!el2.isConnected) {
+          if (el2.dataset?.iwOverlay === POPUP) clearPopupTag(el2);
+          else tagged.delete(el2);
           continue;
         }
-        if (el.dataset.iwOverlay === SCRIM && !isScrim(el)) {
-          untag(el);
-          tagged.delete(el);
+        if (el2.dataset.iwOverlay === SCRIM && !isScrim(el2)) {
+          untag(el2);
+          tagged.delete(el2);
           continue;
         }
-        if (el.dataset.iwOverlay === POPUP) {
-          const frame2 = classifyContainedPopup(el);
-          if (!frame2) clearPopupTag(el);
-          else tagPopup(el, frame2);
+        if (el2.dataset.iwOverlay === POPUP) {
+          const frame2 = classifyContainedPopup(el2);
+          if (!frame2) clearPopupTag(el2);
+          else tagPopup(el2, frame2);
           continue;
         }
-        if (el.dataset.iwOverlay === PANEL) classifyOverlayContent(el);
+        if (el2.dataset.iwOverlay === PANEL) classifyOverlayContent(el2);
       }
       for (const popup of popupCandidates()) {
         if (popup.dataset?.iwOverlay === POPUP) continue;
@@ -9408,12 +11631,12 @@
       const candidates = document.querySelectorAll(
         '[class*="fixed"],[style*="position: fixed"],[style*="position:fixed"]'
       );
-      for (const el of candidates) {
-        if (seen.has(el)) continue;
-        seen.add(el);
-        if (el.dataset.iwOverlay === SCRIM) continue;
-        if (el.closest(SKIN_OWNED)) continue;
-        if (isScrim(el)) tagScrim(el);
+      for (const el2 of candidates) {
+        if (seen.has(el2)) continue;
+        seen.add(el2);
+        if (el2.dataset.iwOverlay === SCRIM) continue;
+        if (el2.closest(SKIN_OWNED)) continue;
+        if (isScrim(el2)) tagScrim(el2);
       }
     } catch (err) {
       warnOnce("overlay:frame", err);
@@ -9421,17 +11644,17 @@
   }
   function clearOverlayFramer() {
     document.querySelectorAll("[data-iw-overlay]").forEach(untag);
-    document.querySelectorAll(`[${OVERLAY_HOST_ATTR}]`).forEach((el) => el.removeAttribute(OVERLAY_HOST_ATTR));
+    document.querySelectorAll(`[${OVERLAY_HOST_ATTR}]`).forEach((el2) => el2.removeAttribute(OVERLAY_HOST_ATTR));
     document.querySelectorAll('[data-iw-overlay-content="player-stats"]').forEach(clearPlayerStatsSurface);
-    document.querySelectorAll("[data-iw-overlay-role]").forEach((el) => {
-      if ([STAT_LABEL, STAT_VALUE].includes(el.dataset.iwOverlayRole)) delete el.dataset.iwOverlayRole;
+    document.querySelectorAll("[data-iw-overlay-role]").forEach((el2) => {
+      if ([STAT_LABEL, STAT_VALUE].includes(el2.dataset.iwOverlayRole)) delete el2.dataset.iwOverlayRole;
     });
     tagged = /* @__PURE__ */ new Set();
     popupHosts = /* @__PURE__ */ new Map();
   }
 
   // src/styles/base.css
-  var base_default = '@font-face{font-family:"Cinzel";font-style:normal;font-weight:600 700;font-display:swap;src:url(../assets/fonts/cinzel-variable.woff2) format("woff2")}@font-face{font-family:"Barlow";font-style:normal;font-weight:400;font-display:swap;src:url(../assets/fonts/barlow-400.woff2) format("woff2")}@font-face{font-family:"Barlow";font-style:normal;font-weight:500;font-display:swap;src:url(../assets/fonts/barlow-500.woff2) format("woff2")}@font-face{font-family:"Barlow";font-style:normal;font-weight:600;font-display:swap;src:url(../assets/fonts/barlow-600.woff2) format("woff2")}@font-face{font-family:"Barlow";font-style:normal;font-weight:700;font-display:swap;src:url(../assets/fonts/barlow-700.woff2) format("woff2")}@font-face{font-family:"Crimson Text";font-style:italic;font-weight:400;font-display:swap;src:url(../assets/fonts/crimson-text-italic.woff2) format("woff2")}:root{--iw-ink-950: #070806;--iw-ink-900: #0B0C0A;--iw-ink-850: #10100D;--iw-ink-800: #14130F;--iw-ink-750: #191711;--iw-ink-700: #1E1B15;--iw-ink-600: #29251C;--iw-th-accent: #D4AD63;--iw-th-accent-dim: #9D8458;--iw-th-edge: #6B4F28;--iw-th-hairline: #9B7437;--iw-th-hairline-hi: #D09A4B;--iw-th-bracket: #C9A24D;--iw-th-bracket-dim: #8A7038;--iw-th-brass: #8A6A2C;--iw-th-rule: #806337;--iw-th-rule-soft: #3A2F18;--iw-th-plate: #0B0C0E;--iw-th-cta: #B64619;--iw-th-cta-hi: #D15A22;--iw-th-ground-a: #171713;--iw-th-ground-b: #0D0E0C;--iw-th-ground-wash: transparent;--iw-th-glow: rgba(226,164,72,.08);--iw-th-edge-mid: #4A3820;--iw-th-edge-soft: #332B20;--iw-th-edge-faint: #29251D;--iw-line: #342D20;--iw-line-hi: #58482B;--iw-line-hot: var(--iw-th-rule);--iw-gold: var(--iw-th-accent);--iw-gold-dim: var(--iw-th-accent-dim);--iw-ember: var(--iw-th-cta);--iw-ember-hi: var(--iw-th-cta-hi);--iw-text: #DDD6C6;--iw-text-hi:#F0E8D6;--iw-dim: #938A79;--iw-faint: #666052;--iw-good: #82B88A;--iw-bad: #D27171;--iw-info: #75A8C8;--iw-t-common: #B9B4A8;--iw-t-uncommon: #6FBF73;--iw-t-rare: #5B9BD5;--iw-t-epic: #B98FE0;--iw-t-legendary: #D98A3A;--iw-t-mythic: #E06666;--iw-font-head: "Cinzel", Georgia, serif;--iw-font-ui: "Barlow", system-ui, -apple-system, sans-serif;--iw-font-flav: "Crimson Text", Georgia, serif;--iw-r-panel: 3px;--iw-r-control: 2px;--iw-r-slot: 2px;--iw-r: var(--iw-r-control);--iw-r-sm: var(--iw-r-slot);--iw-action-tick: 1s;--background: var(--iw-ink-900) !important;--foreground: var(--iw-text) !important;--card: var(--iw-ink-800) !important;--card-foreground: var(--iw-text) !important;--popover: var(--iw-ink-800) !important;--popover-foreground: var(--iw-text) !important;--panel-bg: var(--iw-ink-800) !important;--panel-border: var(--iw-line) !important;--surface-bg: var(--iw-ink-700) !important;--surface-border: var(--iw-line) !important;--primary: var(--iw-ember) !important;--primary-foreground: #FFEAD1 !important;--accent: var(--iw-ember) !important;--accent-foreground: var(--iw-text-hi) !important;--ring: var(--iw-gold-dim)!important;--border: var(--iw-line) !important;--input: var(--iw-ink-850) !important;--muted: var(--iw-ink-700) !important;--muted-foreground: var(--iw-dim) !important;--sidebar: var(--iw-ink-800) !important;--sidebar-foreground: var(--iw-text) !important;--sidebar-border: var(--iw-line) !important;--sidebar-accent: var(--iw-ink-700) !important}:root{--iw-zone-atlas: url(../assets/skills_ui_atlas.webp);--iw-corner-filigree: url(../assets/inventory/panel_corners.webp);--iw-zone-separator: url(../assets/inventory/separator_flourish.webp)}:root[data-iw-zone-theme=glacial]{--iw-th-accent: #9FCBE6;--iw-th-accent-dim: #7C9DB4;--iw-th-edge: #45657D;--iw-th-hairline: #6E96B4;--iw-th-hairline-hi: #A7CFE6;--iw-th-bracket: #A9CADE;--iw-th-bracket-dim: #6E8CA0;--iw-th-brass: #5C7E96;--iw-th-rule: #5E86A0;--iw-th-rule-soft: #223540;--iw-th-plate: #0A0E12;--iw-th-cta: #356E9A;--iw-th-cta-hi: #4E90BE;--iw-th-ground-a: #14171A;--iw-th-ground-b: #0B0D10;--iw-th-ground-wash: rgba(126,164,192,.055);--iw-th-glow: rgba(150,200,230,.10)}:root[data-iw-zone-theme=infernal]{--iw-th-accent: #E0762E;--iw-th-accent-dim: #B5673A;--iw-th-edge: #6A2A18;--iw-th-hairline: #8A3B22;--iw-th-hairline-hi: #D6702E;--iw-th-bracket: #D2782E;--iw-th-bracket-dim: #8A4326;--iw-th-brass: #7A3A1E;--iw-th-rule: #7E3A22;--iw-th-rule-soft: #2A1109;--iw-th-plate: #0C0705;--iw-th-cta: #B23A16;--iw-th-cta-hi: #D0602A;--iw-th-ground-a: #17110E;--iw-th-ground-b: #0D0908;--iw-th-ground-wash: rgba(200,80,30,.055);--iw-th-glow: rgba(224,118,46,.11)}:root[data-iw-zone-theme=verdant]{--iw-th-accent: #82BE68;--iw-th-accent-dim: #7C9463;--iw-th-edge: #3B5A2E;--iw-th-hairline: #5E7E44;--iw-th-hairline-hi: #97C57A;--iw-th-bracket: #8FBE6E;--iw-th-bracket-dim: #5E7E44;--iw-th-brass: #4E6A2E;--iw-th-rule: #5E7E44;--iw-th-rule-soft: #202A16;--iw-th-plate: #080B07;--iw-th-cta: #4E7A30;--iw-th-cta-hi: #6A9C42;--iw-th-ground-a: #131711;--iw-th-ground-b: #0A0D08;--iw-th-ground-wash: rgba(126,176,94,.05);--iw-th-glow: rgba(150,200,110,.09)}:root[data-iw-zone-theme=forged-metal]{--iw-th-accent: #A6BBCC;--iw-th-accent-dim: #8593A2;--iw-th-edge: #3E4A57;--iw-th-hairline: #6E8092;--iw-th-hairline-hi: #B7C5CF;--iw-th-bracket: #A6B8C6;--iw-th-bracket-dim: #6E8092;--iw-th-brass: #5A6675;--iw-th-rule: #6E8092;--iw-th-rule-soft: #232A31;--iw-th-plate: #090B0E;--iw-th-cta: #45607A;--iw-th-cta-hi: #5E82A2;--iw-th-ground-a: #14161A;--iw-th-ground-b: #0B0D10;--iw-th-ground-wash: rgba(150,175,200,.045);--iw-th-glow: rgba(180,200,220,.08)}:root[data-iw-zone-theme=celestial]{--iw-th-accent: #E7C87A;--iw-th-accent-dim: #B7A574;--iw-th-edge: #5A5330;--iw-th-hairline: #B99A55;--iw-th-hairline-hi: #EBD08A;--iw-th-bracket: #E2C170;--iw-th-bracket-dim: #9A8340;--iw-th-brass: #7A6A38;--iw-th-rule: #8F7A45;--iw-th-rule-soft: #2A2718;--iw-th-plate: #0A0B0E;--iw-th-cta: #9A6E2E;--iw-th-cta-hi: #C79A4A;--iw-th-ground-a: #16150F;--iw-th-ground-b: #0C0C0A;--iw-th-ground-wash: rgba(200,180,110,.05);--iw-th-glow: rgba(230,200,130,.10)}:root[data-iw-zone-theme=voidborn]{--iw-th-accent: #A97FD8;--iw-th-accent-dim: #8C74A6;--iw-th-edge: #46345C;--iw-th-hairline: #6E4F92;--iw-th-hairline-hi: #B48EDC;--iw-th-bracket: #AE86D6;--iw-th-bracket-dim: #6E4F92;--iw-th-brass: #573C6B;--iw-th-rule: #6E4F92;--iw-th-rule-soft: #251A33;--iw-th-plate: #0A0710;--iw-th-cta: #6A3CAA;--iw-th-cta-hi: #8E63C8;--iw-th-ground-a: #16121C;--iw-th-ground-b: #0C0910;--iw-th-ground-wash: rgba(150,110,210,.055);--iw-th-glow: rgba(169,127,216,.10)}:root[data-iw-zone-theme=runic-arcane]{--iw-th-accent: #5CC6B4;--iw-th-accent-dim: #6E9E96;--iw-th-edge: #234C46;--iw-th-hairline: #3E7E72;--iw-th-hairline-hi: #72B7A9;--iw-th-bracket: #5FC6B2;--iw-th-bracket-dim: #3E7E72;--iw-th-brass: #2E5A52;--iw-th-rule: #3E7E72;--iw-th-rule-soft: #17302C;--iw-th-plate: #070C0B;--iw-th-cta: #26786A;--iw-th-cta-hi: #3E9E8C;--iw-th-ground-a: #101715;--iw-th-ground-b: #080D0C;--iw-th-ground-wash: rgba(90,200,180,.05);--iw-th-glow: rgba(110,200,185,.09)}:root[data-iw-zone-theme=lunar-spectral]{--iw-th-accent: #9FA8D6;--iw-th-accent-dim: #8489AC;--iw-th-edge: #2C3150;--iw-th-hairline: #5A5F86;--iw-th-hairline-hi: #A6ADCD;--iw-th-bracket: #A4ACD6;--iw-th-bracket-dim: #5A5F86;--iw-th-brass: #45496B;--iw-th-rule: #5A5F86;--iw-th-rule-soft: #1E2033;--iw-th-plate: #08090F;--iw-th-cta: #4A4F8A;--iw-th-cta-hi: #6E74AE;--iw-th-ground-a: #14151C;--iw-th-ground-b: #0A0B10;--iw-th-ground-wash: rgba(150,155,210,.05);--iw-th-glow: rgba(159,168,214,.09)}:root[data-iw-zone-theme=tempest-oceanic]{--iw-th-accent: #4FC7D8;--iw-th-accent-dim: #5E9EA8;--iw-th-edge: #123C48;--iw-th-hairline: #2E6E7C;--iw-th-hairline-hi: #6FC0CE;--iw-th-bracket: #52C7D6;--iw-th-bracket-dim: #2E6E7C;--iw-th-brass: #1E5C68;--iw-th-rule: #2E6E7C;--iw-th-rule-soft: #122A31;--iw-th-plate: #060E11;--iw-th-cta: #227483;--iw-th-cta-hi: #3EA6B8;--iw-th-ground-a: #0F171A;--iw-th-ground-b: #070D0F;--iw-th-ground-wash: rgba(80,190,210,.05);--iw-th-glow: rgba(90,200,220,.10)}:root[data-iw-zone-theme]{--iw-th-edge-mid: color-mix(in srgb, var(--iw-th-edge) 66%, var(--iw-ink-850));--iw-th-edge-soft: color-mix(in srgb, var(--iw-th-edge) 42%, var(--iw-ink-850));--iw-th-edge-faint: color-mix(in srgb, var(--iw-th-edge) 26%, var(--iw-ink-850));--iw-line: var(--iw-th-edge-soft);--iw-line-hi: color-mix(in srgb, var(--iw-th-edge) 84%, var(--iw-ink-850))}html,body{background-color:var(--iw-ink-900)!important;color:var(--iw-text)!important;font-family:var(--iw-font-ui)!important}body{background-image:radial-gradient(1200px 520px at 50% -140px,rgba(124,91,42,.10),transparent 68%),linear-gradient(180deg,rgba(255,255,255,.012),transparent 220px)!important;background-attachment:fixed!important}h1,h2,h3{font-family:var(--iw-font-head)!important;letter-spacing:.025em}h1:not(:where([data-iw-header=profile-name])),h2,h3{color:var(--iw-text-hi)!important}.compact-panel,[class~=compact-panel]{border-color:var(--iw-th-edge)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,0.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;color:var(--iw-text)!important;border-radius:var(--iw-r-panel)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.6),inset 0 1px 0 var(--iw-th-glow)!important}.compact-row,[class*=item-row]{border-color:var(--iw-th-edge)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,0.02),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;color:var(--iw-text)!important}[class*=rounded-3xl],[class*=rounded-2xl],[class*=rounded-xl],[class*=rounded-lg],[class*=rounded-md]{border-radius:var(--iw-r-panel)!important}button:not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([class*=decoration-dotted]):not([data-iw-order-handle]):not([data-fs-inv]):not([data-iw-header=utility-button]),[role=button]:not(.iw-item-ref):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([class*=decoration-dotted]):not([data-iw-order-handle]):not([data-fs-inv]){border-radius:var(--iw-r-control)!important}button:not(:where([data-iw-header=profile-name] button)),[role=button]:not(:where([data-iw-header=profile-name] *)){background-color:var(--iw-ink-750);color:var(--iw-text)}[class*="hover:underline"]{background-color:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;border-radius:0!important}button:not(.iw-item-ref):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-ui=section-title]):not([data-iw-order-handle]),[role=button]:not(.iw-item-ref):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-ui=section-title]):not([data-iw-order-handle]),input,select,textarea{font-family:var(--iw-font-ui)!important}button:not(.iw-item-ref):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([class*=decoration-dotted]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-order-handle]):not([data-fs-inv]):not([data-iw-zone-link]),[role=button]:not(.iw-item-ref):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([class*=decoration-dotted]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-order-handle]):not([data-fs-inv]):not([data-iw-zone-link]){box-shadow:inset 0 1px 0 rgba(255,255,255,.028),0 1px 0 rgba(0,0,0,.65)!important;transition:color .12s ease,border-color .12s ease,background-color .12s ease,filter .12s ease!important}button:not(.iw-item-ref):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-order-handle]):not([data-fs-inv]):hover:not(:disabled),[role=button]:not(.iw-item-ref):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-order-handle]):not([data-fs-inv]):hover{filter:brightness(1.08)}button:not(.iw-item-ref):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-order-handle]):focus-visible,[role=button]:not(.iw-item-ref):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-order-handle]):focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--iw-gold)!important;outline-offset:2px!important}input:not([type=checkbox]):not([type=radio]),select,textarea{border-radius:var(--iw-r-control)!important;border-color:var(--iw-line)!important;background:linear-gradient(180deg,#090C0D,#0C0E0D)!important;color:var(--iw-text)!important;box-shadow:inset 0 1px 4px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.018)!important}input::placeholder,textarea::placeholder{color:var(--iw-faint)!important}nav button,nav [role=button],header button:not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-header=utility-button]),[class*=tab] button{border-radius:var(--iw-r-control)!important;font-weight:700!important}hr{border-color:var(--iw-line)!important}.iw-ico{flex:none;display:block;position:relative;background-repeat:no-repeat;background-color:#090806;border:1px solid var(--iw-line-hi);border-radius:var(--iw-r-slot);box-shadow:inset 0 0 0 1px rgba(0,0,0,.45)}.iw-icon-badge{position:absolute;right:-3px;bottom:-3px;font-family:var(--iw-font-ui);font-size:9px;font-weight:700;line-height:1;padding:2px 3px;border-radius:1px;background:var(--iw-ink-950);border:1px solid var(--iw-ember);color:var(--iw-gold);font-variant-numeric:tabular-nums;pointer-events:none;z-index:3}.iw-icon-badge--sprite{right:-5px;bottom:-5px;width:22px;height:22px;padding:0;border:0;border-radius:0;background-color:transparent;color:transparent;font-size:0;line-height:0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.85))}.tier-common{color:var(--iw-t-common)}.tier-uncommon{color:var(--iw-t-uncommon)}.tier-rare{color:var(--iw-t-rare)}.tier-epic{color:var(--iw-t-epic)}.tier-legendary{color:var(--iw-t-legendary)}.tier-mythic{color:var(--iw-t-mythic)}.iw-btn{font-family:var(--iw-font-ui);font-size:12px;font-weight:700;letter-spacing:.055em;text-transform:uppercase;padding:7px 14px;min-width:76px;border-radius:var(--iw-r-control);cursor:pointer;border:1px solid var(--iw-line-hi);background:linear-gradient(180deg,#242018,#17140F);color:var(--iw-text);transition:background .13s,border-color .13s,color .13s;align-self:center;height:auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 0 #000}.iw-btn:hover{background:linear-gradient(180deg,#2B261C,#1A1711);border-color:var(--iw-gold-dim);color:var(--iw-gold)}.iw-btn--primary{background:linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 60%,#000));border-color:var(--iw-th-cta-hi);color:#FFEAD1}.iw-btn--primary:hover{background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 66%,#000));border-color:var(--iw-ember-hi);color:#fff}.iw-btn--disabled,.iw-btn:disabled{background:#100F0C;border-color:var(--iw-th-edge-faint);color:var(--iw-faint);cursor:not-allowed;box-shadow:none}.iw-xp{display:flex;flex-direction:column;gap:4px}.iw-xp__line{display:flex;align-items:baseline;gap:8px;font-size:12px;font-family:var(--iw-font-ui)}.iw-xp__pct{color:var(--iw-gold);font-weight:700;font-variant-numeric:tabular-nums}.iw-xp__togo{margin-left:auto;color:var(--iw-faint);font-variant-numeric:tabular-nums}.iw-xp__track{height:4px;background:#080806;border:1px solid var(--iw-th-edge-faint);border-radius:0;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.75)}.iw-xp__fill{height:100%;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-th-cta) 55%,#000),var(--iw-ember));transition:width .3s ease}.iw-xp__fill--ready{background:linear-gradient(90deg,#2E6438,#4D9859)}::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-track{background:var(--iw-ink-950)}::-webkit-scrollbar-thumb{background:#403625;border-radius:1px}::-webkit-scrollbar-thumb:hover{background:var(--iw-line-hi)}@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}[class*=rounded-full][class*=px-],button[class*=rounded-full]:not([class*=chat-name-]):not([class*="hover:underline"]),[role=button][class*=rounded-full]:not([class*=chat-name-]):not([class*="hover:underline"]){border-radius:var(--iw-r-control)!important}[class*=border][class*=rounded-3xl],[class*=border][class*=rounded-2xl],[class*=border][class*=rounded-xl]{border-color:var(--iw-line)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.018),inset 0 -1px 0 rgba(0,0,0,.38)!important}\n';
+  var base_default = '@font-face{font-family:"Cinzel";font-style:normal;font-weight:600 700;font-display:swap;src:url(../assets/fonts/cinzel-variable.woff2) format("woff2")}@font-face{font-family:"Barlow";font-style:normal;font-weight:400;font-display:swap;src:url(../assets/fonts/barlow-400.woff2) format("woff2")}@font-face{font-family:"Barlow";font-style:normal;font-weight:500;font-display:swap;src:url(../assets/fonts/barlow-500.woff2) format("woff2")}@font-face{font-family:"Barlow";font-style:normal;font-weight:600;font-display:swap;src:url(../assets/fonts/barlow-600.woff2) format("woff2")}@font-face{font-family:"Barlow";font-style:normal;font-weight:700;font-display:swap;src:url(../assets/fonts/barlow-700.woff2) format("woff2")}@font-face{font-family:"Crimson Text";font-style:italic;font-weight:400;font-display:swap;src:url(../assets/fonts/crimson-text-italic.woff2) format("woff2")}:root{--iw-ink-950: #070806;--iw-ink-900: #0B0C0A;--iw-ink-850: #10100D;--iw-ink-800: #14130F;--iw-ink-750: #191711;--iw-ink-700: #1E1B15;--iw-ink-600: #29251C;--iw-th-accent: #D4AD63;--iw-th-accent-dim: #9D8458;--iw-th-edge: #6B4F28;--iw-th-hairline: #9B7437;--iw-th-hairline-hi: #D09A4B;--iw-th-bracket: #C9A24D;--iw-th-bracket-dim: #8A7038;--iw-th-brass: #8A6A2C;--iw-th-rule: #806337;--iw-th-rule-soft: #3A2F18;--iw-th-plate: #0B0C0E;--iw-th-cta: #B64619;--iw-th-cta-hi: #D15A22;--iw-th-ground-a: #171713;--iw-th-ground-b: #0D0E0C;--iw-th-ground-wash: transparent;--iw-th-glow: rgba(226,164,72,.08);--iw-th-edge-mid: #4A3820;--iw-th-edge-soft: #332B20;--iw-th-edge-faint: #29251D;--iw-line: #342D20;--iw-line-hi: #58482B;--iw-line-hot: var(--iw-th-rule);--iw-gold: var(--iw-th-accent);--iw-gold-dim: var(--iw-th-accent-dim);--iw-ember: var(--iw-th-cta);--iw-ember-hi: var(--iw-th-cta-hi);--iw-text: #DDD6C6;--iw-text-hi:#F0E8D6;--iw-dim: #938A79;--iw-faint: #666052;--iw-good: #82B88A;--iw-bad: #D27171;--iw-info: #75A8C8;--iw-t-common: #B9B4A8;--iw-t-uncommon: #6FBF73;--iw-t-rare: #5B9BD5;--iw-t-epic: #B98FE0;--iw-t-legendary: #D98A3A;--iw-t-mythic: #E06666;--iw-font-head: "Cinzel", Georgia, serif;--iw-font-ui: "Barlow", system-ui, -apple-system, sans-serif;--iw-font-flav: "Crimson Text", Georgia, serif;--iw-r-panel: 3px;--iw-r-control: 2px;--iw-r-slot: 2px;--iw-r: var(--iw-r-control);--iw-r-sm: var(--iw-r-slot);--iw-action-tick: 1s;--background: var(--iw-ink-900) !important;--foreground: var(--iw-text) !important;--card: var(--iw-ink-800) !important;--card-foreground: var(--iw-text) !important;--popover: var(--iw-ink-800) !important;--popover-foreground: var(--iw-text) !important;--panel-bg: var(--iw-ink-800) !important;--panel-border: var(--iw-line) !important;--surface-bg: var(--iw-ink-700) !important;--surface-border: var(--iw-line) !important;--primary: var(--iw-ember) !important;--primary-foreground: #FFEAD1 !important;--accent: var(--iw-ember) !important;--accent-foreground: var(--iw-text-hi) !important;--ring: var(--iw-gold-dim)!important;--border: var(--iw-line) !important;--input: var(--iw-ink-850) !important;--muted: var(--iw-ink-700) !important;--muted-foreground: var(--iw-dim) !important;--sidebar: var(--iw-ink-800) !important;--sidebar-foreground: var(--iw-text) !important;--sidebar-border: var(--iw-line) !important;--sidebar-accent: var(--iw-ink-700) !important}:root{--iw-zone-atlas: url(../assets/skills_ui_atlas.webp);--iw-corner-filigree: url(../assets/inventory/panel_corners.webp);--iw-zone-separator: url(../assets/inventory/separator_flourish.webp)}:root[data-iw-zone-theme=glacial]{--iw-th-accent: #9FCBE6;--iw-th-accent-dim: #7C9DB4;--iw-th-edge: #45657D;--iw-th-hairline: #6E96B4;--iw-th-hairline-hi: #A7CFE6;--iw-th-bracket: #A9CADE;--iw-th-bracket-dim: #6E8CA0;--iw-th-brass: #5C7E96;--iw-th-rule: #5E86A0;--iw-th-rule-soft: #223540;--iw-th-plate: #0A0E12;--iw-th-cta: #356E9A;--iw-th-cta-hi: #4E90BE;--iw-th-ground-a: #14171A;--iw-th-ground-b: #0B0D10;--iw-th-ground-wash: rgba(126,164,192,.055);--iw-th-glow: rgba(150,200,230,.10)}:root[data-iw-zone-theme=infernal]{--iw-th-accent: #E0762E;--iw-th-accent-dim: #B5673A;--iw-th-edge: #6A2A18;--iw-th-hairline: #8A3B22;--iw-th-hairline-hi: #D6702E;--iw-th-bracket: #D2782E;--iw-th-bracket-dim: #8A4326;--iw-th-brass: #7A3A1E;--iw-th-rule: #7E3A22;--iw-th-rule-soft: #2A1109;--iw-th-plate: #0C0705;--iw-th-cta: #B23A16;--iw-th-cta-hi: #D0602A;--iw-th-ground-a: #17110E;--iw-th-ground-b: #0D0908;--iw-th-ground-wash: rgba(200,80,30,.055);--iw-th-glow: rgba(224,118,46,.11)}:root[data-iw-zone-theme=verdant]{--iw-th-accent: #82BE68;--iw-th-accent-dim: #7C9463;--iw-th-edge: #3B5A2E;--iw-th-hairline: #5E7E44;--iw-th-hairline-hi: #97C57A;--iw-th-bracket: #8FBE6E;--iw-th-bracket-dim: #5E7E44;--iw-th-brass: #4E6A2E;--iw-th-rule: #5E7E44;--iw-th-rule-soft: #202A16;--iw-th-plate: #080B07;--iw-th-cta: #4E7A30;--iw-th-cta-hi: #6A9C42;--iw-th-ground-a: #131711;--iw-th-ground-b: #0A0D08;--iw-th-ground-wash: rgba(126,176,94,.05);--iw-th-glow: rgba(150,200,110,.09)}:root[data-iw-zone-theme=forged-metal]{--iw-th-accent: #A6BBCC;--iw-th-accent-dim: #8593A2;--iw-th-edge: #3E4A57;--iw-th-hairline: #6E8092;--iw-th-hairline-hi: #B7C5CF;--iw-th-bracket: #A6B8C6;--iw-th-bracket-dim: #6E8092;--iw-th-brass: #5A6675;--iw-th-rule: #6E8092;--iw-th-rule-soft: #232A31;--iw-th-plate: #090B0E;--iw-th-cta: #45607A;--iw-th-cta-hi: #5E82A2;--iw-th-ground-a: #14161A;--iw-th-ground-b: #0B0D10;--iw-th-ground-wash: rgba(150,175,200,.045);--iw-th-glow: rgba(180,200,220,.08)}:root[data-iw-zone-theme=celestial]{--iw-th-accent: #E7C87A;--iw-th-accent-dim: #B7A574;--iw-th-edge: #5A5330;--iw-th-hairline: #B99A55;--iw-th-hairline-hi: #EBD08A;--iw-th-bracket: #E2C170;--iw-th-bracket-dim: #9A8340;--iw-th-brass: #7A6A38;--iw-th-rule: #8F7A45;--iw-th-rule-soft: #2A2718;--iw-th-plate: #0A0B0E;--iw-th-cta: #9A6E2E;--iw-th-cta-hi: #C79A4A;--iw-th-ground-a: #16150F;--iw-th-ground-b: #0C0C0A;--iw-th-ground-wash: rgba(200,180,110,.05);--iw-th-glow: rgba(230,200,130,.10)}:root[data-iw-zone-theme=voidborn]{--iw-th-accent: #A97FD8;--iw-th-accent-dim: #8C74A6;--iw-th-edge: #46345C;--iw-th-hairline: #6E4F92;--iw-th-hairline-hi: #B48EDC;--iw-th-bracket: #AE86D6;--iw-th-bracket-dim: #6E4F92;--iw-th-brass: #573C6B;--iw-th-rule: #6E4F92;--iw-th-rule-soft: #251A33;--iw-th-plate: #0A0710;--iw-th-cta: #6A3CAA;--iw-th-cta-hi: #8E63C8;--iw-th-ground-a: #16121C;--iw-th-ground-b: #0C0910;--iw-th-ground-wash: rgba(150,110,210,.055);--iw-th-glow: rgba(169,127,216,.10)}:root[data-iw-zone-theme=runic-arcane]{--iw-th-accent: #5CC6B4;--iw-th-accent-dim: #6E9E96;--iw-th-edge: #234C46;--iw-th-hairline: #3E7E72;--iw-th-hairline-hi: #72B7A9;--iw-th-bracket: #5FC6B2;--iw-th-bracket-dim: #3E7E72;--iw-th-brass: #2E5A52;--iw-th-rule: #3E7E72;--iw-th-rule-soft: #17302C;--iw-th-plate: #070C0B;--iw-th-cta: #26786A;--iw-th-cta-hi: #3E9E8C;--iw-th-ground-a: #101715;--iw-th-ground-b: #080D0C;--iw-th-ground-wash: rgba(90,200,180,.05);--iw-th-glow: rgba(110,200,185,.09)}:root[data-iw-zone-theme=lunar-spectral]{--iw-th-accent: #9FA8D6;--iw-th-accent-dim: #8489AC;--iw-th-edge: #2C3150;--iw-th-hairline: #5A5F86;--iw-th-hairline-hi: #A6ADCD;--iw-th-bracket: #A4ACD6;--iw-th-bracket-dim: #5A5F86;--iw-th-brass: #45496B;--iw-th-rule: #5A5F86;--iw-th-rule-soft: #1E2033;--iw-th-plate: #08090F;--iw-th-cta: #4A4F8A;--iw-th-cta-hi: #6E74AE;--iw-th-ground-a: #14151C;--iw-th-ground-b: #0A0B10;--iw-th-ground-wash: rgba(150,155,210,.05);--iw-th-glow: rgba(159,168,214,.09)}:root[data-iw-zone-theme=tempest-oceanic]{--iw-th-accent: #4FC7D8;--iw-th-accent-dim: #5E9EA8;--iw-th-edge: #123C48;--iw-th-hairline: #2E6E7C;--iw-th-hairline-hi: #6FC0CE;--iw-th-bracket: #52C7D6;--iw-th-bracket-dim: #2E6E7C;--iw-th-brass: #1E5C68;--iw-th-rule: #2E6E7C;--iw-th-rule-soft: #122A31;--iw-th-plate: #060E11;--iw-th-cta: #227483;--iw-th-cta-hi: #3EA6B8;--iw-th-ground-a: #0F171A;--iw-th-ground-b: #070D0F;--iw-th-ground-wash: rgba(80,190,210,.05);--iw-th-glow: rgba(90,200,220,.10)}:root[data-iw-zone-theme]{--iw-th-edge-mid: color-mix(in srgb, var(--iw-th-edge) 66%, var(--iw-ink-850));--iw-th-edge-soft: color-mix(in srgb, var(--iw-th-edge) 42%, var(--iw-ink-850));--iw-th-edge-faint: color-mix(in srgb, var(--iw-th-edge) 26%, var(--iw-ink-850));--iw-line: var(--iw-th-edge-soft);--iw-line-hi: color-mix(in srgb, var(--iw-th-edge) 84%, var(--iw-ink-850))}html,body{background-color:var(--iw-ink-900)!important;color:var(--iw-text)!important;font-family:var(--iw-font-ui)!important}body{background-image:radial-gradient(1200px 520px at 50% -140px,rgba(124,91,42,.10),transparent 68%),linear-gradient(180deg,rgba(255,255,255,.012),transparent 220px)!important;background-attachment:fixed!important}h1,h2,h3{font-family:var(--iw-font-head)!important;letter-spacing:.025em}h1:not(:where([data-iw-header=profile-name])),h2,h3{color:var(--iw-text-hi)!important}.compact-panel,[class~=compact-panel]{border-color:var(--iw-th-edge)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,0.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;color:var(--iw-text)!important;border-radius:var(--iw-r-panel)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.6),inset 0 1px 0 var(--iw-th-glow)!important}.compact-row,[class*=item-row]{border-color:var(--iw-th-edge)!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,0.02),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;color:var(--iw-text)!important}[class*=rounded-3xl],[class*=rounded-2xl],[class*=rounded-xl],[class*=rounded-lg],[class*=rounded-md]{border-radius:var(--iw-r-panel)!important}button:not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([class*=decoration-dotted]):not([data-iw-order-handle]):not([data-fs-inv]):not([data-iw-header=utility-button]),[role=button]:not(.iw-item-ref):not([data-iw-raid-owned]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([class*=decoration-dotted]):not([data-iw-order-handle]):not([data-fs-inv]){border-radius:var(--iw-r-control)!important}button:not(:where([data-iw-header=profile-name] button)),[role=button]:not(:where([data-iw-header=profile-name] *)){background-color:var(--iw-ink-750);color:var(--iw-text)}[class*="hover:underline"]{background-color:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;border-radius:0!important}button:not(.iw-item-ref):not([data-iw-raid-owned]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-ui=section-title]):not([data-iw-order-handle]),[role=button]:not(.iw-item-ref):not([data-iw-raid-owned]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-ui=section-title]):not([data-iw-order-handle]),input,select,textarea{font-family:var(--iw-font-ui)!important}button:not(.iw-item-ref):not([data-iw-raid-owned]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([class*=decoration-dotted]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-order-handle]):not([data-fs-inv]):not([data-iw-zone-link]),[role=button]:not(.iw-item-ref):not([data-iw-raid-owned]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([class*=decoration-dotted]):not([data-iw-quest-role]):not([data-iw-boss-role]):not([data-iw-village-role]):not([data-iw-guild-role]):not(.iw-boss-reward):not([data-iw-order-handle]):not([data-fs-inv]):not([data-iw-zone-link]){box-shadow:inset 0 1px 0 rgba(255,255,255,.028),0 1px 0 rgba(0,0,0,.65)!important;transition:color .12s ease,border-color .12s ease,background-color .12s ease,filter .12s ease!important}button:not(.iw-item-ref):not([data-iw-raid-owned]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-order-handle]):not([data-fs-inv]):hover:not(:disabled),[role=button]:not(.iw-item-ref):not([data-iw-raid-owned]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-order-handle]):not([data-fs-inv]):hover{filter:brightness(1.08)}button:not(.iw-item-ref):not([data-iw-raid-owned]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-order-handle]):focus-visible,[role=button]:not(.iw-item-ref):not([data-iw-raid-owned]):not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-skill-role=level-progress]):not([data-iw-order-handle]):focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px solid var(--iw-gold)!important;outline-offset:2px!important}input:not([type=checkbox]):not([type=radio]),select,textarea{border-radius:var(--iw-r-control)!important;border-color:var(--iw-line)!important;background:linear-gradient(180deg,#090C0D,#0C0E0D)!important;color:var(--iw-text)!important;box-shadow:inset 0 1px 4px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.018)!important}input::placeholder,textarea::placeholder{color:var(--iw-faint)!important}nav button,nav [role=button],header button:not([class*=chat-name-]):not([class*="hover:underline"]):not([data-iw-header=utility-button]),[class*=tab] button{border-radius:var(--iw-r-control)!important;font-weight:700!important}hr{border-color:var(--iw-line)!important}.iw-ico{flex:none;display:block;position:relative;background-repeat:no-repeat;background-color:#090806;border:1px solid var(--iw-line-hi);border-radius:var(--iw-r-slot);box-shadow:inset 0 0 0 1px rgba(0,0,0,.45)}.iw-icon-badge{position:absolute;right:-3px;bottom:-3px;font-family:var(--iw-font-ui);font-size:9px;font-weight:700;line-height:1;padding:2px 3px;border-radius:1px;background:var(--iw-ink-950);border:1px solid var(--iw-ember);color:var(--iw-gold);font-variant-numeric:tabular-nums;pointer-events:none;z-index:3}.iw-icon-badge--sprite{right:-5px;bottom:-5px;width:22px;height:22px;padding:0;border:0;border-radius:0;background-color:transparent;color:transparent;font-size:0;line-height:0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.85))}.tier-common{color:var(--iw-t-common)}.tier-uncommon{color:var(--iw-t-uncommon)}.tier-rare{color:var(--iw-t-rare)}.tier-epic{color:var(--iw-t-epic)}.tier-legendary{color:var(--iw-t-legendary)}.tier-mythic{color:var(--iw-t-mythic)}.iw-btn{font-family:var(--iw-font-ui);font-size:12px;font-weight:700;letter-spacing:.055em;text-transform:uppercase;padding:7px 14px;min-width:76px;border-radius:var(--iw-r-control);cursor:pointer;border:1px solid var(--iw-line-hi);background:linear-gradient(180deg,#242018,#17140F);color:var(--iw-text);transition:background .13s,border-color .13s,color .13s;align-self:center;height:auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 0 #000}.iw-btn:hover{background:linear-gradient(180deg,#2B261C,#1A1711);border-color:var(--iw-gold-dim);color:var(--iw-gold)}.iw-btn--primary{background:linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 60%,#000));border-color:var(--iw-th-cta-hi);color:#FFEAD1}.iw-btn--primary:hover{background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 66%,#000));border-color:var(--iw-ember-hi);color:#fff}.iw-btn--disabled,.iw-btn:disabled{background:#100F0C;border-color:var(--iw-th-edge-faint);color:var(--iw-faint);cursor:not-allowed;box-shadow:none}.iw-xp{display:flex;flex-direction:column;gap:4px}.iw-xp__line{display:flex;align-items:baseline;gap:8px;font-size:12px;font-family:var(--iw-font-ui)}.iw-xp__pct{color:var(--iw-gold);font-weight:700;font-variant-numeric:tabular-nums}.iw-xp__togo{margin-left:auto;color:var(--iw-faint);font-variant-numeric:tabular-nums}.iw-xp__track{height:4px;background:#080806;border:1px solid var(--iw-th-edge-faint);border-radius:0;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.75)}.iw-xp__fill{height:100%;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-th-cta) 55%,#000),var(--iw-ember));transition:width .3s ease}.iw-xp__fill--ready{background:linear-gradient(90deg,#2E6438,#4D9859)}::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-track{background:var(--iw-ink-950)}::-webkit-scrollbar-thumb{background:#403625;border-radius:1px}::-webkit-scrollbar-thumb:hover{background:var(--iw-line-hi)}@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}[class*=rounded-full][class*=px-],button[class*=rounded-full]:not([class*=chat-name-]):not([class*="hover:underline"]),[role=button][class*=rounded-full]:not([class*=chat-name-]):not([class*="hover:underline"]){border-radius:var(--iw-r-control)!important}[class*=border][class*=rounded-3xl],[class*=border][class*=rounded-2xl],[class*=border][class*=rounded-xl]{border-color:var(--iw-line)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.018),inset 0 -1px 0 rgba(0,0,0,.38)!important}\n';
 
   // src/styles/skillcard-v2.css
   var skillcard_v2_default = 'html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]{--iw-skill-v2-icon: 43px;--iw-skill-v2-ring-gap: 7px;--iw-skill-v2-ring-weight: 4px;--iw-skill-v2-identity-w: 144px;--iw-skill-v2-command-w: 96px;--iw-skill-v2-gutter: 20px;--iw-skill-v2-rail-bottom: 6px;--iw-skill-v2-cmd-buffer: 8px;--iw-skill-v2-label-h: 12px;--iw-skill-v2-action-label-gap: 4px;--iw-skill-v2-glyph-safe-inset: 14px;--iw-skill-v2-action-label-font: 9.5px;--iw-skill-v2-btn-font: 0px;--iw-skill-v2-label-buffer: 4px;--iw-skill-v2-btn-tracking: .02em;--iw-skill-v2-btn-border: 3px;--iw-skill-v2-btn-offset: calc(var(--iw-skill-v2-label-h) + var(--iw-skill-v2-action-label-gap));--iw-skill-v2-glyph: max(16px, min(calc(var(--iw-skill-v2-btn-w) - var(--iw-skill-v2-glyph-safe-inset) - var(--iw-skill-v2-glyph-safe-inset)), calc(var(--iw-skill-v2-btn-h) - var(--iw-skill-v2-glyph-safe-inset) - var(--iw-skill-v2-glyph-safe-inset))));--iw-skill-v2-glyph-inset: calc(var(--iw-skill-v2-btn-offset) + (var(--iw-skill-v2-btn-h) - var(--iw-skill-v2-glyph)) / 2);--iw-skill-v2-btn-pad: 0;--iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h));--iw-skill-v2-btn-w: 64px;--iw-skill-v2-nav-w: 30px;--iw-skill-v2-nav-h: 22px;--iw-skill-v2-nav-radius: 4px;--iw-skill-v2-btn-h: 66px;--iw-skill-v2-edge: var(--iw-th-edge-mid);--iw-skill-v2-edge-soft: var(--iw-th-edge-soft);container:iw-skill-card / inline-size!important;position:relative!important;overflow:visible!important;padding:0!important;margin-bottom:10px!important;border:1px solid var(--iw-skill-v2-edge)!important;border-radius:7px!important;background:radial-gradient(ellipse at 0 0,color-mix(in srgb,var(--iw-th-edge) 50%,transparent),transparent 60%),linear-gradient(color-mix(in srgb,var(--iw-th-ground-a) 93%,transparent),color-mix(in srgb,var(--iw-th-ground-b) 96%,transparent)),url(../assets/skills_panel_texture.webp) center / cover!important;box-shadow:inset 0 0 0 3px var(--iw-th-plate),inset 0 0 0 4px var(--iw-th-edge-soft),0 4px 12px #0006!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]::before{content:""!important;position:absolute!important;inset:3px 20px auto!important;height:1px!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),color-mix(in srgb,var(--iw-th-accent) 65%,transparent),transparent)!important;pointer-events:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]::after{content:""!important;display:block!important;position:absolute!important;inset:-1px!important;z-index:3!important;pointer-events:none!important;border:solid transparent!important;border-width:17px 16px!important;border-radius:0!important;background:none!important;box-shadow:none!important;border-image:var(--iw-corner-filigree) 50% / 17px 16px / 0 stretch!important;opacity:.85!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>[data-iw-skill-layout-shell="1"],html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:has(>[data-iw-skill-layout-shell="1"])){display:grid!important;grid-template-columns:var(--iw-skill-v2-identity-w) minmax(0,1fr) var(--iw-skill-v2-command-w)!important;grid-template-rows:1fr auto auto auto 1fr!important;grid-template-areas:"identity .        commands" "identity content  commands" "identity body     commands" "identity tabs     commands" "identity .        commands"!important;gap:0!important;align-items:stretch!important;min-height:calc(var(--iw-skill-v2-cmd-stack) + 24px)!important}html[data-iw-skill-card-design=new] [data-iw-collapsed="1"]>.compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state]{display:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone]{position:relative!important;align-self:stretch!important;min-width:0!important;border:0!important;margin:0!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=identity]{grid-area:identity!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:0!important;padding:13px 7px 8px!important;border-right:1px solid var(--iw-skill-v2-edge-soft)!important;background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--fs-skill-accent) 18%,transparent),color-mix(in srgb,var(--iw-th-plate) 67%,transparent) 75%)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=identity]::before,html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=identity]::after{display:none!important;content:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=identity] *:not(.fs-skill-medallion-art):not([data-iw-skill-v2-level-readout]):not([data-iw-skill-v2-xp]):not([data-iw-skill-role=identity]):not(.fs-skill-medallion-art *):not([data-iw-skill-v2-level-readout] *):not([data-iw-skill-role=identity] *):not(:has([data-iw-skill-role=identity])){display:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .fs-skill-medallion-art{position:relative!important;order:1!important;flex:0 0 auto!important;width:var(--iw-skill-v2-icon)!important;min-width:var(--iw-skill-v2-icon)!important;height:var(--iw-skill-v2-icon)!important;min-height:var(--iw-skill-v2-icon)!important;margin:0!important;border:1px solid var(--iw-th-hairline)!important;border-radius:50%!important;box-shadow:inset 0 0 0 3px var(--iw-th-plate),inset 0 0 12px #0009!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .fs-skill-medallion-art::after{content:""!important;display:block!important;position:absolute!important;inset:calc(-1 * var(--iw-skill-v2-ring-gap))!important;width:auto!important;height:auto!important;min-width:0!important;min-height:0!important;transform:none!important;border:0!important;border-radius:50%!important;z-index:2!important;background:conic-gradient(color-mix(in srgb,var(--fs-skill-accent, #55b6d9) 70%,#ccefff) 0 var(--iw-skill-v2-progress, 0%),var(--iw-th-edge-mid) var(--iw-skill-v2-progress, 0%) 100%)!important;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--iw-skill-v2-ring-weight)),#000 calc(100% - var(--iw-skill-v2-ring-weight) + 1px))!important;mask:radial-gradient(farthest-side,transparent calc(100% - var(--iw-skill-v2-ring-weight)),#000 calc(100% - var(--iw-skill-v2-ring-weight) + 1px))!important;filter:drop-shadow(0 0 3px #70cfff66)!important;box-shadow:none!important;pointer-events:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-level-readout{position:relative!important;z-index:3!important;order:2!important;display:flex!important;flex-direction:column!important;align-items:center!important;width:max-content!important;min-width:44px!important;max-width:100%!important;margin:-2px 0 0!important;padding:1px 5px 3px!important;border:1px solid var(--iw-th-hairline)!important;border-radius:4px 4px 11px 11px!important;background:linear-gradient(var(--iw-th-ground-a),var(--iw-th-plate))!important;box-shadow:inset 0 0 0 2px var(--iw-th-edge-soft),0 2px 4px #0009!important;color:#f0f1e9!important;font-family:var(--iw-font-ui, sans-serif)!important;line-height:1.12!important;font-variant-numeric:tabular-nums!important;pointer-events:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-level{font-size:12px!important;font-weight:700!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-percent{font-size:9px!important;color:#bbcedc!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role=identity]{order:3!important;width:100%!important;min-width:0!important;margin:6px 0 0!important;overflow:visible!important;text-align:center!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-xp{order:4!important;display:block!important;max-width:100%!important;min-width:0!important;margin:3px 0 0!important;padding:0 2px!important;font-family:var(--iw-font-ui, sans-serif)!important;font-size:10px!important;line-height:1.25!important;font-weight:600!important;font-variant-numeric:tabular-nums!important;color:#a9bccb!important;text-align:center!important;white-space:normal!important;overflow-wrap:normal!important;text-wrap:balance;cursor:pointer!important;pointer-events:auto!important;border-radius:3px!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-xp:hover{color:#e3edf4!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-xp:focus-visible{outline:1px solid var(--iw-th-hairline, #6fa3c0)!important;outline-offset:1px!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role=identity]::before{display:block!important;font-size:11px!important;line-height:1.2!important;letter-spacing:.035em!important;font-weight:700!important;text-transform:uppercase!important;color:color-mix(in srgb,var(--fs-skill-accent) 65%,#d4e4ef)!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;max-width:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role=level-progress],html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-break{display:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]{grid-area:content!important;display:grid!important;grid-template-columns:minmax(0,max-content) auto!important;justify-content:start!important;align-content:center!important;align-items:center!important;gap:0 12px!important;position:static!important;transform:none!important;filter:none!important;translate:none!important;rotate:none!important;scale:none!important;backdrop-filter:none!important;perspective:none!important;contain:none!important;content-visibility:visible!important;will-change:auto!important;padding:14px var(--iw-skill-v2-gutter) 10px!important;background:none!important;text-align:left!important;box-shadow:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]>*{flex:0 0 auto!important;align-self:flex-start!important;order:5!important;min-width:0!important;max-width:100%!important;margin:0!important;text-align:left!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]>*{grid-column:1 / -1!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]>:is([data-iw-skill-role=action-title],:has([data-iw-skill-role=action-title])){grid-column:1!important;grid-row:1!important;align-self:center!important;width:auto!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role=action-title]::before{display:block!important;font-size:clamp(17px,2cqi,23px)!important;line-height:1.15!important;letter-spacing:.01em!important;color:#f0eee5!important;white-space:normal!important;overflow-wrap:anywhere!important;text-align:left!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]>.fs-skill-base-exp{grid-column:2!important;grid-row:1!important;align-self:center!important;justify-self:start!important;white-space:nowrap!important;width:max-content!important;padding:3px 10px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:4px!important;background:linear-gradient(color-mix(in srgb,var(--iw-th-edge-soft) 80%,var(--iw-th-plate)),var(--iw-th-plate))!important;color:#e6e4d5!important;font-size:11px!important;line-height:1.2!important;letter-spacing:.04em!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]>.iw-skill-v2-summary{order:3!important;display:block!important;width:fit-content!important;padding:4px 10px!important;border:1px solid #294131!important;border-left:2px solid #6bbd8b!important;border-radius:3px!important;background:linear-gradient(90deg,#111d1b,#08101244)!important;color:#91d3a7!important;font-family:var(--iw-font-ui, sans-serif)!important;font-size:12px!important;line-height:1.3!important;overflow-wrap:anywhere!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]>.iw-skill-v2-summary[data-iw-skill-v2-summary-state=unmet]{color:#e1b197!important;border-color:#533f35!important;border-left-color:#cb8d6c!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]>*:not([data-iw-skill-role]):not([data-iw-skill-v2-section]):not([class*=fs-skill]):not([class*=iw-skill-v2]){color:#a7b4bb!important;font-size:12px!important;line-height:1.3!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]>.iw-skill-v2-expand{order:9!important;align-self:flex-end!important;margin:-2px 0 0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:28px!important;min-width:28px!important;height:24px!important;min-height:24px!important;padding:0!important;border:0!important;background:none!important;color:#a8c8e2!important;cursor:pointer!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-expand::before{content:""!important;display:block!important;width:9px!important;height:9px!important;border:solid currentColor!important;border-width:0 2px 2px 0!important;transform:translateY(-2px) rotate(45deg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-expand[aria-expanded=true]::before{transform:translateY(2px) rotate(225deg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-expand:focus-visible{outline:2px solid #68b7ff!important;outline-offset:2px!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]{--iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h))}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:has([data-iw-skill-role=nav-group]){--iw-skill-v2-cmd-stack: calc(var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h) + var(--iw-skill-v2-cmd-buffer) + var(--iw-skill-v2-nav-h))}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=commands]{grid-area:commands!important;display:block!important;padding:0!important;border-left:1px solid var(--iw-skill-v2-edge-soft)!important;background:linear-gradient(270deg,color-mix(in srgb,var(--iw-th-edge) 13%,transparent),transparent)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]{--fs-motion-idle: linear-gradient(135deg, color-mix(in srgb, var(--iw-th-cta) 58%, transparent), color-mix(in srgb, var(--iw-th-plate) 86%, transparent)), url(../assets/skills_panel_texture.webp) center / cover !important;--fs-motion-hover: linear-gradient(135deg, color-mix(in srgb, var(--iw-th-cta-hi) 62%, transparent), color-mix(in srgb, var(--iw-th-cta) 55%, transparent)), url(../assets/skills_panel_texture.webp) center / cover !important;--fs-motion-pressed: linear-gradient(color-mix(in srgb, var(--iw-th-plate) 88%, transparent), color-mix(in srgb, var(--iw-th-cta) 72%, transparent)), url(../assets/skills_panel_texture.webp) center / cover !important;--fs-button-border: var(--iw-skill-v2-btn-border) double var(--iw-th-hairline-hi) !important;--fs-button-shadow: inset 0 0 0 2px var(--iw-th-plate), inset 0 0 0 3px var(--iw-th-accent-dim), inset 0 0 16px color-mix(in srgb, var(--iw-th-accent) 42%, transparent), 0 0 0 2px var(--iw-th-plate), 0 0 0 3px var(--iw-th-edge-mid), 0 0 12px color-mix(in srgb, var(--iw-th-accent) 26%, transparent) !important;position:absolute!important;top:calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-offset))!important;left:calc(50% - var(--iw-skill-v2-btn-w) / 2)!important;right:auto!important;bottom:auto!important;margin:0!important;border-radius:9px!important;outline:none!important;color:transparent!important;overflow:hidden!important;font-size:0!important;line-height:var(--iw-skill-v2-label-h)!important;letter-spacing:.04em!important;white-space:nowrap!important;text-shadow:none!important;filter:none!important;transition:filter .15s ease!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]>:not([style*=width]){opacity:0!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]:hover{filter:brightness(1.2) drop-shadow(0 0 5px color-mix(in srgb,var(--iw-th-accent) 55%,transparent))!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]:active{filter:brightness(.85)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]:focus-visible{outline:2px solid var(--iw-th-accent)!important;outline-offset:5px!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]:disabled,html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button][aria-disabled=true]{--fs-motion-idle: linear-gradient(#25313d, #121920) !important;--fs-motion-hover: linear-gradient(#25313d, #121920) !important;filter:grayscale(.8)!important;opacity:.55!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]>span[style*=width]{position:absolute!important;top:0!important;bottom:0!important;left:0!important;height:auto!important;z-index:1!important;border-radius:0!important;pointer-events:none!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-th-accent) 40%,transparent),color-mix(in srgb,var(--iw-th-accent) 82%,transparent))!important;box-shadow:inset -2px 0 0 color-mix(in srgb,var(--iw-th-accent) 35%,#fff),3px 0 12px color-mix(in srgb,var(--iw-th-accent) 75%,transparent)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]>span:not([style*=width]){position:relative!important;z-index:2!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]>span[style*=width]{transition:width var(--iw-skill-v2-fill-duration, .28s) linear!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-fill-reset] button[data-iw-skill-role=action-button]>span[style*=width]{transition:none!important}@media(prefers-reduced-motion:reduce){html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button][data-iw-skill-role]>span[style*=width]{transition:none!important}}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=action-button]:has(>span[style*=width]){--fs-motion-idle: linear-gradient(135deg, color-mix(in srgb, var(--iw-th-plate) 76%, transparent), color-mix(in srgb, var(--iw-th-plate) 94%, transparent)), url(../assets/skills_panel_texture.webp) center / cover !important;--fs-motion-hover: linear-gradient(135deg, color-mix(in srgb, var(--iw-th-plate) 70%, transparent), color-mix(in srgb, var(--iw-th-plate) 88%, transparent)), url(../assets/skills_panel_texture.webp) center / cover !important;--fs-button-border: var(--iw-skill-v2-btn-border) double color-mix(in srgb, var(--iw-th-accent) 80%, #fff) !important;--fs-button-shadow: inset 0 0 0 2px var(--iw-th-plate), inset 0 0 0 3px var(--iw-th-accent), 0 0 0 2px var(--iw-th-plate), 0 0 0 3px var(--iw-th-accent-dim), 0 0 14px color-mix(in srgb, var(--iw-th-accent) 55%, transparent) !important;text-shadow:0 1px 2px #000,0 0 4px #000c!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>[data-iw-skill-layout-shell="1"]>:is(.iw-skill-v2-action-glyph,.iw-skill-v2-action-label),html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:has(>[data-iw-skill-layout-shell="1"]))>:is(.iw-skill-v2-action-glyph,.iw-skill-v2-action-label){grid-area:commands!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-action-label{display:block!important;position:absolute!important;z-index:3!important;top:calc(50% - var(--iw-skill-v2-cmd-stack) / 2)!important;left:calc(50% - var(--iw-skill-v2-btn-w) / 2)!important;width:var(--iw-skill-v2-btn-w)!important;height:var(--iw-skill-v2-label-h)!important;margin:0!important;padding:0 var(--iw-skill-v2-label-buffer)!important;color:#f3e3c0!important;font:700 var(--iw-skill-v2-action-label-font)/var(--iw-skill-v2-label-h) var(--iw-font-head, serif)!important;text-transform:uppercase!important;letter-spacing:var(--iw-skill-v2-btn-tracking)!important;text-align:center!important;white-space:nowrap!important;overflow:visible!important;pointer-events:none!important;text-shadow:0 1px 2px #000,0 0 4px #000c!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-action-glyph{display:block!important;position:absolute!important;z-index:2!important;top:calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-glyph-inset))!important;left:50%!important;transform:translateX(-50%)!important;width:var(--iw-skill-v2-glyph)!important;height:var(--iw-skill-v2-glyph)!important;background:none center / contain no-repeat!important;pointer-events:none!important;filter:drop-shadow(0 2px 3px #000a)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] button[data-iw-skill-role=action-button]{color:transparent!important;text-shadow:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] button[data-iw-skill-role=action-button]>:not([style*=width]){opacity:0!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] .iw-skill-v2-action-label{opacity:0!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-long-action="1"] .iw-skill-v2-action-glyph[data-iw-skill-v2-action-timer]{display:grid!important;place-items:center!important;z-index:3!important;top:calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-offset))!important;left:calc(50% - var(--iw-skill-v2-btn-w) / 2)!important;width:var(--iw-skill-v2-btn-w)!important;height:var(--iw-skill-v2-btn-h)!important;transform:none!important;background:none!important;color:#f3fbff!important;font:700 15px/1 var(--iw-font-ui, sans-serif)!important;letter-spacing:.02em!important;font-variant-numeric:tabular-nums!important;text-shadow:0 1px 2px #000,0 0 6px color-mix(in srgb,var(--iw-th-accent) 65%,transparent)!important;filter:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=combat] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/combat.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=mining] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/mining.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=smithing] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/smithing.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=gathering] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/gathering.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=alchemy] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/alchemy.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=jewelcrafting] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/jewelcrafting.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=spellcrafting] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/spellcrafting.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=tailoring] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/tailoring.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=woodcutting] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/woodcutting.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-type=construction] .iw-skill-v2-action-glyph{background-image:url(../assets/skills-ui/action-icons/construction.svg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:is([data-iw-skill-v2-type=combat],[data-iw-skill-v2-type=mining],[data-iw-skill-v2-type=smithing],[data-iw-skill-v2-type=gathering],[data-iw-skill-v2-type=alchemy],[data-iw-skill-v2-type=jewelcrafting],[data-iw-skill-v2-type=spellcrafting],[data-iw-skill-v2-type=tailoring],[data-iw-skill-v2-type=woodcutting],[data-iw-skill-v2-type=construction])){--iw-skill-v2-btn-pad: 0 4px}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]:not(:is([data-iw-skill-v2-type=combat],[data-iw-skill-v2-type=mining],[data-iw-skill-v2-type=smithing],[data-iw-skill-v2-type=gathering],[data-iw-skill-v2-type=alchemy],[data-iw-skill-v2-type=jewelcrafting],[data-iw-skill-v2-type=spellcrafting],[data-iw-skill-v2-type=tailoring],[data-iw-skill-v2-type=woodcutting],[data-iw-skill-v2-type=construction])) .iw-skill-v2-action-glyph{display:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone] [data-iw-skill-role=nav-group]{position:absolute!important;top:calc(50% - var(--iw-skill-v2-cmd-stack) / 2 + var(--iw-skill-v2-btn-offset) + var(--iw-skill-v2-btn-h) + var(--iw-skill-v2-cmd-buffer))!important;bottom:auto!important;left:auto!important;right:0!important;transform:none!important;z-index:4!important;display:flex!important;align-items:stretch!important;justify-content:center!important;gap:4px!important;width:var(--iw-skill-v2-command-w)!important;max-width:none!important;min-width:0!important;height:var(--iw-skill-v2-nav-h)!important;margin:0!important;padding:0!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=commands] :has(button[data-iw-skill-role=action-button]),html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone] :has(>[data-iw-skill-role=nav-group]):not([data-iw-skill-zone]){position:static!important;transform:none!important;filter:none!important;backdrop-filter:none!important;translate:none!important;rotate:none!important;scale:none!important;perspective:none!important;contain:none!important;content-visibility:visible!important;will-change:auto!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=nav-button][data-iw-nav-direction]{display:flex!important;align-items:center!important;justify-content:center!important;--fs-button-background: linear-gradient(color-mix(in srgb, var(--iw-th-edge-soft) 70%, var(--iw-th-plate)), var(--iw-th-plate)) !important;--fs-button-border: 1px solid var(--iw-th-edge-mid) !important;--fs-button-shadow: inset 0 1px 0 #ffffff0d !important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=nav-button][data-iw-nav-direction]:hover{--fs-button-background: linear-gradient(var(--iw-th-edge-soft), var(--iw-th-plate)) !important;--fs-button-border: 1px solid var(--iw-th-accent) !important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=nav-button][data-iw-nav-direction]::before{background:none!important;border-image:none!important;content:""!important;width:7px!important;height:7px!important;inset:auto!important;position:relative!important;display:block!important;opacity:1!important;filter:none!important;margin:0!important;border:solid color-mix(in srgb,var(--iw-th-accent) 72%,#fff)!important;border-width:0 2px 2px 0!important;transform:translateX(calc((7px - 2px) / -2.8284)) rotate(-45deg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=nav-button][data-iw-nav-direction=prev]::before{transform:translateX(calc((7px - 2px) / 2.8284)) rotate(135deg)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=nav-button][data-iw-nav-direction]::after{display:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] button[data-iw-skill-role=nav-button][data-iw-nav-direction]>*{position:absolute!important;top:0!important;left:0!important;margin:0!important;visibility:hidden!important;pointer-events:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-controls{grid-area:tabs!important;display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:center!important;gap:3px 10px!important;width:100%!important;margin:0!important;padding:0 var(--iw-skill-v2-gutter) var(--iw-skill-v2-rail-bottom)!important;border:0!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-controls{justify-content:flex-start!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-controls:not(:has(.iw-skill-v2-req-note)){display:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-req-note{flex:1 1 200px!important;min-width:0!important;color:#deb097!important;font:500 10.5px/1.3 var(--iw-font-ui, sans-serif)!important;letter-spacing:.01em!important;text-align:left!important;overflow-wrap:anywhere!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-req-note::before{content:"⚠︎ "!important;color:#c7856c!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body:empty{display:none!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body{--iw-skill-v2-cell-min: 96px;--iw-skill-v2-cell-gap: 5px;container:iw-skill-body / inline-size!important;grid-area:body!important;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(max(var(--iw-skill-v2-cell-min),calc((100% - 2 * var(--iw-skill-v2-cell-gap)) / 3)),1fr))!important;align-content:center!important;align-items:stretch!important;gap:var(--iw-skill-v2-cell-gap)!important;width:auto!important;min-height:0!important;margin:0 var(--iw-skill-v2-gutter) 6px!important;padding:7px 8px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:7px!important;background:linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-plate))!important;box-shadow:inset 0 1px 0 #ffffff0d,inset 0 0 22px #00000066!important;text-align:left!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row{display:flex!important;align-items:center!important;min-width:0!important;padding:5px 8px!important;border:1px solid var(--iw-th-edge-faint)!important;border-left:2px solid #67ab83!important;border-radius:3px!important;color:#91cba4!important;background:color-mix(in srgb,var(--iw-th-edge-soft) 33%,transparent)!important;font:400 clamp(10px,3cqi,12.5px)/1.3 var(--iw-font-ui, sans-serif)!important;text-align:left!important;overflow-wrap:anywhere!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-state=unmet]{border-left-color:#c7856c!important;color:#deb097!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-state=met]:not([data-iw-skill-v2-body-kind=material])::before{content:"✓"!important;flex:0 0 auto!important;margin-right:7px!important;color:#67ab83!important;font-size:12px!important;line-height:1!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-kind=material]{flex-flow:row wrap!important;align-items:baseline!important;align-content:center!important;gap:0 6px!important;padding:4px 7px!important;max-width:100%!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-name{display:block!important;flex:1 1 auto!important;min-width:0!important;max-width:100%!important;font-size:max(10px,.9em)!important;line-height:1.2!important;opacity:.92!important;overflow-wrap:anywhere!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-count{display:inline-flex!important;flex:0 1 auto!important;flex-wrap:wrap!important;align-items:baseline!important;min-width:0!important;max-width:100%!important;font-weight:600!important;line-height:1.2!important;font-variant-numeric:tabular-nums!important;white-space:normal!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] :is(.iw-skill-v2-body-count-owned,.iw-skill-v2-body-count-required){display:inline-block!important;max-width:100%!important;white-space:nowrap!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row[data-iw-skill-v2-body-state=met] .iw-skill-v2-body-count-owned::before{content:"✓ "!important;color:#67ab83!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row:not([data-iw-skill-v2-body-kind=material]){grid-column:1 / -1!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body-row:not([data-iw-skill-v2-body-state]){color:#b9c9d5!important;border-left-color:var(--iw-th-accent-dim)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .fs-skill-ingredient-item{justify-content:flex-start!important;text-align:left!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state=collapsed] .iw-skill-v2-controls,html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout][data-iw-skill-v2-state=collapsed] .iw-skill-v2-body{display:none!important}@container iw-skill-card (max-width: 580px){html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>[data-iw-skill-layout-shell="1"]{--iw-skill-v2-identity-w: 106px;--iw-skill-v2-command-w: 80px;--iw-skill-v2-btn-w: 64px;--iw-skill-v2-nav-w: 30px;--iw-skill-v2-gutter: 10px}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]{padding:12px var(--iw-skill-v2-gutter) 8px!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role=identity]::before{font-size:9px!important;letter-spacing:0!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role=action-title]::before{font-size:16px!important}}@container iw-skill-card (max-width: 480px){html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>[data-iw-skill-layout-shell="1"]{--iw-skill-v2-identity-w: 92px;--iw-skill-v2-command-w: 76px;grid-template-rows:minmax(calc(var(--iw-skill-v2-cmd-stack) + 20px),auto) auto auto!important;grid-template-areas:"identity content commands" "body body body" "tabs tabs tabs"!important;min-height:0!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]{position:relative!important;grid-template-columns:minmax(0,1fr)!important;padding:10px var(--iw-skill-v2-gutter)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content]>.fs-skill-base-exp{grid-column:1!important;grid-row:2!important;margin-top:6px!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=content] [data-iw-skill-role=nav-group]{grid-column:auto!important;right:calc(-1 * var(--iw-skill-v2-command-w))!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-role=action-title]::before{font-size:15px!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] .iw-skill-v2-body{margin:8px var(--iw-skill-v2-gutter)!important}}@media(prefers-reduced-motion:reduce){html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] *{transition:none!important}}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout] [data-iw-skill-zone=identity] *:has([data-iw-skill-role=identity]){display:contents!important}@media(pointer:coarse){html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]{--iw-skill-v2-nav-h: 26px}}@container iw-skill-card (max-width: 480px){html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>[data-iw-skill-zone=identity]{grid-area:auto!important;grid-column:1!important;grid-row:2!important;min-height:calc(var(--iw-skill-v2-cmd-stack) + 20px)!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>[data-iw-skill-zone=content]{grid-area:auto!important;grid-column:2!important;grid-row:2!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>[data-iw-skill-zone=commands],html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>:is(.iw-skill-v2-action-glyph,.iw-skill-v2-action-label){grid-area:auto!important;grid-column:3!important;grid-row:2!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>.iw-skill-v2-body{grid-area:auto!important;grid-column:1 / -1!important;grid-row:3!important}html[data-iw-skill-card-design=new] .compact-panel.fs-skill-panel[data-iw-skill-v2="1"][data-iw-skill-layout]>.iw-skill-v2-controls{grid-area:auto!important;grid-column:1 / -1!important;grid-row:4!important}}\n';
@@ -9537,8 +11760,8 @@
     setRuntimeActive(false);
     console.log("[IW Fantasy Skin] disabled — active presentation removed");
   }
-  function applyEnabled(enabled) {
-    if (enabled === false) teardown();
+  function applyEnabled(enabled2) {
+    if (enabled2 === false) teardown();
     else boot();
   }
   (async function start() {

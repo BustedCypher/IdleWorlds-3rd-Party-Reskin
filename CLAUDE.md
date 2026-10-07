@@ -165,6 +165,18 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   'unknown' for these cards (the Members card's "Combat 66" chips used to make
   it a Combat skill card). `src/styles/guild.css` rides the `ui-system`
   injection. See [docs/traps/guild.md](docs/traps/guild.md).
+- `src/modules/RaidHud.js` — the live raid fight as a raid HUD (Ashen Iron
+  raid UI kit v1, `assets/raids/ui-kit-v1/sprites/`): boss shell + cast bar,
+  effect timer bars (buffs blue, debuffs red) above the party frames carrying
+  every buff/debuff; the game's log and skills panels are hidden and shown
+  instead in a folded dock after Raid Chat whose controls press the game's
+  own buttons. Called last from
+  `GuildPanels.decorateArena`; reads the game's own nodes, places them by grid
+  area, owns only the effect strips, the timer row and the dock
+  (`data-iw-raid-owned`).
+  No personal HUD: it was removed 2026-10-07 because your party frame never
+  hides. See the Raid HUD section of
+  [docs/traps/guild.md](docs/traps/guild.md).
 - `src/modules/CollapsibleFrames.js` — per-panel collapse on every parent
   frame (Skills, Inventory, Quests, Village, World Bosses, Current Action,
   Action Log, World Chat, Zone Control and the Village scene). The World Boss
@@ -255,6 +267,9 @@ here. Add a line to this list only when a lesson applies across surfaces.
   flushes itself forever, and the end state still looks correct.
 - A change carried only by `data-iw-*` or by `<html>` (outside the observer's
   root) triggers no flush, so the code that makes it must run the pass itself.
+- Text ticks never emit `iw:dom-flush`. Anything that COPIES game text into
+  its own attributes must also listen to `iw:text-flush` (filtered to its
+  region), or the copy freezes between unrelated flushes ([guild](docs/traps/guild.md)).
 - A cached classifier with an EMPTY resolution never re-runs, because
   `[].every()` is true; validate coverage too. A cache key must not include
   live content, such as ticking digits, that the cached work does not depend on.

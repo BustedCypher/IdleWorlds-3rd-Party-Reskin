@@ -3,6 +3,7 @@ const folder='output/ashmaw-arena';await mkdir(folder,{recursive:true});
 await copyFile('assets/raids/ashmaw/arena.png',folder+'/arena-painterly.png');
 await copyFile('assets/raids/ashmaw/arena-source/prompts.json',folder+'/painterly-prompts.json');
 await copyFile('src/modules/AshmawArenaRenderer.js',folder+'/scene.js');
+for(const name of ['clouds','furnace-smoke','steam'])await copyFile('assets/raids/ashmaw/'+name+'.png',folder+'/'+name+'.png');
 await writeFile(folder+'/index.html',`<!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ashmaw · Arena Study</title>
@@ -18,8 +19,8 @@ import {createArenaScene} from './scene.js?v=ambient-4';
 const load=src=>new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>reject(new Error('Unable to load '+src));i.src=src;});
 const canvas=document.querySelector('canvas'),pause=document.querySelector('#pause'),battle=document.querySelector('#battle'),scrub=document.querySelector('#scrub'),time=document.querySelector('#time'),status=document.querySelector('#status');
 try{
- const [background,smoke]=await Promise.all([load('arena-painterly.png'),load('../../assets/raids/ashmaw/smoke.png')]);
- const renderer=window.arenaRenderer=createArenaScene(canvas,{background,smoke});
+ const [background,cloudAtlas,smokeAtlas,steamAtlas]=await Promise.all([load('arena-painterly.png'),...['clouds','furnace-smoke','steam'].map(n=>load(n+'.png'))]);
+ const renderer=window.arenaRenderer=createArenaScene(canvas,{background,cloudAtlas,smokeAtlas,steamAtlas,maxWidth:1440});
  const state=window.arenaPlayer={paused:matchMedia('(prefers-reduced-motion:reduce)').matches,battle:false,time:0,last:performance.now(),draw};
  function draw(t){state.time=t;const c=renderer.render(t);scrub.value=Math.round(c.t*30);time.textContent=c.t.toFixed(2)+' s';status.textContent='Ambient · clouds and furnace breath';}
  pause.textContent=state.paused?'Play':'Pause';pause.onclick=()=>{state.paused=!state.paused;pause.textContent=state.paused?'Play':'Pause';};
@@ -28,4 +29,4 @@ try{
  draw(0);requestAnimationFrame(tick);
 }catch(e){document.querySelector('#error').textContent=e.message;}
 </script></html>`);
-console.log('Arena study: http://127.0.0.1:4175/output/ashmaw-arena/');
+console.log('Arena study (output-only server): http://127.0.0.1:4175/ashmaw-arena/');

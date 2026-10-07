@@ -1,32 +1,20 @@
-# Ashmaw, the Cinder Tyrant
+# Ashmaw custom atmosphere
 
-The live Guild raid uses `arena.png`, the approved painterly arena generated
-with the built-in ImageGen tool using the user's composition references.
-Its uneven basalt ground
-is empty of painted raiders; the game supplies its own party sprites and state.
-The painting's generation/edit prompts are in `arena-source/prompts.json`.
-`smoke.png` is the existing transparent texture reused from the earlier
-portrait study; its provenance is in `smoke-source/prompts.json`. Both assets
-are bundled for offline use. Earlier sprite and portrait experiments remain
-local and are excluded from the release package.
+`arena.png` remains the approved fixed composition. The live scene uses the Subtle (0.75) preset from `output/ashmaw-custom-atmosphere/`.
 
-`src/modules/AshmawArenaRenderer.js` provides the shared 16-second Canvas 2D
-loop: billowing painted clouds, smoke, furnace light, eye wisps, flowing lava,
-steam and embers. The boss silhouette and ground stay anchored. Battle effects
-are disabled. `AshmawScene.js` mounts the decorative layer beneath native raid
-controls, caps rendering at 1440px, suspends it offscreen or when the document
-is hidden, and shows a still frame for reduced motion. Cleanup releases its
-canvases and listeners. A missing optional smoke texture still allows motion;
-a missing painting leaves the native game scene intact.
+The approved painterly arena was generated with built-in ImageGen from the user's composition references. Its generation/edit prompts remain in `arena-source/prompts.json`. The game supplies its own party sprites and state over the empty basalt ground. Original smoke provenance remains in `smoke-source/prompts.json`.
 
-Verification: `node tests/ashmaw-scene.test.mjs` checks ownership and encounter
-isolation. `node tests/ashmaw-loop.test.mjs` checks rendered frame identity at
-0/16 and 3/19 seconds, real motion, seam continuity, cross-origin textures,
-reduced motion, suspension, and active cleanup in Chromium. Both run in npm test.
+Fresh transparent built-in ImageGen atlases, copied without modification:
 
-Run `node build-tools/preview-ashmaw-arena.mjs` to generate the arena study from
-these bundled assets. Run `node build-tools/export-ashmaw.mjs --video` to generate
-`output/ashmaw/index.html`, `scene.js`, and `ashmaw-loop.webm`.
-The HTML loops automatically and offers Pause/Play. `--serve` opens a local
-preview server at `http://127.0.0.1:4175/output/ashmaw/`. The WebM contains one
-cycle; enable looping in its player. Outputs are intentionally gitignored.
+- `clouds.png`: four dark cloud banks.
+- `furnace-smoke.png`: four curled furnace smoke plumes.
+- `steam.png`: two low haze and two rising geothermal steam shapes.
+- `prompts-custom-atmosphere.json`: exact generation prompts; excluded from release ZIP.
+
+The canonical `AshmawArenaRenderer.js` caches feathered atlas cells, masks clouds to the sky, preserves the original lava flow/furnace pulse/eye light and emitter timing, and draws four irregular Canvas cinder sprites. No pieces of the painting are sampled for moving clouds. Deterministic 16-second loop.
+
+`AshmawScene.js` loads the three optional textures with CORS, renders at up to 1440×720 and 30 FPS, pauses offscreen/hidden/reduced-motion, and releases resources on removal or encounter change. Missing textures keep lava/light/cinders; missing painting restores native art; failed Canvas keeps the approved still. Native controls and state remain owned by the game.
+
+The original `smoke.png` and earlier sprite/portrait studies are retained for historical previews. Live raids no longer request the original smoke image.
+
+Validation: `node tests/ashmaw-scene.test.mjs`, `node tests/ashmaw-loop.test.mjs`, and `npm test`.

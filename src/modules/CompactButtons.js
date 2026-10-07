@@ -24,7 +24,9 @@ function kind(el, text) {
   if (el.matches('[data-fs-preserved-action="control"]')) {
     return el.dataset.fsActionKind === 'icon' ? 'icon' : 'text';
   }
-  if (el.matches('[data-iw-inventory-control="filter"], [data-iw-inventory-control="page"], [data-iw-ui="nav-tab"], [data-iw-ui="zone-action"], [data-iw-panel-part="send"]')) return 'text';
+  // `action`: the raid's Attack and lent-skill buttons (GuildPanels; guild.css
+  // sizes them and keeps the primary's ember accent).
+  if (el.matches('[data-iw-inventory-control="filter"], [data-iw-inventory-control="page"], [data-iw-ui="nav-tab"], [data-iw-ui="zone-action"], [data-iw-panel-part="send"], [data-iw-guild-role="action"]')) return 'text';
   if (loadoutPair(el, text())) return 'icon';
   if (/^change zone$/i.test(text())) return 'text';
   // The small timer in the screenshot belongs to the Change Zone group.

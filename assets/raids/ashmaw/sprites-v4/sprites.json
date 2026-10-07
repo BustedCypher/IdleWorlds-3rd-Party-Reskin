@@ -1,0 +1,393 @@
+{
+  "character": "Ashmaw",
+  "version": 4,
+  "method": "held body cel plus frame-by-frame painted wing and tail cels; uniform image registration only",
+  "cellWidth": 1200,
+  "cellHeight": 800,
+  "columns": 6,
+  "rows": 4,
+  "sheetWidth": 7200,
+  "sheetHeight": 3200,
+  "sourceSheet": "../sprites-v3/idle-24.png",
+  "registration": [
+    {
+      "scale": 1,
+      "x": 0,
+      "y": 0,
+      "score": 0
+    },
+    {
+      "scale": 0.998,
+      "x": -10,
+      "y": 1,
+      "score": 46.4837037037037
+    },
+    {
+      "scale": 0.998,
+      "x": -27,
+      "y": 2,
+      "score": 65.97481481481482
+    },
+    {
+      "scale": 1.002,
+      "x": -30,
+      "y": 3,
+      "score": 72.73185185185186
+    },
+    {
+      "scale": 0.978,
+      "x": -29,
+      "y": -1,
+      "score": 73.74148148148149
+    },
+    {
+      "scale": 0.982,
+      "x": -34,
+      "y": 3,
+      "score": 94.39777777777778
+    },
+    {
+      "scale": 1.008,
+      "x": 13,
+      "y": 5,
+      "score": 71.42444444444445
+    },
+    {
+      "scale": 1.002,
+      "x": 1,
+      "y": 4,
+      "score": 73.08962962962963
+    },
+    {
+      "scale": 0.974,
+      "x": -19,
+      "y": 2,
+      "score": 67.10888888888888
+    },
+    {
+      "scale": 0.982,
+      "x": -20,
+      "y": 2,
+      "score": 68.51777777777778
+    },
+    {
+      "scale": 0.998,
+      "x": 10,
+      "y": 0,
+      "score": 73.30666666666667
+    },
+    {
+      "scale": 1.002,
+      "x": 1,
+      "y": 1,
+      "score": 70.59925925925926
+    },
+    {
+      "scale": 0.99,
+      "x": 1,
+      "y": 0,
+      "score": 65.78370370370371
+    },
+    {
+      "scale": 0.994,
+      "x": -7,
+      "y": 1,
+      "score": 66.2325925925926
+    },
+    {
+      "scale": 0.992,
+      "x": -9,
+      "y": -1,
+      "score": 63.80148148148148
+    },
+    {
+      "scale": 0.992,
+      "x": -8,
+      "y": -1,
+      "score": 70.58962962962963
+    },
+    {
+      "scale": 0.994,
+      "x": -3,
+      "y": 4,
+      "score": 47.82740740740741
+    },
+    {
+      "scale": 0.988,
+      "x": -3,
+      "y": 2,
+      "score": 53.223703703703706
+    },
+    {
+      "scale": 1.002,
+      "x": -4,
+      "y": 3,
+      "score": 51
+    },
+    {
+      "scale": 1.006,
+      "x": -8,
+      "y": 3,
+      "score": 73.73925925925926
+    },
+    {
+      "scale": 0.964,
+      "x": -22,
+      "y": -1,
+      "score": 54.02518518518519
+    },
+    {
+      "scale": 0.968,
+      "x": -23,
+      "y": 0,
+      "score": 57.71259259259259
+    },
+    {
+      "scale": 0.988,
+      "x": -11,
+      "y": 0,
+      "score": 50.99037037037037
+    },
+    {
+      "scale": 0.988,
+      "x": -11,
+      "y": 0,
+      "score": 51.33481481481481
+    }
+  ],
+  "animations": {
+    "idle": {
+      "file": "idle-24.png",
+      "frameCount": 24,
+      "fps": 24,
+      "frameMilliseconds": 41.666666666666664,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 0
+        },
+        {
+          "x": 1200,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 1
+        },
+        {
+          "x": 2400,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 2
+        },
+        {
+          "x": 3600,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 3
+        },
+        {
+          "x": 4800,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 4
+        },
+        {
+          "x": 6000,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 5
+        },
+        {
+          "x": 0,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 6
+        },
+        {
+          "x": 1200,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 7
+        },
+        {
+          "x": 2400,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 8
+        },
+        {
+          "x": 3600,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 9
+        },
+        {
+          "x": 4800,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 10
+        },
+        {
+          "x": 6000,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 11
+        },
+        {
+          "x": 0,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 12
+        },
+        {
+          "x": 1200,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 13
+        },
+        {
+          "x": 2400,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 14
+        },
+        {
+          "x": 3600,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 15
+        },
+        {
+          "x": 4800,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 16
+        },
+        {
+          "x": 6000,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 17
+        },
+        {
+          "x": 0,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 18
+        },
+        {
+          "x": 1200,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 19
+        },
+        {
+          "x": 2400,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 20
+        },
+        {
+          "x": 3600,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 21
+        },
+        {
+          "x": 4800,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 22
+        },
+        {
+          "x": 6000,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "drawnAppendageSource": 23
+        }
+      ],
+      "verification": {
+        "uniqueFrames": 24,
+        "maxBodyPixelDelta": 0,
+        "adjacentDifferences": [
+          5.058034261067708,
+          5.725026448567708,
+          6.4171142578125,
+          8.841349283854166,
+          7.929534912109375,
+          9.086446126302084,
+          3.4758402506510415,
+          9.018035888671875,
+          3.8441975911458335,
+          6.865030924479167,
+          4.094797770182292,
+          6.957743326822917,
+          7.099517822265625,
+          9.194244384765625,
+          6.63739013671875,
+          9.317769368489584,
+          5.900278727213542,
+          7.119700113932292,
+          7.72357177734375,
+          5.451822916666667,
+          4.707366943359375,
+          6.22113037109375,
+          4.591705322265625,
+          6.342936197916667
+        ],
+        "seamRatio": 0.9556370903718417
+      }
+    }
+  }
+}

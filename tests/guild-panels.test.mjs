@@ -171,7 +171,10 @@ check('the ready toggle keeps its ready (green) state', s.toggleState === 'ready
 check('the ready check is not repainted by the game\'s sans [class*="bg-amber-"] rule',
   /skills_panel_texture/.test(s.readyCheck?.backgroundImage || '') && !/223, 185, 73/.test(s.readyCheck?.backgroundColor || ''), JSON.stringify(s.readyCheck));
 check('Set wears the ember CTA over the game\'s .button-primary', s.set && /gradient/.test(s.set.backgroundImage), JSON.stringify(s.set));
-check('raiders carry no control plate', s.raiders.length === 2 && s.raiders.every(r => r.startsWith('rgba(0, 0, 0, 0)|none|none')), s.raiders.join(' / '));
+// Raiders wear the skin's forged card (head hairline over the shared panel
+// ground, 2026-10-07), never the generic control plate or the kit's unit art.
+check('raiders wear the forged raid card, not the control plate',
+  s.raiders.length === 2 && s.raiders.every(r => r.split('|')[1].startsWith('linear-gradient(90deg') && /skills_panel_texture/.test(r) && !/ui-kit/.test(r)), s.raiders.join(' / '));
 check('raider HP keeps the game\'s colour per state', s.lowHp.length === 2 && s.lowHp[0] !== s.lowHp[1], s.lowHp.join(' / '));
 check('the Guild tab is an active nav tab', s.guildTab === 'nav-tab:active', s.guildTab);
 

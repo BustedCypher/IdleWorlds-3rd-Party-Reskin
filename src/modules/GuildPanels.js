@@ -79,6 +79,13 @@
  */
 
 import { reconcileAshmawScene, clearAshmawScenes, pruneAshmawScenes } from './AshmawScene.js';
+import { reconcileThessalyScene, clearThessalyScenes, pruneThessalyScenes } from './ThessalyScene.js';
+import { reconcileMorwennaScene, clearMorwennaScenes, pruneMorwennaScenes } from './MorwennaScene.js';
+import { reconcileGrimjawScene, clearGrimjawScenes, pruneGrimjawScenes } from './GrimjawScene.js';
+import { reconcileSkarthScene, clearSkarthScenes, pruneSkarthScenes } from './SkarthScene.js';
+import { decorateRaidHud, clearRaidHud, pruneRaidDocks } from './RaidHud.js';
+// TESTING FEATURE: dummy raiders to preview a full party (RaidPartyPreview.js).
+import { syncPartyPreview, syncPartyPreviewToggle, clearRaidPartyPreview } from './RaidPartyPreview.js';
 
 const norm = value => String(value || '').replace(/\s+/g, ' ').trim();
 /** Labels lead with an emoji run ("⚔️ Ready check", "🧪 Pre-raid prep"). */
@@ -140,6 +147,9 @@ function decorateHead(root, heading) {
   for (const span of head.querySelectorAll('span[title]')) {
     if (/guild points/i.test(span.title)) role(span, 'points');
   }
+  // TESTING FEATURE: the full-party preview toggle, shown only during a fight.
+  // Synced before the sweep below, so it is a head link from its first pass.
+  syncPartyPreviewToggle(root, head, decorateArena);
   // "View my guild (Omen)" / "Leave guest spot": text links wearing <button>.
   for (const button of head.querySelectorAll('button')) {
     if (button.hasAttribute('data-iw-collapse')) continue;
@@ -399,23 +409,35 @@ function isTrack(el) {
 function decorateArena(arena) {
   role(arena, 'arena');
   reconcileAshmawScene(arena);
-  const boss=arena.querySelector('img[src*="boss-"],img[alt^="Ashmaw"]');
+  reconcileThessalyScene(arena);
+  reconcileMorwennaScene(arena);
+  reconcileGrimjawScene(arena);
+  reconcileSkarthScene(arena);
+  const boss=arena.querySelector('img[src*="boss-"],img[alt^="Ashmaw"],img[alt^="Thessaly"],img[alt^="Morwenna"],img[alt^="Grimjaw"],img[alt^="Skarth"]');
   if(boss?.parentElement?.parentElement!==arena)role(boss?.parentElement?.parentElement,'boss-summary');
   for (const panel of arena.querySelectorAll('.raid-readable-panel')) {
-    if (panel.tagName === 'BUTTON') {
+    // The log, collapsed (a <button>) or expanded (a <div> holding the game's
+    // '.txt' and Close buttons, which read as a second Raid skills panel when
+    // keyed on the tag): the only readable panel inside a wrapper.
+    if (panel.tagName === 'BUTTON' || (panel.parentElement !== arena && panel.parentElement?.parentElement === arena)) {
       role(panel, 'combat-log');
       // React owns the live log wrapper. Place it without moving its button.
       if (panel.parentElement !== arena && panel.parentElement?.parentElement === arena) role(panel.parentElement, 'combat-log-region');
       continue;
     }
-    role(panel, panel.querySelector('button') ? 'effects' : 'telegraph');
-    tone(panel, panel.querySelector('button') ? 'info' : toneOf(panel));
-    for (const button of panel.querySelectorAll('button')) role(button, 'effects-toggle');
+    // RaidHud appends its own phone fold control here; it is not the game's toggle.
+    const gameButtons = panel.querySelectorAll('button:not([data-iw-raid-owned])');
+    role(panel, gameButtons.length ? 'effects' : 'telegraph');
+    tone(panel, gameButtons.length ? 'info' : toneOf(panel));
+    for (const button of gameButtons) role(button, 'effects-toggle');
   }
   for (const track of arena.querySelectorAll('div')) {
     if (!isTrack(track) || track.closest('.raid-arena-floor')) continue;
     role(track, 'boss-hp');
   }
+  // TESTING FEATURE: tops the party up with dummy frames while the head-row
+  // "🧪 Test: full party" toggle is on. Before the sweep, so they are tagged too.
+  syncPartyPreview(arena);
   for (const raider of arena.querySelectorAll('.raid-arena-floor > button, .raid-arena-floor > div')) {
     role(raider, 'raider');
     const tracks = [...raider.querySelectorAll(':scope > div')].filter(isTrack);
@@ -426,6 +448,26 @@ function decorateArena(arena) {
     role(plates[1], 'raider-skill');
   }
   for (const p of arena.querySelectorAll(':scope > p')) role(p, 'status');
+  // The fight's own controls (Attack + the lent skill) and its result card
+  // ("💀 Wipe." + Close). Untagged, both fell into an empty grid cell of the
+  // HUD layout and stretched to fill it.
+  for (const box of arena.querySelectorAll(':scope > div:not(.raid-arena-floor):not([data-iw-raid-owned])')) {
+    const current = box.getAttribute(ROLE);
+    if (current && current !== 'actions' && current !== 'outcome') continue;
+    if (box.matches('[data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]')) continue;
+    const kids = [...box.children];
+    if (kids.length && kids.every(k => k.tagName === 'BUTTON')) {
+      role(box, 'actions');
+      tone(box, null);
+      for (const button of kids) role(button, 'action');
+    } else if (box.querySelector(':scope > p')) {
+      role(box, 'outcome');
+      tone(box);
+      for (const button of box.querySelectorAll(':scope > button')) role(button, 'outcome-close');
+    }
+  }
+  // Last: it reads every role tagged above (RaidHud.js).
+  decorateRaidHud(arena);
 }
 
 /* ----------------------------------------------------------- lifecycle -- */
@@ -440,6 +482,10 @@ const signatures = new WeakMap();
  */
 export function decorateGuildPanel({ root, heading }) {
   pruneAshmawScenes();
+  pruneThessalyScenes();
+  pruneMorwennaScenes();
+  pruneGrimjawScenes();
+  pruneSkarthScenes();
   mark(root, 'data-iw-guild', 'root');
   decorateHead(root, heading);
   for (const card of root.querySelectorAll('.compact-panel')) {
@@ -454,11 +500,18 @@ export function decorateGuildPanel({ root, heading }) {
     DECORATORS[kind]?.(card);
   }
   for (const arena of root.querySelectorAll('.raid-battle-backdrop')) decorateArena(arena);
+  pruneRaidDocks(root);
 }
 
 export function clearGuildPanel(root) {
   if (!root) return;
   clearAshmawScenes(root);
+  clearThessalyScenes(root);
+  clearMorwennaScenes(root);
+  clearGrimjawScenes(root);
+  clearSkarthScenes(root);
+  clearRaidPartyPreview(root); // TESTING FEATURE
+  clearRaidHud(root);
   for (const attr of ATTRS) {
     if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
     root.querySelectorAll(`[${attr}]`).forEach(el => el.removeAttribute(attr));

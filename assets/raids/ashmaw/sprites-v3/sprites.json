@@ -1,0 +1,1122 @@
+{
+  "character": "Ashmaw, the Cinder Tyrant",
+  "version": 3,
+  "facing": "right",
+  "columns": 6,
+  "rows": 4,
+  "cellWidth": 1200,
+  "cellHeight": 800,
+  "sheetWidth": 7200,
+  "sheetHeight": 3200,
+  "method": "individually painted frame drawings; crop and integer registration only",
+  "animations": {
+    "idle": {
+      "file": "idle-24.png",
+      "frameCount": 24,
+      "fps": 24,
+      "frameMilliseconds": 41.666666666666664,
+      "loopMilliseconds": 1000,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-01-02.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 24
+          }
+        },
+        {
+          "x": 1200,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-01-02.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 23
+          }
+        },
+        {
+          "x": 2400,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-03-04.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 21
+          }
+        },
+        {
+          "x": 3600,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-03-04.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 21
+          }
+        },
+        {
+          "x": 4800,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-05-06.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 19
+          }
+        },
+        {
+          "x": 6000,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-05-06.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 18
+          }
+        },
+        {
+          "x": 0,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-07-08.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 24
+          }
+        },
+        {
+          "x": 1200,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-07-08.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 24
+          }
+        },
+        {
+          "x": 2400,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-09-10.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 21
+          }
+        },
+        {
+          "x": 3600,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-09-10.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 20
+          }
+        },
+        {
+          "x": 4800,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-11-12.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": -13,
+            "y": 30
+          }
+        },
+        {
+          "x": 6000,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-11-12.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 30
+          }
+        },
+        {
+          "x": 0,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-13-14.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 19
+          }
+        },
+        {
+          "x": 1200,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-13-14.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 18
+          }
+        },
+        {
+          "x": 2400,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-15-16.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 27
+          }
+        },
+        {
+          "x": 3600,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-15-16.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 27
+          }
+        },
+        {
+          "x": 4800,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-17-18.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 18
+          }
+        },
+        {
+          "x": 6000,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-17-18.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 19
+          }
+        },
+        {
+          "x": 0,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-19-20.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 22
+          }
+        },
+        {
+          "x": 1200,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-19-20.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 22
+          }
+        },
+        {
+          "x": 2400,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-21-22.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 16
+          }
+        },
+        {
+          "x": 3600,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-21-22.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 15
+          }
+        },
+        {
+          "x": 4800,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-23-24.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 22
+          }
+        },
+        {
+          "x": 6000,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "idle-23-24.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 22
+          }
+        }
+      ],
+      "verification": {
+        "nativeFrameSizes": [
+          [
+            1086,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ]
+        ],
+        "paddedFrameSize": [
+          1200,
+          800
+        ],
+        "uniqueDrawings": 24,
+        "adjacentDifferences": [
+          13.619781494140625,
+          17.542002360026043,
+          13.203206380208334,
+          15.871246337890625,
+          16.861185709635418,
+          26.667704264322918,
+          14.130788167317709,
+          19.850941975911457,
+          8.994160970052084,
+          17.158040364583332,
+          11.878865559895834,
+          12.486470540364584,
+          13.823598225911459,
+          15.416554768880209,
+          11.2476806640625,
+          18.518656412760418,
+          8.949961344401041,
+          9.418314615885416,
+          14.853068033854166,
+          17.648447672526043,
+          8.863677978515625,
+          15.014078776041666,
+          7.500437418619792,
+          14.813466389973959
+        ],
+        "seamDifference": 14.813466389973959,
+        "medianDifference": 14.130788167317709,
+        "seamRatio": 1.0483114044717745,
+        "registeredBaseline": 740
+      }
+    },
+    "fireBreath": {
+      "file": "fire-breath-24.png",
+      "frameCount": 24,
+      "fps": 24,
+      "frameMilliseconds": 41.666666666666664,
+      "loopMilliseconds": 1000,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-01-02.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 105
+          }
+        },
+        {
+          "x": 1200,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-01-02.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 104
+          }
+        },
+        {
+          "x": 2400,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-03-04.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 108
+          }
+        },
+        {
+          "x": 3600,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-03-04.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 108
+          }
+        },
+        {
+          "x": 4800,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-05-06.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 85
+          }
+        },
+        {
+          "x": 6000,
+          "y": 0,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-05-06.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 86
+          }
+        },
+        {
+          "x": 0,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-07-08.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 1,
+            "y": 106
+          }
+        },
+        {
+          "x": 1200,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-07-08.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 4,
+            "y": 106
+          }
+        },
+        {
+          "x": 2400,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-09-10.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 13,
+            "y": 122
+          }
+        },
+        {
+          "x": 3600,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-09-10.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 35,
+            "y": 121
+          }
+        },
+        {
+          "x": 4800,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-11-12.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 4,
+            "y": 108
+          }
+        },
+        {
+          "x": 6000,
+          "y": 800,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-11-12.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 8,
+            "y": 108
+          }
+        },
+        {
+          "x": 0,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-13-14.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 2,
+            "y": 109
+          }
+        },
+        {
+          "x": 1200,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-13-14.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 2,
+            "y": 109
+          }
+        },
+        {
+          "x": 2400,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-15-16.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 2,
+            "y": 107
+          }
+        },
+        {
+          "x": 3600,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-15-16.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 3,
+            "y": 107
+          }
+        },
+        {
+          "x": 4800,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-17-18.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 1,
+            "y": 108
+          }
+        },
+        {
+          "x": 6000,
+          "y": 1600,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-17-18.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            725
+          ],
+          "registration": {
+            "x": 2,
+            "y": 108
+          }
+        },
+        {
+          "x": 0,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-19-20.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 108
+          }
+        },
+        {
+          "x": 1200,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-19-20.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1085,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 109
+          }
+        },
+        {
+          "x": 2400,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-21-22.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 90
+          }
+        },
+        {
+          "x": 3600,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-21-22.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1086,
+            724
+          ],
+          "registration": {
+            "x": 0,
+            "y": 90
+          }
+        },
+        {
+          "x": 4800,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-23-24.png",
+          "sourceFrame": 0,
+          "nativeSize": [
+            1084,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 100
+          }
+        },
+        {
+          "x": 6000,
+          "y": 2400,
+          "width": 1200,
+          "height": 800,
+          "source": "fire-23-24.png",
+          "sourceFrame": 1,
+          "nativeSize": [
+            1084,
+            725
+          ],
+          "registration": {
+            "x": 0,
+            "y": 101
+          }
+        }
+      ],
+      "verification": {
+        "nativeFrameSizes": [
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            725
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1085,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1086,
+            724
+          ],
+          [
+            1084,
+            725
+          ],
+          [
+            1084,
+            725
+          ]
+        ],
+        "paddedFrameSize": [
+          1200,
+          800
+        ],
+        "uniqueDrawings": 24,
+        "adjacentDifferences": [
+          4.436136881510417,
+          6.296162923177083,
+          3.32147216796875,
+          17.092356363932293,
+          11.444437662760416,
+          22.024159749348957,
+          11.075592041015625,
+          13.458587646484375,
+          17.795511881510418,
+          18.297780354817707,
+          10.747670491536459,
+          12.669606526692709,
+          7.253763834635417,
+          10.482889811197916,
+          8.686757405598959,
+          9.735514322916666,
+          9.282033284505209,
+          13.198415120442709,
+          9.546346028645834,
+          25.052897135416668,
+          3.0328572591145835,
+          14.180379231770834,
+          15.698140462239584,
+          6.867899576822917
+        ],
+        "seamDifference": 6.867899576822917,
+        "medianDifference": 11.075592041015625,
+        "seamRatio": 0.6200932240361875,
+        "registeredBaseline": 740
+      }
+    }
+  }
+}

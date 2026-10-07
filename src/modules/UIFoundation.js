@@ -15,6 +15,7 @@ import { decorateWorldBossPanel, clearWorldBossPanel } from './WorldBossPanels.j
 import { decorateVillagePanel, clearVillagePanel } from './VillagePanels.js';
 import { reconcileVillageScene, clearVillageScene } from './VillageScene.js';
 import { decorateGuildPanel, clearGuildPanel } from './GuildPanels.js';
+import { refreshRaidText } from './RaidHud.js';
 import { decorateCollapsibleFrames, clearCollapsibleFrames } from './CollapsibleFrames.js';
 import { classifyHeaderChrome, clearHeaderChrome } from './HeaderChrome.js';
 import { ensureArcaneCacheButton, clearArcaneCacheDemo } from './ArcaneCacheDemo.js';
@@ -1526,6 +1527,8 @@ export function injectUIFoundationStyles() {
 export function initUIFoundation() {
   injectUIFoundationStyles();
   on('iw:dom-flush', queueClassify);
+  // The raid's mirrored timers tick on text alone (RaidHud.refreshRaidText).
+  on('iw:text-flush', event => guard('ui:raid-text', () => refreshRaidText(event.detail?.parents || [])));
   // Native title/button text ticks deliberately do not emit dom-flush.
   // Reconcile only the already-resolved boss panel through the shared watcher.
   on('iw:skill-panel', event => {

@@ -1,0 +1,38 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "purpose": "Stable illustrated layers and a closed-eye cel for Ashmaw's close-up living portrait.",
+  "conceptPromptSet": "../../../../output/ashmaw-concepts/prompts.json",
+  "layers": [
+    {
+      "name": "smoke",
+      "prompt": "Use case: stylized-concept.\nAsset type: one isolated transparent smoke VFX texture for an animated painterly fantasy raid boss portrait.\nPrimary request: a single beautiful billowing volcanic smoke cloud, a horizontally flowing wisp with irregular swirling curls and layered vapor, charcoal/burgundy shadows and muted warm copper/orange lava light beneath. Smoke ONLY; no dragon, creature, fire, architecture, ground, scenery, particles, text or grid.\nStyle: premium hand-painted detailed fantasy illustration, rich soft volumetric smoke, intricate natural eddies and wisps, matches a dark crimson molten dragon's volcanic fortress. Not a flat gradient or cartoon, not opaque white steam, not photographic.\nComposition: one irregular elongated cloud in the center of a wide landscape canvas; roughly two times wider than tall; curl gently upward at the left and taper into wispy thin translucent edges at both ends. Leave generous completely transparent padding all around it so no smoke touches the canvas boundaries. Soft layered semi-transparent gray-burgundy smoke with amber under-light; holes and thinner areas through the center, organic asymmetrical silhouette. True RGBA transparency, no checkerboard painted into the artwork, no solid background or vignette. This is one reusable cloud cutout for a looping smoke animation, not a sprite sheet.",
+      "path": "C:\\Users\\curti\\.codex\\generated_images\\01a10b45-add7-7193-8da4-2d274c2f4b8f\\exec-ae59279e-07ea-4e6b-8e36-f857e0157de8.png",
+      "asset": "smoke.png",
+      "transparent_background": true
+    },
+    {
+      "name": "background",
+      "prompt": "Use case: precise-object-edit. Edit target: the attached wide volcanic Ashmaw portrait. REMOVE ONLY the entire foreground dragon on the RIGHT: its horns, skull, jaw, neck, shoulders and all dragon silhouette. Inpaint the area with the same distant volcanic fortress, smoke, lava-lit crags and atmosphere continuing the landscape. Preserve the entire left half, foreground basalt arena, composition, native1916x821 canvas/aspect ratio and existing architecture exactly. Do not crop, zoom, move camera, shift arena or redesign the environment. This is the fixed BACKGROUND plate for a subtle living portrait. Painted fantasy illustration; same palette/light/style; no new character, no text, no interface.",
+      "path": "C:\\Users\\curti\\.codex\\generated_images\\01a10b45-add7-7193-8da4-2d274c2f4b8f\\exec-7f59ff2c-7bd1-4215-a89a-d36b1bda22ea.png",
+      "asset": "background.png",
+      "editTarget": "output/ashmaw-concepts/ashmaw-closeup-portrait.png",
+      "transparent_background": false
+    },
+    {
+      "name": "dragon",
+      "prompt": "Use case: background-extraction. Edit target: the attached wide Ashmaw portrait. Extract ONLY the existing dragon (horns, head, open jaw, neck, upper shoulders, scales) as one transparent RGBA foreground cutout. Copy the exact existing dragon artwork and all its scale plates, fissure patterns, horns, teeth, eye, pose and shading WITHOUT REDESIGN. Remove all volcanic architecture/ground/sky/background around it; those areas must be transparent. Retain the FULL wide1916x821 canvas and exact original character size and placement on the RIGHT half, with the LEFT half completely empty transparent. Do not center, enlarge, shift, crop differently, or invent missing anatomy. Preserve the original clipped upper/right horns at the canvas boundary exactly. Keep the dragon's lower edge fading naturally through the original soft smoke near lower-right. No detached scenery pieces, no gray/brown halo background. Exact original painted fantasy portrait, single stable cutout for a living illustration, no sprite sheet or multiple poses.",
+      "path": "C:\\Users\\curti\\.codex\\generated_images\\01a10b45-add7-7193-8da4-2d274c2f4b8f\\exec-2e7012dd-2a06-4cd1-9eb1-75825610ee4c.png",
+      "asset": "dragon.png",
+      "editTarget": "output/ashmaw-concepts/ashmaw-closeup-portrait.png",
+      "transparent_background": true
+    },
+    {
+      "name": "blink",
+      "prompt": "Use case: precise-object-edit, facial animation cel. Edit target: attached transparent Ashmaw close-up dragon cutout. Change ONLY the MAIN LARGE glowing eye near x=71.5% of image width,y=26.5% of image height into a naturally CLOSED eyelid. Paint the armored upper eyelid lowered completely across the amber eye, preserving the eye socket, adjacent rigid dark-crimson scale plates, orange cracks and brow; a faint thin warm-orange slit at most, no round glowing iris visible. Everything else must remain exactly identical: head pose, skull, horns, teeth, open mouth, jaw, neck, all scale/crack texture, character placement, original wide1915x821 canvas and transparent background. Do not change the tiny far-side eye, crop, zoom, move, resize or redesign anything. This is ONE closed-eye blink cel corresponding precisely to the original open-eye portrait, not a sheet. Preserve actual RGBA transparency and lower smoke edge.",
+      "path": "C:\\Users\\curti\\.codex\\generated_images\\01a10b45-add7-7193-8da4-2d274c2f4b8f\\exec-dc7289f7-e8fc-4bec-957d-f70c1658c849.png",
+      "asset": "blink.png",
+      "editTarget": "assets/raids/ashmaw/portrait/dragon.png",
+      "transparent_background": true
+    }
+  ]
+}

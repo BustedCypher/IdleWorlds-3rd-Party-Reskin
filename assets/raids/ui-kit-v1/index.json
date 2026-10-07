@@ -1,0 +1,419 @@
+{
+  "version": 1,
+  "atlas": "raid-ui-atlas.png",
+  "width": 2048,
+  "height": 1024,
+  "pixelRatio": 2,
+  "padding": 8,
+  "transparentFraction": 0.5662655830383301,
+  "entries": [
+    {
+      "name": "boss-health",
+      "kind": "chrome",
+      "x": 8,
+      "y": 8,
+      "width": 1215,
+      "height": 380,
+      "logicalWidth": 607.5,
+      "logicalHeight": 190,
+      "source": {
+        "image": "chrome-source.png",
+        "x": 27,
+        "y": 106,
+        "width": 582,
+        "height": 182
+      }
+    },
+    {
+      "name": "boss-cast",
+      "kind": "chrome",
+      "x": 8,
+      "y": 396,
+      "width": 920,
+      "height": 160,
+      "logicalWidth": 460,
+      "logicalHeight": 80,
+      "source": {
+        "image": "chrome-source.png",
+        "x": 663,
+        "y": 153,
+        "width": 559,
+        "height": 97
+      }
+    },
+    {
+      "name": "unit-normal",
+      "kind": "chrome",
+      "x": 936,
+      "y": 396,
+      "width": 264,
+      "height": 136,
+      "logicalWidth": 132,
+      "logicalHeight": 68,
+      "source": {
+        "image": "chrome-source.png",
+        "x": 119,
+        "y": 395,
+        "width": 391,
+        "height": 197
+      }
+    },
+    {
+      "name": "unit-selected",
+      "kind": "chrome",
+      "x": 1208,
+      "y": 396,
+      "width": 264,
+      "height": 136,
+      "logicalWidth": 132,
+      "logicalHeight": 68,
+      "source": {
+        "image": "chrome-source.png",
+        "x": 745,
+        "y": 395,
+        "width": 394,
+        "height": 197
+      }
+    },
+    {
+      "name": "unit-critical",
+      "kind": "chrome",
+      "x": 1480,
+      "y": 396,
+      "width": 264,
+      "height": 136,
+      "logicalWidth": 132,
+      "logicalHeight": 68,
+      "source": {
+        "image": "chrome-source.png",
+        "x": 119,
+        "y": 681,
+        "width": 392,
+        "height": 193
+      }
+    },
+    {
+      "name": "personal-hud",
+      "kind": "chrome",
+      "x": 8,
+      "y": 564,
+      "width": 984,
+      "height": 352,
+      "logicalWidth": 492,
+      "logicalHeight": 176,
+      "source": {
+        "image": "chrome-source.png",
+        "x": 654,
+        "y": 665,
+        "width": 570,
+        "height": 204
+      }
+    },
+    {
+      "name": "utility-panel",
+      "kind": "chrome",
+      "x": 1000,
+      "y": 564,
+      "width": 572,
+      "height": 198,
+      "logicalWidth": 286,
+      "logicalHeight": 99,
+      "source": {
+        "image": "chrome-source.png",
+        "x": 55,
+        "y": 968,
+        "width": 518,
+        "height": 179
+      }
+    },
+    {
+      "name": "divider",
+      "kind": "chrome",
+      "x": 8,
+      "y": 924,
+      "width": 553,
+      "height": 80,
+      "logicalWidth": 276.5,
+      "logicalHeight": 40,
+      "source": {
+        "image": "chrome-source.png",
+        "x": 635,
+        "y": 1017,
+        "width": 595,
+        "height": 86
+      }
+    },
+    {
+      "name": "shield",
+      "kind": "status",
+      "x": 569,
+      "y": 924,
+      "width": 36,
+      "height": 36,
+      "logicalWidth": 18,
+      "logicalHeight": 18,
+      "source": {
+        "image": "status-source.png",
+        "x": 88,
+        "y": 53,
+        "width": 347,
+        "height": 429
+      }
+    },
+    {
+      "name": "ward",
+      "kind": "status",
+      "x": 613,
+      "y": 924,
+      "width": 36,
+      "height": 36,
+      "logicalWidth": 18,
+      "logicalHeight": 18,
+      "source": {
+        "image": "status-source.png",
+        "x": 587,
+        "y": 53,
+        "width": 360,
+        "height": 433
+      }
+    },
+    {
+      "name": "war-cry",
+      "kind": "status",
+      "x": 657,
+      "y": 924,
+      "width": 36,
+      "height": 36,
+      "logicalWidth": 18,
+      "logicalHeight": 18,
+      "source": {
+        "image": "status-source.png",
+        "x": 1065,
+        "y": 47,
+        "width": 416,
+        "height": 429
+      }
+    },
+    {
+      "name": "curse",
+      "kind": "status",
+      "x": 701,
+      "y": 924,
+      "width": 36,
+      "height": 36,
+      "logicalWidth": 18,
+      "logicalHeight": 18,
+      "source": {
+        "image": "status-source.png",
+        "x": 121,
+        "y": 555,
+        "width": 281,
+        "height": 411
+      }
+    },
+    {
+      "name": "bleed",
+      "kind": "status",
+      "x": 745,
+      "y": 924,
+      "width": 36,
+      "height": 36,
+      "logicalWidth": 18,
+      "logicalHeight": 18,
+      "source": {
+        "image": "status-source.png",
+        "x": 626,
+        "y": 552,
+        "width": 278,
+        "height": 413
+      }
+    },
+    {
+      "name": "taunt",
+      "kind": "status",
+      "x": 789,
+      "y": 924,
+      "width": 36,
+      "height": 36,
+      "logicalWidth": 18,
+      "logicalHeight": 18,
+      "source": {
+        "image": "status-source.png",
+        "x": 1045,
+        "y": 527,
+        "width": 449,
+        "height": 439
+      }
+    },
+    {
+      "name": "skill-combat",
+      "kind": "skill",
+      "x": 833,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/combat.svg",
+        "x": 55,
+        "y": 1,
+        "width": 40,
+        "height": 148
+      }
+    },
+    {
+      "name": "skill-jewelcrafting",
+      "kind": "skill",
+      "x": 885,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/jewelcrafting.svg",
+        "x": 25,
+        "y": 33,
+        "width": 100,
+        "height": 84
+      }
+    },
+    {
+      "name": "skill-tailoring",
+      "kind": "skill",
+      "x": 937,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/tailoring.svg",
+        "x": 23,
+        "y": 22,
+        "width": 104,
+        "height": 106
+      }
+    },
+    {
+      "name": "skill-construction",
+      "kind": "skill",
+      "x": 989,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/construction.svg",
+        "x": 17,
+        "y": 21,
+        "width": 116,
+        "height": 108
+      }
+    },
+    {
+      "name": "skill-mining",
+      "kind": "skill",
+      "x": 1041,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/mining.svg",
+        "x": 22,
+        "y": 14,
+        "width": 106,
+        "height": 122
+      }
+    },
+    {
+      "name": "skill-woodcutting",
+      "kind": "skill",
+      "x": 1093,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/woodcutting.svg",
+        "x": 41,
+        "y": 7,
+        "width": 68,
+        "height": 137
+      }
+    },
+    {
+      "name": "skill-alchemy",
+      "kind": "skill",
+      "x": 1145,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/alchemy.svg",
+        "x": 35,
+        "y": 21,
+        "width": 80,
+        "height": 108
+      }
+    },
+    {
+      "name": "skill-gathering",
+      "kind": "skill",
+      "x": 1197,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/gathering.svg",
+        "x": 28,
+        "y": 12,
+        "width": 94,
+        "height": 126
+      }
+    },
+    {
+      "name": "skill-smithing",
+      "kind": "skill",
+      "x": 1249,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/smithing.svg",
+        "x": 22,
+        "y": 44,
+        "width": 106,
+        "height": 62
+      }
+    },
+    {
+      "name": "skill-spellcrafting",
+      "kind": "skill",
+      "x": 1301,
+      "y": 924,
+      "width": 44,
+      "height": 44,
+      "logicalWidth": 22,
+      "logicalHeight": 22,
+      "source": {
+        "image": "../../skills-ui/action-icons/spellcrafting.svg",
+        "x": 17,
+        "y": 25,
+        "width": 116,
+        "height": 100
+      }
+    }
+  ]
+}

@@ -12,7 +12,7 @@ export function getArenaCue(seconds,battle=true){
   rupture:battle?envelope(t,6.05,6.22,6.6,7.8):0,
   debris:battle?envelope(t,6.25,6.45,7.7,9.5):0};
 }
-export function createArenaScene(canvas,{background,smoke,ruptureOverlay,maxWidth}={}){
+export function createArenaScene(canvas,{background,ruptureOverlay,maxWidth,cloudAtlas,smokeAtlas,steamAtlas,strength=.75}={}){
  const sourceWidth=background.naturalWidth||background.width,sourceHeight=background.naturalHeight||background.height;
  const scale=Math.min(1,(maxWidth||sourceWidth)/sourceWidth);
  const width=Math.round(sourceWidth*scale),height=Math.round(sourceHeight*scale);
@@ -25,53 +25,56 @@ export function createArenaScene(canvas,{background,smoke,ruptureOverlay,maxWidt
  let seed=491;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
  const dust=Array.from({length:140},()=>({x:random(),offset:random(),s:.7+random()*1.8,drift:random()*2-1}));
  const debris=Array.from({length:26},()=>({x:random(),v:random(),s:2+random()*5,spin:random()*2-1,delay:random()*.3}));
- // Sample the painting's own clouds. Feathered masks stay above the mountain
- // skyline and away from the horns; no ground or character pixels move.
+ // Fresh independent assets; no animated pixels are sampled from the painting.
+ const atlas=image=>Array.from({length:4},(_,index)=>{
+  const c=layer(384,256),cx=c.getContext('2d',{willReadFrequently:true});
+  if(!image)return {image:c,x:0,y:0,w:384,h:256};
+  const iw=(image.naturalWidth||image.width)/2,ih=(image.naturalHeight||image.height)/2;
+  cx.drawImage(image,index%2*iw,Math.floor(index/2)*ih,iw,ih,0,0,384,256);
+  const data=cx.getImageData(0,0,384,256);let left=384,top=256,right=0,bottom=0;
+  for(let y=0;y<256;y++)for(let x=0;x<384;x++){
+   const k=(y*384+x)*4+3,edge=Math.min(x,y,383-x,255-y)/16;
+   data.data[k]*=Math.min(1,Math.max(0,edge));
+   if(data.data[k]>16){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
+  }
+  cx.putImageData(data,0,0);
+  if(left>right)return {image:c,x:0,y:0,w:384,h:256};
+  return {image:c,x:Math.max(0,left-8),y:Math.max(0,top-8),w:Math.min(384,right+9)-Math.max(0,left-8),h:Math.min(256,bottom+9)-Math.max(0,top-8)};
+ });
+ const clouds=atlas(cloudAtlas),breath=atlas(smokeAtlas),steam=atlas(steamAtlas);
+ const plume=(target,sprite,x,y,w,h,alpha,angle=0,flip=false)=>{
+  if(alpha<.001)return;target.save();target.globalAlpha=alpha*strength;target.translate(x,y);target.rotate(angle);target.scale(flip?-1:1,1);
+  target.drawImage(sprite.image,sprite.x,sprite.y,sprite.w,sprite.h,-w/2,-h/2,w,h);target.restore();
+ };
  const skyLayers=[
   {points:[[.225,0],[.610,0],[.602,.065],[.582,.10],[.570,.15],[.495,.15],[.43,.11],[.41,.085],[.37,.10],[.32,.07],[.225,.07]],dx:100,dy:28,offset:0,alpha:.96},
   {points:[[.40,0],[.588,0],[.588,.067],[.572,.13],[.52,.16],[.45,.12],[.40,.075]],dx:-72,dy:32,offset:.65,alpha:.88},
   {points:[[0,0],[.23,0],[.22,.057],[.18,.060],[.145,.02],[.10,.01],[.072,.035],[.045,.08],[0,.085]],dx:80,dy:16,offset:1.4,alpha:.84}
  ].map(f=>{
   const x=Math.max(0,Math.floor(Math.min(...f.points.map(p=>p[0]))*width)-39),y=0;
-  const w=Math.min(width,Math.ceil(Math.max(...f.points.map(p=>p[0]))*width)+39)-x;
-  const h=Math.ceil(Math.max(...f.points.map(p=>p[1]))*height)+39;
-  const mask=layer(w,h),mc=mask.getContext('2d');mc.filter='blur(13px)';mc.fillStyle='#fff';
-  mc.beginPath();f.points.forEach(([a,b],i)=>i?mc.lineTo(a*width-x,b*height-y):mc.moveTo(a*width-x,b*height-y));mc.closePath();mc.fill();
-  const source=layer(w,h),sourceCtx=source.getContext('2d');
-  sourceCtx.drawImage(background,-x,-y);sourceCtx.globalCompositeOperation='destination-in';sourceCtx.drawImage(mask,0,0);
-  const surface=layer(w,h);return {...f,x,y,w,h,mask,source,surface,sc:surface.getContext('2d')};
+  const w=Math.min(width,Math.ceil(Math.max(...f.points.map(p=>p[0]))*width)+39)-x,h=Math.ceil(Math.max(...f.points.map(p=>p[1]))*height)+39;
+  const mask=layer(w,h),mc=mask.getContext('2d');mc.filter='blur(13px)';mc.fillStyle='#fff';mc.beginPath();f.points.forEach(([a,b],i)=>i?mc.lineTo(a*width-x,b*height-y):mc.moveTo(a*width-x,b*height-y));mc.closePath();mc.fill();
+  const surface=layer(w,h);return {...f,x,y,w,h,mask,surface,sc:surface.getContext('2d')};
  });
- // The original cloud brushwork is kept, with rolling smoke layered into the
- // same sky mask. Both source and destination are masked to protect silhouettes.
- const skySmoke=layer(512,256),ss=skySmoke.getContext('2d');
- if(smoke){
-  ss.drawImage(smoke,0,0,512,256);const p=ss.getImageData(0,0,512,256);
-  for(let i=0;i<p.data.length;i+=4){const tone=p.data[i]*.30+p.data[i+1]*.5+p.data[i+2]*.20;
-   p.data[i]=tone*.76+29;p.data[i+1]=tone*.53+17;p.data[i+2]=tone*.47+18;
-  }ss.putImageData(p,0,0);
- }
  function paintedClouds(phase){
   ctx.save();
   for(const [index,f] of skyLayers.entries()){
-   const a=TAU*phase*2+f.offset,x=f.dx*Math.sin(a),y=f.dy*Math.sin(a+.7);
-   const sc=f.sc;sc.globalCompositeOperation='source-over';sc.clearRect(0,0,f.w,f.h);
-   // The left bank uses smoke alone: its skyline is too close to the clouds
-   // to resample the painting without also picking up mountain tips.
-   if(index!==2){
-    sc.save();sc.translate(f.w*.5+x,f.h*.35+y);sc.rotate(.055*Math.sin(a+.4));
-    sc.scale(1.10+.09*Math.sin(a),1.16+.13*Math.sin(a+1.1));sc.drawImage(f.source,-f.w*.5,-f.h*.35);sc.restore();
+   const a=TAU*phase*2+f.offset,sc=f.sc;sc.globalCompositeOperation='source-over';sc.clearRect(0,0,f.w,f.h);
+   for(let i=0;i<4;i++){
+    const u=frac(phase*2+i/4+index*.17),fade=Math.sin(Math.PI*u)**2;
+    const px=width*((index===2?-.05:.21)+i*.065+u*.12)-f.x+f.dx*Math.sin(a)*.35;
+    const py=height*(.016+(i%2)*.037-u*.025)-f.y+f.dy*Math.sin(a+.7)*.25;
+    plume(sc,clouds[(i+index)%4],px,py,width*(.18+u*.07),height*(.12+u*.04),fade*.38,-.035+.055*Math.sin(a+i));
    }
-   for(let i=0;i<7;i++){
-    const u=frac(phase*4+i/7+index*.17),fade=Math.sin(Math.PI*u)**2;
-    const px=width*((index===2?-.08:.18)+i*.055+u*.18)-f.x,py=height*(.015+(i%3)*.033-u*.044)-f.y;
-    const w=width*(.14+u*.15),h=height*(.10+u*.11);
-    sc.save();sc.globalAlpha=fade*(index===1?.38:.52);sc.translate(px,py);sc.rotate(-.24+.55*u);
-    sc.scale(i%2?-1:1,1);sc.drawImage(skySmoke,-w/2,-h/2,w,h);sc.restore();
-   }
-   f.sc.globalCompositeOperation='destination-in';f.sc.drawImage(f.mask,0,0);
-   ctx.globalAlpha=f.alpha;ctx.drawImage(f.surface,f.x,f.y);
+   sc.globalCompositeOperation='destination-in';sc.drawImage(f.mask,0,0);ctx.globalAlpha=f.alpha;ctx.drawImage(f.surface,f.x,f.y);
   }ctx.restore();
  }
+ // Four small irregular cinders replace uniform particle rectangles, preserving trajectories.
+ const cinders=Array.from({length:4},(_,i)=>{
+  const c=layer(24,24),x=c.getContext('2d'),g=x.createRadialGradient(12,12,0,12,12,11);
+  g.addColorStop(0,'rgba(255,163,63,.55)');g.addColorStop(.35,'rgba(221,83,26,.22)');g.addColorStop(1,'rgba(215,75,22,0)');x.fillStyle=g;x.fillRect(0,0,24,24);
+  x.fillStyle=i%2?'#e29b59':'#dc7841';x.beginPath();x.moveTo(11,6+i);x.lineTo(14+i%2,10);x.lineTo(13,16);x.lineTo(9,14);x.lineTo(10,9);x.closePath();x.fill();return c;
+ });
  const furnace=layer(width,height),fc=furnace.getContext('2d',{willReadFrequently:true});fc.drawImage(background,0,0);
  const heat=fc.getImageData(0,0,width,height);
  const hotAreas=[{x:.621,y:.217,rx:.018,ry:.022},{x:.632,y:.278,rx:.041,ry:.049},
@@ -91,11 +94,11 @@ export function createArenaScene(canvas,{background,smoke,ruptureOverlay,maxWidt
   // Staggered wisps rise from the jaw; each vanishes before its emitter resets.
   for(let i=0;i<4;i++){
    const u=frac(phase*4+i/4+.07),fade=Math.sin(Math.PI*u)**2;
-   cloud(width*(.618-u*.09),height*(.280-u*.083),width*(.035+u*.14),height*(.024+u*.10),fade*(.18+.17*lift),u,i%2===1);
+   cloud(width*(.618-u*.09),height*(.280-u*.083),width*(.035+u*.14),height*(.024+u*.10),fade*(.18+.17*lift),u,i%2===1,'smoke',i);
   }
   for(let i=0;i<3;i++){
    const u=frac(phase*2+i/3+.31),fade=Math.sin(Math.PI*u)**2;
-   cloud(width*(.71+i*.027-u*.055),height*(.355-u*.08),width*(.12+u*.13),height*(.06+u*.075),fade*.23,u,i%2===1);
+   cloud(width*(.71+i*.027-u*.055),height*(.355-u*.08),width*(.12+u*.13),height*(.06+u*.075),fade*.23,u,i%2===1,'smoke',i+2);
   }
  }
  function eyeStreaming(phase){
@@ -156,10 +159,9 @@ export function createArenaScene(canvas,{background,smoke,ruptureOverlay,maxWidt
    ctx.drawImage(f.flow,f.x,f.y);
   }ctx.restore();
  }
- function cloud(x,y,w,h,alpha,u,flip=false){
-  if(!smoke||alpha<=0)return;
-  ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(.11*Math.sin(TAU*u));ctx.scale(flip?-1:1,1);
-  ctx.drawImage(smoke,-w/2,-h/2,w,h);ctx.restore();
+ function cloud(x,y,w,h,alpha,u,flip=false,material='smoke',part=0){
+  const sprites=material==='steam'?steam:breath;
+  plume(ctx,sprites[part%4],x,y,w,h,alpha,.11*Math.sin(TAU*u),flip);
  }
  function glow(x,y,rx,ry,color,alpha){
   ctx.save();ctx.translate(x,y);ctx.scale(rx,ry);
@@ -207,22 +209,22 @@ export function createArenaScene(canvas,{background,smoke,ruptureOverlay,maxWidt
    for(let i=0;i<7;i++){
     const u=frac(phase*2+i/7),fade=Math.sin(Math.PI*u)**2;
     cloud(width*(.12+i*.12)-u*width*.10,height*(.56+i%2*.025)-u*height*.09,
-     width*(.25+u*.14),height*(.13+u*.065),fade*.25,u,i%2===1);
+     width*(.25+u*.14),height*(.13+u*.065),fade*.25,u,i%2===1,'steam',i%2);
    }
    // Continuous steam rises from the two falls, independent of combat cues.
    for(const [x,y] of [[.485,.565],[.921,.617]])for(let i=0;i<4;i++){
     const u=frac(phase*4+i/4+x),fade=Math.sin(Math.PI*u)**2;
-    cloud(width*(x-u*.052),height*(y-u*.16),width*(.045+u*.16),height*(.032+u*.14),fade*.31,u,i%2===1);
+    cloud(width*(x-u*.052),height*(y-u*.16),width*(.045+u*.16),height*(.032+u*.14),fade*.31,u,i%2===1,'steam',2+i%2);
    }
    for(let i=0;i<4;i++){
     const u=frac(phase*2+i/4+.23),fade=Math.sin(Math.PI*u)**2;
-    cloud(width*(.08+i*.28)+u*width*.10,height*.98-u*height*.075,width*(.28+u*.12),height*.16,fade*.23,u,i%2===1);
+    cloud(width*(.08+i*.28)+u*width*.10,height*.98-u*height*.075,width*(.28+u*.12),height*.16,fade*.23,u,i%2===1,'steam',i%2);
    }
    ctx.save();ctx.globalCompositeOperation='lighter';
-   for(const p of dust){
+   for(const [i,p] of dust.entries()){
     const u=frac(phase*3+p.offset),alpha=Math.sin(Math.PI*u)**2*.52;
     const x=p.x*width+p.drift*u*width*.12,y=height*(1.04-u*1.12);
-    ctx.fillStyle=`rgba(228,128,65,${alpha})`;ctx.fillRect(x,y,p.s,p.s*1.4);
+    ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(p.drift*.4+phase*TAU);ctx.drawImage(cinders[i%4],-p.s*1.8,-p.s*2.2,p.s*3.6,p.s*4.4);ctx.restore();
    }ctx.restore();
   }
   if(battleActive)hazards(cue);

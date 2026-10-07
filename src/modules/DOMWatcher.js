@@ -12,6 +12,14 @@
  *   iw:skill-panel        detail: { panel, skill, reason }
  *   iw:dom-flush          detail: { roots }
  *   iw:name-scan-flush    detail: { roots }
+ *   iw:text-flush         detail: { parents }
+ *
+ * iw:text-flush carries the parent element of every text node that changed
+ * this frame. Text ticks deliberately do not emit iw:dom-flush (a full
+ * classify pass per tick), so a consumer that MIRRORS game text into its own
+ * attributes (RaidHud's boss cast and effect timers) filters these parents to
+ * its own region instead; without it, the mirror froze until some unrelated
+ * mutation happened to flush.
  *
  * A second, non-mutation source feeds the same flush pipeline: the game swaps
  * which of its two duplicated layout columns is live at Tailwind's `xl`
@@ -233,6 +241,7 @@ const pendingInventory = new Set();
 const pendingSkills    = new Set();
 const pendingBgRoots   = new Set();
 const pendingNameRoots = new Set();
+const pendingTextParents = new Set();
 let flushQueued = false;
 
 function addIfConnected(set, el) {
@@ -367,6 +376,13 @@ function flushPending() {
   // behind the budget. Found by test/smoke.mjs.
   if (bgRoots.length) guard('emit:dom-flush', () => emit('iw:dom-flush', { roots: bgRoots }));
   if (nameRoots.length) guard('emit:name-scan-flush', () => emit('iw:name-scan-flush', { roots: nameRoots }));
+  // Not budgeted: a parent list is cheap, and consumers filter it to their own
+  // region with one closest() each.
+  if (pendingTextParents.size) {
+    const parents = [...pendingTextParents].filter(el => el.isConnected);
+    pendingTextParents.clear();
+    if (parents.length) guard('emit:text-flush', () => emit('iw:text-flush', { parents }));
+  }
 
   // Anything left over after the budget gets the next frame.
   if (pendingInventory.size || pendingSkills.size
@@ -401,6 +417,7 @@ export function startWatcher() {
         for (const n of m.addedNodes) {
           if (isElement(n)) discover(n, 'mount');
           else if (n.nodeType === 3 && n.parentElement) {
+            pendingTextParents.add(n.parentElement);
             queueContext(n.parentElement, 'text', { background: false });
           }
         }
@@ -411,6 +428,7 @@ export function startWatcher() {
         // and matches() on every descendant, to change nothing. Text cannot
         // alter a surface colour. (Audit S4.2)
         if (m.target.parentElement) {
+          pendingTextParents.add(m.target.parentElement);
           queueContext(m.target.parentElement, 'text', { background: false });
         }
       } else if (m.type === 'attributes') {
@@ -495,6 +513,7 @@ export function stopWatcher() {
   pendingSkills.clear();
   pendingBgRoots.clear();
   pendingNameRoots.clear();
+  pendingTextParents.clear();
 }
 
 export function getScanRoots(root = document) {

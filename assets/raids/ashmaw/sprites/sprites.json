@@ -1,0 +1,296 @@
+{
+  "character": "Ashmaw, the Cinder Tyrant",
+  "facing": "right",
+  "columns": 4,
+  "rows": 2,
+  "animations": {
+    "idle": {
+      "file": "idle.png",
+      "displayScale": 0.84,
+      "frameMilliseconds": 180,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "sheetWidth": 2172,
+      "sheetHeight": 724,
+      "cellWidth": 543,
+      "cellHeight": 362,
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 543,
+          "height": 362,
+          "offsetX": 17,
+          "offsetY": 49,
+          "bounds": {
+            "left": 25,
+            "top": 66,
+            "right": 491,
+            "bottom": 351
+          },
+          "footBaseline": 351
+        },
+        {
+          "x": 543,
+          "y": 0,
+          "width": 543,
+          "height": 362,
+          "offsetX": 17,
+          "offsetY": 49,
+          "bounds": {
+            "left": 22,
+            "top": 56,
+            "right": 480,
+            "bottom": 351
+          },
+          "footBaseline": 351
+        },
+        {
+          "x": 1086,
+          "y": 0,
+          "width": 543,
+          "height": 362,
+          "offsetX": 17,
+          "offsetY": 50,
+          "bounds": {
+            "left": 31,
+            "top": 22,
+            "right": 489,
+            "bottom": 351
+          },
+          "footBaseline": 350
+        },
+        {
+          "x": 1629,
+          "y": 0,
+          "width": 543,
+          "height": 362,
+          "offsetX": 17,
+          "offsetY": 49,
+          "bounds": {
+            "left": 23,
+            "top": 64,
+            "right": 492,
+            "bottom": 351
+          },
+          "footBaseline": 351
+        },
+        {
+          "x": 0,
+          "y": 362,
+          "width": 543,
+          "height": 362,
+          "offsetX": 17,
+          "offsetY": 59,
+          "bounds": {
+            "left": 26,
+            "top": 59,
+            "right": 492,
+            "bottom": 339
+          },
+          "footBaseline": 339
+        },
+        {
+          "x": 543,
+          "y": 362,
+          "width": 543,
+          "height": 362,
+          "offsetX": 17,
+          "offsetY": 59,
+          "bounds": {
+            "left": 15,
+            "top": 89,
+            "right": 500,
+            "bottom": 339
+          },
+          "footBaseline": 339
+        },
+        {
+          "x": 1086,
+          "y": 362,
+          "width": 543,
+          "height": 362,
+          "offsetX": 17,
+          "offsetY": 59,
+          "bounds": {
+            "left": 25,
+            "top": 56,
+            "right": 493,
+            "bottom": 339
+          },
+          "footBaseline": 339
+        },
+        {
+          "x": 1629,
+          "y": 362,
+          "width": 543,
+          "height": 362,
+          "offsetX": 17,
+          "offsetY": 59,
+          "bounds": {
+            "left": 25,
+            "top": 58,
+            "right": 492,
+            "bottom": 339
+          },
+          "footBaseline": 339
+        }
+      ]
+    },
+    "fireBreath": {
+      "file": "fire-breath.png",
+      "displayScale": 1,
+      "frameMilliseconds": 160,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "sheetWidth": 2172,
+      "sheetHeight": 724,
+      "cellWidth": 543,
+      "cellHeight": 362,
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 543,
+          "height": 362,
+          "offsetX": 0,
+          "offsetY": 20,
+          "bounds": {
+            "left": 36,
+            "top": 77,
+            "right": 432,
+            "bottom": 324
+          },
+          "footBaseline": 324
+        },
+        {
+          "x": 543,
+          "y": 0,
+          "width": 543,
+          "height": 362,
+          "offsetX": 0,
+          "offsetY": 20,
+          "bounds": {
+            "left": 45,
+            "top": 63,
+            "right": 436,
+            "bottom": 324
+          },
+          "footBaseline": 324
+        },
+        {
+          "x": 1086,
+          "y": 0,
+          "width": 543,
+          "height": 362,
+          "offsetX": 0,
+          "offsetY": 20,
+          "bounds": {
+            "left": 27,
+            "top": 74,
+            "right": 478,
+            "bottom": 324
+          },
+          "footBaseline": 324
+        },
+        {
+          "x": 1629,
+          "y": 0,
+          "width": 543,
+          "height": 362,
+          "offsetX": 0,
+          "offsetY": 20,
+          "bounds": {
+            "left": 13,
+            "top": 76,
+            "right": 501,
+            "bottom": 324
+          },
+          "footBaseline": 324
+        },
+        {
+          "x": 0,
+          "y": 362,
+          "width": 543,
+          "height": 362,
+          "offsetX": 0,
+          "offsetY": 43,
+          "bounds": {
+            "left": 35,
+            "top": 50,
+            "right": 527,
+            "bottom": 301
+          },
+          "footBaseline": 301
+        },
+        {
+          "x": 543,
+          "y": 362,
+          "width": 543,
+          "height": 362,
+          "offsetX": 0,
+          "offsetY": 43,
+          "bounds": {
+            "left": 32,
+            "top": 51,
+            "right": 525,
+            "bottom": 301
+          },
+          "footBaseline": 301
+        },
+        {
+          "x": 1086,
+          "y": 362,
+          "width": 543,
+          "height": 362,
+          "offsetX": 0,
+          "offsetY": 43,
+          "bounds": {
+            "left": 26,
+            "top": 52,
+            "right": 499,
+            "bottom": 301
+          },
+          "footBaseline": 301
+        },
+        {
+          "x": 1629,
+          "y": 362,
+          "width": 543,
+          "height": 362,
+          "offsetX": 0,
+          "offsetY": 43,
+          "bounds": {
+            "left": 23,
+            "top": 51,
+            "right": 414,
+            "bottom": 301
+          },
+          "footBaseline": 301
+        }
+      ]
+    }
+  }
+}

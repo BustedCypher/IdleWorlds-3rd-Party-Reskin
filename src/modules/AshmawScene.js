@@ -3,6 +3,7 @@ import { createArenaScene, ARENA_PERIOD } from './AshmawArenaRenderer.js';
 
 export const ASHMAW_LOOP_SECONDS=ARENA_PERIOD;
 const scenes=new Map();
+const bossSelector='img[src*="boss-ashmaw"],img[alt^="Ashmaw"]';
 
 /** The approved renderer also powers the portable preview and loop checks. */
 export function createAshmawRenderer(canvas,environment,smoke,options={}){
@@ -19,15 +20,16 @@ export function clearAshmawScene(arena){
 
 export function reconcileAshmawScene(arena){
  pruneAshmawScenes();
- const boss=arena.querySelector('img[src*="boss-ashmaw"],img[alt^="Ashmaw"]');
+ const boss=arena.querySelector(bossSelector);
  const nativeBackground=arena.style.getPropertyValue('--raid-bg-image');
  if(!boss||(nativeBackground&&!/ashmaw/i.test(nativeBackground))){clearAshmawScene(arena);return;}
  const current=scenes.get(arena);
  if(current){if(current.art.parentElement===arena&&current.stage===boss.parentElement)return;clearAshmawScene(arena);}
  const art=document.createElement('div');art.setAttribute('data-iw-ashmaw-art','');art.setAttribute('aria-hidden','true');
- const env=new Image(),smoke=new Image(),canvas=document.createElement('canvas');
+ const env=new Image(),textures={cloudAtlas:new Image(),smokeAtlas:new Image(),steamAtlas:new Image()},canvas=document.createElement('canvas');
  // Extension pixels must stay CORS-clean for the renderer's painted masks.
- env.crossOrigin=smoke.crossOrigin='anonymous';env.setAttribute('data-iw-art','environment');
+ for(const image of [env,...Object.values(textures)])image.crossOrigin='anonymous';
+ env.setAttribute('data-iw-art','environment');
  art.append(env,canvas);arena.append(art);
  const state={art,stage:boss.parentElement,frame:0,disposed:false,onScreen:true,motion:matchMedia('(prefers-reduced-motion: reduce)')};
  scenes.set(arena,state);
@@ -46,14 +48,20 @@ export function reconcileAshmawScene(arena){
  }
  document.addEventListener('visibilitychange',state.resume);state.motion.addEventListener('change',state.resume);
  const load=img=>new Promise((resolve,reject)=>{img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Raid art unavailable'));});
- const loaded=Promise.all([load(env),load(smoke).catch(()=>null)]);
- env.src=assetUrl('assets/raids/ashmaw/arena.png');smoke.src=assetUrl('assets/raids/ashmaw/smoke.png');
- loaded.then(([background,plumes])=>{
+ const loaded=Promise.all([load(env),...Object.values(textures).map(image=>load(image).catch(()=>null))]);
+ env.src=assetUrl('assets/raids/ashmaw/arena.png');
+ for(const [key,name]of Object.entries({cloudAtlas:'clouds',smokeAtlas:'furnace-smoke',steamAtlas:'steam'}))textures[key].src=assetUrl('assets/raids/ashmaw/'+name+'.png');
+ loaded.then(([background,cloudAtlas,smokeAtlas,steamAtlas])=>{
   if(state.disposed||!arena.isConnected)return;
+  const nativeBackground=arena.style.getPropertyValue('--raid-bg-image');
+  if(arena.querySelector(bossSelector)!==boss||boss.parentElement!==state.stage||(nativeBackground&&!/ashmaw/i.test(nativeBackground))){clearAshmawScene(arena);return;}
   arena.setAttribute('data-iw-raid-scene','ashmaw');state.stage.setAttribute('data-iw-raid-boss-stage','ashmaw');
-  try{state.renderer=createAshmawRenderer(canvas,background,plumes,{maxWidth:1440});}catch{/* The approved painting remains as the still fallback. */}
-  if(!state.renderer)return;
-  art.setAttribute('data-iw-animated','');state.renderer.render(0);
+  try{
+   state.renderer=createAshmawRenderer(canvas,background,null,{cloudAtlas,smokeAtlas,steamAtlas,maxWidth:1440});
+   if(!state.renderer)return;
+   state.renderer.render(0);
+  }catch{state.renderer?.destroy();state.renderer=null;return;/* The approved painting remains as the still fallback. */}
+  art.setAttribute('data-iw-animated','');
   if(typeof IntersectionObserver==='function'){
    state.visible=new IntersectionObserver(([entry])=>{state.onScreen=entry.isIntersecting;state.resume();});state.visible.observe(arena);
   }

@@ -72,6 +72,16 @@
 :root [data-iw-guild="root"] [data-iw-guild-role="head-link"]:hover { color: var(--iw-text-hi) !important; filter: none !important; }
 :root [data-iw-guild="root"] [data-iw-guild-role="head-link"][data-iw-guild-tone="bad"] { color: color-mix(in srgb, var(--iw-guild-bad) 62%, var(--iw-faint)) !important; }
 :root [data-iw-guild="root"] [data-iw-guild-role="head-link"][data-iw-guild-tone="bad"]:hover { color: var(--iw-guild-bad) !important; }
+/* TESTING FEATURE (RaidPartyPreview.js): the full-party preview toggle, only
+   shown during a fight. Dashed amber so it never reads as a game control. */
+:root [data-iw-guild="root"] [data-iw-guild-role="head-link"][data-iw-raid-test] {
+  padding: 1px 6px !important;
+  border: 1px dashed color-mix(in srgb, #f5b84a 60%, transparent) !important;
+  border-radius: 4px !important;
+  color: #f5c76a !important;
+  text-decoration: none !important;
+}
+:root [data-iw-guild="root"] [data-iw-guild-role="head-link"][data-iw-raid-test][aria-pressed="true"] { background: rgba(245, 184, 74, .14) !important; }
 
 /* ── Cards ────────────────────────────────────────────────────────── */
 /* base.css already gives every `.compact-panel` the textured ground; a guild
@@ -499,8 +509,8 @@
 :root [data-iw-guild="root"] [data-iw-guild-role="apply"]:disabled { opacity: .5 !important; }
 
 /* ── The fight ────────────────────────────────────────────────────── */
-/* Other encounters retain native art. Ashmaw opts into the owned scene only
-   after both painted assets load; a failed load leaves the native scene intact. */
+/* Supported encounters opt into their owned scene after the painting loads.
+   A failed painting load leaves native art; smoke is optional. */
 :root [data-iw-guild="root"] [data-iw-guild-role="arena"] {
   border: 1px solid var(--iw-th-edge) !important;
   border-radius: 3px !important;
@@ -511,21 +521,16 @@
     0 4px 14px rgba(0,0,0,.35) !important;
 }
 
-:root [data-iw-guild="root"] [data-iw-raid-scene="ashmaw"] {
+:root [data-iw-guild="root"] :is([data-iw-raid-scene="ashmaw"], [data-iw-raid-scene="thessaly"], [data-iw-raid-scene="morwenna"], [data-iw-raid-scene="grimjaw"], [data-iw-raid-scene="skarth"]) {
   position: relative !important;
   isolation: isolate;
   overflow: hidden !important;
   background: #160706 !important;
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  grid-template-rows: auto auto auto minmax(120px, 1fr) auto auto auto;
-  gap: 12px !important;
-  min-height: clamp(640px, 52vw, 760px);
 }
-:root [data-iw-raid-scene="ashmaw"]::before,
-:root [data-iw-raid-scene="ashmaw"]::after,
-:root [data-iw-raid-scene="ashmaw"] > .raid-ember { display: none !important; }
-:root [data-iw-ashmaw-art] {
+:root :is([data-iw-raid-scene="ashmaw"], [data-iw-raid-scene="thessaly"], [data-iw-raid-scene="morwenna"], [data-iw-raid-scene="grimjaw"], [data-iw-raid-scene="skarth"])::before,
+:root :is([data-iw-raid-scene="ashmaw"], [data-iw-raid-scene="thessaly"], [data-iw-raid-scene="morwenna"], [data-iw-raid-scene="grimjaw"], [data-iw-raid-scene="skarth"])::after,
+:root :is([data-iw-raid-scene="ashmaw"], [data-iw-raid-scene="thessaly"], [data-iw-raid-scene="morwenna"], [data-iw-raid-scene="grimjaw"], [data-iw-raid-scene="skarth"]) > .raid-ember { display: none !important; }
+:root :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]) {
   display: none;
   position: absolute !important;
   inset: 0;
@@ -535,110 +540,737 @@
   z-index: 0;
   contain: strict;
 }
-:root [data-iw-raid-scene="ashmaw"] > [data-iw-ashmaw-art] { display: block; }
-:root [data-iw-raid-scene="ashmaw"] > :not([data-iw-ashmaw-art]):not(.raid-ember) {
+:root :is([data-iw-raid-scene="ashmaw"], [data-iw-raid-scene="thessaly"], [data-iw-raid-scene="morwenna"], [data-iw-raid-scene="grimjaw"], [data-iw-raid-scene="skarth"]) > :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]) { display: block; }
+:root :is([data-iw-raid-scene="ashmaw"], [data-iw-raid-scene="thessaly"], [data-iw-raid-scene="morwenna"], [data-iw-raid-scene="grimjaw"], [data-iw-raid-scene="skarth"]) > :not(:is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art])):not(.raid-ember, [data-iw-raid-cast]) {
   position: relative;
   z-index: 1;
   text-shadow: 0 1px 3px #000, 0 0 8px #000;
   min-width: 0;
   margin: 0 !important;
 }
-:root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="boss-summary"] { grid-column: 1; grid-row: 1; }
-:root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="telegraph"] { grid-column: 1; grid-row: 2; }
-:root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="effects"] { grid-column: 1; grid-row: 3; }
-:root [data-iw-raid-scene="ashmaw"] > .raid-arena-floor { grid-column: 1 / -1; grid-row: 5; }
-:root [data-iw-raid-scene="ashmaw"] > :is([data-iw-guild-role="combat-log"], [data-iw-guild-role="combat-log-region"]) { grid-column: 1 / -1; grid-row: 6; }
-:root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="status"] { grid-column: 1 / -1; grid-row: 7; }
-:root [data-iw-ashmaw-art] + :not(.raid-ember) { margin-top: 0 !important; }
-:root [data-iw-ashmaw-art] > canvas,
-:root [data-iw-ashmaw-art] > [data-iw-art="environment"] {
+:root :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]) + :not(.raid-ember) { margin-top: 0 !important; }
+:root :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]) > canvas,
+:root :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]) > [data-iw-art="environment"] {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%;
 }
-:root [data-iw-ashmaw-art]::after {
+:root :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art])::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(180deg, rgba(8,7,5,.25), transparent 35%, transparent 55%, rgba(8,7,5,.6));
 }
-:root [data-iw-ashmaw-art] > canvas { display: none; }
-:root [data-iw-ashmaw-art][data-iw-animated] > canvas { display: block; }
-:root [data-iw-ashmaw-art][data-iw-animated] > img { display: none; }
-:root [data-iw-raid-boss-stage="ashmaw"] {
+:root :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]) > canvas { display: none; }
+:root :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art])[data-iw-animated] > canvas { display: block; }
+:root :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art])[data-iw-animated] > img { display: none; }
+:root :is([data-iw-raid-boss-stage="ashmaw"], [data-iw-raid-boss-stage="thessaly"], [data-iw-raid-boss-stage="morwenna"], [data-iw-raid-boss-stage="grimjaw"], [data-iw-raid-boss-stage="skarth"]) {
   display: none !important;
 }
-:root [data-iw-raid-boss-stage="ashmaw"] > img { visibility: hidden !important; }
-@media (max-width: 700px) {
-  :root [data-iw-guild="root"] [data-iw-raid-scene="ashmaw"] {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(190px, 1fr) auto auto auto auto auto;
-    min-height: 840px;
-  }
-  :root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="telegraph"] { grid-row: 3; }
-  :root [data-iw-raid-scene="ashmaw"] > [data-iw-guild-role="effects"] { grid-row: 4; }
+:root :is([data-iw-raid-boss-stage="ashmaw"], [data-iw-raid-boss-stage="thessaly"], [data-iw-raid-boss-stage="morwenna"], [data-iw-raid-boss-stage="grimjaw"], [data-iw-raid-boss-stage="skarth"]) > img { visibility: hidden !important; }
+:root [data-iw-guild="root"] [data-iw-raid-scene="thessaly"] { background: #101017 !important; }
+:root [data-iw-thessaly-art]::after {
+  background: linear-gradient(180deg, rgba(9,11,14,.25), transparent 35%, transparent 55%, rgba(9,11,14,.63));
 }
-:root [data-iw-guild="root"] :is([data-iw-guild-role="telegraph"], [data-iw-guild-role="effects"], [data-iw-guild-role="combat-log"]) {
-  border: 1px solid var(--iw-th-edge-mid) !important;
-  border-radius: 2px !important;
-  background-color: rgba(8,8,6,.74) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 2px 8px rgba(0,0,0,.4) !important;
+:root [data-iw-guild="root"] [data-iw-raid-scene="morwenna"] { background: #151019 !important; }
+:root [data-iw-morwenna-art]::after {
+  background: linear-gradient(180deg, rgba(13,9,17,.25), transparent 35%, transparent 55%, rgba(13,9,17,.63));
 }
-/* The boss's next move. A coloured telegraph keeps its colour as a rail. */
-:root [data-iw-guild="root"] [data-iw-guild-role="telegraph"] {
-  border-top: 1px solid var(--iw-th-hairline) !important;
-  color: var(--iw-text-hi) !important;
-  font-family: var(--iw-font-head) !important;
-  letter-spacing: .03em !important;
+:root [data-iw-guild="root"] [data-iw-raid-scene="grimjaw"] { background: #111923 !important; }
+:root [data-iw-grimjaw-art]::after {
+  background: linear-gradient(180deg, rgba(9,14,22,.25), transparent 35%, transparent 55%, rgba(9,14,22,.63));
 }
-:root [data-iw-guild="root"] [data-iw-guild-role="telegraph"][data-iw-guild-tone] {
-  border-color: var(--iw-guild-rail) !important;
-  color: var(--iw-guild-ink) !important;
-  box-shadow: 0 0 12px -4px var(--iw-guild-rail) !important;
-}
-:root [data-iw-guild="root"] [data-iw-guild-role="effects"] { border-color: color-mix(in srgb, var(--iw-guild-info-rail) 60%, var(--iw-th-edge-mid)) !important; }
-:root [data-iw-guild="root"] [data-iw-guild-role="effects-toggle"] { color: var(--iw-guild-info) !important; font-size: 12px !important; font-weight: 700 !important; }
-:root [data-iw-guild="root"] [data-iw-guild-role="combat-log"] {
-  color: var(--iw-text) !important;
+
+/* ══ Raid HUD (RaidHud.js; Ashen Iron raid UI kit v1) ══════════════════
+   The fight as a raid HUD: boss identity, ornate health shell and cast bar
+   top left; the painting open in the middle; party frames low and centred;
+   combat log | personal HUD | raid skills along the foot. Every node placed
+   here is the arena's own child, positioned by grid area (rule 2); the only
+   owned nodes are each raider's effect strip and the personal HUD.
+
+   Panels are the skin's own forged frame, not kit art (2026-10-07): party
+   cards, personal HUD, result banner, combat log and raid skills grow to
+   their content at every width. Kit art remains only where it is a bar, not a
+   frame: the boss shell carries a portrait and jewels, so it keeps
+   their aspect and their content sits in the measured channel (the kit
+   README's fractions), plus the status and skill glyphs.
+
+   Colours that are game state stay the game's: raider HP fills (emerald /
+   amber / rose), the boss fill, the Raid skills line colours, your sky
+   nameplate. RaidHud only reads them into attributes. ══════════════════ */
+:root [data-iw-guild="root"] [data-iw-raid-hud] {
+  --iw-raid-brass: #d4ad63;
+  --iw-raid-ivory: #f0e8d6;
+  --iw-raid-read: #b7ad99;
+  --iw-raid-dim: #938a79;
+  --iw-raid-teal: #8fc6dc;
+  --iw-raid-good: #8fd0a3;
+  --iw-raid-bad: #e89aa9;
+  --iw-raid-plate: rgba(9, 9, 7, .82);
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(240px, 300px);
+  grid-template-rows: auto auto minmax(150px, 1fr) auto auto auto auto;
+  grid-template-areas:
+    'boss  boss    .'
+    'cast  cast    .'
+    '.      result  .'
+    'timers timers  timers'
+    'party  party   party'
+    '.      status  .'
+    '.      actions .';
+  gap: 10px 22px !important;
+  padding: 26px 26px 18px !important;
+  min-height: clamp(780px, 60vw, 900px);
   font-family: var(--iw-font-ui) !important;
-  filter: none !important;
+  color: var(--iw-raid-ivory);
 }
-:root [data-iw-guild="root"] [data-iw-guild-role="combat-log"]:hover { border-color: var(--iw-th-rule) !important; }
-:root [data-iw-guild="root"] [data-iw-guild-role="combat-log"] > :first-child > :first-child { color: var(--iw-th-accent-dim) !important; letter-spacing: .14em !important; }
-:root [data-iw-guild="root"] [data-iw-guild-role="combat-log"] > :first-child > :last-child { color: var(--iw-faint) !important; }
+:root [data-iw-raid-hud] > :not(.raid-ember):not([data-iw-ashmaw-art]):not([data-iw-thessaly-art]):not([data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art], [data-iw-raid-cast]) {
+  position: relative; z-index: 1; min-width: 0; margin: 0 !important;
+}
+:root [data-iw-raid-hud] > [data-iw-guild-role="boss-summary"] { grid-area: boss; }
+:root [data-iw-raid-hud] > [data-iw-guild-role="telegraph"] { grid-area: cast; }
+:root [data-iw-raid-hud] > .raid-arena-floor { grid-area: party; }
+/* The game's combat log and Raid skills are hidden here at every width: the
+   skin's dock after Raid Chat shows them, folded, and presses their buttons
+   (RaidHud.decorateDock; Curtis, 2026-10-07). Hidden, never moved (rule 2). */
+:root [data-iw-raid-hud] > :is([data-iw-guild-role="combat-log-region"], [data-iw-guild-role="combat-log"], [data-iw-guild-role="effects"]) {
+  display: none !important;
+}
+:root [data-iw-raid-hud] > .iw-raid-timers { grid-area: timers; }
+:root [data-iw-raid-hud] > [data-iw-guild-role="status"] { grid-area: status; }
+:root [data-iw-raid-hud] > [data-iw-guild-role="actions"] { grid-area: actions; }
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"] { grid-area: result; }
+/* `.raid-readable-panel` blurs what is behind it; behind the kit's shaped art
+   that read as a hazy box around the cast bar's transparent corners. */
+:root [data-iw-raid-hud] .raid-readable-panel { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 
-/* Bars: a forged track; the fill's colour is the game's (boss rose, raider
-   HP emerald -> amber when low, the action charge) and is never touched. */
-:root [data-iw-guild="root"] :is([data-iw-guild-role="boss-hp"], [data-iw-guild-role="raider-hp"], [data-iw-guild-role="raider-charge"]) {
-  border: 1px solid var(--iw-th-edge-mid) !important;
-  border-radius: 1px !important;
-  background: #070806 !important;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,.85) !important;
+/* ── Boss identity and health shell ────────────────────────────────── */
+:root [data-iw-raid-hud] > [data-iw-guild-role="boss-summary"] {
+  container-type: inline-size;
+  width: min(100%, 560px);
+  justify-self: start;
+  text-align: left !important;
+  text-shadow: 0 2px 4px #000, 0 0 14px rgba(0,0,0,.85) !important;
 }
-:root [data-iw-guild="root"] [data-iw-guild-role="boss-hp"] { height: 12px !important; border-color: var(--iw-th-edge) !important; }
-:root [data-iw-guild="root"] :is([data-iw-guild-role="boss-hp"], [data-iw-guild-role="raider-hp"], [data-iw-guild-role="raider-charge"]) > * {
-  border-radius: 0 !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -2px 0 rgba(0,0,0,.25) !important;
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > :first-child {
+  display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 4px;
+  font-size: inherit !important;
 }
-
-/* A raider is a disabled <button>: no plate, no disabled wash. base.css's
-   (0,0,1) `button` fill would otherwise draw a slab behind every sprite. */
-:root [data-iw-guild="root"] [data-iw-guild-role="raider"] {
-  padding: 0 !important;
-  border: 0 !important;
+:root [data-iw-raid-hud] [data-iw-raid-boss] { font-size: 0 !important; line-height: 0 !important; }
+:root [data-iw-raid-hud] [data-iw-raid-boss]::before {
+  content: attr(data-iw-raid-epithet); display: block; margin-bottom: 8px;
+  font: 700 11px/1 var(--iw-font-ui); letter-spacing: .3em; text-transform: uppercase; color: var(--iw-raid-brass);
+}
+:root [data-iw-raid-hud] [data-iw-raid-boss]::after {
+  content: attr(data-iw-raid-boss); display: block;
+  font: 700 clamp(30px, 3.2vw, 44px)/1 var(--iw-font-head); letter-spacing: .03em; color: var(--iw-raid-ivory);
+}
+/* "7/7 standing": the game's count, with a live marker. */
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > :first-child > :not([data-iw-raid-boss]) {
+  font: 600 12px/1 var(--iw-font-ui) !important; letter-spacing: .04em; color: var(--iw-raid-good) !important;
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > :first-child > :not([data-iw-raid-boss])::before {
+  content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 7px; vertical-align: 1px;
+  background: currentColor; box-shadow: 0 0 6px currentColor; transform: rotate(45deg);
+}
+/* The shell IS the game's track: padding puts its content box on the art's
+   transparent opening, so the game's own `width: N%` fill lands there
+   unmodified, BEHIND the frame (the art is the ::before at z-index 1).
+   --iw-shell-l/-t/-r/-b are insets in the 1216x406 sheet's pixels, measured
+   per boss from the alpha channel (the opening at alpha < 40) and grown by
+   8px on every side, so the frame's rim overlaps the fill's edges and its
+   rounded end tucks under the tapered right tip (2026-10-07: sized to an
+   804x68 channel, the fill stopped 42px short of an 848x76 opening and
+   floated on top of the rim). The defaults are the old channel, unbled, for
+   an encounter with no shell. Padding percentages resolve against WIDTH, so
+   every inset divides by 1216. */
+:root [data-iw-raid-hud] { --iw-shell-l: 280; --iw-shell-t: 168; --iw-shell-r: 132; --iw-shell-b: 170; }
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-hp"] {
+  position: relative; isolation: isolate; box-sizing: border-box !important;
+  width: 100% !important; height: auto !important; aspect-ratio: 1216 / 406;
+  margin: 2px 0 0 -2% !important;
+  padding: calc(var(--iw-shell-t) * 100% / 1216) calc(var(--iw-shell-r) * 100% / 1216)
+    calc(var(--iw-shell-b) * 100% / 1216) calc(var(--iw-shell-l) * 100% / 1216) !important;
+  border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible !important;
   background: transparent !important;
-  box-shadow: none !important;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.6));
+}
+/* Transparent artwork sits above the native live fill, never receives clicks. */
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-hp"]::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: var(--iw-raid-boss-shell, none) center / 100% 100% no-repeat;
+}
+/* Chosen from native boss identity, independently of the async scene canvas. */
+:root [data-iw-raid-hud][data-iw-raid-encounter="ashmaw"] { --iw-raid-boss-shell: url('../assets/raids/ui-kit-v1/sprites/boss-health-ashmaw.png');; --iw-shell-l: 270; --iw-shell-t: 158; --iw-shell-r: 82; --iw-shell-b: 156; }
+:root [data-iw-raid-hud][data-iw-raid-encounter="thessaly"] { --iw-raid-boss-shell: url('../assets/raids/ui-kit-v1/sprites/boss-health-thessaly.png');; --iw-shell-l: 269; --iw-shell-t: 159; --iw-shell-r: 77; --iw-shell-b: 157; }
+:root [data-iw-raid-hud][data-iw-raid-encounter="morwenna"] { --iw-raid-boss-shell: url('../assets/raids/ui-kit-v1/sprites/boss-health-morwenna.png');; --iw-shell-l: 271; --iw-shell-t: 159; --iw-shell-r: 83; --iw-shell-b: 157; }
+:root [data-iw-raid-hud][data-iw-raid-encounter="grimjaw"] { --iw-raid-boss-shell: url('../assets/raids/ui-kit-v1/sprites/boss-health-grimjaw.png');; --iw-shell-l: 263; --iw-shell-t: 154; --iw-shell-r: 93; --iw-shell-b: 162; }
+:root [data-iw-raid-hud][data-iw-raid-encounter="skarth"] { --iw-raid-boss-shell: url('../assets/raids/ui-kit-v1/sprites/boss-health-skarth.png');; --iw-shell-l: 272; --iw-shell-t: 159; --iw-shell-r: 75; --iw-shell-b: 156; }
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-hp"] > * {
+  /* Rounded evenly at both ends (Curtis, 2026-10-07: square on the right
+     read as cut off). */
+  border-radius: 999px !important; transition: width .4s ease-out !important;
+  box-shadow: inset 0 1px 0 rgba(255,190,160,.45), inset 0 -1px 0 rgba(40,6,6,.8), 2px 0 7px rgba(231,102,72,.55) !important;
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-hp"] > [class*="bg-rose"],
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-hp"] > [class*="bg-red"] {
+  background: linear-gradient(180deg, #e0654f 0%, #a92e24 32%, #6d1715 84%, #b9422a) !important;
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > p {
+  display: flex !important; align-items: center; justify-content: center; position: relative; z-index: 2;
+  /* The shell's opening in cqw (the summary's width = the shell's width); the
+     shell sits 2% left of the summary, so left and right shift by 2cqw. */
+  height: calc((406 - var(--iw-shell-t) - var(--iw-shell-b)) * 100cqw / 1216);
+  margin: calc((var(--iw-shell-t) - 406) * 100cqw / 1216) calc(var(--iw-shell-r) * 100cqw / 1216 + 2cqw)
+    calc(var(--iw-shell-b) * 100cqw / 1216) calc(var(--iw-shell-l) * 100cqw / 1216 - 2cqw) !important;
+  font: 700 clamp(12px, 2.5cqw, 15px)/1 var(--iw-font-ui) !important; letter-spacing: .02em;
+  color: #fff4e6 !important; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px #000, 0 0 5px #000 !important;
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > p[data-iw-raid-pct]::after {
+  content: attr(data-iw-raid-pct); position: absolute; right: 2.4cqw;
+  font: 800 clamp(11px, 2.2cqw, 13px)/1 var(--iw-font-ui); color: #ffd8bf;
+}
+
+/* ── Cast bar (the boss telegraph) ─────────────────────────────────── */
+:root [data-iw-raid-hud] > [data-iw-guild-role="telegraph"] {
+  justify-self: start; width: min(100%, 470px); margin-left: 4px !important;
+  border: 1px solid rgba(201,162,77,.35) !important; background: var(--iw-raid-plate) !important;
+  font: 600 13px/1.3 var(--iw-font-ui) !important; color: var(--iw-raid-ivory) !important; text-align: left !important;
+}
+/* A slim bar hung just under the health shell's channel (2026-10-07: the kit's
+   ornate cast plate read as a second health bar). --iw-shell-w is the shell's
+   rendered width, the boss summary's `min(100%, 560px)`; percentages here
+   resolve against the same grid width, so the bar's left edge and width land
+   on the channel (21.0263% in = the shell's -2% margin + its 23.0263% padding;
+   66.1184% wide). The negative top margin leaves a small gap under the channel. */
+/* Defaults at (0,2,0), so the step and urgency rules below can override them;
+   declared on the (0,3,0) rule they won outright, and the bar sat full and
+   calm-coloured for the whole countdown. */
+:root [data-iw-raid-cast] {
+  --iw-cast-fill: 100%;
+  --iw-cast-ink: linear-gradient(180deg, #d0352c, #9c1a16 55%, #6a0f0d);
+}
+:root [data-iw-raid-hud] > [data-iw-raid-cast] {
+  --iw-shell-w: min(100%, 560px);
+  /* Out of the HUD's generic child rule (its margin: 0 !important), so the
+     placement below holds; z-index / min-width restated from that rule. */
+  position: relative !important; z-index: 1; min-width: 0; font-size: 0 !important;
+  justify-self: start; align-self: start;
+  width: calc(var(--iw-shell-w) * .661184) !important; height: 24px;
+  margin: calc(var(--iw-shell-w) * -.09 - 10px) 0 0 calc(var(--iw-shell-w) * .210263) !important;
+  padding: 0 !important; border: 0 !important; border-radius: 5px !important;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,226,150,.9) 35%, #fff8e0 50%, rgba(255,226,150,.9) 65%, transparent) calc(var(--iw-cast-fill) - 3px) center / 6px 100% no-repeat,
+    var(--iw-cast-ink) left center / var(--iw-cast-fill) 100% no-repeat,
+    linear-gradient(180deg, #1c1714, #0b0908) !important;
+  box-shadow:
+    inset 0 0 0 1px #000, inset 0 0 0 2px #4a4540, inset 0 0 0 3px #1a1816,
+    inset 0 3px 4px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.7), 0 3px 8px rgba(0,0,0,.55) !important;
+}
+:root [data-iw-raid-cast]::before,
+:root [data-iw-raid-cast]::after {
+  position: absolute; top: 0; bottom: 0; display: flex; align-items: center;
+  font: 600 13px/1 var(--iw-font-ui); color: #fff4e6; text-shadow: 0 1px 2px #000, 0 0 4px #000;
+}
+:root [data-iw-raid-cast]::before {
+  content: attr(data-iw-raid-cast-name) '\2002\00b7\2002' attr(data-iw-raid-cast-scope);
+  left: 10px; right: 46px; letter-spacing: .02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+:root [data-iw-raid-cast-scope=""]::before { content: attr(data-iw-raid-cast-name); }
+:root [data-iw-raid-cast]::after {
+  content: attr(data-iw-raid-cast-secs); right: 10px; font-variant-numeric: tabular-nums;
+}
+:root [data-iw-raid-cast-step="0"] { --iw-cast-fill: 0%; }
+:root [data-iw-raid-cast-step="1"] { --iw-cast-fill: 10%; }
+:root [data-iw-raid-cast-step="2"] { --iw-cast-fill: 20%; }
+:root [data-iw-raid-cast-step="3"] { --iw-cast-fill: 30%; }
+:root [data-iw-raid-cast-step="4"] { --iw-cast-fill: 40%; }
+:root [data-iw-raid-cast-step="5"] { --iw-cast-fill: 50%; }
+:root [data-iw-raid-cast-step="6"] { --iw-cast-fill: 60%; }
+:root [data-iw-raid-cast-step="7"] { --iw-cast-fill: 70%; }
+:root [data-iw-raid-cast-step="8"] { --iw-cast-fill: 80%; }
+:root [data-iw-raid-cast-step="9"] { --iw-cast-fill: 90%; }
+:root [data-iw-raid-cast-step="10"] { --iw-cast-fill: 100%; }
+/* Urgency, from the game's own seconds: the bar heats as the hit lands. */
+:root [data-iw-raid-cast-urgency="near"] { --iw-cast-ink: linear-gradient(180deg, #e5562f, #b42a17 55%, #7c150c); }
+:root [data-iw-raid-cast-urgency="now"] { --iw-cast-ink: linear-gradient(180deg, #ff7a52, #d63a22 55%, #8e1a0e); }
+@media (prefers-reduced-motion: no-preference) {
+  :root [data-iw-raid-cast-urgency="now"] { animation: iw-raid-cast-pulse .7s ease-in-out infinite alternate; }
+}
+@keyframes iw-raid-cast-pulse { to { filter: drop-shadow(0 0 12px rgba(239,106,75,.75)) brightness(1.12); } }
+
+/* ── Party frames ──────────────────────────────────────────────────── */
+/* Four to a row, so a full party of eight is two rows of four (Curtis,
+   2026-10-07). A grid, not a wrapping flex row: the columns stay equal and a
+   short last row keeps the same card width. Phones keep their own three-up
+   flex row (below), where four would leave ~87px a card. */
+:root [data-iw-raid-hud] > .raid-arena-floor {
+  display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch !important;
+  justify-self: center; width: min(100%, 860px);
+  gap: 8px !important; padding: 0 !important; background: none !important; text-shadow: none !important;
+}
+:root [data-iw-raid-hud] > .raid-arena-floor::after { content: none !important; display: none !important; }
+/* The game draws its own floor on this pseudo (absolutely placed, measured
+   live: "Raid party" landed on top of the first frame's health bar), so the
+   whole box is reset before it becomes the row's caption. */
+:root [data-iw-raid-hud] > .raid-arena-floor::before {
+  position: static !important; inset: auto !important; transform: none !important; width: auto !important; height: auto !important;
+  border: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important;
+  filter: none !important; opacity: 1 !important; animation: none !important; z-index: auto !important; pointer-events: none;
+  content: 'Raid party' '\2003\00B7\2003' attr(data-iw-raid-party); flex: 0 0 100%; grid-column: 1 / -1; order: -2; text-align: center; margin-bottom: 2px;
+  font: 700 10px/1 var(--iw-font-ui); letter-spacing: .3em; text-transform: uppercase; color: var(--iw-raid-brass);
+  text-shadow: 0 1px 3px #000;
+}
+/* The skin's own card, not kit art (Curtis, 2026-10-07: the kit frames "don't
+   suit the theme, are inconsistent, don't fit all the info and cannot be
+   resized accurately for mobile and tablet"). The shared forged ground and
+   gold head hairline of every panel, on a themed 1px edge; no corner
+   filigree, which marks a PANEL and is not repeated per unit (ui-system.css,
+   same rule as the inventory rows). Both pseudos carry the skill glyph and
+   HP %, so everything is drawn on the border box. Self and critical keep
+   their state edge and glow through --iw-frame-*. */
+:root [data-iw-raid-hud] [data-iw-guild-role="raider"] {
+  --iw-frame-edge: var(--iw-th-edge);
+  --iw-frame-glow: transparent;
+  position: relative !important; display: grid !important; flex: 1 1 150px; width: auto !important; max-width: none; min-width: 0;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  grid-template-areas: 'ico name pct' 'ico skill skill' 'hp hp hp' 'ch ch ch' 'fx fx fx';
+  align-items: center; align-content: start; column-gap: 7px; row-gap: 3px;
+  padding: 8px 9px 7px !important; text-align: left !important;
+  border: 1px solid var(--iw-frame-edge) !important; border-radius: var(--iw-r-panel, 3px) !important; border-image: none !important;
+  background:
+    linear-gradient(90deg, transparent, var(--iw-th-hairline) 14%, var(--iw-th-hairline-hi) 50%, var(--iw-th-hairline) 86%, transparent) center top / calc(100% - 16px) 1px no-repeat,
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, normal, soft-light, normal !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .78), inset 0 1px 0 var(--iw-th-glow),
+    0 0 12px var(--iw-frame-glow), 0 4px 10px rgba(0, 0, 0, .55) !important;
+  filter: none !important; opacity: 1 !important; cursor: default;
+}
+/* You lead the row. Keyed on RaidHud's reading of the nameplate, never on a
+   sky class: every raider's lend line is text-sky-200 too. */
+:root [data-iw-raid-hud] [data-iw-guild-role="raider"][data-iw-raid-self] { order: -1; }
+:root [data-iw-raid-hud] [data-iw-guild-role="raider"][data-iw-raid-frame="self"] {
+  --iw-frame-edge: #3d7487; --iw-frame-glow: rgba(111, 179, 201, .28);
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="raider"][data-iw-raid-frame="critical"] {
+  --iw-frame-edge: #8a3a2f; --iw-frame-glow: rgba(208, 97, 79, .32);
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="raider"][data-iw-raid-down] { filter: grayscale(.85) brightness(.7) !important; }
+/* Down: the game's skull rode the hidden sprite, so the frame says it. */
+:root [data-iw-raid-hud] [data-iw-guild-role="raider"][data-iw-raid-down]::after {
+  content: '\1F480\2009 Down'; color: var(--iw-raid-bad); font-size: 11px; letter-spacing: .04em;
+}
+/* An empty strip is no row at all, so a quiet frame stays compact. */
+:root .iw-raid-fx:empty { display: none; }
+/* The pixel sprite, its ground shadow and the native status icons give way:
+   every status they carried is re-presented in the effect strip. */
+:root [data-iw-raid-hud] [data-iw-guild-role="raider"] > div:not([data-iw-guild-role]) { display: none !important; }
+:root [data-iw-raid-hud] [data-iw-guild-role="raider"]::before {
+  content: ''; grid-area: ico; align-self: start; width: 22px; height: 22px; margin-top: 1px;
+  background: center / contain no-repeat; opacity: .92;
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="raider"]::after {
+  content: attr(data-iw-raid-hp); grid-area: pct; justify-self: end;
+  font: 700 12px/1 var(--iw-font-ui); color: var(--iw-raid-ivory); font-variant-numeric: tabular-nums;
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="raider-name"] {
+  grid-area: name; width: auto !important; padding: 0 !important; border: 0 !important; background: none !important;
+  font: 700 13px/1.15 var(--iw-font-ui) !important; text-align: left !important; text-shadow: none !important;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="raider-name"]:not([class*="text-sky"]) { color: var(--iw-raid-ivory) !important; }
+:root [data-iw-raid-hud] [data-iw-guild-role="raider-skill"] {
+  grid-area: skill; width: auto !important; text-align: left !important;
+  font: 500 11px/1.15 var(--iw-font-ui) !important; color: var(--iw-raid-read) !important; text-shadow: none !important;
+}
+:root [data-iw-raid-hud] :is([data-iw-guild-role="raider-hp"], [data-iw-guild-role="raider-charge"]) {
+  width: 100% !important; margin-top: 2px; border: 1px solid #3f3a2c !important; border-radius: 0 !important;
+  background: #050605 !important; box-shadow: inset 0 1px 2px rgba(0,0,0,.9) !important;
+}
+:root [data-iw-raid-hud] [data-iw-guild-role="raider-hp"] { grid-area: hp; height: 6px !important; }
+:root [data-iw-raid-hud] [data-iw-guild-role="raider-charge"] { grid-area: ch; height: 4px !important; margin-top: 0; border-color: #2e3433 !important; }
+:root [data-iw-raid-hud] :is([data-iw-guild-role="raider-hp"], [data-iw-guild-role="raider-charge"]) > * { border-radius: 0 !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.3) !important; }
+/* Charge reads cool, so it never looks like low (amber) health. */
+:root [data-iw-raid-hud] [data-iw-guild-role="raider-charge"] > * { background: linear-gradient(180deg, #b2d6e4, #4f8aa3) !important; }
+
+/* Effect strip: every effect stays visible; extras wrap, never "+N". */
+:root .iw-raid-fx {
+  grid-area: fx; display: flex; flex-wrap: wrap; gap: 3px 6px; margin-top: 3px; min-height: 16px;
+}
+:root .iw-raid-chip {
+  display: inline-flex; align-items: center; gap: 2px; white-space: nowrap;
+  font: 700 10.5px/14px var(--iw-font-ui); color: var(--iw-raid-ivory, #f0e8d6); font-variant-numeric: tabular-nums;
+}
+:root .iw-raid-chip[data-iw-raid-tone="debuff"] { color: var(--iw-raid-bad, #e89aa9); }
+:root .iw-raid-chip-icon {
+  display: inline-grid; place-items: center; width: 14px; height: 14px; flex: none;
+  font-style: normal; font-size: 11px; line-height: 1;
+  background: center / contain no-repeat; filter: drop-shadow(0 1px 1px #000);
+}
+:root :is(.iw-raid-chip, .iw-raid-timer)[data-iw-raid-art] > .iw-raid-chip-icon { font-size: 0; }
+:root .iw-raid-chip-name { font-weight: 600; color: var(--iw-raid-read, #b7ad99); }
+:root .iw-raid-chip[data-iw-raid-tone="debuff"] > .iw-raid-chip-name { color: inherit; }
+
+/* Kit art: status and skill glyphs. */
+:root :is(.iw-raid-chip, .iw-raid-timer)[data-iw-raid-art="shield"] > .iw-raid-chip-icon { background-image: url('../assets/raids/ui-kit-v1/sprites/shield.png'); }
+:root :is(.iw-raid-chip, .iw-raid-timer)[data-iw-raid-art="ward"] > .iw-raid-chip-icon { background-image: url('../assets/raids/ui-kit-v1/sprites/ward.png'); }
+:root :is(.iw-raid-chip, .iw-raid-timer)[data-iw-raid-art="war-cry"] > .iw-raid-chip-icon { background-image: url('../assets/raids/ui-kit-v1/sprites/war-cry.png'); }
+:root :is(.iw-raid-chip, .iw-raid-timer)[data-iw-raid-art="curse"] > .iw-raid-chip-icon { background-image: url('../assets/raids/ui-kit-v1/sprites/curse.png'); }
+:root :is(.iw-raid-chip, .iw-raid-timer)[data-iw-raid-art="bleed"] > .iw-raid-chip-icon { background-image: url('../assets/raids/ui-kit-v1/sprites/bleed.png'); }
+:root :is(.iw-raid-chip, .iw-raid-timer)[data-iw-raid-art="taunt"] > .iw-raid-chip-icon { background-image: url('../assets/raids/ui-kit-v1/sprites/taunt.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="combat"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-combat.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="jewelcrafting"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-jewelcrafting.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="tailoring"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-tailoring.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="construction"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-construction.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="mining"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-mining.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="woodcutting"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-woodcutting.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="alchemy"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-alchemy.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="gathering"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-gathering.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="smithing"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-smithing.png'); }
+:root [data-iw-guild-role="raider"][data-iw-raid-skill="spellcrafting"]::before { background-image: url('../assets/raids/ui-kit-v1/sprites/skill-spellcrafting.png'); }
+
+/* ── Raid panels: the shared forged frame ─────────────────────────────
+   The result banner and the dock's combat log and raid skills wear the frame
+   every named panel wears (ui-system.css section frame, overlay.css card):
+   themed edge, per-zone corner filigree, forged ground, gold head hairline.
+   It replaced the kit's personal-hud.png and utility-panel.png (2026-10-07),
+   whose fixed art could not hold the content or resize with the layout.
+
+   Drawn entirely on the border box, as overlay.css does: the corners are a
+   real `border-image` (slice 50% consumes the sheet, so only the four corners
+   paint; `border-image-width` overpaints them into the box while the layout
+   border stays 1px), the hairline is a background layer, and the edge is an
+   outer 1px shadow because a border-image replaces the border's own colour.
+   No pseudo-elements, so none of the game's own can collide. */
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"],
+:root .iw-raid-dock > .iw-raid-dock-panel {
+  --iw-raid-corner-w: 25px 23px;
+  border: 1px solid transparent !important; border-radius: var(--iw-r-panel, 3px) !important;
+  border-image: var(--iw-corner-filigree) 50% / var(--iw-raid-corner-w) / 0 stretch !important;
+  background:
+    linear-gradient(90deg, transparent, var(--iw-th-hairline) 14%, var(--iw-th-hairline-hi) 50%, var(--iw-th-hairline) 86%, transparent) center top / calc(100% - 24px) 1px no-repeat,
+    linear-gradient(var(--iw-th-ground-wash), var(--iw-th-ground-wash)),
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, .025), transparent 32%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a) 0%, var(--iw-th-ground-b) 100%) !important;
+  background-blend-mode: normal, normal, normal, soft-light, normal !important;
+  box-shadow:
+    0 0 0 1px var(--iw-th-edge),
+    inset 0 0 0 1px rgba(0, 0, 0, .78),
+    inset 0 1px 0 var(--iw-th-glow),
+    0 8px 22px rgba(0, 0, 0, .55) !important;
   filter: none !important;
-  opacity: 1 !important;
 }
-:root [data-iw-guild="root"] [data-iw-guild-role="raider-name"] {
-  border: 1px solid var(--iw-th-edge-soft) !important;
-  border-radius: 1px !important;
-  background-color: rgba(8,8,6,.82) !important;
-  font-family: var(--iw-font-ui) !important;
-  font-weight: 700 !important;
+
+/* ── Effect timers (owned; above the party) ───────────────────────────
+   Every effect the game times, as a countdown bar in the cast bar's manner:
+   raid-wide lines from Raid skills ("Ward active … — 13s left"), the tank's
+   "X is tanking … — 21s left", and each raider's debuff statuses. Buffs fill
+   blue, debuffs red; the fill is seconds over the longest count seen for
+   that effect, because the DOM never states a duration. A debuff the game
+   shows without a count (Cursed) is a full red bar with no seconds.
+   The personal HUD this row replaced (2026-10-07) only repeated your party
+   frame, which never hides. */
+:root [data-iw-raid-hud] > .iw-raid-timers {
+  justify-self: center; width: min(100%, 860px); /* the party's width */
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px 10px;
 }
-:root [data-iw-guild="root"] [data-iw-guild-role="raider-skill"] {
-  text-shadow: 0 1px 2px #000 !important;
+.iw-raid-timer {
+  position: relative; display: grid; grid-template-columns: 16px auto minmax(0, 1fr) auto; align-items: center; column-gap: 7px;
+  height: 26px; padding: 0 10px 0 8px; overflow: hidden;
+  border: 1px solid #3d7487; border-radius: var(--iw-r-panel, 3px);
+  background: linear-gradient(180deg, #0b0d0d, #050605);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .9), 0 3px 8px rgba(0, 0, 0, .5);
+  font: 700 11px/1 var(--iw-font-ui); color: #fff; text-shadow: 0 1px 2px #000, 0 0 4px #000;
 }
-:root [data-iw-guild="root"] [data-iw-guild-role="status"] {
-  color: var(--iw-dim) !important;
-  font-style: italic !important;
-  text-shadow: 0 1px 2px #000 !important;
+.iw-raid-timer[data-iw-raid-tone="debuff"] { border-color: #8a3a2f; }
+.iw-raid-timer-fill { position: absolute; inset: 0 auto 0 0; transition: width .9s linear; }
+.iw-raid-timer[data-iw-raid-tone="buff"] > .iw-raid-timer-fill {
+  background: linear-gradient(180deg, #74b6dd, #2f6f9c 58%, #1c4568); box-shadow: inset 0 1px 0 rgba(214, 238, 252, .4);
 }
+.iw-raid-timer[data-iw-raid-tone="debuff"] > .iw-raid-timer-fill {
+  background: linear-gradient(180deg, #e0786a, #a8352b 58%, #6e1a15); box-shadow: inset 0 1px 0 rgba(255, 214, 205, .35);
+}
+.iw-raid-timer > :not(.iw-raid-timer-fill) { position: relative; z-index: 1; min-width: 0; }
+.iw-raid-timer > .iw-raid-chip-icon { width: 16px; height: 16px; font-size: 12px; }
+.iw-raid-timer-name { letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.iw-raid-timer-who { font-weight: 600; color: #e6ddcb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.iw-raid-timer-secs { font-size: 13px; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .iw-raid-timer-fill { transition: none; } }
+
+/* The game's own caption ("Charging your action bar…") sits over the actions. */
+:root [data-iw-raid-hud] > [data-iw-guild-role="status"] {
+  justify-self: center; margin-top: -2px !important; text-align: center;
+  font: italic 500 12px/1.2 var(--iw-font-ui) !important; color: var(--iw-raid-read) !important; text-shadow: 0 1px 3px #000 !important;
+}
+
+/* ── Action bar: Attack + the lent skill ───────────────────────────── */
+:root [data-iw-raid-hud] > [data-iw-guild-role="actions"] {
+  /* `start`: never stretched to a taller row (it was, to ~100px, while the
+     log and skills panels spanned it). */
+  justify-self: center; align-self: start; width: min(100%, 540px);
+  display: flex !important; flex-wrap: wrap; gap: 10px !important;
+}
+/* Attack and the lent skill wear the skin's standard button: the
+   compact-ghost-v3 three-slice plate the nav tabs and chat Send wear, with its
+   idle / hover / pressed layers (CompactButtons.js opts them in; the plate is
+   compact-buttons.css). No surface is painted here, so the plate shows. The
+   plate's caps are a third of its height (40px caps on a 120px cell), so the
+   cap is pinned with the height to keep the art isotropic. */
+:root [data-iw-guild="root"] [data-iw-raid-hud] [data-iw-guild-role="action"] {
+  --iw-compact-cap: 15px;
+  flex: 1 1 140px; height: 44px !important; min-height: 0 !important; padding: 0 24px !important;
+  display: inline-flex !important; align-items: center; justify-content: center; gap: 8px;
+  border: 0 !important; border-radius: 0 !important;
+  font: 700 13px/1 var(--iw-font-head) !important; letter-spacing: .1em; text-transform: uppercase !important; color: var(--iw-raid-ivory) !important;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000 !important; cursor: pointer;
+}
+/* The game's primary stays the primary (rule 5): ember lettering, a low ember
+   glow, and an ember rule along the foot. The rule is drawn on the plate's
+   LAYERS, as the plate's own selected accent is: on the button it paints
+   under them, and only the corners showed. */
+:root [data-iw-guild="root"] [data-iw-raid-hud] [data-iw-guild-role="action"].button-primary {
+  color: #ffd2ad !important;
+  box-shadow: 0 0 16px rgba(217, 120, 74, .28) !important;
+}
+:root [data-iw-guild="root"] [data-iw-raid-hud] [data-iw-guild-role="action"].button-primary > [data-iw-compact-layer] {
+  box-shadow: inset 0 -2px var(--iw-th-cta-hi, #d9784a) !important;
+}
+/* Disabled is game state (no charge yet, or down): dim and desaturate. */
+:root [data-iw-guild="root"] [data-iw-raid-hud] [data-iw-guild-role="action"]:disabled {
+  opacity: .5 !important; filter: saturate(.3) !important; cursor: not-allowed;
+}
+
+/* ── Fight result ("💀 Wipe.", a kill): a banner in the open painting ── */
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"] {
+  justify-self: center; align-self: center; width: min(100%, 460px);
+  display: flex !important; flex-direction: column; align-items: center; gap: 10px;
+  padding: 22px 30px 20px !important; text-align: center;
+}
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"] > p {
+  margin: 0 !important; font: 700 clamp(17px, 1.6vw, 21px)/1.25 var(--iw-font-head) !important; letter-spacing: .03em;
+  color: var(--iw-raid-ivory) !important; text-shadow: 0 2px 4px #000 !important;
+}
+/* The game's tone, kept: a wipe reads red, a kill green. */
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-guild-tone="bad"] > p { color: var(--iw-raid-bad) !important; }
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-guild-tone="good"] > p { color: var(--iw-raid-good) !important; }
+:root [data-iw-raid-hud] > [data-iw-guild-role="outcome"][data-iw-guild-tone="warn"] > p { color: #e8c27a !important; }
+:root [data-iw-guild="root"] [data-iw-raid-hud] [data-iw-guild-role="outcome-close"] {
+  margin: 0 !important; min-height: 32px !important; padding: 0 22px !important;
+  border: 1px solid #6f5631 !important; border-radius: 2px !important;
+  background: linear-gradient(180deg, #2a241a, #13110d) !important; box-shadow: inset 0 1px 0 rgba(255,230,180,.12) !important;
+  font: 700 12px/1 var(--iw-font-head) !important; letter-spacing: .08em; color: var(--iw-raid-ivory) !important;
+}
+:root [data-iw-guild="root"] [data-iw-raid-hud] [data-iw-guild-role="outcome-close"]:hover { filter: brightness(1.15) !important; }
+
+/* ── The dock: combat log + Raid skills, after Raid Chat ──────────────
+   RaidHud's own panels (the game's are hidden in the arena), stacked and
+   folded to a heading bar until opened. The content is the game's text; the
+   skills lines keep the game's colour classes (state), and the fire-resist
+   line keeps its meter. Outside the arena, so the raid tokens are declared
+   here as well. */
+:root .iw-raid-dock {
+  --iw-raid-brass: #d4ad63; --iw-raid-ivory: #f0e8d6; --iw-raid-read: #b7ad99; --iw-raid-dim: #938a79;
+  display: flex; flex-direction: column; gap: 10px;
+  /* The fight panel's own space-y-3 gap, stated so the dock never sits flush. */
+  margin-top: 12px;
+  font-family: var(--iw-font-ui); color: var(--iw-raid-ivory);
+}
+:root .iw-raid-dock > .iw-raid-dock-panel { padding: 0 !important; }
+:root .iw-raid-dock > .iw-raid-dock-panel[hidden] { display: none !important; }
+.iw-raid-dock-head {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 46px; margin: 0; padding: 12px 22px 12px 28px;
+  border: 0; background: none; box-shadow: none; cursor: pointer; text-align: left;
+  font: 700 12px/1 var(--iw-font-head); letter-spacing: .14em; text-transform: uppercase; color: var(--iw-raid-brass);
+}
+.iw-raid-dock-head:hover { filter: brightness(1.15); }
+.iw-raid-dock-head:focus-visible { outline: 1px solid var(--iw-raid-brass); outline-offset: -4px; }
+.iw-raid-dock-glyph { font-size: 13px; letter-spacing: 0; }
+.iw-raid-dock-title { flex: 1 1 auto; min-width: 0; }
+.iw-raid-dock-chevron { display: grid; place-items: center; width: 22px; height: 22px; flex: none; }
+.iw-raid-dock-chevron::before {
+  content: ''; width: 7px; height: 7px; border: solid currentColor; border-width: 0 2px 2px 0;
+  transform: translateY(-2px) rotate(45deg); transition: transform .15s ease;
+}
+.iw-raid-dock-head[aria-expanded="true"] .iw-raid-dock-chevron::before { transform: translateY(2px) rotate(-135deg); }
+.iw-raid-dock-panel[data-iw-raid-fold="closed"] > .iw-raid-dock-body { display: none; }
+.iw-raid-dock-body { padding: 0 26px 18px 28px; text-align: left; }
+.iw-raid-dock-panel[data-iw-raid-dock="log"] > .iw-raid-dock-body {
+  max-height: 260px; overflow-y: auto; overscroll-behavior: contain; margin-bottom: 10px; padding-bottom: 8px;
+  scrollbar-width: thin; scrollbar-color: var(--iw-th-edge-mid, #5b4a2e) transparent;
+}
+.iw-raid-dock-line { margin: 0; font: 500 12.5px/1.6 var(--iw-font-ui); color: var(--iw-raid-read); }
+.iw-raid-dock-line:last-child { color: var(--iw-raid-ivory); }
+.iw-raid-dock-panel[data-iw-raid-dock="skills"] > .iw-raid-dock-body > div {
+  margin: 0; padding: 4px 0 4px 9px; text-align: left;
+  border-left: 2px solid currentColor; font: 600 12px/1.35 var(--iw-font-ui);
+}
+.iw-raid-dock-panel[data-iw-raid-dock="skills"] > .iw-raid-dock-body > div + div { margin-top: 3px; }
+/* The game's "who has what?" roster: names over their buffs. */
+.iw-raid-dock-panel[data-iw-raid-dock="skills"] > .iw-raid-dock-body > div:has(> p) { border-left-color: var(--iw-th-edge-mid, #5b4a2e); color: var(--iw-raid-read); font-weight: 500; }
+.iw-raid-dock-panel[data-iw-raid-dock="skills"] > .iw-raid-dock-body > div > p { margin: 0; }
+.iw-raid-dock-more {
+  display: inline-block; margin: 10px 0 0; padding: 0; border: 0; background: none; box-shadow: none; cursor: pointer;
+  font: 600 11px/1 var(--iw-font-ui); letter-spacing: .03em; color: var(--iw-raid-dim); text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.iw-raid-dock-more:hover { color: var(--iw-raid-ivory); }
+/* Fire resistance as a meter: the game's numbers, a bar under them. */
+.iw-raid-dock-panel[data-iw-raid-dock="skills"] > .iw-raid-dock-body > [data-iw-raid-fx-kind="resist"] {
+  --iw-res: 0%;
+  margin-top: 8px; padding: 7px 0 10px; border-left: 0; border-top: 1px solid #433722;
+  background: linear-gradient(90deg, #b9612f, #e3a14c) left bottom / var(--iw-res) 3px no-repeat,
+              linear-gradient(#0a0908, #0a0908) left bottom / 100% 3px no-repeat;
+}
+:root [data-iw-raid-resist-step="0"] { --iw-res: 0%; } :root [data-iw-raid-resist-step="1"] { --iw-res: 10%; }
+:root [data-iw-raid-resist-step="2"] { --iw-res: 20%; } :root [data-iw-raid-resist-step="3"] { --iw-res: 30%; }
+:root [data-iw-raid-resist-step="4"] { --iw-res: 40%; } :root [data-iw-raid-resist-step="5"] { --iw-res: 50%; }
+:root [data-iw-raid-resist-step="6"] { --iw-res: 60%; } :root [data-iw-raid-resist-step="7"] { --iw-res: 70%; }
+:root [data-iw-raid-resist-step="8"] { --iw-res: 80%; } :root [data-iw-raid-resist-step="9"] { --iw-res: 90%; }
+:root [data-iw-raid-resist-step="10"] { --iw-res: 100%; }
+
+/* ── Tablet: two columns; the foot is the caption and actions ───────── */
+@media (max-width: 1099px) {
+  :root [data-iw-guild="root"] [data-iw-raid-hud] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(120px, 1fr) auto auto auto auto;
+    grid-template-areas: 'boss boss' 'cast cast' 'result result' 'timers timers' 'party party' 'status status' 'actions actions';
+    gap: 10px 14px !important; padding: 22px 18px 16px !important; min-height: 0;
+  }
+  :root [data-iw-raid-hud] > .raid-arena-floor { max-width: 744px; justify-self: center; }
+  :root [data-iw-raid-hud] > .iw-raid-timers { width: min(100%, 744px); }
+}
+
+/* ── Phone: the boss as hero, then the fight in reading order ─────────
+   Identity on a dark band, the painting as a hero window under it, the
+   health shell and cast bar beneath, the effect timers, the party
+   three-up and the actions. Log and skills are in the dock after Raid Chat. The boss
+   summary's box dissolves (display: contents) so its pieces take their
+   own rows; nothing moves in the DOM. */
+@media (max-width: 699px) {
+  :root [data-iw-guild="root"] [data-iw-raid-hud] {
+    --iw-hero-h: clamp(220px, 74vw, 330px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto var(--iw-hero-h) auto auto auto auto auto auto;
+    grid-template-areas: 'boss boss' 'hero hero' 'hp hp' 'cast cast' 'timers timers' 'party party' 'status status' 'actions actions';
+    gap: 10px 8px !important; padding: 18px 12px 14px !important; min-height: 0;
+  }
+  :root [data-iw-guild="root"] [data-iw-raid-hud][data-iw-raid-scene] { background: var(--iw-scene-bg, #0d0c0a) !important; }
+  :root [data-iw-raid-scene="ashmaw"] { --iw-scene-bg: #160706; }
+  :root [data-iw-raid-scene="thessaly"] { --iw-scene-bg: #101017; }
+  :root [data-iw-raid-scene="morwenna"] { --iw-scene-bg: #151019; }
+  :root [data-iw-raid-scene="grimjaw"] { --iw-scene-bg: #111923; }
+
+  /* Hero: the painted scene, confined to its window and cropped from the
+     right, where every boss stands; it fades into the band above and the
+     plate below. An absolutely placed grid child takes its grid area as its
+     containing block. */
+  :root [data-iw-raid-hud] > :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]) {
+    grid-area: hero; inset: -4px -12px !important;
+  }
+  :root [data-iw-raid-hud] > :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art]) > :is(canvas, img) {
+    object-position: 97% 50% !important;
+  }
+  :root [data-iw-raid-hud] > :is([data-iw-ashmaw-art], [data-iw-thessaly-art], [data-iw-morwenna-art], [data-iw-grimjaw-art], [data-iw-skarth-art])::after {
+    background:
+      linear-gradient(180deg, var(--iw-scene-bg) 0%, transparent 24%, transparent 68%, var(--iw-scene-bg) 100%),
+      linear-gradient(90deg, rgba(0,0,0,.35), transparent 18%, transparent 82%, rgba(0,0,0,.35)) !important;
+  }
+
+  :root [data-iw-raid-hud] > [data-iw-guild-role="boss-summary"] { display: contents !important; }
+  :root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > * { position: relative; z-index: 1; min-width: 0; margin: 0 !important; }
+  :root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > :first-child {
+    grid-area: boss; align-items: center !important; text-align: center; gap: 6px;
+  }
+  :root [data-iw-raid-hud] [data-iw-raid-boss]::before { margin-bottom: 6px; letter-spacing: .26em; }
+  :root [data-iw-raid-hud] [data-iw-raid-boss]::after { font-size: clamp(30px, 9vw, 38px); }
+  /* A scene-less boss: the game's own sprite is the hero. */
+  :root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > div:nth-child(2):not([data-iw-guild-role]) {
+    grid-area: hero; align-self: center; justify-self: center;
+  }
+  :root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > div:nth-child(2):not([data-iw-guild-role]) > img {
+    height: calc(var(--iw-hero-h) * .62) !important; width: auto !important;
+  }
+  /* The health shell at full width, its text in the same cell, padded onto
+     the same channel (percent padding resolves against the shared width). */
+  :root [data-iw-raid-hud] [data-iw-guild-role="boss-hp"] { grid-area: hp; width: 100% !important; margin: 0 !important; }
+  :root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > p {
+    grid-area: hp; align-self: stretch; z-index: 2; height: auto !important;
+    display: grid !important; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
+    padding: calc(var(--iw-shell-t) * 100% / 1216) calc(var(--iw-shell-r) * 100% / 1216)
+      calc(var(--iw-shell-b) * 100% / 1216) calc(var(--iw-shell-l) * 100% / 1216) !important;
+    margin: 0 !important; font-size: 14px !important;
+  }
+  :root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > p::before { content: ''; }
+  :root [data-iw-raid-hud] [data-iw-guild-role="boss-summary"] > p[data-iw-raid-pct]::after {
+    position: static; justify-self: end; padding-right: 4px; font-size: 12px;
+  }
+
+  :root [data-iw-raid-hud] > [data-iw-guild-role="telegraph"]:not([data-iw-raid-cast]) { width: 100%; margin-left: 0 !important; justify-self: stretch; }
+  /* The shell spans the column with no offset here: its channel starts 23.0263% in. */
+  :root [data-iw-raid-hud] > [data-iw-raid-cast] {
+    --iw-shell-w: 100%; height: 22px;
+    margin: calc(var(--iw-shell-w) * -.09 - 10px) 0 0 calc(var(--iw-shell-w) * .230263) !important;
+  }
+  :root [data-iw-raid-cast]::before { left: 8px; right: 38px; font-size: 11.5px; }
+  :root [data-iw-raid-cast]::after { right: 8px; font-size: 12px; }
+
+  /* The fight's result reads over the hero. */
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"] { grid-area: hero; z-index: 2; width: calc(100% - 24px); }
+
+  /* Party: three-up, the last row centred; caption left, count right. */
+  :root [data-iw-raid-hud] > .raid-arena-floor {
+    display: flex !important; flex-wrap: wrap !important; justify-content: center !important; width: 100%; gap: 7px 6px !important;
+  }
+  :root [data-iw-guild="root"] [data-iw-raid-hud] [data-iw-guild-role="action"] { --iw-compact-cap: 13px; height: 40px !important; padding: 0 16px !important; font-size: 12px !important; }
+  :root [data-iw-raid-hud] > .raid-arena-floor::before {
+    content: 'Raid party'; flex: 0 0 calc(50% - 3px); text-align: left; margin: 0; order: -4;
+  }
+  :root [data-iw-raid-hud] > .raid-arena-floor::after {
+    position: static !important; inset: auto !important; transform: none !important; width: auto !important; height: auto !important;
+    border: 0 !important; background: none !important; box-shadow: none !important; filter: none !important; opacity: 1 !important; animation: none !important;
+    display: block !important; content: attr(data-iw-raid-party) !important; flex: 0 0 calc(50% - 3px); order: -3; text-align: right;
+    font: 600 10.5px/1 var(--iw-font-ui); color: var(--iw-raid-dim); text-shadow: 0 1px 3px #000;
+  }
+  :root [data-iw-raid-hud] [data-iw-guild-role="raider"] {
+    flex: 0 0 calc((100% - 12px) / 3); max-width: none; padding: 7px 6px 6px !important;
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    /* Three-up leaves ~90px: a 14px icon shares the name line and the HP %
+       rides the skill line, so neither the name nor the skill is cut to
+       "Bust…" / "Com…" (both were, with icon, name and % on one line). */
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    grid-template-areas: 'ico name name' 'skill skill pct' 'hp hp hp' 'ch ch ch' 'fx fx fx';
+    column-gap: 4px; row-gap: 3px;
+  }
+  :root [data-iw-raid-hud] [data-iw-guild-role="raider"]::before { width: 14px; height: 14px; margin-top: 0; align-self: center; }
+  :root [data-iw-raid-hud] [data-iw-guild-role="raider"]::after { font-size: 10.5px; }
+  :root [data-iw-raid-hud] [data-iw-guild-role="raider"][data-iw-raid-down]::after { font-size: 10px; }
+  :root [data-iw-raid-hud] [data-iw-guild-role="raider-name"] { font-size: 10.5px !important; letter-spacing: -.01em; }
+  :root [data-iw-raid-hud] [data-iw-guild-role="raider-skill"] { font-size: 10px !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  :root .iw-raid-fx { gap: 2px 5px; }
+  :root .iw-raid-chip { font-size: 10px; }
+
+  /* The raid panels' corners step down with the phone's tighter padding,
+     as the section frame's do below 1024px. */
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"],
+  :root .iw-raid-dock > .iw-raid-dock-panel {
+    --iw-raid-corner-w: 20px 18px;
+  }
+  .iw-raid-dock-head { min-height: 42px; padding: 10px 16px 10px 22px; font-size: 11px; letter-spacing: .1em; }
+  .iw-raid-dock-body { padding: 0 18px 14px 22px; }
+  /* Timers two-up. */
+  :root [data-iw-raid-hud] > .iw-raid-timers { width: 100%; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px 6px; }
+  .iw-raid-timer { height: 24px; column-gap: 5px; padding: 0 7px 0 6px; font-size: 10px; }
+  .iw-raid-timer-secs { font-size: 12px; }
+
+  :root [data-iw-raid-hud] > [data-iw-guild-role="actions"] { width: 100%; }
+
+  :root [data-iw-raid-hud] > [data-iw-guild-role="outcome"] { padding: 18px 20px 16px !important; }
+}
+
+/* Skarth: cold flooded court, identical HUD layout and native ownership. */
+:root [data-iw-guild="root"] [data-iw-raid-scene="skarth"] { background: #111c28 !important; }
+:root [data-iw-skarth-art]::after { background: linear-gradient(180deg,transparent 50%,rgba(8,16,25,.65)); }
+@media (max-width: 767px) { :root [data-iw-raid-scene="skarth"] { --iw-scene-bg: #111c28; } }

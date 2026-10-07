@@ -42,11 +42,16 @@ if (manifest.version !== pkg.version || manifest.version !== codeVersion) {
 const EXCLUDE = [
   /\.md$/i,
   /\.html$/i,
-  /(^|\/)prompts?\.(txt|json)$/i,
+  /(^|\/)prompts?(?:-[a-z0-9_-]+)?\.(txt|json)$/i,
   // The earlier Ashmaw sprite/portrait studies are retained in the workspace.
-  // Live raids use only the approved arena and smoke; the studies add ~190 MB.
+  // Live raids use the approved arena and custom atmosphere atlases; the studies add ~190 MB.
   /^assets\/raids\/ashmaw\/(?:sprites(?:-v\d+)?|portrait)\//i,
   /^assets\/raids\/ashmaw\/(?:environment|dragon)\.png$/i,
+  // Retained first Thessaly study; the live scene uses arena-storm.png.
+  /^assets\/raids\/thessaly\/arena\.png$/i,
+  // The raid UI kit ships only its separate sprites; the atlas, its ImageGen
+  // sources and the standalone preview are design material.
+  /^assets\/raids\/ui-kit-v1\/(?!sprites\/)/i,
 ];
 
 async function walk(dir) {
