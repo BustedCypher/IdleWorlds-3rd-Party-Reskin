@@ -1373,3 +1373,342 @@
 :root [data-iw-guild="root"] [data-iw-raid-scene="skarth"] { background: #111c28 !important; }
 :root [data-iw-skarth-art]::after { background: linear-gradient(180deg,transparent 50%,rgba(8,16,25,.65)); }
 @media (max-width: 767px) { :root [data-iw-raid-scene="skarth"] { --iw-scene-bg: #111c28; } }
+
+/* ══ Raid lobby layout (GuildLobby.js; Curtis, 2026-10-08) ═════════════
+   The Raid Dungeon panel becomes a grid. The game's wrapper divs (the
+   two-column row, its left column, the stacked block) are `display:
+   contents`, so every card is a grid item placed by its
+   `data-iw-guild-slot`; nothing is moved in the DOM (rule 2).
+
+   Desktop (>=1024px, the game's own lg break), two columns:
+     lend            | invite(s) ─┐ one frame
+     boss            | members  ──┘ (spans the left column's rows)
+     group chat      |
+     pre-raid prep ─┐|
+     raid loadout ──┘ one frame
+     ready / start, other cards, my raid history, footer: full width.
+   Auto-placement does the stacking: a column-1 item after a column-2 item
+   starts a new row, and members spans four rows beside boss, chat, prep and
+   loadout. Below 1024px it is one column in the same reading order.
+   The Leaderboard card is hidden: it lives on the Leaderboards route. */
+:root [data-iw-guild="root"][data-iw-guild-layout="lobby"] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-flow: row;
+  gap: 12px !important;
+  align-items: start;
+}
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-wrap] { display: contents !important; }
+:root [data-iw-guild-layout="lobby"] > *,
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-wrap] > * {
+  grid-column: 1 / -1; min-width: 0; margin: 0 !important;
+}
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="leaderboard"] { display: none !important; }
+
+/* One column: the reading order. Unslotted children (the head, the game's
+   notices and the ready-check card) keep order 0 and lead. */
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="boss"] { order: 20; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="chat"] { order: 21; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="lend"] { order: 22; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="prep"] { order: 23; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="loadout"] { order: 24; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="invite"] { order: 25; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="members"] { order: 26; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="other"] { order: 50; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="start"] { order: 60; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="history"] { order: 70; }
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="footer"] { order: 80; }
+
+@media (min-width: 1024px) {
+  :root [data-iw-guild="root"][data-iw-guild-layout="lobby"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  :root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="lend"] { order: 10; grid-column: 1; align-self: stretch; }
+  :root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="invite"] { order: 11; grid-column: 2; align-self: stretch; }
+  :root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="boss"] { order: 20; grid-column: 1; }
+  :root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="members"] { order: 21; grid-column: 2; grid-row: span 4; align-self: stretch; }
+  :root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="chat"] { order: 30; grid-column: 1; }
+  :root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="prep"] { order: 40; grid-column: 1; align-self: stretch; }
+  :root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="loadout"] { order: 41; grid-column: 1; }
+}
+
+/* Merged frames: the upper card runs into the gap and drops its foot, the
+   lower one drops its head and keeps the guild card's hairline as the seam.
+   Invite(s) + Members read as one frame; so do Pre-raid prep + Raid Loadout. */
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="invite"],
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="prep"]:has(~ [data-iw-guild-slot="loadout"]) {
+  margin-bottom: -12px !important;
+  border-bottom-color: transparent !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="invite"] ~ [data-iw-guild-slot="invite"],
+:root [data-iw-guild-layout="lobby"]:has([data-iw-guild-slot="invite"]) [data-iw-guild-slot="members"],
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="prep"] ~ [data-iw-guild-slot="loadout"] {
+  border-top-color: var(--iw-th-edge-faint) !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+/* "Invite player", then the display-name bar: the help line steps aside. */
+:root [data-iw-guild-layout="lobby"] [data-iw-guild-slot="invite"] [data-iw-guild-role="note"] { display: none !important; }
+
+/* ── Record time under each difficulty pill (GuildLobby) ─────────────── */
+.iw-guild-records { display: flex; gap: 6px; margin-top: 2px; }
+.iw-guild-record {
+  flex: 1 1 0; min-width: 0; text-align: center;
+  font: 600 10.5px/1.3 var(--iw-font-ui); color: var(--iw-dim, #938a79);
+  font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Boss card: hero, stat chips, requirement tiles, tactics (RaidBossCard) ──
+   The card is a one-column grid so the skin's art (an owned node) can share
+   the name, lore and stat-chip rows behind them without wrapping game nodes
+   (rule 2). Rows are explicit for the hero only; everything after it
+   auto-places in DOM order. Without boss tabs (a single boss) the hero
+   starts at row 1. A source line the module parsed is hidden here; one it
+   could not parse never gets the attribute and stays the game's. */
+:root [data-iw-boss-card] {
+  --iw-bc-r1: 2; --iw-bc-r2: 3; --iw-bc-r3: 4; --iw-bc-end: 5;
+  --iw-bc-face: 78px;
+  --iw-bc-indent: calc(var(--iw-bc-face) + 30px);
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-content: start !important;
+}
+:root [data-iw-boss-card]:not(:has(> [data-iw-guild-role="boss-tabs"])) { --iw-bc-r1: 1; --iw-bc-r2: 2; --iw-bc-r3: 3; --iw-bc-end: 4; }
+:root [data-iw-boss-card] > [data-iw-guild-role="boss-tabs"] { grid-row: 1 !important; grid-column: 1 !important; }
+:root [data-iw-boss-card] > [data-iw-boss-card-src] { display: none !important; }
+
+:root [data-iw-boss-card] > .iw-bc-art {
+  grid-column: 1; grid-row: var(--iw-bc-r1) / var(--iw-bc-end);
+  position: relative; z-index: 0; margin: 0 !important; min-height: 132px;
+  border: 1px solid var(--iw-th-edge-soft, #3a3226); border-radius: 2px;
+  background:
+    linear-gradient(90deg, rgba(9,8,7,.96) 0%, rgba(9,8,7,.9) 36%, rgba(9,8,7,.62) 54%, rgba(9,8,7,0) 74%),
+    linear-gradient(0deg, rgba(9,8,7,.7), rgba(9,8,7,0) 42%),
+    var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / 150% auto no-repeat,
+    #0b0a08;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,226,191,.06);
+  pointer-events: none;
+}
+:root [data-iw-boss-card] .iw-bc-portrait {
+  position: absolute; left: 14px; top: 12px;
+  width: var(--iw-bc-face); height: var(--iw-bc-face);
+  background: var(--iw-bc-face-art, none) center / contain no-repeat;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.85));
+}
+/* The banner is drawn at 150% of the hero's width, so a boss whose HEAD is
+   at fraction b of the painting lands at 80% of the hero with x = 3b - 1.6.
+   Every head is in the banner's top quarter, so y stays near 0: anchoring
+   lower cut the heads off at live widths (Curtis, 2026-10-08). */
+.iw-bc-art[data-iw-bc-boss="ashmaw"]   { --iw-bc-banner: url('../assets/raids/lobby/ashmaw-banner.webp');   --iw-bc-face-art: url('../assets/raids/lobby/ashmaw-portrait.webp');   --iw-bc-focus: 38% 26%; }
+.iw-bc-art[data-iw-bc-boss="thessaly"] { --iw-bc-banner: url('../assets/raids/lobby/thessaly-banner.webp'); --iw-bc-face-art: url('../assets/raids/lobby/thessaly-portrait.webp'); --iw-bc-focus: 59% 0%; }
+.iw-bc-art[data-iw-bc-boss="morwenna"] { --iw-bc-banner: url('../assets/raids/lobby/morwenna-banner.webp'); --iw-bc-face-art: url('../assets/raids/lobby/morwenna-portrait.webp'); --iw-bc-focus: 56% 0%; }
+.iw-bc-art[data-iw-bc-boss="grimjaw"]  { --iw-bc-banner: url('../assets/raids/lobby/grimjaw-banner.webp');  --iw-bc-face-art: url('../assets/raids/lobby/grimjaw-portrait.webp');  --iw-bc-focus: 53% 2%; }
+.iw-bc-art[data-iw-bc-boss="skarth"]   { --iw-bc-banner: url('../assets/raids/lobby/skarth-banner.webp');   --iw-bc-face-art: url('../assets/raids/lobby/skarth-portrait.webp');   --iw-bc-focus: 74% 6%; }
+
+/* The hero's rows, over the art. */
+:root [data-iw-boss-card] > :is([data-iw-guild-role="boss-name"], [data-iw-guild-role="lore"], .iw-bc-stats) {
+  grid-column: 1; position: relative; z-index: 1;
+  margin: 0 !important; padding-left: var(--iw-bc-indent) !important; padding-right: 16px !important;
+}
+:root [data-iw-guild="root"] [data-iw-boss-card] > [data-iw-guild-role="boss-name"] {
+  grid-row: var(--iw-bc-r1);
+  padding-top: 16px !important;
+  font-size: 19px !important; line-height: 1.2 !important;
+  text-shadow: 0 1px 0 #000, 0 0 12px rgba(0,0,0,.9) !important;
+}
+:root [data-iw-guild="root"] [data-iw-boss-card] > [data-iw-guild-role="lore"] {
+  grid-row: var(--iw-bc-r2);
+  max-width: 620px; padding-top: 3px !important;
+  font-size: 13.5px !important; color: #e4dac6 !important;
+  text-shadow: 0 1px 1px #000, 0 0 6px rgba(0,0,0,.95), 0 0 14px rgba(0,0,0,.85) !important;
+}
+:root [data-iw-boss-card] > .iw-bc-stats { grid-row: var(--iw-bc-r3); padding-top: 10px !important; padding-bottom: 14px !important; align-self: end; }
+
+/* ATK · DEF · HP chips, then the element and its abilities. */
+.iw-bc-stats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.iw-bc-stat {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 3px 9px; border: 1px solid rgba(200,168,97,.30); border-radius: 2px;
+  background: rgba(8,7,6,.72); box-shadow: inset 0 1px 0 rgba(255,226,191,.05);
+}
+.iw-bc-stat-label { font: 700 9.5px/1 var(--iw-font-ui); letter-spacing: .12em; color: var(--iw-th-accent-dim, #a88d5d); }
+.iw-bc-stat-value { font: 700 13px/1.15 var(--iw-font-ui); color: var(--iw-text-hi, #f0e8d6); font-variant-numeric: tabular-nums; }
+/* Rule 5: the game's Hard (rose) / Practice (emerald) numbers. */
+.iw-bc-stat-value[data-iw-bc-tone="hard"] { color: #fda4af; }
+.iw-bc-stat-value[data-iw-bc-tone="easy"] { color: #6ee7b7; }
+.iw-bc-element { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 7px; margin-left: 4px; font: 500 11.5px/1.3 var(--iw-font-ui); text-shadow: 0 1px 2px #000; }
+.iw-bc-element-name { font-weight: 700; color: var(--iw-text-hi, #f0e8d6); }
+.iw-bc-element-list { color: #b9ad97; }
+
+/* Requirement tiles: the game's amber requirement line, one fact per tile. */
+.iw-bc-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); gap: 6px; }
+.iw-bc-tile {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+  padding: 7px 10px; border: 1px solid var(--iw-th-edge-faint, #2a251d); border-left: 2px solid var(--iw-guild-warn-rail);
+  border-radius: 2px; background: color-mix(in srgb, var(--iw-guild-warn-rail) 9%, rgba(0,0,0,.3));
+}
+.iw-bc-tile[data-iw-bc-kind="advice"] {
+  border-left-color: var(--iw-guild-info-rail); background: color-mix(in srgb, var(--iw-guild-info-rail) 8%, rgba(0,0,0,.3));
+  --iw-bc-tile-ink: var(--iw-guild-info);
+}
+.iw-bc-tile-body { display: flex; flex-direction: column; min-width: 0; }
+.iw-bc-tile-label { font: 700 9.5px/1.2 var(--iw-font-ui); letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb, var(--iw-bc-tile-ink, var(--iw-guild-warn)) 72%, #5a554c); }
+.iw-bc-tile-value { font: 700 13.5px/1.25 var(--iw-font-ui); color: var(--iw-bc-tile-ink, var(--iw-guild-warn)); font-variant-numeric: tabular-nums; }
+.iw-bc-tile-sub { font: 500 10.5px/1.3 var(--iw-font-ui); color: var(--iw-dim, #938a79); }
+.iw-bc-icon { flex: 0 0 auto; width: 22px; height: 22px; background: var(--iw-bc-skill-art, none) center / contain no-repeat; opacity: .9; }
+.iw-bc-glyph { flex: 0 0 auto; width: 22px; text-align: center; font-size: 17px; line-height: 1; }
+.iw-bc-icon[data-iw-bc-skill="alchemy"]       { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-alchemy.png'); }
+.iw-bc-icon[data-iw-bc-skill="combat"]        { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-combat.png'); }
+.iw-bc-icon[data-iw-bc-skill="construction"]  { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-construction.png'); }
+.iw-bc-icon[data-iw-bc-skill="gathering"]     { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-gathering.png'); }
+.iw-bc-icon[data-iw-bc-skill="jewelcrafting"] { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-jewelcrafting.png'); }
+.iw-bc-icon[data-iw-bc-skill="mining"]        { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-mining.png'); }
+.iw-bc-icon[data-iw-bc-skill="smithing"]      { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-smithing.png'); }
+.iw-bc-icon[data-iw-bc-skill="spellcrafting"] { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-spellcrafting.png'); }
+.iw-bc-icon[data-iw-bc-skill="tailoring"]     { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-tailoring.png'); }
+.iw-bc-icon[data-iw-bc-skill="woodcutting"]   { --iw-bc-skill-art: url('../assets/raids/ui-kit-v1/sprites/skill-woodcutting.png'); }
+
+/* Tactics: the boss's recommended team loadout, then its tip (sky, the
+   game's tip colour). */
+.iw-bc-tactics {
+  display: flex; flex-direction: column; align-items: stretch; gap: 7px;
+  padding: 8px 10px; border: 1px solid var(--iw-th-edge-faint, #2a251d); border-left: 2px solid var(--iw-guild-info-rail);
+  border-radius: 2px; background: color-mix(in srgb, var(--iw-guild-info-rail) 8%, rgba(0,0,0,.3));
+  font: 500 11.5px/1.35 var(--iw-font-ui); color: var(--iw-dim, #938a79);
+}
+.iw-bc-tactics-label { font: 700 9.5px/1.2 var(--iw-font-ui); letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb, var(--iw-guild-info) 72%, #3c5a6b); }
+.iw-bc-roles { display: flex; flex-wrap: wrap; gap: 6px; }
+.iw-bc-role {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--iw-guild-info-rail) 45%, transparent); border-radius: 2px;
+  background: rgba(8,7,6,.55); color: var(--iw-text, #d8cfbd); font-weight: 600;
+}
+.iw-bc-role-count { font: 700 14px/1 var(--iw-font-ui); color: var(--iw-guild-info); font-variant-numeric: tabular-nums; }
+.iw-bc-role > .iw-bc-icon { width: 16px; height: 16px; }
+.iw-bc-role > .iw-bc-glyph { width: 16px; font-size: 13px; color: var(--iw-guild-info); }
+.iw-bc-tip { margin: 0; color: var(--iw-text, #d8cfbd); }
+.iw-bc-tip > b { color: var(--iw-guild-info); font-weight: 700; }
+.iw-bc-tip > .iw-bc-tip-label { color: var(--iw-text-hi, #f0e8d6); }
+
+/* Weekly loot: state, rule, countdown. The game's notice tone sets the rail. */
+.iw-bc-loot {
+  --iw-bc-rail: var(--iw-guild-warn-rail); --iw-bc-ink: var(--iw-guild-warn);
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 14px;
+  padding: 8px 12px; border: 1px solid var(--iw-th-edge-faint, #2a251d); border-left: 2px solid var(--iw-bc-rail);
+  border-radius: 2px; background: color-mix(in srgb, var(--iw-bc-rail) 10%, rgba(0,0,0,.3));
+  font: 500 11.5px/1.35 var(--iw-font-ui); color: var(--iw-dim, #938a79);
+}
+.iw-bc-loot[data-iw-bc-tone="good"] { --iw-bc-rail: var(--iw-guild-good-rail); --iw-bc-ink: var(--iw-guild-good); }
+.iw-bc-loot[data-iw-bc-tone="bad"]  { --iw-bc-rail: var(--iw-guild-bad-rail);  --iw-bc-ink: var(--iw-guild-bad); }
+.iw-bc-loot[data-iw-bc-tone="info"] { --iw-bc-rail: var(--iw-guild-info-rail); --iw-bc-ink: var(--iw-guild-info); }
+.iw-bc-loot-state { font-weight: 700; font-size: 12.5px; color: var(--iw-bc-ink); white-space: nowrap; }
+.iw-bc-loot-when { display: grid; grid-template-columns: auto auto; align-items: baseline; justify-content: end; gap: 0 6px; text-align: right; }
+.iw-bc-loot-label { font: 700 9.5px/1.2 var(--iw-font-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--iw-faint, #6f675a); }
+.iw-bc-loot-count { font: 700 14px/1.2 var(--iw-font-ui); color: var(--iw-text-hi, #f0e8d6); font-variant-numeric: tabular-nums; }
+.iw-bc-loot-reset { grid-column: 1 / -1; font-size: 10px; color: var(--iw-faint, #6f675a); }
+@media (max-width: 640px) {
+  .iw-bc-loot { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .iw-bc-loot-when { justify-content: start; text-align: left; }
+  .iw-bc-tile { padding: 5px 9px; }
+}
+
+/* Phones: a smaller medallion beside the name; lore and chips take the
+   full width under it, and the art darkens from the top down. */
+@media (max-width: 640px) {
+  :root [data-iw-boss-card] { --iw-bc-face: 58px; }
+  :root [data-iw-boss-card] > .iw-bc-art {
+    background:
+      linear-gradient(180deg, rgba(9,8,7,.25) 0%, rgba(9,8,7,.82) 52%, rgba(9,8,7,.95) 100%),
+      linear-gradient(90deg, rgba(9,8,7,.75), rgba(9,8,7,0) 70%),
+      var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / cover no-repeat,
+      #0b0a08;
+  }
+  :root [data-iw-guild="root"] [data-iw-boss-card] > [data-iw-guild-role="boss-name"] {
+    display: flex !important; align-items: center; min-height: calc(var(--iw-bc-face) + 22px);
+    padding-top: 10px !important; font-size: 17px !important;
+  }
+  :root [data-iw-boss-card] > :is([data-iw-guild-role="lore"], .iw-bc-stats) { padding-left: 12px !important; padding-right: 12px !important; }
+  :root [data-iw-boss-card] .iw-bc-portrait { left: 10px; top: 10px; }
+  .iw-bc-element { margin-left: 0; }
+}
+
+/* ── Ready-check pop-up (GuildLobby; the skin's own, never the leader's) ── */
+.iw-rc-popup {
+  position: fixed; z-index: 2147483000; top: 16px; left: 50%; transform: translateX(-50%);
+  width: min(440px, calc(100vw - 24px)); box-sizing: border-box; padding: 20px 24px 18px;
+  border: 1px solid transparent; border-radius: var(--iw-r-panel, 3px);
+  border-image: var(--iw-corner-filigree) 50% / 25px 23px / 0 stretch;
+  background:
+    linear-gradient(90deg, rgba(240, 180, 92, .14), transparent 60%),
+    url('../assets/skills_panel_texture.webp'),
+    linear-gradient(180deg, var(--iw-th-ground-a, #1a1611), var(--iw-th-ground-b, #0d0c0a));
+  background-blend-mode: normal, soft-light, normal;
+  box-shadow: 0 0 0 1px #c9963f, inset 0 0 0 1px rgba(0, 0, 0, .7), 0 14px 40px rgba(0, 0, 0, .75), 0 0 34px -10px rgba(240, 180, 92, .7);
+  color: var(--iw-text-hi, #f0e8d6); font-family: var(--iw-font-ui);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .iw-rc-popup { animation: iw-rc-in .28s cubic-bezier(.2, .9, .3, 1.2) both; }
+}
+@keyframes iw-rc-in { from { opacity: 0; transform: translate(-50%, -14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.iw-rc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.iw-rc-title { margin: 0; font: 700 15px/1.25 var(--iw-font-head); letter-spacing: .03em; color: #f5d58a; text-shadow: 0 1px 0 #000; }
+.iw-rc-timer { flex: none; font: 800 15px/1 var(--iw-font-ui); color: #f0b45c; font-variant-numeric: tabular-nums; }
+.iw-rc-note { margin: 8px 0 14px; font: 500 12px/1.45 var(--iw-font-ui); color: var(--iw-dim, #b7ad99); }
+.iw-rc-actions { display: flex; gap: 8px; }
+.iw-rc-actions > button {
+  --iw-compact-cap: 12px;
+  flex: 1 1 0; height: 36px; padding: 0 14px; margin: 0; border: 0; background: none; cursor: pointer;
+  font: 700 12px/1 var(--iw-font-head); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--iw-text-hi, #f0e8d6) !important; text-shadow: 0 1px 2px #000;
+}
+.iw-rc-actions > .iw-rc-confirm { color: #ffd2ad !important; box-shadow: 0 0 14px rgba(217, 120, 74, .3) !important; }
+.iw-rc-actions > .iw-rc-confirm > [data-iw-compact-layer] { box-shadow: inset 0 -2px var(--iw-th-cta-hi, #d9784a) !important; }
+
+/* ── Raid leaderboard on the Leaderboards route (RaidLeaderboards.js) ── */
+.iw-raid-lb-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.iw-raid-lb-title { margin: 0; }
+.iw-raid-lb-sub { font: 500 11px/1 var(--iw-font-ui); color: var(--iw-dim, #938a79); }
+.iw-raid-lb-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.iw-raid-lb-tab {
+  --iw-compact-cap: 10px;
+  height: 28px; padding: 0 12px; margin: 0; border: 0; background: none; cursor: pointer;
+  font: 700 11px/1 var(--iw-font-ui); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--iw-dim, #938a79) !important;
+}
+.iw-raid-lb-tab[aria-pressed="true"] { color: var(--iw-text-hi, #f0e8d6) !important; }
+.iw-raid-lb-tab[aria-pressed="true"] > [data-iw-compact-layer] { box-shadow: inset 0 -2px var(--iw-th-accent, #5dbbd0) !important; }
+.iw-raid-lb-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; }
+.iw-raid-lb-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 10px;
+  border: 1px solid var(--iw-th-edge-faint, #29251d); border-radius: 2px; background: rgba(0, 0, 0, .22);
+  font: 500 12.5px/1.25 var(--iw-font-ui); color: var(--iw-text-hi, #f0e8d6);
+}
+.iw-raid-lb-name { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.iw-raid-lb-rank { flex: none; width: 2.2em; font-weight: 800; color: var(--iw-dim, #938a79); font-variant-numeric: tabular-nums; }
+.iw-raid-lb-row[data-iw-raid-lb-rank="1"] .iw-raid-lb-rank { color: #f1c35b; }
+.iw-raid-lb-row[data-iw-raid-lb-rank="2"] .iw-raid-lb-rank { color: #c9ccd2; }
+.iw-raid-lb-row[data-iw-raid-lb-rank="3"] .iw-raid-lb-rank { color: #d08a52; }
+.iw-raid-lb-guild { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.iw-raid-lb-tag {
+  flex: none; padding: 1px 5px; border: 1px solid rgba(125, 190, 230, .35); border-radius: 2px;
+  font: 600 9.5px/1.2 var(--iw-font-ui); letter-spacing: .04em; text-transform: uppercase; color: #a9d4ef;
+}
+.iw-raid-lb-time { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--iw-text-hi, #f0e8d6); }
+.iw-raid-lb-note { margin: 6px 0 2px; font: italic 500 12px/1.4 var(--iw-font-ui); color: var(--iw-dim, #938a79); }
+
+/* TESTING FEATURE (LobbyPreview.js): the lobby's "🧪 Test:" strip. Dashed
+   amber, like the fight's test toggles, so it never reads as a game control. */
+:root [data-iw-guild="root"] > [data-iw-lobby-test="bar"] {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px;
+  border: 1px dashed color-mix(in srgb, #f5b84a 45%, transparent); border-radius: 4px; background: rgba(245, 184, 74, .05);
+}
+:root [data-iw-guild="root"] [data-iw-lobby-test="label"] {
+  margin-right: 4px; font: 700 10.5px/1 var(--iw-font-ui); letter-spacing: .06em; text-transform: uppercase; color: #f5c76a;
+}
+:root [data-iw-guild="root"] button[data-iw-lobby-test] {
+  padding: 3px 9px !important; margin: 0 !important; min-height: 0 !important;
+  border: 1px dashed color-mix(in srgb, #f5b84a 60%, transparent) !important; border-radius: 4px !important;
+  background: none !important; box-shadow: none !important; filter: none !important; cursor: pointer;
+  font: 600 11px/1.3 var(--iw-font-ui) !important; letter-spacing: .02em; text-transform: none !important; color: #f5c76a !important;
+}
+:root [data-iw-guild="root"] button[data-iw-lobby-test][aria-pressed="true"] { background: rgba(245, 184, 74, .18) !important; color: #ffe2a8 !important; }

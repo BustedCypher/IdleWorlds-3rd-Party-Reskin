@@ -1,0 +1,430 @@
+{
+  "version": 1,
+  "source": "idleWorlds-game-sprites-BC@6d1ea43 raid_artwork_manifest.json v2",
+  "item_data_generated_at": "2026-10-05T03:26:31.108Z",
+  "cell_size": 128,
+  "raids": {
+    "ashmaw": {
+      "atlas": "assets/raid_gear/ashmaw.png",
+      "width": 896,
+      "height": 128,
+      "columns": 7,
+      "rows": 1
+    },
+    "thessaly": {
+      "atlas": "assets/raid_gear/thessaly.png",
+      "width": 896,
+      "height": 128,
+      "columns": 7,
+      "rows": 1
+    },
+    "morwenna": {
+      "atlas": "assets/raid_gear/morwenna.png",
+      "width": 896,
+      "height": 128,
+      "columns": 7,
+      "rows": 1
+    },
+    "grimjaw": {
+      "atlas": "assets/raid_gear/grimjaw.png",
+      "width": 896,
+      "height": 128,
+      "columns": 7,
+      "rows": 1
+    },
+    "skarth": {
+      "atlas": "assets/raid_gear/skarth.png",
+      "width": 896,
+      "height": 128,
+      "columns": 7,
+      "rows": 1
+    }
+  },
+  "items": [
+    {
+      "item_id": "ashmaws_scale_helm",
+      "name": "Ashmaw's Scale Crest",
+      "raid": "ashmaw",
+      "category": "Equipment",
+      "subcategory": "Helmet slot",
+      "x": 0,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "ashmaws_scale_chest",
+      "name": "Ashmaw's Scale Hauberk",
+      "raid": "ashmaw",
+      "category": "Equipment",
+      "subcategory": "Chest slot",
+      "x": 128,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "tyrants_ember",
+      "name": "Tyrant's Ember",
+      "raid": "ashmaw",
+      "category": "Equipment",
+      "subcategory": "Trinket slot",
+      "x": 256,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "ashmaws_cinderheart_band",
+      "name": "Cinderheart Band",
+      "raid": "ashmaw",
+      "category": "Equipment",
+      "subcategory": "Ring slot",
+      "x": 384,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "tyrants_forgehands",
+      "name": "Tyrant's Forgehands",
+      "raid": "ashmaw",
+      "category": "Equipment",
+      "subcategory": "Gloves slot",
+      "x": 512,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "cinderforged_pendant",
+      "name": "Cinderforged Pendant",
+      "raid": "ashmaw",
+      "category": "Equipment",
+      "subcategory": "Amulet slot",
+      "x": 640,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "cindercore_fragment",
+      "name": "Cindercore Fragment",
+      "raid": "ashmaw",
+      "category": "Trade Good",
+      "subcategory": "Trade good",
+      "x": 768,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "thessalys_storm_grips",
+      "name": "Thessaly's Storm Grips",
+      "raid": "thessaly",
+      "category": "Equipment",
+      "subcategory": "Gloves slot",
+      "x": 0,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "thessalys_stormstriders",
+      "name": "Thessaly's Stormstriders",
+      "raid": "thessaly",
+      "category": "Equipment",
+      "subcategory": "Boots slot",
+      "x": 128,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "voltaic_sigil",
+      "name": "Voltaic Sigil",
+      "raid": "thessaly",
+      "category": "Equipment",
+      "subcategory": "Amulet slot",
+      "x": 256,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "stormcallers_band",
+      "name": "Stormcaller's Band",
+      "raid": "thessaly",
+      "category": "Equipment",
+      "subcategory": "Ring slot",
+      "x": 384,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "thessalys_tempest_lance",
+      "name": "Thessaly's Tempest Lance",
+      "raid": "thessaly",
+      "category": "Equipment",
+      "subcategory": "Weapon slot",
+      "x": 512,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "stormglass_hourglass",
+      "name": "Stormglass Hourglass",
+      "raid": "thessaly",
+      "category": "Equipment",
+      "subcategory": "Trinket slot",
+      "x": 640,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "charged_core_shard",
+      "name": "Charged Core Shard",
+      "raid": "thessaly",
+      "category": "Trade Good",
+      "subcategory": "Trade good",
+      "x": 768,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "morwennas_hollow_crown",
+      "name": "Morwenna's Hollow Crown",
+      "raid": "morwenna",
+      "category": "Equipment",
+      "subcategory": "Helmet slot",
+      "x": 0,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "morwennas_hollow_legwraps",
+      "name": "Morwenna's Hollow Legwraps",
+      "raid": "morwenna",
+      "category": "Equipment",
+      "subcategory": "Legs slot",
+      "x": 128,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "oracles_locket",
+      "name": "Oracle's Locket",
+      "raid": "morwenna",
+      "category": "Equipment",
+      "subcategory": "Trinket slot",
+      "x": 256,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "hollow_seers_band",
+      "name": "Hollow Seer's Band",
+      "raid": "morwenna",
+      "category": "Equipment",
+      "subcategory": "Ring slot",
+      "x": 384,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "eye_of_the_hollow_oracle",
+      "name": "Eye of the Hollow Oracle",
+      "raid": "morwenna",
+      "category": "Equipment",
+      "subcategory": "Amulet slot",
+      "x": 512,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "hollow_oracles_staff",
+      "name": "Hollow Oracle's Staff",
+      "raid": "morwenna",
+      "category": "Equipment",
+      "subcategory": "Weapon slot",
+      "x": 640,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "hollow_core_shard",
+      "name": "Hollow Core Shard",
+      "raid": "morwenna",
+      "category": "Trade Good",
+      "subcategory": "Trade good",
+      "x": 768,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "grimjaws_bound_plate",
+      "name": "Grimjaw's Bound Plate",
+      "raid": "grimjaw",
+      "category": "Equipment",
+      "subcategory": "Chest slot",
+      "x": 0,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "grimjaws_bound_greaves",
+      "name": "Grimjaw's Bound Greaves",
+      "raid": "grimjaw",
+      "category": "Equipment",
+      "subcategory": "Legs slot",
+      "x": 128,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "grimjaws_bound_gauntlets",
+      "name": "Grimjaw's Bound Gauntlets",
+      "raid": "grimjaw",
+      "category": "Equipment",
+      "subcategory": "Gloves slot",
+      "x": 256,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "bulwarks_unbroken_band",
+      "name": "Bulwark's Unbroken Band",
+      "raid": "grimjaw",
+      "category": "Equipment",
+      "subcategory": "Ring slot",
+      "x": 384,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "grimjaws_unbroken_march",
+      "name": "Grimjaw's Unbroken March",
+      "raid": "grimjaw",
+      "category": "Equipment",
+      "subcategory": "Boots slot",
+      "x": 512,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "anchorstone_bulwark",
+      "name": "Anchorstone Bulwark",
+      "raid": "grimjaw",
+      "category": "Equipment",
+      "subcategory": "Shield slot",
+      "x": 640,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "anchor_core_shard",
+      "name": "Anchor Core Shard",
+      "raid": "grimjaw",
+      "category": "Trade Good",
+      "subcategory": "Trade good",
+      "x": 768,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "skarths_rime_helm",
+      "name": "Skarth's Rime Crown",
+      "raid": "skarth",
+      "category": "Equipment",
+      "subcategory": "Helmet slot",
+      "x": 0,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "skarths_rime_chest",
+      "name": "Skarth's Rime Hauberk",
+      "raid": "skarth",
+      "category": "Equipment",
+      "subcategory": "Chest slot",
+      "x": 128,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "skarths_frostheart",
+      "name": "Skarth's Frostheart",
+      "raid": "skarth",
+      "category": "Equipment",
+      "subcategory": "Trinket slot",
+      "x": 256,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "skarths_hoarfrost_band",
+      "name": "Hoarfrost Band",
+      "raid": "skarth",
+      "category": "Equipment",
+      "subcategory": "Ring slot",
+      "x": 384,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "rimeheart_aegis",
+      "name": "Rimeheart Aegis",
+      "raid": "skarth",
+      "category": "Equipment",
+      "subcategory": "Shield slot",
+      "x": 512,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "rimebound_torc",
+      "name": "Rimebound Torc",
+      "raid": "skarth",
+      "category": "Equipment",
+      "subcategory": "Amulet slot",
+      "x": 640,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "item_id": "glacial_core_shard",
+      "name": "Glacial Core Shard",
+      "raid": "skarth",
+      "category": "Trade Good",
+      "subcategory": "Trade good",
+      "x": 768,
+      "y": 0,
+      "width": 128,
+      "height": 128
+    }
+  ]
+}

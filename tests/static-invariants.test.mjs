@@ -393,9 +393,9 @@ assert.doesNotMatch(atlas, /Number\(row\.row\)|Number\(row\.column\)/,
   'runtime atlas dimensions must not depend on optional row/column metadata');
 
 const vendor = await read('build-tools/vendor-assets.mjs');
-assert.match(vendor, /eadbc0fe1eae549184dd740470b69fc76974a411/,
-  'sprite dependency must stay pinned to an immutable revision (v5.4 Woodcutting & ' +
-  'Construction item atlas; gear atlas/manifest byte-identical to the prior +4 pin)');
+assert.match(vendor, /6d1ea43dd83d3a5b46be560a384f143f06a8bfc2/,
+  'sprite dependency must stay pinned to an immutable revision (2026-10-08: the raid ' +
+  'gear atlases; gear atlas +14 icons, none moved or removed; item atlas unchanged)');
 
 /* â”€â”€ Build / manifest / test contract â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 

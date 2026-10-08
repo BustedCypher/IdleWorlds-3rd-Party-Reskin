@@ -44,6 +44,32 @@ they opened a tab. `clearHeaderRenderer()` resets it, so the kill switch leaves
 nothing behind. Pinned across all four routes in
 `tests/route-swap-reclassify.test.mjs`.
 
+**The player can turn zone theming off (2026-10-08).** `ZoneThemeSetting.js`
+adds a "Zone themes" switch at the end of the zone bar's Zones / Previous /
+Next Zone row (Game route). Off, `presentationZoneNumber()` returns null on
+every route, the same path Village takes below, so the header painting,
+`data-iw-zone-theme` and the atlas/corner/separator vars all fall back to the
+stock Ashen Iron theme together. `lastZoneNumber` is kept, so switching back
+on restores the zone at once. Stored as `iw-zone-themes` (false = off) and
+followed across tabs. The change is carried only by `<html>` and inline
+vars, so the setting calls HeaderRenderer's reconcile itself.
+
+- It is a `<label>` + checkbox, not a `<button>`: the generic button rules
+  never reach it, and classifyZoneBar's `querySelectorAll('button')` walk
+  never sees it. It goes in the action ROW, never the zone bar itself, whose
+  exactly-two-children shape HeaderChrome needs. `tests/smoke.test.mjs` pins
+  "only the game buttons and the theme switch, last" in that row.
+- Below 1280px it wraps onto its own line under the zone buttons, with
+  `contain: inline-size` and a `-8px` start margin (the row's live `gap-2`).
+  The merged header chrome sizes the zone column from the row's max-content:
+  inline, the switch took ~125px from the nav rail and clipped every route tab
+  at 900px; wrapped but uncontained, still ~10px (Leaderboards and Dungeon
+  clipped). Contained, the column is 301px against 303px without the switch.
+  On phones the three zone buttons keep their equal thirds. Measured in
+  `tests/menu-rows.test.mjs`.
+- `tests/zone-theme-setting.test.mjs`: on/off/on, persistence on load,
+  another tab, kill switch, phones. Fixture-rendered only.
+
 **Village is intentionally standard-themed.** The `/housing` route (including
 the `/ssf/housing` league prefix) is the sole exception to carrying the cached
 zone presentation across tabs. `presentationZoneNumber()` returns `null` there,

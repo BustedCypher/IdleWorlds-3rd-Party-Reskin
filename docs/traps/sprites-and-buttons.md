@@ -375,3 +375,31 @@ serves the item index 1.5 s late; either half of the fix alone leaves the 6
 placeholders. (QuestPanelRenderer's medallion also gates on `isReady()`; it
 falls back to the discipline glyph, and the next quest render repaints it.
 Not reproduced.)
+
+## Raid gear atlases (2026-10-08)
+
+Raid-boss gear and raid drops are NOT in the gear or item atlas: the sprite
+repo keeps them in one small atlas per raid (`raid_artwork_manifest.json`).
+`vendor-assets.mjs` downloads them to `assets/raid_gear/<raid>.png` and writes
+one combined `assets/raid_gear/index.json` (item_id, name, raid, x/y/w/h, and
+each atlas's pixel size). AtlasService loads it as a third source, `raid`:
+resolved by item_id right after the item atlas, and by EXACT name before the
+gear fallbacks, which strip a leading word or an "of X" and would otherwise
+paint "Hoarfrost Band" or "Ashmaw's Scale Crest" as some other item.
+`_applySprite` sizes a raid window from that atlas's own pixel size (the
+shared atlases are a 128px grid). `isComplete()` includes the raid index, so
+a failed raid load is retried. Not under `assets/raids/`: that is arena art.
+
+Before this, all 18 raid items in the live items.json painted a placeholder
+(measured with the real resolver). The bump to sprite revision 6d1ea43 also
+added 14 gear icons (rows 153 -> 155) with nothing moved or removed, checked
+name by name, and the hand-imported glove cells pixel-identical.
+
+**`npm run vendor` also re-downloads the fonts**, and Google may serve a
+smaller subset (Cinzel 25.9 KB -> 14.2 KB on 2026-10-08). Check the font diff
+after vendoring and restore the committed files unless a font change is meant.
+
+`tests/raid-gear-sprites.test.mjs` runs the real AtlasService on the bundled
+files: every raid item by id and name, its painted window, the 18 live items,
+and ordinary gear/item resolution unchanged. Negative control: remove the
+raid branches in resolve() and five checks fail.

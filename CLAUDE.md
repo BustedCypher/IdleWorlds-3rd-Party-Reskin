@@ -177,6 +177,24 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   No personal HUD: it was removed 2026-10-07 because your party frame never
   hides. See the Raid HUD section of
   [docs/traps/guild.md](docs/traps/guild.md).
+- `src/modules/GuildLobby.js` — the raid LOBBY's layout (2026-10-08): the
+  game's wrapper divs go `display: contents` and each card gets a
+  `data-iw-guild-slot`, so guild.css grids the Raid Dungeon panel into two
+  columns with merged frames (invite + Members, Prep + Loadout), chat where
+  the leaderboard was, history at the foot, the Leaderboard card hidden;
+  record times under the difficulty pills; and the skin's own ready-check
+  pop-up (never for the leader). See the lobby section of
+  [docs/traps/guild.md](docs/traps/guild.md).
+- `src/modules/RaidBossCard.js` — the lobby's boss card as a scan, not a
+  read: an arena-art hero with the boss's medallion behind the game's name
+  and lore, stat chips, a requirement + recommended-resist tile pair, a per-boss team loadout + tip and a loot bar, each
+  parsed from the game's one template and shown only when it parsed (the
+  game line is hidden then, never otherwise). Art from
+  `build-tools/build-raid-lobby-art.py`. See the boss-card section of
+  [docs/traps/guild.md](docs/traps/guild.md).
+- `src/modules/RaidLeaderboards.js` — the raid leaderboard, read from
+  `/api/guild/raid/leaderboard` and shown as the skin's own frame after the
+  Leaderboards route's panel; also the data behind the lobby's record times.
 - `src/modules/CollapsibleFrames.js` — per-panel collapse on every parent
   frame (Skills, Inventory, Quests, Village, World Bosses, Current Action,
   Action Log, World Chat, Zone Control and the Village scene). The World Boss
@@ -192,6 +210,11 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   the zone bar into ONE framed box (see [docs/traps/header-chrome.md](docs/traps/header-chrome.md)).
   Its own `data-iw-chrome` namespace; runs in `queueClassify` right after
   section frames.
+- `src/modules/ZoneThemeSetting.js` — the player's **Zone themes** switch, a
+  `<label>` + checkbox appended to the zone bar's action row. Off renders
+  the stock Ashen Iron theme on every route through the same
+  `presentationZoneNumber() → null` path Village uses. Stored as
+  `iw-zone-themes`. See [docs/traps/zone-theming.md](docs/traps/zone-theming.md).
 - The **Toolkit link** is the skin's own `<a>` (`UIFoundation.ensureToolkitLink`),
   appended to the nav rail and hidden by CSS below 768px (Curtis, 2026-09-16:
   the phone bar read as too crowded); see [docs/traps/mobile.md](docs/traps/mobile.md).

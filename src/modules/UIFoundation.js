@@ -16,6 +16,8 @@ import { decorateVillagePanel, clearVillagePanel } from './VillagePanels.js';
 import { reconcileVillageScene, clearVillageScene } from './VillageScene.js';
 import { decorateGuildPanel, clearGuildPanel } from './GuildPanels.js';
 import { refreshRaidText } from './RaidHud.js';
+import { refreshGuildLobbyText, pruneGuildLobby, clearGuildLobby } from './GuildLobby.js';
+import { reconcileRaidLeaderboards, clearRaidLeaderboards } from './RaidLeaderboards.js';
 import { decorateCollapsibleFrames, clearCollapsibleFrames } from './CollapsibleFrames.js';
 import { classifyHeaderChrome, clearHeaderChrome } from './HeaderChrome.js';
 import { ensureArcaneCacheButton, clearArcaneCacheDemo } from './ArcaneCacheDemo.js';
@@ -1462,6 +1464,11 @@ function queueClassify() {
     guard('ui:village-scene', () => {
       reconcileVillageScene().catch(err => warnOnce('ui:village-scene', err));
     });
+    // The raid leaderboard on the Leaderboards route (moved off the Guild tab);
+    // before compact-buttons, which plates its tabs.
+    guard('ui:raid-leaderboards', reconcileRaidLeaderboards);
+    // A ready-check pop-up outlives its card when the route changes.
+    guard('ui:guild-lobby', pruneGuildLobby);
     guard('ui:compact-buttons', decorateCompactButtons);
     // LAST: it reads the marks every classifier above writes — which frames are
     // leaves, which host is an activity panel, and where each title landed.
@@ -1475,6 +1482,8 @@ export function clearUIFoundation() {
   clearHeaderChrome();
   clearCollapsibleFrames(document);
   clearVillageScene();
+  clearRaidLeaderboards();
+  clearGuildLobby(null);
   clearCompactButtons();
   clearDailyBoost();
   // Drop the per-pass memo with everything else, so a kill-switch round trip
@@ -1529,6 +1538,8 @@ export function initUIFoundation() {
   on('iw:dom-flush', queueClassify);
   // The raid's mirrored timers tick on text alone (RaidHud.refreshRaidText).
   on('iw:text-flush', event => guard('ui:raid-text', () => refreshRaidText(event.detail?.parents || [])));
+  // The ready-check pop-up copies the game's countdown (GuildLobby).
+  on('iw:text-flush', event => guard('ui:guild-lobby-text', () => refreshGuildLobbyText(event.detail?.parents || [])));
   // Native title/button text ticks deliberately do not emit dom-flush.
   // Reconcile only the already-resolved boss panel through the shared watcher.
   on('iw:skill-panel', event => {

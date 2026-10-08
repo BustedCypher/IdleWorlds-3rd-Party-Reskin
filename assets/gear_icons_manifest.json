@@ -1,10 +1,10 @@
 {
-  "version": 7,
+  "version": 9,
   "cell_size": 128,
   "display_cell_size": 64,
   "pixel_ratio": 2,
   "columns": 10,
-  "rows": 153,
+  "rows": 155,
   "icons": [
     {
       "name": "+1",
@@ -11485,7 +11485,127 @@
       "y": 19456,
       "width": 128,
       "height": 128
+    },
+    {
+      "name": "Woodcutter's Axe",
+      "index": 1148,
+      "row": 152,
+      "column": 9,
+      "x": 1152,
+      "y": 19456,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Builder's Mallet",
+      "index": 1149,
+      "row": 153,
+      "column": 0,
+      "x": 0,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Woodcutter's Bark Shield",
+      "index": 1150,
+      "row": 153,
+      "column": 1,
+      "x": 128,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Builder's Toolbox",
+      "index": 1151,
+      "row": 153,
+      "column": 2,
+      "x": 256,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Rimewrought Greatblade",
+      "index": 1152,
+      "row": 153,
+      "column": 3,
+      "x": 384,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Glacial Bulwark",
+      "index": 1153,
+      "row": 153,
+      "column": 4,
+      "x": 512,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Sentinel's Frosted Plate",
+      "index": 1154,
+      "row": 153,
+      "column": 5,
+      "x": 640,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Coronet of the Rime Court",
+      "index": 1155,
+      "row": 153,
+      "column": 6,
+      "x": 768,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Frostforge Gauntlets",
+      "index": 1156,
+      "row": 153,
+      "column": 7,
+      "x": 896,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Band of the Unbroken Frost",
+      "index": 1157,
+      "row": 153,
+      "column": 8,
+      "x": 1024,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Wanderer's Frozen Pendant",
+      "index": 1158,
+      "row": 153,
+      "column": 9,
+      "x": 1152,
+      "y": 19584,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "name": "Glacier's Last Gasp",
+      "index": 1159,
+      "row": 154,
+      "column": 0,
+      "x": 0,
+      "y": 19712,
+      "width": 128,
+      "height": 128
     }
   ],
-  "asset_version": "2x-2026-08-18-missing27-lapidaryfix-plus4restore1"
+  "asset_version": "2x-2026-09-21-rimewrought-sentinel-drops"
 }

@@ -655,12 +655,16 @@ check('toolkit link points off-site and opens in a new tab',
   /noopener/.test(toolkitLinks[0]?.getAttribute('rel') || ''),
   `${toolkitLinks[0]?.getAttribute('href')} ${toolkitLinks[0]?.getAttribute('target')} ${toolkitLinks[0]?.getAttribute('rel')}`);
 /* The rail is the link's ONLY slot (Curtis, 2026-09-16: no Toolkit on a phone,
-   where CSS hides this one - tests/menu-rows.test.mjs measures that). Nothing
-   of the skin's may sit in the zone action row: a nav tab there would stop
-   classifyZoneBar's host walk from ever finding the bar again. */
-check('the zone action row carries nothing the skin appended',
+   where CSS hides this one - tests/menu-rows.test.mjs measures that). No nav
+   tab or button of the skin's may sit in the zone action row: a nav tab there
+   would stop classifyZoneBar's host walk from ever finding the bar again. The
+   ONE exception is the "Zone themes" switch (ZoneThemeSetting.js, 2026-10-08):
+   a <label> + checkbox, never a button or nav tab, exactly one, and last. */
+check('the zone action row carries only the game buttons and the theme switch',
   [...(window.document.getElementById('zone-bar-actions')?.children || [])]
-    .every(el => el.tagName === 'BUTTON' && el.dataset.iwUi === 'zone-action'),
+    .every((el, i, all) => (el.tagName === 'BUTTON' && el.dataset.iwUi === 'zone-action')
+      || (el.tagName === 'LABEL' && el.hasAttribute('data-iw-theme-toggle') && i === all.length - 1
+        && !el.querySelector('button, [data-iw-ui]'))),
   [...(window.document.getElementById('zone-bar-actions')?.children || [])]
     .map(el => el.tagName + ':' + (el.dataset.iwUi || '-')).join(' '));
 check('the row the inventory filter tabs share is tagged',

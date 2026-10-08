@@ -12,9 +12,14 @@
  *                  goods, item_id-keyed (authoritative — matches the
  *                  game API's item_id field exactly)
  *
+ *   Raid atlases — assets/raid_gear/<raid>.png / assets/raid_gear/index.json
+ *                  raid-boss gear and raid drops, one small atlas per raid,
+ *                  item_id-keyed (vendor-assets.mjs, 2026-10-08)
+ *
  * Resolution order (see resolve()):
  *   1. item_id match in the item atlas               (authoritative)
- *   2. name match in the item atlas
+ *   1b. item_id match in a raid atlas                (authoritative)
+ *   2. name match in the item atlas, then a raid atlas
  *   3. name match in the gear atlas (direct)
  *   4. gear atlas after stripping a +N upgrade suffix
  *   5. gear atlas after applying the cloak material alias table
@@ -46,6 +51,7 @@ const GEAR_MANIFEST_URL = assetUrl('assets/gear_icons_manifest.json');
 const GEAR_ATLAS_URL    = assetUrl('assets/gear_icons_atlas.png');
 const ITEM_INDEX_URL    = assetUrl('assets/item_icons_index.csv');
 const ITEM_ATLAS_URL    = assetUrl('assets/item_icons_atlas.png');
+const RAID_INDEX_URL    = assetUrl('assets/raid_gear/index.json');
 
 // These are the columns runtime rendering ACTUALLY depends on. `row` and
 // `column` may exist as convenient metadata, but atlas dimensions are derived
@@ -150,6 +156,11 @@ class _AtlasService {
     this._itemByName   = null;
     this._itemDims     = { cols: 10, rows: 48, cell: 128 };
 
+    // Raid gear: { [raid]: { url, width, height } } and item_id / name maps.
+    this._raidAtlases  = null;
+    this._raidById     = null;
+    this._raidByName   = null;
+
     this._promise = null;
     this._nextRetryAt = 0;
     this._missingWarned = new Set();
@@ -161,7 +172,8 @@ class _AtlasService {
   }
 
   isComplete() {
-    return !!(this._gearByName && this._itemById);
+    // The raid atlases count: a failed raid load must be retried by ready().
+    return !!(this._gearByName && this._itemById && this._raidById);
   }
 
   revision() {
@@ -208,6 +220,10 @@ class _AtlasService {
       jobs.push(this._loadItemAtlas());
       labels.push('item');
     }
+    if (!this._raidById) {
+      jobs.push(this._loadRaidAtlases());
+      labels.push('raid');
+    }
 
     if (!jobs.length) return;
 
@@ -227,6 +243,7 @@ class _AtlasService {
           revision: this._revision,
           gearReady: !!this._gearByName,
           itemReady: !!this._itemById,
+          raidReady: !!this._raidById,
         },
         bubbles: false,
       }));
@@ -248,7 +265,8 @@ class _AtlasService {
 
     console.log(
       `[AtlasService] Ready — gear: ${this._gearByName ? this._gearByName.size : 0} icons, ` +
-      `items: ${this._itemRows ? this._itemRows.length : 0} icons`
+      `items: ${this._itemRows ? this._itemRows.length : 0} icons, ` +
+      `raid: ${this._raidById ? this._raidById.size : 0} icons`
     );
   }
 
@@ -329,6 +347,37 @@ class _AtlasService {
     };
   }
 
+  async _loadRaidAtlases() {
+    const res = await fetch(RAID_INDEX_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Raid index fetch failed: ${res.status}`);
+    const index = await res.json();
+    if (!index || !index.raids || !Array.isArray(index.items) || !index.items.length) {
+      throw new Error('Raid index contained no items');
+    }
+    const atlases = {};
+    for (const [raid, atlas] of Object.entries(index.raids)) {
+      const width = Number(atlas.width);
+      const height = Number(atlas.height);
+      if (!atlas.atlas || !(width > 0) || !(height > 0)) throw new Error(`Raid atlas ${raid} has no size`);
+      atlases[raid] = { url: assetUrl(atlas.atlas), width, height };
+    }
+    const byId = new Map();
+    const byName = new Map();
+    for (const item of index.items) {
+      // An item whose raid has no atlas, or whose cell leaves it, is skipped
+      // (a placeholder), never painted as another item's art.
+      const atlas = atlases[item.raid];
+      const [x, y, w, h] = [item.x, item.y, item.width, item.height].map(Number);
+      if (!atlas || ![x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0 || x + w > atlas.width || y + h > atlas.height) continue;
+      if (item.item_id) byId.set(String(item.item_id), item);
+      const key = normalise(item.name);
+      if (key && !byName.has(key)) byName.set(key, item);
+    }
+    this._raidAtlases = atlases;
+    this._raidById = byId;
+    this._raidByName = byName;
+  }
+
   resolve(ref = {}) {
     const id   = ref.id !== undefined && ref.id !== null ? String(ref.id) : null;
     const name = ref.name || '';
@@ -336,10 +385,20 @@ class _AtlasService {
     if (id && this._itemById && this._itemById.has(id)) {
       return { atlas: 'item', entry: this._itemById.get(id) };
     }
+    if (id && this._raidById && this._raidById.has(id)) {
+      return { atlas: 'raid', entry: this._raidById.get(id) };
+    }
 
     if (name && this._itemByName) {
       const hit = this._itemByName.get(normalise(name));
       if (hit) return { atlas: 'item', entry: hit };
+    }
+    // Raid gear by its exact name, BEFORE the gear fallbacks below: they strip
+    // a leading word or an "of X" and would land "Hoarfrost Band" or
+    // "Ashmaw's Scale Crest" on some other item's art.
+    if (name && this._raidByName) {
+      const hit = this._raidByName.get(normalise(name));
+      if (hit) return { atlas: 'raid', entry: hit };
     }
 
     if (!name || !this._gearByName) return null;
@@ -397,12 +456,14 @@ class _AtlasService {
   /** Paint one manifest/index entry from either atlas into any sized element. */
   _applySprite(el, atlas, entry) {
     const isGear = atlas === 'gear';
-    const atlasUrl = isGear ? GEAR_ATLAS_URL : ITEM_ATLAS_URL;
+    const raid = atlas === 'raid' ? this._raidAtlases?.[entry.raid] : null;
+    const atlasUrl = raid ? raid.url : isGear ? GEAR_ATLAS_URL : ITEM_ATLAS_URL;
     const dims = isGear ? this._gearDims : this._itemDims;
 
-    const cell = dims.cell;
-    const atlasW = dims.cols * cell;
-    const atlasH = dims.rows * cell;
+    const cell = raid ? Number(entry.width) || 128 : dims.cell;
+    // A raid atlas states its own pixel size; the shared atlases are a grid.
+    const atlasW = raid ? raid.width : dims.cols * cell;
+    const atlasH = raid ? raid.height : dims.rows * cell;
 
     const x = Number(entry.x) || 0;
     const y = Number(entry.y) || 0;

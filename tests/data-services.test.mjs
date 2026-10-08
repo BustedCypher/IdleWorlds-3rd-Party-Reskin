@@ -134,6 +134,17 @@ globalThis.fetch = async (url) => {
       },
     };
   }
+  // The raid-gear index (2026-10-08) is the third source; complete needs it too.
+  if (u.includes('raid_gear/index.json')) {
+    return {
+      ok: true,
+      status: 200,
+      async json() {
+        return { raids: { ashmaw: { atlas: 'assets/raid_gear/ashmaw.png', width: 128, height: 128 } },
+          items: [{ item_id: 'ashmaws_scale_helm', name: "Ashmaw's Scale Crest", raid: 'ashmaw', x: 0, y: 0, width: 128, height: 128 }] };
+      },
+    };
+  }
   throw new Error(`unexpected URL ${u}`);
 };
 const { AtlasService: atlas } = await import('../src/modules/AtlasService.js?partial=3');
@@ -148,6 +159,8 @@ atlas._nextRetryAt = 0;
 await atlas.ready();
 assert.equal(atlas.isComplete(), true);
 assert.equal(atlas.resolve({ name: 'Iron Sword' })?.atlas, 'gear');
+assert.equal(atlas.resolve({ id: 'ashmaws_scale_helm', name: "Ashmaw's Scale Crest" })?.atlas, 'raid',
+  'raid gear resolves to its raid atlas by id');
 assert.equal(atlas.resolve({ id: 'woodcutters_gloves', name: "Woodcutter's Gloves" })?.atlas, 'gear',
   'a live Woodcutter\'s Gloves item must fall through an item-atlas ID miss to bundled gear art by name');
 assert.equal(atlas.resolve({ id: 'builders_gloves', name: "Builder's Gloves" })?.atlas, 'gear',

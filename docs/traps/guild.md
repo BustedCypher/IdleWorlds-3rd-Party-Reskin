@@ -220,6 +220,132 @@ today's module:
 The five boss tabs wrap to two rows at 390px (Skarth alone on the second).
 That is the existing boss-tab design, not part of this change.
 
+## The raid lobby layout (2026-10-08)
+
+`GuildLobby.js` + the "Raid lobby layout" section at the end of guild.css,
+from Curtis's list and his live capture of a pickup-group leader (build
+v0.2.0+2026-10-08.3). The live Raid Dungeon panel holds: head; notices and
+the ready-check card; a two-column row (left column: boss, Leaderboard,
+"📜 My raid history"; right: Members); a stacked block (Lend, Pre-raid
+prep, Raid Loadout, the invite card(s)); the Ready/Start card; Group Chat;
+the Disband row.
+
+- **Nothing moves; the wrappers dissolve.** Each wrapper between a card and
+  the panel is `data-iw-guild-wrap` -> `display: contents`, so every card
+  is a grid item of the panel, placed by `data-iw-guild-slot` (this
+  module's own attribute; `data-iw-guild-card` stays GuildPanels'). Only the
+  lobby shape (boss card in a column of a row that is a direct child of the
+  panel) gets `data-iw-guild-layout="lobby"`; the fight keeps its flow.
+- **Two columns by auto-placement, not named areas** (>=1024px, the game's
+  `lg`): orders lend 10 / invite 11 / boss 20 / members 21 (span 4) /
+  chat 30 / prep 40 / loadout 41, then full-width other, start, history,
+  footer. A column-1 item after a column-2 item starts a new row, so the
+  columns stack without knowing heights; members spans boss..loadout. Below
+  1024px: one column, boss, chat, lend, prep, loadout, invite, members,
+  start, history, footer.
+- **Merged frames** (invite(s) + Members, Prep + Loadout): the upper card
+  stretches its row and runs `-12px` into the gap, dropping its foot; the
+  lower one drops its head. The invite help line is hidden ("Invite player,
+  then the display name bar").
+- **The Space-y margins must be cancelled.** The wrappers are `space-y-3`:
+  their margin-top still applies to cards inside a `display: contents`
+  wrapper. Every lobby item is `margin: 0 !important`; the fixture models
+  the margins, or it would lie.
+- **The Leaderboard card is hidden** and the board moved to the Leaderboards
+  route (`RaidLeaderboards.js`): `GET /api/guild/raid/leaderboard` ->
+  `{ leaderboard: { [boss]: { easy|normal|hard: [ { sessionId, guildName,
+  isPickup?, isTestGuild?, elapsedMs | elapsedSec } ] } } }`, ranked. The
+  skin's own section frame goes after the game's Leaderboards `.panel`
+  (rendered copy, `target.after`). It carries no `.panel` class (like the
+  Village scene). Times are the game's `m:ss.cc`.
+- **Record time per difficulty:** an owned row under the difficulty pills
+  (one cell per pill, flex 1 like the pills) reads the same board for the
+  selected boss tab. A network result is no mutation, so the read's callback
+  redraws the row itself.
+- **"Mark Ready" is the live ready label.** `READY_LABEL` lacked it, so the
+  Ready/Start card was `generic` (and lost its ready state styling).
+- **The ready-check pop-up** is the skin's own, on `document.body`, from the
+  game's ready-check card (chunk 8577): shown when the card offers YOU
+  "Confirm — I'm here!", never when it carries the leader-only "Start now".
+  Confirm presses the game's button; Dismiss hides it for that card node (a
+  new check is a new card). The countdown is copied on `iw:text-flush`.
+  **Every leaf panel on /guild runs the Guild pass** (the header too): a pass
+  that closed the pop-up whenever ITS panel had no card rebuilt it every
+  flush (measured). Only the panel holding the card, or a disconnected card
+  (`pruneGuildLobby`, every classify pass), may close it. Off the Guild tab
+  it does not exist: that needs `/api/guild/mine`, unseen.
+- Tests: `tests/guild-lobby.test.mjs` (desktop placement, merged frames,
+  records, pop-up member / dismiss / new check / leader, phone order, the
+  Leaderboards panel, kill switch). Negative controls run: wrappers not
+  `contents` (8 checks fail), no merge margin (3), no leader exclusion (1).
+
+- **TESTING FEATURE — lobby test toggles (2026-10-08):** `LobbyPreview.js`
+  adds a dashed "🧪 Test:" strip under the lobby heading (never in a fight)
+  with four separate toggles: Pending invite (a "Waiting for an answer (2)"
+  block in the invite card, or a whole test invite card), Full party (test
+  roster rows up to 8, guest or member shape from a real row's role), Ready
+  check (a test ready-check card; its own Confirm marks it confirmed) and
+  Pop-up (`GuildLobby.setLobbyTestPopup`, a 30s demo countdown). Test nodes
+  are the game's own markup (chunk 8577, the live capture), appended and
+  `data-iw-lobby-dummy`; a dummy ready-check card never opens the pop-up
+  (negative control: let it, and the "NO pop-up" check fails). Two gaps it
+  found: "Group (1/8)" (pickup) was not recognised as the guest list (only
+  "Raid guests" was), and a pending invite's "cancel" link-buttons get the
+  generic plate. Remove the module, its GuildLobby call sites (marked) and
+  the `data-iw-lobby-test` rules in guild.css when the lobby is settled.
+
+### The boss card (RaidBossCard.js, 2026-10-08)
+
+Curtis: "cleaner, requires less reading but still contains just as much info",
+with the raid boss art. The card keeps the game's tabs, name, lore,
+difficulty pills and record times; four prose blocks become owned parts:
+
+- **Hero**: `.iw-bc-art` (owned, `aria-hidden`, pointer-transparent) shares
+  the name / lore / stat-chip grid rows behind them. Art is
+  `assets/raids/lobby/<boss>-banner.webp` (upper 62% of the live arena
+  painting; Thessaly's is `arena-storm.png`) and `<boss>-portrait.webp`
+  (the HUD frame's headshot medallion on a feathered circle), both from
+  `build-tools/build-raid-lobby-art.py`; the arena PNGs are ~2 MB each.
+  The banner is drawn at 150% of the hero's width so the boss can sit right
+  of the text: a boss at fraction b of the painting lands at 80% with
+  x = 3b − 1.6 (`--iw-bc-focus`, b = the HEAD's position). At `cover` it
+  fitted the width and the boss sat under the lore. Every head is in the
+  banner's top quarter, so y stays at 0–8% (Ashmaw 26%): anchoring at 30–60%
+  cut the heads off at the live ~930px card (Curtis's screenshots,
+  2026-10-08), while the 600px fixture still looked fine. Check 960px renders.
+- **Stat chips**, **two tiles**: "To join" (the real gate, amber) and the
+  resist as "Recommended" (sky, the advice colour, so it never reads as a
+  requirement). The Jewelcrafting-lend clause is dropped on request; it
+  survives only in the tile's title.
+  a per-boss **Recommended Team Loadout** + tip (`TACTICS` in the module:
+  the skin's OWN copy replacing the game's one generic tip, which stays as
+  the title; every mechanic quoted is the game's chunk-9811 ability/skill
+  text. Curtis asked for "Veil mitigates Cinderstorm"; the game says only
+  Ward does and Veil dodges the single-target hit, and he chose the game's
+  version), and the **loot bar** (claimed / available templates only).
+- Every source is chunk 8577's single template, so the parse is exact
+  regexes. A line is hidden (`data-iw-boss-card-src`) only when it parsed
+  fully; each owned part carries its sentence as `title`. Anything else
+  (lock, test-guild, coming-soon notices; a reworded line) stays the game's.
+  Negative control in the test: an odd requirement line and a lock notice
+  stay visible with no owned part.
+- Lore ink is #e4dac6 with a dark halo over a darker left band; the dim
+  ink was unreadable over Thessaly's and Grimjaw's pale storms.
+- Record times under the difficulty pills read "🏆 1:50.00 · Royal Flush"
+  (time, then the group that set it; GuildLobby.decorateRecords).
+- Rule 5: ATK/HP's `text-rose-300` (Hard) / `text-emerald-300` (Practice)
+  carry onto the chips as `data-iw-bc-tone`; the loot bar copies the
+  notice's `data-iw-guild-tone` for its rail.
+- The loot countdown ("3d 18h") is a text tick: `refreshBossCardText` runs
+  from `refreshGuildLobbyText`. Negative control: unwire it and "a
+  text-only countdown tick reaches the bar" fails.
+- Grid: rows are explicit only for the hero (`--iw-bc-r1..3`, shifted to
+  start at 1 by `:has()` when the game renders no tabs, i.e. one boss);
+  everything after auto-places in DOM order.
+
+`tests/raid-boss-card.test.mjs` (screenshots in `tmp/raid-boss-card/`).
+Fixture-rendered only, not live-verified.
+
 ## Six-tab rail
 
 GUILD measures k = 2.819 (Barlow 700, uppercase, .025em, rendered at 100px),

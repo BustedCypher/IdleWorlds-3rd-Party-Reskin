@@ -62,21 +62,21 @@
     const detail = err && err.message ? err.message : err;
     console.warn(`[IW Fantasy Skin] ${key}:`, detail);
   }
-  function guard(label4, fn) {
+  function guard(label5, fn) {
     if (!runtimeActive) return false;
     try {
       fn();
       return true;
     } catch (err) {
-      warnOnce(`guard:${label4}`, err);
+      warnOnce(`guard:${label5}`, err);
       return false;
     }
   }
-  function guardEach(label4, items, fn) {
+  function guardEach(label5, items, fn) {
     if (!runtimeActive) return 0;
     let ok = 0;
     for (const item of items || []) {
-      if (guard(label4, () => fn(item))) ok += 1;
+      if (guard(label5, () => fn(item))) ok += 1;
     }
     return ok;
   }
@@ -109,17 +109,17 @@
   var TIMEOUT_MS = 4e3;
   var POLL_MS = 50;
   function waitForPageHydration({
-    enabled: enabled2 = HYDRATION_GATE_ENABLED,
+    enabled: enabled3 = HYDRATION_GATE_ENABLED,
     timeoutMs = TIMEOUT_MS,
     pollMs = POLL_MS,
     root = document.documentElement
   } = {}) {
-    if (!enabled2 || !root) return Promise.resolve({ state: "disabled", waitedMs: 0 });
+    if (!enabled3 || !root) return Promise.resolve({ state: "disabled", waitedMs: 0 });
     const started = performance.now();
     return new Promise((resolve2) => {
-      const finish = (state) => {
+      const finish = (state2) => {
         if (root.hasAttribute(HYDRATION_ATTR)) root.removeAttribute(HYDRATION_ATTR);
-        resolve2({ state, waitedMs: Math.round(performance.now() - started) });
+        resolve2({ state: state2, waitedMs: Math.round(performance.now() - started) });
       };
       const poll = () => {
         const value = root.getAttribute(HYDRATION_ATTR);
@@ -207,9 +207,9 @@
     fishing: ["fishing"],
     locked: ["coming soon", "upcoming skill"]
   };
-  function skillIdentitySignals(panel) {
+  function skillIdentitySignals(panel2) {
     const signals = /* @__PURE__ */ new Set();
-    for (const el2 of panel.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span,p,strong')) {
+    for (const el2 of panel2.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span,p,strong')) {
       if (el2.closest("button,a")) continue;
       const explicitHeading = /^H[1-4]$/.test(el2.tagName) || /skill-name/i.test(String(el2.className || ""));
       if (!explicitHeading && el2.childElementCount) continue;
@@ -224,10 +224,10 @@
     }
     return null;
   }
-  function lockedCopySignal(panel) {
+  function lockedCopySignal(panel2) {
     let hasLabel = false;
     let hasUnlock = false;
-    for (const el2 of panel.querySelectorAll("div,span,p,strong")) {
+    for (const el2 of panel2.querySelectorAll("div,span,p,strong")) {
       const text = normaliseSkillSignal(el2.textContent);
       if (!text || text.length > 96) continue;
       if (text.includes("coming soon") || text.includes("upcoming skill")) hasLabel = true;
@@ -235,38 +235,38 @@
     }
     return hasLabel && hasUnlock;
   }
-  function skillSignature(panel) {
-    const buttonEls = [...panel.querySelectorAll("button")];
+  function skillSignature(panel2) {
+    const buttonEls = [...panel2.querySelectorAll("button")];
     const buttons = buttonEls.map((btn) => normaliseSkillSignal(btn.textContent));
-    const identities = skillIdentitySignals(panel);
-    const lockedCopy = lockedCopySignal(panel);
+    const identities = skillIdentitySignals(panel2);
+    const lockedCopy = lockedCopySignal(panel2);
     const sig = JSON.stringify([buttons, identities, lockedCopy]);
     return { sig, buttonEls, buttons, identities, lockedCopy };
   }
-  function detectSkillTypeCached(panel) {
-    const computed = skillSignature(panel);
-    const hit = skillTypeCache.get(panel);
+  function detectSkillTypeCached(panel2) {
+    const computed = skillSignature(panel2);
+    const hit = skillTypeCache.get(panel2);
     if (hit && hit.sig === computed.sig) return hit.type;
-    const type = detectSkillType(panel, computed);
-    skillTypeCache.set(panel, { sig: computed.sig, type });
+    const type = detectSkillType(panel2, computed);
+    skillTypeCache.set(panel2, { sig: computed.sig, type });
     return type;
   }
-  function isGuildSurface(panel) {
+  function isGuildSurface(panel2) {
     if (/^\/guild(?:\/|$)/i.test(location.pathname || "")) return true;
-    if (panel.closest(".raid-battle-backdrop")) return true;
-    const host = panel.parentElement?.closest(".panel");
+    if (panel2.closest(".raid-battle-backdrop")) return true;
+    const host = panel2.parentElement?.closest(".panel");
     const heading = host?.querySelector("h1,h2,h3");
     return !!heading && /^raid dungeon$/i.test(normaliseSkillSignal(heading.firstElementChild?.textContent || heading.textContent).replace(/^[^a-z0-9]+/i, ""));
   }
-  function detectSkillType(panel, precomputed) {
+  function detectSkillType(panel2, precomputed) {
     const { buttonEls, buttons, identities: labels, lockedCopy } = precomputed;
     const actionTexts = buttons.filter(Boolean);
     const hasAction = (...names) => actionTexts.some((text) => names.includes(text));
     const hasTurnInOrSkip = actionTexts.some((text) => /^turn in$/.test(text) || /^skip(?:\s*\(\d+\))?$/.test(text));
-    if (hasTurnInOrSkip && [...panel.querySelectorAll("p,div,span")].some((el2) => /^reward\s*:/i.test(el2.textContent.trim()))) {
+    if (hasTurnInOrSkip && [...panel2.querySelectorAll("p,div,span")].some((el2) => /^reward\s*:/i.test(el2.textContent.trim()))) {
       return "unknown";
     }
-    if (isGuildSurface(panel)) return "unknown";
+    if (isGuildSurface(panel2)) return "unknown";
     if (!buttonEls.length) return "unknown";
     if (hasAction("fight")) return "combat";
     if (hasAction("mine")) return "mining";
@@ -394,7 +394,7 @@
     flushQueued = false;
     const { inventory, skills, bgRoots, nameRoots } = drainGlobalBudget(FLUSH_BUDGET);
     guardEach("emit:inventory-row", inventory, (row) => emit("iw:inventory-row", { row, reason: "reconcile" }));
-    guardEach("emit:skill-panel", skills, (panel) => emit("iw:skill-panel", { panel, skill: detectSkillTypeCached(panel), reason: "reconcile" }));
+    guardEach("emit:skill-panel", skills, (panel2) => emit("iw:skill-panel", { panel: panel2, skill: detectSkillTypeCached(panel2), reason: "reconcile" }));
     if (bgRoots.length) guard("emit:dom-flush", () => emit("iw:dom-flush", { roots: bgRoots }));
     if (nameRoots.length) guard("emit:name-scan-flush", () => emit("iw:name-scan-flush", { roots: nameRoots }));
     if (pendingTextParents.size) {
@@ -525,6 +525,7 @@
   var GEAR_ATLAS_URL = assetUrl("assets/gear_icons_atlas.png");
   var ITEM_INDEX_URL = assetUrl("assets/item_icons_index.csv");
   var ITEM_ATLAS_URL = assetUrl("assets/item_icons_atlas.png");
+  var RAID_INDEX_URL = assetUrl("assets/raid_gear/index.json");
   var REQUIRED_ITEM_COLUMNS = ["item_id", "name", "x", "y", "width", "height"];
   function setAttr(el2, name, value) {
     if (el2.getAttribute(name) !== value) el2.setAttribute(name, value);
@@ -601,6 +602,9 @@
       this._itemById = null;
       this._itemByName = null;
       this._itemDims = { cols: 10, rows: 48, cell: 128 };
+      this._raidAtlases = null;
+      this._raidById = null;
+      this._raidByName = null;
       this._promise = null;
       this._nextRetryAt = 0;
       this._missingWarned = /* @__PURE__ */ new Set();
@@ -610,7 +614,7 @@
       return !!(this._gearByName || this._itemById);
     }
     isComplete() {
-      return !!(this._gearByName && this._itemById);
+      return !!(this._gearByName && this._itemById && this._raidById);
     }
     revision() {
       return this._revision;
@@ -642,6 +646,10 @@
         jobs.push(this._loadItemAtlas());
         labels.push("item");
       }
+      if (!this._raidById) {
+        jobs.push(this._loadRaidAtlases());
+        labels.push("raid");
+      }
       if (!jobs.length) return;
       const results = await Promise.allSettled(jobs);
       const failures = [];
@@ -656,7 +664,8 @@
           detail: {
             revision: this._revision,
             gearReady: !!this._gearByName,
-            itemReady: !!this._itemById
+            itemReady: !!this._itemById,
+            raidReady: !!this._raidById
           },
           bubbles: false
         }));
@@ -671,7 +680,7 @@
         throw new Error(`No atlas metadata available (${failures.join(" | ")})`);
       }
       console.log(
-        `[AtlasService] Ready — gear: ${this._gearByName ? this._gearByName.size : 0} icons, items: ${this._itemRows ? this._itemRows.length : 0} icons`
+        `[AtlasService] Ready — gear: ${this._gearByName ? this._gearByName.size : 0} icons, items: ${this._itemRows ? this._itemRows.length : 0} icons, raid: ${this._raidById ? this._raidById.size : 0} icons`
       );
     }
     async _loadGearAtlas() {
@@ -688,9 +697,9 @@
         cell: manifest.cell_size || 128
       };
       this._gearByName = /* @__PURE__ */ new Map();
-      for (const icon2 of manifest.icons) {
-        const key = normalise(icon2.name);
-        if (key) this._gearByName.set(key, icon2);
+      for (const icon3 of manifest.icons) {
+        const key = normalise(icon3.name);
+        if (key) this._gearByName.set(key, icon3);
       }
       const sample = manifest.icons[0] || {};
       if (!Number.isFinite(Number(sample.x)) || !Number.isFinite(Number(sample.y))) {
@@ -736,38 +745,73 @@
         cell
       };
     }
+    async _loadRaidAtlases() {
+      const res = await fetch(RAID_INDEX_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Raid index fetch failed: ${res.status}`);
+      const index = await res.json();
+      if (!index || !index.raids || !Array.isArray(index.items) || !index.items.length) {
+        throw new Error("Raid index contained no items");
+      }
+      const atlases = {};
+      for (const [raid, atlas] of Object.entries(index.raids)) {
+        const width = Number(atlas.width);
+        const height = Number(atlas.height);
+        if (!atlas.atlas || !(width > 0) || !(height > 0)) throw new Error(`Raid atlas ${raid} has no size`);
+        atlases[raid] = { url: assetUrl(atlas.atlas), width, height };
+      }
+      const byId = /* @__PURE__ */ new Map();
+      const byName = /* @__PURE__ */ new Map();
+      for (const item of index.items) {
+        const atlas = atlases[item.raid];
+        const [x, y, w, h] = [item.x, item.y, item.width, item.height].map(Number);
+        if (!atlas || ![x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0 || x + w > atlas.width || y + h > atlas.height) continue;
+        if (item.item_id) byId.set(String(item.item_id), item);
+        const key = normalise(item.name);
+        if (key && !byName.has(key)) byName.set(key, item);
+      }
+      this._raidAtlases = atlases;
+      this._raidById = byId;
+      this._raidByName = byName;
+    }
     resolve(ref = {}) {
       const id = ref.id !== void 0 && ref.id !== null ? String(ref.id) : null;
       const name = ref.name || "";
       if (id && this._itemById && this._itemById.has(id)) {
         return { atlas: "item", entry: this._itemById.get(id) };
       }
+      if (id && this._raidById && this._raidById.has(id)) {
+        return { atlas: "raid", entry: this._raidById.get(id) };
+      }
       if (name && this._itemByName) {
         const hit2 = this._itemByName.get(normalise(name));
         if (hit2) return { atlas: "item", entry: hit2 };
+      }
+      if (name && this._raidByName) {
+        const hit2 = this._raidByName.get(normalise(name));
+        if (hit2) return { atlas: "raid", entry: hit2 };
       }
       if (!name || !this._gearByName) return null;
       let hit = this._gearByName.get(normalise(name));
       if (hit) return { atlas: "gear", entry: hit };
       const upgradeMatch = UPGRADE_SUFFIX.exec(name);
-      const badge = upgradeMatch ? parseInt(upgradeMatch[0].replace(/\D/g, ""), 10) : 0;
+      const badge2 = upgradeMatch ? parseInt(upgradeMatch[0].replace(/\D/g, ""), 10) : 0;
       let stripped = name.replace(UPGRADE_SUFFIX, "").trim();
       hit = this._gearByName.get(normalise(stripped));
-      if (hit) return { atlas: "gear", entry: hit, badge };
+      if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
       const aliased = applyCloakAlias(stripped);
       if (aliased !== stripped) {
         hit = this._gearByName.get(normalise(aliased));
-        if (hit) return { atlas: "gear", entry: hit, badge };
+        if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
       }
       const noLevel = stripped.replace(LEVEL_SUFFIX, "").trim();
       hit = this._gearByName.get(normalise(noLevel));
-      if (hit) return { atlas: "gear", entry: hit, badge };
+      if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
       const noSuffix = noLevel.replace(OF_SUFFIX, "").trim();
       hit = this._gearByName.get(normalise(noSuffix));
-      if (hit) return { atlas: "gear", entry: hit, badge };
+      if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
       const noPrefix = noSuffix.replace(PREFIX_AFFIX, "").trim();
       hit = this._gearByName.get(normalise(noPrefix));
-      if (hit) return { atlas: "gear", entry: hit, badge };
+      if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
       if (!this._missingWarned.has(name)) {
         this._missingWarned.add(name);
         console.warn(`[AtlasService] No icon found for "${name}"`);
@@ -778,21 +822,22 @@
       if (!hostEl) return false;
       const result = this.resolve(ref);
       if (!result) return false;
-      const { atlas, entry: entry2, badge } = result;
+      const { atlas, entry: entry2, badge: badge2 } = result;
       this._applySprite(hostEl, atlas, entry2);
       if (hostEl.dataset.iwAtlas !== atlas) hostEl.dataset.iwAtlas = atlas;
-      if (badge) this._paintBadge(hostEl, badge);
+      if (badge2) this._paintBadge(hostEl, badge2);
       else this._clearBadge(hostEl);
       return true;
     }
     /** Paint one manifest/index entry from either atlas into any sized element. */
     _applySprite(el2, atlas, entry2) {
       const isGear = atlas === "gear";
-      const atlasUrl = isGear ? GEAR_ATLAS_URL : ITEM_ATLAS_URL;
+      const raid = atlas === "raid" ? this._raidAtlases?.[entry2.raid] : null;
+      const atlasUrl = raid ? raid.url : isGear ? GEAR_ATLAS_URL : ITEM_ATLAS_URL;
       const dims = isGear ? this._gearDims : this._itemDims;
-      const cell = dims.cell;
-      const atlasW = dims.cols * cell;
-      const atlasH = dims.rows * cell;
+      const cell = raid ? Number(entry2.width) || 128 : dims.cell;
+      const atlasW = raid ? raid.width : dims.cols * cell;
+      const atlasH = raid ? raid.height : dims.rows * cell;
       const x = Number(entry2.x) || 0;
       const y = Number(entry2.y) || 0;
       const w = Number(entry2.width) || cell;
@@ -1236,8 +1281,8 @@
     return ItemDatabase.find(ref);
   }
   var tooltipItems = /* @__PURE__ */ new WeakMap();
-  function registerTooltipItem(anchor2, item) {
-    tooltipItems.set(anchor2, item);
+  function registerTooltipItem(anchor3, item) {
+    tooltipItems.set(anchor3, item);
   }
   function categoryGlyph(item) {
     const category = String(item?.category || "").toLowerCase();
@@ -1360,8 +1405,8 @@
       painted
     };
   }
-  function position(anchor2) {
-    const rect = anchor2.getBoundingClientRect();
+  function position(anchor3) {
+    const rect = anchor3.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const el2 = STATE.el;
@@ -1400,8 +1445,8 @@
   function findTrigger(node2) {
     return node2 && node2.closest ? node2.closest(TRIGGER_SELECTOR) : null;
   }
-  function isVirtual(anchor2) {
-    return !!(anchor2 && anchor2.__virtual);
+  function isVirtual(anchor3) {
+    return !!(anchor3 && anchor3.__virtual);
   }
   function anchorContainsPointer() {
     if (!isVirtual(STATE.anchor)) return false;
@@ -1424,37 +1469,37 @@
   function pointerIsOnActiveSurface() {
     return !!activeSurfaceForNode(pointerNode());
   }
-  function cleanupAnchor(anchor2) {
-    if (!anchor2 || isVirtual(anchor2)) return;
-    anchor2.removeAttribute("aria-describedby");
-    anchor2.setAttribute("aria-expanded", "false");
+  function cleanupAnchor(anchor3) {
+    if (!anchor3 || isVirtual(anchor3)) return;
+    anchor3.removeAttribute("aria-describedby");
+    anchor3.setAttribute("aria-expanded", "false");
   }
-  function show(anchor2, { keyboard = false } = {}) {
-    if (!anchor2?.isConnected) return;
-    const item = isVirtual(anchor2) ? anchor2.item : findItem({
-      id: anchor2.getAttribute("data-iw-item"),
-      name: anchor2.getAttribute("data-iw-item-name")
-    }) || tooltipItems.get(anchor2);
+  function show(anchor3, { keyboard = false } = {}) {
+    if (!anchor3?.isConnected) return;
+    const item = isVirtual(anchor3) ? anchor3.item : findItem({
+      id: anchor3.getAttribute("data-iw-item"),
+      name: anchor3.getAttribute("data-iw-item-name")
+    }) || tooltipItems.get(anchor3);
     if (!item) return;
     clearShowTimer();
-    if (STATE.anchor && STATE.anchor !== anchor2) cleanupAnchor(STATE.anchor);
-    const { html, artHost, painted } = renderCard(item);
-    STATE.el.innerHTML = html;
+    if (STATE.anchor && STATE.anchor !== anchor3) cleanupAnchor(STATE.anchor);
+    const { html: html2, artHost, painted } = renderCard(item);
+    STATE.el.innerHTML = html2;
     const artSlot = STATE.el.querySelector(".iw-tip-art");
     if (artSlot && painted) {
       artSlot.textContent = "";
       artHost.classList.add("iw-tip-art-painted");
       artSlot.appendChild(artHost);
     }
-    STATE.anchor = anchor2;
+    STATE.anchor = anchor3;
     STATE.keyboardOwned = keyboard;
     STATE.el.setAttribute("aria-label", `${item.name} item details`);
-    if (!isVirtual(anchor2)) {
-      anchor2.setAttribute("aria-controls", "iw-tip");
-      anchor2.setAttribute("aria-haspopup", "dialog");
-      anchor2.setAttribute("aria-expanded", "true");
+    if (!isVirtual(anchor3)) {
+      anchor3.setAttribute("aria-controls", "iw-tip");
+      anchor3.setAttribute("aria-haspopup", "dialog");
+      anchor3.setAttribute("aria-expanded", "true");
     }
-    position(anchor2);
+    position(anchor3);
     STATE.el.classList.add("is-open");
     if (keyboard) {
       try {
@@ -1475,13 +1520,13 @@
     STATE.anchor = null;
     STATE.keyboardOwned = false;
   }
-  function scheduleShow(anchor2) {
+  function scheduleShow(anchor3) {
     clearShowTimer();
     STATE.showTimer = setTimeout(() => {
       STATE.showTimer = null;
-      if (!anchor2?.isConnected) return;
-      if (!isMobile() && !anchor2.matches(":hover")) return;
-      show(anchor2);
+      if (!anchor3?.isConnected) return;
+      if (!isMobile() && !anchor3.matches(":hover")) return;
+      show(anchor3);
     }, SHOW_DELAY);
   }
   function initTooltipEngine() {
@@ -1521,10 +1566,10 @@
     });
     STATE.el.addEventListener("click", (e) => {
       if (!e.target.closest?.(".iw-tip-close")) return;
-      const anchor2 = STATE.anchor;
+      const anchor3 = STATE.anchor;
       const restoreFocus = STATE.keyboardOwned;
       hide();
-      if (restoreFocus && anchor2?.focus) anchor2.focus();
+      if (restoreFocus && anchor3?.focus) anchor3.focus();
     });
     document.addEventListener("mouseover", (e) => {
       if (isMobile() || STATE.keyboardOwned) return;
@@ -1656,11 +1701,11 @@
   function isTooltipOpen() {
     return isOpen();
   }
-  function itemRef(nameOrItem, label4, opts = {}) {
+  function itemRef(nameOrItem, label5, opts = {}) {
     const isObj = nameOrItem && typeof nameOrItem === "object";
     const name = isObj ? nameOrItem.name : String(nameOrItem == null ? "" : nameOrItem);
     const id = isObj ? nameOrItem.item_id : null;
-    const text = opts.html != null ? opts.html : esc(label4 != null ? label4 : name);
+    const text = opts.html != null ? opts.html : esc(label5 != null ? label5 : name);
     if (!name && !id) return text;
     const attr = id ? `data-iw-item="${esc(id)}"` : `data-iw-item-name="${esc(name)}"`;
     const glyph = '<span class="iw-item-info" aria-hidden="true">i</span>';
@@ -2185,45 +2230,45 @@
         states.set(el2, props);
         track(el2);
       }
-      let state = props.get(prop);
+      let state2 = props.get(prop);
       const currentValue = el2.style.getPropertyValue(prop);
       const currentPriority = el2.style.getPropertyPriority(prop);
-      if (!state) {
-        state = {
+      if (!state2) {
+        state2 = {
           nativeValue: currentValue,
           nativePriority: currentPriority,
           appliedValue: null,
           appliedPriority: null
         };
-        props.set(prop, state);
-      } else if (state.appliedValue !== null && (currentValue !== state.appliedValue || currentPriority !== state.appliedPriority)) {
-        state.nativeValue = currentValue;
-        state.nativePriority = currentPriority;
+        props.set(prop, state2);
+      } else if (state2.appliedValue !== null && (currentValue !== state2.appliedValue || currentPriority !== state2.appliedPriority)) {
+        state2.nativeValue = currentValue;
+        state2.nativePriority = currentPriority;
       }
-      return state;
+      return state2;
     }
     function set2(el2, prop, value, priority = "important") {
       if (!el2?.style) return false;
-      const state = stateFor(el2, prop);
+      const state2 = stateFor(el2, prop);
       const beforeValue = el2.style.getPropertyValue(prop);
       const beforePriority = el2.style.getPropertyPriority(prop);
       el2.style.setProperty(prop, value, priority);
       const afterValue = el2.style.getPropertyValue(prop);
       const afterPriority = el2.style.getPropertyPriority(prop);
-      state.appliedValue = afterValue;
-      state.appliedPriority = afterPriority;
+      state2.appliedValue = afterValue;
+      state2.appliedPriority = afterPriority;
       return beforeValue !== afterValue || beforePriority !== afterPriority;
     }
     function restoreElement(el2) {
       const props = states.get(el2);
       if (!props) return;
-      for (const [prop, state] of props) {
+      for (const [prop, state2] of props) {
         const currentValue = el2.style.getPropertyValue(prop);
         const currentPriority = el2.style.getPropertyPriority(prop);
-        const stillOurs = currentValue === state.appliedValue && currentPriority === state.appliedPriority;
+        const stillOurs = currentValue === state2.appliedValue && currentPriority === state2.appliedPriority;
         if (!stillOurs) continue;
-        if (state.nativeValue) {
-          el2.style.setProperty(prop, state.nativeValue, state.nativePriority || "");
+        if (state2.nativeValue) {
+          el2.style.setProperty(prop, state2.nativeValue, state2.nativePriority || "");
         } else {
           el2.style.removeProperty(prop);
         }
@@ -2408,10 +2453,10 @@
   function filterTabRow(buttons, labelOf) {
     const rows = /* @__PURE__ */ new Map();
     for (const button2 of buttons) {
-      const label4 = labelOf(button2);
-      if (!FILTER_LABEL.test(label4) || !button2.parentElement) continue;
+      const label5 = labelOf(button2);
+      if (!FILTER_LABEL.test(label5) || !button2.parentElement) continue;
       if (!rows.has(button2.parentElement)) rows.set(button2.parentElement, /* @__PURE__ */ new Set());
-      rows.get(button2.parentElement).add(label4);
+      rows.get(button2.parentElement).add(label5);
     }
     let best = null, most = 0;
     for (const [row, labels] of rows) if (labels.size > most) {
@@ -2492,9 +2537,9 @@
     });
     if (ok) setAttr2(list, INVENTORY_LIST_ATTR, "1");
   }
-  function classifySalvageList(row, panel) {
+  function classifySalvageList(row, panel2) {
     const list = row.parentElement;
-    if (list && list !== panel && panel.contains(list)) setAttr2(list, SALVAGE_LIST_ATTR, "1");
+    if (list && list !== panel2 && panel2.contains(list)) setAttr2(list, SALVAGE_LIST_ATTR, "1");
   }
   function salvageDetails(row) {
     const details = [];
@@ -2683,9 +2728,9 @@
     }
     const item = ItemDatabase.getByName(data.name);
     const detailModel = salvage ? salvageDetails(row) : buildInventoryDetails(data.detailTexts, item, data.name);
-    const signature2 = rowSignature(data, item, detailModel);
+    const signature3 = rowSignature(data, item, detailModel);
     const existing = row.querySelector(":scope > .fs-inv-row");
-    if (existing && row.getAttribute(RENDERED_ATTR) === signature2) {
+    if (existing && row.getAttribute(RENDERED_ATTR) === signature3) {
       hideOriginalChildren(row, existing);
       syncRowState(row, existing);
       cheapSignatures.set(row, cheapSig);
@@ -2720,7 +2765,7 @@
     row.appendChild(overlay);
     hideOriginalChildren(row, overlay);
     syncRowState(row, overlay);
-    row.setAttribute(RENDERED_ATTR, signature2);
+    row.setAttribute(RENDERED_ATTR, signature3);
     cheapSignatures.set(row, cheapSig);
     paintIcon(overlay, item, data);
   }
@@ -2937,21 +2982,21 @@
   var uiIndex = null;
   var iconByKey = /* @__PURE__ */ new Map();
   var uiByKey = /* @__PURE__ */ new Map();
-  function validateIndex(data, label4) {
+  function validateIndex(data, label5) {
     if (!data || !Number.isFinite(data.width) || !Number.isFinite(data.height) || !Array.isArray(data.entries)) {
-      throw new Error(`${label4} index is malformed`);
+      throw new Error(`${label5} index is malformed`);
     }
     for (const entry2 of data.entries) {
       if (!entry2?.key || !Number.isFinite(entry2.x) || !Number.isFinite(entry2.y) || !Number.isFinite(entry2.width) || !Number.isFinite(entry2.height)) {
-        throw new Error(`${label4} contains a malformed entry`);
+        throw new Error(`${label5} contains a malformed entry`);
       }
     }
     return data;
   }
-  async function fetchIndex(path, label4) {
+  async function fetchIndex(path, label5) {
     const response = await fetch(assetUrl(path), { cache: "no-store" });
-    if (!response.ok) throw new Error(`${label4} fetch failed: ${response.status}`);
-    return validateIndex(await response.json(), label4);
+    if (!response.ok) throw new Error(`${label5} fetch failed: ${response.status}`);
+    return validateIndex(await response.json(), label5);
   }
   function spriteGeometry(index, entry2) {
     const xRange = Math.max(1, index.width - entry2.width);
@@ -2981,8 +3026,8 @@
     setData(host, "iwSkillsAtlasIndex", String(entry2.index ?? ""));
     return true;
   }
-  function setVar(panel, name, value) {
-    panel.style.setProperty(name, value);
+  function setVar(panel2, name, value) {
+    panel2.style.setProperty(name, value);
   }
   function setData(el2, key, value) {
     if (el2.dataset[key] !== value) el2.dataset[key] = value;
@@ -3016,51 +3061,51 @@
     }
     return true;
   }
-  function applyUiVariables(panel) {
-    if (!panel || !uiIndex) return false;
-    setVar(panel, "--fs-skills-panel-texture", `url("${assetUrl(TEXTURE_URL)}")`);
+  function applyUiVariables(panel2) {
+    if (!panel2 || !uiIndex) return false;
+    setVar(panel2, "--fs-skills-panel-texture", `url("${assetUrl(TEXTURE_URL)}")`);
     setVar(
-      panel,
+      panel2,
       "--fs-skills-ui-atlas",
       `var(--iw-zone-atlas, url("${assetUrl(`assets/${uiIndex.atlas}`)}"))`
     );
-    setVar(panel, "--fs-skills-nav-prev", `url("${assetUrl(NAV_PREV_URL)}")`);
-    setVar(panel, "--fs-skills-nav-next", `url("${assetUrl(NAV_NEXT_URL)}")`);
+    setVar(panel2, "--fs-skills-nav-prev", `url("${assetUrl(NAV_PREV_URL)}")`);
+    setVar(panel2, "--fs-skills-nav-next", `url("${assetUrl(NAV_NEXT_URL)}")`);
     for (const [key, token] of Object.entries(UI_TOKENS)) {
       const entry2 = uiByKey.get(key);
       if (!entry2) continue;
       const sprite = spriteGeometry(uiIndex, entry2);
-      setVar(panel, `--fs-ui-${token}-size`, sprite.size);
-      setVar(panel, `--fs-ui-${token}-position`, sprite.position);
+      setVar(panel2, `--fs-ui-${token}-size`, sprite.size);
+      setVar(panel2, `--fs-ui-${token}-position`, sprite.position);
       if (!SLICED_TOKENS.has(token)) continue;
-      const cap = Math.min(ACTION_CAP_PX, Math.floor(entry2.width / 2) - 1);
-      const capLeft = bandGeometry(uiIndex, entry2, 0, cap);
-      const capRight = bandGeometry(uiIndex, entry2, entry2.width - cap, cap);
-      const mid = bandGeometry(uiIndex, entry2, cap, entry2.width - cap * 2);
-      setVar(panel, `--fs-ui-${token}-cap-size`, capLeft.size);
-      setVar(panel, `--fs-ui-${token}-cap-l-position`, capLeft.position);
-      setVar(panel, `--fs-ui-${token}-cap-r-position`, capRight.position);
-      setVar(panel, `--fs-ui-${token}-mid-size`, mid.size);
-      setVar(panel, `--fs-ui-${token}-mid-position`, mid.position);
-      setVar(panel, "--fs-ui-action-cap-ratio", String(cap / entry2.height));
+      const cap2 = Math.min(ACTION_CAP_PX, Math.floor(entry2.width / 2) - 1);
+      const capLeft = bandGeometry(uiIndex, entry2, 0, cap2);
+      const capRight = bandGeometry(uiIndex, entry2, entry2.width - cap2, cap2);
+      const mid = bandGeometry(uiIndex, entry2, cap2, entry2.width - cap2 * 2);
+      setVar(panel2, `--fs-ui-${token}-cap-size`, capLeft.size);
+      setVar(panel2, `--fs-ui-${token}-cap-l-position`, capLeft.position);
+      setVar(panel2, `--fs-ui-${token}-cap-r-position`, capRight.position);
+      setVar(panel2, `--fs-ui-${token}-mid-size`, mid.size);
+      setVar(panel2, `--fs-ui-${token}-mid-position`, mid.position);
+      setVar(panel2, "--fs-ui-action-cap-ratio", String(cap2 / entry2.height));
     }
-    setData(panel, "iwSkillsUiReady", "1");
+    setData(panel2, "iwSkillsUiReady", "1");
     return true;
   }
-  function clearUiVariables(panel) {
-    if (!panel?.style) return;
-    panel.style.removeProperty("--fs-skills-panel-texture");
-    panel.style.removeProperty("--fs-skills-ui-atlas");
-    panel.style.removeProperty("--fs-skills-nav-prev");
-    panel.style.removeProperty("--fs-skills-nav-next");
+  function clearUiVariables(panel2) {
+    if (!panel2?.style) return;
+    panel2.style.removeProperty("--fs-skills-panel-texture");
+    panel2.style.removeProperty("--fs-skills-ui-atlas");
+    panel2.style.removeProperty("--fs-skills-nav-prev");
+    panel2.style.removeProperty("--fs-skills-nav-next");
     for (const token of Object.values(UI_TOKENS)) {
-      panel.style.removeProperty(`--fs-ui-${token}-size`);
-      panel.style.removeProperty(`--fs-ui-${token}-position`);
+      panel2.style.removeProperty(`--fs-ui-${token}-size`);
+      panel2.style.removeProperty(`--fs-ui-${token}-position`);
       if (!SLICED_TOKENS.has(token)) continue;
-      for (const suffix of SLICE_VARS) panel.style.removeProperty(`--fs-ui-${token}-${suffix}`);
+      for (const suffix of SLICE_VARS) panel2.style.removeProperty(`--fs-ui-${token}-${suffix}`);
     }
-    panel.style.removeProperty("--fs-ui-action-cap-ratio");
-    delete panel.dataset.iwSkillsUiReady;
+    panel2.style.removeProperty("--fs-ui-action-cap-ratio");
+    delete panel2.dataset.iwSkillsUiReady;
   }
   async function load() {
     const [icons, ui] = await Promise.all([
@@ -3091,11 +3136,11 @@
       const entry2 = iconByKey.get(key) || iconByKey.get(ICON_ALIASES[key]) || iconByKey.get("generic");
       return paint(host, iconIndex, entry2);
     },
-    decoratePanel(panel) {
-      return applyUiVariables(panel);
+    decoratePanel(panel2) {
+      return applyUiVariables(panel2);
     },
-    clearPanel(panel) {
-      clearUiVariables(panel);
+    clearPanel(panel2) {
+      clearUiVariables(panel2);
     },
     applyThemeVariables(host, theme) {
       return applyThemeVariables(host, theme);
@@ -3266,16 +3311,16 @@
       return;
     }
     const classifiedState = classifyButton(btn);
-    const state = role2 === "action-button" && classifiedState !== "disabled" ? "primary" : classifiedState;
-    const art2 = role2 === "action-button" && btn.closest('[data-iw-skills-ui-ready="1"]') ? ACTION_ART[state === "disabled" ? "disabled" : "idle"] : null;
+    const state2 = role2 === "action-button" && classifiedState !== "disabled" ? "primary" : classifiedState;
+    const art2 = role2 === "action-button" && btn.closest('[data-iw-skills-ui-ready="1"]') ? ACTION_ART[state2 === "disabled" ? "disabled" : "idle"] : null;
     const compact = compactCommandButton(btn);
     const currentStyle = btn.getAttribute("style") || "";
     const previous = buttonStyleSnapshots.get(btn);
-    if (previous && previous.state === state && previous.role === role2 && previous.art === !!art2 && previous.compact === compact && previous.style === currentStyle) return;
+    if (previous && previous.state === state2 && previous.role === role2 && previous.art === !!art2 && previous.compact === compact && previous.style === currentStyle) return;
     for (const [prop, value] of Object.entries(BUTTON_STYLES.base)) {
       setOwnedStyle(buttonStyleOwner, btn, prop, value);
     }
-    for (const [prop, value] of Object.entries({ ...BUTTON_STYLES[state], ...art2 })) {
+    for (const [prop, value] of Object.entries({ ...BUTTON_STYLES[state2], ...art2 })) {
       setOwnedStyle(buttonStyleOwner, btn, prop, value);
     }
     if (role2 === "nav-button") {
@@ -3306,8 +3351,8 @@
         setOwnedStyle(buttonStyleOwner, btn, "border-radius", "8px");
       }
     }
-    if (btn.dataset.iwBtnState !== state) btn.dataset.iwBtnState = state;
-    buttonStyleSnapshots.set(btn, { state, role: role2, art: !!art2, compact, style: btn.getAttribute("style") || "" });
+    if (btn.dataset.iwBtnState !== state2) btn.dataset.iwBtnState = state2;
+    buttonStyleSnapshots.set(btn, { state: state2, role: role2, art: !!art2, compact, style: btn.getAttribute("style") || "" });
   }
   var NAV_BUTTON_W = "26px";
   var LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?(?:\s*[-\u2013]\s*\d+(?:\.\d+)?%\s*[\u2022\u00b7]\s*[\d,]+\s+(?:xp\s+)?to\s+go|\s*[\u2022\u00b7]\s*[\d,]+\s*\/\s*[\d,]+\s*xp)$/i;
@@ -3317,8 +3362,8 @@
   function isLevelReadoutText(text) {
     return LEVEL_PROGRESS_PATTERN.test(text) || LEVEL_READOUT_LOOSE.test(text);
   }
-  function findHookedReadout(panel) {
-    for (const el2 of panel.querySelectorAll("[title]")) {
+  function findHookedReadout(panel2) {
+    for (const el2 of panel2.querySelectorAll("[title]")) {
       if (!XP_READOUT_TITLE.test(el2.getAttribute("title") || "")) continue;
       if (el2.closest(`[${XP_LINE_ATTR}], [data-iw-skill-v2-level-readout]`)) continue;
       return el2;
@@ -3349,14 +3394,14 @@
   function readoutCursor(el2) {
     return el2.matches?.('button, a, [role="button"], [tabindex]:not([tabindex="-1"])') ? "pointer" : "default";
   }
-  function sameTextShellChain(el2, panel) {
+  function sameTextShellChain(el2, panel2) {
     if (!el2) return [];
     const text = normText(el2.textContent);
     const chain = [el2];
     let cur = el2;
     for (let depth = 0; depth < 8; depth += 1) {
       const parent = cur.parentElement;
-      if (!parent || parent === panel) break;
+      if (!parent || parent === panel2) break;
       if (parent.matches?.('button, a, [role="button"]') || parent.closest?.('button, a, [role="button"]')) break;
       if (normText(parent.textContent) !== text) break;
       chain.push(parent);
@@ -3364,18 +3409,18 @@
     }
     return chain;
   }
-  function outerSameTextShell(el2, panel) {
-    const chain = sameTextShellChain(el2, panel);
+  function outerSameTextShell(el2, panel2) {
+    const chain = sameTextShellChain(el2, panel2);
     return chain[chain.length - 1] || el2;
   }
-  function readoutBranch(el2, panel) {
+  function readoutBranch(el2, panel2) {
     if (!el2) return [];
     const branch = [el2];
     const readoutText = normText(el2.textContent);
     let cur = el2;
     for (let depth = 0; depth < 10; depth += 1) {
       const parent = cur.parentElement;
-      if (!parent || parent === panel) break;
+      if (!parent || parent === panel2) break;
       if (parent.matches?.('button,a,input,select,textarea,[role="button"]')) break;
       const parentText = normText(parent.textContent);
       if (!parentText.includes(readoutText)) break;
@@ -3391,11 +3436,11 @@
     }
     return branch;
   }
-  function neutraliseReadouts(panel) {
-    const previouslyMarked = [...panel.querySelectorAll("[data-iw-readout]")];
-    let readout = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
+  function neutraliseReadouts(panel2) {
+    const previouslyMarked = [...panel2.querySelectorAll("[data-iw-readout]")];
+    let readout = panel2.querySelector(`[${ROLE_ATTR}="level-progress"]`);
     if (!readout) {
-      readout = [...panel.querySelectorAll("div,span,p,strong")].find((el2) => {
+      readout = [...panel2.querySelectorAll("div,span,p,strong")].find((el2) => {
         if (el2.closest('button,a,[role="button"]')) return false;
         return isLevelReadoutText(normText(el2.textContent));
       }) || null;
@@ -3409,8 +3454,8 @@
       return;
     }
     const branch = [.../* @__PURE__ */ new Set([
-      ...readoutBranch(readout, panel),
-      ...sameTextShellChain(readout, panel)
+      ...readoutBranch(readout, panel2),
+      ...sameTextShellChain(readout, panel2)
     ])];
     const current = new Set(branch);
     for (const old of previouslyMarked) {
@@ -3535,9 +3580,9 @@
   function rebuildIngredientHighlight() {
     if (!supportsIngredientHighlights()) return;
     const ranges = [];
-    for (const [panel, panelRanges] of [...ingredientHighlightRanges.entries()]) {
-      if (!panel.isConnected) {
-        ingredientHighlightRanges.delete(panel);
+    for (const [panel2, panelRanges] of [...ingredientHighlightRanges.entries()]) {
+      if (!panel2.isConnected) {
+        ingredientHighlightRanges.delete(panel2);
         continue;
       }
       ranges.push(...panelRanges.filter((range) => range.startContainer?.isConnected));
@@ -3548,17 +3593,17 @@
     } catch {
     }
   }
-  function updateIngredientHighlights(panel) {
+  function updateIngredientHighlights(panel2) {
     if (!supportsIngredientHighlights()) return;
-    const hosts = [...panel.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
-    ingredientHighlightRanges.set(panel, hosts.flatMap(completedIngredientRanges));
+    const hosts = [...panel2.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
+    ingredientHighlightRanges.set(panel2, hosts.flatMap(completedIngredientRanges));
     rebuildIngredientHighlight();
   }
-  function clearIngredientHighlights(panel) {
-    if (panel) ingredientHighlightRanges.delete(panel);
+  function clearIngredientHighlights(panel2) {
+    if (panel2) ingredientHighlightRanges.delete(panel2);
     else ingredientHighlightRanges.clear();
     if (!supportsIngredientHighlights()) return;
-    if (panel) rebuildIngredientHighlight();
+    if (panel2) rebuildIngredientHighlight();
     else globalThis.CSS.highlights.delete(MET_INGREDIENT_HIGHLIGHT);
   }
   function removeIngredientList(source, list) {
@@ -3566,11 +3611,11 @@
     list?.remove();
     ingredientLists.delete(source);
   }
-  function updateIngredientLists(panel) {
-    const sources = [...panel.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
+  function updateIngredientLists(panel2) {
+    const sources = [...panel2.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
     const current = new Set(sources);
     for (const [source, list] of [...ingredientLists.entries()]) {
-      if (!source.isConnected || source.closest(".compact-panel") === panel && !current.has(source)) {
+      if (!source.isConnected || source.closest(".compact-panel") === panel2 && !current.has(source)) {
         removeIngredientList(source, list);
       }
     }
@@ -3589,8 +3634,8 @@
         list.setAttribute("aria-label", "Required materials");
         ingredientLists.set(source, list);
       }
-      const signature2 = entries.map((entry2) => `${entry2.state}:${entry2.text}`).join("");
-      if (list.dataset.iwIngredientSignature !== signature2) {
+      const signature3 = entries.map((entry2) => `${entry2.state}:${entry2.text}`).join("");
+      if (list.dataset.iwIngredientSignature !== signature3) {
         const fragment = document.createDocumentFragment();
         for (const entry2 of entries) {
           const item = document.createElement("span");
@@ -3601,27 +3646,27 @@
           fragment.appendChild(item);
         }
         list.replaceChildren(fragment);
-        list.dataset.iwIngredientSignature = signature2;
+        list.dataset.iwIngredientSignature = signature3;
       }
       source.dataset.iwIngredientListSource = "1";
       if (source.nextElementSibling !== list) source.after(list);
     }
   }
-  function clearIngredientLists(panel) {
+  function clearIngredientLists(panel2) {
     for (const [source, list] of [...ingredientLists.entries()]) {
-      if (!panel || !source.isConnected || source.closest(".compact-panel") === panel) {
+      if (!panel2 || !source.isConnected || source.closest(".compact-panel") === panel2) {
         removeIngredientList(source, list);
       }
     }
-    const root = panel || document;
+    const root = panel2 || document;
     root.querySelectorAll("[data-iw-ingredient-list-source]").forEach((el2) => {
       delete el2.dataset.iwIngredientListSource;
     });
     root.querySelectorAll("[data-iw-skill-ingredient-list]").forEach((el2) => el2.remove());
   }
-  function neutraliseIngredients(panel) {
-    const readouts = [...panel.querySelectorAll(`[${ROLE_ATTR}="level-progress"], [${XP_LINE_ATTR}]`)];
-    for (const el2 of panel.querySelectorAll("div, span, p")) {
+  function neutraliseIngredients(panel2) {
+    const readouts = [...panel2.querySelectorAll(`[${ROLE_ATTR}="level-progress"], [${XP_LINE_ATTR}]`)];
+    for (const el2 of panel2.querySelectorAll("div, span, p")) {
       if (el2.closest('[data-iw-skill-ingredient-list="1"]')) continue;
       if (el2.closest("[data-iw-skill-v2-summary], [data-iw-skill-v2-body], [data-iw-skill-v2-controls]")) continue;
       if (el2.tagName === "BUTTON" || el2.closest('button, a, [role="button"]')) continue;
@@ -3636,7 +3681,7 @@
         ingredientStyleSnapshots.delete(el2);
         continue;
       }
-      const chain = sameTextShellChain(el2, panel);
+      const chain = sameTextShellChain(el2, panel2);
       for (const target of chain) {
         const currentStyle = target.getAttribute("style") || "";
         if (ingredientStyleSnapshots.get(target) === currentStyle && target.dataset.iwIngr === "1") continue;
@@ -3647,22 +3692,22 @@
         ingredientStyleSnapshots.set(target, target.getAttribute("style") || "");
       }
     }
-    updateIngredientHighlights(panel);
-    updateIngredientLists(panel);
+    updateIngredientHighlights(panel2);
+    updateIngredientLists(panel2);
   }
   function setRole(el2, role2) {
     if (el2 && el2.getAttribute(ROLE_ATTR) !== role2) el2.setAttribute(ROLE_ATTR, role2);
     return el2;
   }
-  function clearStructureRoles(panel) {
-    panel.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction], [data-iw-req-state]`).forEach((el2) => {
+  function clearStructureRoles(panel2) {
+    panel2.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction], [data-iw-req-state]`).forEach((el2) => {
       el2.removeAttribute(ROLE_ATTR);
       el2.removeAttribute(ZONE_ATTR);
       el2.removeAttribute(SHELL_ATTR);
       el2.removeAttribute("data-iw-req-state");
       delete el2.dataset.iwNavDirection;
     });
-    delete panel.dataset.iwSkillLayout;
+    delete panel2.dataset.iwSkillLayout;
   }
   function childUnder(container, el2) {
     if (!container || !el2 || !container.contains(el2)) return null;
@@ -3670,15 +3715,15 @@
     while (cur && cur.parentElement !== container) cur = cur.parentElement;
     return cur?.parentElement === container ? cur : null;
   }
-  function commonAncestorWithin(panel, elements) {
+  function commonAncestorWithin(panel2, elements) {
     const nodes = elements.filter(Boolean);
-    if (!nodes.length || nodes.some((node2) => !panel.contains(node2))) return null;
+    if (!nodes.length || nodes.some((node2) => !panel2.contains(node2))) return null;
     let cur = nodes[0];
-    while (cur && cur !== panel) {
+    while (cur && cur !== panel2) {
       if (nodes.every((node2) => cur.contains(node2))) return cur;
       cur = cur.parentElement;
     }
-    return panel;
+    return panel2;
   }
   function isPresentationHidden(el2) {
     if (!el2 || el2.hidden || el2.getAttribute?.("aria-hidden") === "true") return true;
@@ -3694,27 +3739,27 @@
   }
   var lastCandidatePanel = null;
   var lastCandidates = null;
-  function textCandidates(panel) {
-    if (lastCandidatePanel === panel) return lastCandidates;
-    const candidates = visibleFirst([...panel.querySelectorAll("h1,h2,h3,h4,div,span,p")].filter((el2) => !el2.closest("button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body], [data-iw-skill-v2-action-label], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-level-readout], [data-iw-skill-v2-xp]")).filter((el2) => normText(el2.textContent).length <= 130));
-    lastCandidatePanel = panel;
+  function textCandidates(panel2) {
+    if (lastCandidatePanel === panel2) return lastCandidates;
+    const candidates = visibleFirst([...panel2.querySelectorAll("h1,h2,h3,h4,div,span,p")].filter((el2) => !el2.closest("button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body], [data-iw-skill-v2-action-label], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-level-readout], [data-iw-skill-v2-xp]")).filter((el2) => normText(el2.textContent).length <= 130));
+    lastCandidatePanel = panel2;
     lastCandidates = candidates;
     return candidates;
   }
-  function findBestText(panel, predicate) {
-    const candidates = textCandidates(panel);
+  function findBestText(panel2, predicate) {
+    const candidates = textCandidates(panel2);
     const exactOwn = candidates.find((el2) => predicate(normText(el2.childElementCount ? "" : el2.textContent), el2));
     if (exactOwn) return exactOwn;
     const matches = candidates.filter((el2) => predicate(normText(el2.textContent), el2));
     return matches.find((el2) => !matches.some((inner) => inner !== el2 && el2.contains(inner))) || matches[0] || null;
   }
-  function findProgress(panel) {
-    const semantic = panel.querySelector('[role="progressbar"]');
+  function findProgress(panel2) {
+    const semantic = panel2.querySelector('[role="progressbar"]');
     if (semantic) {
       const fill = semantic.firstElementChild || null;
       return { track: semantic, fill };
     }
-    for (const el2 of panel.querySelectorAll("div")) {
+    for (const el2 of panel2.querySelectorAll("div")) {
       if (el2.children.length !== 1) continue;
       const child = el2.firstElementChild;
       const cls = `${el2.className || ""} ${child?.className || ""}`;
@@ -3729,59 +3774,59 @@
   }
   var structureSignatures = /* @__PURE__ */ new WeakMap();
   var structureText = (value) => normText(value).replace(/\d[\d,.]*/g, "#");
-  function structureSignature(panel, type) {
+  function structureSignature(panel2, type) {
     const keyDisabled = type === "locked";
-    const buttonState = [...panel.querySelectorAll("button")].map((btn) => {
+    const buttonState = [...panel2.querySelectorAll("button")].map((btn) => {
       const disabled = keyDisabled && (btn.disabled || btn.getAttribute("aria-disabled") === "true") ? "1" : "0";
       return `${disabled}:${structureText(btn.textContent)}:${structureText(btn.getAttribute("aria-label"))}`;
     }).join("|");
-    const hasRequirement = /(?:needs|requires)\b/i.test(panel.textContent || "") ? "r" : "-";
-    return `${hasRequirement}${type}\0${panel.childElementCount}\0${buttonState}`;
+    const hasRequirement = /(?:needs|requires)\b/i.test(panel2.textContent || "") ? "r" : "-";
+    return `${hasRequirement}${type}\0${panel2.childElementCount}\0${buttonState}`;
   }
   var UNMET_CLASS = /\btext-(?:red|rose|orange|amber|yellow)-\d|\b(?:text-danger|text-warning)\b/;
-  function syncRequirementState(panel) {
-    panel.querySelectorAll(`[${ROLE_ATTR}="requirement"]`).forEach((shell) => {
+  function syncRequirementState(panel2) {
+    panel2.querySelectorAll(`[${ROLE_ATTR}="requirement"]`).forEach((shell) => {
       const classes = [shell, ...shell.querySelectorAll("*")].map((el2) => typeof el2.className === "string" ? el2.className : "").join(" ");
-      const state = UNMET_CLASS.test(classes) ? "unmet" : "met";
-      if (shell.getAttribute("data-iw-req-state") !== state) shell.setAttribute("data-iw-req-state", state);
+      const state2 = UNMET_CLASS.test(classes) ? "unmet" : "met";
+      if (shell.getAttribute("data-iw-req-state") !== state2) shell.setAttribute("data-iw-req-state", state2);
     });
   }
-  function annotateStructure(panel, type, meta) {
-    const sig = structureSignature(panel, type);
-    if (structureSignatures.get(panel) === sig) return;
+  function annotateStructure(panel2, type, meta) {
+    const sig = structureSignature(panel2, type);
+    if (structureSignatures.get(panel2) === sig) return;
     lastCandidatePanel = null;
     lastCandidates = null;
-    clearStructureRoles(panel);
-    const identityLabels = (meta.labels || [meta.label]).map((label4) => label4.toLowerCase());
-    let identity = findBestText(panel, (text) => identityLabels.includes(textWithoutLeadingGlyph(text).toLowerCase()));
+    clearStructureRoles(panel2);
+    const identityLabels = (meta.labels || [meta.label]).map((label5) => label5.toLowerCase());
+    let identity = findBestText(panel2, (text) => identityLabels.includes(textWithoutLeadingGlyph(text).toLowerCase()));
     if (!identity) {
-      identity = findBestText(panel, (text) => {
+      identity = findBestText(panel2, (text) => {
         const clean = textWithoutLeadingGlyph(text).toLowerCase();
-        return identityLabels.some((label4) => clean === label4 || clean.startsWith(`${label4} `));
+        return identityLabels.some((label5) => clean === label5 || clean.startsWith(`${label5} `));
       });
     }
     if (!identity) {
-      identity = textCandidates(panel).find((el2) => {
+      identity = textCandidates(panel2).find((el2) => {
         const directText = [...el2.childNodes].map((node2) => normText(node2.textContent)).filter(Boolean).join(" ");
         const clean = textWithoutLeadingGlyph(directText).toLowerCase();
-        return identityLabels.some((label4) => clean === label4 || clean.startsWith(`${label4} `));
+        return identityLabels.some((label5) => clean === label5 || clean.startsWith(`${label5} `));
       }) || null;
     }
     if (identity) {
-      const shell = outerSameTextShell(identity, panel);
+      const shell = outerSameTextShell(identity, panel2);
       setRole(shell, "identity");
     }
     const actionWord = (meta.titleActions || meta.actions).join("|");
     const actionTitleRe = new RegExp(`^(?:${actionWord})\\b`, "i");
-    let actionTitle = findBestText(panel, (text, el2) => {
+    let actionTitle = findBestText(panel2, (text, el2) => {
       if (!text || text.length > 90 || !actionTitleRe.test(textWithoutLeadingGlyph(text))) return false;
       if (el2.closest(".iw-item-ref")) return false;
       if (el2.matches?.(`[${ROLE_ATTR}="identity"]`) || el2.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
       return true;
     });
-    if (actionTitle) setRole(outerSameTextShell(actionTitle, panel), "action-title");
-    const buttons = visibleFirst([...panel.querySelectorAll("button")]);
-    const hookedReadout = findHookedReadout(panel);
+    if (actionTitle) setRole(outerSameTextShell(actionTitle, panel2), "action-title");
+    const buttons = visibleFirst([...panel2.querySelectorAll("button")]);
+    const hookedReadout = findHookedReadout(panel2);
     const levelProgressButton = (hookedReadout?.tagName === "BUTTON" ? hookedReadout : null) || buttons.find((btn) => isLevelReadoutText(normText(btn.textContent))) || null;
     if (levelProgressButton) setRole(levelProgressButton, "level-progress");
     let actionButton = null;
@@ -3835,24 +3880,24 @@
       );
       if (actionSignal && actionSignal.length <= 32) {
         const needle = actionSignal.toLowerCase();
-        actionTitle = findBestText(panel, (text, el2) => {
+        actionTitle = findBestText(panel2, (text, el2) => {
           const clean = textWithoutLeadingGlyph(text).toLowerCase();
           if (!(clean === needle || clean.startsWith(`${needle} `))) return false;
           if (el2.closest(".iw-item-ref")) return false;
           if (el2.matches?.(`[${ROLE_ATTR}="identity"]`) || el2.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
           return true;
         });
-        if (actionTitle) setRole(outerSameTextShell(actionTitle, panel), "action-title");
+        if (actionTitle) setRole(outerSameTextShell(actionTitle, panel2), "action-title");
       }
     }
     if (!actionTitle && levelProgressButton) {
-      const readoutShell = outerSameTextShell(levelProgressButton, panel);
+      const readoutShell = outerSameTextShell(levelProgressButton, panel2);
       const candidate = readoutShell?.previousElementSibling || null;
       const candidateText = candidate ? normText(candidate.textContent) : "";
       const usable = candidate && candidateText && candidateText.length <= 90 && !candidate.getAttribute(ROLE_ATTR) && !candidate.querySelector?.(`[${ROLE_ATTR}], button, a, input, select, textarea`) && !candidate.closest?.(`[${ROLE_ATTR}="identity"]`) && !candidate.closest?.(".iw-item-ref") && !isLevelReadoutText(candidateText);
       if (usable) {
         actionTitle = candidate;
-        setRole(outerSameTextShell(candidate, panel), "action-title");
+        setRole(outerSameTextShell(candidate, panel2), "action-title");
       }
     }
     const navButtons = buttons.filter((btn) => btn.getAttribute(ROLE_ATTR) === "nav-button");
@@ -3867,39 +3912,39 @@
       if (parent && navButtons.every((btn) => btn.parentElement === parent)) setRole(parent, "nav-group");
     }
     if (!levelProgressButton) {
-      const readout = hookedReadout || findBestText(panel, (text) => isLevelReadoutText(text));
+      const readout = hookedReadout || findBestText(panel2, (text) => isLevelReadoutText(text));
       if (readout) setRole(readout, "level-progress");
     }
-    const xpGain = findBestText(panel, (text) => /^\d[\d,]*\s*xp$/i.test(text));
-    if (xpGain) setRole(outerSameTextShell(xpGain, panel), "xp-gain");
-    const requirement = findBestText(panel, (text) => /^(?:needs|requires)\b/i.test(text));
+    const xpGain = findBestText(panel2, (text) => /^\d[\d,]*\s*xp$/i.test(text));
+    if (xpGain) setRole(outerSameTextShell(xpGain, panel2), "xp-gain");
+    const requirement = findBestText(panel2, (text) => /^(?:needs|requires)\b/i.test(text));
     if (requirement) {
-      const reqShell = outerSameTextShell(requirement, panel);
+      const reqShell = outerSameTextShell(requirement, panel2);
       setRole(reqShell, "requirement");
     }
-    const reward2 = findBestText(panel, (text) => /^base reward\s*:/i.test(text));
-    if (reward2) setRole(outerSameTextShell(reward2, panel), "reward");
-    const detail = meta.details?.length ? findBestText(panel, (text) => meta.details.some((pattern) => pattern.test(text))) : null;
-    if (detail) setRole(outerSameTextShell(detail, panel), "action-detail");
-    const { track, fill } = findProgress(panel);
+    const reward2 = findBestText(panel2, (text) => /^base reward\s*:/i.test(text));
+    if (reward2) setRole(outerSameTextShell(reward2, panel2), "reward");
+    const detail = meta.details?.length ? findBestText(panel2, (text) => meta.details.some((pattern) => pattern.test(text))) : null;
+    if (detail) setRole(outerSameTextShell(detail, panel2), "action-detail");
+    const { track, fill } = findProgress(panel2);
     if (track) setRole(track, "progress-track");
     if (fill) setRole(fill, "progress-fill");
-    for (const ref of panel.querySelectorAll(".iw-item-ref")) {
+    for (const ref of panel2.querySelectorAll(".iw-item-ref")) {
       const host = ref.parentElement;
-      if (host && host !== panel && /\d+\s*\/\s*\d+/.test(normText(host.textContent))) setRole(host, "ingredient");
+      if (host && host !== panel2 && /\d+\s*\/\s*\d+/.test(normText(host.textContent))) setRole(host, "ingredient");
     }
-    const identityRole = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
-    const titleRole = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
-    const actionRole = panel.querySelector(`[${ROLE_ATTR}="action-button"]`);
-    const layoutShell = commonAncestorWithin(panel, [identityRole, titleRole, actionRole]);
-    const supportedShell = layoutShell && (layoutShell === panel || layoutShell.parentElement === panel);
+    const identityRole = panel2.querySelector(`[${ROLE_ATTR}="identity"]`);
+    const titleRole = panel2.querySelector(`[${ROLE_ATTR}="action-title"]`);
+    const actionRole = panel2.querySelector(`[${ROLE_ATTR}="action-button"]`);
+    const layoutShell = commonAncestorWithin(panel2, [identityRole, titleRole, actionRole]);
+    const supportedShell = layoutShell && (layoutShell === panel2 || layoutShell.parentElement === panel2);
     const identityZone = supportedShell ? childUnder(layoutShell, identityRole) : null;
     const contentZone = supportedShell ? childUnder(layoutShell, titleRole) : null;
     const commandZone = supportedShell ? childUnder(layoutShell, actionRole) : null;
     const shellChildren = supportedShell ? [...layoutShell.children].filter((el2) => !el2.classList.contains("fs-skill-header")) : [];
     const distinctZones = identityZone && contentZone && commandZone && (/* @__PURE__ */ new Set([identityZone, contentZone, commandZone])).size === 3;
     if (distinctZones) {
-      if (layoutShell !== panel) layoutShell.setAttribute(SHELL_ATTR, "1");
+      if (layoutShell !== panel2) layoutShell.setAttribute(SHELL_ATTR, "1");
       identityZone.setAttribute(ZONE_ATTR, "identity");
       contentZone.setAttribute(ZONE_ATTR, "content");
       commandZone.setAttribute(ZONE_ATTR, "commands");
@@ -3926,12 +3971,12 @@
         const rect = el2.getBoundingClientRect?.();
         return !rect || rect.width > 2 && rect.height > 2;
       });
-      if (!unexpectedFlowChild) panel.dataset.iwSkillLayout = "three-zone";
+      if (!unexpectedFlowChild) panel2.dataset.iwSkillLayout = "three-zone";
     }
-    structureSignatures.set(panel, sig);
+    structureSignatures.set(panel2, sig);
   }
-  function ensureSkillArtwork(panel, type) {
-    const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
+  function ensureSkillArtwork(panel2, type) {
+    const identityZone = panel2.querySelector(`[${ZONE_ATTR}="identity"]`);
     if (!identityZone) return;
     let artHost = identityZone.querySelector(":scope > .fs-skill-medallion-art");
     if (!artHost || artHost.dataset.iwSkillArt !== type) {
@@ -3943,8 +3988,8 @@
       identityZone.appendChild(artHost);
     }
     const paint2 = () => {
-      if (!artHost.isConnected || !panel.isConnected) return;
-      SkillsArtService.decoratePanel(panel);
+      if (!artHost.isConnected || !panel2.isConnected) return;
+      SkillsArtService.decoratePanel(panel2);
       if (SkillsArtService.paintIcon(artHost, type)) setOwnData(artHost, "iwSkillArtReady", "1");
     };
     if (SkillsArtService.isReady()) {
@@ -3957,26 +4002,26 @@
       });
     }
   }
-  function baseExpValue(panel) {
-    const reward2 = panel.querySelector(`[${ROLE_ATTR}="reward"]`);
+  function baseExpValue(panel2) {
+    const reward2 = panel2.querySelector(`[${ROLE_ATTR}="reward"]`);
     const rewardText = normText(reward2?.textContent);
     const rewardMatch = /\bxp\b/i.test(rewardText) ? rewardText.match(/base reward\s*:\s*\+?\s*([\d,]+)/i) : null;
     if (rewardMatch) return rewardMatch[1].replace(/,/g, "");
-    const xpGain = panel.querySelector(`[${ROLE_ATTR}="xp-gain"]`);
+    const xpGain = panel2.querySelector(`[${ROLE_ATTR}="xp-gain"]`);
     const xpMatch = normText(xpGain?.textContent).match(/^\+?\s*([\d,]+)\s*xp$/i);
     return xpMatch ? xpMatch[1].replace(/,/g, "") : "";
   }
-  function progressPercent(panel) {
-    const fill = panel.querySelector(`[${ROLE_ATTR}="progress-fill"]`);
+  function progressPercent(panel2) {
+    const fill = panel2.querySelector(`[${ROLE_ATTR}="progress-fill"]`);
     const width = String(fill?.style?.width || "").trim();
     if (/^\d+(?:\.\d+)?%$/.test(width)) return width;
-    const track = panel.querySelector(`[${ROLE_ATTR}="progress-track"]`);
+    const track = panel2.querySelector(`[${ROLE_ATTR}="progress-track"]`);
     const now = Number(track?.getAttribute("aria-valuenow"));
     const max = Number(track?.getAttribute("aria-valuemax"));
     if (Number.isFinite(now) && Number.isFinite(max) && max > 0) {
       return `${Math.max(0, Math.min(100, now / max * 100))}%`;
     }
-    const readout = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
+    const readout = panel2.querySelector(`[${ROLE_ATTR}="level-progress"]`);
     const match = normText(readout?.textContent).match(/(\d+(?:\.\d+)?)%/);
     return match ? `${match[1]}%` : "";
   }
@@ -3990,16 +4035,16 @@
     if (!value) return "";
     return value.replace(/\s*[-–]\s*\d+(?:\.\d+)?%\s*[•·]\s*/i, " • ").replace(/\s*[•·]\s*\d+(?:\.\d+)?%\s*[•·]\s*/i, " • ").replace(/\s{2,}/g, " ").trim();
   }
-  function skillActionsFrame(panel) {
-    let cur = panel?.parentElement || null;
+  function skillActionsFrame(panel2) {
+    let cur = panel2?.parentElement || null;
     for (let depth = 0; cur && depth < 8; depth += 1, cur = cur.parentElement) {
       const heading = cur.querySelector?.("h1,h2,h3,h4");
       if (heading && /^skill actions$/i.test(normText(heading.textContent))) return cur;
     }
     return null;
   }
-  function ensureSkillActionsFrame(panel) {
-    const frame2 = skillActionsFrame(panel);
+  function ensureSkillActionsFrame(panel2) {
+    const frame2 = skillActionsFrame(panel2);
     if (!frame2) return;
     if (!frame2.classList.contains("fs-skills-section-frame")) frame2.classList.add("fs-skills-section-frame");
     const paint2 = () => SkillsArtService.decoratePanel(frame2);
@@ -4013,19 +4058,19 @@
   function setOwnData(el2, key, value) {
     if (el2.dataset[key] !== value) el2.dataset[key] = value;
   }
-  function ensureSkillPresentation(panel, meta) {
-    ensureSkillActionsFrame(panel);
-    const identity = panel.querySelector(`[${ROLE_ATTR}="identity"]`);
-    const title = panel.querySelector(`[${ROLE_ATTR}="action-title"]`);
-    const levelProgress = panel.querySelector(`[${ROLE_ATTR}="level-progress"]`);
+  function ensureSkillPresentation(panel2, meta) {
+    ensureSkillActionsFrame(panel2);
+    const identity = panel2.querySelector(`[${ROLE_ATTR}="identity"]`);
+    const title = panel2.querySelector(`[${ROLE_ATTR}="action-title"]`);
+    const levelProgress = panel2.querySelector(`[${ROLE_ATTR}="level-progress"]`);
     if (identity) {
       setOwnData(identity, "iwCleanText", meta.label);
     }
     if (title) setOwnData(title, "iwCleanText", textWithoutLeadingGlyph(title.textContent));
     if (levelProgress) setOwnData(levelProgress, "iwProgressDisplay", centralProgressText(levelProgress.textContent));
-    const identityZone = panel.querySelector(`[${ZONE_ATTR}="identity"]`);
+    const identityZone = panel2.querySelector(`[${ZONE_ATTR}="identity"]`);
     if (identityZone) {
-      const percentValue = progressPercent(panel);
+      const percentValue = progressPercent(panel2);
       let percent2 = identityZone.querySelector(":scope > .fs-skill-identity-percent");
       if (percentValue) {
         if (!percent2) {
@@ -4049,9 +4094,9 @@
       const fill = progress.querySelector(".fs-skill-identity-progress-fill");
       if (fill) fill.style.width = percentValue || "0%";
     }
-    const contentZone = panel.querySelector(`[${ZONE_ATTR}="content"]`);
+    const contentZone = panel2.querySelector(`[${ZONE_ATTR}="content"]`);
     if (contentZone) {
-      const amount2 = baseExpValue(panel);
+      const amount2 = baseExpValue(panel2);
       let plaque = contentZone.querySelector(":scope > .fs-skill-base-exp");
       if (amount2) {
         if (!plaque) {
@@ -4067,21 +4112,21 @@
       }
     }
   }
-  function applyPanelTreatment(panel, type, meta) {
-    annotateStructure(panel, type, meta);
-    syncRequirementState(panel);
-    ensureSkillArtwork(panel, type, meta);
-    ensureSkillPresentation(panel, meta);
-    panel.querySelectorAll("button").forEach(styleButton);
-    neutraliseReadouts(panel);
-    neutraliseIngredients(panel);
+  function applyPanelTreatment(panel2, type, meta) {
+    annotateStructure(panel2, type, meta);
+    syncRequirementState(panel2);
+    ensureSkillArtwork(panel2, type, meta);
+    ensureSkillPresentation(panel2, meta);
+    panel2.querySelectorAll("button").forEach(styleButton);
+    neutraliseReadouts(panel2);
+    neutraliseIngredients(panel2);
   }
   var SKILL_CLASSES = Object.keys(SKILL_META).map((type) => `fs-skill--${type}`);
-  function clearPanelInlineTreatment(panel) {
-    buttonStyleOwner.restoreWithin(panel);
-    readoutStyleOwner.restoreWithin(panel);
-    ingredientStyleOwner.restoreWithin(panel);
-    panel.querySelectorAll("[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]").forEach((el2) => {
+  function clearPanelInlineTreatment(panel2) {
+    buttonStyleOwner.restoreWithin(panel2);
+    readoutStyleOwner.restoreWithin(panel2);
+    ingredientStyleOwner.restoreWithin(panel2);
+    panel2.querySelectorAll("[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]").forEach((el2) => {
       delete el2.dataset.iwReadout;
       delete el2.dataset.iwIngr;
       delete el2.dataset.iwBtnState;
@@ -4090,52 +4135,52 @@
       ingredientStyleSnapshots.delete(el2);
     });
   }
-  function ownsPanel(panel) {
-    return panel.hasAttribute(RENDERED_ATTR2) || panel.classList.contains("fs-skill-panel");
+  function ownsPanel(panel2) {
+    return panel2.hasAttribute(RENDERED_ATTR2) || panel2.classList.contains("fs-skill-panel");
   }
-  function clearPanelChrome(panel) {
-    structureSignatures.delete(panel);
-    clearIngredientHighlights(panel);
-    clearIngredientLists(panel);
-    clearPanelInlineTreatment(panel);
-    SkillsArtService.clearPanel(panel);
-    panel.querySelectorAll(".fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp").forEach((el2) => el2.remove());
-    panel.querySelectorAll("[data-iw-clean-text], [data-iw-base-exp], [data-iw-progress-display]").forEach((el2) => {
+  function clearPanelChrome(panel2) {
+    structureSignatures.delete(panel2);
+    clearIngredientHighlights(panel2);
+    clearIngredientLists(panel2);
+    clearPanelInlineTreatment(panel2);
+    SkillsArtService.clearPanel(panel2);
+    panel2.querySelectorAll(".fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp").forEach((el2) => el2.remove());
+    panel2.querySelectorAll("[data-iw-clean-text], [data-iw-base-exp], [data-iw-progress-display]").forEach((el2) => {
       delete el2.dataset.iwCleanText;
       delete el2.dataset.iwBaseExp;
       delete el2.dataset.iwProgressDisplay;
     });
-    clearStructureRoles(panel);
-    panel.classList.remove("fs-skill-panel", ...SKILL_CLASSES);
-    delete panel.dataset.fsSkillLabel;
-    delete panel.dataset.fsSkillRune;
-    delete panel.dataset.fsSkillFlavour;
-    delete panel.dataset.iwSkillGlyph;
-    delete panel.dataset.iwSkill;
-    if (panel.dataset.iwUi === "skill-panel") delete panel.dataset.iwUi;
-    panel.removeAttribute(RENDERED_ATTR2);
+    clearStructureRoles(panel2);
+    panel2.classList.remove("fs-skill-panel", ...SKILL_CLASSES);
+    delete panel2.dataset.fsSkillLabel;
+    delete panel2.dataset.fsSkillRune;
+    delete panel2.dataset.fsSkillFlavour;
+    delete panel2.dataset.iwSkillGlyph;
+    delete panel2.dataset.iwSkill;
+    if (panel2.dataset.iwUi === "skill-panel") delete panel2.dataset.iwUi;
+    panel2.removeAttribute(RENDERED_ATTR2);
   }
-  function applyPanelChrome(panel, type, meta) {
-    if (!panel.classList.contains("fs-skill-panel")) panel.classList.add("fs-skill-panel");
+  function applyPanelChrome(panel2, type, meta) {
+    if (!panel2.classList.contains("fs-skill-panel")) panel2.classList.add("fs-skill-panel");
     for (const cls of SKILL_CLASSES) {
-      if (cls !== `fs-skill--${type}` && panel.classList.contains(cls)) panel.classList.remove(cls);
+      if (cls !== `fs-skill--${type}` && panel2.classList.contains(cls)) panel2.classList.remove(cls);
     }
-    if (!panel.classList.contains(`fs-skill--${type}`)) panel.classList.add(`fs-skill--${type}`);
-    setOwnData(panel, "iwUi", "skill-panel");
-    setOwnData(panel, "iwSkill", type);
-    setOwnData(panel, "iwSkillGlyph", meta.glyph);
-    if (panel.dataset.fsSkillLabel !== meta.label) panel.dataset.fsSkillLabel = meta.label;
+    if (!panel2.classList.contains(`fs-skill--${type}`)) panel2.classList.add(`fs-skill--${type}`);
+    setOwnData(panel2, "iwUi", "skill-panel");
+    setOwnData(panel2, "iwSkill", type);
+    setOwnData(panel2, "iwSkillGlyph", meta.glyph);
+    if (panel2.dataset.fsSkillLabel !== meta.label) panel2.dataset.fsSkillLabel = meta.label;
   }
-  function renderPanel(panel, skillType) {
-    if (!panel || !panel.isConnected) return;
+  function renderPanel(panel2, skillType) {
+    if (!panel2 || !panel2.isConnected) return;
     if (!SKILL_META[skillType]) {
-      if (ownsPanel(panel)) clearPanelChrome(panel);
+      if (ownsPanel(panel2)) clearPanelChrome(panel2);
       return;
     }
     const meta = SKILL_META[skillType];
-    applyPanelChrome(panel, skillType, meta);
-    if (panel.getAttribute(RENDERED_ATTR2) !== skillType) panel.setAttribute(RENDERED_ATTR2, skillType);
-    applyPanelTreatment(panel, skillType, meta);
+    applyPanelChrome(panel2, skillType, meta);
+    if (panel2.getAttribute(RENDERED_ATTR2) !== skillType) panel2.setAttribute(RENDERED_ATTR2, skillType);
+    applyPanelTreatment(panel2, skillType, meta);
   }
   function clearSkillPanels() {
     guardEach("skill:teardown", document.querySelectorAll(".compact-panel"), clearPanelChrome);
@@ -4176,33 +4221,33 @@
   function sampleProgress(samples, key, pct, at = nowMs()) {
     const none = { reset: false, durationMs: null };
     if (pct === null || !Number.isFinite(pct)) return none;
-    const state = samples.get(key);
-    if (!state) {
+    const state2 = samples.get(key);
+    if (!state2) {
       samples.set(key, { pct, at, deltas: [], afterReset: false });
       return none;
     }
-    if (Math.abs(pct - state.pct) < PROGRESS_EPSILON) return none;
+    if (Math.abs(pct - state2.pct) < PROGRESS_EPSILON) return none;
     const out = { reset: false, durationMs: null };
-    if (pct < state.pct - PROGRESS_EPSILON) {
+    if (pct < state2.pct - PROGRESS_EPSILON) {
       out.reset = true;
-      state.afterReset = true;
+      state2.afterReset = true;
     } else {
-      const delta = at - state.at;
-      if (delta >= 60 && delta <= 4e3 && !state.afterReset) {
-        state.deltas.push(delta);
-        if (state.deltas.length > 5) state.deltas.shift();
-        if (state.deltas.length >= 3) {
-          const ms = Math.min(4e3, Math.max(60, median(state.deltas))) * PROGRESS_LEAD_BIAS;
-          if (state.appliedDurationMs === void 0 || Math.abs(ms - state.appliedDurationMs) >= PROGRESS_DURATION_EPSILON_MS) {
-            state.appliedDurationMs = ms;
+      const delta = at - state2.at;
+      if (delta >= 60 && delta <= 4e3 && !state2.afterReset) {
+        state2.deltas.push(delta);
+        if (state2.deltas.length > 5) state2.deltas.shift();
+        if (state2.deltas.length >= 3) {
+          const ms = Math.min(4e3, Math.max(60, median(state2.deltas))) * PROGRESS_LEAD_BIAS;
+          if (state2.appliedDurationMs === void 0 || Math.abs(ms - state2.appliedDurationMs) >= PROGRESS_DURATION_EPSILON_MS) {
+            state2.appliedDurationMs = ms;
             out.durationMs = ms;
           }
         }
       }
-      state.afterReset = false;
+      state2.afterReset = false;
     }
-    state.pct = pct;
-    state.at = at;
+    state2.pct = pct;
+    state2.at = at;
     return out;
   }
   function formatDuration(ms) {
@@ -4222,15 +4267,15 @@
   function setText(el2, value) {
     if (el2 && el2.textContent !== value) el2.textContent = value;
   }
-  function markSections(panel) {
+  function markSections(panel2) {
     const desired = /* @__PURE__ */ new Map();
     for (const [name, selector] of [
       ["requirements", '[data-iw-skill-role="requirement"]'],
       ["materials", "[data-iw-skill-ingredient-list],.fs-skill-ingredient-grid"],
       ["details", '[data-iw-skill-role="action-detail"]'],
       ["rewards", '[data-iw-skill-role="reward"]']
-    ]) panel.querySelectorAll(selector).forEach((el2) => desired.set(el2, name));
-    const content = panel.querySelector('[data-iw-skill-zone="content"]');
+    ]) panel2.querySelectorAll(selector).forEach((el2) => desired.set(el2, name));
+    const content = panel2.querySelector('[data-iw-skill-zone="content"]');
     content?.querySelectorAll("p,span").forEach((el2) => {
       if (el2.closest('[class*="iw-skill-v2"],.fs-skill-ingredient-grid,button,a,[data-iw-skill-role="level-progress"]')) return;
       if (el2.querySelector("p,span,button,a")) return;
@@ -4241,7 +4286,7 @@
     desired.forEach((name, el2) => {
       if (name === "details" && /queue|missing materials/i.test(el2.textContent || "")) desired.set(el2, "queue");
     });
-    panel.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => {
+    panel2.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => {
       const next = desired.get(el2);
       if (!next) delete el2.dataset.iwSkillV2Section;
       else if (el2.dataset.iwSkillV2Section !== next) el2.dataset.iwSkillV2Section = next;
@@ -4251,17 +4296,17 @@
       el2.dataset.iwSkillV2Section = name;
     });
   }
-  function levelReadout(panel) {
-    const zone = panel.querySelector('[data-iw-skill-zone="identity"]');
+  function levelReadout(panel2) {
+    const zone = panel2.querySelector('[data-iw-skill-zone="identity"]');
     if (!zone) return;
-    const text = panel.querySelector('[data-iw-skill-role="level-progress"]')?.textContent || "";
+    const text = panel2.querySelector('[data-iw-skill-role="level-progress"]')?.textContent || "";
     const zoneText = zone.textContent || "";
-    const pct = (panel.querySelector(".fs-skill-identity-percent")?.textContent || "").match(/(\d+(?:\.\d+)?)\s*%/) || text.match(/(\d+(?:\.\d+)?)\s*%/) || zoneText.match(/(\d+(?:\.\d+)?)\s*%/);
+    const pct = (panel2.querySelector(".fs-skill-identity-percent")?.textContent || "").match(/(\d+(?:\.\d+)?)\s*%/) || text.match(/(\d+(?:\.\d+)?)\s*%/) || zoneText.match(/(\d+(?:\.\d+)?)\s*%/);
     const lvl = text.match(/\bLv\s*([\d]+(?:\s*\+\s*\d+)?|-)/i) || zoneText.match(/\bLv\s*([\d]+(?:\s*\+\s*\d+)?|-)/i);
     const value = pct ? Math.max(0, Math.min(100, Number(pct[1]))) : 0;
     const progress = `${Number.isFinite(value) ? value : 0}%`;
-    if (panel.style.getPropertyValue("--iw-skill-v2-progress") !== progress) {
-      panel.style.setProperty("--iw-skill-v2-progress", progress);
+    if (panel2.style.getPropertyValue("--iw-skill-v2-progress") !== progress) {
+      panel2.style.setProperty("--iw-skill-v2-progress", progress);
     }
     let out = zone.querySelector(":scope > [data-iw-skill-v2-level-readout]");
     if (!out) {
@@ -4277,7 +4322,7 @@
     }
     setText(out.children[0], lvl ? `Lv ${lvl[1].replace(/\s+/g, " ")}` : "Lv —");
     setText(out.children[1], pct ? `${pct[1]}%` : "—");
-    xpLine(panel, zone, text);
+    xpLine(panel2, zone, text);
   }
   var XP_LINE = "data-iw-skill-v2-xp";
   function xpLineText(readout) {
@@ -4287,10 +4332,10 @@
     if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     event.stopPropagation();
-    const panel = event.currentTarget.closest(".compact-panel");
-    panel?.querySelector('[data-iw-skill-role="level-progress"]')?.click();
+    const panel2 = event.currentTarget.closest(".compact-panel");
+    panel2?.querySelector('[data-iw-skill-role="level-progress"]')?.click();
   }
-  function xpLine(panel, zone, readoutText) {
+  function xpLine(panel2, zone, readoutText) {
     const value = xpLineText(readoutText);
     let line = zone.querySelector(`:scope > [${XP_LINE}]`);
     if (!value) {
@@ -4309,16 +4354,16 @@
     }
     setText(line, value);
   }
-  function removeRetiredNodes(panel) {
-    panel.querySelectorAll("[data-iw-skill-v2-summary], [data-iw-skill-v2-break], [data-iw-skill-v2-expand], [data-iw-skill-v2-tabs]").forEach((el2) => el2.remove());
+  function removeRetiredNodes(panel2) {
+    panel2.querySelectorAll("[data-iw-skill-v2-summary], [data-iw-skill-v2-break], [data-iw-skill-v2-expand], [data-iw-skill-v2-tabs]").forEach((el2) => el2.remove());
   }
-  function ensureActionGlyph(panel) {
-    const zone = panel.querySelector('[data-iw-skill-zone="commands"]');
+  function ensureActionGlyph(panel2) {
+    const zone = panel2.querySelector('[data-iw-skill-zone="commands"]');
     const ACTION = '[data-iw-skill-role="action-button"]';
     const btn = zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
     const host = btn?.parentElement;
     if (!host) return null;
-    panel.querySelectorAll("[data-iw-skill-v2-action-glyph]").forEach((el2) => {
+    panel2.querySelectorAll("[data-iw-skill-v2-action-glyph]").forEach((el2) => {
       if (el2.parentElement !== host) el2.remove();
     });
     const existing = host.querySelector(":scope > [data-iw-skill-v2-action-glyph]");
@@ -4330,30 +4375,30 @@
     host.appendChild(glyph);
     return glyph;
   }
-  function ensureActionLabel(panel) {
-    const btn = actionButtonOf(panel);
+  function ensureActionLabel(panel2) {
+    const btn = actionButtonOf(panel2);
     const host = btn?.parentElement;
     if (!host) return null;
-    const labels = [...panel.querySelectorAll("[data-iw-skill-v2-action-label]")];
-    let label4 = labels.find((el2) => el2.parentElement === host) || null;
+    const labels = [...panel2.querySelectorAll("[data-iw-skill-v2-action-label]")];
+    let label5 = labels.find((el2) => el2.parentElement === host) || null;
     labels.forEach((el2) => {
-      if (el2 !== label4) el2.remove();
+      if (el2 !== label5) el2.remove();
     });
-    if (!label4) {
-      label4 = document.createElement("span");
-      label4.dataset.iwSkillV2ActionLabel = "1";
-      host.appendChild(label4);
+    if (!label5) {
+      label5 = document.createElement("span");
+      label5.dataset.iwSkillV2ActionLabel = "1";
+      host.appendChild(label5);
     }
-    if (label4.className !== "iw-skill-v2-action-label") label4.className = "iw-skill-v2-action-label";
-    if (label4.getAttribute("aria-hidden") !== "true") label4.setAttribute("aria-hidden", "true");
-    if (label4.hasAttribute("style")) label4.removeAttribute("style");
-    setText(label4, (btn.textContent || "").replace(/\s+/g, " ").trim());
-    return label4;
+    if (label5.className !== "iw-skill-v2-action-label") label5.className = "iw-skill-v2-action-label";
+    if (label5.getAttribute("aria-hidden") !== "true") label5.setAttribute("aria-hidden", "true");
+    if (label5.hasAttribute("style")) label5.removeAttribute("style");
+    setText(label5, (btn.textContent || "").replace(/\s+/g, " ").trim());
+    return label5;
   }
   var LABEL_CEILING_PX = 9.5;
   var LABEL_FLOOR_PX = 4;
-  function labelTextBox(label4) {
-    const walker = document.createTreeWalker(label4, NodeFilter.SHOW_TEXT);
+  function labelTextBox(label5) {
+    const walker = document.createTreeWalker(label5, NodeFilter.SHOW_TEXT);
     const range = document.createRange();
     let left = Infinity, right = -Infinity;
     for (let node2 = walker.nextNode(); node2; node2 = walker.nextNode()) {
@@ -4368,21 +4413,21 @@
   }
   var fillSamples = /* @__PURE__ */ new WeakMap();
   var FILL = ':scope > span[style*="width"]';
-  function smoothActionFill(panel) {
-    const btn = actionButtonOf(panel);
+  function smoothActionFill(panel2) {
+    const btn = actionButtonOf(panel2);
     const width = btn?.querySelector(FILL)?.style.width || "";
     if (!/^\d+(?:\.\d+)?%$/.test(width)) return;
-    const { reset, durationMs } = sampleProgress(fillSamples, panel, parseFloat(width));
+    const { reset, durationMs } = sampleProgress(fillSamples, panel2, parseFloat(width));
     if (reset) {
-      panel.dataset.iwSkillV2FillReset = "1";
+      panel2.dataset.iwSkillV2FillReset = "1";
       raf(() => {
-        delete panel.dataset.iwSkillV2FillReset;
+        delete panel2.dataset.iwSkillV2FillReset;
       });
     }
-    if (durationMs !== null) panel.style.setProperty("--iw-skill-v2-fill-duration", formatDuration(durationMs));
+    if (durationMs !== null) panel2.style.setProperty("--iw-skill-v2-fill-duration", formatDuration(durationMs));
   }
-  function actionButtonOf(panel) {
-    const zone = panel.querySelector('[data-iw-skill-zone="commands"]');
+  function actionButtonOf(panel2) {
+    const zone = panel2.querySelector('[data-iw-skill-zone="commands"]');
     const ACTION = '[data-iw-skill-role="action-button"]';
     return zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
   }
@@ -4408,21 +4453,21 @@
     }
     return null;
   }
-  function clearLongActionTimer(panel, glyph = panel.querySelector("[data-iw-skill-v2-action-glyph]")) {
+  function clearLongActionTimer(panel2, glyph = panel2.querySelector("[data-iw-skill-v2-action-glyph]")) {
     if (glyph?.hasAttribute("data-iw-skill-v2-action-timer")) {
       glyph.removeAttribute("data-iw-skill-v2-action-timer");
       setText(glyph, "");
     }
-    delete panel.dataset.iwSkillV2LongAction;
+    delete panel2.dataset.iwSkillV2LongAction;
   }
-  function syncLongActionTimer(panel, glyph, remaining = currentActionRemaining) {
-    const running = !!actionButtonOf(panel)?.querySelector(FILL);
-    if (!running) return clearLongActionTimer(panel, glyph);
+  function syncLongActionTimer(panel2, glyph, remaining = currentActionRemaining) {
+    const running = !!actionButtonOf(panel2)?.querySelector(FILL);
+    if (!running) return clearLongActionTimer(panel2, glyph);
     if (typeof remaining === "function") remaining = remaining();
-    const startedLong = panel.dataset.iwSkillV2LongAction === "1";
-    if (!startedLong && !(remaining?.seconds > LONG_ACTION_SECONDS)) return clearLongActionTimer(panel, glyph);
+    const startedLong = panel2.dataset.iwSkillV2LongAction === "1";
+    if (!startedLong && !(remaining?.seconds > LONG_ACTION_SECONDS)) return clearLongActionTimer(panel2, glyph);
     if (!remaining || !glyph) return;
-    setData2(panel, "iwSkillV2LongAction", "1");
+    setData2(panel2, "iwSkillV2LongAction", "1");
     if (!glyph.hasAttribute("data-iw-skill-v2-action-timer")) glyph.setAttribute("data-iw-skill-v2-action-timer", "1");
     setText(glyph, remaining.text);
   }
@@ -4438,22 +4483,22 @@
     if (!host || !touchesHost(roots, host)) return;
     let remaining;
     const readOnce = () => remaining === void 0 ? remaining = currentActionRemaining() : remaining;
-    document.querySelectorAll(".compact-panel.fs-skill-panel[data-iw-skill-v2]").forEach((panel) => {
-      if (!panel.isConnected) return;
-      if (panel.dataset.iwSkillV2LongAction !== "1" && !actionButtonOf(panel)?.querySelector(FILL)) return;
-      syncLongActionTimer(panel, panel.querySelector("[data-iw-skill-v2-action-glyph]"), readOnce);
+    document.querySelectorAll(".compact-panel.fs-skill-panel[data-iw-skill-v2]").forEach((panel2) => {
+      if (!panel2.isConnected) return;
+      if (panel2.dataset.iwSkillV2LongAction !== "1" && !actionButtonOf(panel2)?.querySelector(FILL)) return;
+      syncLongActionTimer(panel2, panel2.querySelector("[data-iw-skill-v2-action-glyph]"), readOnce);
     });
   }
-  function fitActionLabel(panel) {
-    const zone = panel.querySelector('[data-iw-skill-zone="commands"]');
+  function fitActionLabel(panel2) {
+    const zone = panel2.querySelector('[data-iw-skill-zone="commands"]');
     const ACTION = '[data-iw-skill-role="action-button"]';
     const btn = zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
     if (!btn) return;
-    const visual = panel.querySelector("[data-iw-skill-v2-action-label]");
-    const label4 = (btn.textContent || "").replace(/\s+/g, " ").trim();
-    const key = `${label4}|${panel.dataset.iwSkillLayout || ""}|${btn.style.getPropertyValue("width")}|${getLayoutEpoch()}`;
-    if (!label4 || panel.dataset.iwSkillV2LabelFit === key) return;
-    panel.dataset.iwSkillV2LabelFit = key;
+    const visual = panel2.querySelector("[data-iw-skill-v2-action-label]");
+    const label5 = (btn.textContent || "").replace(/\s+/g, " ").trim();
+    const key = `${label5}|${panel2.dataset.iwSkillLayout || ""}|${btn.style.getPropertyValue("width")}|${getLayoutEpoch()}`;
+    if (!label5 || panel2.dataset.iwSkillV2LabelFit === key) return;
+    panel2.dataset.iwSkillV2LabelFit = key;
     const text = labelTextBox(visual || btn);
     if (!text || !(text.width > 0)) return;
     const cs = getComputedStyle(visual || btn);
@@ -4464,15 +4509,15 @@
     const width = text.width - tracking;
     const fit = Math.floor(current * (room / width) * 10) / 10;
     const size = `${Math.max(LABEL_FLOOR_PX, Math.min(LABEL_CEILING_PX, fit))}px`;
-    if (panel.style.getPropertyValue("--iw-skill-v2-action-label-font") !== size) panel.style.setProperty("--iw-skill-v2-action-label-font", size);
+    if (panel2.style.getPropertyValue("--iw-skill-v2-action-label-font") !== size) panel2.style.setProperty("--iw-skill-v2-action-label-font", size);
   }
-  function controlsHost(panel) {
-    return panel.querySelector('[data-iw-skill-layout-shell="1"]') || panel;
+  function controlsHost(panel2) {
+    return panel2.querySelector('[data-iw-skill-layout-shell="1"]') || panel2;
   }
   var MATERIAL_PARTS = /^(.*?)\s*([\d,]+\s*\/\s*[\d,]+)\s*$/;
   var MATERIAL_COUNT_PARTS = /^([\d,]+)\s*\/\s*([\d,]+)$/;
-  function ensureDetailBody(panel) {
-    const host = controlsHost(panel);
+  function ensureDetailBody(panel2) {
+    const host = controlsHost(panel2);
     if (!host) return null;
     let body = host.querySelector(":scope > [data-iw-skill-v2-body]");
     if (!body) {
@@ -4483,7 +4528,7 @@
       host.appendChild(body);
     }
     const selected = FRAME_SECTIONS.flatMap((name) => {
-      const sections = [...panel.querySelectorAll(`[data-iw-skill-v2-section="${name}"]`)];
+      const sections = [...panel2.querySelectorAll(`[data-iw-skill-v2-section="${name}"]`)];
       const grid = sections.find((el2) => el2.classList.contains("fs-skill-ingredient-grid"));
       return grid ? [grid] : sections.filter((el2) => !sections.some((other) => other !== el2 && other.contains(el2)));
     });
@@ -4497,8 +4542,8 @@
       state: el2.dataset.iwIngredientState || "",
       kind: "material"
     })) : [{ text: (section.textContent || "").replace(/\s+/g, " ").trim(), state: "", kind: "" }]);
-    const signature2 = rows.map((r) => `${r.kind}:${r.state}:${r.text}`).join(String.fromCharCode(31));
-    if (body.dataset.iwSkillV2BodySignature === signature2) return body;
+    const signature3 = rows.map((r) => `${r.kind}:${r.state}:${r.text}`).join(String.fromCharCode(31));
+    if (body.dataset.iwSkillV2BodySignature === signature3) return body;
     const frag = document.createDocumentFragment();
     for (const row of rows) {
       const el2 = document.createElement("span");
@@ -4531,11 +4576,11 @@
       frag.appendChild(el2);
     }
     body.replaceChildren(frag);
-    body.dataset.iwSkillV2BodySignature = signature2;
+    body.dataset.iwSkillV2BodySignature = signature3;
     return body;
   }
-  function ensureFootRow(panel) {
-    const host = controlsHost(panel);
+  function ensureFootRow(panel2) {
+    const host = controlsHost(panel2);
     if (!host) return null;
     let row = host.querySelector(":scope > [data-iw-skill-v2-controls]");
     if (!row) {
@@ -4547,14 +4592,14 @@
     }
     return row;
   }
-  function syncRequirementNote(panel) {
-    const unmet = [...new Set([...panel.querySelectorAll('[data-iw-skill-v2-section="requirements"][data-iw-req-state="unmet"]')].map((el2) => (el2.textContent || "").replace(/\s+/g, " ").trim()).filter(Boolean))];
-    const existing = panel.querySelector("[data-iw-skill-v2-controls]");
+  function syncRequirementNote(panel2) {
+    const unmet = [...new Set([...panel2.querySelectorAll('[data-iw-skill-v2-section="requirements"][data-iw-req-state="unmet"]')].map((el2) => (el2.textContent || "").replace(/\s+/g, " ").trim()).filter(Boolean))];
+    const existing = panel2.querySelector("[data-iw-skill-v2-controls]");
     if (!unmet.length) {
       existing?.remove();
       return null;
     }
-    const row = ensureFootRow(panel);
+    const row = ensureFootRow(panel2);
     if (!row) return null;
     let note = row.querySelector(":scope > [data-iw-skill-v2-req-note]");
     if (!note) {
@@ -4567,45 +4612,45 @@
     setText(note, unmet.join(" · "));
     return row;
   }
-  function enhanceSkillCardV2(panel, skillType) {
-    if (!panel || !panel.isConnected || !skillType || skillType === "unknown") return null;
-    if (panel.style.getPropertyValue("--iw-skill-v2-btn-font")) panel.style.removeProperty("--iw-skill-v2-btn-font");
-    setData2(panel, "iwSkillV2", "1");
-    setData2(panel, "iwSkillV2Type", skillType);
-    setData2(panel, "iwSkillV2State", "expanded");
-    markSections(panel);
-    levelReadout(panel);
-    const glyph = ensureActionGlyph(panel);
-    ensureActionLabel(panel);
-    fitActionLabel(panel);
-    smoothActionFill(panel);
-    syncLongActionTimer(panel, glyph);
-    removeRetiredNodes(panel);
-    const row = syncRequirementNote(panel);
-    ensureDetailBody(panel);
+  function enhanceSkillCardV2(panel2, skillType) {
+    if (!panel2 || !panel2.isConnected || !skillType || skillType === "unknown") return null;
+    if (panel2.style.getPropertyValue("--iw-skill-v2-btn-font")) panel2.style.removeProperty("--iw-skill-v2-btn-font");
+    setData2(panel2, "iwSkillV2", "1");
+    setData2(panel2, "iwSkillV2Type", skillType);
+    setData2(panel2, "iwSkillV2State", "expanded");
+    markSections(panel2);
+    levelReadout(panel2);
+    const glyph = ensureActionGlyph(panel2);
+    ensureActionLabel(panel2);
+    fitActionLabel(panel2);
+    smoothActionFill(panel2);
+    syncLongActionTimer(panel2, glyph);
+    removeRetiredNodes(panel2);
+    const row = syncRequirementNote(panel2);
+    ensureDetailBody(panel2);
     return row;
   }
-  function clearSkillCardV2(panel) {
-    if (!panel) return;
-    panel.querySelectorAll("[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-xp],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]").forEach((el2) => el2.remove());
-    panel.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => delete el2.dataset.iwSkillV2Section);
-    panel.style.removeProperty("--iw-skill-v2-progress");
-    panel.style.removeProperty("--iw-skill-v2-btn-font");
-    panel.style.removeProperty("--iw-skill-v2-action-label-font");
-    panel.style.removeProperty("--iw-skill-v2-fill-duration");
-    delete panel.dataset.iwSkillV2FillReset;
-    delete panel.dataset.iwSkillV2LongAction;
-    fillSamples.delete(panel);
-    delete panel.dataset.iwSkillV2LabelFit;
-    delete panel.dataset.iwSkillV2;
-    delete panel.dataset.iwSkillV2Type;
-    delete panel.dataset.iwSkillV2State;
-    delete panel.dataset.iwSkillV2Tab;
+  function clearSkillCardV2(panel2) {
+    if (!panel2) return;
+    panel2.querySelectorAll("[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-xp],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]").forEach((el2) => el2.remove());
+    panel2.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => delete el2.dataset.iwSkillV2Section);
+    panel2.style.removeProperty("--iw-skill-v2-progress");
+    panel2.style.removeProperty("--iw-skill-v2-btn-font");
+    panel2.style.removeProperty("--iw-skill-v2-action-label-font");
+    panel2.style.removeProperty("--iw-skill-v2-fill-duration");
+    delete panel2.dataset.iwSkillV2FillReset;
+    delete panel2.dataset.iwSkillV2LongAction;
+    fillSamples.delete(panel2);
+    delete panel2.dataset.iwSkillV2LabelFit;
+    delete panel2.dataset.iwSkillV2;
+    delete panel2.dataset.iwSkillV2Type;
+    delete panel2.dataset.iwSkillV2State;
+    delete panel2.dataset.iwSkillV2Tab;
   }
-  function reconcile(panel, skill) {
-    if (!panel?.isConnected) return;
-    if (!skill || skill === "unknown" || !panel.classList.contains("fs-skill-panel")) return clearSkillCardV2(panel);
-    enhanceSkillCardV2(panel, skill);
+  function reconcile(panel2, skill) {
+    if (!panel2?.isConnected) return;
+    if (!skill || skill === "unknown" || !panel2.classList.contains("fs-skill-panel")) return clearSkillCardV2(panel2);
+    enhanceSkillCardV2(panel2, skill);
   }
   function bindOnce() {
     if (bound) return;
@@ -4622,9 +4667,9 @@
     bindOnce();
     document.fonts?.ready?.then(() => guard("skill-v2:fonts", () => {
       if (!active) return;
-      document.querySelectorAll(".compact-panel[data-iw-skill-v2-label-fit]").forEach((panel) => {
-        delete panel.dataset.iwSkillV2LabelFit;
-        fitActionLabel(panel);
+      document.querySelectorAll(".compact-panel[data-iw-skill-v2-label-fit]").forEach((panel2) => {
+        delete panel2.dataset.iwSkillV2LabelFit;
+        fitActionLabel(panel2);
       });
     }));
     const root = document.documentElement;
@@ -4666,8 +4711,8 @@
   }
   function textLeaves(root) {
     return [...root.querySelectorAll("p,span,div,strong,em,h1,h2,h3,h4")].filter((el2) => !el2.closest('button,a,[role="button"],.fs-quest-sigil')).filter((el2) => {
-      const own2 = [...el2.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
-      return own2 && normText2(el2.textContent).length <= 220;
+      const own5 = [...el2.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
+      return own5 && normText2(el2.textContent).length <= 220;
     });
   }
   function questButtons(card) {
@@ -4675,9 +4720,9 @@
     let turnIn = null;
     let skip = null;
     for (const btn of all) {
-      const label4 = normText2(btn.textContent) || normText2(btn.getAttribute("aria-label"));
-      if (!turnIn && /turn\s*in/i.test(label4)) turnIn = btn;
-      else if (!skip && /^skip\b/i.test(label4)) skip = btn;
+      const label5 = normText2(btn.textContent) || normText2(btn.getAttribute("aria-label"));
+      if (!turnIn && /turn\s*in/i.test(label5)) turnIn = btn;
+      else if (!skip && /^skip\b/i.test(label5)) skip = btn;
     }
     return { turnIn, skip, all };
   }
@@ -4842,21 +4887,21 @@
       body.insertBefore(sigil, body.firstChild);
     }
     if (sigil.dataset.iwQuestGlyph !== style.glyph) sigil.dataset.iwQuestGlyph = style.glyph;
-    let icon2 = sigil.querySelector(":scope > .fs-quest-sigil-icon");
+    let icon3 = sigil.querySelector(":scope > .fs-quest-sigil-icon");
     if (ref && ref.name && AtlasService.isReady()) {
-      const target = icon2 || Object.assign(document.createElement("span"), { className: "fs-quest-sigil-icon" });
+      const target = icon3 || Object.assign(document.createElement("span"), { className: "fs-quest-sigil-icon" });
       if (AtlasService.paint(target, { id: ref.id, name: ref.name })) {
-        if (!icon2) {
+        if (!icon3) {
           target.setAttribute("aria-hidden", "true");
           sigil.appendChild(target);
         }
         if (sigil.dataset.iwQuestIcon !== "1") sigil.dataset.iwQuestIcon = "1";
       } else {
-        icon2?.remove();
+        icon3?.remove();
         delete sigil.dataset.iwQuestIcon;
       }
     } else {
-      icon2?.remove();
+      icon3?.remove();
       delete sigil.dataset.iwQuestIcon;
       if (ref && ref.name && !AtlasService.isReady() && !card.dataset.iwQuestIconPending) {
         card.dataset.iwQuestIconPending = "1";
@@ -4876,8 +4921,8 @@
         ring.className = "fs-quest-sigil-pct";
         sigil.appendChild(ring);
       }
-      const label4 = `${pct}%`;
-      if (ring.textContent !== label4) ring.textContent = label4;
+      const label5 = `${pct}%`;
+      if (ring.textContent !== label5) ring.textContent = label5;
     } else {
       ring?.remove();
     }
@@ -4930,8 +4975,8 @@
     if (card.style.getPropertyValue("--fs-quest-accent") !== style.accent) {
       card.style.setProperty("--fs-quest-accent", style.accent);
     }
-    const state = questState(card);
-    if (card.getAttribute(STATE_ATTR) !== state) card.setAttribute(STATE_ATTR, state);
+    const state2 = questState(card);
+    if (card.getAttribute(STATE_ATTR) !== state2) card.setAttribute(STATE_ATTR, state2);
     if (card.getAttribute(RENDERED_ATTR3) !== "1") card.setAttribute(RENDERED_ATTR3, "1");
     ensureObjectiveTrigger(ref);
     ensureDecoration(card, style, ref);
@@ -5159,16 +5204,16 @@
     }
     crest.appendChild(owned("span", "iw-control-crystal-core"));
   }
-  function stopStrengthImpact(panel) {
-    impactCleanup.get(panel)?.();
-    impactCleanup.delete(panel);
-    for (const animation of impactAnimations.get(panel) || []) animation?.cancel?.();
-    impactAnimations.delete(panel);
+  function stopStrengthImpact(panel2) {
+    impactCleanup.get(panel2)?.();
+    impactCleanup.delete(panel2);
+    for (const animation of impactAnimations.get(panel2) || []) animation?.cancel?.();
+    impactAnimations.delete(panel2);
   }
-  function playStrengthImpact(panel, previous, strengths) {
+  function playStrengthImpact(panel2, previous, strengths) {
     const preference = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
     if (preference?.matches) {
-      stopStrengthImpact(panel);
+      stopStrengthImpact(panel2);
       return;
     }
     if (!previous) return;
@@ -5176,33 +5221,33 @@
     if (previous.red !== strengths.red.value) changed.push("red");
     if (previous.blue !== strengths.blue.value) changed.push("blue");
     if (!changed.length) return;
-    stopStrengthImpact(panel);
+    stopStrengthImpact(panel2);
     const mobile = typeof matchMedia === "function" && matchMedia("(max-width: 760px)").matches;
     const animations = [];
     for (const team of changed) {
-      const energy = panel.querySelector(`.iw-control-impact-${team}`);
+      const energy = panel2.querySelector(`.iw-control-impact-${team}`);
       if (energy?.animate) animations.push(energy.animate([
         { opacity: 0, transform: "translateX(-100%) scaleX(.45)" },
         { opacity: mobile ? 0.4 : 0.65, transform: "translateX(65%) scaleX(1.1)", offset: 0.42 },
         { opacity: 0, transform: "translateX(330%) scaleX(.6)" }
       ], { duration: mobile ? 1e3 : 1250, delay: team === "blue" ? 170 : 0, easing: "cubic-bezier(.3,.1,.3,1)" }));
     }
-    impactAnimations.set(panel, animations);
+    impactAnimations.set(panel2, animations);
     const onPreference = () => {
-      if (preference.matches) stopStrengthImpact(panel);
+      if (preference.matches) stopStrengthImpact(panel2);
     };
     preference?.addEventListener?.("change", onPreference);
-    impactCleanup.set(panel, () => preference?.removeEventListener?.("change", onPreference));
+    impactCleanup.set(panel2, () => preference?.removeEventListener?.("change", onPreference));
     const finished = animations.map((animation) => animation.finished).filter(Boolean);
     if (finished.length) Promise.allSettled(finished).then(() => {
-      if (impactAnimations.get(panel) === animations) stopStrengthImpact(panel);
+      if (impactAnimations.get(panel2) === animations) stopStrengthImpact(panel2);
     });
   }
   function ensureDominion(card) {
-    let panel = card.querySelector(".iw-control-dominion");
-    if (panel) return panel;
-    panel = owned("section", "iw-control-dominion");
-    panel.setAttribute("aria-label", "Zone dominion status");
+    let panel2 = card.querySelector(".iw-control-dominion");
+    if (panel2) return panel2;
+    panel2 = owned("section", "iw-control-dominion");
+    panel2.setAttribute("aria-label", "Zone dominion status");
     const crest = owned("div", "iw-control-crest");
     crest.setAttribute("aria-hidden", "true");
     ensureCrestLayers(crest);
@@ -5226,13 +5271,13 @@
     meter.append(meterHead, track);
     const factions = owned("div", "iw-control-factions");
     factions.append(owned("span", "iw-control-faction iw-control-faction-red", "Crimson Oath"), owned("span", "iw-control-versus", "✦"), owned("span", "iw-control-faction iw-control-faction-blue", "Azure Covenant"));
-    panel.append(crest, readout, meter, factions);
-    card.appendChild(panel);
-    return panel;
+    panel2.append(crest, readout, meter, factions);
+    card.appendChild(panel2);
+    return panel2;
   }
   function updateDominion(card, team) {
-    const panel = ensureDominion(card);
-    ensureCrestLayers(panel.querySelector(".iw-control-crest"));
+    const panel2 = ensureDominion(card);
+    ensureCrestLayers(panel2.querySelector(".iw-control-crest"));
     const hp = [...card.querySelectorAll("p")].find((el2) => !el2.closest("[data-iw-boss-owned]") && /\b[\d,.]+(?:\s*\/\s*[\d,.]+)?\s*HP\b/i.test(norm(el2.textContent)));
     const progress = controlProgress(card);
     const nativeStrengths = controlStrengths(card);
@@ -5241,7 +5286,7 @@
     const split = totalStrength > 0 ? strengths.red.value / totalStrength * 100 : 50;
     const percent2 = progress.percent;
     const value = strengths ? `${strengths.red.raw} · ${strengths.blue.raw}` : hp ? norm(hp.textContent) : team === "contested" ? "Under siege" : "Fortified";
-    const state = team === "red" ? "Crimson Dominion" : team === "blue" ? "Azure Dominion" : "Ward contested";
+    const state2 = team === "red" ? "Crimson Dominion" : team === "blue" ? "Azure Dominion" : "Ward contested";
     card.querySelectorAll('[data-iw-boss-role="control-strength"]').forEach((row) => row.removeAttribute("data-iw-boss-role"));
     const hiddenStrengths = strengths || (nativeStrengths?.red.team === "red" && nativeStrengths?.blue.team === "blue" ? nativeStrengths : null);
     if (hiddenStrengths) {
@@ -5250,25 +5295,25 @@
     }
     mark(hp, "data-iw-boss-role", "control-hp");
     mark(progress.track, "data-iw-boss-role", "control-progress");
-    panel.querySelector(".iw-control-crest").dataset.iwControlCrest = team;
-    setText2(panel.querySelector(".iw-control-state"), state);
-    setText2(panel.querySelector(".iw-control-meter-label"), strengths ? "Ward Strength" : "Ward Integrity");
-    setText2(panel.querySelector(".iw-control-meter-value"), value);
-    const meter = panel.querySelector(".iw-control-meter");
-    const fill = panel.querySelector(".iw-control-meter-fill");
+    panel2.querySelector(".iw-control-crest").dataset.iwControlCrest = team;
+    setText2(panel2.querySelector(".iw-control-state"), state2);
+    setText2(panel2.querySelector(".iw-control-meter-label"), strengths ? "Ward Strength" : "Ward Integrity");
+    setText2(panel2.querySelector(".iw-control-meter-value"), value);
+    const meter = panel2.querySelector(".iw-control-meter");
+    const fill = panel2.querySelector(".iw-control-meter-fill");
     if (strengths) {
-      playStrengthImpact(panel, strengthHistory.get(card), strengths);
+      playStrengthImpact(panel2, strengthHistory.get(card), strengths);
       strengthHistory.set(card, { red: strengths.red.value, blue: strengths.blue.value });
       meter.dataset.iwControlSource = "factions";
       fill.style.width = "100%";
       fill.style.setProperty("--iw-control-split", `${Number(split.toFixed(1))}%`);
     } else {
       strengthHistory.delete(card);
-      stopStrengthImpact(panel);
+      stopStrengthImpact(panel2);
       delete meter.dataset.iwControlSource;
       fill.style.width = `${percent2 ?? 100}%`;
     }
-    const track = panel.querySelector(".iw-control-meter-track");
+    const track = panel2.querySelector(".iw-control-meter-track");
     track.setAttribute("aria-label", strengths ? "Ward strength balance" : "Ward integrity");
     if (strengths) {
       track.setAttribute("aria-valuemin", "0");
@@ -5288,9 +5333,9 @@
     }
   }
   function rewards(card, boss) {
-    const signature2 = `${boss.key}:${ItemDatabase.revision()}:${AtlasService.revision()}`;
+    const signature3 = `${boss.key}:${ItemDatabase.revision()}:${AtlasService.revision()}`;
     let section = card.querySelector(".iw-boss-rewards");
-    if (section && signatures.get(card) === signature2) return;
+    if (section && signatures.get(card) === signature3) return;
     const ids2 = [.../* @__PURE__ */ new Set([...boss.ids, ...ItemDatabase.all().filter((item) => item.acquisition_type === "BossDrop" && `${item.acquisition_summary} ${item.acquisition_detail}`.includes(boss.name)).map((item) => item.item_id), "trader_token", "boss_upgrade_orb"])];
     if (!section) {
       section = owned("details", "iw-boss-rewards");
@@ -5304,21 +5349,21 @@
     for (const id of ids2) {
       const item = ItemDatabase.find({ id }) || fallback.get(id);
       if (!item) continue;
-      const tile = owned("button", "iw-boss-reward");
-      tile.type = "button";
-      tile.dataset.iwTooltipTrigger = "1";
-      tile.dataset.iwItem = id;
-      tile.dataset.iwItemName = item.name;
-      tile.setAttribute("aria-label", `${item.name} — item details`);
-      registerTooltipItem(tile, item);
-      const icon2 = owned("span", "iw-boss-reward-icon");
-      icon2.setAttribute("aria-hidden", "true");
-      if (!AtlasService.paint(icon2, id === "boss_upgrade_orb" ? { name: "Copper Upgrade Orb", id: "copper_upgrade_orb" } : { id, name: item.name })) icon2.textContent = "◆";
-      tile.append(icon2, owned("span", "iw-boss-reward-name", item.name));
-      list.appendChild(tile);
+      const tile2 = owned("button", "iw-boss-reward");
+      tile2.type = "button";
+      tile2.dataset.iwTooltipTrigger = "1";
+      tile2.dataset.iwItem = id;
+      tile2.dataset.iwItemName = item.name;
+      tile2.setAttribute("aria-label", `${item.name} — item details`);
+      registerTooltipItem(tile2, item);
+      const icon3 = owned("span", "iw-boss-reward-icon");
+      icon3.setAttribute("aria-hidden", "true");
+      if (!AtlasService.paint(icon3, id === "boss_upgrade_orb" ? { name: "Copper Upgrade Orb", id: "copper_upgrade_orb" } : { id, name: item.name })) icon3.textContent = "◆";
+      tile2.append(icon3, owned("span", "iw-boss-reward-name", item.name));
+      list.appendChild(tile2);
     }
     section.appendChild(list);
-    signatures.set(card, signature2);
+    signatures.set(card, signature3);
   }
   function decorateWorldBossPanel({ root, heading }) {
     if (!root.querySelector(".iw-boss-notice")) {
@@ -5331,9 +5376,9 @@
       if (card.querySelector(".compact-panel")) continue;
       const header = [...card.children].find((el2) => !el2.hasAttribute("data-iw-boss-owned"));
       const title = header?.querySelector("p") || (header?.matches("p") ? header : null);
-      const label4 = norm(title?.textContent);
-      const boss = BOSSES.find((entry2) => label4.includes(entry2.name));
-      const control = /controls Zone\s+\d+|Zone\s+\d+.*(?:Race to capture|contested)/i.test(label4);
+      const label5 = norm(title?.textContent);
+      const boss = BOSSES.find((entry2) => label5.includes(entry2.name));
+      const control = /controls Zone\s+\d+|Zone\s+\d+.*(?:Race to capture|contested)/i.test(label5);
       if (!boss && !control) continue;
       mark(card, "data-iw-encounter", boss ? boss.key : "zone");
       mark(header, "data-iw-boss-role", "header");
@@ -5379,7 +5424,7 @@
       }
       if (boss) rewards(card, boss);
       else {
-        const team = /red team controls/i.test(label4) ? "red" : /blue team controls/i.test(label4) ? "blue" : "contested";
+        const team = /red team controls/i.test(label5) ? "red" : /blue team controls/i.test(label5) ? "blue" : "contested";
         mark(card, "data-iw-control", team);
         for (const el2 of card.children) {
           if (el2.hasAttribute("data-iw-boss-owned") || el2 === header) continue;
@@ -5523,13 +5568,13 @@
     const effects = vacant ? null : rest[1] || null;
     const buildingName = name ? label(name.textContent) : "";
     const building = resolveBuilding(buildingName);
-    const state = vacant ? "vacant" : name ? "installed" : "unknown";
-    if (state === "unknown") {
+    const state2 = vacant ? "vacant" : name ? "installed" : "unknown";
+    if (state2 === "unknown") {
       undecorateSlot(card);
       return false;
     }
     mark2(card, "data-iw-village", "slot");
-    mark2(card, "data-iw-village-state", state);
+    mark2(card, "data-iw-village-state", state2);
     mark2(head, "data-iw-village-role", "head");
     mark2(copy, "data-iw-village-role", "copy");
     mark2(index, "data-iw-village-role", "index");
@@ -5740,38 +5785,38 @@
     if (row.button.getAttribute("aria-expanded") !== expanded) {
       row.button.setAttribute("aria-expanded", expanded);
     }
-    const label4 = `${open ? "Collapse" : "Expand"} ${row.name}`;
-    if (row.button.getAttribute("title") !== label4) row.button.setAttribute("title", label4);
+    const label5 = `${open ? "Collapse" : "Expand"} ${row.name}`;
+    if (row.button.getAttribute("title") !== label5) row.button.setAttribute("title", label5);
   }
   var ids = 0;
-  function icon(own2, file, fallback2) {
-    const box = own2("span", "iw-vs-entry-icon");
+  function icon(own5, file, fallback2) {
+    const box = own5("span", "iw-vs-entry-icon");
     box.setAttribute("aria-hidden", "true");
     if (!file) {
       box.textContent = fallback2;
       return box;
     }
-    const img = own2("img", "iw-vs-entry-sprite");
+    const img = own5("img", "iw-vs-entry-sprite");
     img.src = assetUrl(`assets/${file}`);
     img.alt = "";
     img.decoding = "async";
     box.append(img);
     return box;
   }
-  function statList(own2, rows) {
-    const list = own2("dl", "iw-vs-stats");
+  function statList(own5, rows) {
+    const list = own5("dl", "iw-vs-stats");
     for (const row of rows) {
-      const line = own2("div", "iw-vs-stat");
+      const line = own5("div", "iw-vs-stat");
       if (row.kind) line.dataset.iwVsStatKind = row.kind;
-      line.append(own2("dt", "", row.label), own2("dd", "", row.value));
+      line.append(own5("dt", "", row.label), own5("dd", "", row.value));
       list.append(line);
     }
     return list;
   }
-  function chevron(own2) {
-    const mark4 = own2("span", "iw-vs-chevron");
-    mark4.setAttribute("aria-hidden", "true");
-    return mark4;
+  function chevron(own5) {
+    const mark6 = own5("span", "iw-vs-chevron");
+    mark6.setAttribute("aria-hidden", "true");
+    return mark6;
   }
   function wire(key, name, box, button2) {
     const row = { key, name, entry: box, button: button2 };
@@ -5788,26 +5833,26 @@
     applyEntry(row);
     return row;
   }
-  function entry(own2, { key, name, meta, file, fallback: fallback2, rows, notes, empty }) {
-    const box = own2("div", "iw-vs-entry");
+  function entry(own5, { key, name, meta, file, fallback: fallback2, rows, notes, empty }) {
+    const box = own5("div", "iw-vs-entry");
     box.dataset.iwVsEntry = key;
-    const button2 = own2("button", "iw-vs-entry-head");
+    const button2 = own5("button", "iw-vs-entry-head");
     button2.type = "button";
     button2.dataset.iwVsToggle = "1";
     const bodyId = `iw-vs-entry-${ids += 1}`;
     button2.setAttribute("aria-controls", bodyId);
     button2.setAttribute("aria-expanded", "true");
-    const label4 = own2("span", "iw-vs-entry-label");
-    label4.append(own2("span", "iw-vs-entry-name", name));
-    if (meta) label4.append(own2("span", "iw-vs-entry-meta", meta));
-    button2.append(icon(own2, file, fallback2), label4, chevron(own2));
-    const body = own2("div", "iw-vs-entry-body");
+    const label5 = own5("span", "iw-vs-entry-label");
+    label5.append(own5("span", "iw-vs-entry-name", name));
+    if (meta) label5.append(own5("span", "iw-vs-entry-meta", meta));
+    button2.append(icon(own5, file, fallback2), label5, chevron(own5));
+    const body = own5("div", "iw-vs-entry-body");
     body.id = bodyId;
     const lines = notes || [];
-    if (rows.length) body.append(statList(own2, rows));
-    for (const note of lines) body.append(own2("p", "iw-vs-entry-note", note));
+    if (rows.length) body.append(statList(own5, rows));
+    for (const note of lines) body.append(own5("p", "iw-vs-entry-note", note));
     if (!rows.length && !lines.length) {
-      body.append(own2("p", "iw-vs-entry-note", empty || "No recorded effects."));
+      body.append(own5("p", "iw-vs-entry-note", empty || "No recorded effects."));
     }
     box.append(button2, body);
     wire(key, name, box, button2);
@@ -5867,25 +5912,25 @@
     }
     return rows;
   }
-  function buildVillageLedger({ snapshot: snapshot2, house, perks: perks2, own: own2 }) {
+  function buildVillageLedger({ snapshot: snapshot2, house, perks: perks2, own: own5 }) {
     void loadPreferences();
     live = [];
-    const ledger = own2("div", "iw-vs-ledger");
+    const ledger = own5("div", "iw-vs-ledger");
     ledger.dataset.iwVillageLedger = "1";
-    const head = own2("div", "iw-vs-ledger-head");
-    head.append(own2("div", "iw-vs-ledger-title", "Buildings"));
-    const sectionToggle = own2("button", "iw-vs-ledger-toggle");
+    const head = own5("div", "iw-vs-ledger-head");
+    head.append(own5("div", "iw-vs-ledger-title", "Buildings"));
+    const sectionToggle = own5("button", "iw-vs-ledger-toggle");
     sectionToggle.type = "button";
     sectionToggle.dataset.iwVsToggle = "section";
     sectionToggle.setAttribute("aria-expanded", "true");
-    sectionToggle.append(chevron(own2));
+    sectionToggle.append(chevron(own5));
     head.append(sectionToggle);
-    const list = own2("div", "iw-vs-ledger-list");
+    const list = own5("div", "iw-vs-ledger-list");
     list.id = `iw-vs-list-${ids += 1}`;
     sectionToggle.setAttribute("aria-controls", list.id);
     ledger.append(head, list);
     wire("ledger", "the building list", ledger, sectionToggle);
-    list.append(entry(own2, {
+    list.append(entry(own5, {
       key: "home",
       name: house?.name || "No House",
       meta: `Home · tier ${snapshot2.tier}`,
@@ -5898,11 +5943,11 @@
     const installed = [];
     for (const slot of snapshot2.slots) {
       if (slot.state !== "installed") {
-        const line = own2("div", "iw-vs-ledger-vacant");
+        const line = own5("div", "iw-vs-ledger-vacant");
         line.dataset.iwVsSlotState = slot.state;
         line.append(
-          own2("span", "", `Slot ${slot.slot}`),
-          own2("span", "", slot.state === "locked" ? "Locked · upgrade housing" : "Empty plot")
+          own5("span", "", `Slot ${slot.slot}`),
+          own5("span", "", slot.state === "locked" ? "Locked · upgrade housing" : "Empty plot")
         );
         list.append(line);
         continue;
@@ -5910,7 +5955,7 @@
       const item = buildingItem(slot);
       if (item) installed.push(item);
       const tier = Number(item?.tier);
-      list.append(entry(own2, {
+      list.append(entry(own5, {
         key: `building:${slot.name.toLowerCase()}`,
         name: slot.name,
         meta: `Slot ${slot.slot}${Number.isFinite(tier) ? ` · tier ${tier}` : ""}`,
@@ -5920,21 +5965,21 @@
         empty: ItemDatabase.isReady() ? "This building records no effects." : "Effects arrive with the item database."
       }));
     }
-    const totals = own2("section", "iw-vs-totals");
+    const totals = own5("section", "iw-vs-totals");
     totals.dataset.iwVillageTotals = "1";
-    const title = own2("div", "iw-vs-totals-title", "Overall stats");
+    const title = own5("div", "iw-vs-totals-title", "Overall stats");
     title.setAttribute("role", "heading");
     title.setAttribute("aria-level", "3");
     totals.append(title);
     const rows = totalBenefits(installed);
-    if (rows.length) totals.append(statList(own2, rows));
+    if (rows.length) totals.append(statList(own5, rows));
     let note;
     if (!ItemDatabase.isReady()) note = "Waiting on the item database before totalling your buildings.";
     else if (!installed.length) note = "No installed buildings yet, so nothing is counted here.";
     else {
       note = `Summed from ${installed.length} installed building${installed.length === 1 ? "" : "s"}. Housing is not counted.`;
     }
-    totals.append(own2("p", "iw-vs-totals-note", note));
+    totals.append(own5("p", "iw-vs-totals-note", note));
     ledger.append(totals);
     return ledger;
   }
@@ -6403,7 +6448,7 @@
       }
       ctx.restore();
     }
-    const tile = layer(256, 256), tc = tile.getContext("2d"), tp = tc.createImageData(256, 256);
+    const tile2 = layer(256, 256), tc = tile2.getContext("2d"), tp = tc.createImageData(256, 256);
     for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
       const v = 0.5 + 0.5 * Math.sin(TAU * y / 256 + 0.45 * Math.sin(TAU * x / 256));
       tp.data.set([255, 125, 32, Math.round(10 + v * v * v * 105)], (y * 256 + x) * 4);
@@ -6435,7 +6480,7 @@
       px.forEach(([a, b], i) => i ? mc.lineTo(a - x, b - y) : mc.moveTo(a - x, b - y));
       mc.closePath();
       mc.fill();
-      const flow = layer(w, h), fc2 = flow.getContext("2d"), pattern = fc2.createPattern(tile, "repeat");
+      const flow = layer(w, h), fc2 = flow.getContext("2d"), pattern = fc2.createPattern(tile2, "repeat");
       const length = Math.hypot(...d);
       return { x, y, w, h, mask, flow, fc: fc2, pattern, dx: d[0] / length, dy: d[1] / length, cycles };
     });
@@ -6520,7 +6565,7 @@
         cloud(width * 0.48 + u * width * 0.03, height * 0.72 - u * height * 0.08, width * (0.32 + u * 0.09), height * (0.16 + u * 0.07), cue.debris * 0.24, u);
       }
     }
-    function render2(seconds, { battle = false, ambient = true, lava = true, atmosphere = true, cloudMotion = true, bossMotion = true, eyeLight = true } = {}) {
+    function render3(seconds, { battle = false, ambient = true, lava = true, atmosphere = true, cloudMotion = true, bossMotion = true, eyeLight = true } = {}) {
       if (destroyed) return getArenaCue(seconds, false);
       const phase2 = frac(seconds / ARENA_PERIOD), battleActive = battle && BATTLE_EFFECTS_ENABLED, cue = getArenaCue(seconds, battleActive);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -6571,7 +6616,7 @@
       if (battleActive) hazards(cue);
       return cue;
     }
-    return { render: render2, width, height, period: ARENA_PERIOD, destroy() {
+    return { render: render3, width, height, period: ARENA_PERIOD, destroy() {
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
       canvas.width = canvas.height = 1;
@@ -6585,17 +6630,17 @@
     return createArenaScene(canvas, { background: environment, smoke, ...options });
   }
   function clearAshmawScene(arena) {
-    const state = scenes.get(arena);
-    if (!state) return;
-    state.disposed = true;
-    cancelAnimationFrame(state.frame);
-    state.visible?.disconnect();
-    state.renderer?.destroy();
-    state.renderer = null;
-    document.removeEventListener("visibilitychange", state.resume);
-    state.motion.removeEventListener("change", state.resume);
-    state.art.remove();
-    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state2 = scenes.get(arena);
+    if (!state2) return;
+    state2.disposed = true;
+    cancelAnimationFrame(state2.frame);
+    state2.visible?.disconnect();
+    state2.renderer?.destroy();
+    state2.renderer = null;
+    document.removeEventListener("visibilitychange", state2.resume);
+    state2.motion.removeEventListener("change", state2.resume);
+    state2.art.remove();
+    state2.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes.delete(arena);
   }
@@ -6620,34 +6665,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes.set(arena, state);
+    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes.set(arena, state2);
     const start2 = performance.now();
     let last = 0;
-    state.resume = () => {
-      cancelAnimationFrame(state.frame);
-      state.frame = 0;
-      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
-      if (state.motion.matches) {
-        state.renderer.render(0);
+    state2.resume = () => {
+      cancelAnimationFrame(state2.frame);
+      state2.frame = 0;
+      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
+      if (state2.motion.matches) {
+        state2.renderer.render(0);
         return;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearAshmawScene(arena);
         return;
       }
-      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state.renderer.render((now - start2) / 1e3);
+        state2.renderer.render((now - start2) / 1e3);
         last = now;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state.resume);
-    state.motion.addEventListener("change", state.resume);
+    document.addEventListener("visibilitychange", state2.resume);
+    state2.motion.addEventListener("change", state2.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -6656,34 +6701,34 @@
     env.src = assetUrl("assets/raids/ashmaw/arena.png");
     for (const [key, name] of Object.entries({ cloudAtlas: "clouds", smokeAtlas: "furnace-smoke", steamAtlas: "steam" })) textures[key].src = assetUrl("assets/raids/ashmaw/" + name + ".png");
     loaded.then(([background, cloudAtlas, smokeAtlas, steamAtlas]) => {
-      if (state.disposed || !arena.isConnected) return;
+      if (state2.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
-      if (arena.querySelector(bossSelector) !== boss || boss.parentElement !== state.stage || nativeBackground2 && !/ashmaw/i.test(nativeBackground2)) {
+      if (arena.querySelector(bossSelector) !== boss || boss.parentElement !== state2.stage || nativeBackground2 && !/ashmaw/i.test(nativeBackground2)) {
         clearAshmawScene(arena);
         return;
       }
       arena.setAttribute("data-iw-raid-scene", "ashmaw");
-      state.stage.setAttribute("data-iw-raid-boss-stage", "ashmaw");
+      state2.stage.setAttribute("data-iw-raid-boss-stage", "ashmaw");
       try {
-        state.renderer = createAshmawRenderer(canvas, background, null, { cloudAtlas, smokeAtlas, steamAtlas, maxWidth: 1440 });
-        if (!state.renderer) return;
-        state.renderer.render(0);
+        state2.renderer = createAshmawRenderer(canvas, background, null, { cloudAtlas, smokeAtlas, steamAtlas, maxWidth: 1440 });
+        if (!state2.renderer) return;
+        state2.renderer.render(0);
       } catch {
-        state.renderer?.destroy();
-        state.renderer = null;
+        state2.renderer?.destroy();
+        state2.renderer = null;
         return;
       }
       art2.setAttribute("data-iw-animated", "");
       if (typeof IntersectionObserver === "function") {
-        state.visible = new IntersectionObserver(([entry2]) => {
-          state.onScreen = entry2.isIntersecting;
-          state.resume();
+        state2.visible = new IntersectionObserver(([entry2]) => {
+          state2.onScreen = entry2.isIntersecting;
+          state2.resume();
         });
-        state.visible.observe(arena);
+        state2.visible.observe(arena);
       }
-      state.resume();
+      state2.resume();
     }).catch(() => {
-      if (!state.disposed) clearAshmawScene(arena);
+      if (!state2.disposed) clearAshmawScene(arena);
     });
   }
   function clearAshmawScenes(root) {
@@ -6991,7 +7036,7 @@
       }
       ctx.restore();
     }
-    function render2(seconds, { ambient = true, cloudMotion = true, atmosphere = true, courtyardMist = true, bossMotion = true, bodyClouds = true, hairMotion = true, spectralWisps = true, lightning = true, spores: drift = true } = {}) {
+    function render3(seconds, { ambient = true, cloudMotion = true, atmosphere = true, courtyardMist = true, bossMotion = true, bodyClouds = true, hairMotion = true, spectralWisps = true, lightning = true, spores: drift = true } = {}) {
       const phase2 = frac2(seconds / THESSALY_PERIOD), cue = { t: phase2 * THESSALY_PERIOD, battle: false };
       if (destroyed) return cue;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -7010,7 +7055,7 @@
       if (ambient && drift) motes(phase2);
       return cue;
     }
-    return { render: render2, width, height, period: THESSALY_PERIOD, destroy() {
+    return { render: render3, width, height, period: THESSALY_PERIOD, destroy() {
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
       canvas.width = canvas.height = 1;
@@ -7023,17 +7068,17 @@
     return createThessalyArenaScene(canvas, { background: environment, ...assets, ...options });
   }
   function clearThessalyScene(arena) {
-    const state = scenes2.get(arena);
-    if (!state) return;
-    state.disposed = true;
-    cancelAnimationFrame(state.frame);
-    state.visible?.disconnect();
-    state.renderer?.destroy();
-    state.renderer = null;
-    document.removeEventListener("visibilitychange", state.resume);
-    state.motion.removeEventListener("change", state.resume);
-    state.art.remove();
-    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state2 = scenes2.get(arena);
+    if (!state2) return;
+    state2.disposed = true;
+    cancelAnimationFrame(state2.frame);
+    state2.visible?.disconnect();
+    state2.renderer?.destroy();
+    state2.renderer = null;
+    document.removeEventListener("visibilitychange", state2.resume);
+    state2.motion.removeEventListener("change", state2.resume);
+    state2.art.remove();
+    state2.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes2.delete(arena);
   }
@@ -7058,34 +7103,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes2.set(arena, state);
+    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes2.set(arena, state2);
     const start2 = performance.now();
     let last = 0;
-    state.resume = () => {
-      cancelAnimationFrame(state.frame);
-      state.frame = 0;
-      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
-      if (state.motion.matches) {
-        state.renderer.render(0);
+    state2.resume = () => {
+      cancelAnimationFrame(state2.frame);
+      state2.frame = 0;
+      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
+      if (state2.motion.matches) {
+        state2.renderer.render(0);
         return;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearThessalyScene(arena);
         return;
       }
-      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state.renderer.render((now - start2) / 1e3);
+        state2.renderer.render((now - start2) / 1e3);
         last = now;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state.resume);
-    state.motion.addEventListener("change", state.resume);
+    document.addEventListener("visibilitychange", state2.resume);
+    state2.motion.addEventListener("change", state2.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -7094,27 +7139,27 @@
     env.src = assetUrl("assets/raids/thessaly/arena-storm.png");
     for (const [key, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist", hair: "hair-wisps", body: "body-clouds" })) textures[key].src = assetUrl("assets/raids/thessaly/" + name + ".png");
     loaded.then(([background, ...images]) => {
-      if (state.disposed || !arena.isConnected) return;
+      if (state2.disposed || !arena.isConnected) return;
       arena.setAttribute("data-iw-raid-scene", "thessaly");
-      state.stage.setAttribute("data-iw-raid-boss-stage", "thessaly");
+      state2.stage.setAttribute("data-iw-raid-boss-stage", "thessaly");
       const assets = Object.fromEntries(Object.keys(textures).map((key, index) => [key, images[index]]));
       try {
-        state.renderer = createThessalyRenderer(canvas, background, assets, { maxWidth: 1440 });
+        state2.renderer = createThessalyRenderer(canvas, background, assets, { maxWidth: 1440 });
       } catch {
       }
-      if (!state.renderer) return;
+      if (!state2.renderer) return;
       art2.setAttribute("data-iw-animated", "");
-      state.renderer.render(0);
+      state2.renderer.render(0);
       if (typeof IntersectionObserver === "function") {
-        state.visible = new IntersectionObserver(([entry2]) => {
-          state.onScreen = entry2.isIntersecting;
-          state.resume();
+        state2.visible = new IntersectionObserver(([entry2]) => {
+          state2.onScreen = entry2.isIntersecting;
+          state2.resume();
         });
-        state.visible.observe(arena);
+        state2.visible.observe(arena);
       }
-      state.resume();
+      state2.resume();
     }).catch(() => {
-      if (!state.disposed) clearThessalyScene(arena);
+      if (!state2.disposed) clearThessalyScene(arena);
     });
   }
   function clearThessalyScenes(root) {
@@ -7381,7 +7426,7 @@
       }
       ctx.restore();
     }
-    function render2(seconds, { ambient = true, clouds: clouds2 = true, mist: mist2 = true, shroud = true, curse = true, embers = true, foreground = true } = {}) {
+    function render3(seconds, { ambient = true, clouds: clouds2 = true, mist: mist2 = true, shroud = true, curse = true, embers = true, foreground = true } = {}) {
       if (destroyed) return { t: 0 };
       const t = Math.round((seconds % MORWENNA_PERIOD + MORWENNA_PERIOD) % MORWENNA_PERIOD * 1e9) / 1e9;
       const phase2 = t / MORWENNA_PERIOD;
@@ -7399,7 +7444,7 @@
       }
       return { t };
     }
-    return { render: render2, period: MORWENNA_PERIOD, destroy() {
+    return { render: render3, period: MORWENNA_PERIOD, destroy() {
       if (destroyed) return;
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
@@ -7414,17 +7459,17 @@
     return createMorwennaArenaScene(canvas, { background: environment, ...assets, ...options });
   }
   function clearMorwennaScene(arena) {
-    const state = scenes3.get(arena);
-    if (!state) return;
-    state.disposed = true;
-    cancelAnimationFrame(state.frame);
-    state.visible?.disconnect();
-    state.renderer?.destroy();
-    state.renderer = null;
-    document.removeEventListener("visibilitychange", state.resume);
-    state.motion.removeEventListener("change", state.resume);
-    state.art.remove();
-    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state2 = scenes3.get(arena);
+    if (!state2) return;
+    state2.disposed = true;
+    cancelAnimationFrame(state2.frame);
+    state2.visible?.disconnect();
+    state2.renderer?.destroy();
+    state2.renderer = null;
+    document.removeEventListener("visibilitychange", state2.resume);
+    state2.motion.removeEventListener("change", state2.resume);
+    state2.art.remove();
+    state2.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes3.delete(arena);
   }
@@ -7449,34 +7494,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes3.set(arena, state);
+    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes3.set(arena, state2);
     const start2 = performance.now();
     let last = 0;
-    state.resume = () => {
-      cancelAnimationFrame(state.frame);
-      state.frame = 0;
-      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
-      if (state.motion.matches) {
-        state.renderer.render(0);
+    state2.resume = () => {
+      cancelAnimationFrame(state2.frame);
+      state2.frame = 0;
+      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
+      if (state2.motion.matches) {
+        state2.renderer.render(0);
         return;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearMorwennaScene(arena);
         return;
       }
-      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state.renderer.render((now - start2) / 1e3);
+        state2.renderer.render((now - start2) / 1e3);
         last = now;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state.resume);
-    state.motion.addEventListener("change", state.resume);
+    document.addEventListener("visibilitychange", state2.resume);
+    state2.motion.addEventListener("change", state2.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -7485,33 +7530,33 @@
     env.src = assetUrl("assets/raids/morwenna/arena.png");
     for (const [key, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key].src = assetUrl("assets/raids/morwenna/" + name + ".png");
     loaded.then(([background, clouds, mist]) => {
-      if (state.disposed || !arena.isConnected) return;
+      if (state2.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
-      if (arena.querySelector(bossSelector2) !== boss || boss.parentElement !== state.stage || nativeBackground2 && !/morwenna/i.test(nativeBackground2)) {
+      if (arena.querySelector(bossSelector2) !== boss || boss.parentElement !== state2.stage || nativeBackground2 && !/morwenna/i.test(nativeBackground2)) {
         clearMorwennaScene(arena);
         return;
       }
       arena.setAttribute("data-iw-raid-scene", "morwenna");
-      state.stage.setAttribute("data-iw-raid-boss-stage", "morwenna");
+      state2.stage.setAttribute("data-iw-raid-boss-stage", "morwenna");
       try {
-        state.renderer = createMorwennaRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
-        state.renderer.render(0);
+        state2.renderer = createMorwennaRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
+        state2.renderer.render(0);
       } catch {
-        state.renderer?.destroy();
-        state.renderer = null;
+        state2.renderer?.destroy();
+        state2.renderer = null;
         return;
       }
       art2.setAttribute("data-iw-animated", "");
       if (typeof IntersectionObserver === "function") {
-        state.visible = new IntersectionObserver(([entry2]) => {
-          state.onScreen = entry2.isIntersecting;
-          state.resume();
+        state2.visible = new IntersectionObserver(([entry2]) => {
+          state2.onScreen = entry2.isIntersecting;
+          state2.resume();
         });
-        state.visible.observe(arena);
+        state2.visible.observe(arena);
       }
-      state.resume();
+      state2.resume();
     }).catch(() => {
-      if (!state.disposed) clearMorwennaScene(arena);
+      if (!state2.disposed) clearMorwennaScene(arena);
     });
   }
   function clearMorwennaScenes(root) {
@@ -7738,7 +7783,7 @@
       }
       ctx.restore();
     }
-    function render2(seconds, { clouds: clouds2 = true, mist: mist2 = true, boss = true, snow = true, foreground = true, ambient = true } = {}) {
+    function render3(seconds, { clouds: clouds2 = true, mist: mist2 = true, boss = true, snow = true, foreground = true, ambient = true } = {}) {
       if (destroyed) return { t: 0 };
       const t = Math.round((seconds % GRIMJAW_PERIOD + GRIMJAW_PERIOD) % GRIMJAW_PERIOD * 1e9) / 1e9, phase2 = t / GRIMJAW_PERIOD;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -7754,7 +7799,7 @@
       }
       return { t };
     }
-    return { render: render2, period: GRIMJAW_PERIOD, destroy() {
+    return { render: render3, period: GRIMJAW_PERIOD, destroy() {
       if (destroyed) return;
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
@@ -7769,17 +7814,17 @@
     return createGrimjawArenaScene(canvas, { background: environment, ...assets, ...options });
   }
   function clearGrimjawScene(arena) {
-    const state = scenes4.get(arena);
-    if (!state) return;
-    state.disposed = true;
-    cancelAnimationFrame(state.frame);
-    state.visible?.disconnect();
-    state.renderer?.destroy();
-    state.renderer = null;
-    document.removeEventListener("visibilitychange", state.resume);
-    state.motion.removeEventListener("change", state.resume);
-    state.art.remove();
-    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state2 = scenes4.get(arena);
+    if (!state2) return;
+    state2.disposed = true;
+    cancelAnimationFrame(state2.frame);
+    state2.visible?.disconnect();
+    state2.renderer?.destroy();
+    state2.renderer = null;
+    document.removeEventListener("visibilitychange", state2.resume);
+    state2.motion.removeEventListener("change", state2.resume);
+    state2.art.remove();
+    state2.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes4.delete(arena);
   }
@@ -7804,34 +7849,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes4.set(arena, state);
+    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes4.set(arena, state2);
     const start2 = performance.now();
     let last = 0;
-    state.resume = () => {
-      cancelAnimationFrame(state.frame);
-      state.frame = 0;
-      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
-      if (state.motion.matches) {
-        state.renderer.render(0);
+    state2.resume = () => {
+      cancelAnimationFrame(state2.frame);
+      state2.frame = 0;
+      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
+      if (state2.motion.matches) {
+        state2.renderer.render(0);
         return;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearGrimjawScene(arena);
         return;
       }
-      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state.renderer.render((now - start2) / 1e3);
+        state2.renderer.render((now - start2) / 1e3);
         last = now;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state.resume);
-    state.motion.addEventListener("change", state.resume);
+    document.addEventListener("visibilitychange", state2.resume);
+    state2.motion.addEventListener("change", state2.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -7840,33 +7885,33 @@
     env.src = assetUrl("assets/raids/grimjaw/arena.png");
     for (const [key, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key].src = assetUrl("assets/raids/grimjaw/" + name + ".png");
     loaded.then(([background, clouds, mist]) => {
-      if (state.disposed || !arena.isConnected) return;
+      if (state2.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
-      if (arena.querySelector(bossSelector3) !== boss || boss.parentElement !== state.stage || nativeBackground2 && !/grimjaw/i.test(nativeBackground2)) {
+      if (arena.querySelector(bossSelector3) !== boss || boss.parentElement !== state2.stage || nativeBackground2 && !/grimjaw/i.test(nativeBackground2)) {
         clearGrimjawScene(arena);
         return;
       }
       arena.setAttribute("data-iw-raid-scene", "grimjaw");
-      state.stage.setAttribute("data-iw-raid-boss-stage", "grimjaw");
+      state2.stage.setAttribute("data-iw-raid-boss-stage", "grimjaw");
       try {
-        state.renderer = createGrimjawRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
-        state.renderer.render(0);
+        state2.renderer = createGrimjawRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
+        state2.renderer.render(0);
       } catch {
-        state.renderer?.destroy();
-        state.renderer = null;
+        state2.renderer?.destroy();
+        state2.renderer = null;
         return;
       }
       art2.setAttribute("data-iw-animated", "");
       if (typeof IntersectionObserver === "function") {
-        state.visible = new IntersectionObserver(([entry2]) => {
-          state.onScreen = entry2.isIntersecting;
-          state.resume();
+        state2.visible = new IntersectionObserver(([entry2]) => {
+          state2.onScreen = entry2.isIntersecting;
+          state2.resume();
         });
-        state.visible.observe(arena);
+        state2.visible.observe(arena);
       }
-      state.resume();
+      state2.resume();
     }).catch(() => {
-      if (!state.disposed) clearGrimjawScene(arena);
+      if (!state2.disposed) clearGrimjawScene(arena);
     });
   }
   function clearGrimjawScenes(root) {
@@ -8094,7 +8139,7 @@
         plume(ctx, air[3], 0.54 - 0.72 * (u - 0.5), 0.68 + i * 0.1, 0.73, 0.045, 0.13 * fade2(u), -0.09);
       }
     }
-    function render2(seconds, { clouds = true, mist = true, ice: ice2 = true, water: water2 = true, snow: snow2 = true, foreground = true, ambient = true } = {}) {
+    function render3(seconds, { clouds = true, mist = true, ice: ice2 = true, water: water2 = true, snow: snow2 = true, foreground = true, ambient = true } = {}) {
       if (destroyed) return { t: 0 };
       const t = Math.round((seconds % SKARTH_PERIOD + SKARTH_PERIOD) % SKARTH_PERIOD * 1e9) / 1e9, phase2 = t / SKARTH_PERIOD;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -8118,7 +8163,7 @@
       }
       return { t };
     }
-    return { render: render2, period: SKARTH_PERIOD, destroy() {
+    return { render: render3, period: SKARTH_PERIOD, destroy() {
       if (destroyed) return;
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
@@ -8133,17 +8178,17 @@
     return createSkarthArenaScene(canvas, { background: environment, ...assets, ...options });
   }
   function clearSkarthScene(arena) {
-    const state = scenes5.get(arena);
-    if (!state) return;
-    state.disposed = true;
-    cancelAnimationFrame(state.frame);
-    state.visible?.disconnect();
-    state.renderer?.destroy();
-    state.renderer = null;
-    document.removeEventListener("visibilitychange", state.resume);
-    state.motion.removeEventListener("change", state.resume);
-    state.art.remove();
-    state.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state2 = scenes5.get(arena);
+    if (!state2) return;
+    state2.disposed = true;
+    cancelAnimationFrame(state2.frame);
+    state2.visible?.disconnect();
+    state2.renderer?.destroy();
+    state2.renderer = null;
+    document.removeEventListener("visibilitychange", state2.resume);
+    state2.motion.removeEventListener("change", state2.resume);
+    state2.art.remove();
+    state2.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes5.delete(arena);
   }
@@ -8168,34 +8213,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes5.set(arena, state);
+    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes5.set(arena, state2);
     const start2 = performance.now();
     let last = 0;
-    state.resume = () => {
-      cancelAnimationFrame(state.frame);
-      state.frame = 0;
-      if (!state.renderer || state.disposed || document.hidden || !state.onScreen) return;
-      if (state.motion.matches) {
-        state.renderer.render(0);
+    state2.resume = () => {
+      cancelAnimationFrame(state2.frame);
+      state2.frame = 0;
+      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
+      if (state2.motion.matches) {
+        state2.renderer.render(0);
         return;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearSkarthScene(arena);
         return;
       }
-      if (state.disposed || document.hidden || !state.onScreen || state.motion.matches) return;
+      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state.renderer.render((now - start2) / 1e3);
+        state2.renderer.render((now - start2) / 1e3);
         last = now;
       }
-      state.frame = requestAnimationFrame(tick);
+      state2.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state.resume);
-    state.motion.addEventListener("change", state.resume);
+    document.addEventListener("visibilitychange", state2.resume);
+    state2.motion.addEventListener("change", state2.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -8204,33 +8249,33 @@
     env.src = assetUrl("assets/raids/skarth/arena.png");
     for (const [key, name] of Object.entries({ atmosphere: "atmosphere", ice: "ice", water: "water" })) textures[key].src = assetUrl("assets/raids/skarth/" + name + ".png");
     loaded.then(([background, atmosphere, ice, water]) => {
-      if (state.disposed || !arena.isConnected) return;
+      if (state2.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
-      if (arena.querySelector(bossSelector4) !== boss || boss.parentElement !== state.stage || nativeBackground2 && !/skarth/i.test(nativeBackground2)) {
+      if (arena.querySelector(bossSelector4) !== boss || boss.parentElement !== state2.stage || nativeBackground2 && !/skarth/i.test(nativeBackground2)) {
         clearSkarthScene(arena);
         return;
       }
       arena.setAttribute("data-iw-raid-scene", "skarth");
-      state.stage.setAttribute("data-iw-raid-boss-stage", "skarth");
+      state2.stage.setAttribute("data-iw-raid-boss-stage", "skarth");
       try {
-        state.renderer = createSkarthRenderer(canvas, background, { atmosphere, ice, water }, { maxWidth: 1440 });
-        state.renderer.render(0);
+        state2.renderer = createSkarthRenderer(canvas, background, { atmosphere, ice, water }, { maxWidth: 1440 });
+        state2.renderer.render(0);
       } catch {
-        state.renderer?.destroy();
-        state.renderer = null;
+        state2.renderer?.destroy();
+        state2.renderer = null;
         return;
       }
       art2.setAttribute("data-iw-animated", "");
       if (typeof IntersectionObserver === "function") {
-        state.visible = new IntersectionObserver(([entry2]) => {
-          state.onScreen = entry2.isIntersecting;
-          state.resume();
+        state2.visible = new IntersectionObserver(([entry2]) => {
+          state2.onScreen = entry2.isIntersecting;
+          state2.resume();
         });
-        state.visible.observe(arena);
+        state2.visible.observe(arena);
       }
-      state.resume();
+      state2.resume();
     }).catch(() => {
-      if (!state.disposed) clearSkarthScene(arena);
+      if (!state2.disposed) clearSkarthScene(arena);
     });
   }
   function clearSkarthScenes(root) {
@@ -8558,15 +8603,15 @@
     return { shared, tank, resist };
   }
   function readOwnEffects(raider) {
-    const own2 = [];
+    const own5 = [];
     for (const span of raider.querySelectorAll("[title]")) {
       if (span.closest(`[${OWNED}]`)) continue;
       const title = norm3(span.title);
       const art2 = artFor(title);
       const num = /^(\d[\d,]*)\s+/.exec(title);
-      own2.push({ art: art2?.art || null, name: art2?.name || title, glyph: norm3(span.textContent), value: art2?.art === "shield" && num ? num[1] : "", title });
+      own5.push({ art: art2?.art || null, name: art2?.name || title, glyph: norm3(span.textContent), value: art2?.art === "shield" && num ? num[1] : "", title });
     }
-    return own2;
+    return own5;
   }
   function chip(effect, withLabel) {
     const node2 = el("span", "iw-raid-chip");
@@ -8574,9 +8619,9 @@
     if (effect.tone) node2.dataset.iwRaidTone = effect.tone;
     node2.title = effect.title || effect.name;
     node2.setAttribute("aria-label", `${effect.name}${effect.value ? ` ${effect.value}` : ""}`);
-    const icon2 = el("i", "iw-raid-chip-icon", effect.art ? null : effect.glyph || "•");
-    icon2.setAttribute("aria-hidden", "true");
-    node2.append(icon2);
+    const icon3 = el("i", "iw-raid-chip-icon", effect.art ? null : effect.glyph || "•");
+    icon3.setAttribute("aria-hidden", "true");
+    node2.append(icon3);
     if (withLabel) node2.append(el("span", "iw-raid-chip-name", effect.name));
     if (effect.value) node2.append(el("b", "iw-raid-chip-value", effect.value));
     return node2;
@@ -8664,8 +8709,8 @@
   }
   function buildTimer(spec) {
     const bar = el("div", "iw-raid-timer");
-    const icon2 = el("i", "iw-raid-chip-icon", spec.art ? null : spec.glyph || "•");
-    bar.append(el("i", "iw-raid-timer-fill"), icon2, el("span", "iw-raid-timer-name"), el("span", "iw-raid-timer-who"), el("b", "iw-raid-timer-secs"));
+    const icon3 = el("i", "iw-raid-chip-icon", spec.art ? null : spec.glyph || "•");
+    bar.append(el("i", "iw-raid-timer-fill"), icon3, el("span", "iw-raid-timer-name"), el("span", "iw-raid-timer-who"), el("b", "iw-raid-timer-secs"));
     return bar;
   }
   function setText3(node2, value) {
@@ -8732,13 +8777,13 @@
     event.preventDefault();
     event.stopPropagation();
     const head = event.currentTarget;
-    const panel = head.parentElement;
-    const dock = panel.parentElement;
+    const panel2 = head.parentElement;
+    const dock = panel2.parentElement;
     const arena = docks.get(dock);
-    const key = panel.dataset.iwRaidDock;
+    const key = panel2.dataset.iwRaidDock;
     const open = folds.get(key) !== true;
     folds.set(key, open);
-    syncDockPanel(panel, open);
+    syncDockPanel(panel2, open);
     if (!arena) return;
     decorateDock(arena);
     if (key !== "log") return;
@@ -8752,41 +8797,41 @@
     const arena = docks.get(event.currentTarget.closest(".iw-raid-dock"));
     gameSkills(arena)?.querySelector('[data-iw-guild-role="effects-toggle"]')?.click();
   }
-  function syncDockPanel(panel, open) {
-    set(panel, "data-iw-raid-fold", open ? "open" : "closed");
-    const head = panel.firstElementChild;
+  function syncDockPanel(panel2, open) {
+    set(panel2, "data-iw-raid-fold", open ? "open" : "closed");
+    const head = panel2.firstElementChild;
     set(head, "aria-expanded", String(open));
   }
   function dockPanel(key, title, glyph) {
-    const panel = el("section", "iw-raid-dock-panel");
-    panel.dataset.iwRaidDock = key;
+    const panel2 = el("section", "iw-raid-dock-panel");
+    panel2.dataset.iwRaidDock = key;
     const head = el("button", "iw-raid-dock-head");
     head.type = "button";
     if (glyph) head.append(el("span", "iw-raid-dock-glyph", glyph));
     head.append(el("span", "iw-raid-dock-title", title), el("i", "iw-raid-dock-chevron"));
     head.addEventListener("click", onDockHead);
-    panel.append(head, el("div", "iw-raid-dock-body"));
-    return panel;
+    panel2.append(head, el("div", "iw-raid-dock-body"));
+    return panel2;
   }
-  function fillLog(panel, arena) {
+  function fillLog(panel2, arena) {
     const lines = logLines(gameLog(arena));
     const sig = lines.join("\n");
-    if (dockSigs.get(panel) === sig) return;
-    dockSigs.set(panel, sig);
-    const body = panel.lastElementChild;
+    if (dockSigs.get(panel2) === sig) return;
+    dockSigs.set(panel2, sig);
+    const body = panel2.lastElementChild;
     const pinned = !body.firstChild || body.scrollHeight - body.scrollTop - body.clientHeight < 12;
     const top = body.scrollTop;
     body.replaceChildren(...(lines.length ? lines : ["The fight begins…"]).map((line) => el("p", "iw-raid-dock-line", line)));
     body.scrollTop = pinned ? body.scrollHeight : top;
   }
-  function fillSkills(panel, arena) {
+  function fillSkills(panel2, arena) {
     const skills = gameSkills(arena);
     const toggle = skills?.querySelector('[data-iw-guild-role="effects-toggle"]');
     const rows = skills ? [...skills.children].filter((c) => c !== toggle && !c.hasAttribute(OWNED)) : [];
     const sig = `${toggle ? norm3(toggle.textContent) : ""}\0${rows.map((r) => `${r.className}|${r.textContent}`).join("")}`;
-    if (dockSigs.get(panel) === sig) return;
-    dockSigs.set(panel, sig);
-    const body = panel.lastElementChild;
+    if (dockSigs.get(panel2) === sig) return;
+    dockSigs.set(panel2, sig);
+    const body = panel2.lastElementChild;
     const kids = rows.map((row) => {
       const copy = copyOf(row);
       for (const attr of ["data-iw-raid-fx-kind", "data-iw-raid-resist-step"]) if (row.hasAttribute(attr)) copy.setAttribute(attr, row.getAttribute(attr));
@@ -8821,14 +8866,14 @@
       dock.append(dockPanel("log", "Combat log"), dockPanel("skills", "Raid skills", "⚡"));
       docks.set(dock, arena);
     }
-    const anchor2 = dockAnchor(arena);
-    if (anchor2.nextElementSibling !== dock) anchor2.after(dock);
+    const anchor3 = dockAnchor(arena);
+    if (anchor3.nextElementSibling !== dock) anchor3.after(dock);
     const [logPanel, skillsPanel] = dock.children;
-    for (const [panel, present, fill] of [[logPanel, hasLog, fillLog], [skillsPanel, hasSkills, fillSkills]]) {
-      const open = folds.get(panel.dataset.iwRaidDock) === true;
-      set(panel, "hidden", present ? null : "");
-      syncDockPanel(panel, open);
-      if (present && open) fill(panel, arena);
+    for (const [panel2, present, fill] of [[logPanel, hasLog, fillLog], [skillsPanel, hasSkills, fillSkills]]) {
+      const open = folds.get(panel2.dataset.iwRaidDock) === true;
+      set(panel2, "hidden", present ? null : "");
+      syncDockPanel(panel2, open);
+      if (present && open) fill(panel2, arena);
     }
   }
   function pruneRaidDocks(root) {
@@ -8866,11 +8911,349 @@
     }
   }
 
-  // src/modules/GuildPanels.js
+  // src/modules/RaidLeaderboards.js
+  var OWNED2 = "data-iw-raid-lb";
+  var TTL_MS = 6e4;
+  var RETRY_MS2 = 2e4;
+  var DIFFICULTY_KEYS = [
+    { key: "easy", label: "Practice", test: /^practice\b/i },
+    { key: "normal", label: "Normal", test: /^normal\b/i },
+    { key: "hard", label: "Hard", test: /^hard\b/i }
+  ];
+  var BOSS_ORDER = ["ashmaw", "thessaly", "morwenna", "grimjaw", "skarth"];
+  function bossKeyOf(name) {
+    const m = new RegExp("^[^\\p{L}]*(\\p{L}+)", "u").exec(String(name || ""));
+    return m ? m[1].toLowerCase() : null;
+  }
+  function formatRaidTime(entry2) {
+    const ms = entry2?.elapsedMs ?? (entry2?.elapsedSec != null ? entry2.elapsedSec * 1e3 : null);
+    if (ms == null || !Number.isFinite(+ms)) return "—";
+    const cs = Math.max(0, Math.round(ms / 10));
+    return `${Math.floor(cs / 6e3)}:${String(Math.floor(cs % 6e3 / 100)).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}`;
+  }
+  var titleCase = (key) => key.charAt(0).toUpperCase() + key.slice(1);
+  var leagueOf2 = (path) => /^\/ssf(?:\/|$)/.test(path) ? "ssf" : "standard";
+  var board = null;
+  var nextRead2 = 0;
+  var request2 = null;
+  var listeners = /* @__PURE__ */ new Set();
+  function raidBoard() {
+    return board;
+  }
+  function refreshRaidBoard(onUpdate) {
+    if (onUpdate) listeners.add(onUpdate);
+    if (request2 || Date.now() < nextRead2 || document.visibilityState === "hidden") return;
+    const controller = new AbortController();
+    request2 = controller;
+    nextRead2 = Date.now() + TTL_MS;
+    const timeout = setTimeout(() => controller.abort(), 1e4);
+    fetch("/api/guild/raid/leaderboard", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: controller.signal,
+      headers: { "x-idleworlds-league": leagueOf2(location.pathname) }
+    }).then((response) => response.ok ? response.json() : Promise.reject(new Error("leaderboard unavailable"))).then((data) => {
+      if (!isRuntimeActive() || !data || typeof data.leaderboard !== "object") return;
+      board = data.leaderboard || {};
+      for (const fn of [...listeners]) fn();
+    }).catch(() => {
+      nextRead2 = Date.now() + RETRY_MS2;
+    }).finally(() => {
+      clearTimeout(timeout);
+      if (request2 === controller) request2 = null;
+    });
+  }
+  var panel = null;
+  var anchor2 = null;
+  var anchorEpoch2 = -1;
+  var chosenBoss = null;
+  var chosenDiff = "normal";
+  var signature2 = "";
+  function own2(tag, cls, text) {
+    const el2 = document.createElement(tag);
+    if (cls) el2.className = cls;
+    el2.setAttribute(OWNED2, "1");
+    if (text != null) el2.textContent = text;
+    return el2;
+  }
+  function onLeaderboards() {
+    return /^\/(?:ssf\/)?leaderboards\/?$/.test(location.pathname);
+  }
+  function findAnchor2() {
+    if (anchor2?.isConnected && anchorEpoch2 === getLayoutEpoch()) return anchor2;
+    const headings = [...document.querySelectorAll(".panel h2")].filter((h) => !h.closest(`[${OWNED2}], [role="dialog"], [data-iw-overlay]`) && /^leaderboards$/i.test(h.textContent.replace(/^[^\p{L}]+/u, "").trim()));
+    anchor2 = pickRendered(headings.map((h) => h.closest(".panel")).filter(Boolean));
+    anchorEpoch2 = getLayoutEpoch();
+    return anchor2;
+  }
+  function bossKeys() {
+    const keys = Object.keys(board || {});
+    return [...BOSS_ORDER.filter((k) => keys.includes(k)), ...keys.filter((k) => !BOSS_ORDER.includes(k)).sort()];
+  }
+  function tab(text, pressed, onClick, kind2) {
+    const button2 = own2("button", "iw-raid-lb-tab", text);
+    button2.type = "button";
+    button2.dataset.iwRaidLbTab = kind2;
+    button2.setAttribute("aria-pressed", String(pressed));
+    button2.addEventListener("click", (event) => {
+      event.preventDefault();
+      onClick();
+      render2(true);
+    });
+    return button2;
+  }
+  function render2(force = false) {
+    if (!panel) return;
+    const keys = bossKeys();
+    if (!chosenBoss || !keys.includes(chosenBoss)) chosenBoss = keys[0] || null;
+    const entries = chosenBoss && board?.[chosenBoss]?.[chosenDiff] || [];
+    const sig = JSON.stringify([!!board, keys, chosenBoss, chosenDiff, entries.slice(0, 10).map((e) => [e.sessionId, e.guildName, e.elapsedMs, e.elapsedSec, e.isPickup, e.isTestGuild])]);
+    if (!force && sig === signature2) return;
+    signature2 = sig;
+    const body = panel.querySelector(".iw-raid-lb-body");
+    const kids = [];
+    if (!board) {
+      kids.push(own2("p", "iw-raid-lb-note", "Loading raid leaderboard…"));
+    } else if (!keys.length) {
+      kids.push(own2("p", "iw-raid-lb-note", "No raid has been cleared yet."));
+    } else {
+      const bossTabs = own2("div", "iw-raid-lb-tabs");
+      bossTabs.dataset.iwRaidLbRow = "boss";
+      bossTabs.append(...keys.map((k) => tab(titleCase(k), k === chosenBoss, () => {
+        chosenBoss = k;
+      }, "boss")));
+      const diffTabs = own2("div", "iw-raid-lb-tabs");
+      diffTabs.dataset.iwRaidLbRow = "difficulty";
+      diffTabs.append(...DIFFICULTY_KEYS.map((d) => tab(d.label, d.key === chosenDiff, () => {
+        chosenDiff = d.key;
+      }, "difficulty")));
+      kids.push(bossTabs, diffTabs);
+      const label5 = DIFFICULTY_KEYS.find((d) => d.key === chosenDiff)?.label || chosenDiff;
+      if (!entries.length) {
+        kids.push(own2("p", "iw-raid-lb-note", `No guild has defeated ${titleCase(chosenBoss)} on ${label5} yet.`));
+      } else {
+        const list = own2("ol", "iw-raid-lb-list");
+        entries.slice(0, 10).forEach((entry2, i) => {
+          const row = own2("li", "iw-raid-lb-row");
+          row.dataset.iwRaidLbRank = String(i + 1);
+          const name = own2("span", "iw-raid-lb-name");
+          name.append(own2("span", "iw-raid-lb-rank", `#${i + 1}`), own2("span", "iw-raid-lb-guild", entry2.guildName || "Unknown"));
+          if (entry2.isPickup) name.append(own2("span", "iw-raid-lb-tag", "pickup"));
+          if (entry2.isTestGuild) name.append(own2("span", "iw-raid-lb-tag", "test"));
+          row.append(name, own2("span", "iw-raid-lb-time", formatRaidTime(entry2)));
+          list.append(row);
+        });
+        kids.push(list);
+      }
+    }
+    body.replaceChildren(...kids);
+  }
+  function reconcileRaidLeaderboards() {
+    if (!isRuntimeActive()) return;
+    const target = onLeaderboards() ? findAnchor2() : null;
+    if (!target) {
+      panel?.remove();
+      panel = null;
+      signature2 = "";
+      return;
+    }
+    if (!panel?.isConnected || panel.previousElementSibling !== target) {
+      panel?.remove();
+      panel = own2("section", "iw-raid-lb");
+      panel.dataset.iwUi = "section-frame";
+      panel.dataset.iwPanel = "raid-leaderboard";
+      panel.setAttribute("aria-label", "Raid leaderboards");
+      const head = own2("div", "iw-raid-lb-head");
+      const h2 = own2("h2", "iw-raid-lb-title", "⚔️ Raid Leaderboards");
+      h2.dataset.iwUi = "section-title";
+      head.append(h2, own2("span", "iw-raid-lb-sub", "Fastest clears"));
+      panel.append(head, own2("div", "iw-raid-lb-body"));
+      target.after(panel);
+      signature2 = "";
+    }
+    render2();
+    refreshRaidBoard(() => render2());
+  }
+  function clearRaidLeaderboards() {
+    panel?.remove();
+    panel = null;
+    anchor2 = null;
+    signature2 = "";
+    document.querySelectorAll(`[${OWNED2}]`).forEach((node2) => node2.remove());
+  }
+
+  // src/modules/LobbyPreview.js
+  var DUMMY2 = "data-iw-lobby-dummy";
+  var TEST2 = "data-iw-lobby-test";
+  var FULL_PARTY2 = 8;
+  var state = { invite: false, party: false, ready: false };
+  var ROSTER2 = [
+    { name: "Test Tank", guild: "Omen", skill: "Combat", lend: ["🎯", "Challenge"], ready: true },
+    { name: "Test Healer", guild: "Royal Flush", skill: "Spellcrafting", lend: ["✨", "Mend"], ready: true },
+    { name: "Test Warder", guild: "Omen", skill: "Jewelcrafting", lend: ["💠", "Ward"], ready: false },
+    { name: "Test Smith", guild: null, skill: "Smithing", lend: ["🛡️", "Fortify"], ready: true },
+    { name: "Test Weaver", guild: "Omen", skill: "Tailoring", lend: ["🧵", "Veil"], ready: false },
+    { name: "Test Miner", guild: "Royal Flush", skill: "Mining", lend: ["⛏️", "War Cry"], ready: true },
+    { name: "Test Alchemist", guild: "Omen", skill: "Alchemy", lend: ["🧪", "Cleanse"], ready: true },
+    { name: "Test Forester", guild: null, skill: "Woodcutting", lend: ["🩸", "Rend"], ready: false }
+  ];
+  function html(markup) {
+    const t = document.createElement("template");
+    t.innerHTML = markup.trim();
+    const node2 = t.content.firstElementChild;
+    node2.setAttribute(DUMMY2, "1");
+    return node2;
+  }
+  var esc3 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  var readyBadge = (ready) => ready ? '<span class="rounded border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">READY</span>' : '<span class="text-[11px] text-white/25">Not ready</span>';
+  var guestRow = (p) => html(`<div class="flex items-center justify-between gap-2 rounded-lg bg-sky-400/5 p-2"><div class="min-w-0"><button type="button" class="truncate text-left text-xs font-medium text-white hover:underline">${esc3(p.name)}</button><p class="truncate text-[10px] text-white/40">${p.guild ? `from ${esc3(p.guild)}` : "no guild"} · ${esc3(p.skill)} Lv70</p></div><span class="flex shrink-0 items-center gap-1">${readyBadge(p.ready)}</span></div>`);
+  var memberRow = (p) => html(`<div class="rounded-lg bg-white/5 p-2.5 space-y-2"><div class="flex items-center justify-between gap-2"><div class="flex min-w-0 items-center gap-1.5"><span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span><button type="button" class="truncate text-sm font-medium hover:underline underline-offset-2 text-white">${esc3(p.name)}</button><span class="shrink-0 text-[10px] text-amber-200/70" title="Guild Points earned in this guild (1 per day played)">⭐ 2</span></div><div class="flex shrink-0 items-center gap-1.5"><span class="rounded border px-1.5 py-0.5 text-[10px] font-medium border-white/15 text-white/40" title="Combat skill level">Combat 70</span></div></div><div class="flex flex-wrap items-center justify-between gap-2"><div class="min-w-[140px] flex-1"><div class="flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-400/10 px-2.5 py-1 text-sky-200"><span>${p.lend[0]}</span><span class="truncate text-xs font-semibold">${esc3(p.lend[1])}</span><span class="shrink-0 text-[10px] text-sky-300/60">${esc3(p.skill)} · Lv70</span></div></div><span class="flex shrink-0 items-center gap-1">${readyBadge(p.ready)}</span></div></div>`);
+  var waitingBlock = () => html(`<div class="rounded-lg bg-white/5 p-2 space-y-1"><p class="text-[10px] font-semibold text-white/70">Waiting for an answer (2)</p><div class="flex items-center justify-between gap-2 text-[10px]"><span class="truncate text-white/80">Test Invitee</span><span class="flex shrink-0 items-center gap-2"><span class="text-amber-200/80">invited 3m ago</span><button type="button" class="text-white/40 underline hover:text-white/70">cancel</button></span></div><div class="flex items-center justify-between gap-2 text-[10px]"><span class="truncate text-white/80">Another Invitee</span><span class="flex shrink-0 items-center gap-2"><span class="text-amber-200/80">invited 12m ago</span><button type="button" class="text-white/40 underline hover:text-white/70">cancel</button></span></div></div>`);
+  var inviteCard = () => html(`<div class="compact-panel p-3 space-y-2"><div class="flex items-center justify-between"><p class="text-[11px] font-semibold text-white">⚔️ Invite to your pickup group</p><span class="text-[10px] text-white/40">4/8</span></div><p class="text-[10px] text-white/40">Invite anyone in your league, guildless or from any guild.</p><div class="flex gap-2"><div class="relative flex-1"><input class="w-full rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder:text-white/30" placeholder="Display name (test)" autocomplete="off" value=""></div><button class="button-primary px-3 py-1.5 text-xs" disabled="">Invite</button></div></div>`);
+  function readyCheckCard() {
+    const card = html(`<div class="compact-panel p-3 space-y-2 border border-amber-300/50 bg-amber-950/30"><div class="flex items-center justify-between gap-2"><p class="text-sm font-semibold text-amber-100">⚔️ Ready check: Ashmaw Normal (test)</p><span class="text-xs tabular-nums text-amber-200">28s</span></div><p class="text-[11px] text-white/70">✅ Test Tank, Test Healer<span class="block text-white/50">⏳ Waiting on: you, Test Warder</span></p><div class="flex flex-wrap gap-2"><button class="button-primary px-4 py-1.5 text-xs">Confirm — I'm here!</button></div></div>`);
+    card.querySelector("button").addEventListener("click", (event) => {
+      event.preventDefault();
+      event.currentTarget.parentElement.replaceChildren(html(`<span class="text-[11px] text-emerald-300">You're confirmed. The fight starts when everyone is.</span>`));
+    });
+    return card;
+  }
+  function syncInvite(root) {
+    const dummies = [...root.querySelectorAll(`[${DUMMY2}][data-iw-lobby-kind="invite"]`)];
+    if (!state.invite) {
+      dummies.forEach((n) => n.remove());
+      return;
+    }
+    if (dummies.some((n) => n.isConnected)) return;
+    const real = root.querySelector('[data-iw-guild-card="form"]:not([data-iw-lobby-dummy])');
+    if (real && /^invite\b/i.test(real.textContent.replace(/^[^\p{L}]+/u, ""))) {
+      const block = waitingBlock();
+      block.dataset.iwLobbyKind = "invite";
+      real.append(block);
+      return;
+    }
+    const stack = root.querySelector('[data-iw-guild-card="prep"], [data-iw-guild-card="lend"]')?.parentElement;
+    if (!stack || stack === root) return;
+    const card = inviteCard();
+    card.dataset.iwLobbyKind = "invite";
+    card.append(waitingBlock());
+    stack.append(card);
+  }
+  function syncParty(root) {
+    const members = root.querySelector('[data-iw-guild-card="members"]');
+    const dummies = [...root.querySelectorAll(`[${DUMMY2}][data-iw-lobby-kind="party"]`)];
+    if (!members) {
+      dummies.forEach((n) => n.remove());
+      return;
+    }
+    const real0 = members.querySelector(`[data-iw-guild-role="guest"]:not([${DUMMY2}]), [data-iw-guild-role="member"]:not([${DUMMY2}])`);
+    const list = real0?.parentElement || members.querySelector('[data-iw-guild-role="guests"]');
+    if (!list) return;
+    const guests = !real0 || real0.getAttribute("data-iw-guild-role") === "guest";
+    const real = [...list.children].filter((c) => c.tagName === "DIV" && !c.hasAttribute(DUMMY2));
+    const want = state.party ? Math.max(0, Math.min(ROSTER2.length, FULL_PARTY2 - real.length)) : 0;
+    if (dummies.length === want && dummies.every((d) => d.parentElement === list)) return;
+    dummies.forEach((n) => n.remove());
+    for (const spec of ROSTER2.slice(0, want)) {
+      const row = guests ? guestRow(spec) : memberRow(spec);
+      row.dataset.iwLobbyKind = "party";
+      list.append(row);
+    }
+  }
+  function syncReady(root, head) {
+    const dummy = root.querySelector(`[${DUMMY2}][data-iw-lobby-kind="ready"]`);
+    if (!state.ready) {
+      dummy?.remove();
+      return;
+    }
+    if (dummy?.isConnected) return;
+    const card = readyCheckCard();
+    card.dataset.iwLobbyKind = "ready";
+    const bar = root.querySelector(`:scope > [${TEST2}="bar"]`);
+    (bar || head).after(card);
+  }
+  var TOGGLES2 = [
+    { key: "invite", text: "Pending invite", title: "Testing feature: show a pending invite" },
+    { key: "party", text: "Full party", title: "Testing feature: top the member list up to 8" },
+    { key: "ready", text: "Ready check", title: "Testing feature: show a ready-check card (no pop-up)" },
+    { key: "popup", text: "Pop-up", title: "Testing feature: show the ready-check pop-up" }
+  ];
+  var pressedOf = (key) => key === "popup" ? lobbyTestPopupOn() : state[key];
+  function syncBar(root, head, redecorate) {
+    let bar = root.querySelector(`:scope > [${TEST2}="bar"]`);
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.setAttribute(TEST2, "bar");
+      bar.setAttribute("role", "toolbar");
+      bar.setAttribute("aria-label", "Lobby test toggles");
+      const lead = document.createElement("span");
+      lead.setAttribute(TEST2, "label");
+      lead.textContent = "🧪 Test:";
+      bar.append(lead);
+      for (const spec of TOGGLES2) {
+        const button2 = document.createElement("button");
+        button2.type = "button";
+        button2.setAttribute(TEST2, spec.key);
+        button2.setAttribute("data-iw-guild-role", "test-toggle");
+        button2.title = spec.title;
+        button2.textContent = spec.text;
+        button2.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (spec.key === "popup") setLobbyTestPopup(!lobbyTestPopupOn(), () => redecorate());
+          else state[spec.key] = !state[spec.key];
+          redecorate();
+        });
+        bar.append(button2);
+      }
+    }
+    if (bar.previousElementSibling !== head) head.after(bar);
+    for (const button2 of bar.querySelectorAll("button")) {
+      const pressed = String(!!pressedOf(button2.getAttribute(TEST2)));
+      if (button2.getAttribute("aria-pressed") !== pressed) button2.setAttribute("aria-pressed", pressed);
+    }
+  }
+  function syncLobbyPreview(root, redecorate) {
+    const head = root.querySelector(':scope > [data-iw-guild-role="head"]');
+    const lobby = !!head && !!root.querySelector('[data-iw-guild-card="boss"]') && !root.querySelector(".raid-battle-backdrop");
+    if (!lobby) {
+      clearLobbyPreview(root);
+      return;
+    }
+    syncBar(root, head, redecorate);
+    syncInvite(root);
+    syncParty(root);
+    syncReady(root, head);
+  }
+  function clearLobbyPreview(root) {
+    if (!root) return;
+    root.querySelectorAll(`[${DUMMY2}], [${TEST2}="bar"]`).forEach((node2) => node2.remove());
+  }
+
+  // src/modules/RaidBossCard.js
+  var OWNED3 = "data-iw-boss-card-owned";
+  var CARD = "data-iw-boss-card";
+  var SRC = "data-iw-boss-card-src";
+  var ATTRS = [CARD, SRC];
+  var BOSSES2 = /* @__PURE__ */ new Set(["ashmaw", "thessaly", "morwenna", "grimjaw", "skarth"]);
   var norm4 = (value) => String(value || "").replace(/\s+/g, " ").trim();
-  var label2 = (value) => norm4(value).replace(/^[^\p{L}\p{N}]+/u, "");
-  var ROLE = "data-iw-guild-role";
-  var ATTRS = ["data-iw-guild", "data-iw-guild-card", ROLE, "data-iw-guild-tone", "data-iw-guild-state"];
+  var cap = (value) => value ? value[0].toUpperCase() + value.slice(1) : value;
+  var STATS = /^ATK ([\d,]+) • DEF ([\d,]+) • HP ([\d,]+) • (\S+) ([\p{L}]+)-based abilities \(([^)]+)\)$/u;
+  var REQ = /^Requires Combat (\d+)\+ to join\. Wants (\d+) ([\p{L}]+) resist total to mitigate most ([\p{L}]+) damage — a level (\d+) ([\p{L}]+) lend covers (\d+) of that, bring the rest on gear\.$/u;
+  var CLAIMED = /^✅ You['’]ve claimed (.+?)['’]s loot this week\. You can keep raiding it for leaderboard times, but it won['’]t drop loot for you again until the weekly reset in ([^.]+)\.\s*Weekly reset: (.+?), same time for everyone\.$/u;
+  var AVAILABLE = /^🎁 Loot available this week\. Your first (.+?) clear on Normal or Hard rolls loot for everyone in the group, alive or not\. After that it['’]s claimed until the weekly reset in ([^.]+)\.\s*Weekly reset: (.+?), same time for everyone\.$/u;
+  var TIP = "Tip: bring a tank (Combat lend → Challenge) so the big single hits land on them, plus healers and Cleanse. Fortify (Smithing) makes tanking much safer.";
+  var TACTICS = {
+    ashmaw: { roles: [1, 2, 2, 3], tip: [["Watch out for "], ["Cinderstorm", 1], [": only "], ["Ward", 1], [" mitigates it, boosting resistances raid-wide. "], ["Veil", 1], [" helps dodge "], ["Claw Rake", 1], ["."]] },
+    thessaly: { roles: [1, 2, 2, 3], tip: [["Watch out for "], ["Stormsurge", 1], [": it hits harder the more max HP you have. "], ["Ward", 1], [" boosts lightning resist raid-wide; "], ["Cleanse", 1], [" Voltaic Wound before it jumps."]] },
+    morwenna: { roles: [1, 2, 3, 2], tip: [["Watch out for "], ["Soulrend Mark", 1], [": "], ["Cleanse", 1], [" it before it expires, or the marked raider dies and the raid takes 35% of max HP. Only "], ["Ward", 1], [" mitigates Hollow Wave."]] },
+    grimjaw: { roles: [2, 2, 2, 2], tip: [["Watch out for "], ["Soul Anchor", 1], [": 2 stacks kill the tank outright, so swap "], ["Challenge", 1], [" to the second tank before it reapplies. Only "], ["Ward", 1], [" mitigates Absolute Zero."]] },
+    skarth: { roles: [1, 2, 2, 3], tip: [["Watch out for "], ["Blizzard", 1], [": only "], ["Ward", 1], [" mitigates it. "], ["Cleanse", 1], [" Frostbite before it runs out, or it jumps to another raider."]] }
+  };
+  var ROLES = [["Tank", "Tanks", "combat", null], ["Healer", "Healers", "spellcrafting", null], ["Support", "Support", "jewelcrafting", null], ["DPS", "DPS", null, "⚔"]];
+  var sigs = /* @__PURE__ */ new WeakMap();
+  var lastCard = null;
   function mark3(el2, key, value) {
     if (!el2) return;
     if (value == null) {
@@ -8879,8 +9262,504 @@
     }
     if (el2.getAttribute(key) !== value) el2.setAttribute(key, value);
   }
-  var role = (el2, value) => mark3(el2, ROLE, value);
-  function toneOf2(el2) {
+  function own3(tag, cls, text) {
+    const el2 = document.createElement(tag);
+    if (cls) el2.className = cls;
+    el2.setAttribute(OWNED3, "1");
+    if (text != null) el2.textContent = text;
+    return el2;
+  }
+  function toneOf2(span) {
+    const cls = String(span?.className || "");
+    if (/(?:^|\s)text-(?:rose|red)-/.test(cls)) return "hard";
+    if (/(?:^|\s)text-(?:emerald|green)-/.test(cls)) return "easy";
+    return null;
+  }
+  function icon2(skill) {
+    const el2 = own3("span", "iw-bc-icon");
+    el2.setAttribute("aria-hidden", "true");
+    el2.dataset.iwBcSkill = skill;
+    return el2;
+  }
+  function badge(skill, glyph) {
+    if (skill) return icon2(skill);
+    const el2 = own3("span", "iw-bc-glyph", glyph);
+    el2.setAttribute("aria-hidden", "true");
+    return el2;
+  }
+  function chip2(labelText2, value, tone2) {
+    const el2 = own3("span", "iw-bc-stat");
+    const v = own3("b", "iw-bc-stat-value", value);
+    if (tone2) v.dataset.iwBcTone = tone2;
+    el2.append(own3("span", "iw-bc-stat-label", labelText2), v);
+    return el2;
+  }
+  function tile({ skill, glyph, labelText: labelText2, value, sub, title, kind: kind2 }) {
+    const el2 = own3("div", "iw-bc-tile");
+    el2.title = title;
+    if (kind2) el2.dataset.iwBcKind = kind2;
+    el2.append(badge(skill, glyph));
+    const body = own3("div", "iw-bc-tile-body");
+    body.append(own3("span", "iw-bc-tile-label", labelText2), own3("span", "iw-bc-tile-value", value));
+    if (sub) body.append(own3("span", "iw-bc-tile-sub", sub));
+    el2.append(body);
+    return el2;
+  }
+  function readLines(card) {
+    const out = { stats: null, req: null, tip: null, notice: null };
+    for (const div of card.querySelectorAll(':scope > div[data-iw-guild-role="notice"]')) {
+      const text = norm4(div.textContent);
+      if (CLAIMED.test(text) || AVAILABLE.test(text)) {
+        out.notice = div;
+        break;
+      }
+    }
+    for (const p of card.querySelectorAll(":scope > p")) {
+      const text = norm4(p.textContent);
+      if (!out.stats && /^ATK\b/.test(text)) out.stats = p;
+      else if (!out.req && /^Requires Combat\b/.test(text)) out.req = p;
+      else if (!out.tip && /^Tip:/.test(text)) out.tip = p;
+    }
+    return out;
+  }
+  function buildStats(p) {
+    const m = p && STATS.exec(norm4(p.textContent));
+    if (!m) return null;
+    const [, atk, def, hp, glyph, element, abilities] = m;
+    const spans = p.querySelectorAll(":scope > span");
+    const strip = own3("div", "iw-bc-stats");
+    strip.title = norm4(p.textContent);
+    strip.append(chip2("ATK", atk, toneOf2(spans[0])), chip2("DEF", def), chip2("HP", hp, toneOf2(spans[1])));
+    const kind2 = own3("span", "iw-bc-element");
+    kind2.append(
+      own3("b", "iw-bc-element-name", `${glyph} ${cap(element)}`),
+      own3("span", "iw-bc-element-list", abilities.split(/\s*,\s*/).join(" · "))
+    );
+    strip.append(kind2);
+    return strip;
+  }
+  function buildRequirements(p, glyph) {
+    const m = p && REQ.exec(norm4(p.textContent));
+    if (!m) return null;
+    const [, combat, resist, element] = m;
+    const sentence = norm4(p.textContent);
+    const row = own3("div", "iw-bc-tiles");
+    row.append(
+      tile({ skill: "combat", labelText: "To join", value: `Combat ${combat}+`, title: sentence }),
+      tile({
+        glyph: glyph || "🛡️",
+        labelText: "Recommended",
+        value: `${resist} ${cap(element)} resist`,
+        sub: `mitigates most ${element} damage`,
+        title: sentence,
+        kind: "advice"
+      })
+    );
+    return row;
+  }
+  function buildTactics(p, key) {
+    const plan = TACTICS[key];
+    if (!p || !plan || norm4(p.textContent) !== TIP) return null;
+    const box = own3("div", "iw-bc-tactics");
+    box.title = TIP;
+    box.append(own3("span", "iw-bc-tactics-label", `${cap(key)}: Recommended Team Loadout`));
+    const roles = own3("div", "iw-bc-roles");
+    ROLES.forEach(([one, many, skill, glyph], i) => {
+      const n = plan.roles[i];
+      const el2 = own3("span", "iw-bc-role");
+      el2.append(badge(skill, glyph), own3("b", "iw-bc-role-count", String(n)), own3("span", null, n === 1 ? one : many));
+      roles.append(el2);
+    });
+    const tip = own3("p", "iw-bc-tip");
+    tip.append(own3("b", "iw-bc-tip-label", "Tip:"), " ", ...plan.tip.map(([text, bold]) => bold ? own3("b", null, text) : text));
+    box.append(roles, tip);
+    return box;
+  }
+  function buildLoot(div) {
+    const text = div && norm4(div.textContent);
+    const claimed = text && CLAIMED.exec(text);
+    const open = !claimed && text && AVAILABLE.exec(text);
+    if (!claimed && !open) return null;
+    const [, , countdown, reset] = claimed || open;
+    const bar = own3("div", "iw-bc-loot");
+    bar.title = text;
+    bar.dataset.iwBcLoot = claimed ? "claimed" : "available";
+    const tone2 = div.getAttribute("data-iw-guild-tone");
+    if (tone2) bar.dataset.iwBcTone = tone2;
+    const when = own3("span", "iw-bc-loot-when");
+    when.append(
+      own3("span", "iw-bc-loot-label", claimed ? "Loot again in" : "Resets in"),
+      own3("b", "iw-bc-loot-count", countdown),
+      own3("span", "iw-bc-loot-reset", `${reset}, same for everyone`)
+    );
+    bar.append(
+      own3("span", "iw-bc-loot-state", claimed ? "✅ Loot claimed this week" : "🎁 Loot available this week"),
+      own3("span", "iw-bc-loot-rule", claimed ? "Repeat runs count for leaderboard times only, no loot." : `Your first ${open[1]} clear on Normal or Hard rolls loot for the whole group, alive or not.`),
+      when
+    );
+    return bar;
+  }
+  function place(anchor3, node2) {
+    if (anchor3.nextElementSibling !== node2) anchor3.after(node2);
+  }
+  function setPart(card, cls, anchor3, node2, src, srcKey) {
+    const old = card.querySelector(`:scope > .${cls}[${OWNED3}]`);
+    if (!node2) {
+      old?.remove();
+      mark3(src, SRC, null);
+      return;
+    }
+    if (old) old.replaceWith(node2);
+    place(anchor3, node2);
+    mark3(src, SRC, srcKey);
+  }
+  function ensureArt2(card, name, key) {
+    let art2 = card.querySelector(`:scope > .iw-bc-art[${OWNED3}]`);
+    if (!art2) {
+      art2 = own3("div", "iw-bc-art");
+      art2.setAttribute("aria-hidden", "true");
+      art2.append(own3("span", "iw-bc-portrait"));
+    }
+    if (art2.dataset.iwBcBoss !== key) art2.dataset.iwBcBoss = key;
+    if (name.previousElementSibling !== art2) name.before(art2);
+  }
+  function decorateBossCard(root) {
+    const card = root?.querySelector('[data-iw-guild-card="boss"]');
+    if (card) decorateCard(card);
+  }
+  function refreshBossCardText(parents) {
+    if (!lastCard?.isConnected) return;
+    for (const parent of parents) {
+      if (parent && lastCard.contains(parent) && !parent.closest(`[${OWNED3}]`)) {
+        decorateCard(lastCard);
+        return;
+      }
+    }
+  }
+  function decorateCard(card) {
+    lastCard = card;
+    const name = card.querySelector(':scope > [data-iw-guild-role="boss-name"]');
+    const selected = card.querySelector('[data-iw-guild-role="boss-tab"][data-iw-guild-state="selected"]');
+    const key = bossKeyOf(selected?.title || name?.textContent);
+    if (!name || !BOSSES2.has(key)) {
+      clearBossCard(card);
+      return;
+    }
+    const lines = readLines(card);
+    const spans = lines.stats ? [...lines.stats.querySelectorAll(":scope > span")].map((s) => s.className).join("|") : "";
+    const sig = [
+      key,
+      norm4(lines.stats?.textContent),
+      spans,
+      norm4(lines.req?.textContent),
+      norm4(lines.tip?.textContent),
+      norm4(lines.notice?.textContent),
+      lines.notice?.getAttribute("data-iw-guild-tone") || ""
+    ].join("\0");
+    const owned3 = card.querySelectorAll(`:scope > [${OWNED3}]`).length;
+    if (sigs.get(card) === sig && owned3 && card.getAttribute(CARD) === key) {
+      const art2 = card.querySelector(`:scope > .iw-bc-art[${OWNED3}]`);
+      if (art2 && name.previousElementSibling !== art2) name.before(art2);
+      for (const [cls, src] of [["iw-bc-stats", lines.stats], ["iw-bc-tiles", lines.req], ["iw-bc-tactics", lines.tip], ["iw-bc-loot", lines.notice]]) {
+        const node2 = card.querySelector(`:scope > .${cls}[${OWNED3}]`);
+        if (node2 && src) place(src, node2);
+      }
+      return;
+    }
+    sigs.set(card, sig);
+    mark3(card, CARD, key);
+    ensureArt2(card, name, key);
+    setPart(card, "iw-bc-stats", lines.stats, buildStats(lines.stats), lines.stats, "stats");
+    const glyph = STATS.exec(norm4(lines.stats?.textContent))?.[4];
+    setPart(card, "iw-bc-tiles", lines.req, buildRequirements(lines.req, glyph), lines.req, "req");
+    setPart(card, "iw-bc-tactics", lines.tip, buildTactics(lines.tip, key), lines.tip, "tip");
+    setPart(card, "iw-bc-loot", lines.notice, buildLoot(lines.notice), lines.notice, "notice");
+    for (const el2 of card.querySelectorAll(`:scope > [${SRC}="notice"]`)) if (el2 !== lines.notice) mark3(el2, SRC, null);
+  }
+  function clearBossCard(root) {
+    if (!root) return;
+    if (lastCard && (root === lastCard || root.contains?.(lastCard))) lastCard = null;
+    root.querySelectorAll(`[${OWNED3}]`).forEach((node2) => node2.remove());
+    for (const attr of ATTRS) {
+      if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
+      root.querySelectorAll(`[${attr}]`).forEach((node2) => node2.removeAttribute(attr));
+    }
+  }
+
+  // src/modules/GuildLobby.js
+  var OWNED4 = "data-iw-guild-lobby-owned";
+  var SLOT = "data-iw-guild-slot";
+  var WRAP = "data-iw-guild-wrap";
+  var LAYOUT = "data-iw-guild-layout";
+  var ATTRS2 = [SLOT, WRAP, LAYOUT, "data-iw-guild-record"];
+  var norm5 = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  var label2 = (value) => norm5(value).replace(/^[^\p{L}\p{N}]+/u, "");
+  function mark4(el2, key, value) {
+    if (!el2) return;
+    if (value == null) {
+      if (el2.hasAttribute(key)) el2.removeAttribute(key);
+      return;
+    }
+    if (el2.getAttribute(key) !== value) el2.setAttribute(key, value);
+  }
+  function own4(tag, cls, text) {
+    const el2 = document.createElement(tag);
+    if (cls) el2.className = cls;
+    el2.setAttribute(OWNED4, "1");
+    if (text != null) el2.textContent = text;
+    return el2;
+  }
+  function titleOf(card) {
+    return label2(card.querySelector('[data-iw-guild-role="card-title"], p')?.textContent);
+  }
+  function slotOf(card) {
+    const kind2 = card.getAttribute("data-iw-guild-card");
+    const title = titleOf(card);
+    if (kind2 === "boss" || kind2 === "leaderboard" || kind2 === "members" || kind2 === "lend" || kind2 === "prep" || kind2 === "chat" || kind2 === "ready-check") return kind2;
+    if (kind2 === "ready") return "start";
+    if (kind2 === "form" && /^invite\b/i.test(title)) return "invite";
+    if (/^raid loadout$/i.test(title)) return "loadout";
+    if (/^my raid history$/i.test(title)) return "history";
+    if (card.querySelector('[data-iw-guild-role="start"], [data-iw-guild-role="ready-toggle"]')) return "start";
+    return "other";
+  }
+  var lastRoot = null;
+  function decorateLayout(root) {
+    const boss = root.querySelector('[data-iw-guild-card="boss"]');
+    const left = boss?.parentElement;
+    const columns = left?.parentElement;
+    const lobby = !!(boss && left && columns && left !== root && columns.parentElement === root);
+    mark4(root, LAYOUT, lobby ? "lobby" : null);
+    if (!lobby) {
+      for (const el2 of root.querySelectorAll(`[${WRAP}], [${SLOT}]`)) {
+        mark4(el2, WRAP, null);
+        mark4(el2, SLOT, null);
+      }
+      return;
+    }
+    const wraps = /* @__PURE__ */ new Set([left, columns]);
+    const cards = [...root.querySelectorAll("[data-iw-guild-card]")].filter((c) => !c.parentElement?.closest("[data-iw-guild-card]"));
+    for (const card of cards) {
+      const slot = slotOf(card);
+      mark4(card, SLOT, slot);
+      for (let p = card.parentElement; p && p !== root; p = p.parentElement) wraps.add(p);
+    }
+    for (const el2 of root.querySelectorAll(`[${WRAP}]`)) if (!wraps.has(el2)) mark4(el2, WRAP, null);
+    for (const el2 of wraps) mark4(el2, WRAP, "1");
+    for (const child of root.children) {
+      if (child.hasAttribute(OWNED4) || child.hasAttribute(WRAP) || child.hasAttribute("data-iw-guild-card")) continue;
+      const after = !!(columns.compareDocumentPosition(child) & Node.DOCUMENT_POSITION_FOLLOWING);
+      mark4(child, SLOT, after ? "footer" : null);
+    }
+  }
+  function decorateRecords(root) {
+    const boss = root.querySelector('[data-iw-guild-card="boss"]');
+    const row = boss?.querySelector('[data-iw-guild-role="difficulties"]');
+    let records = boss?.querySelector(`:scope .iw-guild-records[${OWNED4}]`);
+    if (!row) {
+      records?.remove();
+      return;
+    }
+    const selected = boss.querySelector('[data-iw-guild-role="boss-tab"][data-iw-guild-state="selected"]');
+    const key = bossKeyOf(selected?.title || boss.querySelector('[data-iw-guild-role="boss-name"]')?.textContent);
+    const board2 = raidBoard();
+    const pills = [...row.querySelectorAll('[data-iw-guild-role="difficulty"]')];
+    const cells = pills.map((pill) => {
+      const diff = DIFFICULTY_KEYS.find((d) => d.test.test(label2(pill.textContent)));
+      const best = diff && key && board2 ? board2[key]?.[diff.key]?.[0] : null;
+      return {
+        text: best ? `🏆 ${formatRaidTime(best)} · ${best.guildName}` : board2 ? "No clear yet" : "…",
+        title: best ? `${diff.label} record: ${best.guildName} · ${formatRaidTime(best)}` : `${diff?.label || ""} record`
+      };
+    });
+    const sig = JSON.stringify(cells);
+    if (records && records.previousElementSibling === row && records.dataset.sig === sig) return;
+    if (!records) {
+      records = own4("div", "iw-guild-records");
+      records.setAttribute("aria-label", "Record times");
+    }
+    if (records.previousElementSibling !== row) row.after(records);
+    records.dataset.sig = sig;
+    records.replaceChildren(...cells.map((c) => {
+      const cell = own4("span", "iw-guild-record", c.text);
+      cell.title = c.title;
+      return cell;
+    }));
+  }
+  var dismissed = /* @__PURE__ */ new WeakSet();
+  var popup = null;
+  var popupCard = null;
+  var testPopup = null;
+  var TEST_SECONDS = 30;
+  function readyCheckFor(root) {
+    const card = root.querySelector('[data-iw-guild-card="ready-check"]:not([data-iw-lobby-dummy])');
+    if (!card) return null;
+    const buttons = [...card.querySelectorAll("button")];
+    if (buttons.some((b) => /^start now\b/i.test(label2(b.textContent)))) return null;
+    const confirm = buttons.find((b) => /^confirm\b/i.test(label2(b.textContent)));
+    if (!confirm) return null;
+    return { card, confirm };
+  }
+  function closePopup() {
+    popup?.remove();
+    popup = null;
+    popupCard = null;
+  }
+  function stopTestPopup() {
+    if (!testPopup) return;
+    clearInterval(testPopup.interval);
+    const done = testPopup.onClose;
+    testPopup = null;
+    closePopup();
+    done?.();
+  }
+  function onPopupConfirm(event) {
+    event.preventDefault();
+    if (testPopup) {
+      stopTestPopup();
+      return;
+    }
+    const check = lastRoot && readyCheckFor(lastRoot);
+    check?.confirm.click();
+    if (popupCard) dismissed.add(popupCard);
+    closePopup();
+  }
+  function onPopupDismiss(event) {
+    event.preventDefault();
+    if (testPopup) {
+      stopTestPopup();
+      return;
+    }
+    if (popupCard) dismissed.add(popupCard);
+    closePopup();
+  }
+  function setPopupText(title, timer) {
+    if (!popup) return;
+    const [titleEl, timerEl] = [popup.querySelector(".iw-rc-title"), popup.querySelector(".iw-rc-timer")];
+    if (titleEl && titleEl.textContent !== title) titleEl.textContent = title;
+    if (timerEl && timerEl.textContent !== timer) timerEl.textContent = timer;
+  }
+  function syncPopupText() {
+    if (!popup) return;
+    if (testPopup) {
+      const left = Math.max(0, TEST_SECONDS - Math.floor((Date.now() - testPopup.started) / 1e3));
+      setPopupText("⚔️ Ready check: Ashmaw Normal (test)", left > 0 ? `${left}s` : "time's up");
+      return;
+    }
+    if (!popupCard) return;
+    setPopupText(
+      norm5(popupCard.querySelector('[data-iw-guild-role="rc-title"]')?.textContent) || "Ready check started",
+      norm5(popupCard.querySelector('[data-iw-guild-role="rc-timer"]')?.textContent)
+    );
+  }
+  function openPopup() {
+    closePopup();
+    popup = own4("div", "iw-rc-popup");
+    popup.setAttribute("role", "alertdialog");
+    popup.setAttribute("aria-live", "assertive");
+    popup.setAttribute("aria-label", "Raid ready check");
+    if (testPopup) popup.setAttribute("data-iw-lobby-dummy", "1");
+    const head = own4("div", "iw-rc-head");
+    head.append(own4("p", "iw-rc-title"), own4("span", "iw-rc-timer"));
+    const note = own4("p", "iw-rc-note", "Your raid is about to start. Confirm you are here, or you will be left out of this attempt.");
+    const actions = own4("div", "iw-rc-actions");
+    const confirm = own4("button", "iw-rc-confirm", "Confirm — I’m here!");
+    confirm.type = "button";
+    confirm.addEventListener("click", onPopupConfirm);
+    const dismiss = own4("button", "iw-rc-dismiss", "Dismiss");
+    dismiss.type = "button";
+    dismiss.addEventListener("click", onPopupDismiss);
+    actions.append(confirm, dismiss);
+    popup.append(head, note, actions);
+    document.body.append(popup);
+  }
+  function setLobbyTestPopup(on2, onClose) {
+    if (!on2) {
+      stopTestPopup();
+      return;
+    }
+    if (testPopup) return;
+    testPopup = { started: Date.now(), interval: setInterval(syncPopupText, 1e3), onClose };
+    openPopup();
+    syncPopupText();
+  }
+  function lobbyTestPopupOn() {
+    return !!testPopup;
+  }
+  function decoratePopup(root) {
+    if (testPopup) {
+      if (!popup?.isConnected) openPopup();
+      syncPopupText();
+      return;
+    }
+    const check = readyCheckFor(root);
+    if (!check || dismissed.has(check.card)) {
+      if (popupCard && (root.contains(popupCard) || !popupCard.isConnected)) closePopup();
+      return;
+    }
+    if (!popup || popupCard !== check.card || !popup.isConnected) {
+      openPopup();
+      popupCard = check.card;
+    }
+    syncPopupText();
+  }
+  function decorateGuildLobby(root) {
+    if (!root) return;
+    if (root.querySelector('[data-iw-guild-card="boss"], [data-iw-guild-card="ready-check"]')) lastRoot = root;
+    syncLobbyPreview(root, () => decorateGuildLobby(root));
+    decorateLayout(root);
+    decorateBossCard(root);
+    decorateRecords(root);
+    decoratePopup(root);
+    if (root.querySelector('[data-iw-guild-card="boss"]')) {
+      refreshRaidBoard(() => {
+        if (lastRoot?.isConnected) decorateRecords(lastRoot);
+      });
+    }
+  }
+  function refreshGuildLobbyText(parents) {
+    refreshBossCardText(parents);
+    if (!popup || !popupCard) return;
+    for (const parent of parents) {
+      if (parent && popupCard.contains(parent)) {
+        syncPopupText();
+        return;
+      }
+    }
+  }
+  function pruneGuildLobby() {
+    if (popupCard && !popupCard.isConnected) closePopup();
+    if (testPopup && !lastRoot?.isConnected) stopTestPopup();
+  }
+  function clearGuildLobby(root) {
+    stopTestPopup();
+    closePopup();
+    if (!root) return;
+    clearLobbyPreview(root);
+    clearBossCard(root);
+    root.querySelectorAll(`[${OWNED4}]`).forEach((node2) => node2.remove());
+    for (const attr of ATTRS2) {
+      if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
+      root.querySelectorAll(`[${attr}]`).forEach((node2) => node2.removeAttribute(attr));
+    }
+    lastRoot = null;
+  }
+
+  // src/modules/GuildPanels.js
+  var norm6 = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  var label3 = (value) => norm6(value).replace(/^[^\p{L}\p{N}]+/u, "");
+  var ROLE = "data-iw-guild-role";
+  var ATTRS3 = ["data-iw-guild", "data-iw-guild-card", ROLE, "data-iw-guild-tone", "data-iw-guild-state"];
+  function mark5(el2, key, value) {
+    if (!el2) return;
+    if (value == null) {
+      if (el2.hasAttribute(key)) el2.removeAttribute(key);
+      return;
+    }
+    if (el2.getAttribute(key) !== value) el2.setAttribute(key, value);
+  }
+  var role = (el2, value) => mark5(el2, ROLE, value);
+  function toneOf3(el2) {
     const cls = String(el2?.className || "");
     if (/(?:^|\s)(?:[a-z]+:)?(?:bg|border|text)-(?:emerald|green|lime)-/.test(cls)) return "good";
     if (/(?:^|\s)(?:[a-z]+:)?(?:bg|border|text)-(?:rose|red)-/.test(cls)) return "bad";
@@ -8889,13 +9768,13 @@
     if (/(?:^|\s)(?:bg|border|text)-ember\b/.test(cls)) return "accent";
     return null;
   }
-  var tone = (el2, value = toneOf2(el2)) => mark3(el2, "data-iw-guild-tone", value);
+  var tone = (el2, value = toneOf3(el2)) => mark5(el2, "data-iw-guild-tone", value);
   function selectedBy(el2, pattern) {
     return pattern.test(String(el2?.className || ""));
   }
   function firstLine(card) {
     const p = card.querySelector("p");
-    return p ? label2(p.textContent) : "";
+    return p ? label3(p.textContent) : "";
   }
   function decorateHead(root, heading) {
     if (!heading) return;
@@ -8904,7 +9783,7 @@
     if (head.parentElement !== root) return;
     role(head, "head");
     for (const span of heading.querySelectorAll(":scope > span")) {
-      if (/^(beta|alpha|new)$/i.test(norm4(span.textContent))) role(span, "badge");
+      if (/^(beta|alpha|new)$/i.test(norm6(span.textContent))) role(span, "badge");
     }
     for (const p of head.querySelectorAll("p")) {
       if (!heading.contains(p)) role(p, "subtitle");
@@ -8916,10 +9795,10 @@
     for (const button2 of head.querySelectorAll("button")) {
       if (button2.hasAttribute("data-iw-collapse")) continue;
       role(button2, "head-link");
-      mark3(button2, "data-iw-guild-tone", /^(leave|disband|kick|decline)\b/i.test(label2(button2.textContent)) ? "bad" : null);
+      mark5(button2, "data-iw-guild-tone", /^(leave|disband|kick|decline)\b/i.test(label3(button2.textContent)) ? "bad" : null);
     }
   }
-  var READY_LABEL = /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up)$/i;
+  var READY_LABEL = /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up|mark ready)$/i;
   function cardKind(card) {
     const first = firstLine(card);
     const field = card.querySelector('input:not([type="checkbox"]):not([type="radio"]), textarea');
@@ -8935,8 +9814,8 @@
     if (/^members$/i.test(first)) return "members";
     if ([...card.querySelectorAll("button[title]")].filter((b) => /,\s*the\s/i.test(b.title)).length >= 2) return "boss";
     const buttons = [...card.querySelectorAll("button")];
-    const toggles = buttons.filter((b) => READY_LABEL.test(label2(b.textContent)));
-    if (toggles.length === 1 && buttons.every((b) => toggles.includes(b) || /^start raid\b/i.test(label2(b.textContent)))) return "ready";
+    const toggles = buttons.filter((b) => READY_LABEL.test(label3(b.textContent)));
+    if (toggles.length === 1 && buttons.every((b) => toggles.includes(b) || /^start raid\b/i.test(label3(b.textContent)))) return "ready";
     return "generic";
   }
   function decorateBoss2(card) {
@@ -8944,13 +9823,13 @@
     role(pills[0]?.parentElement, "boss-tabs");
     for (const pill of pills) {
       role(pill, "boss-tab");
-      mark3(pill, "data-iw-guild-state", selectedBy(pill, /(?:^|\s)bg-ember(?:\s|$)/) ? "selected" : null);
+      mark5(pill, "data-iw-guild-state", selectedBy(pill, /(?:^|\s)bg-ember(?:\s|$)/) ? "selected" : null);
     }
-    const difficulties = [...card.querySelectorAll("button")].filter((b) => !pills.includes(b) && /\b(practice|normal|hard|heroic|mythic)\b/i.test(label2(b.textContent)));
+    const difficulties = [...card.querySelectorAll("button")].filter((b) => !pills.includes(b) && /\b(practice|normal|hard|heroic|mythic)\b/i.test(label3(b.textContent)));
     role(difficulties[0]?.parentElement, "difficulties");
     for (const button2 of difficulties) {
       role(button2, "difficulty");
-      mark3(
+      mark5(
         button2,
         "data-iw-guild-state",
         selectedBy(button2, /(?:^|\s)border-ember(?:\s|$)/) ? "selected" : /🔒/u.test(button2.textContent) || button2.disabled ? "locked" : null
@@ -8978,12 +9857,12 @@
     for (const row of card.querySelectorAll("button")) {
       role(row, "lb-row");
       const name = row.firstElementChild;
-      mark3(name, "data-iw-guild-tone", selectedBy(name, /(?:^|\s)text-ember(?:\s|$)/) ? "accent" : null);
+      mark5(name, "data-iw-guild-tone", selectedBy(name, /(?:^|\s)text-ember(?:\s|$)/) ? "accent" : null);
     }
   }
   function decorateRosterRow(row) {
     for (const el2 of row.querySelectorAll("span, div")) {
-      const text = label2(el2.textContent);
+      const text = label3(el2.textContent);
       const cls = String(el2.className || "");
       if (!el2.childElementCount && /^ready$/i.test(text)) {
         role(el2, "ready-badge");
@@ -8991,7 +9870,7 @@
       } else if (!el2.childElementCount && /^not ready$/i.test(text)) role(el2, "not-ready");
       else if (!el2.childElementCount && !text && /\brounded-full\b/.test(cls) && /\bh-1\.5\b/.test(cls)) {
         role(el2, "dot");
-        mark3(el2, "data-iw-guild-state", toneOf2(el2) === "good" ? "online" : null);
+        mark5(el2, "data-iw-guild-state", toneOf3(el2) === "good" ? "online" : null);
       } else if (/guild points/i.test(el2.title)) role(el2, "points");
       else if (/skill level/i.test(el2.title)) {
         role(el2, "chip");
@@ -9003,7 +9882,7 @@
       if (/^kick\b/i.test(button2.title)) role(button2, "kick");
       else if (picker && picker !== button2) {
         role(button2, "option");
-        mark3(button2, "data-iw-guild-state", toneOf2(button2) === "info" || button2.getAttribute("aria-selected") === "true" ? "selected" : null);
+        mark5(button2, "data-iw-guild-state", toneOf3(button2) === "info" || button2.getAttribute("aria-selected") === "true" ? "selected" : null);
       } else if (/\bborder-sky-/.test(String(button2.className))) role(button2, "picker");
       else role(button2, "member-name");
     }
@@ -9022,7 +9901,7 @@
       decorateRosterRow(row);
     }
     for (const p of card.querySelectorAll("p")) {
-      if (/^raid guests\b/i.test(label2(p.textContent))) {
+      if (/^(?:raid guests\b|group\s*\(\d+\/\d+\))/i.test(label3(p.textContent))) {
         role(p, "subhead");
         role(p.parentElement !== card ? p.parentElement : null, "guests");
       }
@@ -9034,12 +9913,12 @@
     role(buttons[0], "picker");
     for (const option of buttons.slice(1)) {
       role(option, "option");
-      mark3(option, "data-iw-guild-state", toneOf2(option) === "info" || option.getAttribute("aria-selected") === "true" ? "selected" : null);
+      mark5(option, "data-iw-guild-state", toneOf3(option) === "info" || option.getAttribute("aria-selected") === "true" ? "selected" : null);
     }
   }
   function decoratePrep(card) {
     role(card.querySelector(":scope > p"), "card-title");
-    for (const p of card.querySelectorAll(":scope > p")) if (toneOf2(p)) {
+    for (const p of card.querySelectorAll(":scope > p")) if (toneOf3(p)) {
       role(p, "line");
       tone(p);
     }
@@ -9055,12 +9934,12 @@
   }
   function decorateReady(card) {
     for (const button2 of card.querySelectorAll("button")) {
-      if (!READY_LABEL.test(label2(button2.textContent))) {
+      if (!READY_LABEL.test(label3(button2.textContent))) {
         role(button2, "start");
         continue;
       }
       role(button2, "ready-toggle");
-      mark3(button2, "data-iw-guild-state", toneOf2(button2) === "good" ? "ready" : null);
+      mark5(button2, "data-iw-guild-state", toneOf3(button2) === "good" ? "ready" : null);
     }
     for (const p of card.querySelectorAll(":scope > p")) role(p, "note");
   }
@@ -9094,7 +9973,7 @@
     role(list, "directory");
     for (const row of list ? list.children : []) {
       role(row, "guild-row");
-      mark3(row, "data-iw-guild-state", /\S\s+\S/.test(String(row.className).trim()) || row.children.length > 1 ? "open" : null);
+      mark5(row, "data-iw-guild-state", /\S\s+\S/.test(String(row.className).trim()) || row.children.length > 1 ? "open" : null);
       const line = row.firstElementChild;
       for (const button2 of line ? line.querySelectorAll(":scope > button") : []) {
         if (button2.querySelector("span")) role(button2, "guild-name");
@@ -9109,7 +9988,7 @@
     }
   }
   function decorateReadyCheck(card) {
-    mark3(card, "data-iw-guild-tone", toneOf2(card) || "warn");
+    mark5(card, "data-iw-guild-tone", toneOf3(card) || "warn");
     const head = card.querySelector(":scope > div");
     role(head, "card-head");
     role(head?.querySelector("p"), "rc-title");
@@ -9160,15 +10039,15 @@
     reconcileSkarthScene(arena);
     const boss = arena.querySelector('img[src*="boss-"],img[alt^="Ashmaw"],img[alt^="Thessaly"],img[alt^="Morwenna"],img[alt^="Grimjaw"],img[alt^="Skarth"]');
     if (boss?.parentElement?.parentElement !== arena) role(boss?.parentElement?.parentElement, "boss-summary");
-    for (const panel of arena.querySelectorAll(".raid-readable-panel")) {
-      if (panel.tagName === "BUTTON" || panel.parentElement !== arena && panel.parentElement?.parentElement === arena) {
-        role(panel, "combat-log");
-        if (panel.parentElement !== arena && panel.parentElement?.parentElement === arena) role(panel.parentElement, "combat-log-region");
+    for (const panel2 of arena.querySelectorAll(".raid-readable-panel")) {
+      if (panel2.tagName === "BUTTON" || panel2.parentElement !== arena && panel2.parentElement?.parentElement === arena) {
+        role(panel2, "combat-log");
+        if (panel2.parentElement !== arena && panel2.parentElement?.parentElement === arena) role(panel2.parentElement, "combat-log-region");
         continue;
       }
-      const gameButtons = panel.querySelectorAll("button:not([data-iw-raid-owned])");
-      role(panel, gameButtons.length ? "effects" : "telegraph");
-      tone(panel, gameButtons.length ? "info" : toneOf2(panel));
+      const gameButtons = panel2.querySelectorAll("button:not([data-iw-raid-owned])");
+      role(panel2, gameButtons.length ? "effects" : "telegraph");
+      tone(panel2, gameButtons.length ? "info" : toneOf3(panel2));
       for (const button2 of gameButtons) role(button2, "effects-toggle");
     }
     for (const track of arena.querySelectorAll("div")) {
@@ -9210,7 +10089,7 @@
     pruneMorwennaScenes();
     pruneGrimjawScenes();
     pruneSkarthScenes();
-    mark3(root, "data-iw-guild", "root");
+    mark5(root, "data-iw-guild", "root");
     decorateHead(root, heading);
     for (const card of root.querySelectorAll(".compact-panel")) {
       if (card.querySelector(".compact-panel")) continue;
@@ -9218,11 +10097,12 @@
       if (signatures2.get(card) === sig && card.hasAttribute("data-iw-guild-card")) continue;
       signatures2.set(card, sig);
       const kind2 = cardKind(card);
-      mark3(card, "data-iw-guild-card", kind2);
+      mark5(card, "data-iw-guild-card", kind2);
       DECORATORS[kind2]?.(card);
     }
     for (const arena of root.querySelectorAll(".raid-battle-backdrop")) decorateArena(arena);
     pruneRaidDocks(root);
+    decorateGuildLobby(root);
   }
   function clearGuildPanel(root) {
     if (!root) return;
@@ -9233,7 +10113,8 @@
     clearSkarthScenes(root);
     clearRaidPartyPreview(root);
     clearRaidHud(root);
-    for (const attr of ATTRS) {
+    clearGuildLobby(root);
+    for (const attr of ATTRS3) {
       if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
       root.querySelectorAll(`[${attr}]`).forEach((el2) => el2.removeAttribute(attr));
     }
@@ -9252,8 +10133,8 @@
     return normText3(el2?.textContent).replace(/^[^\p{L}\p{N}]+/u, "");
   }
   function nameText(el2) {
-    const own2 = [...el2?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
-    return labelText({ textContent: own2 }) || labelText(el2);
+    const own5 = [...el2?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
+    return labelText({ textContent: own5 }) || labelText(el2);
   }
   function frameTitle(frame2, found = frameLandmarks(frame2)) {
     return found.sectionTitle || found.roleHeading || found.heading;
@@ -9287,8 +10168,8 @@
     }
   }
   function collapseTarget(frame2) {
-    const panel = frame2.closest?.(".panel");
-    if (panel && !panel.querySelector(".panel")) return panel;
+    const panel2 = frame2.closest?.(".panel");
+    if (panel2 && !panel2.querySelector(".panel")) return panel2;
     return frame2;
   }
   function frameKey(target, title, found = frameLandmarks(target)) {
@@ -9322,9 +10203,9 @@
     }
     const expanded = collapsed ? "false" : "true";
     if (button2.getAttribute("aria-expanded") !== expanded) button2.setAttribute("aria-expanded", expanded);
-    const label4 = `${collapsed ? "Expand" : "Collapse"} ${name}`;
-    if (button2.getAttribute("aria-label") !== label4) button2.setAttribute("aria-label", label4);
-    if (button2.getAttribute("title") !== label4) button2.setAttribute("title", label4);
+    const label5 = `${collapsed ? "Expand" : "Collapse"} ${name}`;
+    if (button2.getAttribute("aria-label") !== label5) button2.setAttribute("aria-label", label5);
+    if (button2.getAttribute("title") !== label5) button2.setAttribute("title", label5);
   }
   function ensureToggle(head, frame2, key, name) {
     let button2 = head.querySelector(":scope > [data-iw-collapse]");
@@ -9415,7 +10296,7 @@
       el2.removeAttribute(ROLE2);
     });
   }
-  function norm5(text) {
+  function norm7(text) {
     return (text || "").replace(/\s+/g, " ").trim();
   }
   function looksLikeShell(el2) {
@@ -9483,7 +10364,7 @@
         resolution = null;
         return;
       }
-      const text = norm5(notice.textContent);
+      const text = norm7(notice.textContent);
       if (!text || text.length > MAX_NOTICE_CHARS) {
         clearMarks();
         resolution = null;
@@ -9711,20 +10592,20 @@
           card.dataset.rarity = entry2.rarity;
           const face = node("article", "reward-face");
           const head = node("div", "reward-head");
-          const icon2 = node("span", "reward-icon", "✦");
-          icon2.setAttribute("aria-hidden", "true");
+          const icon3 = node("span", "reward-icon", "✦");
+          icon3.setAttribute("aria-hidden", "true");
           const identity = node("div", "reward-identity");
           identity.append(node("h3", "", entry2.name), node("span", "sr-only", entry2.rarity));
           head.append(identity, node("span", "quantity", `×${number(entry2.quantity)}`));
           const art2 = node("div", "reward-art");
-          art2.append(icon2);
+          art2.append(icon3);
           const description = node("ul", "reward-description");
           description.setAttribute("aria-label", "Item stats");
           const requirement = node("p", "reward-requirement");
           face.append(head, art2, description, requirement);
           card.append(face);
           cards.push(card);
-          icons.push({ el: icon2, entry: entry2 });
+          icons.push({ el: icon3, entry: entry2 });
           detailNodes.push({ entry: entry2, description, requirement });
           rewards2.append(card);
         }
@@ -9735,11 +10616,11 @@
             row.dataset.rewardId = entry2.id;
             row.dataset.quantity = String(entry2.quantity);
             row.dataset.rarity = entry2.rarity;
-            const icon2 = node("span", entry2.kind === "currency" ? "loot-icon gold-icon" : "loot-icon", entry2.kind === "currency" ? "✦" : "◆");
-            icon2.setAttribute("aria-hidden", "true");
-            row.append(icon2, node("span", "loot-name", entry2.name), node("span", "loot-quantity", `×${number(entry2.quantity)}`));
+            const icon3 = node("span", entry2.kind === "currency" ? "loot-icon gold-icon" : "loot-icon", entry2.kind === "currency" ? "✦" : "◆");
+            icon3.setAttribute("aria-hidden", "true");
+            row.append(icon3, node("span", "loot-name", entry2.name), node("span", "loot-quantity", `×${number(entry2.quantity)}`));
             rows.append(row);
-            icons.push({ el: icon2, entry: entry2 });
+            icons.push({ el: icon3, entry: entry2 });
           }
         }
         commonGroup.hidden = listed.list.length === 0;
@@ -9780,8 +10661,8 @@
     if (text !== void 0) el2.textContent = text;
     return el2;
   };
-  var button = (className, label4, action) => {
-    const el2 = make("button", className, label4);
+  var button = (className, label5, action) => {
+    const el2 = make("button", className, label5);
     el2.type = "button";
     el2.addEventListener("click", action);
     return el2;
@@ -9917,8 +10798,8 @@
     seal.append(make("span", "", "✧"), make("span", "", "✦"), make("span", "", "✧"));
     const chest = make("div", "chest");
     chest.setAttribute("aria-hidden", "true");
-    for (const state of ["closed", "open"]) {
-      const sprite = make("span", `chest-sprite chest-${state}`);
+    for (const state2 of ["closed", "open"]) {
+      const sprite = make("span", `chest-sprite chest-${state2}`);
       sprite.style.backgroundImage = `url("${assetUrl(ART)}")`;
       chest.append(sprite);
     }
@@ -10011,8 +10892,8 @@
     if (toolbarButton?.parentElement === track && bulkButton?.parentElement === track) return;
     toolbarButton?.remove();
     bulkButton?.remove();
-    const trigger = (label4, key, count) => {
-      const el2 = button("", label4, (event) => showArcaneCacheDemo(event.currentTarget, count));
+    const trigger = (label5, key, count) => {
+      const el2 = button("", label5, (event) => showArcaneCacheDemo(event.currentTarget, count));
       el2.dataset.iwNavLink = key;
       el2.dataset.iwCacheTrigger = "1";
       el2.dataset.iwUi = "nav-tab";
@@ -10043,7 +10924,7 @@
   var collapsible_default = '[data-iw-collapse-head]{position:relative!important;padding-right:30px!important}[data-iw-collapse]{position:absolute!important;top:50%!important;right:0!important;transform:translateY(-50%)!important;z-index:3!important;display:grid!important;place-items:center!important;width:22px!important;height:22px!important;padding:0!important;margin:0!important;border:1px solid var(--iw-th-edge-faint, #4B3D26)!important;border-radius:3px!important;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.34))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;color:var(--iw-th-accent, #C9A24D)!important;cursor:pointer!important;line-height:0!important;-webkit-appearance:none!important;appearance:none!important}[data-iw-collapse]::after{content:""!important;width:6px!important;height:6px!important;border-right:1.5px solid currentColor!important;border-bottom:1.5px solid currentColor!important;transform:translateY(1px) rotate(-135deg)!important;transition:transform .16s ease!important}[data-iw-collapse][aria-expanded=false]::after{transform:translateY(-2px) rotate(45deg)!important}@media(pointer:coarse){[data-iw-collapse]::before{content:""!important;position:absolute!important;inset:-5px!important}}[data-iw-collapse]:hover{border-color:var(--iw-th-brass, #8A6A2C)!important;box-shadow:inset 0 0 9px -3px var(--iw-th-cta, #D8791F)!important}[data-iw-collapse]:focus-visible{outline:2px solid var(--iw-th-accent, #C9A24D)!important;outline-offset:2px!important}[data-iw-collapsed="1"]>*:not([data-iw-collapse]):not([data-iw-collapse-head]){display:none!important}[data-iw-collapsed="1"]{--iw-frame-pad-y: 7px;--iw-frame-pad-mobile-y: 7px;--iw-frame-pad-x: 22px;--iw-frame-pad-mobile-x: 16px}[data-iw-collapsed="1"] [data-iw-collapse-head]{min-height:0!important;margin:0!important;padding-top:0!important;padding-bottom:0!important;padding-left:22px!important;gap:0!important}[data-iw-collapsed="1"] [data-iw-collapse-head] *:not([data-iw-collapse-spine]):not([data-iw-collapse]){display:none!important}[data-iw-collapsed="1"] [data-iw-collapse-spine]{display:block!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}[data-iw-collapsed="1"] [data-iw-collapse-title]{font-family:var(--iw-font-head, "Cinzel", Georgia, serif)!important;font-size:14px!important;font-weight:600!important;line-height:20px!important;letter-spacing:.08em!important;text-transform:none!important;text-align:left!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}[data-iw-collapsed="1"]::after{content:""!important;position:absolute!important;inset:-3px -1px!important;z-index:0!important;pointer-events:none!important;border-style:solid!important;border-width:34px 0 0 32px!important;border-color:transparent!important;border-image:var(--iw-corner-filigree) 50% / 34px 0 0 32px / 0 stretch!important}@media(prefers-reduced-motion:reduce){[data-iw-collapse]::after{transition:none!important}}\n';
 
   // src/styles/guild.css
-  var guild_default = ':root [data-iw-guild=root]{min-width:0!important;--iw-guild-good: #91cba4;--iw-guild-good-rail: #67ab83;--iw-guild-warn: #e0bd78;--iw-guild-warn-rail: #c08a3a;--iw-guild-bad: #dc8a80;--iw-guild-bad-rail: #b4554a;--iw-guild-info: #8fc3da;--iw-guild-info-rail: #4f86a3;--iw-guild-plate: linear-gradient(180deg, rgba(255,255,255,.022), rgba(0,0,0,.18)), #100F0C}:root [data-iw-guild=root] [data-iw-guild-role=head]{gap:14px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]{margin-top:5px!important;color:var(--iw-dim)!important;font-size:11px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]>span:not([data-iw-guild-role]){color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=badge]{padding:2px 6px!important;border:1px solid color-mix(in srgb,var(--iw-guild-good-rail) 55%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-good-rail) 14%,transparent)!important;color:var(--iw-guild-good)!important;font-family:var(--iw-font-ui)!important;font-size:9px!important;letter-spacing:.14em!important;text-shadow:none!important;vertical-align:middle}:root [data-iw-guild=root] [data-iw-guild-role=head-link],:root [data-iw-guild=root] [data-iw-guild-role=effects-toggle]{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-dim)!important;font-size:10.5px!important;text-decoration:underline dotted color-mix(in srgb,currentColor 55%,transparent)!important;text-underline-offset:3px!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link]:hover{color:var(--iw-text-hi)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]{color:color-mix(in srgb,var(--iw-guild-bad) 62%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]:hover{color:var(--iw-guild-bad)!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-raid-test]{padding:1px 6px!important;border:1px dashed color-mix(in srgb,#f5b84a 60%,transparent)!important;border-radius:4px!important;color:#f5c76a!important;text-decoration:none!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-raid-test][aria-pressed=true]{background:rgba(245,184,74,.14)!important}:root [data-iw-guild-card]{position:relative!important}:root [data-iw-guild-card]::before{content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:1px!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.8!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title],:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name],:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{font-family:var(--iw-font-head)!important;font-weight:700!important;letter-spacing:.03em!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]{font-size:13px!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]>span{font-family:var(--iw-font-ui)!important;color:var(--iw-dim)!important;font-size:11px!important;letter-spacing:0!important}:root [data-iw-guild=root] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-size:11px!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=note]{color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=subhead]{color:var(--iw-th-accent-dim)!important;font-size:9.5px!important;letter-spacing:.16em!important}:root [data-iw-guild=root] [data-iw-guild-role=guests]{border-top-color:var(--iw-th-edge-faint)!important}:root [data-iw-guild=root] [data-iw-guild-tone=good]{--iw-guild-ink: var(--iw-guild-good);--iw-guild-rail: var(--iw-guild-good-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=warn]{--iw-guild-ink: var(--iw-guild-warn);--iw-guild-rail: var(--iw-guild-warn-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=bad]{--iw-guild-ink: var(--iw-guild-bad);--iw-guild-rail: var(--iw-guild-bad-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=info]{--iw-guild-ink: var(--iw-guild-info);--iw-guild-rail: var(--iw-guild-info-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=accent]{--iw-guild-ink: var(--iw-th-accent);--iw-guild-rail: var(--iw-th-cta-hi)}:root [data-iw-guild=root] :is([data-iw-guild-role=line],[data-iw-guild-role=rc-roster] span,[data-iw-guild-card=ready-check] span)[data-iw-guild-tone]{color:var(--iw-guild-ink)!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,var(--iw-th-edge))!important;border-left:3px solid var(--iw-guild-rail)!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-rail) 16%,transparent),transparent 70%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important;background-blend-mode:normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 14px -6px var(--iw-guild-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink, var(--iw-text-hi))!important;font-size:13px!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-timer]{color:var(--iw-guild-ink, var(--iw-dim))!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]>span{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action]{min-height:28px!important;padding:0 12px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action][data-iw-guild-tone]{border-color:var(--iw-guild-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail) 34%,#15130F),color-mix(in srgb,var(--iw-guild-rail) 14%,#0B0C0A))!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tabs]{gap:0!important;padding-bottom:0!important;margin-bottom:8px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.28)!important;overflow:hidden}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]{flex:1 1 auto!important;min-height:28px!important;padding:0 10px!important;border:0!important;border-right:1px solid var(--iw-th-edge-soft)!important;border-radius:0!important;background:linear-gradient(180deg,#211E18,#16140F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.022)!important;color:#AAA291!important;font-size:11px!important;font-weight:700!important;letter-spacing:.04em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:last-child{border-right:0!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:hover{color:var(--iw-text-hi)!important;filter:brightness(1.12)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab][data-iw-guild-state=selected],:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{color:#FFE8CB!important;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%),linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 52%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,226,191,.13),inset 0 -2px 0 rgba(55,16,4,.58)!important;text-shadow:0 1px 0 rgba(40,10,2,.8)!important}:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name]{font-size:15px!important}:root [data-iw-guild=root] [data-iw-guild-role=lore]{font-family:var(--iw-font-flav)!important;font-size:13px!important;line-height:1.35!important;color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]){color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]) span{color:var(--iw-text-hi)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=difficulties]{gap:4px!important;padding-top:6px!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]{min-height:28px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-dim)!important;font-size:10.5px!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]:hover{border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{border-color:var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=locked]{border-style:dashed!important;color:var(--iw-faint)!important;background:rgba(0,0,0,.24)!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]{border:1px solid var(--iw-th-edge-faint)!important;border-left:2px solid var(--iw-guild-rail, var(--iw-th-rule))!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 12%,rgba(0,0,0,.25))!important;color:var(--iw-text)!important;padding:7px 10px!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>.font-semibold{color:var(--iw-guild-ink, var(--iw-text-hi))!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>span:not(.font-semibold){color:var(--iw-faint)!important;opacity:1!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]{min-height:26px!important;padding:3px 8px!important;border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]:hover{background:rgba(255,255,255,.03)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:first-child:not([data-iw-guild-tone]){color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>[data-iw-guild-tone=accent]{color:var(--iw-th-accent)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:last-child{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=member],[data-iw-guild-role=guest],[data-iw-guild-role=potion]){border:1px solid var(--iw-th-edge-faint)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),inset 0 -6px 10px -8px rgba(0,0,0,.8)!important}:root [data-iw-guild=root] [data-iw-guild-role=guest]{border-left:2px solid var(--iw-guild-info-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=member-name]{font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=dot][data-iw-guild-state=online]{box-shadow:0 0 5px color-mix(in srgb,var(--iw-guild-good) 70%,transparent)!important}:root [data-iw-guild=root] [data-iw-guild-role=points]{color:var(--iw-th-accent-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=chip]{border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.3)!important;color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]){border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 70%,transparent)!important;border-left-width:2px!important;border-radius:2px!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-info-rail) 20%,#0B0C0A),color-mix(in srgb,var(--iw-guild-info-rail) 6%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-guild-info)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]) [class*=text-sky-300]{color:color-mix(in srgb,var(--iw-guild-info) 60%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=picker]:hover{border-color:var(--iw-guild-info)!important;filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=option]{border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:#0E0E0B!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=option]:hover,:root [data-iw-guild=root] [data-iw-guild-role=option][data-iw-guild-state=selected]{background:color-mix(in srgb,var(--iw-guild-info-rail) 18%,#0E0E0B)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-badge]{border:1px solid color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 80%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 18%,#0B0C0A)!important;color:var(--iw-guild-ink, var(--iw-guild-good))!important;letter-spacing:.12em!important;box-shadow:0 0 8px -3px var(--iw-guild-rail, var(--iw-guild-good-rail))!important}:root [data-iw-guild=root] [data-iw-guild-role=not-ready]{color:var(--iw-faint)!important;font-style:italic!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span>span{color:var(--iw-faint)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=drink]{min-height:24px!important;padding:0 11px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:linear-gradient(180deg,#242018,#15130F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;color:var(--iw-text)!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=select]{min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]){min-height:32px!important;padding:0 16px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 62%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-weight:700!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):hover:not(:disabled){filter:brightness(1.12)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):disabled{filter:saturate(.45) brightness(.7)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]{min-height:38px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 58%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-size:14px!important;letter-spacing:.06em!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle][data-iw-guild-state=ready]{border-color:var(--iw-guild-good-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-good-rail) 38%,#15130F),color-mix(in srgb,var(--iw-guild-good-rail) 14%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(200,255,220,.08),0 0 12px -4px var(--iw-guild-good-rail)!important;color:var(--iw-guild-good)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]:hover:not(:disabled){filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A linear-gradient(180deg,rgba(255,255,255,.018),transparent 22%)!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*{margin:0!important;padding:3px 4px!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;line-height:1.35!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*>span:last-child{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=composer]{gap:8px!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]){min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]):focus{outline:1px solid rgba(197,145,67,.5)!important;outline-offset:1px!important;border-color:var(--iw-th-brass)!important}:root [data-iw-guild=root] [data-iw-guild-role=start]{min-height:38px!important;font-size:14px!important;letter-spacing:.06em!important}:root [data-iw-guild-card=ready]:has([data-iw-guild-role=start]) [data-iw-guild-role=ready-toggle]:not([data-iw-guild-state=ready]){border-color:var(--iw-th-edge)!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-text)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] :is([data-iw-guild-card=pickup],[data-iw-guild-card=form],[data-iw-guild-card=directory]) [data-iw-guild-role=note]{color:var(--iw-dim)!important;font-size:10.5px!important;line-height:1.4!important}:root [data-iw-guild-card=pickup] [data-iw-guild-role=note]{margin-top:3px!important}:root [data-iw-guild-card=form] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]{min-height:0!important;padding:0 2px!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]:hover{color:var(--iw-guild-bad)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=chip][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,transparent)!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=disclosure],[data-iw-guild-role=guild-name]){min-height:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure]:hover [data-iw-guild-role=card-title]{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure-hint]{color:var(--iw-th-accent-dim)!important;font-size:10px!important;letter-spacing:.08em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;padding:2px!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]>*+*{margin-top:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]{border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:hover{background:rgba(255,255,255,.025)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row][data-iw-guild-state=open]{background:color-mix(in srgb,var(--iw-th-cta) 8%,#0E0E0B)!important;box-shadow:inset 2px 0 0 var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]>span:last-child{color:var(--iw-text-hi)!important;font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]:hover>span:last-child{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=capacity]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]{min-height:20px!important;padding:0 8px!important;border:1px solid var(--iw-guild-rail, var(--iw-th-edge))!important;border-radius:2px!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 30%,#15130F),color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 10%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;color:var(--iw-guild-ink, var(--iw-text))!important;letter-spacing:.06em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:hover:not(:disabled){filter:brightness(1.15)!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=arena]{border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 0 3px color-mix(in srgb,var(--iw-th-edge) 35%,transparent),inset 0 0 40px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35)!important}:root [data-iw-guild=root] :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth]){position:relative!important;isolation:isolate;overflow:hidden!important;background:#160706!important}:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])::before,:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])::after,:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])>.raid-ember{display:none!important}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art]){display:none;position:absolute!important;inset:0;margin:0!important;pointer-events:none!important;overflow:hidden;z-index:0;contain:strict}:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art]){display:block}:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])>:not(:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])):not(.raid-ember,[data-iw-raid-cast]){position:relative;z-index:1;text-shadow:0 1px 3px #000,0 0 8px #000;min-width:0;margin:0!important}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])+:not(.raid-ember){margin-top:0!important}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>canvas,:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>[data-iw-art=environment]{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:70% 50%}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,7,5,.25),transparent 35%,transparent 55%,rgba(8,7,5,.6))}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>canvas{display:none}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])[data-iw-animated]>canvas{display:block}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])[data-iw-animated]>img{display:none}:root :is([data-iw-raid-boss-stage=ashmaw],[data-iw-raid-boss-stage=thessaly],[data-iw-raid-boss-stage=morwenna],[data-iw-raid-boss-stage=grimjaw],[data-iw-raid-boss-stage=skarth]){display:none!important}:root :is([data-iw-raid-boss-stage=ashmaw],[data-iw-raid-boss-stage=thessaly],[data-iw-raid-boss-stage=morwenna],[data-iw-raid-boss-stage=grimjaw],[data-iw-raid-boss-stage=skarth])>img{visibility:hidden!important}:root [data-iw-guild=root] [data-iw-raid-scene=thessaly]{background:#101017!important}:root [data-iw-thessaly-art]::after{background:linear-gradient(180deg,rgba(9,11,14,.25),transparent 35%,transparent 55%,rgba(9,11,14,.63))}:root [data-iw-guild=root] [data-iw-raid-scene=morwenna]{background:#151019!important}:root [data-iw-morwenna-art]::after{background:linear-gradient(180deg,rgba(13,9,17,.25),transparent 35%,transparent 55%,rgba(13,9,17,.63))}:root [data-iw-guild=root] [data-iw-raid-scene=grimjaw]{background:#111923!important}:root [data-iw-grimjaw-art]::after{background:linear-gradient(180deg,rgba(9,14,22,.25),transparent 35%,transparent 55%,rgba(9,14,22,.63))}:root [data-iw-guild=root] [data-iw-raid-hud]{--iw-raid-brass: #d4ad63;--iw-raid-ivory: #f0e8d6;--iw-raid-read: #b7ad99;--iw-raid-dim: #938a79;--iw-raid-teal: #8fc6dc;--iw-raid-good: #8fd0a3;--iw-raid-bad: #e89aa9;--iw-raid-plate: rgba(9, 9, 7, .82);position:relative!important;isolation:isolate;overflow:hidden!important;display:grid!important;grid-template-columns:minmax(240px,300px) minmax(0,1fr) minmax(240px,300px);grid-template-rows:auto auto minmax(150px,1fr) auto auto auto auto;grid-template-areas:"boss  boss    ." "cast  cast    ." ".      result  ." "timers timers  timers" "party  party   party" ".      status  ." ".      actions .";gap:10px 22px!important;padding:26px 26px 18px!important;min-height:clamp(780px,60vw,900px);font-family:var(--iw-font-ui)!important;color:var(--iw-raid-ivory)}:root [data-iw-raid-hud]>:not(.raid-ember):not([data-iw-ashmaw-art]):not([data-iw-thessaly-art]):not([data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art],[data-iw-raid-cast]){position:relative;z-index:1;min-width:0;margin:0!important}:root [data-iw-raid-hud]>[data-iw-guild-role=boss-summary]{grid-area:boss}:root [data-iw-raid-hud]>[data-iw-guild-role=telegraph]{grid-area:cast}:root [data-iw-raid-hud]>.raid-arena-floor{grid-area:party}:root [data-iw-raid-hud]>:is([data-iw-guild-role=combat-log-region],[data-iw-guild-role=combat-log],[data-iw-guild-role=effects]){display:none!important}:root [data-iw-raid-hud]>.iw-raid-timers{grid-area:timers}:root [data-iw-raid-hud]>[data-iw-guild-role=status]{grid-area:status}:root [data-iw-raid-hud]>[data-iw-guild-role=actions]{grid-area:actions}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{grid-area:result}:root [data-iw-raid-hud] .raid-readable-panel{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}:root [data-iw-raid-hud]>[data-iw-guild-role=boss-summary]{container-type:inline-size;width:min(100%,560px);justify-self:start;text-align:left!important;text-shadow:0 2px 4px #000,0 0 14px rgba(0,0,0,.85)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:4px;font-size:inherit!important}:root [data-iw-raid-hud] [data-iw-raid-boss]{font-size:0!important;line-height:0!important}:root [data-iw-raid-hud] [data-iw-raid-boss]::before{content:attr(data-iw-raid-epithet);display:block;margin-bottom:8px;font:700 11px/1 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-raid-brass)}:root [data-iw-raid-hud] [data-iw-raid-boss]::after{content:attr(data-iw-raid-boss);display:block;font:700 clamp(30px,3.2vw,44px)/1 var(--iw-font-head);letter-spacing:.03em;color:var(--iw-raid-ivory)}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child>:not([data-iw-raid-boss]){font:600 12px/1 var(--iw-font-ui)!important;letter-spacing:.04em;color:var(--iw-raid-good)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child>:not([data-iw-raid-boss])::before{content:"";display:inline-block;width:6px;height:6px;margin-right:7px;vertical-align:1px;background:currentColor;box-shadow:0 0 6px currentColor;transform:rotate(45deg)}:root [data-iw-raid-hud]{--iw-shell-l: 280;--iw-shell-t: 168;--iw-shell-r: 132;--iw-shell-b: 170}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]{position:relative;isolation:isolate;box-sizing:border-box!important;width:100%!important;height:auto!important;aspect-ratio:1216 / 406;margin:2px 0 0 -2%!important;padding:calc(var(--iw-shell-t) * 100% / 1216) calc(var(--iw-shell-r) * 100% / 1216) calc(var(--iw-shell-b) * 100% / 1216) calc(var(--iw-shell-l) * 100% / 1216)!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;background:transparent!important;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:var(--iw-raid-boss-shell, none) center / 100% 100% no-repeat}:root [data-iw-raid-hud][data-iw-raid-encounter=ashmaw]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-ashmaw.png);--iw-shell-l: 270;--iw-shell-t: 158;--iw-shell-r: 82;--iw-shell-b: 156}:root [data-iw-raid-hud][data-iw-raid-encounter=thessaly]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-thessaly.png);--iw-shell-l: 269;--iw-shell-t: 159;--iw-shell-r: 77;--iw-shell-b: 157}:root [data-iw-raid-hud][data-iw-raid-encounter=morwenna]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-morwenna.png);--iw-shell-l: 271;--iw-shell-t: 159;--iw-shell-r: 83;--iw-shell-b: 157}:root [data-iw-raid-hud][data-iw-raid-encounter=grimjaw]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-grimjaw.png);--iw-shell-l: 263;--iw-shell-t: 154;--iw-shell-r: 93;--iw-shell-b: 162}:root [data-iw-raid-hud][data-iw-raid-encounter=skarth]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-skarth.png);--iw-shell-l: 272;--iw-shell-t: 159;--iw-shell-r: 75;--iw-shell-b: 156}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]>*{border-radius:999px!important;transition:width .4s ease-out!important;box-shadow:inset 0 1px 0 rgba(255,190,160,.45),inset 0 -1px 0 rgba(40,6,6,.8),2px 0 7px rgba(231,102,72,.55)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]>[class*=bg-rose],:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]>[class*=bg-red]{background:linear-gradient(180deg,#e0654f 0%,#a92e24 32%,#6d1715 84%,#b9422a)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p{display:flex!important;align-items:center;justify-content:center;position:relative;z-index:2;height:calc((406 - var(--iw-shell-t) - var(--iw-shell-b)) * 100cqw / 1216);margin:calc((var(--iw-shell-t) - 406) * 100cqw / 1216) calc(var(--iw-shell-r) * 100cqw / 1216 + 2cqw) calc(var(--iw-shell-b) * 100cqw / 1216) calc(var(--iw-shell-l) * 100cqw / 1216 - 2cqw)!important;font:700 clamp(12px,2.5cqw,15px)/1 var(--iw-font-ui)!important;letter-spacing:.02em;color:#fff4e6!important;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000,0 0 5px #000!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p[data-iw-raid-pct]::after{content:attr(data-iw-raid-pct);position:absolute;right:2.4cqw;font:800 clamp(11px,2.2cqw,13px)/1 var(--iw-font-ui);color:#ffd8bf}:root [data-iw-raid-hud]>[data-iw-guild-role=telegraph]{justify-self:start;width:min(100%,470px);margin-left:4px!important;border:1px solid rgba(201,162,77,.35)!important;background:var(--iw-raid-plate)!important;font:600 13px/1.3 var(--iw-font-ui)!important;color:var(--iw-raid-ivory)!important;text-align:left!important}:root [data-iw-raid-cast]{--iw-cast-fill: 100%;--iw-cast-ink: linear-gradient(180deg, #d0352c, #9c1a16 55%, #6a0f0d)}:root [data-iw-raid-hud]>[data-iw-raid-cast]{--iw-shell-w: min(100%, 560px);position:relative!important;z-index:1;min-width:0;font-size:0!important;justify-self:start;align-self:start;width:calc(var(--iw-shell-w) * .661184)!important;height:24px;margin:calc(var(--iw-shell-w) * -.09 - 10px) 0 0 calc(var(--iw-shell-w) * .210263)!important;padding:0!important;border:0!important;border-radius:5px!important;background:linear-gradient(90deg,transparent,rgba(255,226,150,.9) 35%,#fff8e0 50%,rgba(255,226,150,.9) 65%,transparent) calc(var(--iw-cast-fill) - 3px) center / 6px 100% no-repeat,var(--iw-cast-ink) left center / var(--iw-cast-fill) 100% no-repeat,linear-gradient(180deg,#1c1714,#0b0908)!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px #4a4540,inset 0 0 0 3px #1a1816,inset 0 3px 4px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.7),0 3px 8px rgba(0,0,0,.55)!important}:root [data-iw-raid-cast]::before,:root [data-iw-raid-cast]::after{position:absolute;top:0;bottom:0;display:flex;align-items:center;font:600 13px/1 var(--iw-font-ui);color:#fff4e6;text-shadow:0 1px 2px #000,0 0 4px #000}:root [data-iw-raid-cast]::before{content:attr(data-iw-raid-cast-name) " · " attr(data-iw-raid-cast-scope);left:10px;right:46px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root [data-iw-raid-cast-scope=""]::before{content:attr(data-iw-raid-cast-name)}:root [data-iw-raid-cast]::after{content:attr(data-iw-raid-cast-secs);right:10px;font-variant-numeric:tabular-nums}:root [data-iw-raid-cast-step="0"]{--iw-cast-fill: 0%}:root [data-iw-raid-cast-step="1"]{--iw-cast-fill: 10%}:root [data-iw-raid-cast-step="2"]{--iw-cast-fill: 20%}:root [data-iw-raid-cast-step="3"]{--iw-cast-fill: 30%}:root [data-iw-raid-cast-step="4"]{--iw-cast-fill: 40%}:root [data-iw-raid-cast-step="5"]{--iw-cast-fill: 50%}:root [data-iw-raid-cast-step="6"]{--iw-cast-fill: 60%}:root [data-iw-raid-cast-step="7"]{--iw-cast-fill: 70%}:root [data-iw-raid-cast-step="8"]{--iw-cast-fill: 80%}:root [data-iw-raid-cast-step="9"]{--iw-cast-fill: 90%}:root [data-iw-raid-cast-step="10"]{--iw-cast-fill: 100%}:root [data-iw-raid-cast-urgency=near]{--iw-cast-ink: linear-gradient(180deg, #e5562f, #b42a17 55%, #7c150c)}:root [data-iw-raid-cast-urgency=now]{--iw-cast-ink: linear-gradient(180deg, #ff7a52, #d63a22 55%, #8e1a0e)}@media(prefers-reduced-motion:no-preference){:root [data-iw-raid-cast-urgency=now]{animation:iw-raid-cast-pulse .7s ease-in-out infinite alternate}}@keyframes iw-raid-cast-pulse{to{filter:drop-shadow(0 0 12px rgba(239,106,75,.75)) brightness(1.12)}}:root [data-iw-raid-hud]>.raid-arena-floor{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch!important;justify-self:center;width:min(100%,860px);gap:8px!important;padding:0!important;background:none!important;text-shadow:none!important}:root [data-iw-raid-hud]>.raid-arena-floor::after{content:none!important;display:none!important}:root [data-iw-raid-hud]>.raid-arena-floor::before{position:static!important;inset:auto!important;transform:none!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;animation:none!important;z-index:auto!important;pointer-events:none;content:"Raid party" " · " attr(data-iw-raid-party);flex:0 0 100%;grid-column:1 / -1;order:-2;text-align:center;margin-bottom:2px;font:700 10px/1 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-raid-brass);text-shadow:0 1px 3px #000}:root [data-iw-raid-hud] [data-iw-guild-role=raider]{--iw-frame-edge: var(--iw-th-edge);--iw-frame-glow: transparent;position:relative!important;display:grid!important;flex:1 1 150px;width:auto!important;max-width:none;min-width:0;grid-template-columns:20px minmax(0,1fr) auto;grid-template-areas:"ico name pct" "ico skill skill" "hp hp hp" "ch ch ch" "fx fx fx";align-items:center;align-content:start;column-gap:7px;row-gap:3px;padding:8px 9px 7px!important;text-align:left!important;border:1px solid var(--iw-frame-edge)!important;border-radius:var(--iw-r-panel, 3px)!important;border-image:none!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent) center top / calc(100% - 16px) 1px no-repeat,linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 0 12px var(--iw-frame-glow),0 4px 10px rgba(0,0,0,.55)!important;filter:none!important;opacity:1!important;cursor:default}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-self]{order:-1}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-frame=self]{--iw-frame-edge: #3d7487;--iw-frame-glow: rgba(111, 179, 201, .28)}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-frame=critical]{--iw-frame-edge: #8a3a2f;--iw-frame-glow: rgba(208, 97, 79, .32)}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-down]{filter:grayscale(.85) brightness(.7)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-down]::after{content:"💀 Down";color:var(--iw-raid-bad);font-size:11px;letter-spacing:.04em}:root .iw-raid-fx:empty{display:none}:root [data-iw-raid-hud] [data-iw-guild-role=raider]>div:not([data-iw-guild-role]){display:none!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::before{content:"";grid-area:ico;align-self:start;width:22px;height:22px;margin-top:1px;background:center / contain no-repeat;opacity:.92}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::after{content:attr(data-iw-raid-hp);grid-area:pct;justify-self:end;font:700 12px/1 var(--iw-font-ui);color:var(--iw-raid-ivory);font-variant-numeric:tabular-nums}:root [data-iw-raid-hud] [data-iw-guild-role=raider-name]{grid-area:name;width:auto!important;padding:0!important;border:0!important;background:none!important;font:700 13px/1.15 var(--iw-font-ui)!important;text-align:left!important;text-shadow:none!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}:root [data-iw-raid-hud] [data-iw-guild-role=raider-name]:not([class*=text-sky]){color:var(--iw-raid-ivory)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-skill]{grid-area:skill;width:auto!important;text-align:left!important;font:500 11px/1.15 var(--iw-font-ui)!important;color:var(--iw-raid-read)!important;text-shadow:none!important}:root [data-iw-raid-hud] :is([data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge]){width:100%!important;margin-top:2px;border:1px solid #3f3a2c!important;border-radius:0!important;background:#050605!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.9)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-hp]{grid-area:hp;height:6px!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-charge]{grid-area:ch;height:4px!important;margin-top:0;border-color:#2e3433!important}:root [data-iw-raid-hud] :is([data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge])>*{border-radius:0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-charge]>*{background:linear-gradient(180deg,#b2d6e4,#4f8aa3)!important}:root .iw-raid-fx{grid-area:fx;display:flex;flex-wrap:wrap;gap:3px 6px;margin-top:3px;min-height:16px}:root .iw-raid-chip{display:inline-flex;align-items:center;gap:2px;white-space:nowrap;font:700 10.5px/14px var(--iw-font-ui);color:var(--iw-raid-ivory, #f0e8d6);font-variant-numeric:tabular-nums}:root .iw-raid-chip[data-iw-raid-tone=debuff]{color:var(--iw-raid-bad, #e89aa9)}:root .iw-raid-chip-icon{display:inline-grid;place-items:center;width:14px;height:14px;flex:none;font-style:normal;font-size:11px;line-height:1;background:center / contain no-repeat;filter:drop-shadow(0 1px 1px #000)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art]>.iw-raid-chip-icon{font-size:0}:root .iw-raid-chip-name{font-weight:600;color:var(--iw-raid-read, #b7ad99)}:root .iw-raid-chip[data-iw-raid-tone=debuff]>.iw-raid-chip-name{color:inherit}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=shield]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/shield.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=ward]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/ward.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=war-cry]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/war-cry.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=curse]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/curse.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=bleed]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/bleed.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=taunt]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/taunt.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=combat]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-combat.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=jewelcrafting]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-jewelcrafting.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=tailoring]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-tailoring.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=construction]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-construction.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=mining]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-mining.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=woodcutting]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-woodcutting.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=alchemy]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-alchemy.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=gathering]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-gathering.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=smithing]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-smithing.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=spellcrafting]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-spellcrafting.png)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome],:root .iw-raid-dock>.iw-raid-dock-panel{--iw-raid-corner-w: 25px 23px;border:1px solid transparent!important;border-radius:var(--iw-r-panel, 3px)!important;border-image:var(--iw-corner-filigree) 50% / var(--iw-raid-corner-w) / 0 stretch!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent) center top / calc(100% - 24px) 1px no-repeat,linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,normal,soft-light,normal!important;box-shadow:0 0 0 1px var(--iw-th-edge),inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 8px 22px rgba(0,0,0,.55)!important;filter:none!important}:root [data-iw-raid-hud]>.iw-raid-timers{justify-self:center;width:min(100%,860px);display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 10px}.iw-raid-timer{position:relative;display:grid;grid-template-columns:16px auto minmax(0,1fr) auto;align-items:center;column-gap:7px;height:26px;padding:0 10px 0 8px;overflow:hidden;border:1px solid #3d7487;border-radius:var(--iw-r-panel, 3px);background:linear-gradient(180deg,#0b0d0d,#050605);box-shadow:inset 0 1px 3px rgba(0,0,0,.9),0 3px 8px rgba(0,0,0,.5);font:700 11px/1 var(--iw-font-ui);color:#fff;text-shadow:0 1px 2px #000,0 0 4px #000}.iw-raid-timer[data-iw-raid-tone=debuff]{border-color:#8a3a2f}.iw-raid-timer-fill{position:absolute;inset:0 auto 0 0;transition:width .9s linear}.iw-raid-timer[data-iw-raid-tone=buff]>.iw-raid-timer-fill{background:linear-gradient(180deg,#74b6dd,#2f6f9c 58%,#1c4568);box-shadow:inset 0 1px 0 rgba(214,238,252,.4)}.iw-raid-timer[data-iw-raid-tone=debuff]>.iw-raid-timer-fill{background:linear-gradient(180deg,#e0786a,#a8352b 58%,#6e1a15);box-shadow:inset 0 1px 0 rgba(255,214,205,.35)}.iw-raid-timer>:not(.iw-raid-timer-fill){position:relative;z-index:1;min-width:0}.iw-raid-timer>.iw-raid-chip-icon{width:16px;height:16px;font-size:12px}.iw-raid-timer-name{letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}.iw-raid-timer-who{font-weight:600;color:#e6ddcb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iw-raid-timer-secs{font-size:13px;font-variant-numeric:tabular-nums}@media(prefers-reduced-motion:reduce){.iw-raid-timer-fill{transition:none}}:root [data-iw-raid-hud]>[data-iw-guild-role=status]{justify-self:center;margin-top:-2px!important;text-align:center;font:italic 500 12px/1.2 var(--iw-font-ui)!important;color:var(--iw-raid-read)!important;text-shadow:0 1px 3px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=actions]{justify-self:center;align-self:start;width:min(100%,540px);display:flex!important;flex-wrap:wrap;gap:10px!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action]{--iw-compact-cap: 15px;flex:1 1 140px;height:44px!important;min-height:0!important;padding:0 24px!important;display:inline-flex!important;align-items:center;justify-content:center;gap:8px;border:0!important;border-radius:0!important;font:700 13px/1 var(--iw-font-head)!important;letter-spacing:.1em;text-transform:uppercase!important;color:var(--iw-raid-ivory)!important;text-shadow:0 1px 2px #000,0 0 4px #000!important;cursor:pointer}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action].button-primary{color:#ffd2ad!important;box-shadow:0 0 16px rgba(217,120,74,.28)!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action].button-primary>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-cta-hi, #d9784a)!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action]:disabled{opacity:.5!important;filter:saturate(.3)!important;cursor:not-allowed}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{justify-self:center;align-self:center;width:min(100%,460px);display:flex!important;flex-direction:column;align-items:center;gap:10px;padding:22px 30px 20px!important;text-align:center}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]>p{margin:0!important;font:700 clamp(17px,1.6vw,21px)/1.25 var(--iw-font-head)!important;letter-spacing:.03em;color:var(--iw-raid-ivory)!important;text-shadow:0 2px 4px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-guild-tone=bad]>p{color:var(--iw-raid-bad)!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-guild-tone=good]>p{color:var(--iw-raid-good)!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-guild-tone=warn]>p{color:#e8c27a!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=outcome-close]{--iw-compact-cap: 11px;margin:0!important;height:32px!important;min-height:0!important;padding:0 26px!important;border:0!important;border-radius:0!important;font:700 12px/1 var(--iw-font-head)!important;letter-spacing:.1em;text-transform:uppercase;color:var(--iw-raid-ivory)!important;text-shadow:0 1px 2px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{--iw-res-hi: #fff2c8;--iw-res-mid: #e8b44c;--iw-res-lo: #87561a;--iw-res-ring: #d6a64a;--iw-res-ray: rgba(255, 204, 110, .15);--iw-res-glow: rgba(255, 186, 76, .42);--iw-res-band: rgba(13, 10, 6, .9);--iw-res-warm: rgba(255, 186, 76, .16);--iw-res-ink: #f1e4c2;isolation:isolate;overflow:visible!important;width:min(100%,540px);gap:12px;padding:54px 40px 24px!important;border:0!important;border-image:none!important;border-radius:0!important;background:linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center top / 100% 1px no-repeat,linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center bottom / 100% 1px no-repeat,radial-gradient(ellipse 60% 75% at 50% 28%,var(--iw-res-warm),transparent 70%),linear-gradient(90deg,transparent,var(--iw-res-band) 16%,var(--iw-res-band) 84%,transparent)!important;box-shadow:none!important;filter:none!important}@media(prefers-reduced-motion:no-preference){:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{animation:iw-res-in .7s cubic-bezier(.2,.9,.3,1.15) both}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{animation:iw-res-spin 80s linear infinite}}@keyframes iw-res-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}@keyframes iw-res-spin{to{transform:rotate(1turn)}}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=wipe]{--iw-res-hi: #f4c7b8;--iw-res-mid: #c44430;--iw-res-lo: #4c0e09;--iw-res-ring: #9e3d2d;--iw-res-ray: rgba(205, 64, 44, .12);--iw-res-glow: rgba(220, 72, 50, .38);--iw-res-band: rgba(14, 7, 6, .9);--iw-res-warm: rgba(196, 58, 40, .14);--iw-res-ink: #e9d0c7}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=other]{--iw-res-hi: #f4f0e6;--iw-res-mid: #b9b2a2;--iw-res-lo: #4d4a42;--iw-res-ring: #8f8877;--iw-res-ray: rgba(230, 224, 210, .08);--iw-res-glow: rgba(230, 224, 210, .25);--iw-res-warm: rgba(230, 224, 210, .08);--iw-res-ink: #ece6d8}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{content:"";position:absolute;z-index:-1;left:50%;top:0;width:380px;height:380px;margin:-190px 0 0 -190px;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from 0deg,var(--iw-res-ray) 0deg 5deg,transparent 5deg 15deg);-webkit-mask:radial-gradient(circle,#000 14%,transparent 66%);mask:radial-gradient(circle,#000 14%,transparent 66%)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{content:attr(data-iw-raid-result-glyph);position:absolute;z-index:1;left:50%;top:0;transform:translate(-50%,-50%);display:grid;place-items:center;width:68px;height:68px;border-radius:50%;pointer-events:none;font-size:31px;line-height:1;background:radial-gradient(circle at 50% 32%,color-mix(in srgb,var(--iw-res-lo) 55%,#2a1d0c),#0d0905 72%);border:2px solid var(--iw-res-ring);box-shadow:0 0 0 4px rgba(0,0,0,.6),0 0 0 5px var(--iw-res-lo),0 0 26px var(--iw-res-glow),inset 0 2px 7px color-mix(in srgb,var(--iw-res-hi) 30%,transparent)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type{display:flex!important;flex-direction:column;align-items:center;gap:10px;font-size:0!important;line-height:0!important;text-shadow:none!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{content:attr(data-iw-raid-result-word);padding:0 .12em;font:700 clamp(36px,4.4vw,52px)/1 var(--iw-font-head);letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(180deg,var(--iw-res-hi) 8%,var(--iw-res-mid) 52%,var(--iw-res-lo) 96%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.85)) drop-shadow(0 0 16px var(--iw-res-glow))}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{content:attr(data-iw-raid-result-boss);padding:0 58px;font:700 12px/1.2 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-res-ink);text-shadow:0 1px 3px #000;background:linear-gradient(90deg,transparent,var(--iw-res-ring)) left center / 46px 1px no-repeat,linear-gradient(90deg,var(--iw-res-ring),transparent) right center / 46px 1px no-repeat}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{max-width:42ch;margin:2px 0 4px!important;font:italic 500 13px/1.5 var(--iw-font-ui)!important;letter-spacing:.01em;text-transform:none;color:var(--iw-res-ink)!important;opacity:.88;text-shadow:0 1px 2px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p::before{content:"";display:block;width:7px;height:7px;margin:0 auto 12px;transform:rotate(45deg);background:var(--iw-res-ring);box-shadow:0 0 8px var(--iw-res-glow)}:root .iw-raid-dock{--iw-raid-brass: #d4ad63;--iw-raid-ivory: #f0e8d6;--iw-raid-read: #b7ad99;--iw-raid-dim: #938a79;display:flex;flex-direction:column;gap:10px;margin-top:12px;font-family:var(--iw-font-ui);color:var(--iw-raid-ivory)}:root .iw-raid-dock>.iw-raid-dock-panel{padding:0!important}:root .iw-raid-dock>.iw-raid-dock-panel[hidden]{display:none!important}.iw-raid-dock-head{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;margin:0;padding:12px 22px 12px 28px;border:0;background:none;box-shadow:none;cursor:pointer;text-align:left;font:700 12px/1 var(--iw-font-head);letter-spacing:.14em;text-transform:uppercase;color:var(--iw-raid-brass)}.iw-raid-dock-head:hover{filter:brightness(1.15)}.iw-raid-dock-head:focus-visible{outline:1px solid var(--iw-raid-brass);outline-offset:-4px}.iw-raid-dock-glyph{font-size:13px;letter-spacing:0}.iw-raid-dock-title{flex:1 1 auto;min-width:0}.iw-raid-dock-chevron{display:grid;place-items:center;width:22px;height:22px;flex:none}.iw-raid-dock-chevron::before{content:"";width:7px;height:7px;border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);transition:transform .15s ease}.iw-raid-dock-head[aria-expanded=true] .iw-raid-dock-chevron::before{transform:translateY(2px) rotate(-135deg)}.iw-raid-dock-panel[data-iw-raid-fold=closed]>.iw-raid-dock-body{display:none}.iw-raid-dock-body{padding:0 26px 18px 28px;text-align:left}.iw-raid-dock-panel[data-iw-raid-dock=log]>.iw-raid-dock-body{max-height:260px;overflow-y:auto;overscroll-behavior:contain;margin-bottom:10px;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:var(--iw-th-edge-mid, #5b4a2e) transparent}.iw-raid-dock-line{margin:0;font:500 12.5px/1.6 var(--iw-font-ui);color:var(--iw-raid-read)}.iw-raid-dock-line:last-child{color:var(--iw-raid-ivory)}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div{margin:0;padding:4px 0 4px 9px;text-align:left;border-left:2px solid currentColor;font:600 12px/1.35 var(--iw-font-ui)}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div+div{margin-top:3px}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div:has(>p){border-left-color:var(--iw-th-edge-mid, #5b4a2e);color:var(--iw-raid-read);font-weight:500}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div>p{margin:0}.iw-raid-dock-more{display:inline-block;margin:10px 0 0;padding:0;border:0;background:none;box-shadow:none;cursor:pointer;font:600 11px/1 var(--iw-font-ui);letter-spacing:.03em;color:var(--iw-raid-dim);text-decoration:underline dotted;text-underline-offset:3px}.iw-raid-dock-more:hover{color:var(--iw-raid-ivory)}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>[data-iw-raid-fx-kind=resist]{--iw-res: 0%;margin-top:8px;padding:7px 0 10px;border-left:0;border-top:1px solid #433722;background:linear-gradient(90deg,#b9612f,#e3a14c) left bottom / var(--iw-res) 3px no-repeat,linear-gradient(#0a0908,#0a0908) left bottom / 100% 3px no-repeat}:root [data-iw-raid-resist-step="0"]{--iw-res: 0%}:root [data-iw-raid-resist-step="1"]{--iw-res: 10%}:root [data-iw-raid-resist-step="2"]{--iw-res: 20%}:root [data-iw-raid-resist-step="3"]{--iw-res: 30%}:root [data-iw-raid-resist-step="4"]{--iw-res: 40%}:root [data-iw-raid-resist-step="5"]{--iw-res: 50%}:root [data-iw-raid-resist-step="6"]{--iw-res: 60%}:root [data-iw-raid-resist-step="7"]{--iw-res: 70%}:root [data-iw-raid-resist-step="8"]{--iw-res: 80%}:root [data-iw-raid-resist-step="9"]{--iw-res: 90%}:root [data-iw-raid-resist-step="10"]{--iw-res: 100%}@media(max-width:1099px){:root [data-iw-guild=root] [data-iw-raid-hud]{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(120px,1fr) auto auto auto auto;grid-template-areas:"boss boss" "cast cast" "result result" "timers timers" "party party" "status status" "actions actions";gap:10px 14px!important;padding:22px 18px 16px!important;min-height:0}:root [data-iw-raid-hud]>.raid-arena-floor{max-width:744px;justify-self:center}:root [data-iw-raid-hud]>.iw-raid-timers{width:min(100%,744px)}}@media(max-width:699px){:root [data-iw-guild=root] [data-iw-raid-hud]{--iw-hero-h: clamp(220px, 74vw, 330px);grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto var(--iw-hero-h) auto auto auto auto auto auto;grid-template-areas:"boss boss" "hero hero" "hp hp" "cast cast" "timers timers" "party party" "status status" "actions actions";gap:10px 8px!important;padding:18px 12px 14px!important;min-height:0}:root [data-iw-guild=root] [data-iw-raid-hud][data-iw-raid-scene]{background:var(--iw-scene-bg, #0d0c0a)!important}:root [data-iw-raid-scene=ashmaw]{--iw-scene-bg: #160706}:root [data-iw-raid-scene=thessaly]{--iw-scene-bg: #101017}:root [data-iw-raid-scene=morwenna]{--iw-scene-bg: #151019}:root [data-iw-raid-scene=grimjaw]{--iw-scene-bg: #111923}:root [data-iw-raid-hud]>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art]){grid-area:hero;inset:-4px -12px!important}:root [data-iw-raid-hud]>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>:is(canvas,img){object-position:97% 50%!important}:root [data-iw-raid-hud]>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])::after{background:linear-gradient(180deg,var(--iw-scene-bg) 0%,transparent 24%,transparent 68%,var(--iw-scene-bg) 100%),linear-gradient(90deg,rgba(0,0,0,.35),transparent 18%,transparent 82%,rgba(0,0,0,.35))!important}:root [data-iw-raid-hud]>[data-iw-guild-role=boss-summary]{display:contents!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>*{position:relative;z-index:1;min-width:0;margin:0!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child{grid-area:boss;align-items:center!important;text-align:center;gap:6px}:root [data-iw-raid-hud] [data-iw-raid-boss]::before{margin-bottom:6px;letter-spacing:.26em}:root [data-iw-raid-hud] [data-iw-raid-boss]::after{font-size:clamp(30px,9vw,38px)}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>div:nth-child(2):not([data-iw-guild-role]){grid-area:hero;align-self:center;justify-self:center}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>div:nth-child(2):not([data-iw-guild-role])>img{height:calc(var(--iw-hero-h) * .62)!important;width:auto!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]{grid-area:hp;width:100%!important;margin:0!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p{grid-area:hp;align-self:stretch;z-index:2;height:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;padding:calc(var(--iw-shell-t) * 100% / 1216) calc(var(--iw-shell-r) * 100% / 1216) calc(var(--iw-shell-b) * 100% / 1216) calc(var(--iw-shell-l) * 100% / 1216)!important;margin:0!important;font-size:14px!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p::before{content:""}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p[data-iw-raid-pct]::after{position:static;justify-self:end;padding-right:4px;font-size:12px}:root [data-iw-raid-hud]>[data-iw-guild-role=telegraph]:not([data-iw-raid-cast]){width:100%;margin-left:0!important;justify-self:stretch}:root [data-iw-raid-hud]>[data-iw-raid-cast]{--iw-shell-w: 100%;height:22px;margin:calc(var(--iw-shell-w) * -.09 - 10px) 0 0 calc(var(--iw-shell-w) * .230263)!important}:root [data-iw-raid-cast]::before{left:8px;right:38px;font-size:11.5px}:root [data-iw-raid-cast]::after{right:8px;font-size:12px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{grid-area:hero;z-index:2;width:calc(100% - 24px)}:root [data-iw-raid-hud]>.raid-arena-floor{display:flex!important;flex-wrap:wrap!important;justify-content:center!important;width:100%;gap:7px 6px!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action]{--iw-compact-cap: 13px;height:40px!important;padding:0 16px!important;font-size:12px!important}:root [data-iw-raid-hud]>.raid-arena-floor::before{content:"Raid party";flex:0 0 calc(50% - 3px);text-align:left;margin:0;order:-4}:root [data-iw-raid-hud]>.raid-arena-floor::after{position:static!important;inset:auto!important;transform:none!important;width:auto!important;height:auto!important;border:0!important;background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;animation:none!important;display:block!important;content:attr(data-iw-raid-party)!important;flex:0 0 calc(50% - 3px);order:-3;text-align:right;font:600 10.5px/1 var(--iw-font-ui);color:var(--iw-raid-dim);text-shadow:0 1px 3px #000}:root [data-iw-raid-hud] [data-iw-guild-role=raider]{flex:0 0 calc((100% - 12px) / 3);max-width:none;padding:7px 6px 6px!important;grid-template-columns:16px minmax(0,1fr) auto;grid-template-columns:14px minmax(0,1fr) auto;grid-template-areas:"ico name name" "skill skill pct" "hp hp hp" "ch ch ch" "fx fx fx";column-gap:4px;row-gap:3px}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::before{width:14px;height:14px;margin-top:0;align-self:center}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::after{font-size:10.5px}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-down]::after{font-size:10px}:root [data-iw-raid-hud] [data-iw-guild-role=raider-name]{font-size:10.5px!important;letter-spacing:-.01em}:root [data-iw-raid-hud] [data-iw-guild-role=raider-skill]{font-size:10px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}:root .iw-raid-fx{gap:2px 5px}:root .iw-raid-chip{font-size:10px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome],:root .iw-raid-dock>.iw-raid-dock-panel{--iw-raid-corner-w: 20px 18px}.iw-raid-dock-head{min-height:42px;padding:10px 16px 10px 22px;font-size:11px;letter-spacing:.1em}.iw-raid-dock-body{padding:0 18px 14px 22px}:root [data-iw-raid-hud]>.iw-raid-timers{width:100%;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px 6px}.iw-raid-timer{height:24px;column-gap:5px;padding:0 7px 0 6px;font-size:10px}.iw-raid-timer-secs{font-size:12px}:root [data-iw-raid-hud]>[data-iw-guild-role=actions]{width:100%}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{padding:18px 20px 16px!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{align-self:end;padding:44px 18px 18px!important;gap:10px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{width:280px;height:280px;margin:-140px 0 0 -140px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{width:56px;height:56px;font-size:26px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{font-size:clamp(28px,9vw,36px)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{padding:0 40px;font-size:10.5px;letter-spacing:.22em;background-size:30px 1px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{font-size:12px!important}}:root [data-iw-guild=root] [data-iw-raid-scene=skarth]{background:#111c28!important}:root [data-iw-skarth-art]::after{background:linear-gradient(180deg,transparent 50%,rgba(8,16,25,.65))}@media(max-width:767px){:root [data-iw-raid-scene=skarth]{--iw-scene-bg: #111c28}}\n';
+  var guild_default = ':root [data-iw-guild=root]{min-width:0!important;--iw-guild-good: #91cba4;--iw-guild-good-rail: #67ab83;--iw-guild-warn: #e0bd78;--iw-guild-warn-rail: #c08a3a;--iw-guild-bad: #dc8a80;--iw-guild-bad-rail: #b4554a;--iw-guild-info: #8fc3da;--iw-guild-info-rail: #4f86a3;--iw-guild-plate: linear-gradient(180deg, rgba(255,255,255,.022), rgba(0,0,0,.18)), #100F0C}:root [data-iw-guild=root] [data-iw-guild-role=head]{gap:14px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]{margin-top:5px!important;color:var(--iw-dim)!important;font-size:11px!important}:root [data-iw-guild=root] [data-iw-guild-role=subtitle]>span:not([data-iw-guild-role]){color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=badge]{padding:2px 6px!important;border:1px solid color-mix(in srgb,var(--iw-guild-good-rail) 55%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-good-rail) 14%,transparent)!important;color:var(--iw-guild-good)!important;font-family:var(--iw-font-ui)!important;font-size:9px!important;letter-spacing:.14em!important;text-shadow:none!important;vertical-align:middle}:root [data-iw-guild=root] [data-iw-guild-role=head-link],:root [data-iw-guild=root] [data-iw-guild-role=effects-toggle]{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-dim)!important;font-size:10.5px!important;text-decoration:underline dotted color-mix(in srgb,currentColor 55%,transparent)!important;text-underline-offset:3px!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link]:hover{color:var(--iw-text-hi)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]{color:color-mix(in srgb,var(--iw-guild-bad) 62%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-guild-tone=bad]:hover{color:var(--iw-guild-bad)!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-raid-test]{padding:1px 6px!important;border:1px dashed color-mix(in srgb,#f5b84a 60%,transparent)!important;border-radius:4px!important;color:#f5c76a!important;text-decoration:none!important}:root [data-iw-guild=root] [data-iw-guild-role=head-link][data-iw-raid-test][aria-pressed=true]{background:rgba(245,184,74,.14)!important}:root [data-iw-guild-card]{position:relative!important}:root [data-iw-guild-card]::before{content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:1px!important;pointer-events:none!important;background:linear-gradient(90deg,var(--iw-th-hairline-hi),rgba(200,168,97,.16) 34%,transparent 72%)!important;opacity:.8!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title],:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name],:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{font-family:var(--iw-font-head)!important;font-weight:700!important;letter-spacing:.03em!important;color:var(--iw-text-hi)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]{font-size:13px!important}:root [data-iw-guild=root] [data-iw-guild-role=card-title]>span{font-family:var(--iw-font-ui)!important;color:var(--iw-dim)!important;font-size:11px!important;letter-spacing:0!important}:root [data-iw-guild=root] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-size:11px!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=note]{color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=subhead]{color:var(--iw-th-accent-dim)!important;font-size:9.5px!important;letter-spacing:.16em!important}:root [data-iw-guild=root] [data-iw-guild-role=guests]{border-top-color:var(--iw-th-edge-faint)!important}:root [data-iw-guild=root] [data-iw-guild-tone=good]{--iw-guild-ink: var(--iw-guild-good);--iw-guild-rail: var(--iw-guild-good-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=warn]{--iw-guild-ink: var(--iw-guild-warn);--iw-guild-rail: var(--iw-guild-warn-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=bad]{--iw-guild-ink: var(--iw-guild-bad);--iw-guild-rail: var(--iw-guild-bad-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=info]{--iw-guild-ink: var(--iw-guild-info);--iw-guild-rail: var(--iw-guild-info-rail)}:root [data-iw-guild=root] [data-iw-guild-tone=accent]{--iw-guild-ink: var(--iw-th-accent);--iw-guild-rail: var(--iw-th-cta-hi)}:root [data-iw-guild=root] :is([data-iw-guild-role=line],[data-iw-guild-role=rc-roster] span,[data-iw-guild-card=ready-check] span)[data-iw-guild-tone]{color:var(--iw-guild-ink)!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,var(--iw-th-edge))!important;border-left:3px solid var(--iw-guild-rail)!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-rail) 16%,transparent),transparent 70%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important;background-blend-mode:normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 0 14px -6px var(--iw-guild-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink, var(--iw-text-hi))!important;font-size:13px!important}:root [data-iw-guild-card=ready-check][data-iw-guild-tone] [data-iw-guild-role=rc-title]{color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-timer]{color:var(--iw-guild-ink, var(--iw-dim))!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-roster]>span{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action]{min-height:28px!important;padding:0 12px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=rc-action][data-iw-guild-tone]{border-color:var(--iw-guild-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail) 34%,#15130F),color-mix(in srgb,var(--iw-guild-rail) 14%,#0B0C0A))!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tabs]{gap:0!important;padding-bottom:0!important;margin-bottom:8px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.28)!important;overflow:hidden}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]{flex:1 1 auto!important;min-height:28px!important;padding:0 10px!important;border:0!important;border-right:1px solid var(--iw-th-edge-soft)!important;border-radius:0!important;background:linear-gradient(180deg,#211E18,#16140F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.022)!important;color:#AAA291!important;font-size:11px!important;font-weight:700!important;letter-spacing:.04em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:last-child{border-right:0!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab]:hover{color:var(--iw-text-hi)!important;filter:brightness(1.12)!important}:root [data-iw-guild=root] [data-iw-guild-role=boss-tab][data-iw-guild-state=selected],:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{color:#FFE8CB!important;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%),linear-gradient(180deg,var(--iw-th-cta),color-mix(in srgb,var(--iw-th-cta) 52%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,226,191,.13),inset 0 -2px 0 rgba(55,16,4,.58)!important;text-shadow:0 1px 0 rgba(40,10,2,.8)!important}:root [data-iw-guild=root] [data-iw-guild-card=boss] [data-iw-guild-role=boss-name]{font-size:15px!important}:root [data-iw-guild=root] [data-iw-guild-role=lore]{font-family:var(--iw-font-flav)!important;font-size:13px!important;line-height:1.35!important;color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]){color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=line]:not([data-iw-guild-tone]) span{color:var(--iw-text-hi)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=difficulties]{gap:4px!important;padding-top:6px!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]{min-height:28px!important;border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-dim)!important;font-size:10.5px!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty]:hover{border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=selected]{border-color:var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=difficulty][data-iw-guild-state=locked]{border-style:dashed!important;color:var(--iw-faint)!important;background:rgba(0,0,0,.24)!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]{border:1px solid var(--iw-th-edge-faint)!important;border-left:2px solid var(--iw-guild-rail, var(--iw-th-rule))!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 12%,rgba(0,0,0,.25))!important;color:var(--iw-text)!important;padding:7px 10px!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>.font-semibold{color:var(--iw-guild-ink, var(--iw-text-hi))!important}:root [data-iw-guild=root] [data-iw-guild-role=notice]>span:not(.font-semibold){color:var(--iw-faint)!important;opacity:1!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]{min-height:26px!important;padding:3px 8px!important;border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]:hover{background:rgba(255,255,255,.03)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:first-child:not([data-iw-guild-tone]){color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>[data-iw-guild-tone=accent]{color:var(--iw-th-accent)!important}:root [data-iw-guild=root] [data-iw-guild-role=lb-row]>:last-child{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=member],[data-iw-guild-role=guest],[data-iw-guild-role=potion]){border:1px solid var(--iw-th-edge-faint)!important;border-radius:2px!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),inset 0 -6px 10px -8px rgba(0,0,0,.8)!important}:root [data-iw-guild=root] [data-iw-guild-role=guest]{border-left:2px solid var(--iw-guild-info-rail)!important}:root [data-iw-guild=root] [data-iw-guild-role=member-name]{font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=dot][data-iw-guild-state=online]{box-shadow:0 0 5px color-mix(in srgb,var(--iw-guild-good) 70%,transparent)!important}:root [data-iw-guild=root] [data-iw-guild-role=points]{color:var(--iw-th-accent-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=chip]{border:1px solid var(--iw-th-edge-soft)!important;border-radius:2px!important;background:rgba(0,0,0,.3)!important;color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]){border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 70%,transparent)!important;border-left-width:2px!important;border-radius:2px!important;background:linear-gradient(90deg,color-mix(in srgb,var(--iw-guild-info-rail) 20%,#0B0C0A),color-mix(in srgb,var(--iw-guild-info-rail) 6%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-guild-info)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=lend-pill],[data-iw-guild-role=picker]) [class*=text-sky-300]{color:color-mix(in srgb,var(--iw-guild-info) 60%,var(--iw-faint))!important}:root [data-iw-guild=root] [data-iw-guild-role=picker]:hover{border-color:var(--iw-guild-info)!important;filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=option]{border:0!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important;background:#0E0E0B!important;box-shadow:none!important}:root [data-iw-guild=root] [data-iw-guild-role=option]:hover,:root [data-iw-guild=root] [data-iw-guild-role=option][data-iw-guild-state=selected]{background:color-mix(in srgb,var(--iw-guild-info-rail) 18%,#0E0E0B)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-badge]{border:1px solid color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 80%,transparent)!important;border-radius:2px!important;background:color-mix(in srgb,var(--iw-guild-rail, var(--iw-guild-good-rail)) 18%,#0B0C0A)!important;color:var(--iw-guild-ink, var(--iw-guild-good))!important;letter-spacing:.12em!important;box-shadow:0 0 8px -3px var(--iw-guild-rail, var(--iw-guild-good-rail))!important}:root [data-iw-guild=root] [data-iw-guild-role=not-ready]{color:var(--iw-faint)!important;font-style:italic!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=potion]>span>span{color:var(--iw-faint)!important;font-variant-numeric:tabular-nums}:root [data-iw-guild=root] [data-iw-guild-role=drink]{min-height:24px!important;padding:0 11px!important;border:1px solid var(--iw-th-edge)!important;border-radius:2px!important;background:linear-gradient(180deg,#242018,#15130F)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;color:var(--iw-text)!important;font-weight:700!important;letter-spacing:.05em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:hover:not(:disabled){border-color:var(--iw-th-rule)!important;color:var(--iw-text-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=drink]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=select]{min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]){min-height:32px!important;padding:0 16px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 62%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-weight:700!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):hover:not(:disabled){filter:brightness(1.12)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=cta],[data-iw-guild-role=start]):disabled{filter:saturate(.45) brightness(.7)!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]{min-height:38px!important;border:1px solid var(--iw-th-cta-hi)!important;border-radius:2px!important;background:linear-gradient(180deg,var(--iw-th-cta-hi),color-mix(in srgb,var(--iw-th-cta) 58%,#000))!important;box-shadow:inset 0 1px 0 rgba(255,218,174,.14)!important;color:#FFF0DA!important;font-family:var(--iw-font-head)!important;font-size:14px!important;letter-spacing:.06em!important;text-shadow:0 1px 0 #3A1005!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle][data-iw-guild-state=ready]{border-color:var(--iw-guild-good-rail)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-good-rail) 38%,#15130F),color-mix(in srgb,var(--iw-guild-good-rail) 14%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(200,255,220,.08),0 0 12px -4px var(--iw-guild-good-rail)!important;color:var(--iw-guild-good)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] [data-iw-guild-role=ready-toggle]:hover:not(:disabled){filter:brightness(1.1)!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A linear-gradient(180deg,rgba(255,255,255,.018),transparent 22%)!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*{margin:0!important;padding:3px 4px!important;border-bottom:1px solid var(--iw-th-edge-faint)!important;line-height:1.35!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=chat-feed]>*>span:last-child{color:var(--iw-text)!important}:root [data-iw-guild=root] [data-iw-guild-role=composer]{gap:8px!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]){min-height:32px!important;border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#080A09!important;box-shadow:inset 0 2px 7px rgba(0,0,0,.48)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=chat-input],[data-iw-guild-role=field]):focus{outline:1px solid rgba(197,145,67,.5)!important;outline-offset:1px!important;border-color:var(--iw-th-brass)!important}:root [data-iw-guild=root] [data-iw-guild-role=start]{min-height:38px!important;font-size:14px!important;letter-spacing:.06em!important}:root [data-iw-guild-card=ready]:has([data-iw-guild-role=start]) [data-iw-guild-role=ready-toggle]:not([data-iw-guild-state=ready]){border-color:var(--iw-th-edge)!important;background:var(--iw-guild-plate)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;color:var(--iw-text)!important;text-shadow:0 1px 0 #000!important}:root [data-iw-guild=root] :is([data-iw-guild-card=pickup],[data-iw-guild-card=form],[data-iw-guild-card=directory]) [data-iw-guild-role=note]{color:var(--iw-dim)!important;font-size:10.5px!important;line-height:1.4!important}:root [data-iw-guild-card=pickup] [data-iw-guild-role=note]{margin-top:3px!important}:root [data-iw-guild-card=form] [data-iw-guild-role=card-count]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]{min-height:0!important;padding:0 2px!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--iw-faint)!important}:root [data-iw-guild=root] [data-iw-guild-role=kick]:hover{color:var(--iw-guild-bad)!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=chip][data-iw-guild-tone]{border-color:color-mix(in srgb,var(--iw-guild-rail) 70%,transparent)!important;color:var(--iw-guild-ink)!important}:root [data-iw-guild=root] :is([data-iw-guild-role=disclosure],[data-iw-guild-role=guild-name]){min-height:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;filter:none!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure]:hover [data-iw-guild-role=card-title]{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=disclosure-hint]{color:var(--iw-th-accent-dim)!important;font-size:10px!important;letter-spacing:.08em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]{border:1px solid var(--iw-th-edge-mid)!important;border-radius:2px!important;background:#0B0C0A!important;box-shadow:inset 0 0 18px rgba(0,0,0,.24)!important;padding:2px!important;scrollbar-color:var(--iw-th-edge-mid) #11110E!important;scrollbar-width:thin!important}:root [data-iw-guild=root] [data-iw-guild-role=directory]>*+*{margin-top:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]{border-bottom:1px solid var(--iw-th-edge-faint)!important;border-radius:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:last-child{border-bottom:0!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row]:hover{background:rgba(255,255,255,.025)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-row][data-iw-guild-state=open]{background:color-mix(in srgb,var(--iw-th-cta) 8%,#0E0E0B)!important;box-shadow:inset 2px 0 0 var(--iw-th-cta-hi)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]{color:var(--iw-dim)!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]>span:last-child{color:var(--iw-text-hi)!important;font-family:var(--iw-font-ui)!important;font-weight:700!important}:root [data-iw-guild=root] [data-iw-guild-role=guild-name]:hover>span:last-child{color:#FFF0DA!important}:root [data-iw-guild=root] [data-iw-guild-role=capacity]{color:var(--iw-dim)!important;font-variant-numeric:tabular-nums!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]{min-height:20px!important;padding:0 8px!important;border:1px solid var(--iw-guild-rail, var(--iw-th-edge))!important;border-radius:2px!important;background:linear-gradient(180deg,color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 30%,#15130F),color-mix(in srgb,var(--iw-guild-rail, var(--iw-th-edge)) 10%,#0B0C0A))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;color:var(--iw-guild-ink, var(--iw-text))!important;letter-spacing:.06em!important;text-transform:uppercase!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:hover:not(:disabled){filter:brightness(1.15)!important}:root [data-iw-guild=root] [data-iw-guild-role=apply]:disabled{opacity:.5!important}:root [data-iw-guild=root] [data-iw-guild-role=arena]{border:1px solid var(--iw-th-edge)!important;border-radius:3px!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 0 3px color-mix(in srgb,var(--iw-th-edge) 35%,transparent),inset 0 0 40px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.35)!important}:root [data-iw-guild=root] :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth]){position:relative!important;isolation:isolate;overflow:hidden!important;background:#160706!important}:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])::before,:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])::after,:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])>.raid-ember{display:none!important}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art]){display:none;position:absolute!important;inset:0;margin:0!important;pointer-events:none!important;overflow:hidden;z-index:0;contain:strict}:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art]){display:block}:root :is([data-iw-raid-scene=ashmaw],[data-iw-raid-scene=thessaly],[data-iw-raid-scene=morwenna],[data-iw-raid-scene=grimjaw],[data-iw-raid-scene=skarth])>:not(:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])):not(.raid-ember,[data-iw-raid-cast]){position:relative;z-index:1;text-shadow:0 1px 3px #000,0 0 8px #000;min-width:0;margin:0!important}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])+:not(.raid-ember){margin-top:0!important}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>canvas,:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>[data-iw-art=environment]{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:70% 50%}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,7,5,.25),transparent 35%,transparent 55%,rgba(8,7,5,.6))}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>canvas{display:none}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])[data-iw-animated]>canvas{display:block}:root :is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])[data-iw-animated]>img{display:none}:root :is([data-iw-raid-boss-stage=ashmaw],[data-iw-raid-boss-stage=thessaly],[data-iw-raid-boss-stage=morwenna],[data-iw-raid-boss-stage=grimjaw],[data-iw-raid-boss-stage=skarth]){display:none!important}:root :is([data-iw-raid-boss-stage=ashmaw],[data-iw-raid-boss-stage=thessaly],[data-iw-raid-boss-stage=morwenna],[data-iw-raid-boss-stage=grimjaw],[data-iw-raid-boss-stage=skarth])>img{visibility:hidden!important}:root [data-iw-guild=root] [data-iw-raid-scene=thessaly]{background:#101017!important}:root [data-iw-thessaly-art]::after{background:linear-gradient(180deg,rgba(9,11,14,.25),transparent 35%,transparent 55%,rgba(9,11,14,.63))}:root [data-iw-guild=root] [data-iw-raid-scene=morwenna]{background:#151019!important}:root [data-iw-morwenna-art]::after{background:linear-gradient(180deg,rgba(13,9,17,.25),transparent 35%,transparent 55%,rgba(13,9,17,.63))}:root [data-iw-guild=root] [data-iw-raid-scene=grimjaw]{background:#111923!important}:root [data-iw-grimjaw-art]::after{background:linear-gradient(180deg,rgba(9,14,22,.25),transparent 35%,transparent 55%,rgba(9,14,22,.63))}:root [data-iw-guild=root] [data-iw-raid-hud]{--iw-raid-brass: #d4ad63;--iw-raid-ivory: #f0e8d6;--iw-raid-read: #b7ad99;--iw-raid-dim: #938a79;--iw-raid-teal: #8fc6dc;--iw-raid-good: #8fd0a3;--iw-raid-bad: #e89aa9;--iw-raid-plate: rgba(9, 9, 7, .82);position:relative!important;isolation:isolate;overflow:hidden!important;display:grid!important;grid-template-columns:minmax(240px,300px) minmax(0,1fr) minmax(240px,300px);grid-template-rows:auto auto minmax(150px,1fr) auto auto auto auto;grid-template-areas:"boss  boss    ." "cast  cast    ." ".      result  ." "timers timers  timers" "party  party   party" ".      status  ." ".      actions .";gap:10px 22px!important;padding:26px 26px 18px!important;min-height:clamp(780px,60vw,900px);font-family:var(--iw-font-ui)!important;color:var(--iw-raid-ivory)}:root [data-iw-raid-hud]>:not(.raid-ember):not([data-iw-ashmaw-art]):not([data-iw-thessaly-art]):not([data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art],[data-iw-raid-cast]){position:relative;z-index:1;min-width:0;margin:0!important}:root [data-iw-raid-hud]>[data-iw-guild-role=boss-summary]{grid-area:boss}:root [data-iw-raid-hud]>[data-iw-guild-role=telegraph]{grid-area:cast}:root [data-iw-raid-hud]>.raid-arena-floor{grid-area:party}:root [data-iw-raid-hud]>:is([data-iw-guild-role=combat-log-region],[data-iw-guild-role=combat-log],[data-iw-guild-role=effects]){display:none!important}:root [data-iw-raid-hud]>.iw-raid-timers{grid-area:timers}:root [data-iw-raid-hud]>[data-iw-guild-role=status]{grid-area:status}:root [data-iw-raid-hud]>[data-iw-guild-role=actions]{grid-area:actions}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{grid-area:result}:root [data-iw-raid-hud] .raid-readable-panel{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}:root [data-iw-raid-hud]>[data-iw-guild-role=boss-summary]{container-type:inline-size;width:min(100%,560px);justify-self:start;text-align:left!important;text-shadow:0 2px 4px #000,0 0 14px rgba(0,0,0,.85)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:4px;font-size:inherit!important}:root [data-iw-raid-hud] [data-iw-raid-boss]{font-size:0!important;line-height:0!important}:root [data-iw-raid-hud] [data-iw-raid-boss]::before{content:attr(data-iw-raid-epithet);display:block;margin-bottom:8px;font:700 11px/1 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-raid-brass)}:root [data-iw-raid-hud] [data-iw-raid-boss]::after{content:attr(data-iw-raid-boss);display:block;font:700 clamp(30px,3.2vw,44px)/1 var(--iw-font-head);letter-spacing:.03em;color:var(--iw-raid-ivory)}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child>:not([data-iw-raid-boss]){font:600 12px/1 var(--iw-font-ui)!important;letter-spacing:.04em;color:var(--iw-raid-good)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child>:not([data-iw-raid-boss])::before{content:"";display:inline-block;width:6px;height:6px;margin-right:7px;vertical-align:1px;background:currentColor;box-shadow:0 0 6px currentColor;transform:rotate(45deg)}:root [data-iw-raid-hud]{--iw-shell-l: 280;--iw-shell-t: 168;--iw-shell-r: 132;--iw-shell-b: 170}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]{position:relative;isolation:isolate;box-sizing:border-box!important;width:100%!important;height:auto!important;aspect-ratio:1216 / 406;margin:2px 0 0 -2%!important;padding:calc(var(--iw-shell-t) * 100% / 1216) calc(var(--iw-shell-r) * 100% / 1216) calc(var(--iw-shell-b) * 100% / 1216) calc(var(--iw-shell-l) * 100% / 1216)!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;background:transparent!important;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:var(--iw-raid-boss-shell, none) center / 100% 100% no-repeat}:root [data-iw-raid-hud][data-iw-raid-encounter=ashmaw]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-ashmaw.png);--iw-shell-l: 270;--iw-shell-t: 158;--iw-shell-r: 82;--iw-shell-b: 156}:root [data-iw-raid-hud][data-iw-raid-encounter=thessaly]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-thessaly.png);--iw-shell-l: 269;--iw-shell-t: 159;--iw-shell-r: 77;--iw-shell-b: 157}:root [data-iw-raid-hud][data-iw-raid-encounter=morwenna]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-morwenna.png);--iw-shell-l: 271;--iw-shell-t: 159;--iw-shell-r: 83;--iw-shell-b: 157}:root [data-iw-raid-hud][data-iw-raid-encounter=grimjaw]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-grimjaw.png);--iw-shell-l: 263;--iw-shell-t: 154;--iw-shell-r: 93;--iw-shell-b: 162}:root [data-iw-raid-hud][data-iw-raid-encounter=skarth]{--iw-raid-boss-shell: url(../assets/raids/ui-kit-v1/sprites/boss-health-skarth.png);--iw-shell-l: 272;--iw-shell-t: 159;--iw-shell-r: 75;--iw-shell-b: 156}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]>*{border-radius:999px!important;transition:width .4s ease-out!important;box-shadow:inset 0 1px 0 rgba(255,190,160,.45),inset 0 -1px 0 rgba(40,6,6,.8),2px 0 7px rgba(231,102,72,.55)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]>[class*=bg-rose],:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]>[class*=bg-red]{background:linear-gradient(180deg,#e0654f 0%,#a92e24 32%,#6d1715 84%,#b9422a)!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p{display:flex!important;align-items:center;justify-content:center;position:relative;z-index:2;height:calc((406 - var(--iw-shell-t) - var(--iw-shell-b)) * 100cqw / 1216);margin:calc((var(--iw-shell-t) - 406) * 100cqw / 1216) calc(var(--iw-shell-r) * 100cqw / 1216 + 2cqw) calc(var(--iw-shell-b) * 100cqw / 1216) calc(var(--iw-shell-l) * 100cqw / 1216 - 2cqw)!important;font:700 clamp(12px,2.5cqw,15px)/1 var(--iw-font-ui)!important;letter-spacing:.02em;color:#fff4e6!important;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000,0 0 5px #000!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p[data-iw-raid-pct]::after{content:attr(data-iw-raid-pct);position:absolute;right:2.4cqw;font:800 clamp(11px,2.2cqw,13px)/1 var(--iw-font-ui);color:#ffd8bf}:root [data-iw-raid-hud]>[data-iw-guild-role=telegraph]{justify-self:start;width:min(100%,470px);margin-left:4px!important;border:1px solid rgba(201,162,77,.35)!important;background:var(--iw-raid-plate)!important;font:600 13px/1.3 var(--iw-font-ui)!important;color:var(--iw-raid-ivory)!important;text-align:left!important}:root [data-iw-raid-cast]{--iw-cast-fill: 100%;--iw-cast-ink: linear-gradient(180deg, #d0352c, #9c1a16 55%, #6a0f0d)}:root [data-iw-raid-hud]>[data-iw-raid-cast]{--iw-shell-w: min(100%, 560px);position:relative!important;z-index:1;min-width:0;font-size:0!important;justify-self:start;align-self:start;width:calc(var(--iw-shell-w) * .661184)!important;height:24px;margin:calc(var(--iw-shell-w) * -.09 - 10px) 0 0 calc(var(--iw-shell-w) * .210263)!important;padding:0!important;border:0!important;border-radius:5px!important;background:linear-gradient(90deg,transparent,rgba(255,226,150,.9) 35%,#fff8e0 50%,rgba(255,226,150,.9) 65%,transparent) calc(var(--iw-cast-fill) - 3px) center / 6px 100% no-repeat,var(--iw-cast-ink) left center / var(--iw-cast-fill) 100% no-repeat,linear-gradient(180deg,#1c1714,#0b0908)!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px #4a4540,inset 0 0 0 3px #1a1816,inset 0 3px 4px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.7),0 3px 8px rgba(0,0,0,.55)!important}:root [data-iw-raid-cast]::before,:root [data-iw-raid-cast]::after{position:absolute;top:0;bottom:0;display:flex;align-items:center;font:600 13px/1 var(--iw-font-ui);color:#fff4e6;text-shadow:0 1px 2px #000,0 0 4px #000}:root [data-iw-raid-cast]::before{content:attr(data-iw-raid-cast-name) " · " attr(data-iw-raid-cast-scope);left:10px;right:46px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root [data-iw-raid-cast-scope=""]::before{content:attr(data-iw-raid-cast-name)}:root [data-iw-raid-cast]::after{content:attr(data-iw-raid-cast-secs);right:10px;font-variant-numeric:tabular-nums}:root [data-iw-raid-cast-step="0"]{--iw-cast-fill: 0%}:root [data-iw-raid-cast-step="1"]{--iw-cast-fill: 10%}:root [data-iw-raid-cast-step="2"]{--iw-cast-fill: 20%}:root [data-iw-raid-cast-step="3"]{--iw-cast-fill: 30%}:root [data-iw-raid-cast-step="4"]{--iw-cast-fill: 40%}:root [data-iw-raid-cast-step="5"]{--iw-cast-fill: 50%}:root [data-iw-raid-cast-step="6"]{--iw-cast-fill: 60%}:root [data-iw-raid-cast-step="7"]{--iw-cast-fill: 70%}:root [data-iw-raid-cast-step="8"]{--iw-cast-fill: 80%}:root [data-iw-raid-cast-step="9"]{--iw-cast-fill: 90%}:root [data-iw-raid-cast-step="10"]{--iw-cast-fill: 100%}:root [data-iw-raid-cast-urgency=near]{--iw-cast-ink: linear-gradient(180deg, #e5562f, #b42a17 55%, #7c150c)}:root [data-iw-raid-cast-urgency=now]{--iw-cast-ink: linear-gradient(180deg, #ff7a52, #d63a22 55%, #8e1a0e)}@media(prefers-reduced-motion:no-preference){:root [data-iw-raid-cast-urgency=now]{animation:iw-raid-cast-pulse .7s ease-in-out infinite alternate}}@keyframes iw-raid-cast-pulse{to{filter:drop-shadow(0 0 12px rgba(239,106,75,.75)) brightness(1.12)}}:root [data-iw-raid-hud]>.raid-arena-floor{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch!important;justify-self:center;width:min(100%,860px);gap:8px!important;padding:0!important;background:none!important;text-shadow:none!important}:root [data-iw-raid-hud]>.raid-arena-floor::after{content:none!important;display:none!important}:root [data-iw-raid-hud]>.raid-arena-floor::before{position:static!important;inset:auto!important;transform:none!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;animation:none!important;z-index:auto!important;pointer-events:none;content:"Raid party" " · " attr(data-iw-raid-party);flex:0 0 100%;grid-column:1 / -1;order:-2;text-align:center;margin-bottom:2px;font:700 10px/1 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-raid-brass);text-shadow:0 1px 3px #000}:root [data-iw-raid-hud] [data-iw-guild-role=raider]{--iw-frame-edge: var(--iw-th-edge);--iw-frame-glow: transparent;position:relative!important;display:grid!important;flex:1 1 150px;width:auto!important;max-width:none;min-width:0;grid-template-columns:20px minmax(0,1fr) auto;grid-template-areas:"ico name pct" "ico skill skill" "hp hp hp" "ch ch ch" "fx fx fx";align-items:center;align-content:start;column-gap:7px;row-gap:3px;padding:8px 9px 7px!important;text-align:left!important;border:1px solid var(--iw-frame-edge)!important;border-radius:var(--iw-r-panel, 3px)!important;border-image:none!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent) center top / calc(100% - 16px) 1px no-repeat,linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 0 12px var(--iw-frame-glow),0 4px 10px rgba(0,0,0,.55)!important;filter:none!important;opacity:1!important;cursor:default}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-self]{order:-1}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-frame=self]{--iw-frame-edge: #3d7487;--iw-frame-glow: rgba(111, 179, 201, .28)}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-frame=critical]{--iw-frame-edge: #8a3a2f;--iw-frame-glow: rgba(208, 97, 79, .32)}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-down]{filter:grayscale(.85) brightness(.7)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-down]::after{content:"💀 Down";color:var(--iw-raid-bad);font-size:11px;letter-spacing:.04em}:root .iw-raid-fx:empty{display:none}:root [data-iw-raid-hud] [data-iw-guild-role=raider]>div:not([data-iw-guild-role]){display:none!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::before{content:"";grid-area:ico;align-self:start;width:22px;height:22px;margin-top:1px;background:center / contain no-repeat;opacity:.92}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::after{content:attr(data-iw-raid-hp);grid-area:pct;justify-self:end;font:700 12px/1 var(--iw-font-ui);color:var(--iw-raid-ivory);font-variant-numeric:tabular-nums}:root [data-iw-raid-hud] [data-iw-guild-role=raider-name]{grid-area:name;width:auto!important;padding:0!important;border:0!important;background:none!important;font:700 13px/1.15 var(--iw-font-ui)!important;text-align:left!important;text-shadow:none!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}:root [data-iw-raid-hud] [data-iw-guild-role=raider-name]:not([class*=text-sky]){color:var(--iw-raid-ivory)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-skill]{grid-area:skill;width:auto!important;text-align:left!important;font:500 11px/1.15 var(--iw-font-ui)!important;color:var(--iw-raid-read)!important;text-shadow:none!important}:root [data-iw-raid-hud] :is([data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge]){width:100%!important;margin-top:2px;border:1px solid #3f3a2c!important;border-radius:0!important;background:#050605!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.9)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-hp]{grid-area:hp;height:6px!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-charge]{grid-area:ch;height:4px!important;margin-top:0;border-color:#2e3433!important}:root [data-iw-raid-hud] :is([data-iw-guild-role=raider-hp],[data-iw-guild-role=raider-charge])>*{border-radius:0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)!important}:root [data-iw-raid-hud] [data-iw-guild-role=raider-charge]>*{background:linear-gradient(180deg,#b2d6e4,#4f8aa3)!important}:root .iw-raid-fx{grid-area:fx;display:flex;flex-wrap:wrap;gap:3px 6px;margin-top:3px;min-height:16px}:root .iw-raid-chip{display:inline-flex;align-items:center;gap:2px;white-space:nowrap;font:700 10.5px/14px var(--iw-font-ui);color:var(--iw-raid-ivory, #f0e8d6);font-variant-numeric:tabular-nums}:root .iw-raid-chip[data-iw-raid-tone=debuff]{color:var(--iw-raid-bad, #e89aa9)}:root .iw-raid-chip-icon{display:inline-grid;place-items:center;width:14px;height:14px;flex:none;font-style:normal;font-size:11px;line-height:1;background:center / contain no-repeat;filter:drop-shadow(0 1px 1px #000)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art]>.iw-raid-chip-icon{font-size:0}:root .iw-raid-chip-name{font-weight:600;color:var(--iw-raid-read, #b7ad99)}:root .iw-raid-chip[data-iw-raid-tone=debuff]>.iw-raid-chip-name{color:inherit}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=shield]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/shield.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=ward]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/ward.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=war-cry]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/war-cry.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=curse]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/curse.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=bleed]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/bleed.png)}:root :is(.iw-raid-chip,.iw-raid-timer)[data-iw-raid-art=taunt]>.iw-raid-chip-icon{background-image:url(../assets/raids/ui-kit-v1/sprites/taunt.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=combat]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-combat.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=jewelcrafting]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-jewelcrafting.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=tailoring]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-tailoring.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=construction]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-construction.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=mining]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-mining.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=woodcutting]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-woodcutting.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=alchemy]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-alchemy.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=gathering]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-gathering.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=smithing]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-smithing.png)}:root [data-iw-guild-role=raider][data-iw-raid-skill=spellcrafting]::before{background-image:url(../assets/raids/ui-kit-v1/sprites/skill-spellcrafting.png)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome],:root .iw-raid-dock>.iw-raid-dock-panel{--iw-raid-corner-w: 25px 23px;border:1px solid transparent!important;border-radius:var(--iw-r-panel, 3px)!important;border-image:var(--iw-corner-filigree) 50% / var(--iw-raid-corner-w) / 0 stretch!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent) center top / calc(100% - 24px) 1px no-repeat,linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a) 0%,var(--iw-th-ground-b) 100%)!important;background-blend-mode:normal,normal,normal,soft-light,normal!important;box-shadow:0 0 0 1px var(--iw-th-edge),inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 8px 22px rgba(0,0,0,.55)!important;filter:none!important}:root [data-iw-raid-hud]>.iw-raid-timers{justify-self:center;width:min(100%,860px);display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 10px}.iw-raid-timer{position:relative;display:grid;grid-template-columns:16px auto minmax(0,1fr) auto;align-items:center;column-gap:7px;height:26px;padding:0 10px 0 8px;overflow:hidden;border:1px solid #3d7487;border-radius:var(--iw-r-panel, 3px);background:linear-gradient(180deg,#0b0d0d,#050605);box-shadow:inset 0 1px 3px rgba(0,0,0,.9),0 3px 8px rgba(0,0,0,.5);font:700 11px/1 var(--iw-font-ui);color:#fff;text-shadow:0 1px 2px #000,0 0 4px #000}.iw-raid-timer[data-iw-raid-tone=debuff]{border-color:#8a3a2f}.iw-raid-timer-fill{position:absolute;inset:0 auto 0 0;transition:width .9s linear}.iw-raid-timer[data-iw-raid-tone=buff]>.iw-raid-timer-fill{background:linear-gradient(180deg,#74b6dd,#2f6f9c 58%,#1c4568);box-shadow:inset 0 1px 0 rgba(214,238,252,.4)}.iw-raid-timer[data-iw-raid-tone=debuff]>.iw-raid-timer-fill{background:linear-gradient(180deg,#e0786a,#a8352b 58%,#6e1a15);box-shadow:inset 0 1px 0 rgba(255,214,205,.35)}.iw-raid-timer>:not(.iw-raid-timer-fill){position:relative;z-index:1;min-width:0}.iw-raid-timer>.iw-raid-chip-icon{width:16px;height:16px;font-size:12px}.iw-raid-timer-name{letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}.iw-raid-timer-who{font-weight:600;color:#e6ddcb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iw-raid-timer-secs{font-size:13px;font-variant-numeric:tabular-nums}@media(prefers-reduced-motion:reduce){.iw-raid-timer-fill{transition:none}}:root [data-iw-raid-hud]>[data-iw-guild-role=status]{justify-self:center;margin-top:-2px!important;text-align:center;font:italic 500 12px/1.2 var(--iw-font-ui)!important;color:var(--iw-raid-read)!important;text-shadow:0 1px 3px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=actions]{justify-self:center;align-self:start;width:min(100%,540px);display:flex!important;flex-wrap:wrap;gap:10px!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action]{--iw-compact-cap: 15px;flex:1 1 140px;height:44px!important;min-height:0!important;padding:0 24px!important;display:inline-flex!important;align-items:center;justify-content:center;gap:8px;border:0!important;border-radius:0!important;font:700 13px/1 var(--iw-font-head)!important;letter-spacing:.1em;text-transform:uppercase!important;color:var(--iw-raid-ivory)!important;text-shadow:0 1px 2px #000,0 0 4px #000!important;cursor:pointer}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action].button-primary{color:#ffd2ad!important;box-shadow:0 0 16px rgba(217,120,74,.28)!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action].button-primary>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-cta-hi, #d9784a)!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action]:disabled{opacity:.5!important;filter:saturate(.3)!important;cursor:not-allowed}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{justify-self:center;align-self:center;width:min(100%,460px);display:flex!important;flex-direction:column;align-items:center;gap:10px;padding:22px 30px 20px!important;text-align:center}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]>p{margin:0!important;font:700 clamp(17px,1.6vw,21px)/1.25 var(--iw-font-head)!important;letter-spacing:.03em;color:var(--iw-raid-ivory)!important;text-shadow:0 2px 4px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-guild-tone=bad]>p{color:var(--iw-raid-bad)!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-guild-tone=good]>p{color:var(--iw-raid-good)!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-guild-tone=warn]>p{color:#e8c27a!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=outcome-close]{--iw-compact-cap: 11px;margin:0!important;height:32px!important;min-height:0!important;padding:0 26px!important;border:0!important;border-radius:0!important;font:700 12px/1 var(--iw-font-head)!important;letter-spacing:.1em;text-transform:uppercase;color:var(--iw-raid-ivory)!important;text-shadow:0 1px 2px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{--iw-res-hi: #fff2c8;--iw-res-mid: #e8b44c;--iw-res-lo: #87561a;--iw-res-ring: #d6a64a;--iw-res-ray: rgba(255, 204, 110, .15);--iw-res-glow: rgba(255, 186, 76, .42);--iw-res-band: rgba(13, 10, 6, .9);--iw-res-warm: rgba(255, 186, 76, .16);--iw-res-ink: #f1e4c2;isolation:isolate;overflow:visible!important;width:min(100%,540px);gap:12px;padding:54px 40px 24px!important;border:0!important;border-image:none!important;border-radius:0!important;background:linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center top / 100% 1px no-repeat,linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center bottom / 100% 1px no-repeat,radial-gradient(ellipse 60% 75% at 50% 28%,var(--iw-res-warm),transparent 70%),linear-gradient(90deg,transparent,var(--iw-res-band) 16%,var(--iw-res-band) 84%,transparent)!important;box-shadow:none!important;filter:none!important}@media(prefers-reduced-motion:no-preference){:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{animation:iw-res-in .7s cubic-bezier(.2,.9,.3,1.15) both}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{animation:iw-res-spin 80s linear infinite}}@keyframes iw-res-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}@keyframes iw-res-spin{to{transform:rotate(1turn)}}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=wipe]{--iw-res-hi: #f4c7b8;--iw-res-mid: #c44430;--iw-res-lo: #4c0e09;--iw-res-ring: #9e3d2d;--iw-res-ray: rgba(205, 64, 44, .12);--iw-res-glow: rgba(220, 72, 50, .38);--iw-res-band: rgba(14, 7, 6, .9);--iw-res-warm: rgba(196, 58, 40, .14);--iw-res-ink: #e9d0c7}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=other]{--iw-res-hi: #f4f0e6;--iw-res-mid: #b9b2a2;--iw-res-lo: #4d4a42;--iw-res-ring: #8f8877;--iw-res-ray: rgba(230, 224, 210, .08);--iw-res-glow: rgba(230, 224, 210, .25);--iw-res-warm: rgba(230, 224, 210, .08);--iw-res-ink: #ece6d8}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{content:"";position:absolute;z-index:-1;left:50%;top:0;width:380px;height:380px;margin:-190px 0 0 -190px;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from 0deg,var(--iw-res-ray) 0deg 5deg,transparent 5deg 15deg);-webkit-mask:radial-gradient(circle,#000 14%,transparent 66%);mask:radial-gradient(circle,#000 14%,transparent 66%)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{content:attr(data-iw-raid-result-glyph);position:absolute;z-index:1;left:50%;top:0;transform:translate(-50%,-50%);display:grid;place-items:center;width:68px;height:68px;border-radius:50%;pointer-events:none;font-size:31px;line-height:1;background:radial-gradient(circle at 50% 32%,color-mix(in srgb,var(--iw-res-lo) 55%,#2a1d0c),#0d0905 72%);border:2px solid var(--iw-res-ring);box-shadow:0 0 0 4px rgba(0,0,0,.6),0 0 0 5px var(--iw-res-lo),0 0 26px var(--iw-res-glow),inset 0 2px 7px color-mix(in srgb,var(--iw-res-hi) 30%,transparent)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type{display:flex!important;flex-direction:column;align-items:center;gap:10px;font-size:0!important;line-height:0!important;text-shadow:none!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{content:attr(data-iw-raid-result-word);padding:0 .12em;font:700 clamp(36px,4.4vw,52px)/1 var(--iw-font-head);letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(180deg,var(--iw-res-hi) 8%,var(--iw-res-mid) 52%,var(--iw-res-lo) 96%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.85)) drop-shadow(0 0 16px var(--iw-res-glow))}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{content:attr(data-iw-raid-result-boss);padding:0 58px;font:700 12px/1.2 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-res-ink);text-shadow:0 1px 3px #000;background:linear-gradient(90deg,transparent,var(--iw-res-ring)) left center / 46px 1px no-repeat,linear-gradient(90deg,var(--iw-res-ring),transparent) right center / 46px 1px no-repeat}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{max-width:42ch;margin:2px 0 4px!important;font:italic 500 13px/1.5 var(--iw-font-ui)!important;letter-spacing:.01em;text-transform:none;color:var(--iw-res-ink)!important;opacity:.88;text-shadow:0 1px 2px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p::before{content:"";display:block;width:7px;height:7px;margin:0 auto 12px;transform:rotate(45deg);background:var(--iw-res-ring);box-shadow:0 0 8px var(--iw-res-glow)}:root .iw-raid-dock{--iw-raid-brass: #d4ad63;--iw-raid-ivory: #f0e8d6;--iw-raid-read: #b7ad99;--iw-raid-dim: #938a79;display:flex;flex-direction:column;gap:10px;margin-top:12px;font-family:var(--iw-font-ui);color:var(--iw-raid-ivory)}:root .iw-raid-dock>.iw-raid-dock-panel{padding:0!important}:root .iw-raid-dock>.iw-raid-dock-panel[hidden]{display:none!important}.iw-raid-dock-head{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;margin:0;padding:12px 22px 12px 28px;border:0;background:none;box-shadow:none;cursor:pointer;text-align:left;font:700 12px/1 var(--iw-font-head);letter-spacing:.14em;text-transform:uppercase;color:var(--iw-raid-brass)}.iw-raid-dock-head:hover{filter:brightness(1.15)}.iw-raid-dock-head:focus-visible{outline:1px solid var(--iw-raid-brass);outline-offset:-4px}.iw-raid-dock-glyph{font-size:13px;letter-spacing:0}.iw-raid-dock-title{flex:1 1 auto;min-width:0}.iw-raid-dock-chevron{display:grid;place-items:center;width:22px;height:22px;flex:none}.iw-raid-dock-chevron::before{content:"";width:7px;height:7px;border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);transition:transform .15s ease}.iw-raid-dock-head[aria-expanded=true] .iw-raid-dock-chevron::before{transform:translateY(2px) rotate(-135deg)}.iw-raid-dock-panel[data-iw-raid-fold=closed]>.iw-raid-dock-body{display:none}.iw-raid-dock-body{padding:0 26px 18px 28px;text-align:left}.iw-raid-dock-panel[data-iw-raid-dock=log]>.iw-raid-dock-body{max-height:260px;overflow-y:auto;overscroll-behavior:contain;margin-bottom:10px;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:var(--iw-th-edge-mid, #5b4a2e) transparent}.iw-raid-dock-line{margin:0;font:500 12.5px/1.6 var(--iw-font-ui);color:var(--iw-raid-read)}.iw-raid-dock-line:last-child{color:var(--iw-raid-ivory)}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div{margin:0;padding:4px 0 4px 9px;text-align:left;border-left:2px solid currentColor;font:600 12px/1.35 var(--iw-font-ui)}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div+div{margin-top:3px}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div:has(>p){border-left-color:var(--iw-th-edge-mid, #5b4a2e);color:var(--iw-raid-read);font-weight:500}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>div>p{margin:0}.iw-raid-dock-more{display:inline-block;margin:10px 0 0;padding:0;border:0;background:none;box-shadow:none;cursor:pointer;font:600 11px/1 var(--iw-font-ui);letter-spacing:.03em;color:var(--iw-raid-dim);text-decoration:underline dotted;text-underline-offset:3px}.iw-raid-dock-more:hover{color:var(--iw-raid-ivory)}.iw-raid-dock-panel[data-iw-raid-dock=skills]>.iw-raid-dock-body>[data-iw-raid-fx-kind=resist]{--iw-res: 0%;margin-top:8px;padding:7px 0 10px;border-left:0;border-top:1px solid #433722;background:linear-gradient(90deg,#b9612f,#e3a14c) left bottom / var(--iw-res) 3px no-repeat,linear-gradient(#0a0908,#0a0908) left bottom / 100% 3px no-repeat}:root [data-iw-raid-resist-step="0"]{--iw-res: 0%}:root [data-iw-raid-resist-step="1"]{--iw-res: 10%}:root [data-iw-raid-resist-step="2"]{--iw-res: 20%}:root [data-iw-raid-resist-step="3"]{--iw-res: 30%}:root [data-iw-raid-resist-step="4"]{--iw-res: 40%}:root [data-iw-raid-resist-step="5"]{--iw-res: 50%}:root [data-iw-raid-resist-step="6"]{--iw-res: 60%}:root [data-iw-raid-resist-step="7"]{--iw-res: 70%}:root [data-iw-raid-resist-step="8"]{--iw-res: 80%}:root [data-iw-raid-resist-step="9"]{--iw-res: 90%}:root [data-iw-raid-resist-step="10"]{--iw-res: 100%}@media(max-width:1099px){:root [data-iw-guild=root] [data-iw-raid-hud]{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(120px,1fr) auto auto auto auto;grid-template-areas:"boss boss" "cast cast" "result result" "timers timers" "party party" "status status" "actions actions";gap:10px 14px!important;padding:22px 18px 16px!important;min-height:0}:root [data-iw-raid-hud]>.raid-arena-floor{max-width:744px;justify-self:center}:root [data-iw-raid-hud]>.iw-raid-timers{width:min(100%,744px)}}@media(max-width:699px){:root [data-iw-guild=root] [data-iw-raid-hud]{--iw-hero-h: clamp(220px, 74vw, 330px);grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto var(--iw-hero-h) auto auto auto auto auto auto;grid-template-areas:"boss boss" "hero hero" "hp hp" "cast cast" "timers timers" "party party" "status status" "actions actions";gap:10px 8px!important;padding:18px 12px 14px!important;min-height:0}:root [data-iw-guild=root] [data-iw-raid-hud][data-iw-raid-scene]{background:var(--iw-scene-bg, #0d0c0a)!important}:root [data-iw-raid-scene=ashmaw]{--iw-scene-bg: #160706}:root [data-iw-raid-scene=thessaly]{--iw-scene-bg: #101017}:root [data-iw-raid-scene=morwenna]{--iw-scene-bg: #151019}:root [data-iw-raid-scene=grimjaw]{--iw-scene-bg: #111923}:root [data-iw-raid-hud]>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art]){grid-area:hero;inset:-4px -12px!important}:root [data-iw-raid-hud]>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])>:is(canvas,img){object-position:97% 50%!important}:root [data-iw-raid-hud]>:is([data-iw-ashmaw-art],[data-iw-thessaly-art],[data-iw-morwenna-art],[data-iw-grimjaw-art],[data-iw-skarth-art])::after{background:linear-gradient(180deg,var(--iw-scene-bg) 0%,transparent 24%,transparent 68%,var(--iw-scene-bg) 100%),linear-gradient(90deg,rgba(0,0,0,.35),transparent 18%,transparent 82%,rgba(0,0,0,.35))!important}:root [data-iw-raid-hud]>[data-iw-guild-role=boss-summary]{display:contents!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>*{position:relative;z-index:1;min-width:0;margin:0!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>:first-child{grid-area:boss;align-items:center!important;text-align:center;gap:6px}:root [data-iw-raid-hud] [data-iw-raid-boss]::before{margin-bottom:6px;letter-spacing:.26em}:root [data-iw-raid-hud] [data-iw-raid-boss]::after{font-size:clamp(30px,9vw,38px)}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>div:nth-child(2):not([data-iw-guild-role]){grid-area:hero;align-self:center;justify-self:center}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>div:nth-child(2):not([data-iw-guild-role])>img{height:calc(var(--iw-hero-h) * .62)!important;width:auto!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-hp]{grid-area:hp;width:100%!important;margin:0!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p{grid-area:hp;align-self:stretch;z-index:2;height:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;padding:calc(var(--iw-shell-t) * 100% / 1216) calc(var(--iw-shell-r) * 100% / 1216) calc(var(--iw-shell-b) * 100% / 1216) calc(var(--iw-shell-l) * 100% / 1216)!important;margin:0!important;font-size:14px!important}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p::before{content:""}:root [data-iw-raid-hud] [data-iw-guild-role=boss-summary]>p[data-iw-raid-pct]::after{position:static;justify-self:end;padding-right:4px;font-size:12px}:root [data-iw-raid-hud]>[data-iw-guild-role=telegraph]:not([data-iw-raid-cast]){width:100%;margin-left:0!important;justify-self:stretch}:root [data-iw-raid-hud]>[data-iw-raid-cast]{--iw-shell-w: 100%;height:22px;margin:calc(var(--iw-shell-w) * -.09 - 10px) 0 0 calc(var(--iw-shell-w) * .230263)!important}:root [data-iw-raid-cast]::before{left:8px;right:38px;font-size:11.5px}:root [data-iw-raid-cast]::after{right:8px;font-size:12px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{grid-area:hero;z-index:2;width:calc(100% - 24px)}:root [data-iw-raid-hud]>.raid-arena-floor{display:flex!important;flex-wrap:wrap!important;justify-content:center!important;width:100%;gap:7px 6px!important}:root [data-iw-guild=root] [data-iw-raid-hud] [data-iw-guild-role=action]{--iw-compact-cap: 13px;height:40px!important;padding:0 16px!important;font-size:12px!important}:root [data-iw-raid-hud]>.raid-arena-floor::before{content:"Raid party";flex:0 0 calc(50% - 3px);text-align:left;margin:0;order:-4}:root [data-iw-raid-hud]>.raid-arena-floor::after{position:static!important;inset:auto!important;transform:none!important;width:auto!important;height:auto!important;border:0!important;background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;animation:none!important;display:block!important;content:attr(data-iw-raid-party)!important;flex:0 0 calc(50% - 3px);order:-3;text-align:right;font:600 10.5px/1 var(--iw-font-ui);color:var(--iw-raid-dim);text-shadow:0 1px 3px #000}:root [data-iw-raid-hud] [data-iw-guild-role=raider]{flex:0 0 calc((100% - 12px) / 3);max-width:none;padding:7px 6px 6px!important;grid-template-columns:16px minmax(0,1fr) auto;grid-template-columns:14px minmax(0,1fr) auto;grid-template-areas:"ico name name" "skill skill pct" "hp hp hp" "ch ch ch" "fx fx fx";column-gap:4px;row-gap:3px}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::before{width:14px;height:14px;margin-top:0;align-self:center}:root [data-iw-raid-hud] [data-iw-guild-role=raider]::after{font-size:10.5px}:root [data-iw-raid-hud] [data-iw-guild-role=raider][data-iw-raid-down]::after{font-size:10px}:root [data-iw-raid-hud] [data-iw-guild-role=raider-name]{font-size:10.5px!important;letter-spacing:-.01em}:root [data-iw-raid-hud] [data-iw-guild-role=raider-skill]{font-size:10px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}:root .iw-raid-fx{gap:2px 5px}:root .iw-raid-chip{font-size:10px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome],:root .iw-raid-dock>.iw-raid-dock-panel{--iw-raid-corner-w: 20px 18px}.iw-raid-dock-head{min-height:42px;padding:10px 16px 10px 22px;font-size:11px;letter-spacing:.1em}.iw-raid-dock-body{padding:0 18px 14px 22px}:root [data-iw-raid-hud]>.iw-raid-timers{width:100%;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px 6px}.iw-raid-timer{height:24px;column-gap:5px;padding:0 7px 0 6px;font-size:10px}.iw-raid-timer-secs{font-size:12px}:root [data-iw-raid-hud]>[data-iw-guild-role=actions]{width:100%}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome]{padding:18px 20px 16px!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{align-self:end;padding:44px 18px 18px!important;gap:10px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{width:280px;height:280px;margin:-140px 0 0 -140px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{width:56px;height:56px;font-size:26px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{font-size:clamp(28px,9vw,36px)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{padding:0 40px;font-size:10.5px;letter-spacing:.22em;background-size:30px 1px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{font-size:12px!important}}:root [data-iw-guild=root] [data-iw-raid-scene=skarth]{background:#111c28!important}:root [data-iw-skarth-art]::after{background:linear-gradient(180deg,transparent 50%,rgba(8,16,25,.65))}@media(max-width:767px){:root [data-iw-raid-scene=skarth]{--iw-scene-bg: #111c28}}:root [data-iw-guild=root][data-iw-guild-layout=lobby]{display:grid!important;grid-template-columns:minmax(0,1fr);grid-auto-flow:row;gap:12px!important;align-items:start}:root [data-iw-guild-layout=lobby] [data-iw-guild-wrap]{display:contents!important}:root [data-iw-guild-layout=lobby]>*,:root [data-iw-guild-layout=lobby] [data-iw-guild-wrap]>*{grid-column:1 / -1;min-width:0;margin:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=leaderboard]{display:none!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=boss]{order:20}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=chat]{order:21}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=lend]{order:22}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]{order:23}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=loadout]{order:24}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]{order:25}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=members]{order:26}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=other]{order:50}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=start]{order:60}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=history]{order:70}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=footer]{order:80}@media(min-width:1024px){:root [data-iw-guild=root][data-iw-guild-layout=lobby]{grid-template-columns:repeat(2,minmax(0,1fr))}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=lend]{order:10;grid-column:1;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]{order:11;grid-column:2;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=boss]{order:20;grid-column:1}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=members]{order:21;grid-column:2;grid-row:span 4;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=chat]{order:30;grid-column:1}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]{order:40;grid-column:1;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=loadout]{order:41;grid-column:1}}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite],:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]:has(~[data-iw-guild-slot=loadout]){margin-bottom:-12px!important;border-bottom-color:transparent!important;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]~[data-iw-guild-slot=invite],:root [data-iw-guild-layout=lobby]:has([data-iw-guild-slot=invite]) [data-iw-guild-slot=members],:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]~[data-iw-guild-slot=loadout]{border-top-color:var(--iw-th-edge-faint)!important;border-top-left-radius:0!important;border-top-right-radius:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite] [data-iw-guild-role=note]{display:none!important}.iw-guild-records{display:flex;gap:6px;margin-top:2px}.iw-guild-record{flex:1 1 0;min-width:0;text-align:center;font:600 10.5px/1.3 var(--iw-font-ui);color:var(--iw-dim, #938a79);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root [data-iw-boss-card]{--iw-bc-r1: 2;--iw-bc-r2: 3;--iw-bc-r3: 4;--iw-bc-end: 5;--iw-bc-face: 78px;--iw-bc-indent: calc(var(--iw-bc-face) + 30px);display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start!important}:root [data-iw-boss-card]:not(:has(>[data-iw-guild-role=boss-tabs])){--iw-bc-r1: 1;--iw-bc-r2: 2;--iw-bc-r3: 3;--iw-bc-end: 4}:root [data-iw-boss-card]>[data-iw-guild-role=boss-tabs]{grid-row:1!important;grid-column:1!important}:root [data-iw-boss-card]>[data-iw-boss-card-src]{display:none!important}:root [data-iw-boss-card]>.iw-bc-art{grid-column:1;grid-row:var(--iw-bc-r1) / var(--iw-bc-end);position:relative;z-index:0;margin:0!important;min-height:132px;border:1px solid var(--iw-th-edge-soft, #3a3226);border-radius:2px;background:linear-gradient(90deg,rgba(9,8,7,.96) 0%,rgba(9,8,7,.9) 36%,rgba(9,8,7,.62) 54%,rgba(9,8,7,0) 74%),linear-gradient(0deg,rgba(9,8,7,.7),rgba(9,8,7,0) 42%),var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / 150% auto no-repeat,#0b0a08;box-shadow:inset 0 0 0 1px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,226,191,.06);pointer-events:none}:root [data-iw-boss-card] .iw-bc-portrait{position:absolute;left:14px;top:12px;width:var(--iw-bc-face);height:var(--iw-bc-face);background:var(--iw-bc-face-art, none) center / contain no-repeat;filter:drop-shadow(0 3px 6px rgba(0,0,0,.85))}.iw-bc-art[data-iw-bc-boss=ashmaw]{--iw-bc-banner: url(../assets/raids/lobby/ashmaw-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/ashmaw-portrait.webp);--iw-bc-focus: 38% 26%}.iw-bc-art[data-iw-bc-boss=thessaly]{--iw-bc-banner: url(../assets/raids/lobby/thessaly-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/thessaly-portrait.webp);--iw-bc-focus: 59% 0%}.iw-bc-art[data-iw-bc-boss=morwenna]{--iw-bc-banner: url(../assets/raids/lobby/morwenna-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/morwenna-portrait.webp);--iw-bc-focus: 56% 0%}.iw-bc-art[data-iw-bc-boss=grimjaw]{--iw-bc-banner: url(../assets/raids/lobby/grimjaw-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/grimjaw-portrait.webp);--iw-bc-focus: 53% 2%}.iw-bc-art[data-iw-bc-boss=skarth]{--iw-bc-banner: url(../assets/raids/lobby/skarth-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/skarth-portrait.webp);--iw-bc-focus: 74% 6%}:root [data-iw-boss-card]>:is([data-iw-guild-role=boss-name],[data-iw-guild-role=lore],.iw-bc-stats){grid-column:1;position:relative;z-index:1;margin:0!important;padding-left:var(--iw-bc-indent)!important;padding-right:16px!important}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=boss-name]{grid-row:var(--iw-bc-r1);padding-top:16px!important;font-size:19px!important;line-height:1.2!important;text-shadow:0 1px 0 #000,0 0 12px rgba(0,0,0,.9)!important}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=lore]{grid-row:var(--iw-bc-r2);max-width:620px;padding-top:3px!important;font-size:13.5px!important;color:#e4dac6!important;text-shadow:0 1px 1px #000,0 0 6px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.85)!important}:root [data-iw-boss-card]>.iw-bc-stats{grid-row:var(--iw-bc-r3);padding-top:10px!important;padding-bottom:14px!important;align-self:end}.iw-bc-stats{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.iw-bc-stat{display:inline-flex;align-items:baseline;gap:6px;padding:3px 9px;border:1px solid rgba(200,168,97,.30);border-radius:2px;background:rgba(8,7,6,.72);box-shadow:inset 0 1px 0 rgba(255,226,191,.05)}.iw-bc-stat-label{font:700 9.5px/1 var(--iw-font-ui);letter-spacing:.12em;color:var(--iw-th-accent-dim, #a88d5d)}.iw-bc-stat-value{font:700 13px/1.15 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6);font-variant-numeric:tabular-nums}.iw-bc-stat-value[data-iw-bc-tone=hard]{color:#fda4af}.iw-bc-stat-value[data-iw-bc-tone=easy]{color:#6ee7b7}.iw-bc-element{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:2px 7px;margin-left:4px;font:500 11.5px/1.3 var(--iw-font-ui);text-shadow:0 1px 2px #000}.iw-bc-element-name{font-weight:700;color:var(--iw-text-hi, #f0e8d6)}.iw-bc-element-list{color:#b9ad97}.iw-bc-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:6px}.iw-bc-tile{display:flex;align-items:center;gap:10px;min-width:0;padding:7px 10px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-guild-warn-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-guild-warn-rail) 9%,rgba(0,0,0,.3))}.iw-bc-tile[data-iw-bc-kind=advice]{border-left-color:var(--iw-guild-info-rail);background:color-mix(in srgb,var(--iw-guild-info-rail) 8%,rgba(0,0,0,.3));--iw-bc-tile-ink: var(--iw-guild-info)}.iw-bc-tile-body{display:flex;flex-direction:column;min-width:0}.iw-bc-tile-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--iw-bc-tile-ink, var(--iw-guild-warn)) 72%,#5a554c)}.iw-bc-tile-value{font:700 13.5px/1.25 var(--iw-font-ui);color:var(--iw-bc-tile-ink, var(--iw-guild-warn));font-variant-numeric:tabular-nums}.iw-bc-tile-sub{font:500 10.5px/1.3 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-icon{flex:0 0 auto;width:22px;height:22px;background:var(--iw-bc-skill-art, none) center / contain no-repeat;opacity:.9}.iw-bc-glyph{flex:0 0 auto;width:22px;text-align:center;font-size:17px;line-height:1}.iw-bc-icon[data-iw-bc-skill=alchemy]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-alchemy.png)}.iw-bc-icon[data-iw-bc-skill=combat]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-combat.png)}.iw-bc-icon[data-iw-bc-skill=construction]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-construction.png)}.iw-bc-icon[data-iw-bc-skill=gathering]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-gathering.png)}.iw-bc-icon[data-iw-bc-skill=jewelcrafting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-jewelcrafting.png)}.iw-bc-icon[data-iw-bc-skill=mining]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-mining.png)}.iw-bc-icon[data-iw-bc-skill=smithing]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-smithing.png)}.iw-bc-icon[data-iw-bc-skill=spellcrafting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-spellcrafting.png)}.iw-bc-icon[data-iw-bc-skill=tailoring]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-tailoring.png)}.iw-bc-icon[data-iw-bc-skill=woodcutting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-woodcutting.png)}.iw-bc-tactics{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:8px 10px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-guild-info-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-guild-info-rail) 8%,rgba(0,0,0,.3));font:500 11.5px/1.35 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-tactics-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--iw-guild-info) 72%,#3c5a6b)}.iw-bc-roles{display:flex;flex-wrap:wrap;gap:6px}.iw-bc-role{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 7px;border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 45%,transparent);border-radius:2px;background:rgba(8,7,6,.55);color:var(--iw-text, #d8cfbd);font-weight:600}.iw-bc-role-count{font:700 14px/1 var(--iw-font-ui);color:var(--iw-guild-info);font-variant-numeric:tabular-nums}.iw-bc-role>.iw-bc-icon{width:16px;height:16px}.iw-bc-role>.iw-bc-glyph{width:16px;font-size:13px;color:var(--iw-guild-info)}.iw-bc-tip{margin:0;color:var(--iw-text, #d8cfbd)}.iw-bc-tip>b{color:var(--iw-guild-info);font-weight:700}.iw-bc-tip>.iw-bc-tip-label{color:var(--iw-text-hi, #f0e8d6)}.iw-bc-loot{--iw-bc-rail: var(--iw-guild-warn-rail);--iw-bc-ink: var(--iw-guild-warn);display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:4px 14px;padding:8px 12px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-bc-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-bc-rail) 10%,rgba(0,0,0,.3));font:500 11.5px/1.35 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-loot[data-iw-bc-tone=good]{--iw-bc-rail: var(--iw-guild-good-rail);--iw-bc-ink: var(--iw-guild-good)}.iw-bc-loot[data-iw-bc-tone=bad]{--iw-bc-rail: var(--iw-guild-bad-rail);--iw-bc-ink: var(--iw-guild-bad)}.iw-bc-loot[data-iw-bc-tone=info]{--iw-bc-rail: var(--iw-guild-info-rail);--iw-bc-ink: var(--iw-guild-info)}.iw-bc-loot-state{font-weight:700;font-size:12.5px;color:var(--iw-bc-ink);white-space:nowrap}.iw-bc-loot-when{display:grid;grid-template-columns:auto auto;align-items:baseline;justify-content:end;gap:0 6px;text-align:right}.iw-bc-loot-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--iw-faint, #6f675a)}.iw-bc-loot-count{font:700 14px/1.2 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6);font-variant-numeric:tabular-nums}.iw-bc-loot-reset{grid-column:1 / -1;font-size:10px;color:var(--iw-faint, #6f675a)}@media(max-width:640px){.iw-bc-loot{grid-template-columns:minmax(0,1fr);gap:3px}.iw-bc-loot-when{justify-content:start;text-align:left}.iw-bc-tile{padding:5px 9px}}@media(max-width:640px){:root [data-iw-boss-card]{--iw-bc-face: 58px}:root [data-iw-boss-card]>.iw-bc-art{background:linear-gradient(180deg,rgba(9,8,7,.25) 0%,rgba(9,8,7,.82) 52%,rgba(9,8,7,.95) 100%),linear-gradient(90deg,rgba(9,8,7,.75),rgba(9,8,7,0) 70%),var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / cover no-repeat,#0b0a08}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=boss-name]{display:flex!important;align-items:center;min-height:calc(var(--iw-bc-face) + 22px);padding-top:10px!important;font-size:17px!important}:root [data-iw-boss-card]>:is([data-iw-guild-role=lore],.iw-bc-stats){padding-left:12px!important;padding-right:12px!important}:root [data-iw-boss-card] .iw-bc-portrait{left:10px;top:10px}.iw-bc-element{margin-left:0}}.iw-rc-popup{position:fixed;z-index:2147483000;top:16px;left:50%;transform:translateX(-50%);width:min(440px,calc(100vw - 24px));box-sizing:border-box;padding:20px 24px 18px;border:1px solid transparent;border-radius:var(--iw-r-panel, 3px);border-image:var(--iw-corner-filigree) 50% / 25px 23px / 0 stretch;background:linear-gradient(90deg,rgba(240,180,92,.14),transparent 60%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a, #1a1611),var(--iw-th-ground-b, #0d0c0a));background-blend-mode:normal,soft-light,normal;box-shadow:0 0 0 1px #c9963f,inset 0 0 0 1px rgba(0,0,0,.7),0 14px 40px rgba(0,0,0,.75),0 0 34px -10px rgba(240,180,92,.7);color:var(--iw-text-hi, #f0e8d6);font-family:var(--iw-font-ui)}@media(prefers-reduced-motion:no-preference){.iw-rc-popup{animation:iw-rc-in .28s cubic-bezier(.2,.9,.3,1.2) both}}@keyframes iw-rc-in{from{opacity:0;transform:translate(-50%,-14px)}to{opacity:1;transform:translate(-50%,0)}}.iw-rc-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.iw-rc-title{margin:0;font:700 15px/1.25 var(--iw-font-head);letter-spacing:.03em;color:#f5d58a;text-shadow:0 1px 0 #000}.iw-rc-timer{flex:none;font:800 15px/1 var(--iw-font-ui);color:#f0b45c;font-variant-numeric:tabular-nums}.iw-rc-note{margin:8px 0 14px;font:500 12px/1.45 var(--iw-font-ui);color:var(--iw-dim, #b7ad99)}.iw-rc-actions{display:flex;gap:8px}.iw-rc-actions>button{--iw-compact-cap: 12px;flex:1 1 0;height:36px;padding:0 14px;margin:0;border:0;background:none;cursor:pointer;font:700 12px/1 var(--iw-font-head);letter-spacing:.08em;text-transform:uppercase;color:var(--iw-text-hi, #f0e8d6)!important;text-shadow:0 1px 2px #000}.iw-rc-actions>.iw-rc-confirm{color:#ffd2ad!important;box-shadow:0 0 14px rgba(217,120,74,.3)!important}.iw-rc-actions>.iw-rc-confirm>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-cta-hi, #d9784a)!important}.iw-raid-lb-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}.iw-raid-lb-title{margin:0}.iw-raid-lb-sub{font:500 11px/1 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-raid-lb-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.iw-raid-lb-tab{--iw-compact-cap: 10px;height:28px;padding:0 12px;margin:0;border:0;background:none;cursor:pointer;font:700 11px/1 var(--iw-font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--iw-dim, #938a79)!important}.iw-raid-lb-tab[aria-pressed=true]{color:var(--iw-text-hi, #f0e8d6)!important}.iw-raid-lb-tab[aria-pressed=true]>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}.iw-raid-lb-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px}.iw-raid-lb-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 10px;border:1px solid var(--iw-th-edge-faint, #29251d);border-radius:2px;background:rgba(0,0,0,.22);font:500 12.5px/1.25 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6)}.iw-raid-lb-name{display:flex;align-items:baseline;gap:8px;min-width:0}.iw-raid-lb-rank{flex:none;width:2.2em;font-weight:800;color:var(--iw-dim, #938a79);font-variant-numeric:tabular-nums}.iw-raid-lb-row[data-iw-raid-lb-rank="1"] .iw-raid-lb-rank{color:#f1c35b}.iw-raid-lb-row[data-iw-raid-lb-rank="2"] .iw-raid-lb-rank{color:#c9ccd2}.iw-raid-lb-row[data-iw-raid-lb-rank="3"] .iw-raid-lb-rank{color:#d08a52}.iw-raid-lb-guild{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.iw-raid-lb-tag{flex:none;padding:1px 5px;border:1px solid rgba(125,190,230,.35);border-radius:2px;font:600 9.5px/1.2 var(--iw-font-ui);letter-spacing:.04em;text-transform:uppercase;color:#a9d4ef}.iw-raid-lb-time{flex:none;font-weight:700;font-variant-numeric:tabular-nums;color:var(--iw-text-hi, #f0e8d6)}.iw-raid-lb-note{margin:6px 0 2px;font:italic 500 12px/1.4 var(--iw-font-ui);color:var(--iw-dim, #938a79)}:root [data-iw-guild=root]>[data-iw-lobby-test=bar]{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;border:1px dashed color-mix(in srgb,#f5b84a 45%,transparent);border-radius:4px;background:rgba(245,184,74,.05)}:root [data-iw-guild=root] [data-iw-lobby-test=label]{margin-right:4px;font:700 10.5px/1 var(--iw-font-ui);letter-spacing:.06em;text-transform:uppercase;color:#f5c76a}:root [data-iw-guild=root] button[data-iw-lobby-test]{padding:3px 9px!important;margin:0!important;min-height:0!important;border:1px dashed color-mix(in srgb,#f5b84a 60%,transparent)!important;border-radius:4px!important;background:none!important;box-shadow:none!important;filter:none!important;cursor:pointer;font:600 11px/1.3 var(--iw-font-ui)!important;letter-spacing:.02em;text-transform:none!important;color:#f5c76a!important}:root [data-iw-guild=root] button[data-iw-lobby-test][aria-pressed=true]{background:rgba(245,184,74,.18)!important;color:#ffe2a8!important}\n';
 
   // src/styles/compact-buttons.css
   var compact_buttons_default = '[data-iw-compact-layer]{display:none}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-compact-button]{--iw-compact-cap: 10px;position:relative!important;isolation:isolate!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;filter:none!important;transform:none!important;transition:color 180ms ease-out!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-ui=nav-tab]{--iw-compact-cap: 12px}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-panel-part=send]{--iw-compact-cap: 14px}html[data-iw-compact-atlas=compact-ghost-v3]{--iw-compact-mid-size: 150% 326.6666666666667%;--iw-compact-mid-x: 21.428571428571427%;--iw-compact-cap-size: 1680% 326.6666666666667%;--iw-compact-left-x: 1.2658227848101267%;--iw-compact-right-x: 78.48101265822785%;--iw-compact-icon-size: 560% 326.6666666666667%;--iw-compact-icon-x: 98.55072463768116%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-layer=idle]{--iw-compact-y: 2.9411764705882355%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-layer=hover]{--iw-compact-y: 50%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-layer=clicked]{--iw-compact-y: 97.05882352941177%}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]{display:block!important;position:absolute!important;inset:0!important;box-sizing:border-box!important;margin:0!important;border:0!important;border-radius:0!important;width:auto!important;height:auto!important;padding:0 var(--iw-compact-cap)!important;pointer-events:none!important;background-image:var(--iw-compact-atlas)!important;background-size:var(--iw-compact-mid-size)!important;background-position:var(--iw-compact-mid-x) var(--iw-compact-y)!important;background-repeat:no-repeat!important;background-origin:content-box!important;background-clip:content-box!important;opacity:1;z-index:-3}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::before,html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::after{content:""!important;position:absolute!important;top:0!important;bottom:0!important;width:var(--iw-compact-cap)!important;background-image:var(--iw-compact-atlas)!important;background-size:var(--iw-compact-cap-size)!important;background-position:var(--iw-compact-left-x) var(--iw-compact-y)!important;background-repeat:no-repeat!important;pointer-events:none!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::before{left:0!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]::after{right:0!important;background-position:var(--iw-compact-right-x) var(--iw-compact-y)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button=icon]>[data-iw-compact-layer]{padding:0!important;background-size:var(--iw-compact-icon-size)!important;background-position:var(--iw-compact-icon-x) var(--iw-compact-y)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button=icon]>[data-iw-compact-layer]::before,html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button=icon]>[data-iw-compact-layer]::after{content:none!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer=hover]{opacity:0;z-index:-2;transition:opacity 180ms ease-out}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer=clicked]{opacity:0;z-index:-1;transition:opacity 70ms ease-out}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:not(:disabled):not([aria-disabled=true]):is(:hover,:focus-visible,:active)>[data-iw-compact-layer=hover],html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:not(:disabled):not([aria-disabled=true]):active>[data-iw-compact-layer=clicked]{opacity:1}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is([data-iw-inventory-filter-state=active],[data-iw-compact-selected=true],[data-fs-action-kind=equipped]){box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-fs-action-kind=equipped]{box-shadow:inset 0 -2px var(--iw-good, #80b38a)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is([data-iw-inventory-filter-state=active],[data-iw-compact-selected=true])>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-fs-action-kind=equipped]>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-good, #80b38a)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-compact-selected=true]{color:var(--iw-text-hi, #fff0dc)!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-ui=nav-tab][data-iw-state=active]{color:var(--iw-text-hi, #fff0dc)!important;-webkit-text-fill-color:currentColor!important;opacity:1!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button][data-iw-ui=nav-tab][data-iw-state=active] :not([data-iw-compact-layer]){color:inherit!important;-webkit-text-fill-color:currentColor!important;opacity:1!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:focus-visible{outline:2px solid var(--iw-th-accent, #5dbbd0)!important;outline-offset:2px!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is(:disabled,[aria-disabled=true])>[data-iw-compact-layer]:not([data-iw-compact-layer=idle]){opacity:0!important;transition:none!important}html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]:is(:disabled,[aria-disabled=true]){opacity:.45!important}@media(prefers-reduced-motion:reduce){html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button],html[data-iw-compact-atlas=compact-ghost-v3] [data-iw-compact-button]>[data-iw-compact-layer]{transition:none!important}}\n';
@@ -10052,22 +10933,22 @@
   var CONTROL = 'button, a[data-iw-ui="nav-tab"], a[data-fs-preserved-action="control"], [role="button"][data-fs-preserved-action="control"]';
   var LAYER = "[data-iw-compact-layer]";
   var decorated = /* @__PURE__ */ new Set();
-  var label3 = (el2) => String(el2.textContent || "").replace(/\s+/g, " ").trim();
+  var label4 = (el2) => String(el2.textContent || "").replace(/\s+/g, " ").trim();
   var STATES = ["idle", "hover", "clicked"];
-  function loadoutPair(el2, text = label3(el2)) {
+  function loadoutPair(el2, text = label4(el2)) {
     if (!/^(I|II)$/.test(text)) return false;
     const peers = [...el2.parentElement?.querySelectorAll("button") || []];
-    return peers.length === 2 && peers.some((p) => label3(p) === "I") && peers.some((p) => label3(p) === "II");
+    return peers.length === 2 && peers.some((p) => label4(p) === "I") && peers.some((p) => label4(p) === "II");
   }
   function kind(el2, text) {
     if (el2.matches("[data-iw-collapse]")) return "";
     if (el2.matches('[data-fs-preserved-action="control"]')) {
       return el2.dataset.fsActionKind === "icon" ? "icon" : "text";
     }
-    if (el2.matches('[data-iw-inventory-control="filter"], [data-iw-inventory-control="page"], [data-iw-ui="nav-tab"], [data-iw-ui="zone-action"], [data-iw-panel-part="send"], [data-iw-guild-role="action"], [data-iw-guild-role="outcome-close"]')) return "text";
+    if (el2.matches('[data-iw-inventory-control="filter"], [data-iw-inventory-control="page"], [data-iw-ui="nav-tab"], [data-iw-ui="zone-action"], [data-iw-panel-part="send"], [data-iw-guild-role="action"], [data-iw-guild-role="outcome-close"], [data-iw-raid-lb-tab], .iw-rc-popup button')) return "text";
     if (loadoutPair(el2, text())) return "icon";
     if (/^change zone$/i.test(text())) return "text";
-    if ((!text() || /^[⏱⏲⏰⌚︎️]+$/u.test(text())) && [...el2.parentElement?.children || []].some((p) => p.matches("button") && /^change zone$/i.test(label3(p)))) return "icon";
+    if ((!text() || /^[⏱⏲⏰⌚︎️]+$/u.test(text())) && [...el2.parentElement?.children || []].some((p) => p.matches("button") && /^change zone$/i.test(label4(p)))) return "icon";
     return "";
   }
   function clear(el2) {
@@ -10079,7 +10960,7 @@
     const next = /* @__PURE__ */ new Set();
     for (const el2 of root.querySelectorAll(CONTROL)) {
       let cached;
-      const text = () => cached === void 0 ? cached = label3(el2) : cached;
+      const text = () => cached === void 0 ? cached = label4(el2) : cached;
       const shape = kind(el2, text);
       if (!shape) continue;
       next.add(el2);
@@ -10093,10 +10974,10 @@
         const layerState = child.getAttribute("data-iw-compact-layer");
         if (layerState !== null) present.add(layerState);
       }
-      for (const state of STATES) {
-        if (present.has(state)) continue;
+      for (const state2 of STATES) {
+        if (present.has(state2)) continue;
         const layer = el2.ownerDocument.createElement("span");
-        layer.dataset.iwCompactLayer = state;
+        layer.dataset.iwCompactLayer = state2;
         layer.setAttribute("aria-hidden", "true");
         el2.append(layer);
       }
@@ -10197,8 +11078,8 @@
     if (!root) return 0;
     const seen = /* @__PURE__ */ new Set();
     for (const btn of root.querySelectorAll('button, a, [role="tab"]')) {
-      const label4 = navLabelText(btn);
-      if (NAV_LABELS.includes(label4)) seen.add(label4);
+      const label5 = navLabelText(btn);
+      if (NAV_LABELS.includes(label5)) seen.add(label5);
     }
     return seen.size;
   }
@@ -10219,13 +11100,13 @@
     const buttons = [...document.querySelectorAll('button, a, [role="tab"]')];
     const byLabel = /* @__PURE__ */ new Map();
     for (const btn of buttons) {
-      const label4 = navLabelText(btn);
-      if (!NAV_LABELS.includes(label4)) continue;
-      if (!byLabel.has(label4)) byLabel.set(label4, []);
-      byLabel.get(label4).push(btn);
+      const label5 = navLabelText(btn);
+      if (!NAV_LABELS.includes(label5)) continue;
+      if (!byLabel.has(label5)) byLabel.set(label5, []);
+      byLabel.get(label5).push(btn);
     }
     if (byLabel.size < 4) return null;
-    const tabs = NAV_LABELS.map((label4) => byLabel.has(label4) ? pickRendered(byLabel.get(label4)) : null).filter(Boolean);
+    const tabs = NAV_LABELS.map((label5) => byLabel.has(label5) ? pickRendered(byLabel.get(label5)) : null).filter(Boolean);
     const track = commonAncestor2(tabs);
     if (!track) return null;
     setNavRole(track, "main-nav");
@@ -10247,7 +11128,7 @@
     const semanticActive = tabs.map((btn) => deriveTabActive(btn));
     const hasSemanticActive = semanticActive.some(Boolean);
     const routeSegments = (value) => new Set(String(value || "").toLowerCase().split(/[^a-z0-9-]+/).filter(Boolean));
-    const routeLabel = (segments) => NAV_LABELS.find((label4) => segments.has(NAV_ROUTE_KEYS[label4] || label4));
+    const routeLabel = (segments) => NAV_LABELS.find((label5) => segments.has(NAV_ROUTE_KEYS[label5] || label5));
     const pathRoute = routeLabel(routeSegments(location.pathname));
     const hashRoute = routeLabel(routeSegments(location.hash));
     const rootRoute = !location.hash && /^\/$/.test(location.pathname || "/") ? "game" : "";
@@ -10259,8 +11140,8 @@
     tabs.forEach((btn, index) => {
       const wasActive = btn.dataset.iwState === "active";
       setRole4(btn, "nav-tab");
-      const tab = navLabelText(btn);
-      if (btn.dataset.iwTab !== tab) btn.dataset.iwTab = tab;
+      const tab2 = navLabelText(btn);
+      if (btn.dataset.iwTab !== tab2) btn.dataset.iwTab = tab2;
       const active3 = hasRouteActive ? routeActive[index] : hasSemanticActive ? semanticActive[index] : firstClassification ? warmActive[index] : wasActive;
       if (active3) {
         if (!wasActive) btn.dataset.iwState = "active";
@@ -10314,8 +11195,8 @@
     const zoneLabel = (el2) => /^zone\s*\d+\s*:/i.test(normText4(el2.textContent).replace(/^[^a-z0-9]+/i, ""));
     const matches = [...document.querySelectorAll("div,span,p,strong")].filter((el2) => zoneLabel(el2) && el2.childElementCount <= 2);
     const labels = matches.filter((el2) => !matches.some((other) => other !== el2 && el2.contains(other)));
-    for (const label4 of labels) {
-      let host = label4.parentElement;
+    for (const label5 of labels) {
+      let host = label5.parentElement;
       for (let depth = 0; host && depth < 5; depth += 1, host = host.parentElement) {
         if (host.querySelector('header, [data-iw-ui="main-nav"], [data-iw-ui="nav-tab"]')) break;
         const buttons = [...host.querySelectorAll("button")];
@@ -10338,7 +11219,7 @@
             if (btn.parentElement?.querySelector(':scope > [data-iw-ui="zone-action"]')) return;
             if (btn.dataset.iwZoneLink !== "1") btn.dataset.iwZoneLink = "1";
           });
-          const title = sameTextShell(label4, host, 2);
+          const title = sameTextShell(label5, host, 2);
           setRole4(title, "zone-title");
           zoneBarResolutions.push({ host, title, buttons: zoneButtons });
           break;
@@ -10369,17 +11250,17 @@
     const firstByPanel = /* @__PURE__ */ new Map();
     const orphans = [];
     for (const h of all) {
-      const panel = h.closest(".panel");
-      if (panel) {
-        if (!firstByPanel.has(panel)) firstByPanel.set(panel, h);
+      const panel2 = h.closest(".panel");
+      if (panel2) {
+        if (!firstByPanel.has(panel2)) firstByPanel.set(panel2, h);
       } else orphans.push(h);
     }
     headingIndexValue = { all, firstByPanel, orphans };
     headingIndexToken = passToken;
     return headingIndexValue;
   }
-  function panelHeading(panel) {
-    return headingIndex().firstByPanel.get(panel) || null;
+  function panelHeading(panel2) {
+    return headingIndex().firstByPanel.get(panel2) || null;
   }
   function sectionFrameResolutionValid(entry2) {
     return entry2.epoch === getLayoutEpoch() && entry2.frame.isConnected && entry2.frame.dataset.iwUi === "section-frame" && !inOverlay(entry2.frame) && !ownedElsewhere(entry2.frame) && // A panel with no heading YET is legal (an async route paints the card
@@ -10411,11 +11292,11 @@
     }
     sectionFrameResolutions = [];
     sectionFrameSeen = new Set(targets);
-    for (const panel of panels) {
-      const heading = panelHeading(panel);
-      setRole4(panel, "section-frame");
+    for (const panel2 of panels) {
+      const heading = panelHeading(panel2);
+      setRole4(panel2, "section-frame");
       if (heading) setRole4(heading, "section-title");
-      sectionFrameResolutions.push({ heading, frame: panel, epoch: getLayoutEpoch() });
+      sectionFrameResolutions.push({ heading, frame: panel2, epoch: getLayoutEpoch() });
     }
     for (const heading of orphans) {
       const ownPanel = heading.closest(".panel");
@@ -10450,8 +11331,8 @@
     return entry2.epoch === getLayoutEpoch() && entry2.heading.isConnected && entry2.root.isConnected && entry2.root.contains(entry2.heading);
   }
   function bossPanelRoot(heading) {
-    const panel = heading.closest(".panel");
-    if (panel) return panel;
+    const panel2 = heading.closest(".panel");
+    if (panel2) return panel2;
     const entry2 = (sectionFrameResolutions || []).find((e) => e.heading === heading);
     return entry2 ? entry2.frame : null;
   }
@@ -10611,25 +11492,25 @@
       return !/^\s*[\d,.]+\s*xp\s*\/\s*hr\s*$/i.test(normText4(child.textContent));
     });
   }
-  function panelHostMatches(candidate, panel, heading) {
-    if (panel === "current-action") {
+  function panelHostMatches(candidate, panel2, heading) {
+    if (panel2 === "current-action") {
       return !!findCurrentActionProgress(candidate);
     }
-    if (panel === "action-log") {
+    if (panel2 === "action-log") {
       const hasControl = [...candidate.querySelectorAll(GAME_CONTROL + ",a")].some((el2) => /^view\s+all$/i.test(normText4(el2.textContent)));
       const hasRate = /\b[\d,.]+\s*xp\s*\/\s*hr\b/i.test(normText4(candidate.textContent));
       return (hasControl || hasRate) && hasPanelBodyOutsideHeading(candidate, heading);
     }
-    if (panel === "world-chat") {
+    if (panel2 === "world-chat") {
       return !![...candidate.querySelectorAll("input,textarea")].find((el2) => /message\s+world\s+chat/i.test(el2.getAttribute("placeholder") || ""));
     }
     return false;
   }
-  function findActivityPanelHost(heading, panel) {
+  function findActivityPanelHost(heading, panel2) {
     const ownPanel = heading.closest?.(".panel") || null;
     let cur = heading.parentElement;
     for (let depth = 0; cur && cur !== document.body && depth < 6; depth += 1, cur = cur.parentElement) {
-      if (panelHostMatches(cur, panel, heading)) return cur;
+      if (panelHostMatches(cur, panel2, heading)) return cur;
       if (cur === ownPanel) break;
     }
     const panelEl = heading.closest?.(".panel");
@@ -10709,19 +11590,19 @@
     return entry2.epoch === getLayoutEpoch() && entry2.heading.isConnected && entry2.host.isConnected && entry2.host.dataset.iwUi === "section-frame" && entry2.host.dataset.iwPanel === entry2.panel && entry2.host.contains(entry2.heading);
   }
   function runActivityPanel(entry2) {
-    const { host, heading, panel } = entry2;
+    const { host, heading, panel: panel2 } = entry2;
     classifyPanelHeader(host, heading);
-    if (panel === "current-action") classifyCurrentAction(host);
-    else if (panel === "action-log") classifyActionLog(host);
+    if (panel2 === "current-action") classifyCurrentAction(host);
+    else if (panel2 === "action-log") classifyActionLog(host);
     else classifyWorldChat(host);
   }
   function activityPanelLabelNodes() {
     const seen = /* @__PURE__ */ new Set();
     const collected = [];
-    const push = (el2, panel) => {
-      if (!el2 || !panel || seen.has(el2)) return;
+    const push = (el2, panel2) => {
+      if (!el2 || !panel2 || seen.has(el2)) return;
       seen.add(el2);
-      collected.push({ node: el2, panel });
+      collected.push({ node: el2, panel: panel2 });
     };
     for (const el2 of document.querySelectorAll('h1,h2,h3,h4,[role="heading"]')) {
       push(el2, ACTIVITY_PANELS.get(normText4(el2.textContent).toLowerCase()));
@@ -10733,8 +11614,8 @@
     if (!haveBeforeId.has("current-action")) {
       const byId = pickRendered([...document.querySelectorAll('[id="current-action-panel"]')]);
       if (byId) {
-        const label4 = [...byId.querySelectorAll('h1,h2,h3,h4,[role="heading"],p,span,div,strong,b')].find((el2) => el2.childElementCount === 0 && normText4(el2.textContent).length > 0 && normText4(el2.textContent).length <= 40);
-        push(label4 || byId, "current-action");
+        const label5 = [...byId.querySelectorAll('h1,h2,h3,h4,[role="heading"],p,span,div,strong,b')].find((el2) => el2.childElementCount === 0 && normText4(el2.textContent).length > 0 && normText4(el2.textContent).length <= 40);
+        push(label5 || byId, "current-action");
       }
     }
     const have = new Set(collected.map((o) => o.panel));
@@ -10743,9 +11624,9 @@
         if (seen.has(el2)) continue;
         for (const n of el2.childNodes) {
           if (n.nodeType !== 3) continue;
-          const panel = ACTIVITY_PANELS.get(normText4(n.textContent).toLowerCase());
-          if (panel && !have.has(panel)) {
-            push(el2, panel);
+          const panel2 = ACTIVITY_PANELS.get(normText4(n.textContent).toLowerCase());
+          if (panel2 && !have.has(panel2)) {
+            push(el2, panel2);
             break;
           }
         }
@@ -10782,14 +11663,14 @@
       }
     }
     activityPanelResolutions = [];
-    for (const { node: heading, panel } of labels) {
-      const host = findActivityPanelHost(heading, panel);
+    for (const { node: heading, panel: panel2 } of labels) {
+      const host = findActivityPanelHost(heading, panel2);
       if (!host) continue;
       if (activityPanelResolutions.some((e) => e.host === host)) continue;
       setRole4(host, "section-frame");
       setRole4(heading, "section-title");
-      setPanel(host, panel);
-      const entry2 = { heading, host, panel, epoch: getLayoutEpoch() };
+      setPanel(host, panel2);
+      const entry2 = { heading, host, panel: panel2, epoch: getLayoutEpoch() };
       activityPanelResolutions.push(entry2);
       runActivityPanel(entry2);
     }
@@ -10844,6 +11725,8 @@
       guard("ui:village-scene", () => {
         reconcileVillageScene().catch((err) => warnOnce("ui:village-scene", err));
       });
+      guard("ui:raid-leaderboards", reconcileRaidLeaderboards);
+      guard("ui:guild-lobby", pruneGuildLobby);
       guard("ui:compact-buttons", decorateCompactButtons);
       guard("ui:collapsible", () => decorateCollapsibleFrames(document));
     });
@@ -10853,6 +11736,8 @@
     clearHeaderChrome();
     clearCollapsibleFrames(document);
     clearVillageScene();
+    clearRaidLeaderboards();
+    clearGuildLobby(null);
     clearCompactButtons();
     clearDailyBoost();
     headingIndexToken = -1;
@@ -10920,10 +11805,11 @@
     injectUIFoundationStyles();
     on("iw:dom-flush", queueClassify);
     on("iw:text-flush", (event) => guard("ui:raid-text", () => refreshRaidText(event.detail?.parents || [])));
+    on("iw:text-flush", (event) => guard("ui:guild-lobby-text", () => refreshGuildLobbyText(event.detail?.parents || [])));
     on("iw:skill-panel", (event) => {
-      const panel = event.detail?.panel;
-      if (!panel) return;
-      const entry2 = (bossPanelResolutions || []).find((entry3) => bossPanelResolutionValid(entry3) && entry3.root.contains(panel));
+      const panel2 = event.detail?.panel;
+      if (!panel2) return;
+      const entry2 = (bossPanelResolutions || []).find((entry3) => bossPanelResolutionValid(entry3) && entry3.root.contains(panel2));
       if (entry2) guard("ui:boss-state", () => decorateWorldBossPanel(entry2));
     });
     const redecorateBosses = () => {
@@ -10988,8 +11874,74 @@
     return Number.isInteger(zone) && ZONE_THEMES[zone] || null;
   }
 
+  // src/modules/ZoneThemeSetting.js
+  var KEY = "iw-zone-themes";
+  var ATTR = "data-iw-theme-toggle";
+  var enabled2 = true;
+  var onChange = null;
+  var unsubscribe = null;
+  function zoneThemesEnabled() {
+    return enabled2;
+  }
+  function syncInputs() {
+    for (const input of document.querySelectorAll(`[${ATTR}] input`)) {
+      if (input.checked !== enabled2) input.checked = enabled2;
+    }
+    for (const label5 of document.querySelectorAll(`[${ATTR}]`)) {
+      const state2 = enabled2 ? "on" : "off";
+      if (label5.getAttribute(ATTR) !== state2) label5.setAttribute(ATTR, state2);
+    }
+  }
+  function setEnabled(value, persist3) {
+    const next = value !== false;
+    if (next === enabled2) return;
+    enabled2 = next;
+    syncInputs();
+    if (persist3) storageSet(KEY, enabled2);
+    guard("zone-theme-setting:change", () => onChange?.());
+  }
+  async function initZoneThemeSetting(changed) {
+    onChange = changed;
+    unsubscribe?.();
+    unsubscribe = onStorageChanged(KEY, (value) => setEnabled(value, false));
+    const stored = await storageGet(KEY);
+    setEnabled(stored, false);
+  }
+  function buildToggle() {
+    const label5 = document.createElement("label");
+    label5.setAttribute(ATTR, enabled2 ? "on" : "off");
+    label5.title = "Zone themes: match the skin to your zone. Off uses the standard Ashen Iron theme everywhere.";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.setAttribute("role", "switch");
+    input.checked = enabled2;
+    input.addEventListener("change", () => setEnabled(input.checked, true));
+    const track = document.createElement("span");
+    track.className = "iw-theme-toggle-track";
+    track.setAttribute("aria-hidden", "true");
+    const text = document.createElement("span");
+    text.className = "iw-theme-toggle-text";
+    text.textContent = "Zone themes";
+    label5.append(input, track, text);
+    return label5;
+  }
+  function ensureZoneThemeToggle() {
+    for (const bar of document.querySelectorAll('[data-iw-ui="zone-bar"]')) {
+      const row = bar.querySelector('[data-iw-ui="zone-action"]')?.parentElement;
+      if (!row || row === bar) continue;
+      if (!row.querySelector(`:scope > [${ATTR}]`)) row.append(buildToggle());
+    }
+  }
+  function clearZoneThemeSetting() {
+    document.querySelectorAll(`[${ATTR}]`).forEach((el2) => el2.remove());
+    unsubscribe?.();
+    unsubscribe = null;
+    onChange = null;
+    enabled2 = true;
+  }
+
   // src/styles/header.css
-  var header_default = '[data-iw-header=root],[data-iw-ui=main-nav],[data-iw-header=announcement],[data-iw-header=zone-shell]{--hd-bracket: var(--iw-th-bracket);--hd-bracket-dim: var(--iw-th-bracket-dim);--hd-plate: var(--iw-th-plate);--hd-rule: var(--iw-th-edge);--hd-rule-soft: var(--iw-th-rule-soft);--hd-teal: #4FC7D8;--hd-teal-dim: #1E5C68;--hd-gap: 8px}[data-iw-header=status-card],[data-iw-header=utility-button],[data-iw-ui=zone-action]{--b: 10px;--i: 3px;--bc: var(--hd-bracket-dim);position:relative!important;border:1px solid var(--hd-rule-soft)!important;border-radius:var(--iw-r-panel)!important;background-color:var(--hd-plate)!important;background-repeat:no-repeat!important;background-image:linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc))!important;background-size:var(--b) 1px,1px var(--b),var(--b) 1px,1px var(--b),var(--b) 1px,1px var(--b),var(--b) 1px,1px var(--b)!important;background-position:var(--i) var(--i),var(--i) var(--i),calc(100% - var(--i)) var(--i),calc(100% - var(--i)) var(--i),var(--i) calc(100% - var(--i)),var(--i) calc(100% - var(--i)),calc(100% - var(--i)) calc(100% - var(--i)),calc(100% - var(--i)) calc(100% - var(--i))!important;box-shadow:none!important}[data-iw-header=root]{position:relative!important;isolation:isolate!important;display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;contain:layout inline-size!important;min-height:0!important;padding:16px 20px!important;border:1px solid var(--hd-rule)!important;border-radius:var(--iw-r-panel)!important;overflow:hidden!important;background-color:#0A0B0D!important;background-image:var(--iw-header-surface)!important;background-size:cover!important;background-position:center!important;box-shadow:none!important}[data-iw-header=root]>*{position:relative;z-index:1}[data-iw-header=root]::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;border-style:solid;border-width:34px 32px;border-color:transparent;border-image:var(--iw-corner-filigree) 50% / 34px 32px / 0 stretch}[data-iw-header=layout]{display:grid!important;width:100%!important;min-width:0!important;grid-template-columns:minmax(0,62fr) minmax(0,38fr)!important;align-items:start!important;gap:0 18px!important;min-height:0!important;padding:0!important}[data-iw-header=identity-region]{--hd-crest-h: 106px;--hd-name-size: clamp(21px, 1.9vw, 29px);--hd-row-h: max(var(--hd-crest-h), calc(var(--hd-name-size) * 1.04 + 85px));--hd-seam: 6px;--hd-util: calc((var(--hd-row-h) + 16px - 2 * var(--hd-seam)) / 3);display:grid!important;isolation:isolate!important;grid-template-columns:104px minmax(0,1fr) var(--hd-util)!important;grid-template-rows:minmax(var(--hd-row-h),auto)!important;grid-template-areas:"crest profile utilities"!important;align-items:center!important;justify-self:start!important;align-self:center!important;margin-left:16px!important;width:fit-content!important;max-width:min(560px,46vw)!important;gap:16px 14px!important;min-width:0!important;padding:0!important;background:none!important}[data-iw-header=identity-region]::before{content:""!important;grid-column:crest-start / profile-end!important;grid-row:1 / 2!important;align-self:stretch!important;z-index:0!important;margin:-8px -8px!important;border:1px solid rgba(201,162,77,0.46)!important;border-radius:10px 0 0 10px!important;background:rgba(9,8,13,0.72)!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.07),0 0 0 1px rgba(0,0,0,0.38),0 0 8px rgba(201,162,77,0.14)!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important;pointer-events:none!important}[data-iw-header=identity-region]>*{position:relative!important;z-index:1!important}.fs-header-crest{grid-area:crest!important;display:block!important;width:104px!important;height:106px!important;background-image:var(--iw-header-crest)!important;background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;filter:drop-shadow(0 0 14px rgba(70,130,200,0.22));pointer-events:none}[data-iw-header=profile]{grid-area:profile!important;min-width:0!important;padding:0!important;background:none!important}[data-iw-header=brand]{margin:0 0 1px!important;display:flex!important;align-items:center!important;gap:8px!important;font-family:var(--iw-font-head)!important;font-size:11.5px!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:#FFFFFF!important}[data-iw-header=brand]::before,[data-iw-header=brand]::after{content:"";width:16px;height:1px;background:linear-gradient(90deg,transparent,var(--iw-th-edge))}[data-iw-header=brand]::after{transform:scaleX(-1)}[data-iw-header=profile-name]{margin:0 0 2px!important;font-family:var(--iw-font-head)!important;font-size:var(--hd-name-size, clamp(21px, 1.9vw, 29px))!important;font-weight:700!important;line-height:1.04!important;letter-spacing:0.005em!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}[data-iw-header=profile-name] button{display:inline!important;border:0!important;margin:0!important;padding:0!important;background-color:transparent!important;box-shadow:none!important;font:inherit!important;cursor:pointer!important}[data-iw-header=profile-title]{margin:0!important;font-family:var(--iw-font-head)!important;font-size:12.5px!important;font-weight:600!important;letter-spacing:0.08em!important;text-transform:uppercase!important;color:var(--iw-gold)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}[data-iw-header=profile-meta]{margin-top:4px!important;font-size:12.5px!important;line-height:1.3!important;color:#FFFFFF!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}[data-iw-header=profile-online]{margin-top:2px!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-image:none!important;box-shadow:none!important;text-align:left!important;height:auto!important;min-height:0!important;display:flex!important;align-items:center!important;gap:8px!important;font-family:var(--iw-font-head)!important;font-size:11.5px!important;font-weight:600!important;letter-spacing:0.09em!important;text-transform:uppercase!important;color:#FFFFFF!important}[data-iw-header=profile-online]::before{content:"";width:7px;height:7px;border-radius:50%;background:#38C8A8;box-shadow:0 0 8px rgba(56,200,168,0.75);flex:0 0 auto}[data-iw-header=utilities]{grid-area:utilities!important;align-self:stretch!important;display:grid!important;grid-template-columns:100%!important;grid-auto-rows:minmax(0,1fr)!important;align-content:stretch!important;justify-content:stretch!important;gap:var(--hd-seam, 6px)!important;width:var(--hd-util)!important;margin:-8px 0!important;padding:0!important}[data-iw-header=utility-button]{--b: 9px;--i: 3px;flex:1 1 0!important;width:auto!important;min-width:0!important;height:42px!important;min-height:42px!important;padding:0!important;display:grid!important;place-items:center!important;border-radius:3px!important;background-color:#14161A!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.05),inset 0 -1px 0 rgba(0,0,0,0.5),0 1px 2px rgba(0,0,0,0.35)!important;color:#FFFFFF!important;transition:color 120ms ease,border-color 120ms ease,background-color 120ms ease,box-shadow 120ms ease}[data-iw-header=utility-button] svg{width:20px!important;height:20px!important}[data-iw-header=utility-button]:hover{--bc: color-mix(in srgb, var(--iw-th-bracket) 78%, #fff);color:#FFFFFF!important;border-color:var(--hd-rule)!important;background-color:#1C1F25!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.09),inset 0 -1px 0 rgba(0,0,0,0.5),0 0 10px rgba(201,162,77,0.16)!important}[data-iw-header=utility-button]{box-sizing:border-box!important;border:1px solid rgba(201,162,77,0.44)!important;border-radius:7px!important;background:rgba(9,8,13,0.70)!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.06),0 0 0 1px rgba(0,0,0,0.38),0 0 7px rgba(201,162,77,0.13)!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important}[data-iw-header=utility-button] svg{width:18px!important;height:18px!important}[data-iw-header=utility-button]:hover{background:rgba(22,19,28,0.82)!important;border-color:rgba(226,190,118,0.62)!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.09),0 0 9px rgba(201,162,77,0.22)!important;filter:brightness(1.08)!important}[data-iw-header=utility-button]{transition:color 120ms ease,filter 120ms ease}[data-iw-header=utilities]>*{align-self:stretch!important;justify-self:stretch!important;min-height:0!important;width:100%!important;margin:0!important}[data-iw-header=utilities]>:not([data-iw-header=utility-button]):has([data-iw-header=utility-button]){display:flex!important;flex-direction:column!important}[data-iw-header=utility-button]{flex:1 1 0!important;width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;border-radius:0!important}[data-iw-header=utilities]>[data-iw-header=utility-button]:first-child,[data-iw-header=utilities]>:first-child [data-iw-header=utility-button]{border-top-right-radius:10px!important}[data-iw-header=utilities]>[data-iw-header=utility-button]:last-child,[data-iw-header=utilities]>:last-child [data-iw-header=utility-button]{border-bottom-right-radius:10px!important}[data-iw-header=utility-button]:has(>span.absolute.rounded-full){color:#FFD9A0!important;border-color:rgba(255,160,72,0.95)!important;background:rgba(46,22,8,0.82)!important;box-shadow:inset 0 0 10px rgba(255,138,61,0.35),0 0 0 1px rgba(0,0,0,0.45),0 0 12px rgba(255,138,61,0.55)!important}[data-iw-header=utility-button]:has(>span.absolute.rounded-full) svg{filter:drop-shadow(0 0 4px rgba(255,170,90,0.85))}[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::before,[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none}[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::before{background:radial-gradient(circle at 50% 50%,rgba(255,150,70,0.45),rgba(255,150,70,0) 70%);animation:iw-hd-alert-breathe 1.6s ease-in-out infinite}[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::after{border:2px solid rgba(255,150,60,0.95);box-shadow:0 0 10px rgba(255,138,61,0.8);z-index:1;animation:iw-hd-alert-ring 1.6s ease-out infinite}[data-iw-header=utility-button]>span.absolute.rounded-full{top:-6px!important;right:-6px!important;left:auto!important;bottom:auto!important;z-index:3!important;box-sizing:border-box!important;width:16px!important;min-width:16px!important;height:16px!important;padding:0!important;border-radius:50%!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:10px!important;line-height:1!important;font-weight:700!important;background:#D32F2F!important;color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;border:0!important;box-shadow:0 0 0 1px rgba(0,0,0,0.55),0 0 8px rgba(211,47,47,0.85)!important}@keyframes iw-hd-alert-breathe{0%,100%{opacity:0.35}50%{opacity:1}}@keyframes iw-hd-alert-ring{0%{opacity:0.95;transform:scale(1)}70%{opacity:0;transform:scale(1.22)}100%{opacity:0;transform:scale(1.22)}}@media(prefers-reduced-motion:reduce){[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::before{animation:none;opacity:0.8}[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::after{animation:none;opacity:0.9}}[data-iw-header=status-card]{box-sizing:border-box!important;border:1px solid rgba(201,162,77,0.46)!important;border-image:none!important;border-radius:8px!important;background:rgba(9,8,13,0.72)!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.07),0 0 0 1px rgba(0,0,0,0.38),0 0 8px rgba(201,162,77,0.14)!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important}[data-iw-header=status-grid] [data-iw-header-stat=gold]{grid-area:1 / 1 / 3 / 2!important}[data-iw-header=status-grid] [data-iw-header-stat=timer],[data-iw-header=status-grid] [data-iw-header-stat=other]{grid-column:2!important}[data-iw-header=status-grid] [data-iw-header-stat=gold]{font-family:var(--iw-font-head)!important;font-variant-numeric:tabular-nums!important}[data-iw-header=status-grid] [data-iw-header-stat=timer]{min-height:30px!important;font-size:11.5px!important;color:#FFFFFF!important}@media(min-width:861px){[data-iw-header=status-grid] [data-iw-header-stat=gold],[data-iw-header=status-grid]:not(:has([data-iw-header-stat=boost])) [data-iw-header-stat=combat],[data-iw-header=status-grid]:has([data-iw-header-stat=boost]) [data-iw-header-stat=boost]{justify-content:center!important;text-align:center!important;font-size:12px!important;letter-spacing:.01em!important;color:#FFFFFF!important}[data-iw-header=status-grid]:not(:has([data-iw-header-stat=boost])) [data-iw-header-stat=combat],[data-iw-header=status-grid]:has([data-iw-header-stat=boost]) [data-iw-header-stat=boost]{grid-area:3 / 1 / 5 / 2!important}[data-iw-header=status-grid]:has([data-iw-header-stat=boost]) [data-iw-header-stat=boost]{padding:5px 10px!important;line-height:1.3!important}[data-iw-header=status-grid]:has([data-iw-header-stat=boost]) [data-iw-header-stat=combat]{grid-area:auto!important;grid-column:2!important;min-height:30px!important;font-size:11.5px!important;color:#FFFFFF!important}}[data-iw-header=status-grid]{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:repeat(4,auto)!important;align-content:start!important;gap:6px!important;justify-self:end!important;width:376px!important;max-width:100%!important;min-width:0!important;padding:0!important}[data-iw-header=status-card]{min-width:0!important;min-height:36px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;padding:3px 8px!important;text-align:left!important;font-family:Georgia,"Times New Roman",serif!important;font-size:12px!important;font-weight:600!important;line-height:1.16!important;color:#FFFFFF!important;white-space:normal!important;overflow-wrap:anywhere!important;overflow:hidden!important}[data-iw-header=status-card]>*{min-width:0}[data-iw-ui=main-nav-shell]{margin-top:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}[data-iw-ui=main-nav]{position:relative!important;display:flex!important;align-items:stretch!important;gap:0!important;min-height:0!important;padding:0!important;overflow:hidden!important;border:1px solid var(--hd-rule)!important;border-radius:var(--iw-r-panel)!important;background-color:transparent!important;background-image:linear-gradient(180deg,#121317 0%,#0A0B0D 60%,#0D0E11 100%)!important;box-shadow:none!important}[data-iw-ui=nav-tab]{flex:0 1 auto!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:11px!important;height:auto!important;min-height:0!important;margin:0!important;padding:12px 26px!important;border:0!important;border-right:1px solid var(--hd-rule-soft)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;font-family:var(--iw-font-head)!important;font-size:17px!important;font-weight:600!important;letter-spacing:0.06em!important;text-transform:uppercase!important;white-space:nowrap!important;color:var(--iw-dim)!important;text-shadow:none!important;transition:color 120ms ease,background-color 120ms ease}[data-iw-ui=nav-tab]:hover{color:var(--iw-text)!important;background-color:rgba(255,214,140,0.045)!important}[data-iw-ui=nav-tab][data-iw-state=active]{color:#FFE2AE!important;border-left:1px solid var(--hd-bracket)!important;border-right:1px solid var(--hd-bracket)!important;background-image:linear-gradient(180deg,rgba(255,176,64,0.38) 0%,rgba(158,82,20,0.26) 55%,rgba(74,36,8,0.32) 100%)!important;box-shadow:inset 0 1px 0 rgba(255,208,130,0.55),inset 0 -1px 0 rgba(255,190,100,0.30),0 0 18px rgba(255,150,40,0.16)!important}[data-iw-ui=nav-tab]:first-child{border-left:0!important}[data-iw-header=announcement]{box-sizing:border-box!important;display:flex!important;align-items:center!important;gap:10px!important;height:auto!important;min-height:32px!important;margin:6px 0!important;padding:5px 14px!important;border:1px solid var(--hd-teal-dim)!important;border-radius:var(--iw-r-panel)!important;background-color:transparent!important;background-image:linear-gradient(90deg,rgba(24,68,80,0.92) 0%,rgba(12,32,40,0.92) 38%,rgba(8,18,24,0.92) 100%)!important;box-shadow:inset 0 0 26px rgba(40,150,175,0.10)!important;font-size:13.5px!important;color:var(--iw-text)!important}[data-iw-header=announcement]::before{content:""!important;flex:0 0 auto;width:16px;height:16px;background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--iw-th-accent) 25%,#fff) 0%,var(--iw-th-accent) 40%,color-mix(in srgb,var(--iw-th-accent) 55%,#000) 100%);clip-path:polygon(50% 0%,59% 41%,100% 50%,59% 59%,50% 100%,41% 59%,0% 50%,41% 41%);filter:drop-shadow(0 0 7px color-mix(in srgb,var(--iw-th-accent) 60%,transparent))}[data-iw-header=zone-shell]{position:relative!important;isolation:isolate!important;display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:6px 14px!important;min-height:0!important;padding:5px 12px!important;border:1px solid var(--hd-rule)!important;border-radius:var(--iw-r-panel)!important;overflow:hidden!important;background-color:#08090B!important;background-image:none!important;box-shadow:none!important}[data-iw-header=zone-shell]>*{position:relative;z-index:1}[data-iw-header=zone-shell]>:has([data-iw-ui=zone-title]){display:flex!important;flex:1 1 auto!important;flex-wrap:wrap!important;align-items:baseline!important;column-gap:12px!important;row-gap:2px!important;min-width:0!important;margin:0!important}[data-iw-ui=zone-title],[data-iw-ui=zone-title]~*{margin:0!important}[data-iw-ui=zone-title]~:not([data-iw-zone-link]){position:relative!important;padding-left:12px!important;font-size:12.5px!important;color:var(--iw-dim)!important}[data-iw-ui=zone-title]~:not([data-iw-zone-link])::before{content:""!important;position:absolute!important;left:0!important;top:50%!important;transform:translateY(-50%)!important;width:1px!important;height:1em!important;background:var(--iw-th-edge-mid)!important}[data-iw-header=zone-shell]>:not(:has([data-iw-ui=zone-title])){margin-left:auto!important;display:flex!important;flex-wrap:wrap!important;gap:6px!important}[data-iw-header=zone-shell]::before{content:"";position:absolute;inset:0 34% 0 16%;z-index:0;background-image:var(--iw-zone-scene);background-size:cover;background-position:center;opacity:0.34;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 26%,#000 68%,transparent 100%),linear-gradient(180deg,transparent 0%,#000 26%,#000 74%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent 0%,#000 26%,#000 68%,transparent 100%),linear-gradient(180deg,transparent 0%,#000 26%,#000 74%,transparent 100%);mask-composite:intersect}[data-iw-ui=zone-title]{font-family:var(--iw-font-head)!important;font-size:16px!important;font-weight:700!important;letter-spacing:0.03em!important;color:var(--iw-text-hi)!important;text-shadow:none!important}[data-iw-ui=zone-action]{--b: 7px;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-width:0!important;min-height:30px!important;height:auto!important;padding:5px 13px!important;font-family:var(--iw-font-head)!important;font-weight:600!important;letter-spacing:0.06em!important;text-transform:uppercase!important;color:var(--iw-text)!important;transition:filter 120ms ease}[data-iw-ui=zone-action]:hover{filter:brightness(1.18)}[data-iw-ui=zone-action][data-iw-zone-action=zones],[data-iw-ui=zone-action]:first-of-type{--bc: var(--hd-teal);color:#CFF2F8!important;border-color:var(--hd-teal-dim)!important;background-color:#07171C!important;box-shadow:inset 0 0 20px rgba(50,170,195,0.14)!important}[data-iw-ui=zone-action][data-iw-zone-action=next],[data-iw-ui=zone-action]:last-of-type{color:#F3E3C0!important;border:1px solid var(--iw-th-cta-hi)!important;background-color:var(--iw-th-plate)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta) 34%,#000),color-mix(in srgb,var(--iw-th-cta) 14%,#000))!important;background-size:auto!important;background-position:0 0!important;box-shadow:inset 0 0 14px -2px color-mix(in srgb,var(--iw-th-cta-hi) 60%,transparent),inset 0 1px 0 rgba(255,216,150,.18),0 0 0 1px color-mix(in srgb,var(--iw-th-cta-hi) 20%,transparent)!important;text-shadow:0 0 8px color-mix(in srgb,var(--iw-th-cta-hi) 45%,transparent)!important}@media(max-width:1280px){[data-iw-header=layout]{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}[data-iw-header=status-grid]{margin-top:2px!important}[data-iw-header=identity-region]{justify-self:stretch!important;width:auto!important;max-width:none!important;margin-left:0!important}}@media(max-width:860px){[data-iw-header=root]{padding:14px!important}[data-iw-header=identity-region]{--hd-crest-h: 116px;grid-template-columns:108px minmax(0,1fr) var(--hd-util)!important;grid-template-areas:"crest profile utilities"!important;gap:10px 14px!important}.fs-header-crest{width:108px!important;height:116px!important}[data-iw-header=status-grid]{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:auto!important;width:auto!important;justify-self:stretch!important}[data-iw-header=status-grid] [data-iw-header-stat]{grid-area:auto!important;grid-column:auto!important}[data-iw-header=status-grid] [data-iw-header-stat=gold],[data-iw-header=status-grid] [data-iw-header-stat=combat],[data-iw-header=status-grid] [data-iw-header-stat=boost]{justify-content:flex-start!important;font-size:13px!important}[data-iw-ui=nav-tab]{padding:11px 14px!important;font-size:14px!important;gap:8px!important}[data-iw-ui=zone-action]{flex:1 1 0!important;padding:5px 8px!important}}@media(max-width:768px){[data-iw-header=root]{background-image:var(--iw-header-surface-mobile, var(--iw-header-surface))!important}}@media(max-width:560px){[data-iw-ui=main-nav]{overflow-x:auto!important;scrollbar-width:none}[data-iw-ui=main-nav]::-webkit-scrollbar{display:none}[data-iw-ui=nav-tab]{flex:0 0 auto!important}}@media(prefers-reduced-motion:reduce){[data-iw-header=utility-button],[data-iw-ui=nav-tab],[data-iw-ui=zone-action]{transition:none}}\n';
+  var header_default = '[data-iw-header=root],[data-iw-ui=main-nav],[data-iw-header=announcement],[data-iw-header=zone-shell]{--hd-bracket: var(--iw-th-bracket);--hd-bracket-dim: var(--iw-th-bracket-dim);--hd-plate: var(--iw-th-plate);--hd-rule: var(--iw-th-edge);--hd-rule-soft: var(--iw-th-rule-soft);--hd-teal: #4FC7D8;--hd-teal-dim: #1E5C68;--hd-gap: 8px}[data-iw-header=status-card],[data-iw-header=utility-button],[data-iw-ui=zone-action]{--b: 10px;--i: 3px;--bc: var(--hd-bracket-dim);position:relative!important;border:1px solid var(--hd-rule-soft)!important;border-radius:var(--iw-r-panel)!important;background-color:var(--hd-plate)!important;background-repeat:no-repeat!important;background-image:linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc)),linear-gradient(var(--bc),var(--bc))!important;background-size:var(--b) 1px,1px var(--b),var(--b) 1px,1px var(--b),var(--b) 1px,1px var(--b),var(--b) 1px,1px var(--b)!important;background-position:var(--i) var(--i),var(--i) var(--i),calc(100% - var(--i)) var(--i),calc(100% - var(--i)) var(--i),var(--i) calc(100% - var(--i)),var(--i) calc(100% - var(--i)),calc(100% - var(--i)) calc(100% - var(--i)),calc(100% - var(--i)) calc(100% - var(--i))!important;box-shadow:none!important}[data-iw-header=root]{position:relative!important;isolation:isolate!important;display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;contain:layout inline-size!important;min-height:0!important;padding:16px 20px!important;border:1px solid var(--hd-rule)!important;border-radius:var(--iw-r-panel)!important;overflow:hidden!important;background-color:#0A0B0D!important;background-image:var(--iw-header-surface)!important;background-size:cover!important;background-position:center!important;box-shadow:none!important}[data-iw-header=root]>*{position:relative;z-index:1}[data-iw-header=root]::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;border-style:solid;border-width:34px 32px;border-color:transparent;border-image:var(--iw-corner-filigree) 50% / 34px 32px / 0 stretch}[data-iw-header=layout]{display:grid!important;width:100%!important;min-width:0!important;grid-template-columns:minmax(0,62fr) minmax(0,38fr)!important;align-items:start!important;gap:0 18px!important;min-height:0!important;padding:0!important}[data-iw-header=identity-region]{--hd-crest-h: 106px;--hd-name-size: clamp(21px, 1.9vw, 29px);--hd-row-h: max(var(--hd-crest-h), calc(var(--hd-name-size) * 1.04 + 85px));--hd-seam: 6px;--hd-util: calc((var(--hd-row-h) + 16px - 2 * var(--hd-seam)) / 3);display:grid!important;isolation:isolate!important;grid-template-columns:104px minmax(0,1fr) var(--hd-util)!important;grid-template-rows:minmax(var(--hd-row-h),auto)!important;grid-template-areas:"crest profile utilities"!important;align-items:center!important;justify-self:start!important;align-self:center!important;margin-left:16px!important;width:fit-content!important;max-width:min(560px,46vw)!important;gap:16px 14px!important;min-width:0!important;padding:0!important;background:none!important}[data-iw-header=identity-region]::before{content:""!important;grid-column:crest-start / profile-end!important;grid-row:1 / 2!important;align-self:stretch!important;z-index:0!important;margin:-8px -8px!important;border:1px solid rgba(201,162,77,0.46)!important;border-radius:10px 0 0 10px!important;background:rgba(9,8,13,0.72)!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.07),0 0 0 1px rgba(0,0,0,0.38),0 0 8px rgba(201,162,77,0.14)!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important;pointer-events:none!important}[data-iw-header=identity-region]>*{position:relative!important;z-index:1!important}.fs-header-crest{grid-area:crest!important;display:block!important;width:104px!important;height:106px!important;background-image:var(--iw-header-crest)!important;background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;filter:drop-shadow(0 0 14px rgba(70,130,200,0.22));pointer-events:none}[data-iw-header=profile]{grid-area:profile!important;min-width:0!important;padding:0!important;background:none!important}[data-iw-header=brand]{margin:0 0 1px!important;display:flex!important;align-items:center!important;gap:8px!important;font-family:var(--iw-font-head)!important;font-size:11.5px!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:#FFFFFF!important}[data-iw-header=brand]::before,[data-iw-header=brand]::after{content:"";width:16px;height:1px;background:linear-gradient(90deg,transparent,var(--iw-th-edge))}[data-iw-header=brand]::after{transform:scaleX(-1)}[data-iw-header=profile-name]{margin:0 0 2px!important;font-family:var(--iw-font-head)!important;font-size:var(--hd-name-size, clamp(21px, 1.9vw, 29px))!important;font-weight:700!important;line-height:1.04!important;letter-spacing:0.005em!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}[data-iw-header=profile-name] button{display:inline!important;border:0!important;margin:0!important;padding:0!important;background-color:transparent!important;box-shadow:none!important;font:inherit!important;cursor:pointer!important}[data-iw-header=profile-title]{margin:0!important;font-family:var(--iw-font-head)!important;font-size:12.5px!important;font-weight:600!important;letter-spacing:0.08em!important;text-transform:uppercase!important;color:var(--iw-gold)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}[data-iw-header=profile-meta]{margin-top:4px!important;font-size:12.5px!important;line-height:1.3!important;color:#FFFFFF!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}[data-iw-header=profile-online]{margin-top:2px!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-image:none!important;box-shadow:none!important;text-align:left!important;height:auto!important;min-height:0!important;display:flex!important;align-items:center!important;gap:8px!important;font-family:var(--iw-font-head)!important;font-size:11.5px!important;font-weight:600!important;letter-spacing:0.09em!important;text-transform:uppercase!important;color:#FFFFFF!important}[data-iw-header=profile-online]::before{content:"";width:7px;height:7px;border-radius:50%;background:#38C8A8;box-shadow:0 0 8px rgba(56,200,168,0.75);flex:0 0 auto}[data-iw-header=utilities]{grid-area:utilities!important;align-self:stretch!important;display:grid!important;grid-template-columns:100%!important;grid-auto-rows:minmax(0,1fr)!important;align-content:stretch!important;justify-content:stretch!important;gap:var(--hd-seam, 6px)!important;width:var(--hd-util)!important;margin:-8px 0!important;padding:0!important}[data-iw-header=utility-button]{--b: 9px;--i: 3px;flex:1 1 0!important;width:auto!important;min-width:0!important;height:42px!important;min-height:42px!important;padding:0!important;display:grid!important;place-items:center!important;border-radius:3px!important;background-color:#14161A!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.05),inset 0 -1px 0 rgba(0,0,0,0.5),0 1px 2px rgba(0,0,0,0.35)!important;color:#FFFFFF!important;transition:color 120ms ease,border-color 120ms ease,background-color 120ms ease,box-shadow 120ms ease}[data-iw-header=utility-button] svg{width:20px!important;height:20px!important}[data-iw-header=utility-button]:hover{--bc: color-mix(in srgb, var(--iw-th-bracket) 78%, #fff);color:#FFFFFF!important;border-color:var(--hd-rule)!important;background-color:#1C1F25!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.09),inset 0 -1px 0 rgba(0,0,0,0.5),0 0 10px rgba(201,162,77,0.16)!important}[data-iw-header=utility-button]{box-sizing:border-box!important;border:1px solid rgba(201,162,77,0.44)!important;border-radius:7px!important;background:rgba(9,8,13,0.70)!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.06),0 0 0 1px rgba(0,0,0,0.38),0 0 7px rgba(201,162,77,0.13)!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important}[data-iw-header=utility-button] svg{width:18px!important;height:18px!important}[data-iw-header=utility-button]:hover{background:rgba(22,19,28,0.82)!important;border-color:rgba(226,190,118,0.62)!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.09),0 0 9px rgba(201,162,77,0.22)!important;filter:brightness(1.08)!important}[data-iw-header=utility-button]{transition:color 120ms ease,filter 120ms ease}[data-iw-header=utilities]>*{align-self:stretch!important;justify-self:stretch!important;min-height:0!important;width:100%!important;margin:0!important}[data-iw-header=utilities]>:not([data-iw-header=utility-button]):has([data-iw-header=utility-button]){display:flex!important;flex-direction:column!important}[data-iw-header=utility-button]{flex:1 1 0!important;width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;border-radius:0!important}[data-iw-header=utilities]>[data-iw-header=utility-button]:first-child,[data-iw-header=utilities]>:first-child [data-iw-header=utility-button]{border-top-right-radius:10px!important}[data-iw-header=utilities]>[data-iw-header=utility-button]:last-child,[data-iw-header=utilities]>:last-child [data-iw-header=utility-button]{border-bottom-right-radius:10px!important}[data-iw-header=utility-button]:has(>span.absolute.rounded-full){color:#FFD9A0!important;border-color:rgba(255,160,72,0.95)!important;background:rgba(46,22,8,0.82)!important;box-shadow:inset 0 0 10px rgba(255,138,61,0.35),0 0 0 1px rgba(0,0,0,0.45),0 0 12px rgba(255,138,61,0.55)!important}[data-iw-header=utility-button]:has(>span.absolute.rounded-full) svg{filter:drop-shadow(0 0 4px rgba(255,170,90,0.85))}[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::before,[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none}[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::before{background:radial-gradient(circle at 50% 50%,rgba(255,150,70,0.45),rgba(255,150,70,0) 70%);animation:iw-hd-alert-breathe 1.6s ease-in-out infinite}[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::after{border:2px solid rgba(255,150,60,0.95);box-shadow:0 0 10px rgba(255,138,61,0.8);z-index:1;animation:iw-hd-alert-ring 1.6s ease-out infinite}[data-iw-header=utility-button]>span.absolute.rounded-full{top:-6px!important;right:-6px!important;left:auto!important;bottom:auto!important;z-index:3!important;box-sizing:border-box!important;width:16px!important;min-width:16px!important;height:16px!important;padding:0!important;border-radius:50%!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:10px!important;line-height:1!important;font-weight:700!important;background:#D32F2F!important;color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;border:0!important;box-shadow:0 0 0 1px rgba(0,0,0,0.55),0 0 8px rgba(211,47,47,0.85)!important}@keyframes iw-hd-alert-breathe{0%,100%{opacity:0.35}50%{opacity:1}}@keyframes iw-hd-alert-ring{0%{opacity:0.95;transform:scale(1)}70%{opacity:0;transform:scale(1.22)}100%{opacity:0;transform:scale(1.22)}}@media(prefers-reduced-motion:reduce){[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::before{animation:none;opacity:0.8}[data-iw-header=utility-button]:has(>span.absolute.rounded-full)::after{animation:none;opacity:0.9}}[data-iw-header=status-card]{box-sizing:border-box!important;border:1px solid rgba(201,162,77,0.46)!important;border-image:none!important;border-radius:8px!important;background:rgba(9,8,13,0.72)!important;box-shadow:inset 0 1px 0 rgba(255,236,190,0.07),0 0 0 1px rgba(0,0,0,0.38),0 0 8px rgba(201,162,77,0.14)!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important}[data-iw-header=status-grid] [data-iw-header-stat=gold]{grid-area:1 / 1 / 3 / 2!important}[data-iw-header=status-grid] [data-iw-header-stat=timer],[data-iw-header=status-grid] [data-iw-header-stat=other]{grid-column:2!important}[data-iw-header=status-grid] [data-iw-header-stat=gold]{font-family:var(--iw-font-head)!important;font-variant-numeric:tabular-nums!important}[data-iw-header=status-grid] [data-iw-header-stat=timer]{min-height:30px!important;font-size:11.5px!important;color:#FFFFFF!important}@media(min-width:861px){[data-iw-header=status-grid] [data-iw-header-stat=gold],[data-iw-header=status-grid]:not(:has([data-iw-header-stat=boost])) [data-iw-header-stat=combat],[data-iw-header=status-grid]:has([data-iw-header-stat=boost]) [data-iw-header-stat=boost]{justify-content:center!important;text-align:center!important;font-size:12px!important;letter-spacing:.01em!important;color:#FFFFFF!important}[data-iw-header=status-grid]:not(:has([data-iw-header-stat=boost])) [data-iw-header-stat=combat],[data-iw-header=status-grid]:has([data-iw-header-stat=boost]) [data-iw-header-stat=boost]{grid-area:3 / 1 / 5 / 2!important}[data-iw-header=status-grid]:has([data-iw-header-stat=boost]) [data-iw-header-stat=boost]{padding:5px 10px!important;line-height:1.3!important}[data-iw-header=status-grid]:has([data-iw-header-stat=boost]) [data-iw-header-stat=combat]{grid-area:auto!important;grid-column:2!important;min-height:30px!important;font-size:11.5px!important;color:#FFFFFF!important}}[data-iw-header=status-grid]{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:repeat(4,auto)!important;align-content:start!important;gap:6px!important;justify-self:end!important;width:376px!important;max-width:100%!important;min-width:0!important;padding:0!important}[data-iw-header=status-card]{min-width:0!important;min-height:36px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;padding:3px 8px!important;text-align:left!important;font-family:Georgia,"Times New Roman",serif!important;font-size:12px!important;font-weight:600!important;line-height:1.16!important;color:#FFFFFF!important;white-space:normal!important;overflow-wrap:anywhere!important;overflow:hidden!important}[data-iw-header=status-card]>*{min-width:0}[data-iw-ui=main-nav-shell]{margin-top:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}[data-iw-ui=main-nav]{position:relative!important;display:flex!important;align-items:stretch!important;gap:0!important;min-height:0!important;padding:0!important;overflow:hidden!important;border:1px solid var(--hd-rule)!important;border-radius:var(--iw-r-panel)!important;background-color:transparent!important;background-image:linear-gradient(180deg,#121317 0%,#0A0B0D 60%,#0D0E11 100%)!important;box-shadow:none!important}[data-iw-ui=nav-tab]{flex:0 1 auto!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:11px!important;height:auto!important;min-height:0!important;margin:0!important;padding:12px 26px!important;border:0!important;border-right:1px solid var(--hd-rule-soft)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;font-family:var(--iw-font-head)!important;font-size:17px!important;font-weight:600!important;letter-spacing:0.06em!important;text-transform:uppercase!important;white-space:nowrap!important;color:var(--iw-dim)!important;text-shadow:none!important;transition:color 120ms ease,background-color 120ms ease}[data-iw-ui=nav-tab]:hover{color:var(--iw-text)!important;background-color:rgba(255,214,140,0.045)!important}[data-iw-ui=nav-tab][data-iw-state=active]{color:#FFE2AE!important;border-left:1px solid var(--hd-bracket)!important;border-right:1px solid var(--hd-bracket)!important;background-image:linear-gradient(180deg,rgba(255,176,64,0.38) 0%,rgba(158,82,20,0.26) 55%,rgba(74,36,8,0.32) 100%)!important;box-shadow:inset 0 1px 0 rgba(255,208,130,0.55),inset 0 -1px 0 rgba(255,190,100,0.30),0 0 18px rgba(255,150,40,0.16)!important}[data-iw-ui=nav-tab]:first-child{border-left:0!important}[data-iw-header=announcement]{box-sizing:border-box!important;display:flex!important;align-items:center!important;gap:10px!important;height:auto!important;min-height:32px!important;margin:6px 0!important;padding:5px 14px!important;border:1px solid var(--hd-teal-dim)!important;border-radius:var(--iw-r-panel)!important;background-color:transparent!important;background-image:linear-gradient(90deg,rgba(24,68,80,0.92) 0%,rgba(12,32,40,0.92) 38%,rgba(8,18,24,0.92) 100%)!important;box-shadow:inset 0 0 26px rgba(40,150,175,0.10)!important;font-size:13.5px!important;color:var(--iw-text)!important}[data-iw-header=announcement]::before{content:""!important;flex:0 0 auto;width:16px;height:16px;background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--iw-th-accent) 25%,#fff) 0%,var(--iw-th-accent) 40%,color-mix(in srgb,var(--iw-th-accent) 55%,#000) 100%);clip-path:polygon(50% 0%,59% 41%,100% 50%,59% 59%,50% 100%,41% 59%,0% 50%,41% 41%);filter:drop-shadow(0 0 7px color-mix(in srgb,var(--iw-th-accent) 60%,transparent))}[data-iw-header=zone-shell]{position:relative!important;isolation:isolate!important;display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:6px 14px!important;min-height:0!important;padding:5px 12px!important;border:1px solid var(--hd-rule)!important;border-radius:var(--iw-r-panel)!important;overflow:hidden!important;background-color:#08090B!important;background-image:none!important;box-shadow:none!important}[data-iw-header=zone-shell]>*{position:relative;z-index:1}[data-iw-header=zone-shell]>:has([data-iw-ui=zone-title]){display:flex!important;flex:1 1 auto!important;flex-wrap:wrap!important;align-items:baseline!important;column-gap:12px!important;row-gap:2px!important;min-width:0!important;margin:0!important}[data-iw-ui=zone-title],[data-iw-ui=zone-title]~*{margin:0!important}[data-iw-ui=zone-title]~:not([data-iw-zone-link]){position:relative!important;padding-left:12px!important;font-size:12.5px!important;color:var(--iw-dim)!important}[data-iw-ui=zone-title]~:not([data-iw-zone-link])::before{content:""!important;position:absolute!important;left:0!important;top:50%!important;transform:translateY(-50%)!important;width:1px!important;height:1em!important;background:var(--iw-th-edge-mid)!important}[data-iw-header=zone-shell]>:not(:has([data-iw-ui=zone-title])){margin-left:auto!important;display:flex!important;flex-wrap:wrap!important;gap:6px!important}[data-iw-header=zone-shell]::before{content:"";position:absolute;inset:0 34% 0 16%;z-index:0;background-image:var(--iw-zone-scene);background-size:cover;background-position:center;opacity:0.34;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 26%,#000 68%,transparent 100%),linear-gradient(180deg,transparent 0%,#000 26%,#000 74%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent 0%,#000 26%,#000 68%,transparent 100%),linear-gradient(180deg,transparent 0%,#000 26%,#000 74%,transparent 100%);mask-composite:intersect}[data-iw-ui=zone-title]{font-family:var(--iw-font-head)!important;font-size:16px!important;font-weight:700!important;letter-spacing:0.03em!important;color:var(--iw-text-hi)!important;text-shadow:none!important}[data-iw-ui=zone-action]{--b: 7px;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-width:0!important;min-height:30px!important;height:auto!important;padding:5px 13px!important;font-family:var(--iw-font-head)!important;font-weight:600!important;letter-spacing:0.06em!important;text-transform:uppercase!important;color:var(--iw-text)!important;transition:filter 120ms ease}[data-iw-ui=zone-action]:hover{filter:brightness(1.18)}[data-iw-ui=zone-action][data-iw-zone-action=zones],[data-iw-ui=zone-action]:first-of-type{--bc: var(--hd-teal);color:#CFF2F8!important;border-color:var(--hd-teal-dim)!important;background-color:#07171C!important;box-shadow:inset 0 0 20px rgba(50,170,195,0.14)!important}[data-iw-ui=zone-action][data-iw-zone-action=next],[data-iw-ui=zone-action]:last-of-type{color:#F3E3C0!important;border:1px solid var(--iw-th-cta-hi)!important;background-color:var(--iw-th-plate)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta) 34%,#000),color-mix(in srgb,var(--iw-th-cta) 14%,#000))!important;background-size:auto!important;background-position:0 0!important;box-shadow:inset 0 0 14px -2px color-mix(in srgb,var(--iw-th-cta-hi) 60%,transparent),inset 0 1px 0 rgba(255,216,150,.18),0 0 0 1px color-mix(in srgb,var(--iw-th-cta-hi) 20%,transparent)!important;text-shadow:0 0 8px color-mix(in srgb,var(--iw-th-cta-hi) 45%,transparent)!important}@media(max-width:1280px){[data-iw-header=layout]{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}[data-iw-header=status-grid]{margin-top:2px!important}[data-iw-header=identity-region]{justify-self:stretch!important;width:auto!important;max-width:none!important;margin-left:0!important}}@media(max-width:860px){[data-iw-header=root]{padding:14px!important}[data-iw-header=identity-region]{--hd-crest-h: 116px;grid-template-columns:108px minmax(0,1fr) var(--hd-util)!important;grid-template-areas:"crest profile utilities"!important;gap:10px 14px!important}.fs-header-crest{width:108px!important;height:116px!important}[data-iw-header=status-grid]{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:auto!important;width:auto!important;justify-self:stretch!important}[data-iw-header=status-grid] [data-iw-header-stat]{grid-area:auto!important;grid-column:auto!important}[data-iw-header=status-grid] [data-iw-header-stat=gold],[data-iw-header=status-grid] [data-iw-header-stat=combat],[data-iw-header=status-grid] [data-iw-header-stat=boost]{justify-content:flex-start!important;font-size:13px!important}[data-iw-ui=nav-tab]{padding:11px 14px!important;font-size:14px!important;gap:8px!important}[data-iw-ui=zone-action]{flex:1 1 0!important;padding:5px 8px!important}}@media(max-width:768px){[data-iw-header=root]{background-image:var(--iw-header-surface-mobile, var(--iw-header-surface))!important}}@media(max-width:560px){[data-iw-ui=main-nav]{overflow-x:auto!important;scrollbar-width:none}[data-iw-ui=main-nav]::-webkit-scrollbar{display:none}[data-iw-ui=nav-tab]{flex:0 0 auto!important}}@media(prefers-reduced-motion:reduce){[data-iw-header=utility-button],[data-iw-ui=nav-tab],[data-iw-ui=zone-action]{transition:none}}[data-iw-theme-toggle]{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;min-height:30px;padding:0 4px 0 8px;cursor:pointer;user-select:none;font:600 10.5px/1 var(--iw-font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--iw-dim, #938a79);white-space:nowrap}[data-iw-theme-toggle]:hover{color:var(--iw-text-hi, #f0e8d6)}[data-iw-theme-toggle]>input{position:absolute;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}.iw-theme-toggle-track{position:relative;width:28px;height:15px;flex:0 0 auto;border:1px solid var(--iw-th-edge, #4a3820);border-radius:8px;background:rgba(0,0,0,.45);box-shadow:inset 0 1px 2px rgba(0,0,0,.6);transition:background-color 120ms ease,border-color 120ms ease}.iw-theme-toggle-track::after{content:"";position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:#6f675a;transition:transform 120ms ease,background-color 120ms ease}[data-iw-theme-toggle=on]{color:var(--iw-text, #d8cfbd)}[data-iw-theme-toggle=on] .iw-theme-toggle-track{border-color:var(--iw-th-cta-hi, #c9963f);background:color-mix(in srgb,var(--iw-th-cta, #b5541c) 38%,#000)}[data-iw-theme-toggle=on] .iw-theme-toggle-track::after{transform:translateX(13px);background:var(--iw-th-accent, #f0b45c)}[data-iw-theme-toggle]>input:focus-visible+.iw-theme-toggle-track{outline:1px solid var(--iw-gold, #c9963f);outline-offset:2px}@media(prefers-reduced-motion:reduce){.iw-theme-toggle-track,.iw-theme-toggle-track::after{transition:none}}@media(max-width:1279px){:has(>[data-iw-theme-toggle]){flex-wrap:wrap!important}[data-iw-theme-toggle]{flex:1 0 100%!important;contain:inline-size;justify-content:flex-end;min-height:24px;margin-left:-8px;padding:3px 0 0}}@media(max-width:768px){[data-iw-theme-toggle]{justify-content:center}}\n';
 
   // src/modules/HeaderRenderer.js
   var ROLE3 = "data-iw-header";
@@ -11009,21 +11961,22 @@
     "--iw-corner-filigree",
     "--iw-zone-separator"
   ];
-  var norm6 = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  var norm8 = (value) => String(value || "").replace(/\s+/g, " ").trim();
   var ZONE_SURFACE_DIR = "assets/header/zones";
   var ZONE_SURFACE_MAX = 34;
   var lastZoneNumber = null;
   function currentZoneNumber() {
     let el2 = document.querySelector('[data-iw-ui="zone-title"]');
     if (!el2) {
-      el2 = [...document.querySelectorAll("div,span,p,strong")].find((n) => /^zone\s*\d+\s*:/i.test(norm6(n.textContent).replace(/^[^a-z0-9]+/i, "")));
+      el2 = [...document.querySelectorAll("div,span,p,strong")].find((n) => /^zone\s*\d+\s*:/i.test(norm8(n.textContent).replace(/^[^a-z0-9]+/i, "")));
     }
-    const m = el2 && norm6(el2.textContent).replace(/^[^a-z0-9]+/i, "").match(/^zone\s*(\d+)/i);
+    const m = el2 && norm8(el2.textContent).replace(/^[^a-z0-9]+/i, "").match(/^zone\s*(\d+)/i);
     if (m) lastZoneNumber = Number(m[1]);
     return lastZoneNumber;
   }
   function presentationZoneNumber() {
     const zone = currentZoneNumber();
+    if (!zoneThemesEnabled()) return null;
     const route = String(location.pathname || "/").toLowerCase().replace(/\/+$/, "") || "/";
     return route === "/housing" || route === "/ssf/housing" ? null : zone;
   }
@@ -11043,25 +11996,25 @@
   var THEME_ASSET_DIR = "assets/skills-ui";
   var FALLBACK_VISUAL_THEME = "forged-metal";
   function applyZoneTheme() {
-    const html = document.documentElement;
-    if (!html) return;
+    const html2 = document.documentElement;
+    if (!html2) return;
     const theme = zoneTheme(presentationZoneNumber());
     const key = theme || "default";
     const visualTheme = theme || FALLBACK_VISUAL_THEME;
-    const zoneVarsReady = theme ? !!html.style.getPropertyValue("--iw-zone-atlas") : !html.style.getPropertyValue("--iw-zone-atlas") && !html.style.getPropertyValue("--iw-corner-filigree") && !html.style.getPropertyValue("--iw-zone-separator");
-    const buttonThemeReady = html.dataset.iwCompactAtlas === "compact-ghost-v3" && !!html.style.getPropertyValue("--iw-compact-atlas") && !!html.style.getPropertyValue("--iw-action-idle");
-    if (html.dataset.iwZoneTheme === key && zoneVarsReady && buttonThemeReady) return;
-    html.dataset.iwZoneTheme = key;
+    const zoneVarsReady = theme ? !!html2.style.getPropertyValue("--iw-zone-atlas") : !html2.style.getPropertyValue("--iw-zone-atlas") && !html2.style.getPropertyValue("--iw-corner-filigree") && !html2.style.getPropertyValue("--iw-zone-separator");
+    const buttonThemeReady = html2.dataset.iwCompactAtlas === "compact-ghost-v3" && !!html2.style.getPropertyValue("--iw-compact-atlas") && !!html2.style.getPropertyValue("--iw-action-idle");
+    if (html2.dataset.iwZoneTheme === key && zoneVarsReady && buttonThemeReady) return;
+    html2.dataset.iwZoneTheme = key;
     if (theme) {
-      html.style.setProperty("--iw-zone-atlas", `url("${assetUrl(`${THEME_ASSET_DIR}/theme_${theme}.webp`)}")`);
-      html.style.setProperty("--iw-corner-filigree", `url("${assetUrl(`${THEME_ASSET_DIR}/panel_corners_${theme}.webp`)}")`);
-      html.style.setProperty("--iw-zone-separator", `url("${assetUrl(`${THEME_ASSET_DIR}/separator_flourish_${theme}.webp`)}")`);
+      html2.style.setProperty("--iw-zone-atlas", `url("${assetUrl(`${THEME_ASSET_DIR}/theme_${theme}.webp`)}")`);
+      html2.style.setProperty("--iw-corner-filigree", `url("${assetUrl(`${THEME_ASSET_DIR}/panel_corners_${theme}.webp`)}")`);
+      html2.style.setProperty("--iw-zone-separator", `url("${assetUrl(`${THEME_ASSET_DIR}/separator_flourish_${theme}.webp`)}")`);
     } else {
-      html.style.removeProperty("--iw-zone-atlas");
-      html.style.removeProperty("--iw-corner-filigree");
-      html.style.removeProperty("--iw-zone-separator");
+      html2.style.removeProperty("--iw-zone-atlas");
+      html2.style.removeProperty("--iw-corner-filigree");
+      html2.style.removeProperty("--iw-zone-separator");
     }
-    SkillsArtService.applyThemeVariables(html, visualTheme);
+    SkillsArtService.applyThemeVariables(html2, visualTheme);
   }
   function setRole5(el2, role2) {
     if (el2 && el2.getAttribute(ROLE3) !== role2) el2.setAttribute(ROLE3, role2);
@@ -11086,7 +12039,7 @@
   }
   function findLiveHeader() {
     const candidates = [...document.querySelectorAll("header")].filter((header) => {
-      const text = norm6(header.textContent);
+      const text = norm8(header.textContent);
       return /combat\s+lv\s*\d+/i.test(text) && /players\s+online\s*:\s*\d+/i.test(text) && /atk\s*\d+.*def\s*\d+.*hp\s*\d+/i.test(text);
     });
     return pickVisible(candidates);
@@ -11110,22 +12063,22 @@
   }
   function classifyProfile(layout) {
     const name = layout.querySelector("h1.header-player-name, h1");
-    const meta = [...layout.querySelectorAll("p,span,div")].find((el2) => /combat\s+lv\s*\d+.*zone\s*\d+\s*:/i.test(norm6(el2.textContent)) && el2.childElementCount <= 1);
-    const online = [...layout.querySelectorAll("button,p,span,div")].find((el2) => /^\s*players\s+online\s*:\s*\d+/i.test(norm6(el2.textContent)) && el2.childElementCount <= 1);
+    const meta = [...layout.querySelectorAll("p,span,div")].find((el2) => /combat\s+lv\s*\d+.*zone\s*\d+\s*:/i.test(norm8(el2.textContent)) && el2.childElementCount <= 1);
+    const online = [...layout.querySelectorAll("button,p,span,div")].find((el2) => /^\s*players\s+online\s*:\s*\d+/i.test(norm8(el2.textContent)) && el2.childElementCount <= 1);
     const profile = name ? name.closest(".min-w-0.overflow-hidden") || directChildContaining(layout, name) : null;
     if (!profile) return { profile: null, region: null };
     setRole5(profile, "profile");
     if (name) setRole5(name, "profile-name");
     if (meta) setRole5(meta, "profile-meta");
     if (online) setRole5(online, "profile-online");
-    const brand = [...profile.children].find((el2) => /^idleworlds$/i.test(norm6(el2.textContent)));
+    const brand = [...profile.children].find((el2) => /^idleworlds$/i.test(norm8(el2.textContent)));
     if (brand) setRole5(brand, "brand");
     const children = [...profile.children];
     const nameIndex = name ? children.indexOf(name) : -1;
     const metaIndex = meta ? children.indexOf(meta) : -1;
     if (nameIndex >= 0 && metaIndex > nameIndex + 1) {
       for (let i = nameIndex + 1; i < metaIndex; i += 1) {
-        if (norm6(children[i].textContent)) {
+        if (norm8(children[i].textContent)) {
           setRole5(children[i], "profile-title");
           break;
         }
@@ -11142,7 +12095,7 @@
     if (!utilities) {
       utilities = [...layout.querySelectorAll("div")].find((div) => {
         const buttons = [...div.children].filter((el2) => el2.tagName === "BUTTON");
-        return buttons.length >= 3 && buttons.length === div.childElementCount && buttons.every((btn) => norm6(btn.textContent).length <= 3);
+        return buttons.length >= 3 && buttons.length === div.childElementCount && buttons.every((btn) => norm8(btn.textContent).length <= 3);
       }) || null;
     }
     if (!utilities) return null;
@@ -11159,7 +12112,7 @@
     return "other";
   }
   function classifyStatus(layout, region) {
-    const statsAnchor = [...layout.querySelectorAll("button,div")].find((el2) => /atk\s*\d+.*def\s*\d+.*hp\s*\d+/i.test(norm6(el2.textContent)) && el2.childElementCount <= 1);
+    const statsAnchor = [...layout.querySelectorAll("button,div")].find((el2) => /atk\s*\d+.*def\s*\d+.*hp\s*\d+/i.test(norm8(el2.textContent)) && el2.childElementCount <= 1);
     let grid = statsAnchor?.closest(".grid.grid-cols-2") || [...layout.children].find((el2) => el2 !== region && el2.querySelector?.(".stat-chip")) || null;
     if (!grid && statsAnchor) {
       let cur = statsAnchor.parentElement;
@@ -11182,7 +12135,7 @@
       setRole5(card, "status-card");
       const cardIndex = String(index + 1);
       if (card.dataset.iwHeaderCard !== cardIndex) card.dataset.iwHeaderCard = cardIndex;
-      const kind2 = statKind(norm6(card.textContent));
+      const kind2 = statKind(norm8(card.textContent));
       if (card.dataset.iwHeaderStat !== kind2) card.dataset.iwHeaderStat = kind2;
     });
   }
@@ -11220,7 +12173,7 @@
       let candidate = shell.nextElementSibling;
       while (candidate && candidate.matches("script,style")) candidate = candidate.nextElementSibling;
       if (!candidate) continue;
-      const text = norm6(candidate.textContent);
+      const text = norm8(candidate.textContent);
       if (!text || text.length > 260 || /zone\s*\d+\s*:/i.test(text)) continue;
       return candidate;
     }
@@ -11243,6 +12196,7 @@
     guard("header:adjacent", classifyAdjacent);
     guard("header:zone-surface", () => applyZoneSurface(headerResolution?.root));
     guard("header:zone-theme", applyZoneTheme);
+    guard("header:zone-theme-toggle", ensureZoneThemeToggle);
   }
   function queueReconcile() {
     if (queued2) return;
@@ -11253,6 +12207,7 @@
     });
   }
   function clearHeaderRenderer() {
+    clearZoneThemeSetting();
     headerResolution = null;
     lastZoneNumber = null;
     delete document.documentElement.dataset.iwZoneTheme;
@@ -11271,6 +12226,7 @@
   function initHeaderRenderer() {
     inject("header", header_default);
     on("iw:dom-flush", queueReconcile);
+    initZoneThemeSetting(queueReconcile);
     queueReconcile();
   }
 
@@ -11445,9 +12401,9 @@
       const rows = children.filter((row) => {
         const cells = [...row.children];
         if (cells.length !== 2) return false;
-        const label4 = normText5(cells[0].textContent);
+        const label5 = normText5(cells[0].textContent);
         const value = normText5(cells[1].textContent);
-        return !!label4 && /^-?[\d,.]+$/.test(value);
+        return !!label5 && /^-?[\d,.]+$/.test(value);
       });
       if (rows.length >= 2) return { surface, rows };
     }
@@ -11461,10 +12417,10 @@
     setData3(match.surface, "iwOverlayContent", PLAYER_STATS);
     const keep = /* @__PURE__ */ new Set();
     for (const row of match.rows) {
-      const [label4, value] = row.children;
-      setData3(label4, "iwOverlayRole", STAT_LABEL);
+      const [label5, value] = row.children;
+      setData3(label5, "iwOverlayRole", STAT_LABEL);
       setData3(value, "iwOverlayRole", STAT_VALUE);
-      keep.add(label4);
+      keep.add(label5);
       keep.add(value);
     }
     match.surface.querySelectorAll("[data-iw-overlay-role]").forEach((el2) => {
@@ -11539,68 +12495,68 @@
   }
   function releaseHost(host, exceptPopup = null) {
     if (!host?.isConnected) return;
-    for (const [popup, owner] of popupHosts) {
-      if (popup !== exceptPopup && owner === host) return;
+    for (const [popup2, owner] of popupHosts) {
+      if (popup2 !== exceptPopup && owner === host) return;
     }
     host.removeAttribute(OVERLAY_HOST_ATTR);
   }
-  function clearPopupTag(popup) {
-    const host = popupHosts.get(popup);
-    popupHosts.delete(popup);
-    if (popup?.dataset?.iwOverlay === POPUP) delete popup.dataset.iwOverlay;
-    tagged.delete(popup);
-    releaseHost(host, popup);
+  function clearPopupTag(popup2) {
+    const host = popupHosts.get(popup2);
+    popupHosts.delete(popup2);
+    if (popup2?.dataset?.iwOverlay === POPUP) delete popup2.dataset.iwOverlay;
+    tagged.delete(popup2);
+    releaseHost(host, popup2);
   }
-  function tagPopup(popup, frame2) {
-    const host = directChildUnder3(frame2, popup);
+  function tagPopup(popup2, frame2) {
+    const host = directChildUnder3(frame2, popup2);
     if (!host) return false;
-    const previous = popupHosts.get(popup);
+    const previous = popupHosts.get(popup2);
     if (previous && previous !== host) {
-      popupHosts.delete(popup);
-      releaseHost(previous, popup);
+      popupHosts.delete(popup2);
+      releaseHost(previous, popup2);
     }
-    if (popup.dataset.iwOverlay !== POPUP) popup.dataset.iwOverlay = POPUP;
+    if (popup2.dataset.iwOverlay !== POPUP) popup2.dataset.iwOverlay = POPUP;
     host.setAttribute(OVERLAY_HOST_ATTR, "1");
-    popupHosts.set(popup, host);
-    tagged.add(popup);
+    popupHosts.set(popup2, host);
+    tagged.add(popup2);
     return true;
   }
-  function matchingExpandedController(popup) {
-    if (!popup?.id) return null;
+  function matchingExpandedController(popup2) {
+    if (!popup2?.id) return null;
     for (const control of document.querySelectorAll("[aria-controls]")) {
-      if (control.getAttribute("aria-controls") !== popup.id) continue;
+      if (control.getAttribute("aria-controls") !== popup2.id) continue;
       if (control.getAttribute("aria-expanded") === "true") return control;
     }
     return null;
   }
-  function capturedInventoryFilterPopup(popup, frame2) {
+  function capturedInventoryFilterPopup(popup2, frame2) {
     if (!frame2?.matches?.('[data-iw-inventory-root="1"]')) return false;
-    const parent = popup.parentElement;
+    const parent = popup2.parentElement;
     if (!parent) return false;
     const trigger = [...parent.children].find((el2) => {
-      if (el2 === popup || !el2.matches?.('button, [role="button"]')) return false;
-      const label4 = `${el2.getAttribute("aria-label") || ""} ${el2.getAttribute("title") || ""}`;
-      return /filter inventory/i.test(label4);
+      if (el2 === popup2 || !el2.matches?.('button, [role="button"]')) return false;
+      const label5 = `${el2.getAttribute("aria-label") || ""} ${el2.getAttribute("title") || ""}`;
+      return /filter inventory/i.test(label5);
     });
     if (!trigger) return false;
-    return popup.parentElement === trigger.parentElement && popup.querySelectorAll('button, [role="button"], input, [role="option"], [role="menuitem"]').length >= 2;
+    return popup2.parentElement === trigger.parentElement && popup2.querySelectorAll('button, [role="button"], input, [role="option"], [role="menuitem"]').length >= 2;
   }
-  function popupSemantics(popup, frame2) {
-    const role2 = String(popup.getAttribute("role") || "").toLowerCase();
+  function popupSemantics(popup2, frame2) {
+    const role2 = String(popup2.getAttribute("role") || "").toLowerCase();
     if (["menu", "listbox", "dialog"].includes(role2)) return true;
-    if (matchingExpandedController(popup)) return true;
-    return capturedInventoryFilterPopup(popup, frame2);
+    if (matchingExpandedController(popup2)) return true;
+    return capturedInventoryFilterPopup(popup2, frame2);
   }
-  function classifyContainedPopup(popup) {
-    if (!popup || !visible(popup)) return null;
-    if (popup.matches?.(".iw-tip, #iw-tip") || popup.closest?.(".iw-tip, #iw-tip")) return null;
-    if (popup.matches?.(ALREADY_FRAMED)) return null;
-    const cs = getComputedStyle(popup);
+  function classifyContainedPopup(popup2) {
+    if (!popup2 || !visible(popup2)) return null;
+    if (popup2.matches?.(".iw-tip, #iw-tip") || popup2.closest?.(".iw-tip, #iw-tip")) return null;
+    if (popup2.matches?.(ALREADY_FRAMED)) return null;
+    const cs = getComputedStyle(popup2);
     if (!["absolute", "fixed"].includes(cs.position)) return null;
-    if (!popup.querySelector('button, a, input, select, [role="button"], [role="option"], [role="menuitem"]')) return null;
-    const frame2 = popup.closest?.(FRAMED_SURFACE);
-    if (!frame2 || frame2 === popup) return null;
-    return popupSemantics(popup, frame2) ? frame2 : null;
+    if (!popup2.querySelector('button, a, input, select, [role="button"], [role="option"], [role="menuitem"]')) return null;
+    const frame2 = popup2.closest?.(FRAMED_SURFACE);
+    if (!frame2 || frame2 === popup2) return null;
+    return popupSemantics(popup2, frame2) ? frame2 : null;
   }
   function popupCandidates() {
     const out = new Set(document.querySelectorAll(
@@ -11643,10 +12599,10 @@
         }
         if (el2.dataset.iwOverlay === PANEL) classifyOverlayContent(el2);
       }
-      for (const popup of popupCandidates()) {
-        if (popup.dataset?.iwOverlay === POPUP) continue;
-        const frame2 = classifyContainedPopup(popup);
-        if (frame2) tagPopup(popup, frame2);
+      for (const popup2 of popupCandidates()) {
+        if (popup2.dataset?.iwOverlay === POPUP) continue;
+        const frame2 = classifyContainedPopup(popup2);
+        if (frame2) tagPopup(popup2, frame2);
       }
       const seen = /* @__PURE__ */ new Set();
       const candidates = document.querySelectorAll(
@@ -11781,8 +12737,8 @@
     setRuntimeActive(false);
     console.log("[IW Fantasy Skin] disabled — active presentation removed");
   }
-  function applyEnabled(enabled2) {
-    if (enabled2 === false) teardown();
+  function applyEnabled(enabled3) {
+    if (enabled3 === false) teardown();
     else boot();
   }
   (async function start() {

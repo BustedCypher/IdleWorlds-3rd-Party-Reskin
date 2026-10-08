@@ -22,7 +22,15 @@ import { dirname } from 'node:path';
 // gains 102 rows (34 timber, 34 Building Parts, 34 buildings). The gear atlas
 // and manifest are byte-identical to the previous pin (39bc876), so this still
 // carries the shared +4 gear overlay; only the item atlas moved.
-const ASSET_REVISION = 'eadbc0fe1eae549184dd740470b69fc76974a411';
+//
+// 2026-10-08: bumped to 6d1ea43 for the raid gear art. The gear atlas gains
+// 14 icons (rows 153 -> 155: the Woodcutting / Construction gloves the skin
+// had imported by hand, their axes, mallet, shield and toolbox, and the
+// Rime Court set); nothing moved or was removed, measured name by name, and
+// the skin's hand-imported glove cells are pixel-identical. The raid-boss
+// gear itself lives in five separate per-raid atlases (raid_artwork_manifest
+// .json) and is vendored by vendorRaidGear() into assets/raid_gear/.
+const ASSET_REVISION = '6d1ea43dd83d3a5b46be560a384f143f06a8bfc2';
 const REPO_BASE =
   `https://raw.githubusercontent.com/BustedCypher/idleWorlds-game-sprites-BC/${ASSET_REVISION}/`;
 
@@ -75,6 +83,38 @@ async function vendorSprites() {
   for (const [remote, local] of SPRITES) {
     await download(REPO_BASE + remote, local);
   }
+}
+
+/**
+ * Raid-boss gear: one small atlas per raid (assets/raids/<raid>/atlas.<hash>
+ * .png upstream), listed by raid_artwork_manifest.json. Vendored to
+ * assets/raid_gear/<raid>.png plus ONE combined index (assets/raid_gear/
+ * index.json) that AtlasService reads. Not under assets/raids/, which holds
+ * the skin's own arena art. Items are keyed by item_id (the game's id).
+ */
+async function vendorRaidGear() {
+  console.log('\nRaid gear atlases');
+  const res = await fetch(REPO_BASE + 'raid_artwork_manifest.json');
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText} — raid_artwork_manifest.json`);
+  const manifest = await res.json();
+  const raids = {};
+  for (const [raid, atlas] of Object.entries(manifest.atlases || {})) {
+    const local = `assets/raid_gear/${raid}.png`;
+    await download(REPO_BASE + atlas.path, local);
+    raids[raid] = { atlas: local, width: atlas.width, height: atlas.height, columns: atlas.columns, rows: atlas.rows };
+  }
+  const items = (manifest.items || []).map(({ item_id, name, raid, category, subcategory, x, y, width, height }) =>
+    ({ item_id, name, raid, category, subcategory, x, y, width, height }));
+  const index = {
+    version: 1,
+    source: `idleWorlds-game-sprites-BC@${ASSET_REVISION.slice(0, 7)} raid_artwork_manifest.json v${manifest.version}`,
+    item_data_generated_at: manifest.item_data_generated_at,
+    cell_size: manifest.cell_size,
+    raids,
+    items,
+  };
+  await writeFile('assets/raid_gear/index.json', JSON.stringify(index, null, 2) + '\n');
+  console.log(`  ✓ assets/raid_gear/index.json  (${items.length} items, ${Object.keys(raids).length} raids)`);
 }
 
 function parseFontFaces(css) {
@@ -173,6 +213,19 @@ async function verify() {
   if (!itemPng) problems.push('item atlas is not a valid PNG (an error page?)');
   else console.log(`  item atlas:    ${itemPng.width}x${itemPng.height}px`);
 
+  // Raid gear: every atlas a real PNG of the stated size, every item inside it.
+  const raidIndex = JSON.parse(await readFile('assets/raid_gear/index.json', 'utf8'));
+  for (const [raid, atlas] of Object.entries(raidIndex.raids || {})) {
+    const png = await pngSize(atlas.atlas);
+    if (!png) { problems.push(`${atlas.atlas} is not a valid PNG`); continue; }
+    if (png.width !== atlas.width || png.height !== atlas.height) problems.push(`${atlas.atlas} is ${png.width}x${png.height}, index says ${atlas.width}x${atlas.height}`);
+    const outside = raidIndex.items.filter(i => i.raid === raid && (i.x + i.width > png.width || i.y + i.height > png.height));
+    if (outside.length) problems.push(`${outside.length} ${raid} raid icons fall outside their atlas`);
+  }
+  const orphans = (raidIndex.items || []).filter(i => !raidIndex.raids?.[i.raid]);
+  if (orphans.length) problems.push(`${orphans.length} raid items name a raid with no atlas`);
+  console.log(`  raid gear:     ${raidIndex.items?.length ?? 0} items in ${Object.keys(raidIndex.raids || {}).length} atlases`);
+
   for (const target of FONT_TARGETS) {
     const buf = await readFile(target.out).catch(() => null);
     if (!buf) { problems.push(`${target.out} missing`); continue; }
@@ -192,6 +245,7 @@ async function verify() {
 async function main() {
   console.log('Vendoring extension assets…');
   await vendorSprites();
+  await vendorRaidGear();
   await vendorFonts();
   await verify();
   console.log('\nDone. Assets are bundled — no runtime network access needed.');

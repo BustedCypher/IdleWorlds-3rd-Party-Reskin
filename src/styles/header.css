@@ -1160,3 +1160,56 @@
   [data-iw-ui="nav-tab"],
   [data-iw-ui="zone-action"] { transition: none; }
 }
+
+/* ── "Zone themes" switch (ZoneThemeSetting.js) ─────────────────────────
+   The skin's own label + checkbox at the end of the zone-action row. Not a
+   <button>, so no generic button rule reaches it; the native box is hidden
+   and the track drawn instead. Off reads dim, on reads in the theme accent. */
+[data-iw-theme-toggle] {
+  display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto;
+  min-height: 30px; padding: 0 4px 0 8px; cursor: pointer; user-select: none;
+  font: 600 10.5px/1 var(--iw-font-ui); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--iw-dim, #938a79); white-space: nowrap;
+}
+[data-iw-theme-toggle]:hover { color: var(--iw-text-hi, #f0e8d6); }
+[data-iw-theme-toggle] > input {
+  position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none;
+}
+.iw-theme-toggle-track {
+  position: relative; width: 28px; height: 15px; flex: 0 0 auto;
+  border: 1px solid var(--iw-th-edge, #4a3820); border-radius: 8px;
+  background: rgba(0,0,0,.45); box-shadow: inset 0 1px 2px rgba(0,0,0,.6);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.iw-theme-toggle-track::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 9px; height: 9px; border-radius: 50%;
+  background: #6f675a; transition: transform 120ms ease, background-color 120ms ease;
+}
+[data-iw-theme-toggle="on"] { color: var(--iw-text, #d8cfbd); }
+[data-iw-theme-toggle="on"] .iw-theme-toggle-track {
+  border-color: var(--iw-th-cta-hi, #c9963f);
+  background: color-mix(in srgb, var(--iw-th-cta, #b5541c) 38%, #000);
+}
+[data-iw-theme-toggle="on"] .iw-theme-toggle-track::after { transform: translateX(13px); background: var(--iw-th-accent, #f0b45c); }
+[data-iw-theme-toggle] > input:focus-visible + .iw-theme-toggle-track { outline: 1px solid var(--iw-gold, #c9963f); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .iw-theme-toggle-track, .iw-theme-toggle-track::after { transition: none; }
+}
+/* Below 1280px the switch never widens the row. At mid widths the nav rail
+   shares the row in the merged header chrome and has no slack (even a
+   track-only switch clipped the route tabs at 900px); on phones the three
+   zone actions fill their row in equal thirds. Either way it wraps onto its
+   own line under the zone buttons (tests/menu-rows.test.mjs). */
+@media (max-width: 1279px) {
+  :has(> [data-iw-theme-toggle]) { flex-wrap: wrap !important; }
+  /* contain: inline-size: the merged chrome's grid sizes the zone column
+     from the row's max-content, and the switch's own width there took
+     ~125px from the nav rail (measured 2026-10-08). Contained, it adds
+     nothing to that and still lays out at the full row width. The row's
+     own `gap-2` (8px, live zone-bar capture) still counted, so a matching
+     negative start margin and no side padding cancel it. */
+  [data-iw-theme-toggle] { flex: 1 0 100% !important; contain: inline-size; justify-content: flex-end; min-height: 24px; margin-left: -8px; padding: 3px 0 0; }
+}
+@media (max-width: 768px) {
+  [data-iw-theme-toggle] { justify-content: center; }
+}

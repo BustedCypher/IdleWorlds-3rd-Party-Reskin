@@ -9,6 +9,7 @@ import { inject } from './StyleInjector.js';
 import { assetUrl, guard, raf } from './Runtime.js';
 import { zoneTheme } from './zoneThemes.js';
 import { SkillsArtService } from './SkillsArtService.js';
+import { zoneThemesEnabled, initZoneThemeSetting, ensureZoneThemeToggle, clearZoneThemeSetting } from './ZoneThemeSetting.js';
 import css from '../styles/header.css';
 
 const ROLE = 'data-iw-header';
@@ -68,6 +69,9 @@ function currentZoneNumber() {
 
 function presentationZoneNumber() {
   const zone = currentZoneNumber();
+  // The player's "Zone themes" switch (ZoneThemeSetting): off renders the
+  // stock Ashen Iron theme everywhere, exactly as Village does below.
+  if (!zoneThemesEnabled()) return null;
   const route = String(location.pathname || '/').toLowerCase().replace(/\/+$/, '') || '/';
   return route === '/housing' || route === '/ssf/housing' ? null : zone;
 }
@@ -417,6 +421,7 @@ function reconcile() {
   guard('header:adjacent', classifyAdjacent);
   guard('header:zone-surface', () => applyZoneSurface(headerResolution?.root));
   guard('header:zone-theme', applyZoneTheme);
+  guard('header:zone-theme-toggle', ensureZoneThemeToggle);
 }
 
 function queueReconcile() {
@@ -429,6 +434,7 @@ function queueReconcile() {
 }
 
 export function clearHeaderRenderer() {
+  clearZoneThemeSetting();
   headerResolution = null;
   lastZoneNumber = null;
   delete document.documentElement.dataset.iwZoneTheme;
@@ -447,5 +453,6 @@ export function clearHeaderRenderer() {
 
 export function initHeaderRenderer() {  inject('header', css);
   on('iw:dom-flush', queueReconcile);
+  initZoneThemeSetting(queueReconcile);
   queueReconcile();
 }

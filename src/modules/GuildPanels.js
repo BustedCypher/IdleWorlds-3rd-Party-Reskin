@@ -84,6 +84,7 @@ import { reconcileMorwennaScene, clearMorwennaScenes, pruneMorwennaScenes } from
 import { reconcileGrimjawScene, clearGrimjawScenes, pruneGrimjawScenes } from './GrimjawScene.js';
 import { reconcileSkarthScene, clearSkarthScenes, pruneSkarthScenes } from './SkarthScene.js';
 import { decorateRaidHud, clearRaidHud, pruneRaidDocks } from './RaidHud.js';
+import { decorateGuildLobby, clearGuildLobby } from './GuildLobby.js';
 // TESTING FEATURE: dummy raiders to preview a full party (RaidPartyPreview.js).
 import { syncPartyPreview, syncPartyPreviewToggle, clearRaidPartyPreview } from './RaidPartyPreview.js';
 
@@ -160,7 +161,8 @@ function decorateHead(root, heading) {
 
 /* ------------------------------------------------------------ the cards -- */
 
-const READY_LABEL = /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up)$/i;
+// "Mark Ready" is the live label (2026-10-08 capture); unknown, the card went generic.
+const READY_LABEL = /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up|mark ready)$/i;
 
 function cardKind(card) {
   const first = firstLine(card);
@@ -266,7 +268,8 @@ function decorateMembers(card) {
     decorateRosterRow(row);
   }
   for (const p of card.querySelectorAll('p')) {
-    if (/^raid guests\b/i.test(label(p.textContent))) {
+    // "Raid guests (2/7)" in a guild; "Group (1/8)" in a pickup group (live, 2026-10-08).
+    if (/^(?:raid guests\b|group\s*\(\d+\/\d+\))/i.test(label(p.textContent))) {
       role(p, 'subhead');
       role(p.parentElement !== card ? p.parentElement : null, 'guests');
     }
@@ -501,6 +504,9 @@ export function decorateGuildPanel({ root, heading }) {
   }
   for (const arena of root.querySelectorAll('.raid-battle-backdrop')) decorateArena(arena);
   pruneRaidDocks(root);
+  // Last: it reads the card kinds tagged above (layout slots, records, the
+  // ready-check pop-up).
+  decorateGuildLobby(root);
 }
 
 export function clearGuildPanel(root) {
@@ -512,6 +518,7 @@ export function clearGuildPanel(root) {
   clearSkarthScenes(root);
   clearRaidPartyPreview(root); // TESTING FEATURE
   clearRaidHud(root);
+  clearGuildLobby(root);
   for (const attr of ATTRS) {
     if (root.hasAttribute?.(attr)) root.removeAttribute(attr);
     root.querySelectorAll(`[${attr}]`).forEach(el => el.removeAttribute(attr));

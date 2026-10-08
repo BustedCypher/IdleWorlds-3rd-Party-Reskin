@@ -10,6 +10,16 @@ const OUTFILE = path.join(DIST, 'content.bundle.js');
 const allowMissingAssets = process.argv.includes('--allow-missing-assets');
 
 const REQUIRED_ASSETS = [
+  'raids/lobby/ashmaw-banner.webp',
+  'raids/lobby/ashmaw-portrait.webp',
+  'raids/lobby/thessaly-banner.webp',
+  'raids/lobby/thessaly-portrait.webp',
+  'raids/lobby/morwenna-banner.webp',
+  'raids/lobby/morwenna-portrait.webp',
+  'raids/lobby/grimjaw-banner.webp',
+  'raids/lobby/grimjaw-portrait.webp',
+  'raids/lobby/skarth-banner.webp',
+  'raids/lobby/skarth-portrait.webp',
   'raids/ashmaw/arena.png',
   'raids/ashmaw/clouds.png',
   'raids/ashmaw/furnace-smoke.png',
@@ -62,6 +72,13 @@ const REQUIRED_ASSETS = [
   'gear_icons_manifest.json',
   'item_icons_atlas.png',
   'item_icons_index.csv',
+  // Raid-boss gear, one atlas per raid (vendor-assets.mjs, 2026-10-08).
+  'raid_gear/index.json',
+  'raid_gear/ashmaw.png',
+  'raid_gear/thessaly.png',
+  'raid_gear/morwenna.png',
+  'raid_gear/grimjaw.png',
+  'raid_gear/skarth.png',
   'fonts/cinzel-variable.woff2',
   'fonts/barlow-400.woff2',
   'fonts/barlow-500.woff2',
