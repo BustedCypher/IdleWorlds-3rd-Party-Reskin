@@ -3,7 +3,7 @@ import { AtlasService } from './AtlasService.js';
 import { ItemDatabase } from './ItemDatabase.js';
 import { registerTooltipItem } from './TooltipEngine.js';
 import { storageGet, storageSet } from './Runtime.js';
-import fallbackItems from '../../assets/world-bosses/rewards.json';
+import fallbackItems from '../../../../assets/world-bosses/rewards.json';
 
 const BOSSES = [
   { key: 'ancient_treant', name: 'Ancient Treant', ids: ['miners_gloves', 'herbalists_gloves', 'blacksmiths_gloves', 'alchemists_gloves', 'jewelcrafters_gloves', 'spellcrafters_gloves', 'tailors_gloves', 'woodcutters_gloves', 'builders_gloves'] },

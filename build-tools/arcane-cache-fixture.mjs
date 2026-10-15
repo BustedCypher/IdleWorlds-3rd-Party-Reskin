@@ -18,6 +18,6 @@ export function cacheFixture() {
   <p>Batch preview supports 20, 50 or 100 caches. Rare treasures float above; resources collect below.</p>
   <p>The chest will arrive, then wait for you to break the seal.</p>
   <small>Local animation preview · Sample rewards · No game account connected</small></section></main>
-  <script>window.__skinListeners=[];window.chrome={runtime:{id:'preview',getURL:p=>new URL('/'+p,location).href},storage:{local:{get:async()=>({}),set:async()=>{}},onChanged:{addListener:f=>window.__skinListeners.push(f)}}};</script>
+  <script>window.__skinListeners=[];window.chrome={runtime:{id:'preview',getURL:p=>new URL('/'+p,location).href},storage:{local:{get:async()=>({}),set:async()=>{}},onChanged:{addListener:f=>window.__skinListeners.push(f),removeListener:f=>{window.__skinListeners=window.__skinListeners.filter(listener=>listener!==f)}}}};</script>
   <script src="/dist/content.bundle.js"></script></body></html>`;
 }

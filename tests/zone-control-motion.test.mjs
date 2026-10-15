@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const compiled = await build({
-  stdin: { contents: `import {decorateWorldBossPanel,clearWorldBossPanel} from './src/modules/WorldBossPanels.js';
+  stdin: { contents: `import {decorateWorldBossPanel,clearWorldBossPanel} from './src/skins/legacy/modules/WorldBossPanels.js';
     const root=document.querySelector('.panel');
     window.decorate=()=>decorateWorldBossPanel({root,heading:root.querySelector('h2')});
     window.clear=()=>clearWorldBossPanel(root);
@@ -20,7 +20,7 @@ const compiled = await build({
 });
 let css = '';
 for (const name of ['base','tooltip-engine','inventory','skillpanel','header','overlay','ui-system']) {
-  css += await readFile(resolve(root, 'src/styles', name + '.css'), 'utf8');
+  css += await readFile(resolve(root, 'src/skins/legacy/styles', name + '.css'), 'utf8');
 }
 css = css.replaceAll('../assets/', '/assets/');
 const html = `<!doctype html><html><head><meta charset="utf-8"><style>${css}</style><style>

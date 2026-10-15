@@ -23,7 +23,7 @@ import { resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const compiled = await build({
-  stdin: { contents: "export { initQuestPanelRenderer, clearQuestPanels } from './src/modules/QuestPanelRenderer.js';", resolveDir: ROOT },
+  stdin: { contents: "export { initQuestPanelRenderer, clearQuestPanels } from './src/skins/legacy/modules/QuestPanelRenderer.js';", resolveDir: ROOT },
   bundle: true, write: false, format: 'iife', globalName: 'Quest', loader: { '.css': 'text' },
 });
 

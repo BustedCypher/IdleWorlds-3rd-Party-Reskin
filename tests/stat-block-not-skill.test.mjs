@@ -21,7 +21,7 @@ import { resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const compiled = await build({
-  stdin: { contents: "export { startWatcher, stopWatcher } from './src/modules/DOMWatcher.js';", resolveDir: ROOT },
+  stdin: { contents: "export { startWatcher, stopWatcher } from './src/skins/legacy/modules/DOMWatcher.js';", resolveDir: ROOT },
   bundle: true, write: false, format: 'iife', globalName: 'Watch', loader: { '.css': 'text' },
 });
 

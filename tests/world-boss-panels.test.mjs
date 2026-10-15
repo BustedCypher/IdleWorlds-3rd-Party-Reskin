@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 import { resolve } from 'node:path';
 
 const projectRoot = resolve(import.meta.dirname, '..');
-const compiled = await build({ stdin: { contents: "export * from './src/modules/WorldBossPanels.js'; export { ItemDatabase } from './src/modules/ItemDatabase.js'; export { AtlasService } from './src/modules/AtlasService.js';", resolveDir: projectRoot }, bundle: true, write: false, format: 'iife', globalName: 'BossPanels', loader: { '.css': 'text' } });
+const compiled = await build({ stdin: { contents: "export * from './src/skins/legacy/modules/WorldBossPanels.js'; export { ItemDatabase } from './src/skins/legacy/modules/ItemDatabase.js'; export { AtlasService } from './src/skins/legacy/modules/AtlasService.js';", resolveDir: projectRoot }, bundle: true, write: false, format: 'iife', globalName: 'BossPanels', loader: { '.css': 'text' } });
 const dom = new JSDOM('<div class="panel"><div><h2>World Bosses</h2><p>Shared world events</p></div><div class="compact-panel"><div><div><p>🌍 Ancient Treant</p><p>Solo</p><p>Buff on kill: +4 XP/task for 1h</p></div><button>Prejoin</button></div><div class="h-1.5 rounded-full"><div style="width: 40%"></div></div><button>World boss participation</button><div class="fighter-details"><p>Top Fighters</p></div><div><p>Respawns 3m left</p></div></div><h2>Zone Control</h2><div class="compact-panel"><div><p>🔴 Red Team controls Zone 12</p></div><p>12,500 / 20,000 HP</p><div class="h-1.5 rounded-full"><div style="width: 62.5%"></div></div><p>Protected for 1h</p><button>Last battle participants</button></div></div>', { runScripts: 'outside-only' });
 const saved = {};
 dom.window.chrome = { runtime: { id: 'test' }, storage: { local: {

@@ -110,7 +110,7 @@ await mkdir(DIST, { recursive: true });
  * Strip CSS block comments, quote-aware.
  *
  * The stylesheets are inlined into the bundle verbatim by the text loader, so
- * every explanatory comment in src/styles ships to every player. They are worth
+ * every explanatory comment in src/skins/legacy/styles ships to every player. They are worth
  * keeping in source and worth nothing at runtime. A naive /\/\*[\s\S]*?\*\// would
  * also eat a "/*" that appears inside a quoted string or a url(), so this walks
  * the text and only removes comments found outside string context.

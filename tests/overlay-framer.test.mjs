@@ -16,7 +16,7 @@
 
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { frameOverlays, clearOverlayFramer } from '../src/modules/OverlayFramer.js';
+import { frameOverlays, clearOverlayFramer } from '../src/skins/legacy/modules/OverlayFramer.js';
 
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { pretendToBeVisual: true });
 const { window } = dom;

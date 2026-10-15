@@ -137,6 +137,27 @@ await tab.evaluate(() => window.toggleSkin(false));
 await tab.waitForTimeout(400);
 s = await state(tab);
 check('kill switch removes the switch', s.toggles === 0, String(s.toggles));
+
+console.log('\nrestore Legacy after disabling and switching profiles');
+await tab.evaluate(() => window.toggleSkin(true));
+await tab.waitForTimeout(400);
+s = await state(tab);
+check('re-enable restores the saved zone themes off preference', s.checked === false && s.theme === 'default', JSON.stringify(s));
+await tab.evaluate(() => window.otherTab('iw-skin-theme', 'fantasy'));
+await tab.waitForTimeout(150);
+check('Fantasy removes the Legacy zone switch', (await state(tab)).toggles === 0);
+await tab.evaluate(() => window.otherTab('iw-skin-theme', 'legacy'));
+await tab.waitForTimeout(400);
+s = await state(tab);
+check('returning from Fantasy restores the saved zone preference', s.checked === false && s.theme === 'default', JSON.stringify(s));
+await tab.click('[data-iw-theme-toggle]');
+await tab.waitForTimeout(250);
+s = await state(tab);
+check('zone toggle still repaints after the profile round trip', s.checked === true && s.theme === zoneTheme && s.stored === true, JSON.stringify(s));
+await tab.evaluate(() => window.otherTab('iw-zone-themes', false));
+await tab.waitForTimeout(250);
+s = await state(tab);
+check('zone preference still follows other tabs after reactivation', s.checked === false && s.theme === 'default', JSON.stringify(s));
 await tab.close();
 
 console.log('\nstored off, fresh load');

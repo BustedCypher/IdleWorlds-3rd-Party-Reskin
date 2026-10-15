@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IdleWorlds Skin Settings</title>
+  <link rel="stylesheet" href="options.css">
+  <script type="module" src="options.js"></script>
+</head>
+<body>
+  <main>
+    <h1>Skin settings</h1>
+    <label for="skin-theme">Active game theme</label>
+    <select id="skin-theme" aria-describedby="theme-help fantasy-help" disabled>
+      <option value="" disabled>Choose a theme</option>
+      <option value="legacy">Legacy</option>
+      <option value="fantasy">Fantasy</option>
+    </select>
+    <p id="theme-help">Choose the theme you use in IdleWorlds. Change the game's theme in its own settings.</p>
+    <p id="fantasy-help">Legacy uses your existing reskin. Fantasy starts fresh with no custom rules.</p>
+    <p id="save-status" role="status" aria-live="polite">Loading settings…</p>
+  </main>
+</body>
+</html>

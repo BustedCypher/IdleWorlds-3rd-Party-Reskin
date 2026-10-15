@@ -55,24 +55,37 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
 
 ## Architecture
 
-- `src/content.js` — activation lifecycle, boot order, teardown, kill switch
-- `src/modules/HydrationGate.js` + `src/page/hydration-signal.js` — hold the
+- `src/content.js` — neutral profile bootstrap. `iw-skin-theme` selects
+  `legacy` or `fantasy`; missing means Legacy, invalid means no active skin.
+  `iw-skin-enabled` remains the kill switch for both profiles.
+- `src/shared/SkinController.js` — exclusive activation after hydration;
+  stop the previous skin before starting another and invalidate stale starts.
+- `src/shared/ExtensionSettings.js` — settings reads, validation, and changes.
+  Subscribe before reading; never let stale reads override newer storage events.
+- `src/options/` — extension settings and toolbar popup. Keep packaging's
+  explicit settings allowlist complete when adding imports or assets here.
+- `src/skins/legacy/index.js` — existing reskin boot order and teardown.
+  All previous modules/styles belong to Legacy; its Runtime flag must stay
+  inactive whenever any other profile is selected.
+- `src/skins/fantasy/` — clean Fantasy reskin compartment. Initially no rules
+  or services. Add its own reversible presentation; never import Legacy here.
+- `src/shared/HydrationGate.js` + `src/page/hydration-signal.js` — hold the
   FIRST boot until React has hydrated (appending skin nodes mid-hydration made
   React throw #418 and re-render the tree). The signal is a separate
   MAIN-world content script at `document_start`, outside the bundle, because
   only page JS can see React's root; it writes one latch attribute on `<html>`,
   which the gate reads and removes. Bounded by a 4s timeout.
   `tests/hydration-gate.test.mjs` pins the protocol.
-- `src/modules/Runtime.js` — `chrome.*` wrappers, `guard`/`guardEach`, `raf`
-- `src/modules/DOMWatcher.js` — **the single MutationObserver** + flush budget
-- `src/modules/StyleInjector.js` — lifecycle-owned CSS injection; rewrites
+- `src/skins/legacy/modules/Runtime.js` — `chrome.*` wrappers, `guard`/`guardEach`, `raf`
+- `src/skins/legacy/modules/DOMWatcher.js` — **the single MutationObserver** + flush budget
+- `src/skins/legacy/modules/StyleInjector.js` — lifecycle-owned CSS injection; rewrites
   `url('../assets/…')` to `chrome-extension://` at runtime. Use that exact
   form in stylesheets or the asset will 404.
-- `src/modules/InlineStyleOwner.js` — reversible property-level inline styles
-- `src/modules/ProgressCadence.js` — the measured-tick / completion-reset logic
+- `src/skins/legacy/modules/InlineStyleOwner.js` — reversible property-level inline styles
+- `src/skins/legacy/modules/ProgressCadence.js` — the measured-tick / completion-reset logic
   that smooths a game-stepped progress fill; shared by the Current Action bar
   and the skill card's action-button fill. Holds no DOM.
-- `src/modules/OverlayFramer.js` — generic pop-up / modal chrome. A portalled
+- `src/skins/legacy/modules/OverlayFramer.js` — generic pop-up / modal chrome. A portalled
   dialog is not a route panel, so `classifySectionFrames` deliberately excludes
   it (`inOverlay`) and this module owns it instead; before it existed, the
   "Players Online" list and every modal the game portals in reached the page
@@ -91,7 +104,7 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   inline `position:fixed`, confirmed by `getComputedStyle` — a cheap probe, not
   a class-name classifier. `tests/overlay-framer.test.mjs` pins detection, the
   negative controls and teardown.
-- `src/modules/QuestPanelRenderer.js` — quest cards are also `.compact-panel`,
+- `src/skins/legacy/modules/QuestPanelRenderer.js` — quest cards are also `.compact-panel`,
   so they arrive on the same `iw:skill-panel` event (as `skill: 'unknown'`).
   This module positively re-identifies them (a `^Reward:` line plus a Turn In /
   Skip control or `% complete`), tags `data-iw-quest-role/-zone/-state`, appends
@@ -106,7 +119,7 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   `data-iw-item*` (attributes only, no wrapper) so `TooltipEngine` shows the
   item card on hover. `NameScanner` skips `[data-iw-tooltip-trigger]` so it
   can't stack a second prose highlight on the same line.
-- `src/modules/VillagePanels.js` — the Village route's two illustrated panels.
+- `src/skins/legacy/modules/VillagePanels.js` — the Village route's two illustrated panels.
   `UIFoundation.classifyVillagePanels` resolves them from their headings
   ("Village" for the Housing hero, "Village Add-ons" for the slot stack, both
   with the leading icon run stripped) and hands each to `decorateVillagePanel`
@@ -115,12 +128,12 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   reaches `SkillPanelRenderer` as `skill: 'unknown'`. The art is the game's own
   hand-painted isometric Construction/housing icons, imported by
   `build-tools/import-village-art.mjs` into `assets/village/building_<tier>.webp`
-  / `house_<tier>.webp` plus the generated `src/modules/villageBuildings.js`
+  / `house_<tier>.webp` plus the generated `src/skins/legacy/modules/villageBuildings.js`
   (DO NOT hand-edit; `tests/village-panels.test.mjs` pins it against
   `assets/village/buildings.json` and checks every file exists). CSS lives at
   the end of `ui-system.css`, and the controls opt out of the generic control
   rule through its `:not([data-iw-village-role])` link.
-- `src/modules/VillageScene.js` — the skin's own **Village** frame on the
+- `src/skins/legacy/modules/VillageScene.js` — the skin's own **Village** frame on the
   dashboard, below Skill Actions: the Construction planner's five-plot
   composition (a house in the middle, four corner plots and one bottom-centre)
   drawn from the game's own building art. It is the only surface here that
@@ -132,9 +145,9 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   `data-iw-village-scene-owned` — its OWN namespace, deliberately not
   VillagePanels' `data-iw-village-owned`; see the collision note in
   [docs/traps/village.md](docs/traps/village.md).
-  `src/styles/village-scene.css` is concatenated into the `ui-system` injection
+  `src/skins/legacy/styles/village-scene.css` is concatenated into the `ui-system` injection
   (no new sheet — the smoke test pins the count at 7).
-- `src/modules/VillageLedger.js` — the **ledger** beside that scene: the home
+- `src/skins/legacy/modules/VillageLedger.js` — the **ledger** beside that scene: the home
   and every installed building as a collapsible heading over its benefits, then
   an **Overall stats** block that sums the INSTALLED BUILDINGS ONLY. The scene
   knows identity (tier, slot, `itemKey`, name); the numbers come from
@@ -155,7 +168,7 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   document-wide `[data-iw-collapse]` sweep can never adopt them, and choices
   persist in `iw-village-ledger`. Scene and ledger wrap rather than squeeze —
   see [docs/traps/village.md](docs/traps/village.md).
-- `src/modules/GuildPanels.js` — the **Guild** route (`/guild`) and its raid:
+- `src/skins/legacy/modules/GuildPanels.js` — the **Guild** route (`/guild`) and its raid:
   lobby cards (ready check, boss picker, leaderboard, members, lend, potions,
   loadout, ready toggle, chat) and the fight (`.raid-battle-backdrop`).
   `UIFoundation.classifyGuildPanels` picks every leaf frame on `/guild` (or a
@@ -163,9 +176,9 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   `data-iw-guild*`; colours the game uses as state are read into
   `data-iw-guild-tone/-state`, never repainted uniformly. `DOMWatcher` answers
   'unknown' for these cards (the Members card's "Combat 66" chips used to make
-  it a Combat skill card). `src/styles/guild.css` rides the `ui-system`
+  it a Combat skill card). `src/skins/legacy/styles/guild.css` rides the `ui-system`
   injection. See [docs/traps/guild.md](docs/traps/guild.md).
-- `src/modules/RaidHud.js` — the live raid fight as a raid HUD (Ashen Iron
+- `src/skins/legacy/modules/RaidHud.js` — the live raid fight as a raid HUD (Ashen Iron
   raid UI kit v1, `assets/raids/ui-kit-v1/sprites/`): boss shell + cast bar,
   effect timer bars (buffs blue, debuffs red) above the party frames carrying
   every buff/debuff; the game's log and skills panels are hidden and shown
@@ -177,7 +190,7 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   No personal HUD: it was removed 2026-10-07 because your party frame never
   hides. See the Raid HUD section of
   [docs/traps/guild.md](docs/traps/guild.md).
-- `src/modules/GuildLobby.js` — the raid LOBBY's layout (2026-10-08): the
+- `src/skins/legacy/modules/GuildLobby.js` — the raid LOBBY's layout (2026-10-08): the
   game's wrapper divs go `display: contents` and each card gets a
   `data-iw-guild-slot`, so guild.css grids the Raid Dungeon panel into two
   columns with merged frames (invite + Members, Prep + Loadout), chat where
@@ -185,32 +198,32 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   record times under the difficulty pills; and the skin's own ready-check
   pop-up (never for the leader). See the lobby section of
   [docs/traps/guild.md](docs/traps/guild.md).
-- `src/modules/RaidBossCard.js` — the lobby's boss card as a scan, not a
+- `src/skins/legacy/modules/RaidBossCard.js` — the lobby's boss card as a scan, not a
   read: an arena-art hero with the boss's medallion behind the game's name
   and lore, stat chips, a requirement + recommended-resist tile pair, a per-boss team loadout + tip and a loot bar, each
   parsed from the game's one template and shown only when it parsed (the
   game line is hidden then, never otherwise). Art from
   `build-tools/build-raid-lobby-art.py`. See the boss-card section of
   [docs/traps/guild.md](docs/traps/guild.md).
-- `src/modules/RaidLeaderboards.js` — the raid leaderboard, read from
+- `src/skins/legacy/modules/RaidLeaderboards.js` — the raid leaderboard, read from
   `/api/guild/raid/leaderboard` and shown as the skin's own frame after the
   Leaderboards route's panel; also the data behind the lobby's record times.
-- `src/modules/CollapsibleFrames.js` — per-panel collapse on every parent
+- `src/skins/legacy/modules/CollapsibleFrames.js` — per-panel collapse on every parent
   frame (Skills, Inventory, Quests, Village, World Bosses, Current Action,
   Action Log, World Chat, Zone Control and the Village scene). The World Boss
   "Possible Rewards" disclosure is a `<details>` because those nodes are the
   skin's own; a route panel's contents are React's, so wrapping them would
   reparent game nodes (rule 2). Here the skin instead APPENDS a small chevron
   button into the panel's heading row and writes `data-iw-collapsed="1"` on the
-  card, and `src/styles/collapsible.css` (concatenated onto the `ui-system`
+  card, and `src/skins/legacy/styles/collapsible.css` (concatenated onto the `ui-system`
   injection) hides `> *` except the heading row and the control. Choices persist
   in one `chrome.storage` key, `iw-collapsed-frames`. See
   [docs/traps/collapsible-frames.md](docs/traps/collapsible-frames.md).
-- `src/modules/HeaderChrome.js` — merges the nav rail, the announcement and
+- `src/skins/legacy/modules/HeaderChrome.js` — merges the nav rail, the announcement and
   the zone bar into ONE framed box (see [docs/traps/header-chrome.md](docs/traps/header-chrome.md)).
   Its own `data-iw-chrome` namespace; runs in `queueClassify` right after
   section frames.
-- `src/modules/ZoneThemeSetting.js` — the player's **Zone themes** switch, a
+- `src/skins/legacy/modules/ZoneThemeSetting.js` — the player's **Zone themes** switch, a
   `<label>` + checkbox appended to the zone bar's action row. Off renders
   the stock Ashen Iron theme on every route through the same
   `presentationZoneNumber() → null` path Village uses. Stored as
@@ -223,7 +236,7 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   `base.css` and `ui-system.css` selector chains: each `:not()` carries
   specificity other rules may be tuned against. They match nothing now.
   [docs/traps/panel-order.md](docs/traps/panel-order.md) is kept for its lessons.
-- `src/styles/*.css` — injected in the order `content.js` boots them.
+- `src/skins/legacy/styles/*.css` — injected in the order `content.js` boots them.
   **`ui-system.css` is injected LAST.**
 
 ## Non-negotiable rules

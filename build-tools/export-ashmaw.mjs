@@ -9,7 +9,7 @@ import path from 'node:path';
 const root=path.resolve('.');
 await mkdir('output/ashmaw',{recursive:true});
 for(const name of ['arena','clouds','furnace-smoke','steam'])await copyFile('assets/raids/ashmaw/'+name+'.png','output/ashmaw/'+name+'.png');
-await build({entryPoints:['src/modules/AshmawScene.js'],bundle:true,format:'iife',globalName:'Ashmaw',outfile:'output/ashmaw/scene.js'});
+await build({entryPoints:['src/skins/legacy/modules/AshmawScene.js'],bundle:true,format:'iife',globalName:'Ashmaw',outfile:'output/ashmaw/scene.js'});
 await writeFile('output/ashmaw/index.html',`<!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ashmaw · The Cinder Tyrant</title>

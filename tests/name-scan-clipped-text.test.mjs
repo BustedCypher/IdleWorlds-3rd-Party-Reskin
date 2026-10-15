@@ -26,9 +26,9 @@ const ROOT = resolve(import.meta.dirname, '..');
 const compiled = await build({
   stdin: {
     contents: `
-      import { ItemDatabase } from './src/modules/ItemDatabase.js';
-      import { initTooltipEngine, isTooltipOpen } from './src/modules/TooltipEngine.js';
-      import { scanForItemNames } from './src/modules/NameScanner.js';
+      import { ItemDatabase } from './src/skins/legacy/modules/ItemDatabase.js';
+      import { initTooltipEngine, isTooltipOpen } from './src/skins/legacy/modules/TooltipEngine.js';
+      import { scanForItemNames } from './src/skins/legacy/modules/NameScanner.js';
       window.__iw = { ItemDatabase, initTooltipEngine, isTooltipOpen, scanForItemNames };
     `,
     resolveDir: ROOT,

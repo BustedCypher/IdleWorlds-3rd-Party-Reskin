@@ -13,7 +13,7 @@ import { JSDOM } from 'jsdom';
  */
 const normText = value => String(value || '').replace(/\s+/g, ' ').trim();
 
-// ---- logic copied verbatim from src/modules/QuestPanelRenderer.js --------
+// ---- logic copied verbatim from src/skins/legacy/modules/QuestPanelRenderer.js --------
 function textLeaves(root) {
   return [...root.querySelectorAll('p,span,div,strong,em,h1,h2,h3,h4')]
     .filter(el => !el.closest('button,a,[role="button"]'))

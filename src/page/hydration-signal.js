@@ -19,7 +19,7 @@
  * "unknown" instead of waiting; the gate also has its own hard timeout.
  *
  * TO REVERT: delete this file's entry from manifest.json (and this file), or
- * set HYDRATION_GATE_ENABLED = false in src/modules/HydrationGate.js.
+ * set HYDRATION_GATE_ENABLED = false in src/shared/HydrationGate.js.
  */
 (() => {
   const ATTR = 'data-iw-page-hydrated';

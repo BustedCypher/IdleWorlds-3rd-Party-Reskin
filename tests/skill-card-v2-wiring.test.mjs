@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
-const content = fs.readFileSync(new URL('../src/content.js', import.meta.url), 'utf8');
-const css = fs.readFileSync(new URL('../src/styles/skillcard-v2.css', import.meta.url), 'utf8');
+const content = fs.readFileSync(new URL('../src/skins/legacy/index.js', import.meta.url), 'utf8');
+const css = fs.readFileSync(new URL('../src/skins/legacy/styles/skillcard-v2.css', import.meta.url), 'utf8');
 
 const checks = [
   ['content imports V2 controller', /SkillCardDesignController\.js/.test(content)],

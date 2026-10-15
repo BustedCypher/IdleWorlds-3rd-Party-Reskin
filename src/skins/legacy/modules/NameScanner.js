@@ -37,7 +37,7 @@
 
 import { ItemDatabase } from './ItemDatabase.js';
 import { showForItem, hideTooltip, isTooltipOpen } from './TooltipEngine.js';
-import { guard, raf, warnOnce } from './Runtime.js';
+import { guard, raf, warnOnce, isRuntimeActive } from './Runtime.js';
 
 const HIGHLIGHT_NAME = 'iw-item-name';
 const MIN_NAME_LENGTH = 3;
@@ -339,7 +339,6 @@ function isTouchLike() {
 }
 
 function handlePointer() {
-  pointerQueued = false;
   const hit = hitTest(lastX, lastY);
 
   if (!hit) {
@@ -369,17 +368,22 @@ function bindHover() {
   hoverBound = true;
 
   document.addEventListener('mousemove', e => {
+    if (!isRuntimeActive()) return;
     lastX = e.clientX;
     lastY = e.clientY;
     if (pointerQueued) return;
     pointerQueued = true;
-    raf(() => guard('name-scan:pointer', handlePointer));
+    raf(() => {
+      pointerQueued = false;
+      guard('name-scan:pointer', handlePointer);
+    });
   }, { passive: true, capture: true });
 
   // Native React text has no element trigger, so delegated TooltipEngine click
   // handling cannot discover it on touch devices. Hit-test the tapped word and
   // open the same virtual-anchor card without cancelling the game's click.
   document.addEventListener('click', e => {
+    if (!isRuntimeActive()) return;
     if (!isTouchLike()) return;
     const hit = hitTest(e.clientX, e.clientY);
     if (!hit) return;

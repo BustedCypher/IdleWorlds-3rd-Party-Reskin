@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { deriveDisplayStats, statChips, statRows, categoryClass } from '../src/modules/itemDisplay.js';
+import { deriveDisplayStats, statChips, statRows, categoryClass } from '../src/skins/legacy/modules/itemDisplay.js';
 
 const woolPlus4 = {
   name: 'Wool Boots+4', tier: 2, category: 'Equipment', subcategory: 'Boots',

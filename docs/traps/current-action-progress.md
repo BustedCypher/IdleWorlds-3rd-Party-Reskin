@@ -1,6 +1,6 @@
 # Current Action progress smoothing
 
-The transition that cancels the game's one-tick head start, and what the tick measurement must ignore. Logic now lives in `src/modules/ProgressCadence.js`.
+The transition that cancels the game's one-tick head start, and what the tick measurement must ignore. Logic now lives in `src/skins/legacy/modules/ProgressCadence.js`.
 
 Moved verbatim from CLAUDE.md on 2026-09-15. "This file" in the text below
 means that original CLAUDE.md, and a "note below/above" may now live in another

@@ -49,8 +49,8 @@ const ITEMS = [
 
 const compiled = await build({
   stdin: {
-    contents: `export * from './src/modules/VillageLedger.js';
-               export { ItemDatabase } from './src/modules/ItemDatabase.js';`,
+    contents: `export * from './src/skins/legacy/modules/VillageLedger.js';
+               export { ItemDatabase } from './src/skins/legacy/modules/ItemDatabase.js';`,
     resolveDir: process.cwd(),
   },
   bundle: true, write: false, format: 'iife', globalName: 'Ledger',

@@ -8,7 +8,7 @@
 
 import { on } from './DOMWatcher.js';
 import { inject } from './StyleInjector.js';
-import { guard, guardEach } from './Runtime.js';
+import { guard, guardEach, isRuntimeActive } from './Runtime.js';
 import { createInlineStyleOwner } from './InlineStyleOwner.js';
 import { SkillsArtService } from './SkillsArtService.js';
 import css from '../styles/skillpanel.css';
@@ -1340,7 +1340,7 @@ function ensureSkillArtwork(panel, type) {
   }
 
   const paint = () => {
-    if (!artHost.isConnected || !panel.isConnected) return;
+    if (!isRuntimeActive() || !artHost.isConnected || !panel.isConnected) return;
     SkillsArtService.decoratePanel(panel);
     if (SkillsArtService.paintIcon(artHost, type)) setOwnData(artHost, 'iwSkillArtReady', '1');
   };
@@ -1425,7 +1425,9 @@ function ensureSkillActionsFrame(panel) {
   // as a background root each time - a full-subtree walk with a computed-style
   // read per card, ~5 times a second on a ticking skill (2026-09-17).
   if (!frame.classList.contains('fs-skills-section-frame')) frame.classList.add('fs-skills-section-frame');
-  const paint = () => SkillsArtService.decoratePanel(frame);
+  const paint = () => {
+    if (isRuntimeActive() && frame.isConnected) SkillsArtService.decoratePanel(frame);
+  };
   if (SkillsArtService.isReady()) paint();
   else SkillsArtService.ready().then(paint).catch(() => {});
 }

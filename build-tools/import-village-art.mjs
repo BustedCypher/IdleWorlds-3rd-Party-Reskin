@@ -7,7 +7,7 @@
  *   <src>/New Buildings/<Name>.png        →  assets/village/building_<tier>.webp
  *   <housing>/{camp,cottage,…}.png        →  assets/village/house_<tier>.webp
  *   <src>/construction_icon_manifest.json →  assets/village/buildings.json   (provenance)
- *                                         →  src/modules/villageBuildings.js (generated)
+ *                                         →  src/skins/legacy/modules/villageBuildings.js (generated)
  *
  * Sources (override the building dir with argv[2]):
  *   ../idleWorlds-art-source/construction-2026-09-04

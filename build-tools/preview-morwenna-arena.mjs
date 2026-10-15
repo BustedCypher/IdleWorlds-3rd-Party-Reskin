@@ -2,7 +2,7 @@ import {mkdir,copyFile,writeFile} from 'node:fs/promises';
 const folder='output/morwenna-arena';
 await mkdir(folder,{recursive:true});
 await copyFile('assets/raids/morwenna/arena.png',folder+'/arena.png');
-await copyFile('src/modules/MorwennaArenaRenderer.js',folder+'/scene.js');
+await copyFile('src/skins/legacy/modules/MorwennaArenaRenderer.js',folder+'/scene.js');
 for(const name of ['storm-clouds','courtyard-mist'])await copyFile('assets/raids/morwenna/'+name+'.png',folder+'/'+name+'.png');
 await copyFile('assets/raids/morwenna/prompts-atmosphere.json',folder+'/atmosphere-prompts.json');
 await writeFile(folder+'/index.html',`<!doctype html>
@@ -54,7 +54,7 @@ The approved rubble-and-mist painting remains anchored. Fresh independent cloud 
 - storm-clouds.png — four independently painted charcoal-violet cloud banks with real alpha.
 - courtyard-mist.png — four distinct thin gray-violet mist formations with real alpha.
 - atmosphere-prompts.json — exact prompts used with the built-in image_gen tool.
-- scene.js — renderer copied from ../../src/modules/MorwennaArenaRenderer.js, shared with the live raid.
+- scene.js — renderer copied from ../../src/skins/legacy/modules/MorwennaArenaRenderer.js, shared with the live raid.
 - index.html — responsive preview with pause, scrub and independent atmosphere/light controls.
 - verification.json — pixel seam, movement, static negative control, protected detail and alpha checks.
 

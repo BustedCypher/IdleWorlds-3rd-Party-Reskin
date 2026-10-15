@@ -43,7 +43,7 @@ number in this codebase.** `document.querySelector('…')` frequently returns
 the **invisible** copy. Always check rendered state, not a class name —
 `getBoundingClientRect()` was the original probe-script technique (a capture
 where everything is `{w:0,h:0}` is the hidden column, not the page), and
-`src/modules/Viewport.js` (`isRendered`/`pickRendered`/`preferRendered`) is
+`src/skins/legacy/modules/Viewport.js` (`isRendered`/`pickRendered`/`preferRendered`) is
 now the shared, correct way to do this in the skin itself.
 
 For a long time `UIFoundation.js` instead excluded `[class~="xl:hidden"]`

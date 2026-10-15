@@ -1,217 +1,34 @@
-/**
- * IdleWorlds Fantasy Skin — content script entry point
- *
- * Lifecycle rules:
- *   1. Every stylesheet is runtime-owned and removable, including base.css.
- *   2. Consumer/listener registration happens ONCE for the page lifetime.
- *   3. Each activation re-injects presentation CSS, starts services/painting,
- *      then starts DOMWatcher LAST.
- *   4. Teardown reverses the active work and removes every skin stylesheet.
- *   5. Runtime guards make late reconciliation callbacks inert while disabled;
- *      queued callbacks still run their bookkeeping so no queue flag is stranded.
- */
+/** Shared bootstrap. Every presentation rule belongs to exactly one skin. */
+import * as legacy from './skins/legacy/index.js';
+import * as fantasy from './skins/fantasy/index.js';
+import { waitForPageHydration } from './shared/HydrationGate.js';
+import { readSettings, watchSettings } from './shared/ExtensionSettings.js';
+import { createSkinController } from './shared/SkinController.js';
+const VERSION = '1.7.0';
+const controller = createSkinController({
+  skins: { legacy, fantasy },
+  waitUntilReady: async () => {
+    const hydration = await waitForPageHydration();
+    console.log(`[IW Fantasy Skin] v${VERSION} boot after page hydration: ${hydration.state} (${hydration.waitedMs}ms)`);
+  },
+});
+let settings = null;
+const changesDuringRead = {};
+const apply = () => controller.update(settings).catch(err => {
+  console.warn('[IW Fantasy Skin] Profile activation failed:', err.message);
+});
 
-import { inject, removeAll as removeAllStyles } from './modules/StyleInjector.js';
-import { waitForPageHydration, clearHydrationLatch } from './modules/HydrationGate.js';
-import { startWatcher, stopWatcher, on, getScanRoots } from './modules/DOMWatcher.js';
-import { AtlasService } from './modules/AtlasService.js';
-import { ItemDatabase } from './modules/ItemDatabase.js';
-import { initTooltipEngine, hideTooltip } from './modules/TooltipEngine.js';
-import { scanForItemNames, clearItemNameScan } from './modules/NameScanner.js';
-import { initInventoryRenderer, clearInventoryRenderer } from './modules/InventoryRenderer.js';
-import { initSkillPanelRenderer, clearSkillPanels } from './modules/SkillPanelRenderer.js';
-import {
-  initSkillCardDesignController,
-  clearSkillCardDesignController,
-} from './modules/SkillCardDesignController.js';
-import { initQuestPanelRenderer, clearQuestPanels } from './modules/QuestPanelRenderer.js';
-import { initUIFoundation, clearUIFoundation, injectUIFoundationStyles } from './modules/UIFoundation.js';
-import { initHeaderRenderer, clearHeaderRenderer } from './modules/HeaderRenderer.js';
-import { paintBackground, clearBackgroundPaint } from './modules/BackgroundPainter.js';
-import { frameOverlays, clearOverlayFramer } from './modules/OverlayFramer.js';
-import {
-  guard,
-  guardEach,
-  storageGet,
-  onStorageChanged,
-  setRuntimeActive,
-} from './modules/Runtime.js';
-
-import baseCss from './styles/base.css';
-import tooltipCss from './styles/tooltip-engine.css';
-import inventoryCss from './styles/inventory.css';
-import skillPanelCss from './styles/skillpanel.css';
-import skillCardV2Css from './styles/skillcard-v2.css';
-import skillCardV2RuntimeSafeCss from './styles/skillcard-v2-runtime-safe.css';
-import cardButtonAtlasCss from './styles/card-button-atlas.css';
-import cardButtonsCss from './styles/card-buttons.css';
-import headerCss from './styles/header.css';
-import overlayCss from './styles/overlay.css';
-
-const ENABLED_KEY = 'iw-skin-enabled';
-const VERSION = '1.6.0';
-
-let booted = false;
-let consumersBound = false;
-
-function injectPresentationStyles() {
-  // base.css used to be declared in manifest.json. That made the kill switch
-  // incapable of restoring the native page because manifest CSS cannot be
-  // removed by StyleInjector. Keep ALL presentation lifecycle-owned instead.
-  inject('base', baseCss);
-  inject('tooltip-engine', tooltipCss);
-  inject('inventory', inventoryCss);
-  // Keep V2 in the existing lifecycle-owned skillpanel sheet so the kill-switch
-  // contract and the seven-stylesheet smoke invariant do not change.
-  inject('skillpanel', skillPanelCss + '\n' + skillCardV2Css + '\n' + skillCardV2RuntimeSafeCss + '\n' + cardButtonAtlasCss + '\n' + cardButtonsCss);
-  inject('header', headerCss);
-  inject('overlay', overlayCss);
-  // ui-system.css MUST be injected LAST (see CLAUDE.md). UIFoundation now owns
-  // its lifecycle injection, including the compact/collapsible layers.
-  injectUIFoundationStyles();
-}
-
-function scanRoots(roots) {
-  if (!ItemDatabase.isReady()) return;
-  const unique = new Set();
-  for (const root of roots || []) {
-    if (root && root.isConnected) unique.add(root);
+// Subscribe first. Newer per-key events override the initial read's snapshot.
+watchSettings(patch => {
+  if (settings === null) Object.assign(changesDuringRead, patch);
+  else {
+    settings = { ...settings, ...patch };
+    apply();
   }
-  guardEach('scan-roots', unique, root => scanForItemNames(root));
-}
-
-function bindConsumersOnce() {
-  if (consumersBound) return;
-  consumersBound = true;
-
-  // Module initializers register their delegated/document listeners. They are
-  // intentionally page-lifetime bindings; activation state is controlled by
-  // DOMWatcher + Runtime rather than adding another copy on every re-enable.
-  guard('init:tooltip', initTooltipEngine);
-  guard('init:inventory', initInventoryRenderer);
-  guard('init:skill-panel', initSkillPanelRenderer);
-  guard('init:quest-panel', initQuestPanelRenderer);
-  guard('init:ui-foundation', initUIFoundation);
-  guard('init:header', initHeaderRenderer);
-
-  on('iw:dom-flush', e => {
-    const roots = e.detail?.roots || [];
-    if (!roots.length) {
-      guard('paint:document', () => paintBackground());
-    } else {
-      guardEach('paint:root', roots, root => paintBackground(root));
-    }
-    // Overlays portal in anywhere and are few — always a whole-document
-    // reconcile, cheap by construction (see OverlayFramer.frameOverlays).
-    guard('frame:overlays', frameOverlays);
-  });
-
-  on('iw:name-scan-flush', e => {
-    if (!ItemDatabase.isReady()) return;
-    scanRoots(e.detail?.roots || []);
-  });
-
-  document.addEventListener('iw:item-db-updated', () => {
-    scanRoots([...getScanRoots()]);
-  });
-}
-
-function boot() {
-  if (booted) return;
-  booted = true;
-  setRuntimeActive(true);
-
-  // 1. Presentation CSS belongs to THIS activation.
-  injectPresentationStyles();
-
-  // 2. Event consumers belong to the PAGE lifetime and are bound once.
-  bindConsumersOnce();
-
-  // Skill-card design state is activation-owned, even though its delegated
-  // listeners are internally registered once. This lets teardown/re-enable
-  // restore the persisted New/Current choice without duplicating listeners.
-  guard('init:skill-card-design', initSkillCardDesignController);
-
-  // 3. Start async services. Neither is allowed to poison itself forever
-  // after a transient failure; renderers reconcile again on update events.
-  AtlasService.ready().catch(err => {
-    console.warn('[IW Fantasy Skin] Atlas failed to load:', err.message);
-  });
-
-  ItemDatabase.startAutoRefresh();
-  ItemDatabase.ready().catch(err => {
-    console.warn('[IW Fantasy Skin] Item database failed to load:', err.message);
-  });
-
-  // 4. Existing page ground.
-  guard('paint:initial', () => paintBackground());
-
-  // 5. Initial DOM discovery happens here, after every listener exists.
-  guard('start:watcher', startWatcher);
-
-  console.log(`[IW Fantasy Skin] v${VERSION} booted`);
-}
-
-/**
- * Remove the active skin from the live page.
- *
- * Keep Runtime active until module cleanup has completed: teardown functions use
- * guardEach(), and they must be allowed to restore/remove the active decoration.
- * Runtime is marked inactive only after the page has been cleaned, which also
- * suppresses late data-service/reconciliation events until the next boot.
- */
-function teardown() {
-  if (!booted) {
-    setRuntimeActive(false);
-    return;
-  }
-  booted = false;
-
-  guard('teardown:watcher', stopWatcher);
-  ItemDatabase.stopAutoRefresh();
-  guard('teardown:tooltip', () => hideTooltip());
-  guard('teardown:name-scan', clearItemNameScan);
-  guard('teardown:inventory', clearInventoryRenderer);
-  guard('teardown:skill-card-design', clearSkillCardDesignController);
-  guard('teardown:skill-panel', clearSkillPanels);
-  guard('teardown:quest-panel', clearQuestPanels);
-  guard('teardown:ui-foundation', clearUIFoundation);
-  guard('teardown:header', clearHeaderRenderer);
-  guard('teardown:background', clearBackgroundPaint);
-  guard('teardown:overlay', clearOverlayFramer);
-  guard('teardown:styles', removeAllStyles);
-  guard('teardown:hydration-latch', () => clearHydrationLatch());
-
-  // From here until the next boot, any late async/data callbacks are inert.
-  setRuntimeActive(false);
-
-  console.log('[IW Fantasy Skin] disabled — active presentation removed');
-}
-
-function applyEnabled(enabled) {
-  if (enabled === false) teardown();
-  else boot();
-}
+});
 
 (async function start() {
-  // Nothing should reconcile before the persisted enable state is known.
-  setRuntimeActive(false);
-
-  // Default to enabled: a storage read failure must never leave the user with
-  // a silently inert extension.
-  const stored = await storageGet(ENABLED_KEY);
-
-  // Hold the FIRST boot until React has hydrated the page (HydrationGate.js):
-  // appending skin nodes mid-hydration made React throw #418 and re-render the
-  // whole tree. Bounded by a hard timeout; the log line is the measurement.
-  const hydration = await waitForPageHydration();
-  if (hydration.state !== 'disabled') {
-    console.log(`[IW Fantasy Skin] boot after page hydration: ${hydration.state} (${hydration.waitedMs}ms)`);
-  }
-
-  applyEnabled(stored === null ? true : stored !== false);
-
-  // This listener intentionally remains active while the skin is disabled: it
-  // is the mechanism that can turn the skin back on.
-  onStorageChanged(ENABLED_KEY, value => applyEnabled(value !== false));
+  const stored = await readSettings();
+  settings = { ...stored, ...changesDuringRead };
+  await apply();
 })();

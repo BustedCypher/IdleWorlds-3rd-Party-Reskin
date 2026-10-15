@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {build} from 'esbuild';
 
-const compiled=await build({entryPoints:['src/modules/GuildPanels.js'],bundle:true,write:false,format:'iife',globalName:'Guild'});
+const compiled=await build({entryPoints:['src/skins/legacy/modules/GuildPanels.js'],bundle:true,write:false,format:'iife',globalName:'Guild'});
 const dom=new JSDOM(`<div id="root"><h2>Raid Dungeon</h2><div class="raid-battle-backdrop" style="--raid-bg-image:url(/raid-backgrounds/boss-grimjaw.png)"><div><span>Grimjaw, the Undying Bulwark</span><div><img alt="Grimjaw, the Undying Bulwark" src="/raid-sprites/boss-grimjaw.png"></div><div id="hp"><div style="width:73%"></div></div></div><div><button class="raid-readable-panel">Combat Log</button></div></div></div>`,{url:'https://idleworlds.com/guild',runScripts:'outside-only',pretendToBeVisual:true});
 const w=dom.window;w.matchMedia=()=>({matches:true,addEventListener(){},removeEventListener(){}});w.eval(compiled.outputFiles[0].text);
 const root=w.document.querySelector('#root'),arena=root.querySelector('.raid-battle-backdrop'),boss=arena.querySelector('img'),button=arena.querySelector('button');

@@ -10,7 +10,7 @@ const code = text => text
 
 /* â”€â”€ Entry lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const content = await read('src/content.js');
+const content = await read('src/skins/legacy/index.js');
 const bootStart = content.indexOf('function boot()');
 const startWatcherAt = content.indexOf("guard('start:watcher', startWatcher)", bootStart);
 const bindConsumersAt = content.indexOf('bindConsumersOnce()', bootStart);
@@ -27,35 +27,35 @@ assert.match(content, /removeAllStyles/);
 
 /* â”€â”€ Exactly one MutationObserver â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const modulesDir = new URL('src/modules/', root);
+const modulesDir = new URL('src/skins/legacy/modules/', root);
 let observerCount = 0;
 for (const name of await readdir(modulesDir)) {
   if (!name.endsWith('.js')) continue;
-  const text = await read(`src/modules/${name}`);
+  const text = await read(`src/skins/legacy/modules/${name}`);
   observerCount += (text.match(/new\s+MutationObserver\s*\(/g) || []).length;
 }
 assert.equal(observerCount, 1, 'there must be exactly one runtime MutationObserver');
 
 /* â”€â”€ Runtime / storage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const runtime = await read('src/modules/Runtime.js');
+const runtime = await read('src/skins/legacy/modules/Runtime.js');
 assert.match(runtime, /chrome\.storage\.local/, 'persistent extension state belongs in chrome.storage.local');
 assert.match(runtime, /runtimeActive/, 'late reconciliation must be suppressible while disabled');
 assert.match(runtime, /if \(!runtimeActive\) return false/, 'guard() must be inert while disabled');
 assert.match(runtime, /export const raf/, 'RAF callbacks must still run their bookkeeping while disabled');
 
-const db = await read('src/modules/ItemDatabase.js');
+const db = await read('src/skins/legacy/modules/ItemDatabase.js');
 assert.doesNotMatch(code(db), /localStorage\.setItem/, 'skin data must never consume the game localStorage quota');
 assert.match(db, /evictLegacyCache/, 'legacy page-origin cache should be reclaimed');
 
 /* â”€â”€ Stylesheet lifecycle / reversible inline ownership â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const injector = await read('src/modules/StyleInjector.js');
+const injector = await read('src/skins/legacy/modules/StyleInjector.js');
 assert.match(injector, /assetUrl/, 'runtime-injected base CSS must rewrite bundled asset URLs');
 assert.match(injector, /\.\.\/assets\//, 'relative extension asset references must be rewritten');
 assert.match(injector, /style\[data-iw-style\]/, 'all injected sheets need one removable ownership marker');
 
-const styleOwner = await read('src/modules/InlineStyleOwner.js');
+const styleOwner = await read('src/skins/legacy/modules/InlineStyleOwner.js');
 assert.match(styleOwner, /nativeValue/);
 assert.match(styleOwner, /appliedValue/);
 assert.match(styleOwner, /restoreElement/);
@@ -67,7 +67,7 @@ assert.doesNotMatch(styleOwner, /const touched = new Set\(\)/, 'style ownership 
 assert.doesNotMatch(styleOwner, /removeAttribute\(['"]style['"]\)/,
   'property ownership must never erase an entire native style attribute');
 
-const painter = await read('src/modules/BackgroundPainter.js');
+const painter = await read('src/skins/legacy/modules/BackgroundPainter.js');
 assert.match(painter, /createInlineStyleOwner/);
 assert.match(painter, /styleOwner\.restoreAll\(\)/);
 assert.doesNotMatch(painter, /style\.removeProperty/,
@@ -77,7 +77,7 @@ assert.match(painter, /isSurfaceCandidate/);
 
 /* â”€â”€ React-safe name annotation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const scanner = await read('src/modules/NameScanner.js');
+const scanner = await read('src/skins/legacy/modules/NameScanner.js');
 assert.doesNotMatch(code(scanner), /replaceChild|appendChild|insertBefore|removeChild/,
   'NameScanner must never detach/reparent React-owned nodes');
 assert.doesNotMatch(code(scanner), /\.innerHTML/,
@@ -85,9 +85,9 @@ assert.doesNotMatch(code(scanner), /\.innerHTML/,
 assert.match(scanner, /CSS\.highlights/);
 assert.match(scanner, /ItemDatabase\.revision\(\)/);
 
-const tooltipEngine = await read('src/modules/TooltipEngine.js');
-const tooltipCss = await read('src/styles/tooltip-engine.css');
-const itemDb = await read('src/modules/ItemDatabase.js');
+const tooltipEngine = await read('src/skins/legacy/modules/TooltipEngine.js');
+const tooltipCss = await read('src/skins/legacy/styles/tooltip-engine.css');
+const itemDb = await read('src/skins/legacy/modules/ItemDatabase.js');
 assert.match(tooltipEngine, /cleanEffectText/);
 assert.match(tooltipEngine, /drop_boosted_by/);
 assert.match(tooltipEngine, /ItemDatabase\.source\(\)/,
@@ -110,7 +110,7 @@ assert.match(scanner, /if \(!isTouchLike\(\)\) return/,
 assert.doesNotMatch(scanner, /SKIP_CONTAINERS[^\n]*button/,
   'native clickable item names must remain eligible for read-only tooltip discovery');
 
-const watcherNames = await read('src/modules/DOMWatcher.js');
+const watcherNames = await read('src/skins/legacy/modules/DOMWatcher.js');
 assert.doesNotMatch(watcherNames, /SEL_SCAN_ROOTS/,
   'item-name coverage must not be restricted to a hand-maintained panel selector list');
 assert.match(watcherNames, /addNameRoot\(root\)/,
@@ -120,7 +120,7 @@ assert.match(watcherNames, /root\?\.body \|\| root/,
 
 /* â”€â”€ Inventory ItemRow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const inventory = await read('src/modules/InventoryRenderer.js');
+const inventory = await read('src/skins/legacy/modules/InventoryRenderer.js');
 assert.match(inventory, /isInventoryContext\(row\)/,
   'generic market/bank/salvage rows must not be rebuilt as Inventory');
 assert.match(inventory, /data-fs-preserved-action/,
@@ -144,7 +144,7 @@ assert.doesNotMatch(inventory.slice(cheapStart, cheapEnd), /textContent[^\n]*\.l
 assert.match(inventory, /if \(listenerBound\) return/,
   'Inventory initializer should remain independently idempotent');
 
-const inventoryCSS = await read('src/styles/inventory.css');
+const inventoryCSS = await read('src/skins/legacy/styles/inventory.css');
 assert.match(inventoryCSS, /\.fs-inv-icon\s*\{[^}]*overflow:\s*visible/s,
   'Inventory enhancement sprites must be allowed to overhang the icon frame');
 assert.match(inventoryCSS, /\.fs-inv-body\s*\{[^}]*overflow:\s*hidden/s);
@@ -162,13 +162,13 @@ assert.doesNotMatch(inventoryCSS, /\.fs-inv-details,\s*\.fs-inv-requirements\s*\
 
 /* â”€â”€ Skill detection / treatment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const contentEntry = await read('src/content.js');
+const contentEntry = await read('src/skins/legacy/index.js');
 assert.match(contentEntry, /ItemDatabase\.startAutoRefresh\(\)/,
   'boot must enable periodic item-data refresh');
 assert.match(contentEntry, /ItemDatabase\.stopAutoRefresh\(\)/,
   'teardown must stop periodic item-data refresh');
 
-const watcher = await read('src/modules/DOMWatcher.js');
+const watcher = await read('src/skins/legacy/modules/DOMWatcher.js');
 assert.doesNotMatch(watcher, /panel\.textContent\.slice/,
   'skill detection must not search arbitrary panel body text');
 assert.match(watcher, /JSON\.stringify\(\[buttons, identities, lockedCopy\]\)/,
@@ -194,7 +194,7 @@ assert.match(watcher, /unlock in a future update/,
 assert.ok(watcher.indexOf('if (identityType) return identityType;') < watcher.indexOf("if (hasAction('craft'))"),
   'generic Craft actions must defer to the visible skill identity');
 
-const skill = await read('src/modules/SkillPanelRenderer.js');
+const skill = await read('src/skins/legacy/modules/SkillPanelRenderer.js');
 assert.doesNotMatch(skill, /migrateLegacyWrapper|insertBefore\\(panel, wrapper\\)/,
   'Skill renderer must never reparent React-owned skill panels during migration or teardown');
 assert.doesNotMatch(skill, /new\s+MutationObserver/);
@@ -238,7 +238,7 @@ assert.match(skill, /ownsOtherControl/,
   'XP readout wrapper traversal must ignore the readout control itself');
 assert.doesNotMatch(skill, /directChildren\.length === 3/);
 
-const skillsArt = await read('src/modules/SkillsArtService.js');
+const skillsArt = await read('src/skins/legacy/modules/SkillsArtService.js');
 assert.match(skillsArt, /assets\/skills_icons_index\.json/);
 assert.match(skillsArt, /assets\/skills_ui_index\.json/);
 assert.match(skillsArt, /assets\/skills_panel_texture\.webp/);
@@ -254,7 +254,7 @@ const xpPlaque = skillsUiIndex.entries.find(entry => entry.key === 'xp_plaque');
 assert.ok(skillsUiIndex.width >= 860 && xpPlaque?.width >= 300 && xpPlaque?.height >= 100,
   'Skills UI atlas must retain the expanded six-digit Base: plaque artwork');
 
-const skillCSS = await read('src/styles/skillpanel.css');
+const skillCSS = await read('src/skins/legacy/styles/skillpanel.css');
 assert.doesNotMatch(skillCSS, /border-top:\s*54px/);
 assert.match(skillCSS, /data-iw-skill-layout=\"three-zone\"/);
 assert.match(skillCSS, /data-iw-skill-role=\"level-progress\"/);
@@ -298,7 +298,7 @@ assert.doesNotMatch(skillCSS, /skill-zone="commands"\]?\s*\{[^}]*transform:\s*tr
 
 /* â”€â”€ Shared UI / tooltip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const ui = await read('src/modules/UIFoundation.js');
+const ui = await read('src/skins/legacy/modules/UIFoundation.js');
 assert.doesNotMatch(ui, /new\s+MutationObserver/);
 assert.match(ui, /main-nav/);
 // A section frame must resolve to the game's own `.panel`, never the layout
@@ -334,11 +334,11 @@ assert.match(ui, /getLayoutEpoch\(\)/,
   'cached column-dependent resolutions (section frames, boss cards, activity panels, main nav) must invalidate on a layout-epoch bump, or a resize leaves them bound to whichever column was live at first resolve');
 assert.doesNotMatch(ui, /ENABLE_PLAYER_HUD_RELAYOUT|classifyPlayerHud|hud-player-name|iwHudLayout/,
   'disabled player-HUD relayout code must not remain as a dormant activation path');
-const uiCss = await read('src/styles/ui-system.css');
+const uiCss = await read('src/skins/legacy/styles/ui-system.css');
 assert.doesNotMatch(uiCss, /player-hud|hud-identity|hud-metric|hud-utility/,
   'disabled player-HUD role CSS must be removed with its dead classifier');
 
-const tooltip = await read('src/modules/TooltipEngine.js');
+const tooltip = await read('src/skins/legacy/modules/TooltipEngine.js');
 assert.match(tooltip, /<span class="iw-item-ref" role="button" tabindex="0"/);
 assert.doesNotMatch(tooltip, /<button type="button" class="iw-item-ref"/);
 assert.doesNotMatch(tooltip, /HIDE_GRACE|hideTimer|overPanel/);
@@ -362,7 +362,7 @@ assert.match(tooltipCss, /100dvh/,
 
 /* â”€â”€ Base theme safety â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const baseCSS = await read('src/styles/base.css');
+const baseCSS = await read('src/skins/legacy/styles/base.css');
 assert.doesNotMatch(baseCSS, /\[class\*="card"\],\s*\[class\*="panel"\]/,
   'broad generic card/panel paint selector must stay removed');
 assert.match(baseCSS, /--iw-r-panel:\s+3px/);
@@ -373,7 +373,7 @@ assert.match(baseCSS, /\.iw-icon-badge--sprite\s*\{[^}]*width:\s*22px[^}]*height
 
 /* â”€â”€ Atlas correctness / dependency pin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-const atlas = await read('src/modules/AtlasService.js');
+const atlas = await read('src/skins/legacy/modules/AtlasService.js');
 assert.match(atlas, /_paintBadge\(hostEl, level\)/,
   'enhanced gear must use the atlas-backed badge painter');
 assert.match(atlas, /iw-icon-badge iw-icon-badge--sprite/,

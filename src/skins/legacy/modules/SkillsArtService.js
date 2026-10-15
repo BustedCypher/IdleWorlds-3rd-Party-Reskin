@@ -7,7 +7,7 @@
  */
 
 import { assetUrl, warnOnce } from './Runtime.js';
-import revisedButtonAtlas from '../../assets/skills-ui/buttons/revised-v5/index.json' with { type: 'json' };
+import revisedButtonAtlas from '../../../../assets/skills-ui/buttons/revised-v5/index.json' with { type: 'json' };
 
 const ICON_INDEX_URL = 'assets/skills_icons_index.json';
 const UI_INDEX_URL = 'assets/skills_ui_index.json';

@@ -18,7 +18,7 @@ import { chromium } from 'playwright';
 import { readFile, writeFile, mkdir, readdir, access } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { THEME_NAMES } from '../src/modules/zoneThemes.js';
+import { THEME_NAMES } from '../src/skins/legacy/modules/zoneThemes.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
@@ -479,7 +479,7 @@ const headerBlock = () => `
    lying about the skin exactly the way CLAUDE.md warns. One loader now, for
    all of them. */
 const sheet = async name =>
-  (await readFile(resolve(ROOT, `src/styles/${name}.css`), 'utf8'))
+  (await readFile(resolve(ROOT, `src/skins/legacy/styles/${name}.css`), 'utf8'))
     .replaceAll('../assets/', fileUrl('assets') + '/');
 
 /* The live page ships Tailwind preflight. Without it a fixture's <svg> stays

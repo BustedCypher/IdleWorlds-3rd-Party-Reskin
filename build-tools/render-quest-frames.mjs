@@ -6,7 +6,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
-import { ZONE_THEMES } from '../src/modules/zoneThemes.js';
+import { ZONE_THEMES } from '../src/skins/legacy/modules/zoneThemes.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = resolve(ROOT, 'output/quest-frames');

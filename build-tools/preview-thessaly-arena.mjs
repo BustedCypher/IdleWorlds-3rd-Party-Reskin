@@ -2,7 +2,7 @@ import {mkdir,copyFile,writeFile} from 'node:fs/promises';
 const folder='output/thessaly-arena';await mkdir(folder,{recursive:true});
 await copyFile('assets/raids/thessaly/arena-storm.png',folder+'/arena-painterly.png');
 await copyFile('assets/raids/thessaly/prompts-storm.json',folder+'/painterly-prompts.json');
-await copyFile('src/modules/ThessalyArenaRenderer.js',folder+'/scene.js');
+await copyFile('src/skins/legacy/modules/ThessalyArenaRenderer.js',folder+'/scene.js');
 await copyFile('assets/raids/thessaly/prompts-atmosphere.json',folder+'/atmosphere-prompts.json');
 for(const name of ['storm-clouds','courtyard-mist','hair-wisps','body-clouds'])await copyFile('assets/raids/thessaly/'+name+'.png',folder+'/'+name+'.png');
 await writeFile(folder+'/index.html',`<!doctype html>

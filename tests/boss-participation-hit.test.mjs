@@ -42,11 +42,11 @@ const fileUrl = rel => pathToFileURL(resolve(ROOT, rel)).href;
 const SHEETS = ['base.css', 'header.css', 'inventory.css', 'skillpanel.css', 'tooltip-engine.css', 'overlay.css', 'ui-system.css'];
 const css = [];
 for (const name of SHEETS) {
-  css.push((await readFile(resolve(ROOT, 'src/styles', name), 'utf8')).replaceAll("url('../assets/", `url('${fileUrl('assets')}/`));
+  css.push((await readFile(resolve(ROOT, 'src/skins/legacy/styles', name), 'utf8')).replaceAll("url('../assets/", `url('${fileUrl('assets')}/`));
 }
 
 const compiled = await build({
-  stdin: { contents: "export * from './src/modules/WorldBossPanels.js';", resolveDir: ROOT },
+  stdin: { contents: "export * from './src/skins/legacy/modules/WorldBossPanels.js';", resolveDir: ROOT },
   bundle: true, write: false, format: 'iife', globalName: 'BossPanels', loader: { '.css': 'text' },
 });
 

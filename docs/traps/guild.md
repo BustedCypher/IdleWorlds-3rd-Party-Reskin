@@ -1,6 +1,6 @@
 # Guild route and raid
 
-`GuildPanels.js` + `src/styles/guild.css`, added 2026-10-05 from two
+`GuildPanels.js` + `src/skins/legacy/styles/guild.css`, added 2026-10-05 from two
 skin-off snapshots: a raid lobby seen as a guest, and an active fight. The
 guild's own page followed the same day (v0.2.0+2026-10-05.16): a leader in a
 guild, and a player with no guild. See "The guild's own page" below. The

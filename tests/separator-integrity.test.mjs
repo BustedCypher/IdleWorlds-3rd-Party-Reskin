@@ -1,7 +1,7 @@
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
-import { THEME_NAMES } from '../src/modules/zoneThemes.js';
+import { THEME_NAMES } from '../src/skins/legacy/modules/zoneThemes.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const browser = await chromium.launch({ headless: true });

@@ -112,7 +112,7 @@ into the same logical 176x190 crop-and-mirror sheet `make-panel-corners.mjs` pro
 because `border-image` slices a standalone image and cannot address an atlas
 cell). Physical dimensions are multiplied by the map's `pixelRatio` (currently
 2), while CSS continues to use the logical dimensions. It also regenerates
-`src/modules/zoneThemes.js` — DO NOT hand-edit that
+`src/skins/legacy/modules/zoneThemes.js` — DO NOT hand-edit that
 file; `tests/zone-themes.test.mjs` pins it against the JSON and checks every
 referenced asset exists.
 

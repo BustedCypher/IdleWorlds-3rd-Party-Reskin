@@ -30,6 +30,7 @@ import { ItemDatabase } from './ItemDatabase.js';
 import { AtlasService } from './AtlasService.js';
 import { tierClass, statRows } from './itemDisplay.js';
 import { inject } from './StyleInjector.js';
+import { isRuntimeActive } from './Runtime.js';
 import css from '../styles/tooltip-engine.css';
 
 const SHOW_DELAY  = 120;  // ms — avoids firing on pointer fly-over
@@ -336,7 +337,7 @@ function cleanupAnchor(anchor) {
 }
 
 function show(anchor, { keyboard = false } = {}) {
-  if (!anchor?.isConnected) return;
+  if (!isRuntimeActive() || !STATE.el?.isConnected || !anchor?.isConnected) return;
   const item = isVirtual(anchor)
     ? anchor.item
     : findItem({
@@ -413,7 +414,10 @@ function scheduleShow(anchor) {
 // ── Bootstrap ──────────────────────────────────────────────────────────────
 
 export function initTooltipEngine() {
-  if (STATE.bound) return;
+  if (STATE.bound) {
+    if (STATE.el && !STATE.el.isConnected) document.body.appendChild(STATE.el);
+    return;
+  }
   STATE.bound = true;
 
   inject('tooltip-engine', css);
@@ -465,6 +469,7 @@ export function initTooltipEngine() {
   });
 
   document.addEventListener('mouseover', e => {
+    if (!isRuntimeActive()) return;
     if (isMobile() || STATE.keyboardOwned) return;
     const t = findTrigger(e.target);
     if (!t) return;
@@ -479,6 +484,7 @@ export function initTooltipEngine() {
   }, true);
 
   document.addEventListener('mouseout', e => {
+    if (!isRuntimeActive()) return;
     if (isMobile() || STATE.keyboardOwned) return;
     const t = findTrigger(e.target);
     if (!t) return;
@@ -499,6 +505,7 @@ export function initTooltipEngine() {
   // over the tooltip itself. This catches missed leave events, React node
   // replacement, and other cases that previously left orphaned cards behind.
   document.addEventListener('mousemove', e => {
+    if (!isRuntimeActive()) return;
     if (isMobile()) return;
     STATE.pointerX = e.clientX;
     STATE.pointerY = e.clientY;
@@ -511,6 +518,7 @@ export function initTooltipEngine() {
   }, true);
 
   document.addEventListener('click', e => {
+    if (!isRuntimeActive()) return;
     const t = findTrigger(e.target);
     if (t) {
       // Tooltip discovery must never consume a game click. Explicit references
@@ -535,6 +543,7 @@ export function initTooltipEngine() {
   });
 
   document.addEventListener('keydown', e => {
+    if (!isRuntimeActive()) return;
     if (e.key === 'Escape') {
       if (!STATE.anchor) return;
       const a = STATE.anchor;
@@ -608,6 +617,12 @@ export function initTooltipEngine() {
 }
 
 // ── Virtual-anchor API ───────────────────────────────────────────────────
+/** Detach the Legacy surface; keep its once-bound listeners for reactivation. */
+export function clearTooltipEngine() {
+  hide();
+  STATE.el?.remove();
+}
+
 //
 // Used by consumers that have geometry but no element — currently NameScanner,
 // which annotates the game's prose without inserting anything into its DOM.

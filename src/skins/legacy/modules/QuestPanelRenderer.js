@@ -16,7 +16,7 @@
 
 import { on } from './DOMWatcher.js';
 import { inject } from './StyleInjector.js';
-import { guard, guardEach } from './Runtime.js';
+import { guard, guardEach, isRuntimeActive } from './Runtime.js';
 import { SkillsArtService } from './SkillsArtService.js';
 import { AtlasService } from './AtlasService.js';
 import { ItemDatabase } from './ItemDatabase.js';
@@ -372,7 +372,7 @@ function ensureDecoration(card, style, ref) {
 
 function ensureAtlas(card) {
   const paint = () => {
-    if (!card.isConnected) return;
+    if (!isRuntimeActive() || !card.isConnected) return;
     SkillsArtService.decoratePanel(card);
   };
   if (SkillsArtService.isReady()) paint();
@@ -426,7 +426,7 @@ function questState(card) {
 }
 
 function renderCard(card) {
-  if (!card || !card.isConnected) return;
+  if (!isRuntimeActive() || !card || !card.isConnected) return;
 
   if (!isQuestCard(card)) {
     if (card.classList.contains(PANEL_CLASS)) clearCard(card);

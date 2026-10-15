@@ -478,7 +478,7 @@ state to lay out. What each cost:
     stepped a quarter-second at a time. A LINEAR width transition one tick
     long makes it continuous. The measurement - median tick, the 1.12 lead
     bias, the completion reset and the poisoned first tick after it - moved
-    out of `UIFoundation` into `src/modules/ProgressCadence.js`
+    out of `UIFoundation` into `src/skins/legacy/modules/ProgressCadence.js`
     (`sampleProgress`), which both surfaces call; neither writes a progress
     value. `SkillCardDesignController.smoothActionFill` runs on every
     reconcile (each width write mutates the span's `style`, which queues the

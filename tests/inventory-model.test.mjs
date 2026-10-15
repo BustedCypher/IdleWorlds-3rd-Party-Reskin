@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { buildInventoryDetails, inventoryDetailSignature, resolveInventoryItemName } from '../src/modules/InventoryModel.js';
+import { buildInventoryDetails, inventoryDetailSignature, resolveInventoryItemName } from '../src/skins/legacy/modules/InventoryModel.js';
 
 const boots = {
   name: 'Eternal Weave Boots+1',

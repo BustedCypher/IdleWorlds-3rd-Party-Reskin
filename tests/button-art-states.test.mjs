@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { THEME_NAMES } from '../src/modules/zoneThemes.js';
-import { SkillsArtService } from '../src/modules/SkillsArtService.js';
+import { THEME_NAMES } from '../src/skins/legacy/modules/zoneThemes.js';
+import { SkillsArtService } from '../src/skins/legacy/modules/SkillsArtService.js';
 
 const expectedKinds = [
   'action-idle', 'action-hover', 'action-clicked',

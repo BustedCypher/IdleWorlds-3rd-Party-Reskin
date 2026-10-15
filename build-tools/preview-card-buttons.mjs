@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 const root=resolve(import.meta.dirname,'..');
 const dir=resolve(root,'assets/skills-ui/buttons/card-v6');
 const index=JSON.parse(await readFile(resolve(dir,'index.json'),'utf8'));
-const atlas=(await readFile(resolve(root,'src/styles/card-button-atlas.css'),'utf8')).replaceAll('html[','section[').replaceAll('../assets/skills-ui/buttons/card-v6/','');
+const atlas=(await readFile(resolve(root,'src/skins/legacy/styles/card-button-atlas.css'),'utf8')).replaceAll('html[','section[').replaceAll('../assets/skills-ui/buttons/card-v6/','');
 const names=['Forged Iron','Infernal','Glacial','Celestial','Lunar Spectral','Runic Arcane','Tempest Oceanic','Verdant','Voidborn'];
 const accents=['#ad9168','#ed7348','#77bedb','#cdb476','#b9a0d5','#8b80e9','#5bacb9','#87b671','#a478d0'];
 const cluster=(state,i)=>`<div class="sample ${state}"><button class="action" aria-label="Prospect"><span class="fill"></span><img src="../../action-icons/jewelcrafting.svg" alt=""><span class="label">PROSPECT</span></button><div class="arrows"><button aria-label="Previous recipe"><i class="prev"></i></button><button aria-label="Next recipe"><i class="next"></i></button></div>${state==='live'?'<small>Hover · press · Tab</small>':''}</div>`;

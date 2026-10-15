@@ -4,9 +4,9 @@ import {build} from 'esbuild';
 import {chromium} from 'playwright';
 
 // Fail immediately if the renderer has not been implemented yet.
-await build({entryPoints:['src/modules/MorwennaArenaRenderer.js'],bundle:true,write:false,format:'esm',logLevel:'silent'});
+await build({entryPoints:['src/skins/legacy/modules/MorwennaArenaRenderer.js'],bundle:true,write:false,format:'esm',logLevel:'silent'});
 const folder='output/morwenna-arena';
-assert.deepEqual(await readFile(folder+'/scene.js'),await readFile('src/modules/MorwennaArenaRenderer.js'),'rebuild the preview so verification exercises the current live renderer');
+assert.deepEqual(await readFile(folder+'/scene.js'),await readFile('src/skins/legacy/modules/MorwennaArenaRenderer.js'),'rebuild the preview so verification exercises the current live renderer');
 assert.deepEqual(await readFile(folder+'/arena.png'),await readFile('output/morwenna-ember-court-v2/arena-rubble-mist.png'),'the approved painting must remain byte-identical');
 const previewURL=process.env.MORWENNA_PREVIEW_URL || 'http://127.0.0.1:4175/morwenna-arena/';
 const browser=await chromium.launch(process.env.IW_CHROMIUM_PATH ? {executablePath:process.env.IW_CHROMIUM_PATH} : {channel:'chrome'});

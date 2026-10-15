@@ -4,7 +4,7 @@ import { resolve, extname } from 'node:path';
 import { chromium } from 'playwright';
 
 const ROOT=resolve(import.meta.dirname,'..');
-const overlayCss=(await readFile(resolve(ROOT,'src/styles/overlay.css'),'utf8')).replaceAll("url('../assets/","url('/assets/");
+const overlayCss=(await readFile(resolve(ROOT,'src/skins/legacy/styles/overlay.css'),'utf8')).replaceAll("url('../assets/","url('/assets/");
 const PAGE=`<!doctype html><html><head><meta charset="utf-8"><style>
 :root{--iw-th-edge:#76511f;--iw-th-ground-a:#17110b;--iw-th-ground-b:#090806;--iw-th-glow:#ffffff12;--iw-text:#ddd}
 *{box-sizing:border-box}body{margin:0;color:#ddd;font-family:Arial,sans-serif}
@@ -23,7 +23,7 @@ ${overlayCss}</style></head><body>
  </div>
 </div>
 <p id="outside-wood" style="font-weight:700">Wood Chopped strategy notes</p>
-<script type="module">import{frameOverlays,clearOverlayFramer}from'/src/modules/OverlayFramer.js';window.frameOverlays=frameOverlays;window.clearOverlayFramer=clearOverlayFramer;</script>
+<script type="module">import{frameOverlays,clearOverlayFramer}from'/src/skins/legacy/modules/OverlayFramer.js';window.frameOverlays=frameOverlays;window.clearOverlayFramer=clearOverlayFramer;</script>
 </body></html>`;
 const MIME={'.js':'text/javascript','.css':'text/css','.webp':'image/webp','.png':'image/png'};
 const browser=await chromium.launch();const page=await browser.newPage({viewport:{width:800,height:700}});const errors=[];page.on('pageerror',e=>errors.push(String(e)));

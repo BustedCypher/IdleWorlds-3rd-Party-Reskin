@@ -12,12 +12,12 @@ import { chromium } from 'playwright';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const styles = await Promise.all([
-  'src/styles/ui-system.css',
-  'src/styles/header.css',
-  'src/styles/tooltip-engine.css',
-  'src/styles/overlay.css',
-  'src/styles/inventory.css',
-  'src/styles/skillpanel.css',
+  'src/skins/legacy/styles/ui-system.css',
+  'src/skins/legacy/styles/header.css',
+  'src/skins/legacy/styles/tooltip-engine.css',
+  'src/skins/legacy/styles/overlay.css',
+  'src/skins/legacy/styles/inventory.css',
+  'src/skins/legacy/styles/skillpanel.css',
 ].map(path => readFile(resolve(ROOT, path), 'utf8')));
 
 const browser = await chromium.launch();

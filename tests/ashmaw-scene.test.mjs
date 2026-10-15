@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 
 // Catches art leaking to another boss, replacing React nodes, duplicate mounts,
 // and an animation surviving route removal or the skin kill switch.
-const compiled = await build({ entryPoints: ['src/modules/GuildPanels.js'], bundle: true,
+const compiled = await build({ entryPoints: ['src/skins/legacy/modules/GuildPanels.js'], bundle: true,
   write: false, format: 'iife', globalName: 'Guild' });
 const dom = new JSDOM(`<div id="root"><h2>Raid Dungeon</h2>
   <div class="raid-battle-backdrop" style="--raid-bg-image: url(/raid-backgrounds/boss-ashmaw.png)">

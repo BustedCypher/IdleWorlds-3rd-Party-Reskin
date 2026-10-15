@@ -8,8 +8,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fileUrl = rel => pathToFileURL(resolve(ROOT, rel)).href;
 const SHEETS = ['base.css', 'header.css', 'inventory.css', 'skillpanel.css', 'tooltip-engine.css', 'overlay.css', 'ui-system.css'];
 const css = [];
-for (const n of SHEETS) css.push((await readFile(resolve(ROOT, 'src/styles', n), 'utf8')).replaceAll("url('../assets/", `url('${fileUrl('assets')}/`));
-const compiled = await build({ stdin: { contents: "export * from './src/modules/WorldBossPanels.js';", resolveDir: ROOT }, bundle: true, write: false, format: 'iife', globalName: 'BossPanels', loader: { '.css': 'text' } });
+for (const n of SHEETS) css.push((await readFile(resolve(ROOT, 'src/skins/legacy/styles', n), 'utf8')).replaceAll("url('../assets/", `url('${fileUrl('assets')}/`));
+const compiled = await build({ stdin: { contents: "export * from './src/skins/legacy/modules/WorldBossPanels.js';", resolveDir: ROOT }, bundle: true, write: false, format: 'iife', globalName: 'BossPanels', loader: { '.css': 'text' } });
 const card = (name) => `<div class="compact-panel" data-iw-boss="card">
   <div><div><p>🌍 ${name}</p><p>Solo</p><p>Buff on kill: +4 XP/task for 1h</p></div><button class="px-3 py-1">Prejoin</button></div>
   <div class="h-1.5 rounded-full"><div style="width: 40%"></div></div>

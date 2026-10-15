@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { THEME_NAMES } from '../src/modules/zoneThemes.js';
+import { THEME_NAMES } from '../src/skins/legacy/modules/zoneThemes.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const files = [

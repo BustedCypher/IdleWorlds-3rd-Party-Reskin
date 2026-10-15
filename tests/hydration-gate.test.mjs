@@ -4,7 +4,7 @@
  * Two files cooperate across the content-script / page-world boundary with no
  * shared code, only a protocol: src/page/hydration-signal.js (MAIN world,
  * document_start) writes `data-iw-page-hydrated` on <html> once React's root
- * has hydrated, and src/modules/HydrationGate.js (the bundle, document_idle)
+ * has hydrated, and src/shared/HydrationGate.js (the bundle, document_idle)
  * holds the skin's first boot until it sees that latch, then removes it.
  *
  * This pins both halves and the protocol between them, because a drift in
@@ -28,7 +28,7 @@ import {
   clearHydrationLatch,
   HYDRATION_ATTR,
   HYDRATION_GATE_ENABLED,
-} from '../src/modules/HydrationGate.js';
+} from '../src/shared/HydrationGate.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const settle = ms => new Promise(r => setTimeout(r, ms));

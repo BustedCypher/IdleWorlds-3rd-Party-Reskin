@@ -3,8 +3,8 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {chromium} from 'playwright';
 import {JSDOM} from 'jsdom';
-import {THEME_NAMES} from '../src/modules/zoneThemes.js';
-import {SkillsArtService} from '../src/modules/SkillsArtService.js';
+import {THEME_NAMES} from '../src/skins/legacy/modules/zoneThemes.js';
+import {SkillsArtService} from '../src/skins/legacy/modules/SkillsArtService.js';
 
 const root=resolve(import.meta.dirname,'..'),dir='assets/skills-ui/buttons/compact-ghost-v3';
 const index=JSON.parse(await readFile(resolve(root,dir,'index.json')));
@@ -12,8 +12,8 @@ assert.deepEqual([...index.themes].sort(),[...THEME_NAMES].sort());
 const manifest=JSON.parse(await readFile(resolve(root,'manifest.json')));
 assert.ok(manifest.web_accessible_resources.some(e=>e.resources.includes(`${dir}/*.png`)));
 const host=new JSDOM('<html></html>').window.document.documentElement;
-const css=(await Promise.all(['base','header','inventory','skillpanel','tooltip-engine','overlay','ui-system','compact-buttons'].map(s=>readFile(resolve(root,`src/styles/${s}.css`),'utf8')))).join('\n').replaceAll("url('../assets/","url('/assets/");
-const renderer=(await readFile(resolve(root,'src/modules/CompactButtons.js'),'utf8')).replaceAll('export function','function');
+const css=(await Promise.all(['base','header','inventory','skillpanel','tooltip-engine','overlay','ui-system','compact-buttons'].map(s=>readFile(resolve(root,`src/skins/legacy/styles/${s}.css`),'utf8')))).join('\n').replaceAll("url('../assets/","url('/assets/");
+const renderer=(await readFile(resolve(root,'src/skins/legacy/modules/CompactButtons.js'),'utf8')).replaceAll('export function','function');
 const browser=await chromium.launch();
 const page=await browser.newPage({viewport:{width:1100,height:850},deviceScaleFactor:2});
 await page.route('**/*',async route=>{

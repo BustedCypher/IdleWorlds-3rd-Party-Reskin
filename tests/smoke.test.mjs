@@ -1699,7 +1699,7 @@ check('exactly seven stylesheets re-injected',
   `${window.document.querySelectorAll('style[data-iw-style]').length} mounted`);
 check('base stylesheet re-injected', !!window.document.querySelector('style[data-iw-style="base"]'));
 check('tooltip surface was not duplicated', window.document.querySelectorAll('.iw-tip').length === 1);
-check('storage listener was not duplicated', window.chrome.storage.onChanged._listeners.length === 1,
+check('one profile and one zone-setting storage listener after re-enable', window.chrome.storage.onChanged._listeners.length === 2,
   `${window.chrome.storage.onChanged._listeners.length} storage listeners`);
 
 /* ── Second disable ──────────────────────────────────────────────────── */
@@ -1719,7 +1719,7 @@ check('second teardown restores skill inline style', skillAction.style.cssText =
   skillAction.style.cssText);
 check('second teardown restores background inline style', inventorySection.style.cssText === nativeSectionStyle,
   inventorySection.style.cssText);
-check('tooltip surface remains singular', window.document.querySelectorAll('.iw-tip').length === 1);
+check('disabled Legacy removes its tooltip surface', window.document.querySelectorAll('.iw-tip').length === 0);
 check('no game text node detached after full lifecycle', gameTextNodes.every(n => n.isConnected));
 
 /* ── Result ──────────────────────────────────────────────────────────── */

@@ -49,7 +49,7 @@ extStorage.set('iw-item-db-cache', {
   cachedAt: 1,
 });
 globalThis.fetch = async () => { throw new Error('offline'); };
-const { ItemDatabase: staleDb } = await import('../src/modules/ItemDatabase.js?stale=1');
+const { ItemDatabase: staleDb } = await import('../src/skins/legacy/modules/ItemDatabase.js?stale=1');
 await staleDb.ready();
 assert.equal(staleDb.isReady(), true);
 assert.equal(staleDb.getByName('Kings Blade')?.item_id, 'blade_1');
@@ -74,7 +74,7 @@ globalThis.fetch = async () => {
     },
   };
 };
-const { ItemDatabase: retryDb } = await import('../src/modules/ItemDatabase.js?retry=2');
+const { ItemDatabase: retryDb } = await import('../src/skins/legacy/modules/ItemDatabase.js?retry=2');
 await assert.rejects(retryDb.ready(), /temporary/);
 failFirst = false;
 await retryDb.ready();
@@ -147,7 +147,7 @@ globalThis.fetch = async (url) => {
   }
   throw new Error(`unexpected URL ${u}`);
 };
-const { AtlasService: atlas } = await import('../src/modules/AtlasService.js?partial=3');
+const { AtlasService: atlas } = await import('../src/skins/legacy/modules/AtlasService.js?partial=3');
 await atlas.ready();
 assert.equal(atlas.isReady(), true);
 assert.equal(atlas.isComplete(), false);
@@ -197,7 +197,7 @@ for (let level = 1; level <= 4; level += 1) {
   globalThis.fetch = async (url, init) => { requestInit = init; return respond(); };
 
   extStorage.clear();
-  const { ItemDatabase: db } = await import('../src/modules/ItemDatabase.js?revalidate=4');
+  const { ItemDatabase: db } = await import('../src/skins/legacy/modules/ItemDatabase.js?revalidate=4');
   await db.ready();
   await new Promise(r => setTimeout(r, 0));
   assert.equal(parses, 1, 'first load parses the table');
@@ -233,7 +233,7 @@ for (let level = 1; level <= 4; level += 1) {
   // 4d) A cache written before validators existed upgrades with ONE full write.
   extStorage.clear();
   extStorage.set('iw-item-db-cache', { ...table('gen-A'), cachedAt: Date.now() });
-  const { ItemDatabase: legacy } = await import('../src/modules/ItemDatabase.js?legacy-cache=4');
+  const { ItemDatabase: legacy } = await import('../src/skins/legacy/modules/ItemDatabase.js?legacy-cache=4');
   parses = 0;
   respond = () => ({ ok: true, status: 200, headers: headers(V1), async json() { parses += 1; return table('gen-A'); } });
   await legacy.ready();

@@ -190,6 +190,35 @@ async function run(react) {
       check('encounter switching releases the previous canvas',await tab.evaluate(()=>window.priorRaidCanvas.width===1&&window.priorRaidCanvas.height===1));
       }
     }
+    if (react) {
+      const extensionId = new URL(state.font).hostname;
+      const settings = await context.newPage();
+      settings.on('pageerror', error => errors.push(`settings: ${error}`));
+      await settings.goto(`chrome-extension://${extensionId}/src/options/options.html`);
+      await settings.waitForFunction(() => !document.querySelector('#skin-theme').disabled);
+      check('settings default to Legacy for an existing install', await settings.locator('#skin-theme').inputValue() === 'legacy');
+      await settings.locator('#skin-theme').selectOption('fantasy');
+      await tab.waitForFunction(() => document.querySelectorAll('style[data-iw-style]').length === 0);
+      check('Fantasy removes Legacy raid art and tooltip surfaces', await tab.locator('[data-iw-animated],.iw-tip,.iw-raid-dock').count() === 0);
+      const second = await context.newPage();
+      await second.goto('https://idleworlds.com/game');
+      await second.waitForTimeout(850);
+      check('new tabs inherit the saved empty Fantasy profile', await second.locator('style[data-iw-style],.iw-tip,.fs-inv-row').count() === 0);
+      await second.reload();
+      await second.waitForTimeout(850);
+      check('Fantasy selection persists across page reloads', await second.locator('style[data-iw-style],.iw-tip,.fs-inv-row').count() === 0);
+      await settings.reload();
+      await settings.waitForFunction(() => !document.querySelector('#skin-theme').disabled);
+      check('settings remember Fantasy after reopening', await settings.locator('#skin-theme').inputValue() === 'fantasy');
+      await settings.locator('#skin-theme').selectOption('legacy');
+      for (const game of [tab, second]) await game.waitForFunction(() => document.querySelectorAll('style[data-iw-style]').length === 7);
+      // Styles mount synchronously; renderers reconcile on the following RAF.
+      await second.locator('.fs-inv-row').first().waitFor();
+      await tab.locator('[data-iw-animated]').waitFor();
+      check('selecting Legacy restores its presentation in all open game tabs', await second.locator('.fs-inv-row').count() > 0 && await tab.locator('[data-iw-animated]').count() === 1);
+      await settings.close();
+      await second.close();
+    }
     check('extension assets load and none fail', assets > 0 && !errors.some(e => e.startsWith('asset failed')),
       `${assets} loaded; ${errors.filter(e => e.startsWith('asset')).slice(0, 2).join(' | ')}`);
     check('no page errors', !errors.some(e => !e.startsWith('asset')), errors.slice(0, 3).join(' | '));

@@ -21,7 +21,7 @@ import { resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const compiled = await build({
-  stdin: { contents: "export * from './src/modules/TooltipEngine.js';", resolveDir: ROOT },
+  stdin: { contents: "export * from './src/skins/legacy/modules/TooltipEngine.js';", resolveDir: ROOT },
   bundle: true, write: false, format: 'iife', globalName: 'Tip', loader: { '.css': 'text', '.json': 'json' },
 });
 const dom = new JSDOM('<!doctype html><body><p id="prose">A Night Claw lies here.</p></body>', {

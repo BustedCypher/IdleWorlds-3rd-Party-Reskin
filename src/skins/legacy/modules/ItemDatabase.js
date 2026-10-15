@@ -8,7 +8,7 @@
  */
 
 import { normaliseItemName } from './normaliseItemName.js';
-import { storageGet, storageSet, warnOnce } from './Runtime.js';
+import { storageGet, storageSet, warnOnce, isRuntimeActive } from './Runtime.js';
 
 const API_URL = 'https://idleworlds.com/items.json';
 const CACHE_KEY = 'iw-item-db-cache';
@@ -75,7 +75,10 @@ class _ItemDatabase {
   ready() {
     if (!this._promise) {
       this._promise = this._load().then(() => {
-        if (this._autoRefresh) this._scheduleRefresh(CACHE_MAX_AGE_MS);
+        // A profile switch can cancel loading while the cache read is pending.
+        // Do not cache an empty resolved promise; the next Legacy boot retries.
+        if (!this.isReady()) this._promise = null;
+        else if (this._autoRefresh) this._scheduleRefresh(CACHE_MAX_AGE_MS);
       }).catch(err => {
         // Do not permanently poison the singleton after a transient failure.
         this._promise = null;
@@ -132,6 +135,7 @@ class _ItemDatabase {
   async _load() {
     evictLegacyCache();
     const cached = await this._readCache({ allowStale: true });
+    if (!isRuntimeActive()) return;
 
     if (cached && !cached.stale) {
       this._index(cached.items, cached.generatedAt, 'cache', cached.validator);

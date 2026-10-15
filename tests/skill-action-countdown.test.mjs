@@ -32,7 +32,7 @@ function installDom() {
 }
 
 installDom();
-const { enhanceSkillCardV2, clearSkillCardV2 } = await import('../src/modules/SkillCardDesignController.js');
+const { enhanceSkillCardV2, clearSkillCardV2 } = await import('../src/skins/legacy/modules/SkillCardDesignController.js');
 const panel = document.querySelector('#card');
 const button = panel.querySelector('[data-iw-skill-role="action-button"]');
 const state = () => {
@@ -68,7 +68,7 @@ assert.equal(state().timer, '10s', 'the countdown follows the game-owned remaini
    does not mutate, so no `iw:skill-panel` fires. The tick reaches the card
    only through the flush events: the timer used to freeze until the card's
    own fill stepped (~10s on a long craft). */
-const { initSkillCardDesignController, clearSkillCardDesignController } = await import('../src/modules/SkillCardDesignController.js');
+const { initSkillCardDesignController, clearSkillCardDesignController } = await import('../src/skins/legacy/modules/SkillCardDesignController.js');
 initSkillCardDesignController();
 const tick = (text, type = 'iw:name-scan-flush') => {
   const el = document.querySelector('#remaining');
@@ -113,7 +113,7 @@ assert.deepEqual(state(), {
   timerParentIsButtonParent: false,
 }, 'teardown removes long-action presentation state');
 
-const css = await readFile(resolve(root, 'src/styles/skillcard-v2.css'), 'utf8');
+const css = await readFile(resolve(root, 'src/skins/legacy/styles/skillcard-v2.css'), 'utf8');
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 900, height: 420 } });
 try {

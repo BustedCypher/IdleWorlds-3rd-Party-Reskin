@@ -4,8 +4,8 @@ import {chromium} from 'playwright';
 import {resolve} from 'node:path';
 
 const result=await build({stdin:{resolveDir:resolve(import.meta.dirname,'..'),contents:`
-  import {decorateCompactButtons,clearCompactButtons} from './src/modules/CompactButtons.js';
-  import {startWatcher,stopWatcher,on} from './src/modules/DOMWatcher.js';
+  import {decorateCompactButtons,clearCompactButtons} from './src/skins/legacy/modules/CompactButtons.js';
+  import {startWatcher,stopWatcher,on} from './src/skins/legacy/modules/DOMWatcher.js';
   window.flushes=0;
   on('iw:dom-flush',()=>{window.flushes++;decorateCompactButtons();});
   window.stop=()=>{stopWatcher();clearCompactButtons();};

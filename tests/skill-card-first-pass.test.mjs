@@ -7,7 +7,7 @@ import { JSDOM } from 'jsdom';
    fs-skill-panel marker; waiting for data-iw-skill-v2 leaves native button text
    and legacy 155px geometry behind until some unrelated mutation causes a
    second pass. */
-const source = await readFile(new URL('../src/modules/SkillPanelRenderer.js', import.meta.url), 'utf8');
+const source = await readFile(new URL('../src/skins/legacy/modules/SkillPanelRenderer.js', import.meta.url), 'utf8');
 const declaration = source.match(/function compactCommandButton\(btn\) \{[\s\S]*?\n\}/)?.[0];
 assert.ok(declaration, 'shipping compactCommandButton implementation is present');
 

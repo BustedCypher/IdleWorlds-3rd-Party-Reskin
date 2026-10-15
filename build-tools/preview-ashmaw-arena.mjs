@@ -2,7 +2,7 @@ import {mkdir,copyFile,writeFile} from 'node:fs/promises';
 const folder='output/ashmaw-arena';await mkdir(folder,{recursive:true});
 await copyFile('assets/raids/ashmaw/arena.png',folder+'/arena-painterly.png');
 await copyFile('assets/raids/ashmaw/arena-source/prompts.json',folder+'/painterly-prompts.json');
-await copyFile('src/modules/AshmawArenaRenderer.js',folder+'/scene.js');
+await copyFile('src/skins/legacy/modules/AshmawArenaRenderer.js',folder+'/scene.js');
 for(const name of ['clouds','furnace-smoke','steam'])await copyFile('assets/raids/ashmaw/'+name+'.png',folder+'/'+name+'.png');
 await writeFile(folder+'/index.html',`<!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

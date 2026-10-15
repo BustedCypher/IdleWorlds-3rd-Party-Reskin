@@ -20,7 +20,7 @@ const projectRoot = resolve(import.meta.dirname, '..');
 /* ---- generated map vs its source of truth, and the files it names -------- */
 
 const manifest = JSON.parse(await readFile(resolve(projectRoot, 'assets/village/buildings.json'), 'utf8'));
-const moduleSource = await readFile(resolve(projectRoot, 'src/modules/villageBuildings.js'), 'utf8');
+const moduleSource = await readFile(resolve(projectRoot, 'src/skins/legacy/modules/villageBuildings.js'), 'utf8');
 assert.equal(manifest.buildings.length, 34, 'every Construction building tier has art');
 assert.equal(manifest.houses.length, 5, 'every housing tier has art');
 for (const entry of [...manifest.buildings, ...manifest.houses]) {
@@ -79,8 +79,8 @@ const compiled = await build({
     // ItemDatabase rides along so the test can prime the singleton VillagePanels
     // actually reads — esbuild bundles one instance, so this is the same object.
     contents: [
-      "export * from './src/modules/VillagePanels.js';",
-      "export { ItemDatabase } from './src/modules/ItemDatabase.js';",
+      "export * from './src/skins/legacy/modules/VillagePanels.js';",
+      "export { ItemDatabase } from './src/skins/legacy/modules/ItemDatabase.js';",
     ].join('\n'),
     resolveDir: projectRoot,
   },

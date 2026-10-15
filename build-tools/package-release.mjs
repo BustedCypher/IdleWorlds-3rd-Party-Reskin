@@ -65,6 +65,16 @@ async function walk(dir) {
 }
 
 const files = new Set(['manifest.json']);
+// Settings are loaded from extension pages, outside the content bundle.
+// Keep their complete import graph explicit rather than shipping all source.
+const settingsFiles = [
+  'src/options/options.html', 'src/options/options.js', 'src/options/options.css',
+  'src/shared/ExtensionSettings.js',
+];
+for (const file of new Set([...settingsFiles, manifest.options_ui?.page, manifest.options_page, manifest.action?.default_popup].filter(Boolean))) {
+  try { await stat(path.join(ROOT, file)); files.add(file); }
+  catch { fail(`settings file missing: ${file}`); }
+}
 for (const script of manifest.content_scripts || []) {
   for (const file of [...(script.js || []), ...(script.css || [])]) {
     try { await stat(path.join(ROOT, file)); files.add(file); }

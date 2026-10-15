@@ -4,7 +4,7 @@ import { resolve, extname } from 'node:path';
 import { chromium } from 'playwright';
 
 const ROOT=resolve(import.meta.dirname,'..');
-const css=(await Promise.all(['ui-system.css','inventory.css','overlay.css'].map(f=>readFile(resolve(ROOT,'src/styles',f),'utf8'))))
+const css=(await Promise.all(['ui-system.css','inventory.css','overlay.css'].map(f=>readFile(resolve(ROOT,'src/skins/legacy/styles',f),'utf8'))))
   .join('\n').replaceAll("url('../assets/","url('/assets/");
 const PAGE=`<!doctype html><html><head><meta charset="utf-8"><style>
 :root{--iw-th-edge:#76511f;--iw-th-ground-a:#17110b;--iw-th-ground-b:#090806;--iw-th-glow:#ffffff12;--iw-th-hairline:#9b6b2d;--iw-th-hairline-hi:#dba34e;--iw-text:#ddd7c8}
@@ -21,7 +21,7 @@ ${css}</style></head><body>
   </div>
   <div id="list" data-iw-inventory-list="1" style="height:230px"><div style="height:100%;background:#26150e">Later inventory list</div></div>
 </div>
-<script type="module">import {frameOverlays,clearOverlayFramer} from '/src/modules/OverlayFramer.js';window.frameOverlays=frameOverlays;window.clearOverlayFramer=clearOverlayFramer;</script>
+<script type="module">import {frameOverlays,clearOverlayFramer} from '/src/skins/legacy/modules/OverlayFramer.js';window.frameOverlays=frameOverlays;window.clearOverlayFramer=clearOverlayFramer;</script>
 </body></html>`;
 const MIME={'.js':'text/javascript','.css':'text/css','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'};
 const browser=await chromium.launch();

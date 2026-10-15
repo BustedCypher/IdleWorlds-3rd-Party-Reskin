@@ -14,6 +14,7 @@ import css from '../styles/header.css';
 
 const ROLE = 'data-iw-header';
 let queued = false;
+let listenerBound = false;
 
 const HEADER_ASSETS = {
   headerSurface: 'assets/header/header_surface.webp',
@@ -452,7 +453,10 @@ export function clearHeaderRenderer() {
 }
 
 export function initHeaderRenderer() {  inject('header', css);
-  on('iw:dom-flush', queueReconcile);
+  if (!listenerBound) {
+    on('iw:dom-flush', queueReconcile);
+    listenerBound = true;
+  }
   initZoneThemeSetting(queueReconcile);
   queueReconcile();
 }

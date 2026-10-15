@@ -42,7 +42,7 @@ import { dirname, resolve } from 'node:path';
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const SRC = resolve(HERE, '../src/modules/SkillPanelRenderer.js');
+const SRC = resolve(HERE, '../src/skins/legacy/modules/SkillPanelRenderer.js');
 
 const normText = value => String(value || '').replace(/\s+/g, ' ').trim();
 

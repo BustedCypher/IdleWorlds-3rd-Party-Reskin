@@ -4,7 +4,7 @@
  * Pins the per-zone frame theme wiring:
  *
  *   - every IdleWorlds zone (1..ZONE_MAX) resolves to exactly one theme
- *   - src/modules/zoneThemes.js and its committed source of truth,
+ *   - src/skins/legacy/modules/zoneThemes.js and its committed source of truth,
  *     assets/skills-ui/zone-theme-map.json, never drift apart (the module is
  *     generated from the JSON by build-tools/import-skill-themes.mjs)
  *   - every theme a zone points at has all three derived asset files on disk:
@@ -21,7 +21,7 @@ import { readFile, access } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
-import { ZONE_THEMES, THEME_NAMES, zoneTheme } from '../src/modules/zoneThemes.js';
+import { ZONE_THEMES, THEME_NAMES, zoneTheme } from '../src/skins/legacy/modules/zoneThemes.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const map = JSON.parse(await readFile(resolve(ROOT, 'assets/skills-ui/zone-theme-map.json'), 'utf8'));
@@ -120,7 +120,7 @@ check('un-themed fallback separator flourish present', await exists('assets/inve
 //    reads --iw-th-* tokens; a missing block would silently fall through to the
 //    stock brass for that whole zone. Negative control: drop a :root[data-…]
 //    block or one of the required tokens from it and this fails.
-const baseCss = (await readFile(resolve(ROOT, 'src/styles/base.css'), 'utf8'))
+const baseCss = (await readFile(resolve(ROOT, 'src/skins/legacy/styles/base.css'), 'utf8'))
   .replace(/\/\*[\s\S]*?\*\//g, '');
 const REQUIRED_TOKENS = ['--iw-th-accent', '--iw-th-edge', '--iw-th-hairline', '--iw-th-cta', '--iw-th-ground-wash'];
 for (const theme of used) {

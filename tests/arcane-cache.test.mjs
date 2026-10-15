@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 import { readFile, mkdir } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { cacheFixture } from '../build-tools/arcane-cache-fixture.mjs';
-import { ARCANE_CACHE_REWARDS } from '../src/modules/arcaneCacheRewards.js';
+import { ARCANE_CACHE_REWARDS } from '../src/skins/legacy/modules/arcaneCacheRewards.js';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const OUT = resolve(ROOT, 'tmp/arcane-cache');

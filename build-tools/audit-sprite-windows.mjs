@@ -52,7 +52,7 @@ const baseKey = sel => sel.replace(/\s+/g, ' ').trim()
 const rules = [];
 const scaleBySelector = new Map();
 for (const name of SHEETS) {
-  const css = (await readFile(resolve(ROOT, `src/styles/${name}.css`), 'utf8'))
+  const css = (await readFile(resolve(ROOT, `src/skins/legacy/styles/${name}.css`), 'utf8'))
     // Comments in this project carry CSS samples, braces and all, which would
     // desynchronise the block matcher below.
     .replace(/\/\*[\s\S]*?\*\//g, '');

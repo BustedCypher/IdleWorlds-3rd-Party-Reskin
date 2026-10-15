@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 
 const root = resolve(import.meta.dirname, '..');
 const css = await Promise.all(['base', 'ui-system'].map(name =>
-  readFile(resolve(root, 'src/styles', name + '.css'), 'utf8')));
+  readFile(resolve(root, 'src/skins/legacy/styles', name + '.css'), 'utf8')));
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 390, height: 220 } });
 const page = await context.newPage();

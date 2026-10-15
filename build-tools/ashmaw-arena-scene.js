@@ -1,2 +1,2 @@
 // Preview tooling and the extension share the approved arena renderer.
-export * from '../src/modules/AshmawArenaRenderer.js';
+export * from '../src/skins/legacy/modules/AshmawArenaRenderer.js';

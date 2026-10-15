@@ -8,7 +8,7 @@ import os from 'node:os';
  * Regression pin for the "panels nest inside layout columns" leaf-vs-container
  * split that ui-system.css draws around every framed surface, and for the
  * freeze-once caches in classifySectionFrames() / classifyActivityPanels()
- * (src/modules/UIFoundation.js) whose stable output that CSS contract depends
+ * (src/skins/legacy/modules/UIFoundation.js) whose stable output that CSS contract depends
  * on.
  *
  * UIFoundation's heading walk and the skills section class both land on the
@@ -28,7 +28,7 @@ import os from 'node:os';
  * Portability:
  *   - the fixture and its inlined stylesheets are resolved from the repo the
  *     same way build-tools/render-fixtures.mjs does (HERE/.. as ROOT, real
- *     src/styles + file:// asset URLs) and written under os.tmpdir();
+ *     src/skins/legacy/styles + file:// asset URLs) and written under os.tmpdir();
  *   - Chromium comes from Playwright's bundled build (chromium.executablePath()),
  *     overridable via IW_CHROMIUM_PATH for CI images that ship their own.
  */
@@ -37,7 +37,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const ASSET_URL = pathToFileURL(resolve(ROOT, 'assets')).href + '/';
 
-const loadStyle = async name => (await readFile(resolve(ROOT, 'src/styles', `${name}.css`), 'utf8'))
+const loadStyle = async name => (await readFile(resolve(ROOT, 'src/skins/legacy/styles', `${name}.css`), 'utf8'))
   .replaceAll('../assets/', ASSET_URL);
 
 const sheets = (await Promise.all(['base', 'inventory', 'ui-system'].map(loadStyle)))

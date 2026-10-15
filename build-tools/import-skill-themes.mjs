@@ -8,7 +8,7 @@
  *   (corner_filigree cell, mirrored 2x2)        →  assets/skills-ui/panel_corners_<name>.webp
  *   (separator_flourish, repaired at left tip)  →  assets/skills-ui/separator_flourish_<name>.webp
  *   <source>/zone-theme-map.json                →  assets/skills-ui/zone-theme-map.json  (provenance)
- *                                              →  src/modules/zoneThemes.js  (generated)
+ *                                              →  src/skins/legacy/modules/zoneThemes.js  (generated)
  *
  * Source art lives in the sibling sprites repo:
  *   ../idleWorlds-game-sprites-BC/assets/skills-ui-atlas/families
@@ -30,7 +30,7 @@
  *     ornament without changing the crystal's proportions.
  *
  * HeaderRenderer.applyZoneTheme() maps the current zone to a theme (see
- * src/modules/zoneThemes.js) and points all three artwork variables at these files.
+ * src/skins/legacy/modules/zoneThemes.js) and points all three artwork variables at these files.
  *
  * This is a pure recolour + crop-and-mirror of art already produced upstream.
  * Re-run whenever the family atlases change.

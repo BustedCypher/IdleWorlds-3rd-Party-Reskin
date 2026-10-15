@@ -19,7 +19,7 @@ const {
   clearSkillCardV2,
   initSkillCardDesignController,
   clearSkillCardDesignController,
-} = await import('../src/modules/SkillCardDesignController.js');
+} = await import('../src/skins/legacy/modules/SkillCardDesignController.js');
 
 const cases = [];
 function check(label, condition, detail = '') {

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "IdleWorlds Fantasy Skin",
-  "version": "1.6.0",
-  "description": "A forged dark-fantasy RPG UI overhaul for IdleWorlds — v1.6.0 hardening pass: bundled assets, extension-private storage, non-destructive text annotation.",
+  "version": "1.7.0",
+  "description": "Independent Legacy and Fantasy reskin profiles for IdleWorlds, with a theme selector and reversible presentation.",
   "permissions": [
     "storage"
   ],
@@ -48,5 +48,13 @@
         "https://www.idleworlds.com/*"
       ]
     }
-  ]
+  ],
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_title": "IdleWorlds Skin Settings",
+    "default_popup": "src/options/options.html"
+  }
 }

@@ -12,7 +12,7 @@ The skin is **presentation only**. React keeps ownership of every gameplay node 
 npm ci            # install locked jsdom / Playwright development dependencies
 npm run vendor    # downloads pinned sprite atlases + typefaces into assets/
 npm run build     # strict production build; requires vendored assets
-npm test          # rebuilds the current bundle, syntax-checks it, then runs five suites
+npm test          # rebuilds, syntax-checks, and runs the registered regression suites
 ```
 
 Or perform the strict fresh-clone sequence after `npm ci`:
@@ -26,6 +26,18 @@ npm run setup
 The production bundle is built with `esbuild` from the standard ESM source graph. CSS imports use esbuild's text loader so every stylesheet remains lifecycle-owned and removable. The output is a single unminified UTF-8 IIFE targeting Chrome 109+ with no source map.
 
 Then load the folder in Chrome via `chrome://extensions` → **Load unpacked**.
+
+## Select a theme
+
+After updating, reload the extension in `chrome://extensions`. Click the extension icon or open its **Options** page, then choose **Legacy** or **Fantasy** in **Active game theme**. Refresh existing game tabs once so they load the updated extension and saved choice. Match this choice to the theme selected in the game's own settings.
+
+Legacy keeps the current reskin and all its existing preferences. Fantasy is a clean base with no custom rules yet, so the game's current Fantasy presentation is visible. The selection is saved in extension-private storage and updates every open game tab automatically. Existing installs default to Legacy. The existing enable/disable switch still controls both profiles.
+
+## Develop the Fantasy reskin
+
+Start in `src/skins/fantasy/index.js` and `src/skins/fantasy/styles/custom.css`. Fantasy currently injects nothing. Add Fantasy modules and CSS inside that compartment, activate them from `start()`, and reverse every change in `stop()`. Each skin must own its runtime guards and removable presentation; do not import Legacy modules or styles into Fantasy.
+
+All existing presentation code is under `src/skins/legacy/`. The neutral bootstrap, settings, and controller live outside both skins. The Legacy assets remain available in `assets/`; sharing an asset does not automatically activate its rules. Theme boundaries, startup races, teardown, and settings persistence are covered by the regression suite.
 
 `npm run vendor` is not optional on a fresh clone before loading the extension. The large sprite atlases are deliberately not stored in this repository; vendoring downloads the immutable sprite revision selected in `build-tools/vendor-assets.mjs`. The current pin includes the shared `+4` gear overlay.
 
@@ -44,27 +56,21 @@ assets/                vendored atlas metadata + fonts; large PNGs produced by v
 dist/                  build output — do not edit
   content.bundle.js    production content bundle
 src/
-  content.js           activation lifecycle, boot order, teardown, kill switch
-  modules/
-    Runtime.js         chrome.* wrappers, activation gate, error isolation, scheduling
-    DOMWatcher.js      the single MutationObserver + flush budget
-    StyleInjector.js   lifecycle-owned stylesheet injection + asset URL rewriting
-    InlineStyleOwner.js reversible property-level inline style ownership
-    AtlasService.js    dual sprite atlas -> background-position
-    ItemDatabase.js    items.json + extension-private cache
-    TooltipEngine.js   delegated item cards (element + virtual anchors)
-    NameScanner.js     non-destructive item-name annotation
-    InventoryRenderer.js
-    SkillPanelRenderer.js
-    UIFoundation.js    nav / zone bar / section frames
-    BackgroundPainter.js
-    InventoryModel.js  pure parser for owned-item detail lines
-    itemDisplay.js     shared stat/tier presentation
-    aliases.js         cloak material alias table (temporary)
-    normaliseItemName.js
-  styles/
-    base.css           global theme + @font-face; bundled and runtime-removable
-    inventory.css  skillpanel.css  tooltip-engine.css  ui-system.css
+  content.js           neutral profile selection and startup
+  shared/
+    ExtensionSettings.js persisted selection, validation and storage events
+    SkinController.js    exclusive start/stop lifecycle and pending-start cancellation
+    HydrationGate.js     shared React hydration safety
+  options/             settings page and toolbar popup
+  page/                neutral MAIN-world hydration signal
+  skins/
+    legacy/
+      index.js         existing reskin lifecycle
+      modules/         all existing Legacy renderers, services and runtime guards
+      styles/          all existing Legacy CSS, including base.css
+    fantasy/
+      index.js         empty start/stop lifecycle for the new reskin
+      styles/custom.css empty Fantasy rule file, not yet injected
 tests/
   data-services.test.mjs    ItemDatabase / AtlasService resilience
   inventory-model.test.mjs  pure owned-item parser cases
@@ -103,7 +109,7 @@ Teardown disconnects the central observer, removes Inventory overlays and semant
 
 ## Testing
 
-`npm test` first rebuilds the production bundle with `--allow-missing-assets`, runs `node --check` on that generated bundle, then executes the five regression suites. This ordering is intentional: the smoke test must never execute stale `dist` output.
+`npm test` first rebuilds the production bundle with `--allow-missing-assets`, runs `node --check` on that generated bundle, then executes the registered regression suites. This ordering is intentional: the smoke test must never execute stale `dist` output.
 
 `static-invariants.test.mjs` asserts architecture directly against the source. `smoke.test.mjs` boots the **real rebuilt bundle** in jsdom against a synthetic IdleWorlds-shaped DOM and checks, among other things:
 

@@ -32,7 +32,7 @@ globalThis.fetch = async url => {
 const realLog = console.log;
 console.log = () => {};
 console.warn = () => {};
-const { AtlasService } = await import('../src/modules/AtlasService.js');
+const { AtlasService } = await import('../src/skins/legacy/modules/AtlasService.js');
 await AtlasService.ready();
 console.log = realLog;
 

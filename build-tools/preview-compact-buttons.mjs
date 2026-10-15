@@ -23,15 +23,15 @@ ${index.states.map(state=>{
   const e=index.entries.find(e=>e.key===`text-${state}`);
   return `${scope} [data-iw-compact-layer="${state}"] { --iw-compact-y: ${percent(e.y,index.height-e.height)}; }`;
 }).join('\n')}`;
-const cssPath=resolve(root,'src/styles/compact-buttons.css');
+const cssPath=resolve(root,'src/skins/legacy/styles/compact-buttons.css');
 let compactCss=await readFile(cssPath,'utf8');
 compactCss=compactCss.replace(/\/\* COMPACT_GEOMETRY \*\/[\s\S]*?(?=\n\nhtml\[data-iw-compact-atlas="[^"]+"\] \[data-iw-compact-button\] >)/,
   `/* COMPACT_GEOMETRY */\n${geometry}`);
 await writeFile(cssPath,compactCss);
 
 const sheets=['base','header','inventory','skillpanel','tooltip-engine','overlay','ui-system'];
-const css=(await Promise.all(sheets.map(n=>readFile(resolve(root,`src/styles/${n}.css`),'utf8')))).join('\n')+'\n'+compactCss;
-const renderer=(await readFile(resolve(root,'src/modules/CompactButtons.js'),'utf8')).replaceAll('export function','function');
+const css=(await Promise.all(sheets.map(n=>readFile(resolve(root,`src/skins/legacy/styles/${n}.css`),'utf8')))).join('\n')+'\n'+compactCss;
+const renderer=(await readFile(resolve(root,'src/skins/legacy/modules/CompactButtons.js'),'utf8')).replaceAll('export function','function');
 const names={ 'forged-metal':'Forged Iron','infernal':'Infernal','glacial':'Glacial','celestial':'Celestial','lunar-spectral':'Lunar Spectral','runic-arcane':'Runic Arcane','tempest-oceanic':'Tempest Oceanic','verdant':'Verdant','voidborn':'Voidborn'};
 const iconSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4"/></svg>';
 const control=(text,attrs='')=>`<button type="button" ${attrs}>${text}</button>`;

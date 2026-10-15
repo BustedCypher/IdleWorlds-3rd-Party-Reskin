@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import * as loot from '../src/modules/arcaneCacheRewards.js';
+import * as loot from '../src/skins/legacy/modules/arcaneCacheRewards.js';
 
 assert.equal(typeof loot.rollCacheRewards, 'function', 'batch rewards can be generated');
 assert.equal(typeof loot.groupCacheRewards, 'function', 'bulk loot is partitioned without losing quantities');

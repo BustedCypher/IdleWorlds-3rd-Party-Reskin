@@ -203,7 +203,7 @@ async function verify() {
   const csv = await readFile('assets/item_icons_index.csv', 'utf8');
   const [headerLine, ...rows] = csv.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
   const headers = headerLine.split(',').map(h => h.trim());
-  // Must match REQUIRED_ITEM_COLUMNS in src/modules/AtlasService.js.
+  // Must match REQUIRED_ITEM_COLUMNS in src/skins/legacy/modules/AtlasService.js.
   for (const col of ['item_id', 'name', 'x', 'y', 'width', 'height']) {
     if (!headers.includes(col)) problems.push(`item index missing required column '${col}'`);
   }

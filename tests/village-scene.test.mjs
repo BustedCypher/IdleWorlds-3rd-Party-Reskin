@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { build } from 'esbuild';
 
-const compiled = await build({ entryPoints: ['src/modules/VillageScene.js'], bundle: true,
+const compiled = await build({ entryPoints: ['src/skins/legacy/modules/VillageScene.js'], bundle: true,
   write: false, format: 'iife', globalName: 'Scene' });
 const dom = new JSDOM('<main><div class="panel" id="actions"><h2>Skill Actions</h2><button>Mine</button></div><div id="next">Next panel</div></main>',
   { url: 'https://idleworlds.com/game', runScripts: 'outside-only' });

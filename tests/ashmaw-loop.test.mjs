@@ -3,7 +3,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
 
-const compiled=await build({entryPoints:['src/modules/AshmawScene.js'],bundle:true,write:false,format:'iife',globalName:'Ashmaw'});
+const compiled=await build({entryPoints:['src/skins/legacy/modules/AshmawScene.js'],bundle:true,write:false,format:'iife',globalName:'Ashmaw'});
 const browser=await chromium.launch(),errors=[];
 try{
  const page=await browser.newPage({viewport:{width:1200,height:800}});page.on('pageerror',e=>errors.push(String(e)));
@@ -36,7 +36,7 @@ try{
  await mkdir('output/ashmaw-live',{recursive:true});await page.screenshot({path:'output/ashmaw-live/renderer.png'});
  const integration=await browser.newPage({viewport:{width:1000,height:850}});integration.on('pageerror',e=>errors.push(String(e)));
  let failPainting=false,failSmoke=false;const assetRequests=new Set();
- const html=`<style>${await readFile('src/styles/guild.css','utf8')}body{margin:10px;background:#14110e;color:#ddd}.raid-battle-backdrop{padding:14px;width:960px}.raid-arena-floor{display:flex;gap:10px}.raid-readable-panel{padding:8px}button{color:inherit}</style>
+ const html=`<style>${await readFile('src/skins/legacy/styles/guild.css','utf8')}body{margin:10px;background:#14110e;color:#ddd}.raid-battle-backdrop{padding:14px;width:960px}.raid-arena-floor{display:flex;gap:10px}.raid-readable-panel{padding:8px}button{color:inherit}</style>
   <div data-iw-guild="root"><h2>Raid Dungeon</h2><div class="raid-battle-backdrop" style="--raid-bg-image:url(boss-ashmaw.png)">
    <div data-iw-guild-role="boss-summary"><span>Ashmaw, the Cinder Tyrant</span><div><img alt="Ashmaw, the Cinder Tyrant" src=""></div><div id="hp" style="height:10px"><div style="width:50%;height:100%;background:#c44"></div></div><p id="hp-value">10,500 / 21,000 HP</p></div>
    <div data-iw-guild-role="telegraph" class="raid-readable-panel">Claw Rake in 10s</div>
