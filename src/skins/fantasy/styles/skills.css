@@ -1,0 +1,572 @@
+/* ============================================================================
+   Fantasy — the game's Skills sheet (`.iw-skill-tabs`, `.iw-ss-*`), 2026-10-16.
+
+   These are GAME nodes styled by the game's stock CSS (plus a <style> it
+   renders inside the Skill Actions panel); the port's Fantasy theme does not
+   know them yet. skills/index.js writes only data-iw-fantasy-skill /
+   -icon / -lead; everything else here keys on the game's own classes.
+
+   SPECIFICITY. Every rule starts `:is(:root,#iwf)`, worth one ID. The port's
+   generic control rule (ui-system.css `button:not(…)` chain, ~(0,40,1)
+   !important) paints every game button it does not exclude, and its chain
+   cannot be extended from here, so one ID weight is the smallest step that
+   beats it. `!important` is used ONLY on the properties that rule sets
+   (border-color, background-image, box-shadow). `#iwf` never exists.
+
+   STATE (rule 5). The prefix also outranks the game's own state rules, so
+   every state the game paints is restated below and stays distinct:
+   active tab, running skill dot, running / best / locked row, open group,
+   boost, lock / gear / warn lines, disabled start.
+   ========================================================================= */
+
+:is(:root,#iwf) {
+  --iwf-item-atlas: url('../assets/item_icons_atlas.png');
+  --iwf-gear-atlas: url('../assets/gear_icons_atlas.png');
+  --iwf-edge: var(--iw-th-edge-soft, #3b3a33);
+  --iwf-edge-mid: var(--iw-th-edge-mid, #57513f);
+  --iwf-edge-faint: var(--iw-th-edge-faint, #2a2a25);
+  --iwf-accent: var(--iw-th-accent, #d8a64a);
+  --iwf-brass: var(--iw-th-brass, #b8975a);
+  --iwf-ground: linear-gradient(180deg,
+      color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent),
+      color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));
+  --iwf-text-hi: #f1e6cc;
+  --iwf-text: #d9cdb2;
+  --iwf-text-dim: #a59a83;
+  --iwf-running: #34d399;
+  /* Every item sprite is at least the inventory's: its icon box is
+     52 / 46 / 42px with a 1px border and the sprite fills it. */
+  --iwf-item: 50px;
+}
+@media (max-width: 1024px) { :is(:root,#iwf) { --iwf-item: 44px; } }
+@media (max-width: 768px) { :is(:root,#iwf) { --iwf-item: 40px; } }
+
+/* One discipline icon per key: Curtis's action-icon set, the same white
+   SVGs Legacy's V2 action buttons ship, painted as a background (no mask:
+   a mask image is fetched with CORS). */
+:is(:root,#iwf) [data-iw-fantasy-skill="combat"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/combat.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="mining"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/mining.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="smithing"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/smithing.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="gathering"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/gathering.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="alchemy"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/alchemy.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="jewelcrafting"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/jewelcrafting.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="spellcrafting"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/spellcrafting.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="tailoring"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/tailoring.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="woodcutting"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/woodcutting.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="construction"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/construction.svg'); }
+
+/* A leading emoji the module SAW and replaced (data-iw-fantasy-lead).
+   ::first-letter takes the whole emoji, variation selector included
+   (measured in Chromium 2026-10-16), and leaves the text node untouched.
+   Only block containers and flex items get a first letter. letter-spacing
+   is inherited as a LENGTH (an em of the parent), so it must be zeroed too
+   or an uppercase label keeps a 0.7px sliver of the emoji. */
+:is(:root,#iwf) [data-iw-fantasy-lead="icon"]::first-letter { font-size: 0; letter-spacing: 0; }
+
+/* ── tabs: square medallion tiles ─────────────────────────────────────── */
+
+/* The Toolkit's collapsed skill card (idleWorlds-game-sprites-BC index.html,
+   `.cp-skills.collapsed .cp-skill`), rebuilt over the game's tab: a square
+   tile, the discipline icon on a dark disc inside a conic XP ring, the
+   level plaque hung from the ring's foot, the name below. Tints are the
+   Toolkit's --sk-* colours, so the two read as one family.
+
+   The ring IS the game's bar: data-iw-fantasy-pct copies the bar's inline
+   width (skills/index.js), and the bar itself hides only while that copy
+   exists, so a tab the pass could not read keeps the game's bar.
+
+   Sizes scale with the tab strip (a size container), not the viewport: the
+   strip is 636px on desktop and ~330px on a phone, five tiles across both. */
+:is(:root,#iwf) [data-iw-fantasy-skill="combat"] { --iwf-tint: #e4574f; }
+:is(:root,#iwf) [data-iw-fantasy-skill="mining"] { --iwf-tint: #8fa4c0; }
+:is(:root,#iwf) [data-iw-fantasy-skill="smithing"] { --iwf-tint: #f0793f; }
+:is(:root,#iwf) [data-iw-fantasy-skill="gathering"] { --iwf-tint: #6dd48a; }
+:is(:root,#iwf) [data-iw-fantasy-skill="alchemy"] { --iwf-tint: #57c6cf; }
+:is(:root,#iwf) [data-iw-fantasy-skill="jewelcrafting"] { --iwf-tint: #62d0e8; }
+:is(:root,#iwf) [data-iw-fantasy-skill="spellcrafting"] { --iwf-tint: #b492ea; }
+:is(:root,#iwf) [data-iw-fantasy-skill="tailoring"] { --iwf-tint: #e88fb8; }
+:is(:root,#iwf) [data-iw-fantasy-skill="woodcutting"] { --iwf-tint: #c99a63; }
+:is(:root,#iwf) [data-iw-fantasy-skill="construction"] { --iwf-tint: #9aa7b8; }
+
+/* The painted medallions: assets/skills_icons_atlas.webp, the Toolkit's own
+   atlas byte for byte (6 x 2 cells of 112px; skills_icons_index.json), so
+   the window is 600% 200% at col x 20%, row x 100%. Woodcutting and
+   Construction are not in that atlas: Curtis painted them on 2026-10-16
+   (assets/skills-medallions/<skill>-v1.png, 1254px sources, not shipped)
+   and they ship as 224px WebPs, a whole image each, sized to the atlas
+   cells' fill. The default below (line icon on a dark disc) is only for a
+   discipline that has no medallion at all. */
+:is(:root,#iwf) [data-iw-fantasy-skill] {
+  --iwf-medal: var(--iwf-skill-icon) center / 54% auto no-repeat, radial-gradient(circle at 50% 38%, #221e17, #0a0a08 72%);
+}
+:is(:root,#iwf) [data-iw-fantasy-skill="combat"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 0% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) [data-iw-fantasy-skill="mining"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 20% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) [data-iw-fantasy-skill="smithing"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 40% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) [data-iw-fantasy-skill="gathering"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 60% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) [data-iw-fantasy-skill="alchemy"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 80% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) [data-iw-fantasy-skill="jewelcrafting"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 100% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) [data-iw-fantasy-skill="spellcrafting"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 0% 100% / 600% 200% no-repeat; }
+:is(:root,#iwf) [data-iw-fantasy-skill="tailoring"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 20% 100% / 600% 200% no-repeat; }
+:is(:root,#iwf) [data-iw-fantasy-skill="woodcutting"] { --iwf-medal: url('../assets/skills-medallions/woodcutting.webp') center / 100% 100% no-repeat; }
+:is(:root,#iwf) [data-iw-fantasy-skill="construction"] { --iwf-medal: url('../assets/skills-medallions/construction.webp') center / 100% 100% no-repeat; }
+
+:is(:root,#iwf) .iw-skill-tabs {
+  container-type: inline-size;
+  gap: 8px;
+}
+:is(:root,#iwf) .iw-skill-tab {
+  --iwf-tint-on: var(--iwf-tint, var(--iwf-accent));
+  --iwf-med: clamp(32px, 7.4cqw, 50px);
+  --iwf-ring-gap: clamp(3px, 1cqw, 6px);
+  --iwf-ring-w: clamp(3px, .65cqw, 4px);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "icon" "lv" "name" "bar";
+  grid-template-rows: auto auto auto auto;
+  justify-items: center;
+  align-content: center;
+  aspect-ratio: 1 / 1;
+  gap: 0;
+  padding: clamp(5px, 1.6cqw, 12px) clamp(2px, .9cqw, 6px) clamp(4px, 1.3cqw, 10px);
+  text-align: center;
+  border-radius: 5px;
+  border: 1px solid var(--iwf-edge);
+  background:
+    radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--iwf-tint-on) 16%, transparent), transparent 62%),
+    var(--iwf-ground), url('../assets/skills_panel_texture.webp') center / cover;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,235,190,.05), 0 3px 10px rgba(0,0,0,.25);
+}
+/* The forged gold hairline across the top. */
+:is(:root,#iwf) .iw-skill-tab::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--iwf-tint-on) 55%, var(--iwf-brass)) 50%, transparent);
+  opacity: .7;
+}
+:is(:root,#iwf) .iw-skill-tab:hover {
+  border-color: color-mix(in srgb, var(--iwf-tint-on) 45%, var(--iwf-edge));
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.7), inset 0 0 22px color-mix(in srgb, var(--iwf-tint-on) 10%, transparent), 0 4px 14px rgba(0,0,0,.35);
+}
+:is(:root,#iwf) .iw-skill-tab:focus-visible { outline: 2px solid var(--iwf-accent); outline-offset: 2px; }
+/* Active (rule 5): the theme accent frames it, the tint floods it, and
+   its ring glows brighter than the rest. */
+:is(:root,#iwf) .iw-skill-tab.is-active {
+  border-color: var(--iwf-accent);
+  background:
+    radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--iwf-tint-on) 30%, transparent), transparent 66%),
+    var(--iwf-ground), url('../assets/skills_panel_texture.webp') center / cover;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--iwf-accent) 40%, transparent), 0 0 14px -5px var(--iwf-accent);
+}
+
+/* The medallion and its ring. */
+:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon {
+  grid-area: icon;
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: var(--iwf-med);
+  height: var(--iwf-med);
+  margin: var(--iwf-ring-gap);
+  border-radius: 50%;
+  font-size: 0;
+  color: transparent;
+  background: var(--iwf-medal);
+  box-shadow: 0 3px 9px rgba(0,0,0,.55);
+  opacity: 1;
+  filter: none;
+}
+:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon::after {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--iwf-ring-gap));
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(color-mix(in srgb, var(--iwf-tint-on) 78%, #fff) 0 var(--iwf-pct, 0%), #2a241b var(--iwf-pct, 0%) 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--iwf-ring-w)), #000 calc(100% - var(--iwf-ring-w) + .5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--iwf-ring-w)), #000 calc(100% - var(--iwf-ring-w) + .5px));
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--iwf-tint-on) 55%, transparent));
+  opacity: .8;
+}
+:is(:root,#iwf) .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon::after,
+:is(:root,#iwf) .iw-skill-tab:hover[data-iw-fantasy-skill] .iw-skill-tab-icon::after { opacity: 1; }
+:is(:root,#iwf) .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon { box-shadow: 0 3px 9px rgba(0,0,0,.55), 0 0 16px -2px color-mix(in srgb, var(--iwf-tint-on) 60%, transparent); }
+
+/* The level plaque, hung from the ring's foot. */
+:is(:root,#iwf) .iw-skill-tab-lv {
+  grid-area: lv;
+  position: relative;
+  z-index: 2;
+  min-width: clamp(24px, 6cqw, 38px);
+  margin-top: calc(-1 * var(--iwf-ring-gap) - clamp(4px, 1.2cqw, 8px));
+  padding: 1px clamp(3px, 1cqw, 7px) 2px;
+  border: 1px solid color-mix(in srgb, var(--iwf-brass) 55%, #3a3226);
+  border-radius: 4px 4px 9px 9px;
+  background: linear-gradient(#1b1812, #0b0c0e);
+  box-shadow: inset 0 0 0 2px #1d1a14, 0 2px 4px rgba(0,0,0,.6);
+  font-size: clamp(9.5px, 1.95cqw, 12.5px);
+  line-height: 1.15;
+  color: var(--iwf-text-hi);
+}
+:is(:root,#iwf) .iw-skill-tab.is-active .iw-skill-tab-lv { border-color: var(--iwf-accent); color: #fff; }
+
+:is(:root,#iwf) .iw-skill-tab-name {
+  grid-area: name;
+  max-width: 100%;
+  margin-top: clamp(3px, 1cqw, 7px);
+  font-family: var(--iw-font-head, serif);
+  font-size: clamp(8px, 1.72cqw, 11px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--iwf-tint-on) 45%, var(--iwf-text-dim));
+  text-shadow: 0 1px 0 #000;
+}
+:is(:root,#iwf) .iw-skill-tab.is-active .iw-skill-tab-name { color: color-mix(in srgb, var(--iwf-tint-on) 62%, var(--iwf-text-hi)); }
+
+/* The game's bar: the ring carries it while the pass has a reading. */
+:is(:root,#iwf) .iw-skill-tab-bar {
+  grid-area: bar;
+  width: 80%;
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 1px;
+  background: #000a;
+}
+:is(:root,#iwf) .iw-skill-tab-bar > span { background: linear-gradient(90deg, var(--iwf-brass), var(--iwf-accent)); }
+:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-pct][data-iw-fantasy-skill] .iw-skill-tab-bar { display: none; }
+
+/* The live dot is state ("Running now"): it keeps the game's green. */
+:is(:root,#iwf) .iw-skill-tab-live {
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+  background: var(--iwf-running);
+  box-shadow: 0 0 0 1px #000, 0 0 6px var(--iwf-running);
+}
+
+/* ── the sheet: ONE frame ────────────────────────────────────────────── */
+
+/* The game stacks head, zone banner, group heads and rows as separate
+   rounded cards with 6-10px gaps between them. Fantasy draws the sheet
+   itself as the only frame and turns every child into a band inside it:
+   a brass section divider between head / banner / list, quieter rule lines
+   between groups and between rows. Every layout the game renders reads the
+   same way, because the rules key on the sheet's children and on row /
+   group adjacency, never on which skill it is: a grouped list (Smithing),
+   a flat list (Alchemy), a single row (Woodcutting), with or without the
+   zone banner, with detail / lock / gear / warn lines or none.
+
+   No overflow clip on the frame (the head's XP chip pops a tooltip), so
+   the last band rounds its own foot instead. */
+:is(:root,#iwf) .iw-skill-sheet {
+  --iwf-sheet-r: 8px;
+  --iwf-pad-x: 16px;
+  --iwf-indent: 34px;
+  --iwf-divider: linear-gradient(90deg, transparent, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 14%, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 86%, transparent);
+  --iwf-rule: var(--iw-th-rule-soft, rgba(255,255,255,.06));
+  gap: 0;
+  border-radius: var(--iwf-sheet-r);
+  border: 1px solid var(--iwf-edge-mid);
+  background: var(--iwf-ground), url('../assets/skills_panel_texture.webp') center / cover;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,235,190,.05), 0 6px 18px -10px #000;
+}
+/* Section dividers: between head, banner, list and an empty note. */
+:is(:root,#iwf) .iw-skill-sheet > * + * {
+  border-style: solid;
+  border-width: 1px 0 0;
+  border-image: var(--iwf-divider) 1;
+}
+
+/* ── sheet head ───────────────────────────────────────────────────────── */
+
+:is(:root,#iwf) .iw-ss-head {
+  gap: 14px;
+  padding: 14px var(--iwf-pad-x) 13px;
+  border: 0;
+  border-radius: calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px) 0 0;
+  background:
+    radial-gradient(ellipse 60% 120% at 0 0, color-mix(in srgb, var(--iwf-tint, var(--iw-th-edge, #6b5d3d)) 16%, transparent), transparent 70%),
+    linear-gradient(180deg, rgba(255,235,190,.025), transparent);
+  box-shadow: none;
+}
+:is(:root,#iwf) .iw-skill-sheet > .iw-ss-head:last-child { border-radius: calc(var(--iwf-sheet-r) - 1px); }
+/* The medallion: the discipline's painted medallion (square art, square box). */
+:is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon {
+  flex: 0 0 auto;
+  width: 54px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  font-size: 0;
+  color: transparent;
+  background: var(--iwf-medal);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.7)) drop-shadow(0 0 10px color-mix(in srgb, var(--iwf-tint, transparent) 22%, transparent));
+}
+:is(:root,#iwf) .iw-ss-name { gap: 6px 10px; }
+:is(:root,#iwf) .iw-ss-name > span:first-child {
+  font-family: var(--iw-font-head, serif);
+  font-size: 18px;
+  letter-spacing: .04em;
+  color: var(--iwf-text-hi);
+  text-shadow: 0 1px 0 #000, 0 0 12px color-mix(in srgb, var(--iwf-tint, transparent) 25%, transparent);
+}
+:is(:root,#iwf) .iw-ss-level {
+  border-radius: 3px;
+  border-color: color-mix(in srgb, var(--iwf-brass) 70%, transparent);
+  background: linear-gradient(180deg, #221c12, #120f0a);
+  color: color-mix(in srgb, var(--iwf-brass) 55%, #fff1d2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  font-variant-numeric: tabular-nums;
+}
+/* Boosted levels read green in the game: kept. */
+:is(:root,#iwf) .iw-ss-boost { color: #86efac; }
+/* The XP bar takes the discipline's tint, as the tab's ring does, over a
+   brass-edged track so a near-empty bar still reads as a bar. */
+:is(:root,#iwf) .iw-ss-xpbar {
+  height: 7px;
+  margin-top: 8px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #050506, #111013);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--iwf-brass) 22%, transparent), inset 0 1px 2px #000;
+}
+:is(:root,#iwf) .iw-ss-xpbar > span {
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.28), transparent 55%),
+    linear-gradient(90deg, color-mix(in srgb, var(--iwf-tint, var(--iwf-brass)) 55%, #2a2118), color-mix(in srgb, var(--iwf-tint, var(--iwf-accent)) 80%, #fff));
+  box-shadow: 0 0 6px -1px color-mix(in srgb, var(--iwf-tint, var(--iwf-accent)) 70%, transparent);
+}
+:is(:root,#iwf) .iw-ss-sub {
+  margin-top: 6px;
+  color: var(--iwf-text-dim);
+  font-family: var(--iw-font-flav, var(--iw-font-ui, inherit));
+}
+
+/* ── zone banner: a band, still state by hue ──────────────────────────── */
+
+/* Up = sky, down = orange (rule 5): the game's own tinted fill stays, and a
+   rail of the same hue replaces its rounded border. */
+:is(:root,#iwf) .iw-ss-zone {
+  --iwf-zone: rgba(56,189,248,.75);
+  gap: 12px;
+  padding: 12px var(--iwf-pad-x);
+  border: 0;
+  border-radius: 0;
+  box-shadow: inset 3px 0 0 var(--iwf-zone);
+}
+:is(:root,#iwf) .iw-ss-zone.is-down { --iwf-zone: rgba(251,146,60,.75); }
+:is(:root,#iwf) .iw-ss-banner > .iw-ss-zone { padding-right: calc(var(--iwf-pad-x) + 26px); }
+:is(:root,#iwf) .iw-skill-sheet > .iw-ss-zone:last-child,
+:is(:root,#iwf) .iw-skill-sheet > .iw-ss-banner:last-child > .iw-ss-zone { border-radius: 0 0 calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px); }
+:is(:root,#iwf) .iw-ss-zone-text { line-height: 1.45; }
+:is(:root,#iwf) .iw-ss-zone-text small { margin-top: 2px; }
+:is(:root,#iwf) .iw-ss-zone-go {
+  border-radius: 4px;
+  border-color: color-mix(in srgb, var(--iwf-zone) 85%, #000) !important;
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--iwf-zone) 38%, #0d1418), color-mix(in srgb, var(--iwf-zone) 18%, #070a0c)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 -2px 0 rgba(0,0,0,.4), 0 2px 6px -3px #000 !important;
+  text-shadow: 0 1px 0 #000;
+}
+:is(:root,#iwf) .iw-ss-zone-go:hover {
+  border-color: var(--iwf-zone) !important;
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--iwf-zone) 52%, #0d1418), color-mix(in srgb, var(--iwf-zone) 26%, #070a0c)) !important;
+}
+:is(:root,#iwf) .iw-ss-zone-go:focus-visible,
+:is(:root,#iwf) .iw-ss-x:focus-visible { outline: 2px solid var(--iwf-accent); outline-offset: 2px; }
+/* Dismiss: a quiet glyph, not a second button plate. */
+:is(:root,#iwf) .iw-ss-x {
+  top: 8px;
+  right: 8px;
+  border-radius: 4px;
+  border-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+:is(:root,#iwf) .iw-ss-x:hover { border-color: rgba(255,255,255,.12) !important; }
+
+/* ── list: groups and rows as bands ───────────────────────────────────── */
+
+:is(:root,#iwf) .iw-ss-rows { gap: 0; }
+:is(:root,#iwf) .iw-ss-group { gap: 0; }
+:is(:root,#iwf) .iw-ss-group + .iw-ss-group,
+:is(:root,#iwf) .iw-ss-group + .iw-ss-row,
+:is(:root,#iwf) .iw-ss-row + .iw-ss-group { border-top: 1px solid var(--iwf-rule); }
+
+:is(:root,#iwf) .iw-ss-group-head {
+  gap: 10px;
+  padding: 10px var(--iwf-pad-x);
+  border-radius: 0;
+  border: 0 !important;
+  background-image: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.24)) !important;
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--iwf-brass) 45%, transparent) !important;
+  font-family: var(--iw-font-head, serif);
+  font-size: 11.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--iwf-text);
+}
+:is(:root,#iwf) .iw-ss-group-head:hover {
+  background-image: linear-gradient(90deg, color-mix(in srgb, var(--iwf-brass) 10%, transparent), transparent 70%), linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.24)) !important;
+  box-shadow: inset 2px 0 0 var(--iwf-brass) !important;
+  color: var(--iwf-text-hi);
+}
+:is(:root,#iwf) .iw-ss-group-head:focus-visible { outline: 2px solid var(--iwf-accent); outline-offset: -2px; }
+/* Open (rule 5): accent rail, bright label, and a rule under the head so
+   the rows below read as its own. */
+:is(:root,#iwf) .iw-ss-group.is-open > .iw-ss-group-head {
+  background-image: linear-gradient(90deg, color-mix(in srgb, var(--iwf-accent) 14%, transparent), transparent 65%), linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.24)) !important;
+  box-shadow: inset 3px 0 0 var(--iwf-accent), inset 0 -1px 0 var(--iwf-rule) !important;
+  color: var(--iwf-text-hi);
+}
+:is(:root,#iwf) .iw-ss-caret { width: 10px; text-align: center; color: var(--iwf-brass); }
+:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-caret { color: var(--iwf-accent); transform: rotate(90deg); }
+:is(:root,#iwf) .iw-ss-group-count {
+  padding: 1px 8px;
+  border: 1px solid var(--iwf-edge-faint);
+  border-radius: 999px;
+  background: rgba(0,0,0,.3);
+  font-family: var(--iw-font-ui, inherit);
+  font-size: 10.5px;
+  letter-spacing: .02em;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--iwf-text-dim);
+}
+:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-group-count { border-color: color-mix(in srgb, var(--iwf-accent) 35%, var(--iwf-edge-faint)); color: var(--iwf-text); }
+/* A closed last group rounds the frame's foot. */
+:is(:root,#iwf) .iw-skill-sheet > .iw-ss-rows:last-child > .iw-ss-group:last-child:not(.is-open) > .iw-ss-group-head { border-radius: 0 0 calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px); }
+
+/* Rows. The left rail is the row's state (rule 5): transparent when plain,
+   accent when best, green when running; a rule line divides neighbours. */
+:is(:root,#iwf) .iw-ss-row {
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px var(--iwf-pad-x) 10px calc(var(--iwf-pad-x) - 3px);
+  border-radius: 0;
+  border: 0 solid transparent;
+  border-left-width: 3px;
+  background: transparent;
+  box-shadow: none;
+}
+:is(:root,#iwf) .iw-ss-row + .iw-ss-row { border-top: 1px solid var(--iwf-rule); }
+/* Inside a group the rows sit a step in, under the group's label. */
+:is(:root,#iwf) .iw-ss-group > .iw-ss-rows > .iw-ss-row {
+  padding-left: calc(var(--iwf-indent) - 3px);
+  background: linear-gradient(180deg, rgba(0,0,0,.14), rgba(0,0,0,.06));
+}
+:is(:root,#iwf) .iw-ss-row:hover { background: linear-gradient(90deg, rgba(255,235,190,.035), transparent 70%); }
+:is(:root,#iwf) .iw-ss-row.is-best {
+  border-left-color: var(--iwf-accent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--iwf-accent) 13%, transparent), transparent 60%);
+}
+:is(:root,#iwf) .iw-ss-row.is-running {
+  border-left-color: var(--iwf-running);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--iwf-running) 14%, transparent), transparent 65%);
+  box-shadow: inset 0 0 18px -12px var(--iwf-running);
+}
+:is(:root,#iwf) .iw-ss-row.is-locked { opacity: .55; filter: saturate(.4); }
+/* The very last row rounds the frame's foot. */
+:is(:root,#iwf) .iw-skill-sheet > .iw-ss-rows:last-child > .iw-ss-row:last-child,
+:is(:root,#iwf) .iw-skill-sheet > .iw-ss-rows:last-child > .iw-ss-group:last-child > .iw-ss-rows > .iw-ss-row:last-child {
+  border-bottom-left-radius: calc(var(--iwf-sheet-r) - 1px);
+  border-bottom-right-radius: calc(var(--iwf-sheet-r) - 1px);
+}
+
+:is(:root,#iwf) .iw-ss-rowname { gap: 4px 10px; color: var(--iwf-text-hi); }
+:is(:root,#iwf) .iw-ss-link { text-decoration-color: color-mix(in srgb, var(--iwf-brass) 55%, transparent); }
+:is(:root,#iwf) .iw-ss-link:hover { color: #fff; text-decoration-color: var(--iwf-accent); }
+:is(:root,#iwf) .iw-ss-xp { font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--iwf-brass) 65%, #fff1d2); }
+:is(:root,#iwf) .iw-ss-badge {
+  align-self: center;
+  border-radius: 2px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--iwf-accent) 85%, #fff), var(--iwf-accent));
+  color: #170f05;
+  box-shadow: 0 0 8px -2px var(--iwf-accent);
+}
+:is(:root,#iwf) :is(.iw-ss-detail, .iw-ss-lock, .iw-ss-gear, .iw-ss-warn) { margin-top: 4px; line-height: 1.35; }
+:is(:root,#iwf) .iw-ss-detail { color: var(--iwf-text-dim); }
+:is(:root,#iwf) .iw-ss-lock { color: #fca5a5; }
+:is(:root,#iwf) .iw-ss-gear { color: #a5b4fc; }
+:is(:root,#iwf) .iw-ss-warn { color: #fcd34d; }
+:is(:root,#iwf) .iw-ss-running { min-width: 84px; text-align: center; color: #6ee7b7; text-shadow: 0 0 8px rgba(52,211,153,.45); font-variant-numeric: tabular-nums; }
+:is(:root,#iwf) .iw-ss-empty { padding: 12px var(--iwf-pad-x); color: var(--iwf-text-dim); font-style: italic; }
+
+/* A phone column: less frame padding, a smaller indent, and the banner's
+   button drops under its text rather than squeezing it. */
+@media (max-width: 480px) {
+  :is(:root,#iwf) .iw-skill-sheet { --iwf-pad-x: 12px; --iwf-indent: 22px; }
+  :is(:root,#iwf) .iw-ss-head { gap: 10px; }
+  :is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon { width: 44px; }
+  :is(:root,#iwf) .iw-ss-zone { flex-wrap: wrap; row-gap: 8px; }
+  :is(:root,#iwf) .iw-ss-zone-text { flex: 1 1 calc(100% - 48px); }
+  :is(:root,#iwf) .iw-ss-zone-go { margin-left: auto; }
+  :is(:root,#iwf) .iw-ss-running { min-width: 64px; }
+}
+
+/* The material's real item sprite in place of its emoji, at inventory size
+   (--iwf-item, see the root block) and leading the ROW: the line's
+   ::before is placed against .iw-ss-main, centred on the name + detail
+   pair, rather than squeezed into the detail line's text. Absolutely
+   placed, so it is never the line's ::first-letter. Every row in a list
+   that shows a material icon keeps the icon's column, so names stay in one
+   line down the list whether or not a row has a sprite (a multi-item line
+   keeps its emoji and no sprite). */
+:is(:root,#iwf) .iw-ss-main:has(> .iw-ss-detail[data-iw-fantasy-icon]) {
+  position: relative;
+  min-height: var(--iwf-item);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+:is(:root,#iwf) .iw-ss-rows:has(> .iw-ss-row > .iw-ss-main > .iw-ss-detail[data-iw-fantasy-icon]) > .iw-ss-row > .iw-ss-main {
+  padding-left: calc(var(--iwf-item) + 12px);
+}
+:is(:root,#iwf) .iw-ss-detail[data-iw-fantasy-icon]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: var(--iwf-item);
+  height: var(--iwf-item);
+  transform: translateY(-50%);
+  pointer-events: none;
+  background-image: var(--iwf-sprite-img);
+  background-size: var(--iwf-sprite-size);
+  background-position: var(--iwf-sprite-pos);
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.75));
+}
+
+/* ── start button ─────────────────────────────────────────────────────── */
+
+:is(:root,#iwf) .iw-ss-start {
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--iw-th-cta, #c9852f) 75%, #000) !important;
+  background-image: linear-gradient(180deg,
+      color-mix(in srgb, var(--iw-th-cta-hi, #e6a24a) 42%, #1a140c),
+      color-mix(in srgb, var(--iw-th-cta, #c9852f) 26%, #0c0a07)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 -2px 0 rgba(0,0,0,.45), 0 2px 6px -3px #000 !important;
+  color: #fff4dc;
+  font-family: var(--iw-font-head, serif);
+  font-size: 11.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #000;
+}
+:is(:root,#iwf) .iw-ss-start:hover:not(:disabled) {
+  border-color: var(--iw-th-cta-hi, #e6a24a) !important;
+  background-image: linear-gradient(180deg,
+      color-mix(in srgb, var(--iw-th-cta-hi, #e6a24a) 58%, #1a140c),
+      color-mix(in srgb, var(--iw-th-cta, #c9852f) 36%, #0c0a07)) !important;
+}
+:is(:root,#iwf) .iw-ss-start:focus-visible { outline: 2px solid var(--iwf-accent); outline-offset: 2px; }
+:is(:root,#iwf) .iw-ss-start:disabled {
+  border-color: var(--iwf-edge-faint) !important;
+  background-image: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.25)) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,.38);
+  text-shadow: none;
+}

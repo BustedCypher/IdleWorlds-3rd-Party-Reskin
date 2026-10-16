@@ -15,8 +15,8 @@
   // src/skins/legacy/modules/Runtime.js
   var hasChrome = typeof chrome !== "undefined" && !!chrome.runtime?.id;
   var runtimeActive = true;
-  function setRuntimeActive(active3) {
-    runtimeActive = active3 !== false;
+  function setRuntimeActive(active5) {
+    runtimeActive = active5 !== false;
   }
   function isRuntimeActive() {
     return runtimeActive;
@@ -75,21 +75,21 @@
     const detail = err && err.message ? err.message : err;
     console.warn(`[IW Fantasy Skin] ${key}:`, detail);
   }
-  function guard(label5, fn) {
+  function guard(label6, fn) {
     if (!runtimeActive) return false;
     try {
       fn();
       return true;
     } catch (err) {
-      warnOnce(`guard:${label5}`, err);
+      warnOnce(`guard:${label6}`, err);
       return false;
     }
   }
-  function guardEach(label5, items, fn) {
+  function guardEach(label6, items, fn) {
     if (!runtimeActive) return 0;
     let ok = 0;
     for (const item of items || []) {
-      if (guard(label5, () => fn(item))) ok += 1;
+      if (guard(label6, () => fn(item))) ok += 1;
     }
     return ok;
   }
@@ -130,9 +130,9 @@
     if (!enabled3 || !root) return Promise.resolve({ state: "disabled", waitedMs: 0 });
     const started = performance.now();
     return new Promise((resolve2) => {
-      const finish = (state2) => {
+      const finish = (state3) => {
         if (root.hasAttribute(HYDRATION_ATTR)) root.removeAttribute(HYDRATION_ATTR);
-        resolve2({ state: state2, waitedMs: Math.round(performance.now() - started) });
+        resolve2({ state: state3, waitedMs: Math.round(performance.now() - started) });
       };
       const poll = () => {
         const value = root.getAttribute(HYDRATION_ATTR);
@@ -220,14 +220,14 @@
     fishing: ["fishing"],
     locked: ["coming soon", "upcoming skill"]
   };
-  function skillIdentitySignals(panel2) {
+  function skillIdentitySignals(panel3) {
     const signals = /* @__PURE__ */ new Set();
-    for (const el2 of panel2.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span,p,strong')) {
+    for (const el2 of panel3.querySelectorAll('h1,h2,h3,h4,[class*="skill-name"],div,span,p,strong')) {
       if (el2.closest("button,a")) continue;
       const explicitHeading = /^H[1-4]$/.test(el2.tagName) || /skill-name/i.test(String(el2.className || ""));
       if (!explicitHeading && el2.childElementCount) continue;
-      const text = normaliseSkillSignal(el2.textContent).replace(/^[^a-z0-9]+/i, "");
-      if (text && text.length <= 32) signals.add(text);
+      const text2 = normaliseSkillSignal(el2.textContent).replace(/^[^a-z0-9]+/i, "");
+      if (text2 && text2.length <= 32) signals.add(text2);
     }
     return [...signals];
   }
@@ -237,49 +237,49 @@
     }
     return null;
   }
-  function lockedCopySignal(panel2) {
+  function lockedCopySignal(panel3) {
     let hasLabel = false;
     let hasUnlock = false;
-    for (const el2 of panel2.querySelectorAll("div,span,p,strong")) {
-      const text = normaliseSkillSignal(el2.textContent);
-      if (!text || text.length > 96) continue;
-      if (text.includes("coming soon") || text.includes("upcoming skill")) hasLabel = true;
-      if (text.includes("unlock in a future update")) hasUnlock = true;
+    for (const el2 of panel3.querySelectorAll("div,span,p,strong")) {
+      const text2 = normaliseSkillSignal(el2.textContent);
+      if (!text2 || text2.length > 96) continue;
+      if (text2.includes("coming soon") || text2.includes("upcoming skill")) hasLabel = true;
+      if (text2.includes("unlock in a future update")) hasUnlock = true;
     }
     return hasLabel && hasUnlock;
   }
-  function skillSignature(panel2) {
-    const buttonEls = [...panel2.querySelectorAll("button")];
+  function skillSignature(panel3) {
+    const buttonEls = [...panel3.querySelectorAll("button")];
     const buttons = buttonEls.map((btn) => normaliseSkillSignal(btn.textContent));
-    const identities = skillIdentitySignals(panel2);
-    const lockedCopy = lockedCopySignal(panel2);
+    const identities = skillIdentitySignals(panel3);
+    const lockedCopy = lockedCopySignal(panel3);
     const sig = JSON.stringify([buttons, identities, lockedCopy]);
     return { sig, buttonEls, buttons, identities, lockedCopy };
   }
-  function detectSkillTypeCached(panel2) {
-    const computed = skillSignature(panel2);
-    const hit = skillTypeCache.get(panel2);
+  function detectSkillTypeCached(panel3) {
+    const computed = skillSignature(panel3);
+    const hit = skillTypeCache.get(panel3);
     if (hit && hit.sig === computed.sig) return hit.type;
-    const type = detectSkillType(panel2, computed);
-    skillTypeCache.set(panel2, { sig: computed.sig, type });
+    const type = detectSkillType(panel3, computed);
+    skillTypeCache.set(panel3, { sig: computed.sig, type });
     return type;
   }
-  function isGuildSurface(panel2) {
+  function isGuildSurface(panel3) {
     if (/^\/guild(?:\/|$)/i.test(location.pathname || "")) return true;
-    if (panel2.closest(".raid-battle-backdrop")) return true;
-    const host = panel2.parentElement?.closest(".panel");
+    if (panel3.closest(".raid-battle-backdrop")) return true;
+    const host = panel3.parentElement?.closest(".panel");
     const heading = host?.querySelector("h1,h2,h3");
     return !!heading && /^raid dungeon$/i.test(normaliseSkillSignal(heading.firstElementChild?.textContent || heading.textContent).replace(/^[^a-z0-9]+/i, ""));
   }
-  function detectSkillType(panel2, precomputed) {
+  function detectSkillType(panel3, precomputed) {
     const { buttonEls, buttons, identities: labels, lockedCopy } = precomputed;
     const actionTexts = buttons.filter(Boolean);
-    const hasAction = (...names) => actionTexts.some((text) => names.includes(text));
-    const hasTurnInOrSkip = actionTexts.some((text) => /^turn in$/.test(text) || /^skip(?:\s*\(\d+\))?$/.test(text));
-    if (hasTurnInOrSkip && [...panel2.querySelectorAll("p,div,span")].some((el2) => /^reward\s*:/i.test(el2.textContent.trim()))) {
+    const hasAction = (...names) => actionTexts.some((text2) => names.includes(text2));
+    const hasTurnInOrSkip = actionTexts.some((text2) => /^turn in$/.test(text2) || /^skip(?:\s*\(\d+\))?$/.test(text2));
+    if (hasTurnInOrSkip && [...panel3.querySelectorAll("p,div,span")].some((el2) => /^reward\s*:/i.test(el2.textContent.trim()))) {
       return "unknown";
     }
-    if (isGuildSurface(panel2)) return "unknown";
+    if (isGuildSurface(panel3)) return "unknown";
     if (!buttonEls.length) return "unknown";
     if (hasAction("fight")) return "combat";
     if (hasAction("mine")) return "mining";
@@ -407,7 +407,7 @@
     flushQueued = false;
     const { inventory, skills, bgRoots, nameRoots } = drainGlobalBudget(FLUSH_BUDGET);
     guardEach("emit:inventory-row", inventory, (row) => emit("iw:inventory-row", { row, reason: "reconcile" }));
-    guardEach("emit:skill-panel", skills, (panel2) => emit("iw:skill-panel", { panel: panel2, skill: detectSkillTypeCached(panel2), reason: "reconcile" }));
+    guardEach("emit:skill-panel", skills, (panel3) => emit("iw:skill-panel", { panel: panel3, skill: detectSkillTypeCached(panel3), reason: "reconcile" }));
     if (bgRoots.length) guard("emit:dom-flush", () => emit("iw:dom-flush", { roots: bgRoots }));
     if (nameRoots.length) guard("emit:name-scan-flush", () => emit("iw:name-scan-flush", { roots: nameRoots }));
     if (pendingTextParents.size) {
@@ -565,8 +565,8 @@
   var OF_SUFFIX = /\s+of\s+.+$/i;
   var PREFIX_AFFIX = /^(gilded|fortunate|enchanted|nimble|sturdy|keen|blessed|arcane|savage|swift|mighty|precise|reinforced|masterwork|superior|pristine)\s+/i;
   var normalise = normaliseItemName;
-  function parseCSV(text) {
-    const clean = String(text || "").replace(/^﻿/, "");
+  function parseCSV(text2) {
+    const clean = String(text2 || "").replace(/^﻿/, "");
     const lines = clean.replace(/\r\n/g, "\n").split("\n").filter(Boolean);
     if (!lines.length) return { headers: [], rows: [] };
     const headers = splitCSVLine(lines[0]).map((h) => h.trim());
@@ -710,9 +710,9 @@
         cell: manifest.cell_size || 128
       };
       this._gearByName = /* @__PURE__ */ new Map();
-      for (const icon3 of manifest.icons) {
-        const key = normalise(icon3.name);
-        if (key) this._gearByName.set(key, icon3);
+      for (const icon4 of manifest.icons) {
+        const key = normalise(icon4.name);
+        if (key) this._gearByName.set(key, icon4);
       }
       const sample = manifest.icons[0] || {};
       if (!Number.isFinite(Number(sample.x)) || !Number.isFinite(Number(sample.y))) {
@@ -772,19 +772,19 @@
         if (!atlas.atlas || !(width > 0) || !(height > 0)) throw new Error(`Raid atlas ${raid} has no size`);
         atlases[raid] = { url: assetUrl(atlas.atlas), width, height };
       }
-      const byId = /* @__PURE__ */ new Map();
-      const byName = /* @__PURE__ */ new Map();
+      const byId2 = /* @__PURE__ */ new Map();
+      const byName2 = /* @__PURE__ */ new Map();
       for (const item of index.items) {
         const atlas = atlases[item.raid];
         const [x, y, w, h] = [item.x, item.y, item.width, item.height].map(Number);
         if (!atlas || ![x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0 || x + w > atlas.width || y + h > atlas.height) continue;
-        if (item.item_id) byId.set(String(item.item_id), item);
+        if (item.item_id) byId2.set(String(item.item_id), item);
         const key = normalise(item.name);
-        if (key && !byName.has(key)) byName.set(key, item);
+        if (key && !byName2.has(key)) byName2.set(key, item);
       }
       this._raidAtlases = atlases;
-      this._raidById = byId;
-      this._raidByName = byName;
+      this._raidById = byId2;
+      this._raidByName = byName2;
     }
     resolve(ref = {}) {
       const id = ref.id !== void 0 && ref.id !== null ? String(ref.id) : null;
@@ -807,24 +807,24 @@
       let hit = this._gearByName.get(normalise(name));
       if (hit) return { atlas: "gear", entry: hit };
       const upgradeMatch = UPGRADE_SUFFIX.exec(name);
-      const badge2 = upgradeMatch ? parseInt(upgradeMatch[0].replace(/\D/g, ""), 10) : 0;
+      const badge3 = upgradeMatch ? parseInt(upgradeMatch[0].replace(/\D/g, ""), 10) : 0;
       let stripped = name.replace(UPGRADE_SUFFIX, "").trim();
       hit = this._gearByName.get(normalise(stripped));
-      if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
+      if (hit) return { atlas: "gear", entry: hit, badge: badge3 };
       const aliased = applyCloakAlias(stripped);
       if (aliased !== stripped) {
         hit = this._gearByName.get(normalise(aliased));
-        if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
+        if (hit) return { atlas: "gear", entry: hit, badge: badge3 };
       }
       const noLevel = stripped.replace(LEVEL_SUFFIX, "").trim();
       hit = this._gearByName.get(normalise(noLevel));
-      if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
+      if (hit) return { atlas: "gear", entry: hit, badge: badge3 };
       const noSuffix = noLevel.replace(OF_SUFFIX, "").trim();
       hit = this._gearByName.get(normalise(noSuffix));
-      if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
+      if (hit) return { atlas: "gear", entry: hit, badge: badge3 };
       const noPrefix = noSuffix.replace(PREFIX_AFFIX, "").trim();
       hit = this._gearByName.get(normalise(noPrefix));
-      if (hit) return { atlas: "gear", entry: hit, badge: badge2 };
+      if (hit) return { atlas: "gear", entry: hit, badge: badge3 };
       if (!this._missingWarned.has(name)) {
         this._missingWarned.add(name);
         console.warn(`[AtlasService] No icon found for "${name}"`);
@@ -835,10 +835,10 @@
       if (!hostEl) return false;
       const result = this.resolve(ref);
       if (!result) return false;
-      const { atlas, entry: entry2, badge: badge2 } = result;
+      const { atlas, entry: entry2, badge: badge3 } = result;
       this._applySprite(hostEl, atlas, entry2);
       if (hostEl.dataset.iwAtlas !== atlas) hostEl.dataset.iwAtlas = atlas;
-      if (badge2) this._paintBadge(hostEl, badge2);
+      if (badge3) this._paintBadge(hostEl, badge3);
       else this._clearBadge(hostEl);
       return true;
     }
@@ -1122,8 +1122,8 @@
     const n = Number(value);
     return Number.isFinite(n) ? n : null;
   }
-  function effectNumber(text, pattern) {
-    const match = pattern.exec(String(text || ""));
+  function effectNumber(text2, pattern) {
+    const match = pattern.exec(String(text2 || ""));
     if (!match) return null;
     const n = Number(match[1]);
     return Number.isFinite(n) ? n : null;
@@ -1134,7 +1134,7 @@
     return effectNumber(item?.effects_raw, pattern);
   }
   function deriveDisplayStats(item) {
-    const text = item?.effects_raw || "";
+    const text2 = item?.effects_raw || "";
     return {
       atk: fieldOrEffect(item, "atk", /\bATK\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
       def: fieldOrEffect(item, "def", /\bDEF\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
@@ -1145,13 +1145,13 @@
       goldFindPct: fieldOrEffect(item, "gold_find_pct", /([+-]?\d+(?:\.\d+)?)%\s*gold\s+find\b/i),
       itemFindPct: fieldOrEffect(item, "item_find_pct", /([+-]?\d+(?:\.\d+)?)%\s*item\s+find\b/i),
       sockets: fieldOrEffect(item, "sockets", /\b(\d+)\s+Sockets?\b/i),
-      allResists: effectNumber(text, /\bAll\s+Resists?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
-      fireResist: effectNumber(text, /\bFire\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
-      frostResist: effectNumber(text, /\bFrost\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
-      lightningResist: effectNumber(text, /\bLightning\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
-      bonusBrewPct: effectNumber(text, /([+-]?\d+(?:\.\d+)?)%\s*Bonus\s+Brew\b/i),
-      bonusEnhancePct: effectNumber(text, /([+-]?\d+(?:\.\d+)?)%\s*Bonus\s+Enhance\b/i),
-      bonusEnchantPct: effectNumber(text, /([+-]?\d+(?:\.\d+)?)%\s*Bonus\s+Enchant\b/i)
+      allResists: effectNumber(text2, /\bAll\s+Resists?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+      fireResist: effectNumber(text2, /\bFire\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+      frostResist: effectNumber(text2, /\bFrost\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+      lightningResist: effectNumber(text2, /\bLightning\s+Resist(?:ance)?\s*\+?\s*(-?\d+(?:\.\d+)?)/i),
+      bonusBrewPct: effectNumber(text2, /([+-]?\d+(?:\.\d+)?)%\s*Bonus\s+Brew\b/i),
+      bonusEnhancePct: effectNumber(text2, /([+-]?\d+(?:\.\d+)?)%\s*Bonus\s+Enhance\b/i),
+      bonusEnchantPct: effectNumber(text2, /([+-]?\d+(?:\.\d+)?)%\s*Bonus\s+Enchant\b/i)
     };
   }
   var TIER_BANDS = [
@@ -1296,8 +1296,8 @@
     return ItemDatabase.find(ref);
   }
   var tooltipItems = /* @__PURE__ */ new WeakMap();
-  function registerTooltipItem(anchor3, item) {
-    tooltipItems.set(anchor3, item);
+  function registerTooltipItem(anchor4, item) {
+    tooltipItems.set(anchor4, item);
   }
   function categoryGlyph(item) {
     const category = String(item?.category || "").toLowerCase();
@@ -1420,8 +1420,8 @@
       painted
     };
   }
-  function position(anchor3) {
-    const rect = anchor3.getBoundingClientRect();
+  function position(anchor4) {
+    const rect = anchor4.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const el2 = STATE.el;
@@ -1460,8 +1460,8 @@
   function findTrigger(node2) {
     return node2 && node2.closest ? node2.closest(TRIGGER_SELECTOR) : null;
   }
-  function isVirtual(anchor3) {
-    return !!(anchor3 && anchor3.__virtual);
+  function isVirtual(anchor4) {
+    return !!(anchor4 && anchor4.__virtual);
   }
   function anchorContainsPointer() {
     if (!isVirtual(STATE.anchor)) return false;
@@ -1484,20 +1484,20 @@
   function pointerIsOnActiveSurface() {
     return !!activeSurfaceForNode(pointerNode());
   }
-  function cleanupAnchor(anchor3) {
-    if (!anchor3 || isVirtual(anchor3)) return;
-    anchor3.removeAttribute("aria-describedby");
-    anchor3.setAttribute("aria-expanded", "false");
+  function cleanupAnchor(anchor4) {
+    if (!anchor4 || isVirtual(anchor4)) return;
+    anchor4.removeAttribute("aria-describedby");
+    anchor4.setAttribute("aria-expanded", "false");
   }
-  function show(anchor3, { keyboard = false } = {}) {
-    if (!isRuntimeActive() || !STATE.el?.isConnected || !anchor3?.isConnected) return;
-    const item = isVirtual(anchor3) ? anchor3.item : findItem({
-      id: anchor3.getAttribute("data-iw-item"),
-      name: anchor3.getAttribute("data-iw-item-name")
-    }) || tooltipItems.get(anchor3);
+  function show(anchor4, { keyboard = false } = {}) {
+    if (!isRuntimeActive() || !STATE.el?.isConnected || !anchor4?.isConnected) return;
+    const item = isVirtual(anchor4) ? anchor4.item : findItem({
+      id: anchor4.getAttribute("data-iw-item"),
+      name: anchor4.getAttribute("data-iw-item-name")
+    }) || tooltipItems.get(anchor4);
     if (!item) return;
     clearShowTimer();
-    if (STATE.anchor && STATE.anchor !== anchor3) cleanupAnchor(STATE.anchor);
+    if (STATE.anchor && STATE.anchor !== anchor4) cleanupAnchor(STATE.anchor);
     const { html: html2, artHost, painted } = renderCard(item);
     STATE.el.innerHTML = html2;
     const artSlot = STATE.el.querySelector(".iw-tip-art");
@@ -1506,15 +1506,15 @@
       artHost.classList.add("iw-tip-art-painted");
       artSlot.appendChild(artHost);
     }
-    STATE.anchor = anchor3;
+    STATE.anchor = anchor4;
     STATE.keyboardOwned = keyboard;
     STATE.el.setAttribute("aria-label", `${item.name} item details`);
-    if (!isVirtual(anchor3)) {
-      anchor3.setAttribute("aria-controls", "iw-tip");
-      anchor3.setAttribute("aria-haspopup", "dialog");
-      anchor3.setAttribute("aria-expanded", "true");
+    if (!isVirtual(anchor4)) {
+      anchor4.setAttribute("aria-controls", "iw-tip");
+      anchor4.setAttribute("aria-haspopup", "dialog");
+      anchor4.setAttribute("aria-expanded", "true");
     }
-    position(anchor3);
+    position(anchor4);
     STATE.el.classList.add("is-open");
     if (keyboard) {
       try {
@@ -1535,13 +1535,13 @@
     STATE.anchor = null;
     STATE.keyboardOwned = false;
   }
-  function scheduleShow(anchor3) {
+  function scheduleShow(anchor4) {
     clearShowTimer();
     STATE.showTimer = setTimeout(() => {
       STATE.showTimer = null;
-      if (!anchor3?.isConnected) return;
-      if (!isMobile() && !anchor3.matches(":hover")) return;
-      show(anchor3);
+      if (!anchor4?.isConnected) return;
+      if (!isMobile() && !anchor4.matches(":hover")) return;
+      show(anchor4);
     }, SHOW_DELAY);
   }
   function initTooltipEngine() {
@@ -1584,10 +1584,10 @@
     });
     STATE.el.addEventListener("click", (e) => {
       if (!e.target.closest?.(".iw-tip-close")) return;
-      const anchor3 = STATE.anchor;
+      const anchor4 = STATE.anchor;
       const restoreFocus = STATE.keyboardOwned;
       hide();
-      if (restoreFocus && anchor3?.focus) anchor3.focus();
+      if (restoreFocus && anchor4?.focus) anchor4.focus();
     });
     document.addEventListener("mouseover", (e) => {
       if (!isRuntimeActive()) return;
@@ -1675,8 +1675,8 @@
     window.addEventListener("blur", hide);
     document.addEventListener("iw:dom-flush", () => {
       if (!isOpen()) return;
-      const raf2 = window.requestAnimationFrame || ((fn) => setTimeout(fn, 16));
-      raf2(() => {
+      const raf3 = window.requestAnimationFrame || ((fn) => setTimeout(fn, 16));
+      raf3(() => {
         if (!STATE.anchor?.isConnected) {
           hide();
           return;
@@ -1728,15 +1728,15 @@
   function isTooltipOpen() {
     return isOpen();
   }
-  function itemRef(nameOrItem, label5, opts = {}) {
+  function itemRef(nameOrItem, label6, opts = {}) {
     const isObj = nameOrItem && typeof nameOrItem === "object";
     const name = isObj ? nameOrItem.name : String(nameOrItem == null ? "" : nameOrItem);
     const id = isObj ? nameOrItem.item_id : null;
-    const text = opts.html != null ? opts.html : esc(label5 != null ? label5 : name);
-    if (!name && !id) return text;
+    const text2 = opts.html != null ? opts.html : esc(label6 != null ? label6 : name);
+    if (!name && !id) return text2;
     const attr = id ? `data-iw-item="${esc(id)}"` : `data-iw-item-name="${esc(name)}"`;
     const glyph = '<span class="iw-item-info" aria-hidden="true">i</span>';
-    const inner = opts.iconOnly ? glyph : `<span class="iw-item-name">${text}</span>${glyph}`;
+    const inner = opts.iconOnly ? glyph : `<span class="iw-item-name">${text2}</span>${glyph}`;
     return `<span class="iw-item-ref" role="button" tabindex="0" ${attr} aria-haspopup="dialog" aria-controls="iw-tip" aria-expanded="false" aria-label="${esc(name)}, item details">${inner}</span>`;
   }
 
@@ -1760,8 +1760,8 @@
   function buildTrie() {
     const items = ItemDatabase.all();
     if (!items.length) return null;
-    const revision = ItemDatabase.revision();
-    if (_trie && _trieRevision === revision) return _trie;
+    const revision2 = ItemDatabase.revision();
+    if (_trie && _trieRevision === revision2) return _trie;
     const root = { children: /* @__PURE__ */ new Map(), item: null };
     for (const item of items) {
       const name = item.name;
@@ -1769,7 +1769,7 @@
       insert(root, name.toLowerCase(), item);
     }
     _trie = root;
-    _trieRevision = revision;
+    _trieRevision = revision2;
     return root;
   }
   function insert(root, lowerName, item) {
@@ -1808,8 +1808,8 @@
     if (el2.closest?.(SKIP_CONTAINERS)) return true;
     return false;
   }
-  function findMatches(text, trie) {
-    const lower = text.toLowerCase();
+  function findMatches(text2, trie) {
+    const lower = text2.toLowerCase();
     const out = [];
     let i = 0;
     while (i < lower.length) {
@@ -2027,12 +2027,12 @@
     let matchedNodes = 0;
     let node2;
     while (node2 = walker.nextNode()) {
-      const text = node2.nodeValue;
-      if (!text || text.trim().length < MIN_NAME_LENGTH) {
+      const text2 = node2.nodeValue;
+      if (!text2 || text2.trim().length < MIN_NAME_LENGTH) {
         if (matchIndex.has(node2)) matchIndex.delete(node2);
         continue;
       }
-      const matches = findMatches(text, trie);
+      const matches = findMatches(text2, trie);
       if (matches.length) {
         const entry2 = matchIndex.get(node2);
         if (!entry2 || !sameMatches(entry2.matches, matches)) matchIndex.set(node2, { matches, ranges: null });
@@ -2079,37 +2079,37 @@
     return normaliseInventoryText(value).toLowerCase().replace(/[.:;,]+$/g, "").replace(/\s+/g, " ");
   }
   function splitLevelName(name) {
-    const text = normaliseInventoryText(name);
-    const m = text.match(/^(.*?)\s+lv\.?\s*(\d+)\s*$/i);
-    return m ? { full: text, base: m[1].trim(), level: m[2] } : { full: text, base: text, level: null };
+    const text2 = normaliseInventoryText(name);
+    const m = text2.match(/^(.*?)\s+lv\.?\s*(\d+)\s*$/i);
+    return m ? { full: text2, base: m[1].trim(), level: m[2] } : { full: text2, base: text2, level: null };
   }
-  function kindFor(text) {
-    if (LOADOUT.test(text)) return "loadout";
-    if (SOCKET_EFFECT.test(text)) return "socket";
-    if (DYNAMIC_EFFECT.test(text)) return "effect";
-    if (SET_STATE.test(text)) return "set";
-    if (UPGRADE_STATE.test(text)) return "status";
+  function kindFor(text2) {
+    if (LOADOUT.test(text2)) return "loadout";
+    if (SOCKET_EFFECT.test(text2)) return "socket";
+    if (DYNAMIC_EFFECT.test(text2)) return "effect";
+    if (SET_STATE.test(text2)) return "set";
+    if (UPGRADE_STATE.test(text2)) return "status";
     return "detail";
   }
-  function isNameFragment(text, nameParts) {
-    const key = compareKey(text);
+  function isNameFragment(text2, nameParts) {
+    const key = compareKey(text2);
     if (!key) return true;
     if (key === compareKey(nameParts.full) || key === compareKey(nameParts.base)) return true;
     if (nameParts.level && key === compareKey(`Lv ${nameParts.level}`)) return true;
     return false;
   }
-  function isStableStatNoise(text) {
-    if (LOADOUT.test(text) || UPGRADE_STATE.test(text) || SET_STATE.test(text)) return false;
-    if (TIER_OR_SLOT.test(text)) return true;
-    if (BASIC_STAT.test(text)) return true;
-    if (SUMMARY_STAT.test(text) && !SOCKET_EFFECT.test(text)) return true;
+  function isStableStatNoise(text2) {
+    if (LOADOUT.test(text2) || UPGRADE_STATE.test(text2) || SET_STATE.test(text2)) return false;
+    if (TIER_OR_SLOT.test(text2)) return true;
+    if (BASIC_STAT.test(text2)) return true;
+    if (SUMMARY_STAT.test(text2) && !SOCKET_EFFECT.test(text2)) return true;
     return false;
   }
-  function isLikelyAggregate(text, nameParts) {
-    const key = compareKey(text);
+  function isLikelyAggregate(text2, nameParts) {
+    const key = compareKey(text2);
     const base = compareKey(nameParts.base);
     if (!key || !base || !key.startsWith(base)) return false;
-    return /(?:\btier\b|\b(?:atk|def|hp)\s*[+-]?\d|\bxp\b.*\/task|\brequires?\b|\bloadout\b|\bupgrad)/i.test(text);
+    return /(?:\btier\b|\b(?:atk|def|hp)\s*[+-]?\d|\bxp\b.*\/task|\brequires?\b|\bloadout\b|\bupgrad)/i.test(text2);
   }
   function resolveInventoryItemName(texts, getByName) {
     const lookup = typeof getByName === "function" ? getByName : () => null;
@@ -2162,11 +2162,11 @@
       if (lv) rollLevel = parseInt(lv[1], 10);
       const m = UPGRADE_ROLL_STATS.exec(s);
       if (!m) continue;
-      const text = m[1].replace(/\s+/g, " ").trim();
-      const key = compareKey(text);
-      if (!text || rolledKeys.has(key)) continue;
+      const text2 = m[1].replace(/\s+/g, " ").trim();
+      const key = compareKey(text2);
+      if (!text2 || rolledKeys.has(key)) continue;
       rolledKeys.add(key);
-      rolledStats.push({ text, kind: "effect", count: 1 });
+      rolledStats.push({ text: text2, kind: "effect", count: 1 });
     }
     const ORB_MAX = 4;
     const isOrbUpgradeable = rollLevel !== null || /\bcloak\b/i.test(String(item?.subcategory || ""));
@@ -2174,38 +2174,38 @@
     const NOT_UPGRADABLE = /\bnot\s+upgradable\b|\bcannot\s+be\s+upgraded\b/i;
     const source = (rawTexts || []).filter((t) => !UPGRADE_ROLL_LINE.test(String(t == null ? "" : t))).map(normaliseInventoryText).filter(Boolean).sort((a, b) => a.length - b.length);
     const atomics = [];
-    for (const text of source) {
-      if (text.length > 220 || isLikelyAggregate(text, nameParts)) continue;
-      const key = compareKey(text);
+    for (const text2 of source) {
+      if (text2.length > 220 || isLikelyAggregate(text2, nameParts)) continue;
+      const key = compareKey(text2);
       const containsAtomic = atomics.some((shorter) => {
         const shortKey = compareKey(shorter);
-        return shorter.length < text.length && shortKey.length >= 5 && key.includes(shortKey);
+        return shorter.length < text2.length && shortKey.length >= 5 && key.includes(shortKey);
       });
       if (containsAtomic) continue;
-      atomics.push(text);
+      atomics.push(text2);
     }
-    for (const text of atomics) {
-      if (!text || text.length > 180) continue;
-      if (isNameFragment(text, nameParts)) continue;
-      if (ACTION_WORDS.test(text) || QUANTITY.test(text) || LEVEL_ONLY.test(text) || NUMBER_ONLY.test(text)) continue;
-      if (REQUIREMENT.test(text)) {
-        const key2 = compareKey(text);
+    for (const text2 of atomics) {
+      if (!text2 || text2.length > 180) continue;
+      if (isNameFragment(text2, nameParts)) continue;
+      if (ACTION_WORDS.test(text2) || QUANTITY.test(text2) || LEVEL_ONLY.test(text2) || NUMBER_ONLY.test(text2)) continue;
+      if (REQUIREMENT.test(text2)) {
+        const key2 = compareKey(text2);
         if (!requirementKeys.has(key2)) {
           requirementKeys.add(key2);
-          requirements.push(text);
+          requirements.push(text2);
         }
         continue;
       }
-      if (isStableStatNoise(text)) continue;
-      if (suppressNotUpgradable && NOT_UPGRADABLE.test(text)) continue;
-      const interesting = LOADOUT.test(text) || SOCKET_EFFECT.test(text) || DYNAMIC_EFFECT.test(text) || UPGRADE_STATE.test(text) || SET_STATE.test(text);
+      if (isStableStatNoise(text2)) continue;
+      if (suppressNotUpgradable && NOT_UPGRADABLE.test(text2)) continue;
+      const interesting = LOADOUT.test(text2) || SOCKET_EFFECT.test(text2) || DYNAMIC_EFFECT.test(text2) || UPGRADE_STATE.test(text2) || SET_STATE.test(text2);
       if (!interesting) continue;
-      const key = compareKey(text);
+      const key = compareKey(text2);
       const current = counts.get(key);
       if (current) {
         current.count += 1;
       } else {
-        counts.set(key, { text, kind: kindFor(text), count: 1 });
+        counts.set(key, { text: text2, kind: kindFor(text2), count: 1 });
       }
     }
     const order = { loadout: 0, socket: 1, effect: 2, set: 3, status: 4, detail: 5 };
@@ -2261,45 +2261,45 @@
         states.set(el2, props);
         track(el2);
       }
-      let state2 = props.get(prop);
+      let state3 = props.get(prop);
       const currentValue = el2.style.getPropertyValue(prop);
       const currentPriority = el2.style.getPropertyPriority(prop);
-      if (!state2) {
-        state2 = {
+      if (!state3) {
+        state3 = {
           nativeValue: currentValue,
           nativePriority: currentPriority,
           appliedValue: null,
           appliedPriority: null
         };
-        props.set(prop, state2);
-      } else if (state2.appliedValue !== null && (currentValue !== state2.appliedValue || currentPriority !== state2.appliedPriority)) {
-        state2.nativeValue = currentValue;
-        state2.nativePriority = currentPriority;
+        props.set(prop, state3);
+      } else if (state3.appliedValue !== null && (currentValue !== state3.appliedValue || currentPriority !== state3.appliedPriority)) {
+        state3.nativeValue = currentValue;
+        state3.nativePriority = currentPriority;
       }
-      return state2;
+      return state3;
     }
     function set2(el2, prop, value, priority = "important") {
       if (!el2?.style) return false;
-      const state2 = stateFor(el2, prop);
+      const state3 = stateFor(el2, prop);
       const beforeValue = el2.style.getPropertyValue(prop);
       const beforePriority = el2.style.getPropertyPriority(prop);
       el2.style.setProperty(prop, value, priority);
       const afterValue = el2.style.getPropertyValue(prop);
       const afterPriority = el2.style.getPropertyPriority(prop);
-      state2.appliedValue = afterValue;
-      state2.appliedPriority = afterPriority;
+      state3.appliedValue = afterValue;
+      state3.appliedPriority = afterPriority;
       return beforeValue !== afterValue || beforePriority !== afterPriority;
     }
     function restoreElement(el2) {
       const props = states.get(el2);
       if (!props) return;
-      for (const [prop, state2] of props) {
+      for (const [prop, state3] of props) {
         const currentValue = el2.style.getPropertyValue(prop);
         const currentPriority = el2.style.getPropertyPriority(prop);
-        const stillOurs = currentValue === state2.appliedValue && currentPriority === state2.appliedPriority;
+        const stillOurs = currentValue === state3.appliedValue && currentPriority === state3.appliedPriority;
         if (!stillOurs) continue;
-        if (state2.nativeValue) {
-          el2.style.setProperty(prop, state2.nativeValue, state2.nativePriority || "");
+        if (state3.nativeValue) {
+          el2.style.setProperty(prop, state3.nativeValue, state3.nativePriority || "");
         } else {
           el2.style.removeProperty(prop);
         }
@@ -2372,10 +2372,10 @@
       if (el2.closest(".fs-inv-row") || isInsideNativeControl(el2, row)) continue;
       const nearLeaf = el2.childElementCount > 0 && el2.childElementCount <= 3 && el2.textContent.trim().length <= 120 && !el2.querySelector(INTERACTIVE_SELECTOR) && [...el2.children].every((c) => c.childElementCount === 0);
       if (el2.childElementCount !== 0 && !nearLeaf) continue;
-      const text = el2.textContent.trim();
-      if (!text || seen.has(text)) continue;
-      seen.add(text);
-      out.push(text);
+      const text2 = el2.textContent.trim();
+      if (!text2 || seen.has(text2)) continue;
+      seen.add(text2);
+      out.push(text2);
     }
     return out;
   }
@@ -2384,23 +2384,23 @@
     const records = [];
     for (const el2 of row.querySelectorAll("span, div, p, li")) {
       if (el2.closest(".fs-inv-row") || isInsideNativeControl(el2, row)) continue;
-      const text = String(el2.textContent || "").replace(/\s+/g, " ").trim();
-      if (!text || text.length > 220 || !interesting.test(text)) continue;
-      records.push({ el: el2, text, key: text.toLowerCase() });
+      const text2 = String(el2.textContent || "").replace(/\s+/g, " ").trim();
+      if (!text2 || text2.length > 220 || !interesting.test(text2)) continue;
+      records.push({ el: el2, text: text2, key: text2.toLowerCase() });
     }
     const deNested = records.filter((rec, idx) => !records.some(
       (other, j) => idx !== j && rec.key === other.key && rec.el.contains(other.el)
     ));
-    const nameKey = String(displayName || "").replace(/\s+/g, " ").trim().toLowerCase();
+    const nameKey2 = String(displayName || "").replace(/\s+/g, " ").trim().toLowerCase();
     const ordered = deNested.sort((a, b) => a.text.length - b.text.length);
     const kept = [];
     for (const rec of ordered) {
-      const { text, key } = rec;
-      if (nameKey && key.startsWith(nameKey) && /(?:\btier\b|\b(?:atk|def|hp)\s*[+-]?\d|\bxp\b.*\/task|\brequires?\b|\bupgrad|\bloadout\b)/i.test(text)) {
+      const { text: text2, key } = rec;
+      if (nameKey2 && key.startsWith(nameKey2) && /(?:\btier\b|\b(?:atk|def|hp)\s*[+-]?\d|\bxp\b.*\/task|\brequires?\b|\bupgrad|\bloadout\b)/i.test(text2)) {
         continue;
       }
       const containsAtomic = kept.some(
-        (shorter) => shorter.text.length < text.length && shorter.key.length >= 5 && key.includes(shorter.key)
+        (shorter) => shorter.text.length < text2.length && shorter.key.length >= 5 && key.includes(shorter.key)
       );
       if (containsAtomic) continue;
       kept.push(rec);
@@ -2450,8 +2450,8 @@
     for (let depth = 0; node2 && depth < 5; depth += 1, node2 = node2.parentElement) {
       if (!node2.classList?.contains("panel")) continue;
       const heading = node2.querySelector(":scope > div > h2, :scope > h2");
-      const text = String(heading?.textContent || "").replace(/^[^\p{L}\p{N}]+/u, "").trim();
-      return SALVAGE_TITLE.test(text) ? node2 : null;
+      const text2 = String(heading?.textContent || "").replace(/^[^\p{L}\p{N}]+/u, "").trim();
+      return SALVAGE_TITLE.test(text2) ? node2 : null;
     }
     return null;
   }
@@ -2483,11 +2483,11 @@
   var FILTER_LABEL = /^(all|gear|materials|consumables|drops)$/;
   function filterTabRow(buttons, labelOf) {
     const rows = /* @__PURE__ */ new Map();
-    for (const button2 of buttons) {
-      const label5 = labelOf(button2);
-      if (!FILTER_LABEL.test(label5) || !button2.parentElement) continue;
-      if (!rows.has(button2.parentElement)) rows.set(button2.parentElement, /* @__PURE__ */ new Set());
-      rows.get(button2.parentElement).add(label5);
+    for (const button3 of buttons) {
+      const label6 = labelOf(button3);
+      if (!FILTER_LABEL.test(label6) || !button3.parentElement) continue;
+      if (!rows.has(button3.parentElement)) rows.set(button3.parentElement, /* @__PURE__ */ new Set());
+      rows.get(button3.parentElement).add(label6);
     }
     let best = null, most = 0;
     for (const [row, labels] of rows) if (labels.size > most) {
@@ -2513,21 +2513,21 @@
       }
     }
     const buttons = [...root.querySelectorAll(notInRow('button, a, [role="button"]'))];
-    const labelOf = (button2) => String(button2.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+    const labelOf = (button3) => String(button3.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
     const tabRow = filterTabRow(buttons, labelOf);
-    for (const button2 of buttons) {
-      const text = labelOf(button2);
+    for (const button3 of buttons) {
+      const text2 = labelOf(button3);
       let role2 = "";
-      if (FILTER_LABEL.test(text)) {
-        if (button2.parentElement === tabRow) role2 = "filter";
-      } else if (/^(prev|previous|next)$/.test(text)) role2 = "page";
-      else if ((!text || text.length <= 2) && button2.querySelector("svg")) role2 = "icon";
-      if (role2) setAttr2(button2, INVENTORY_CONTROL_ATTR, role2);
+      if (FILTER_LABEL.test(text2)) {
+        if (button3.parentElement === tabRow) role2 = "filter";
+      } else if (/^(prev|previous|next)$/.test(text2)) role2 = "page";
+      else if ((!text2 || text2.length <= 2) && button3.querySelector("svg")) role2 = "icon";
+      if (role2) setAttr2(button3, INVENTORY_CONTROL_ATTR, role2);
       if (role2 === "filter") {
-        const cls = String(button2.className || "");
-        const active3 = button2.getAttribute("aria-selected") === "true" || button2.getAttribute("aria-current") === "page" || button2.dataset?.state === "active" || /(?:bg|text|border)-(?:orange|amber|primary|accent)|data-\[state=active\]/i.test(cls);
-        if (active3) setAttr2(button2, INVENTORY_FILTER_STATE_ATTR, "active");
-        else button2.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
+        const cls = String(button3.className || "");
+        const active5 = button3.getAttribute("aria-selected") === "true" || button3.getAttribute("aria-current") === "page" || button3.dataset?.state === "active" || /(?:bg|text|border)-(?:orange|amber|primary|accent)|data-\[state=active\]/i.test(cls);
+        if (active5) setAttr2(button3, INVENTORY_FILTER_STATE_ATTR, "active");
+        else button3.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
       }
     }
     const previousRow = filterRows.get(root);
@@ -2553,8 +2553,8 @@
       }
     }
     for (const el2 of root.querySelectorAll(notInRow("span, div, p"))) {
-      const text = String(el2.textContent || "").trim();
-      if (/^\d+\s*\/\s*\d+$/.test(text)) setAttr2(el2, INVENTORY_CONTROL_ATTR, "page-count");
+      const text2 = String(el2.textContent || "").trim();
+      if (/^\d+\s*\/\s*\d+$/.test(text2)) setAttr2(el2, INVENTORY_CONTROL_ATTR, "page-count");
     }
     classifyRowList(root);
   }
@@ -2568,20 +2568,20 @@
     });
     if (ok) setAttr2(list, INVENTORY_LIST_ATTR, "1");
   }
-  function classifySalvageList(row, panel2) {
+  function classifySalvageList(row, panel3) {
     const list = row.parentElement;
-    if (list && list !== panel2 && panel2.contains(list)) setAttr2(list, SALVAGE_LIST_ATTR, "1");
+    if (list && list !== panel3 && panel3.contains(list)) setAttr2(list, SALVAGE_LIST_ATTR, "1");
   }
   function salvageDetails(row) {
     const details = [];
     for (const span of row.querySelectorAll("p > span")) {
       if (span.closest(".fs-inv-row")) continue;
       for (const part of String(span.textContent || "").split(/[·•]/)) {
-        const text = part.trim();
-        if (!/^(?:enchanted|socketed)$/i.test(text)) continue;
+        const text2 = part.trim();
+        if (!/^(?:enchanted|socketed)$/i.test(text2)) continue;
         details.push({
-          text: text[0].toUpperCase() + text.slice(1).toLowerCase(),
-          kind: /socket/i.test(text) ? "socket" : "status",
+          text: text2[0].toUpperCase() + text2.slice(1).toLowerCase(),
+          kind: /socket/i.test(text2) ? "socket" : "status",
           count: 1
         });
       }
@@ -2605,12 +2605,12 @@
     displayStyleOwner.set(el2, "display", "none", "");
   }
   function classifyActionControl(el2) {
-    const text = String(el2.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
-    if (/^equipped$|^unequip$/.test(text)) return "equipped";
-    if (/^equip$/.test(text)) return "equip";
-    if (/set bonus/.test(text)) return "set";
-    if (/^list$|^sell$|^use$|^deposit$|^withdraw$/.test(text)) return "secondary";
-    if (/^lock$|^unlock$/.test(text) || !text && el2.querySelector?.("svg")) return "icon";
+    const text2 = String(el2.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+    if (/^equipped$|^unequip$/.test(text2)) return "equipped";
+    if (/^equip$/.test(text2)) return "equip";
+    if (/set bonus/.test(text2)) return "set";
+    if (/^list$|^sell$|^use$|^deposit$|^withdraw$/.test(text2)) return "secondary";
+    if (/^lock$|^unlock$/.test(text2) || !text2 && el2.querySelector?.("svg")) return "icon";
     return "secondary";
   }
   function preserveInteractiveTree(el2) {
@@ -2715,7 +2715,7 @@
       return `<span class="fs-inv-detail fs-inv-detail--${esc2(detail.kind)}">${esc2(detail.text)}${count}</span>`;
     }).join("");
     const requirements = (detailModel?.requirements || []).map(
-      (text) => `<span class="fs-inv-requirement">${esc2(text)}</span>`
+      (text2) => `<span class="fs-inv-requirement">${esc2(text2)}</span>`
     ).join("");
     return {
       details: details ? `<div class="fs-inv-details">${details}</div>` : "",
@@ -2759,9 +2759,9 @@
     }
     const item = ItemDatabase.getByName(data.name);
     const detailModel = salvage ? salvageDetails(row) : buildInventoryDetails(data.detailTexts, item, data.name);
-    const signature3 = rowSignature(data, item, detailModel);
+    const signature5 = rowSignature(data, item, detailModel);
     const existing = row.querySelector(":scope > .fs-inv-row");
-    if (existing && row.getAttribute(RENDERED_ATTR) === signature3) {
+    if (existing && row.getAttribute(RENDERED_ATTR) === signature5) {
       hideOriginalChildren(row, existing);
       syncRowState(row, existing);
       cheapSignatures.set(row, cheapSig);
@@ -2796,7 +2796,7 @@
     row.appendChild(overlay);
     hideOriginalChildren(row, overlay);
     syncRowState(row, overlay);
-    row.setAttribute(RENDERED_ATTR, signature3);
+    row.setAttribute(RENDERED_ATTR, signature5);
     cheapSignatures.set(row, cheapSig);
     paintIcon(overlay, item, data);
   }
@@ -3013,21 +3013,21 @@
   var uiIndex = null;
   var iconByKey = /* @__PURE__ */ new Map();
   var uiByKey = /* @__PURE__ */ new Map();
-  function validateIndex(data, label5) {
+  function validateIndex(data, label6) {
     if (!data || !Number.isFinite(data.width) || !Number.isFinite(data.height) || !Array.isArray(data.entries)) {
-      throw new Error(`${label5} index is malformed`);
+      throw new Error(`${label6} index is malformed`);
     }
     for (const entry2 of data.entries) {
       if (!entry2?.key || !Number.isFinite(entry2.x) || !Number.isFinite(entry2.y) || !Number.isFinite(entry2.width) || !Number.isFinite(entry2.height)) {
-        throw new Error(`${label5} contains a malformed entry`);
+        throw new Error(`${label6} contains a malformed entry`);
       }
     }
     return data;
   }
-  async function fetchIndex(path, label5) {
+  async function fetchIndex(path, label6) {
     const response = await fetch(assetUrl(path), { cache: "no-store" });
-    if (!response.ok) throw new Error(`${label5} fetch failed: ${response.status}`);
-    return validateIndex(await response.json(), label5);
+    if (!response.ok) throw new Error(`${label6} fetch failed: ${response.status}`);
+    return validateIndex(await response.json(), label6);
   }
   function spriteGeometry(index, entry2) {
     const xRange = Math.max(1, index.width - entry2.width);
@@ -3057,8 +3057,8 @@
     setData(host, "iwSkillsAtlasIndex", String(entry2.index ?? ""));
     return true;
   }
-  function setVar(panel2, name, value) {
-    panel2.style.setProperty(name, value);
+  function setVar(panel3, name, value) {
+    panel3.style.setProperty(name, value);
   }
   function setData(el2, key, value) {
     if (el2.dataset[key] !== value) el2.dataset[key] = value;
@@ -3092,51 +3092,51 @@
     }
     return true;
   }
-  function applyUiVariables(panel2) {
-    if (!panel2 || !uiIndex) return false;
-    setVar(panel2, "--fs-skills-panel-texture", `url("${assetUrl(TEXTURE_URL)}")`);
+  function applyUiVariables(panel3) {
+    if (!panel3 || !uiIndex) return false;
+    setVar(panel3, "--fs-skills-panel-texture", `url("${assetUrl(TEXTURE_URL)}")`);
     setVar(
-      panel2,
+      panel3,
       "--fs-skills-ui-atlas",
       `var(--iw-zone-atlas, url("${assetUrl(`assets/${uiIndex.atlas}`)}"))`
     );
-    setVar(panel2, "--fs-skills-nav-prev", `url("${assetUrl(NAV_PREV_URL)}")`);
-    setVar(panel2, "--fs-skills-nav-next", `url("${assetUrl(NAV_NEXT_URL)}")`);
+    setVar(panel3, "--fs-skills-nav-prev", `url("${assetUrl(NAV_PREV_URL)}")`);
+    setVar(panel3, "--fs-skills-nav-next", `url("${assetUrl(NAV_NEXT_URL)}")`);
     for (const [key, token] of Object.entries(UI_TOKENS)) {
       const entry2 = uiByKey.get(key);
       if (!entry2) continue;
       const sprite = spriteGeometry(uiIndex, entry2);
-      setVar(panel2, `--fs-ui-${token}-size`, sprite.size);
-      setVar(panel2, `--fs-ui-${token}-position`, sprite.position);
+      setVar(panel3, `--fs-ui-${token}-size`, sprite.size);
+      setVar(panel3, `--fs-ui-${token}-position`, sprite.position);
       if (!SLICED_TOKENS.has(token)) continue;
-      const cap2 = Math.min(ACTION_CAP_PX, Math.floor(entry2.width / 2) - 1);
-      const capLeft = bandGeometry(uiIndex, entry2, 0, cap2);
-      const capRight = bandGeometry(uiIndex, entry2, entry2.width - cap2, cap2);
-      const mid = bandGeometry(uiIndex, entry2, cap2, entry2.width - cap2 * 2);
-      setVar(panel2, `--fs-ui-${token}-cap-size`, capLeft.size);
-      setVar(panel2, `--fs-ui-${token}-cap-l-position`, capLeft.position);
-      setVar(panel2, `--fs-ui-${token}-cap-r-position`, capRight.position);
-      setVar(panel2, `--fs-ui-${token}-mid-size`, mid.size);
-      setVar(panel2, `--fs-ui-${token}-mid-position`, mid.position);
-      setVar(panel2, "--fs-ui-action-cap-ratio", String(cap2 / entry2.height));
+      const cap3 = Math.min(ACTION_CAP_PX, Math.floor(entry2.width / 2) - 1);
+      const capLeft = bandGeometry(uiIndex, entry2, 0, cap3);
+      const capRight = bandGeometry(uiIndex, entry2, entry2.width - cap3, cap3);
+      const mid = bandGeometry(uiIndex, entry2, cap3, entry2.width - cap3 * 2);
+      setVar(panel3, `--fs-ui-${token}-cap-size`, capLeft.size);
+      setVar(panel3, `--fs-ui-${token}-cap-l-position`, capLeft.position);
+      setVar(panel3, `--fs-ui-${token}-cap-r-position`, capRight.position);
+      setVar(panel3, `--fs-ui-${token}-mid-size`, mid.size);
+      setVar(panel3, `--fs-ui-${token}-mid-position`, mid.position);
+      setVar(panel3, "--fs-ui-action-cap-ratio", String(cap3 / entry2.height));
     }
-    setData(panel2, "iwSkillsUiReady", "1");
+    setData(panel3, "iwSkillsUiReady", "1");
     return true;
   }
-  function clearUiVariables(panel2) {
-    if (!panel2?.style) return;
-    panel2.style.removeProperty("--fs-skills-panel-texture");
-    panel2.style.removeProperty("--fs-skills-ui-atlas");
-    panel2.style.removeProperty("--fs-skills-nav-prev");
-    panel2.style.removeProperty("--fs-skills-nav-next");
+  function clearUiVariables(panel3) {
+    if (!panel3?.style) return;
+    panel3.style.removeProperty("--fs-skills-panel-texture");
+    panel3.style.removeProperty("--fs-skills-ui-atlas");
+    panel3.style.removeProperty("--fs-skills-nav-prev");
+    panel3.style.removeProperty("--fs-skills-nav-next");
     for (const token of Object.values(UI_TOKENS)) {
-      panel2.style.removeProperty(`--fs-ui-${token}-size`);
-      panel2.style.removeProperty(`--fs-ui-${token}-position`);
+      panel3.style.removeProperty(`--fs-ui-${token}-size`);
+      panel3.style.removeProperty(`--fs-ui-${token}-position`);
       if (!SLICED_TOKENS.has(token)) continue;
-      for (const suffix of SLICE_VARS) panel2.style.removeProperty(`--fs-ui-${token}-${suffix}`);
+      for (const suffix of SLICE_VARS) panel3.style.removeProperty(`--fs-ui-${token}-${suffix}`);
     }
-    panel2.style.removeProperty("--fs-ui-action-cap-ratio");
-    delete panel2.dataset.iwSkillsUiReady;
+    panel3.style.removeProperty("--fs-ui-action-cap-ratio");
+    delete panel3.dataset.iwSkillsUiReady;
   }
   async function load() {
     const [icons, ui] = await Promise.all([
@@ -3167,11 +3167,11 @@
       const entry2 = iconByKey.get(key) || iconByKey.get(ICON_ALIASES[key]) || iconByKey.get("generic");
       return paint(host, iconIndex, entry2);
     },
-    decoratePanel(panel2) {
-      return applyUiVariables(panel2);
+    decoratePanel(panel3) {
+      return applyUiVariables(panel3);
     },
-    clearPanel(panel2) {
-      clearUiVariables(panel2);
+    clearPanel(panel3) {
+      clearUiVariables(panel3);
     },
     applyThemeVariables(host, theme) {
       return applyThemeVariables(host, theme);
@@ -3233,8 +3233,8 @@
   }
   function classifyButton(btn) {
     if (btn.disabled || btn.getAttribute("aria-disabled") === "true") return "disabled";
-    const text = normText(btn.textContent);
-    if (text.length <= 2) return "icon";
+    const text2 = normText(btn.textContent);
+    if (text2.length <= 2) return "icon";
     const cls = String(btn.className || "");
     if (/bg-ember|bg-orange|bg-primary|bg-accent/i.test(cls)) return "primary";
     return "secondary";
@@ -3342,16 +3342,16 @@
       return;
     }
     const classifiedState = classifyButton(btn);
-    const state2 = role2 === "action-button" && classifiedState !== "disabled" ? "primary" : classifiedState;
-    const art2 = role2 === "action-button" && btn.closest('[data-iw-skills-ui-ready="1"]') ? ACTION_ART[state2 === "disabled" ? "disabled" : "idle"] : null;
+    const state3 = role2 === "action-button" && classifiedState !== "disabled" ? "primary" : classifiedState;
+    const art2 = role2 === "action-button" && btn.closest('[data-iw-skills-ui-ready="1"]') ? ACTION_ART[state3 === "disabled" ? "disabled" : "idle"] : null;
     const compact = compactCommandButton(btn);
     const currentStyle = btn.getAttribute("style") || "";
     const previous = buttonStyleSnapshots.get(btn);
-    if (previous && previous.state === state2 && previous.role === role2 && previous.art === !!art2 && previous.compact === compact && previous.style === currentStyle) return;
+    if (previous && previous.state === state3 && previous.role === role2 && previous.art === !!art2 && previous.compact === compact && previous.style === currentStyle) return;
     for (const [prop, value] of Object.entries(BUTTON_STYLES.base)) {
       setOwnedStyle(buttonStyleOwner, btn, prop, value);
     }
-    for (const [prop, value] of Object.entries({ ...BUTTON_STYLES[state2], ...art2 })) {
+    for (const [prop, value] of Object.entries({ ...BUTTON_STYLES[state3], ...art2 })) {
       setOwnedStyle(buttonStyleOwner, btn, prop, value);
     }
     if (role2 === "nav-button") {
@@ -3382,19 +3382,19 @@
         setOwnedStyle(buttonStyleOwner, btn, "border-radius", "8px");
       }
     }
-    if (btn.dataset.iwBtnState !== state2) btn.dataset.iwBtnState = state2;
-    buttonStyleSnapshots.set(btn, { state: state2, role: role2, art: !!art2, compact, style: btn.getAttribute("style") || "" });
+    if (btn.dataset.iwBtnState !== state3) btn.dataset.iwBtnState = state3;
+    buttonStyleSnapshots.set(btn, { state: state3, role: role2, art: !!art2, compact, style: btn.getAttribute("style") || "" });
   }
   var NAV_BUTTON_W = "26px";
   var LEVEL_PROGRESS_PATTERN = /^lv\s*\d+(?:\s*\+\s*\d+)?(?:\s*[-\u2013]\s*\d+(?:\.\d+)?%\s*[\u2022\u00b7]\s*[\d,]+\s+(?:xp\s+)?to\s+go|\s*[\u2022\u00b7]\s*[\d,]+\s*\/\s*[\d,]+\s*xp)$/i;
   var LEVEL_READOUT_LOOSE = /^lv\s*\d+(?:\s*\+\s*\d+)?\s*[-\u2013\u2014\u2022\u00b7:|]\s*\S.*(?:xp|to\s+go|%)$/i;
   var XP_READOUT_TITLE = /\bxp display\b/i;
   var XP_LINE_ATTR = "data-iw-skill-v2-xp";
-  function isLevelReadoutText(text) {
-    return LEVEL_PROGRESS_PATTERN.test(text) || LEVEL_READOUT_LOOSE.test(text);
+  function isLevelReadoutText(text2) {
+    return LEVEL_PROGRESS_PATTERN.test(text2) || LEVEL_READOUT_LOOSE.test(text2);
   }
-  function findHookedReadout(panel2) {
-    for (const el2 of panel2.querySelectorAll("[title]")) {
+  function findHookedReadout(panel3) {
+    for (const el2 of panel3.querySelectorAll("[title]")) {
       if (!XP_READOUT_TITLE.test(el2.getAttribute("title") || "")) continue;
       if (el2.closest(`[${XP_LINE_ATTR}], [data-iw-skill-v2-level-readout]`)) continue;
       return el2;
@@ -3425,33 +3425,33 @@
   function readoutCursor(el2) {
     return el2.matches?.('button, a, [role="button"], [tabindex]:not([tabindex="-1"])') ? "pointer" : "default";
   }
-  function sameTextShellChain(el2, panel2) {
+  function sameTextShellChain(el2, panel3) {
     if (!el2) return [];
-    const text = normText(el2.textContent);
+    const text2 = normText(el2.textContent);
     const chain = [el2];
     let cur = el2;
     for (let depth = 0; depth < 8; depth += 1) {
       const parent = cur.parentElement;
-      if (!parent || parent === panel2) break;
+      if (!parent || parent === panel3) break;
       if (parent.matches?.('button, a, [role="button"]') || parent.closest?.('button, a, [role="button"]')) break;
-      if (normText(parent.textContent) !== text) break;
+      if (normText(parent.textContent) !== text2) break;
       chain.push(parent);
       cur = parent;
     }
     return chain;
   }
-  function outerSameTextShell(el2, panel2) {
-    const chain = sameTextShellChain(el2, panel2);
+  function outerSameTextShell(el2, panel3) {
+    const chain = sameTextShellChain(el2, panel3);
     return chain[chain.length - 1] || el2;
   }
-  function readoutBranch(el2, panel2) {
+  function readoutBranch(el2, panel3) {
     if (!el2) return [];
     const branch = [el2];
     const readoutText = normText(el2.textContent);
     let cur = el2;
     for (let depth = 0; depth < 10; depth += 1) {
       const parent = cur.parentElement;
-      if (!parent || parent === panel2) break;
+      if (!parent || parent === panel3) break;
       if (parent.matches?.('button,a,input,select,textarea,[role="button"]')) break;
       const parentText = normText(parent.textContent);
       if (!parentText.includes(readoutText)) break;
@@ -3467,11 +3467,11 @@
     }
     return branch;
   }
-  function neutraliseReadouts(panel2) {
-    const previouslyMarked = [...panel2.querySelectorAll("[data-iw-readout]")];
-    let readout = panel2.querySelector(`[${ROLE_ATTR}="level-progress"]`);
+  function neutraliseReadouts(panel3) {
+    const previouslyMarked = [...panel3.querySelectorAll("[data-iw-readout]")];
+    let readout = panel3.querySelector(`[${ROLE_ATTR}="level-progress"]`);
     if (!readout) {
-      readout = [...panel2.querySelectorAll("div,span,p,strong")].find((el2) => {
+      readout = [...panel3.querySelectorAll("div,span,p,strong")].find((el2) => {
         if (el2.closest('button,a,[role="button"]')) return false;
         return isLevelReadoutText(normText(el2.textContent));
       }) || null;
@@ -3485,8 +3485,8 @@
       return;
     }
     const branch = [.../* @__PURE__ */ new Set([
-      ...readoutBranch(readout, panel2),
-      ...sameTextShellChain(readout, panel2)
+      ...readoutBranch(readout, panel3),
+      ...sameTextShellChain(readout, panel3)
     ])];
     const current = new Set(branch);
     for (const old of previouslyMarked) {
@@ -3546,9 +3546,9 @@
     }
     return starts;
   }
-  function entryStart(text, starts, matchIndex2, previousEnd) {
-    const bulletStart = text.lastIndexOf("•", matchIndex2 - 1) + 1;
-    const lineStart = text.lastIndexOf("\n", matchIndex2 - 1) + 1;
+  function entryStart(text2, starts, matchIndex2, previousEnd) {
+    const bulletStart = text2.lastIndexOf("•", matchIndex2 - 1) + 1;
+    const lineStart = text2.lastIndexOf("\n", matchIndex2 - 1) + 1;
     let elementStart = 0;
     for (const offset of starts) {
       if (offset > matchIndex2) break;
@@ -3557,23 +3557,23 @@
     return Math.max(bulletStart, lineStart, elementStart, previousEnd);
   }
   function completedIngredientRanges(root) {
-    const text = root.textContent || "";
+    const text2 = root.textContent || "";
     const elementStarts = elementTextStarts(root);
     const ranges = [];
     INGR_COUNT_PATTERN.lastIndex = 0;
     let match;
     let previousEnd = 0;
-    while (match = INGR_COUNT_PATTERN.exec(text)) {
+    while (match = INGR_COUNT_PATTERN.exec(text2)) {
       const matchEnd = match.index + match[0].length;
-      const start0 = entryStart(text, elementStarts, match.index, previousEnd);
+      const start0 = entryStart(text2, elementStarts, match.index, previousEnd);
       previousEnd = matchEnd;
       const owned3 = Number(match[1].replaceAll(",", ""));
       const required = Number(match[2].replaceAll(",", ""));
       if (!Number.isFinite(owned3) || !Number.isFinite(required) || owned3 < required) continue;
       let start3 = start0;
       let end = matchEnd;
-      while (start3 < end && /\s/.test(text[start3])) start3 += 1;
-      while (end > start3 && /\s/.test(text[end - 1])) end -= 1;
+      while (start3 < end && /\s/.test(text2[start3])) start3 += 1;
+      while (end > start3 && /\s/.test(text2[end - 1])) end -= 1;
       const from = pointAtTextOffset(root, start3);
       const to = pointAtTextOffset(root, end);
       if (!from || !to) continue;
@@ -3588,21 +3588,21 @@
     return ranges;
   }
   function ingredientEntries(root) {
-    const text = root.textContent || "";
+    const text2 = root.textContent || "";
     const elementStarts = elementTextStarts(root);
     const entries = [];
     INGR_COUNT_PATTERN.lastIndex = 0;
     let match;
     let previousEnd = 0;
-    while (match = INGR_COUNT_PATTERN.exec(text)) {
+    while (match = INGR_COUNT_PATTERN.exec(text2)) {
       const matchEnd = match.index + match[0].length;
-      const start3 = entryStart(text, elementStarts, match.index, previousEnd);
+      const start3 = entryStart(text2, elementStarts, match.index, previousEnd);
       previousEnd = matchEnd;
       const owned3 = Number(match[1].replaceAll(",", ""));
       const required = Number(match[2].replaceAll(",", ""));
       if (!Number.isFinite(owned3) || !Number.isFinite(required)) continue;
       entries.push({
-        text: text.slice(start3, matchEnd).trim(),
+        text: text2.slice(start3, matchEnd).trim(),
         state: owned3 >= required ? "met" : "unmet"
       });
     }
@@ -3611,9 +3611,9 @@
   function rebuildIngredientHighlight() {
     if (!supportsIngredientHighlights()) return;
     const ranges = [];
-    for (const [panel2, panelRanges] of [...ingredientHighlightRanges.entries()]) {
-      if (!panel2.isConnected) {
-        ingredientHighlightRanges.delete(panel2);
+    for (const [panel3, panelRanges] of [...ingredientHighlightRanges.entries()]) {
+      if (!panel3.isConnected) {
+        ingredientHighlightRanges.delete(panel3);
         continue;
       }
       ranges.push(...panelRanges.filter((range) => range.startContainer?.isConnected));
@@ -3624,17 +3624,17 @@
     } catch {
     }
   }
-  function updateIngredientHighlights(panel2) {
+  function updateIngredientHighlights(panel3) {
     if (!supportsIngredientHighlights()) return;
-    const hosts = [...panel2.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
-    ingredientHighlightRanges.set(panel2, hosts.flatMap(completedIngredientRanges));
+    const hosts = [...panel3.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
+    ingredientHighlightRanges.set(panel3, hosts.flatMap(completedIngredientRanges));
     rebuildIngredientHighlight();
   }
-  function clearIngredientHighlights(panel2) {
-    if (panel2) ingredientHighlightRanges.delete(panel2);
+  function clearIngredientHighlights(panel3) {
+    if (panel3) ingredientHighlightRanges.delete(panel3);
     else ingredientHighlightRanges.clear();
     if (!supportsIngredientHighlights()) return;
-    if (panel2) rebuildIngredientHighlight();
+    if (panel3) rebuildIngredientHighlight();
     else globalThis.CSS.highlights.delete(MET_INGREDIENT_HIGHLIGHT);
   }
   function removeIngredientList(source, list) {
@@ -3642,11 +3642,11 @@
     list?.remove();
     ingredientLists.delete(source);
   }
-  function updateIngredientLists(panel2) {
-    const sources = [...panel2.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
+  function updateIngredientLists(panel3) {
+    const sources = [...panel3.querySelectorAll("[data-iw-ingr]")].filter((el2) => !el2.parentElement?.closest?.("[data-iw-ingr]"));
     const current = new Set(sources);
     for (const [source, list] of [...ingredientLists.entries()]) {
-      if (!source.isConnected || source.closest(".compact-panel") === panel2 && !current.has(source)) {
+      if (!source.isConnected || source.closest(".compact-panel") === panel3 && !current.has(source)) {
         removeIngredientList(source, list);
       }
     }
@@ -3665,8 +3665,8 @@
         list.setAttribute("aria-label", "Required materials");
         ingredientLists.set(source, list);
       }
-      const signature3 = entries.map((entry2) => `${entry2.state}:${entry2.text}`).join("");
-      if (list.dataset.iwIngredientSignature !== signature3) {
+      const signature5 = entries.map((entry2) => `${entry2.state}:${entry2.text}`).join("");
+      if (list.dataset.iwIngredientSignature !== signature5) {
         const fragment = document.createDocumentFragment();
         for (const entry2 of entries) {
           const item = document.createElement("span");
@@ -3677,33 +3677,33 @@
           fragment.appendChild(item);
         }
         list.replaceChildren(fragment);
-        list.dataset.iwIngredientSignature = signature3;
+        list.dataset.iwIngredientSignature = signature5;
       }
       source.dataset.iwIngredientListSource = "1";
       if (source.nextElementSibling !== list) source.after(list);
     }
   }
-  function clearIngredientLists(panel2) {
+  function clearIngredientLists(panel3) {
     for (const [source, list] of [...ingredientLists.entries()]) {
-      if (!panel2 || !source.isConnected || source.closest(".compact-panel") === panel2) {
+      if (!panel3 || !source.isConnected || source.closest(".compact-panel") === panel3) {
         removeIngredientList(source, list);
       }
     }
-    const root = panel2 || document;
+    const root = panel3 || document;
     root.querySelectorAll("[data-iw-ingredient-list-source]").forEach((el2) => {
       delete el2.dataset.iwIngredientListSource;
     });
     root.querySelectorAll("[data-iw-skill-ingredient-list]").forEach((el2) => el2.remove());
   }
-  function neutraliseIngredients(panel2) {
-    const readouts = [...panel2.querySelectorAll(`[${ROLE_ATTR}="level-progress"], [${XP_LINE_ATTR}]`)];
-    for (const el2 of panel2.querySelectorAll("div, span, p")) {
+  function neutraliseIngredients(panel3) {
+    const readouts = [...panel3.querySelectorAll(`[${ROLE_ATTR}="level-progress"], [${XP_LINE_ATTR}]`)];
+    for (const el2 of panel3.querySelectorAll("div, span, p")) {
       if (el2.closest('[data-iw-skill-ingredient-list="1"]')) continue;
       if (el2.closest("[data-iw-skill-v2-summary], [data-iw-skill-v2-body], [data-iw-skill-v2-controls]")) continue;
       if (el2.tagName === "BUTTON" || el2.closest('button, a, [role="button"]')) continue;
       if (el2.childElementCount > 3) continue;
-      const text = normText(el2.textContent);
-      const matches = INGR_PATTERN.test(text) && !readouts.some((readout) => el2.contains(readout) || readout.contains(el2));
+      const text2 = normText(el2.textContent);
+      const matches = INGR_PATTERN.test(text2) && !readouts.some((readout) => el2.contains(readout) || readout.contains(el2));
       if (!matches) {
         if (el2.dataset.iwIngr) {
           ingredientStyleOwner.restoreElement(el2);
@@ -3712,7 +3712,7 @@
         ingredientStyleSnapshots.delete(el2);
         continue;
       }
-      const chain = sameTextShellChain(el2, panel2);
+      const chain = sameTextShellChain(el2, panel3);
       for (const target of chain) {
         const currentStyle = target.getAttribute("style") || "";
         if (ingredientStyleSnapshots.get(target) === currentStyle && target.dataset.iwIngr === "1") continue;
@@ -3723,22 +3723,22 @@
         ingredientStyleSnapshots.set(target, target.getAttribute("style") || "");
       }
     }
-    updateIngredientHighlights(panel2);
-    updateIngredientLists(panel2);
+    updateIngredientHighlights(panel3);
+    updateIngredientLists(panel3);
   }
   function setRole(el2, role2) {
     if (el2 && el2.getAttribute(ROLE_ATTR) !== role2) el2.setAttribute(ROLE_ATTR, role2);
     return el2;
   }
-  function clearStructureRoles(panel2) {
-    panel2.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction], [data-iw-req-state]`).forEach((el2) => {
+  function clearStructureRoles(panel3) {
+    panel3.querySelectorAll(`[${ROLE_ATTR}], [${ZONE_ATTR}], [${SHELL_ATTR}], [data-iw-nav-direction], [data-iw-req-state]`).forEach((el2) => {
       el2.removeAttribute(ROLE_ATTR);
       el2.removeAttribute(ZONE_ATTR);
       el2.removeAttribute(SHELL_ATTR);
       el2.removeAttribute("data-iw-req-state");
       delete el2.dataset.iwNavDirection;
     });
-    delete panel2.dataset.iwSkillLayout;
+    delete panel3.dataset.iwSkillLayout;
   }
   function childUnder(container, el2) {
     if (!container || !el2 || !container.contains(el2)) return null;
@@ -3746,15 +3746,15 @@
     while (cur && cur.parentElement !== container) cur = cur.parentElement;
     return cur?.parentElement === container ? cur : null;
   }
-  function commonAncestorWithin(panel2, elements) {
+  function commonAncestorWithin(panel3, elements) {
     const nodes = elements.filter(Boolean);
-    if (!nodes.length || nodes.some((node2) => !panel2.contains(node2))) return null;
+    if (!nodes.length || nodes.some((node2) => !panel3.contains(node2))) return null;
     let cur = nodes[0];
-    while (cur && cur !== panel2) {
+    while (cur && cur !== panel3) {
       if (nodes.every((node2) => cur.contains(node2))) return cur;
       cur = cur.parentElement;
     }
-    return panel2;
+    return panel3;
   }
   function isPresentationHidden(el2) {
     if (!el2 || el2.hidden || el2.getAttribute?.("aria-hidden") === "true") return true;
@@ -3770,27 +3770,27 @@
   }
   var lastCandidatePanel = null;
   var lastCandidates = null;
-  function textCandidates(panel2) {
-    if (lastCandidatePanel === panel2) return lastCandidates;
-    const candidates = visibleFirst([...panel2.querySelectorAll("h1,h2,h3,h4,div,span,p")].filter((el2) => !el2.closest("button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body], [data-iw-skill-v2-action-label], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-level-readout], [data-iw-skill-v2-xp]")).filter((el2) => normText(el2.textContent).length <= 130));
-    lastCandidatePanel = panel2;
+  function textCandidates(panel3) {
+    if (lastCandidatePanel === panel3) return lastCandidates;
+    const candidates = visibleFirst([...panel3.querySelectorAll("h1,h2,h3,h4,div,span,p")].filter((el2) => !el2.closest("button, a, [data-iw-skill-v2-controls], [data-iw-skill-v2-body], [data-iw-skill-v2-action-label], [data-iw-skill-v2-action-glyph], [data-iw-skill-v2-level-readout], [data-iw-skill-v2-xp]")).filter((el2) => normText(el2.textContent).length <= 130));
+    lastCandidatePanel = panel3;
     lastCandidates = candidates;
     return candidates;
   }
-  function findBestText(panel2, predicate) {
-    const candidates = textCandidates(panel2);
+  function findBestText(panel3, predicate) {
+    const candidates = textCandidates(panel3);
     const exactOwn = candidates.find((el2) => predicate(normText(el2.childElementCount ? "" : el2.textContent), el2));
     if (exactOwn) return exactOwn;
     const matches = candidates.filter((el2) => predicate(normText(el2.textContent), el2));
     return matches.find((el2) => !matches.some((inner) => inner !== el2 && el2.contains(inner))) || matches[0] || null;
   }
-  function findProgress(panel2) {
-    const semantic = panel2.querySelector('[role="progressbar"]');
+  function findProgress(panel3) {
+    const semantic = panel3.querySelector('[role="progressbar"]');
     if (semantic) {
       const fill = semantic.firstElementChild || null;
       return { track: semantic, fill };
     }
-    for (const el2 of panel2.querySelectorAll("div")) {
+    for (const el2 of panel3.querySelectorAll("div")) {
       if (el2.children.length !== 1) continue;
       const child = el2.firstElementChild;
       const cls = `${el2.className || ""} ${child?.className || ""}`;
@@ -3805,66 +3805,66 @@
   }
   var structureSignatures = /* @__PURE__ */ new WeakMap();
   var structureText = (value) => normText(value).replace(/\d[\d,.]*/g, "#");
-  function structureSignature(panel2, type) {
+  function structureSignature(panel3, type) {
     const keyDisabled = type === "locked";
-    const buttonState = [...panel2.querySelectorAll("button")].map((btn) => {
+    const buttonState = [...panel3.querySelectorAll("button")].map((btn) => {
       const disabled = keyDisabled && (btn.disabled || btn.getAttribute("aria-disabled") === "true") ? "1" : "0";
       return `${disabled}:${structureText(btn.textContent)}:${structureText(btn.getAttribute("aria-label"))}`;
     }).join("|");
-    const hasRequirement = /(?:needs|requires)\b/i.test(panel2.textContent || "") ? "r" : "-";
-    return `${hasRequirement}${type}\0${panel2.childElementCount}\0${buttonState}`;
+    const hasRequirement = /(?:needs|requires)\b/i.test(panel3.textContent || "") ? "r" : "-";
+    return `${hasRequirement}${type}\0${panel3.childElementCount}\0${buttonState}`;
   }
   var UNMET_CLASS = /\btext-(?:red|rose|orange|amber|yellow)-\d|\b(?:text-danger|text-warning)\b/;
-  function syncRequirementState(panel2) {
-    panel2.querySelectorAll(`[${ROLE_ATTR}="requirement"]`).forEach((shell) => {
+  function syncRequirementState(panel3) {
+    panel3.querySelectorAll(`[${ROLE_ATTR}="requirement"]`).forEach((shell) => {
       const classes = [shell, ...shell.querySelectorAll("*")].map((el2) => typeof el2.className === "string" ? el2.className : "").join(" ");
-      const state2 = UNMET_CLASS.test(classes) ? "unmet" : "met";
-      if (shell.getAttribute("data-iw-req-state") !== state2) shell.setAttribute("data-iw-req-state", state2);
+      const state3 = UNMET_CLASS.test(classes) ? "unmet" : "met";
+      if (shell.getAttribute("data-iw-req-state") !== state3) shell.setAttribute("data-iw-req-state", state3);
     });
   }
-  function annotateStructure(panel2, type, meta) {
-    const sig = structureSignature(panel2, type);
-    if (structureSignatures.get(panel2) === sig) return;
+  function annotateStructure(panel3, type, meta) {
+    const sig = structureSignature(panel3, type);
+    if (structureSignatures.get(panel3) === sig) return;
     lastCandidatePanel = null;
     lastCandidates = null;
-    clearStructureRoles(panel2);
-    const identityLabels = (meta.labels || [meta.label]).map((label5) => label5.toLowerCase());
-    let identity = findBestText(panel2, (text) => identityLabels.includes(textWithoutLeadingGlyph(text).toLowerCase()));
+    clearStructureRoles(panel3);
+    const identityLabels = (meta.labels || [meta.label]).map((label6) => label6.toLowerCase());
+    let identity = findBestText(panel3, (text2) => identityLabels.includes(textWithoutLeadingGlyph(text2).toLowerCase()));
     if (!identity) {
-      identity = findBestText(panel2, (text) => {
-        const clean = textWithoutLeadingGlyph(text).toLowerCase();
-        return identityLabels.some((label5) => clean === label5 || clean.startsWith(`${label5} `));
+      identity = findBestText(panel3, (text2) => {
+        const clean = textWithoutLeadingGlyph(text2).toLowerCase();
+        return identityLabels.some((label6) => clean === label6 || clean.startsWith(`${label6} `));
       });
     }
     if (!identity) {
-      identity = textCandidates(panel2).find((el2) => {
+      identity = textCandidates(panel3).find((el2) => {
         const directText = [...el2.childNodes].map((node2) => normText(node2.textContent)).filter(Boolean).join(" ");
         const clean = textWithoutLeadingGlyph(directText).toLowerCase();
-        return identityLabels.some((label5) => clean === label5 || clean.startsWith(`${label5} `));
+        return identityLabels.some((label6) => clean === label6 || clean.startsWith(`${label6} `));
       }) || null;
     }
     if (identity) {
-      const shell = outerSameTextShell(identity, panel2);
+      const shell = outerSameTextShell(identity, panel3);
       setRole(shell, "identity");
     }
     const actionWord = (meta.titleActions || meta.actions).join("|");
     const actionTitleRe = new RegExp(`^(?:${actionWord})\\b`, "i");
-    let actionTitle = findBestText(panel2, (text, el2) => {
-      if (!text || text.length > 90 || !actionTitleRe.test(textWithoutLeadingGlyph(text))) return false;
+    let actionTitle = findBestText(panel3, (text2, el2) => {
+      if (!text2 || text2.length > 90 || !actionTitleRe.test(textWithoutLeadingGlyph(text2))) return false;
       if (el2.closest(".iw-item-ref")) return false;
       if (el2.matches?.(`[${ROLE_ATTR}="identity"]`) || el2.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
       return true;
     });
-    if (actionTitle) setRole(outerSameTextShell(actionTitle, panel2), "action-title");
-    const buttons = visibleFirst([...panel2.querySelectorAll("button")]);
-    const hookedReadout = findHookedReadout(panel2);
+    if (actionTitle) setRole(outerSameTextShell(actionTitle, panel3), "action-title");
+    const buttons = visibleFirst([...panel3.querySelectorAll("button")]);
+    const hookedReadout = findHookedReadout(panel3);
     const levelProgressButton = (hookedReadout?.tagName === "BUTTON" ? hookedReadout : null) || buttons.find((btn) => isLevelReadoutText(normText(btn.textContent))) || null;
     if (levelProgressButton) setRole(levelProgressButton, "level-progress");
     let actionButton = null;
     const commandWord = meta.actions.join("|");
     const actionExact = commandWord ? new RegExp(`^(?:${commandWord})$`, "i") : null;
     for (const btn of buttons) {
-      const text = normText(btn.textContent);
+      const text2 = normText(btn.textContent);
       const aria = normText(btn.getAttribute("aria-label"));
       const disabled = btn.disabled || btn.getAttribute("aria-disabled") === "true";
       if (!actionButton && type === "locked" && btn !== levelProgressButton && disabled && !/^(?:prev|previous|next)$/i.test(aria)) {
@@ -3872,19 +3872,19 @@
         setRole(btn, "action-button");
         continue;
       }
-      if (!actionButton && actionExact && (actionExact.test(text) || actionExact.test(aria))) {
+      if (!actionButton && actionExact && (actionExact.test(text2) || actionExact.test(aria))) {
         actionButton = btn;
         setRole(btn, "action-button");
         continue;
       }
-      if (text.length <= 2 || /^(?:prev|previous|next)$/i.test(aria)) setRole(btn, "nav-button");
+      if (text2.length <= 2 || /^(?:prev|previous|next)$/i.test(aria)) setRole(btn, "nav-button");
     }
     if (type === "locked" && !actionButton) {
       const lockedControl = buttons.find((btn) => {
         if (btn === levelProgressButton) return false;
         const aria = normText(btn.getAttribute("aria-label"));
-        const text = normText(btn.textContent);
-        return !/^(?:prev|previous|next)$/i.test(aria) && !/^[‹›<>]$/.test(text);
+        const text2 = normText(btn.textContent);
+        return !/^(?:prev|previous|next)$/i.test(aria) && !/^[‹›<>]$/.test(text2);
       }) || null;
       if (lockedControl) {
         actionButton = lockedControl;
@@ -3894,9 +3894,9 @@
     if (!actionButton && type !== "locked") {
       const fallbackActions = buttons.filter((btn) => {
         if (btn === levelProgressButton || btn.getAttribute(ROLE_ATTR) === "nav-button") return false;
-        const text = normText(btn.textContent);
+        const text2 = normText(btn.textContent);
         const aria = normText(btn.getAttribute("aria-label"));
-        const signal = text || aria;
+        const signal = text2 || aria;
         if (!signal || signal.length > 32) return false;
         if (/^lv\b.*(?:%|\bxp\b|to go)/i.test(signal)) return false;
         return true;
@@ -3911,31 +3911,31 @@
       );
       if (actionSignal && actionSignal.length <= 32) {
         const needle = actionSignal.toLowerCase();
-        actionTitle = findBestText(panel2, (text, el2) => {
-          const clean = textWithoutLeadingGlyph(text).toLowerCase();
+        actionTitle = findBestText(panel3, (text2, el2) => {
+          const clean = textWithoutLeadingGlyph(text2).toLowerCase();
           if (!(clean === needle || clean.startsWith(`${needle} `))) return false;
           if (el2.closest(".iw-item-ref")) return false;
           if (el2.matches?.(`[${ROLE_ATTR}="identity"]`) || el2.closest?.(`[${ROLE_ATTR}="identity"]`)) return false;
           return true;
         });
-        if (actionTitle) setRole(outerSameTextShell(actionTitle, panel2), "action-title");
+        if (actionTitle) setRole(outerSameTextShell(actionTitle, panel3), "action-title");
       }
     }
     if (!actionTitle && levelProgressButton) {
-      const readoutShell = outerSameTextShell(levelProgressButton, panel2);
+      const readoutShell = outerSameTextShell(levelProgressButton, panel3);
       const candidate = readoutShell?.previousElementSibling || null;
       const candidateText = candidate ? normText(candidate.textContent) : "";
       const usable = candidate && candidateText && candidateText.length <= 90 && !candidate.getAttribute(ROLE_ATTR) && !candidate.querySelector?.(`[${ROLE_ATTR}], button, a, input, select, textarea`) && !candidate.closest?.(`[${ROLE_ATTR}="identity"]`) && !candidate.closest?.(".iw-item-ref") && !isLevelReadoutText(candidateText);
       if (usable) {
         actionTitle = candidate;
-        setRole(outerSameTextShell(candidate, panel2), "action-title");
+        setRole(outerSameTextShell(candidate, panel3), "action-title");
       }
     }
     const navButtons = buttons.filter((btn) => btn.getAttribute(ROLE_ATTR) === "nav-button");
     navButtons.forEach((btn, index) => {
       const aria = normText(btn.getAttribute("aria-label")).toLowerCase();
-      const text = normText(btn.textContent);
-      const isPrev = /prev|previous/.test(aria) || /^[‹<←]$/.test(text) || navButtons.length >= 2 && index === 0;
+      const text2 = normText(btn.textContent);
+      const isPrev = /prev|previous/.test(aria) || /^[‹<←]$/.test(text2) || navButtons.length >= 2 && index === 0;
       btn.dataset.iwNavDirection = isPrev ? "prev" : "next";
     });
     if (navButtons.length >= 2) {
@@ -3943,39 +3943,39 @@
       if (parent && navButtons.every((btn) => btn.parentElement === parent)) setRole(parent, "nav-group");
     }
     if (!levelProgressButton) {
-      const readout = hookedReadout || findBestText(panel2, (text) => isLevelReadoutText(text));
+      const readout = hookedReadout || findBestText(panel3, (text2) => isLevelReadoutText(text2));
       if (readout) setRole(readout, "level-progress");
     }
-    const xpGain = findBestText(panel2, (text) => /^\d[\d,]*\s*xp$/i.test(text));
-    if (xpGain) setRole(outerSameTextShell(xpGain, panel2), "xp-gain");
-    const requirement = findBestText(panel2, (text) => /^(?:needs|requires)\b/i.test(text));
+    const xpGain = findBestText(panel3, (text2) => /^\d[\d,]*\s*xp$/i.test(text2));
+    if (xpGain) setRole(outerSameTextShell(xpGain, panel3), "xp-gain");
+    const requirement = findBestText(panel3, (text2) => /^(?:needs|requires)\b/i.test(text2));
     if (requirement) {
-      const reqShell = outerSameTextShell(requirement, panel2);
+      const reqShell = outerSameTextShell(requirement, panel3);
       setRole(reqShell, "requirement");
     }
-    const reward2 = findBestText(panel2, (text) => /^base reward\s*:/i.test(text));
-    if (reward2) setRole(outerSameTextShell(reward2, panel2), "reward");
-    const detail = meta.details?.length ? findBestText(panel2, (text) => meta.details.some((pattern) => pattern.test(text))) : null;
-    if (detail) setRole(outerSameTextShell(detail, panel2), "action-detail");
-    const { track, fill } = findProgress(panel2);
+    const reward2 = findBestText(panel3, (text2) => /^base reward\s*:/i.test(text2));
+    if (reward2) setRole(outerSameTextShell(reward2, panel3), "reward");
+    const detail = meta.details?.length ? findBestText(panel3, (text2) => meta.details.some((pattern) => pattern.test(text2))) : null;
+    if (detail) setRole(outerSameTextShell(detail, panel3), "action-detail");
+    const { track, fill } = findProgress(panel3);
     if (track) setRole(track, "progress-track");
     if (fill) setRole(fill, "progress-fill");
-    for (const ref of panel2.querySelectorAll(".iw-item-ref")) {
+    for (const ref of panel3.querySelectorAll(".iw-item-ref")) {
       const host = ref.parentElement;
-      if (host && host !== panel2 && /\d+\s*\/\s*\d+/.test(normText(host.textContent))) setRole(host, "ingredient");
+      if (host && host !== panel3 && /\d+\s*\/\s*\d+/.test(normText(host.textContent))) setRole(host, "ingredient");
     }
-    const identityRole = panel2.querySelector(`[${ROLE_ATTR}="identity"]`);
-    const titleRole = panel2.querySelector(`[${ROLE_ATTR}="action-title"]`);
-    const actionRole = panel2.querySelector(`[${ROLE_ATTR}="action-button"]`);
-    const layoutShell = commonAncestorWithin(panel2, [identityRole, titleRole, actionRole]);
-    const supportedShell = layoutShell && (layoutShell === panel2 || layoutShell.parentElement === panel2);
+    const identityRole = panel3.querySelector(`[${ROLE_ATTR}="identity"]`);
+    const titleRole = panel3.querySelector(`[${ROLE_ATTR}="action-title"]`);
+    const actionRole = panel3.querySelector(`[${ROLE_ATTR}="action-button"]`);
+    const layoutShell = commonAncestorWithin(panel3, [identityRole, titleRole, actionRole]);
+    const supportedShell = layoutShell && (layoutShell === panel3 || layoutShell.parentElement === panel3);
     const identityZone = supportedShell ? childUnder(layoutShell, identityRole) : null;
     const contentZone = supportedShell ? childUnder(layoutShell, titleRole) : null;
     const commandZone = supportedShell ? childUnder(layoutShell, actionRole) : null;
     const shellChildren = supportedShell ? [...layoutShell.children].filter((el2) => !el2.classList.contains("fs-skill-header")) : [];
     const distinctZones = identityZone && contentZone && commandZone && (/* @__PURE__ */ new Set([identityZone, contentZone, commandZone])).size === 3;
     if (distinctZones) {
-      if (layoutShell !== panel2) layoutShell.setAttribute(SHELL_ATTR, "1");
+      if (layoutShell !== panel3) layoutShell.setAttribute(SHELL_ATTR, "1");
       identityZone.setAttribute(ZONE_ATTR, "identity");
       contentZone.setAttribute(ZONE_ATTR, "content");
       commandZone.setAttribute(ZONE_ATTR, "commands");
@@ -3984,8 +3984,8 @@
       if (identityLevel) setRole(identityLevel, "identity-level");
       const identityIcon = identityLeaves.find((el2) => {
         if (el2 === identity || el2 === identityLevel || el2.closest(`[${ROLE_ATTR}="identity"]`)) return false;
-        const text = normText(el2.textContent);
-        return text && text.length <= 4 && /[^a-z0-9]/i.test(text);
+        const text2 = normText(el2.textContent);
+        return text2 && text2.length <= 4 && /[^a-z0-9]/i.test(text2);
       }) || null;
       if (identityIcon) setRole(identityIcon, "identity-icon");
       const functionalZones = /* @__PURE__ */ new Set([identityZone, contentZone, commandZone]);
@@ -4002,12 +4002,12 @@
         const rect = el2.getBoundingClientRect?.();
         return !rect || rect.width > 2 && rect.height > 2;
       });
-      if (!unexpectedFlowChild) panel2.dataset.iwSkillLayout = "three-zone";
+      if (!unexpectedFlowChild) panel3.dataset.iwSkillLayout = "three-zone";
     }
-    structureSignatures.set(panel2, sig);
+    structureSignatures.set(panel3, sig);
   }
-  function ensureSkillArtwork(panel2, type) {
-    const identityZone = panel2.querySelector(`[${ZONE_ATTR}="identity"]`);
+  function ensureSkillArtwork(panel3, type) {
+    const identityZone = panel3.querySelector(`[${ZONE_ATTR}="identity"]`);
     if (!identityZone) return;
     let artHost = identityZone.querySelector(":scope > .fs-skill-medallion-art");
     if (!artHost || artHost.dataset.iwSkillArt !== type) {
@@ -4019,8 +4019,8 @@
       identityZone.appendChild(artHost);
     }
     const paint2 = () => {
-      if (!isRuntimeActive() || !artHost.isConnected || !panel2.isConnected) return;
-      SkillsArtService.decoratePanel(panel2);
+      if (!isRuntimeActive() || !artHost.isConnected || !panel3.isConnected) return;
+      SkillsArtService.decoratePanel(panel3);
       if (SkillsArtService.paintIcon(artHost, type)) setOwnData(artHost, "iwSkillArtReady", "1");
     };
     if (SkillsArtService.isReady()) {
@@ -4033,26 +4033,26 @@
       });
     }
   }
-  function baseExpValue(panel2) {
-    const reward2 = panel2.querySelector(`[${ROLE_ATTR}="reward"]`);
+  function baseExpValue(panel3) {
+    const reward2 = panel3.querySelector(`[${ROLE_ATTR}="reward"]`);
     const rewardText = normText(reward2?.textContent);
     const rewardMatch = /\bxp\b/i.test(rewardText) ? rewardText.match(/base reward\s*:\s*\+?\s*([\d,]+)/i) : null;
     if (rewardMatch) return rewardMatch[1].replace(/,/g, "");
-    const xpGain = panel2.querySelector(`[${ROLE_ATTR}="xp-gain"]`);
+    const xpGain = panel3.querySelector(`[${ROLE_ATTR}="xp-gain"]`);
     const xpMatch = normText(xpGain?.textContent).match(/^\+?\s*([\d,]+)\s*xp$/i);
     return xpMatch ? xpMatch[1].replace(/,/g, "") : "";
   }
-  function progressPercent(panel2) {
-    const fill = panel2.querySelector(`[${ROLE_ATTR}="progress-fill"]`);
+  function progressPercent(panel3) {
+    const fill = panel3.querySelector(`[${ROLE_ATTR}="progress-fill"]`);
     const width = String(fill?.style?.width || "").trim();
     if (/^\d+(?:\.\d+)?%$/.test(width)) return width;
-    const track = panel2.querySelector(`[${ROLE_ATTR}="progress-track"]`);
+    const track = panel3.querySelector(`[${ROLE_ATTR}="progress-track"]`);
     const now = Number(track?.getAttribute("aria-valuenow"));
     const max = Number(track?.getAttribute("aria-valuemax"));
     if (Number.isFinite(now) && Number.isFinite(max) && max > 0) {
       return `${Math.max(0, Math.min(100, now / max * 100))}%`;
     }
-    const readout = panel2.querySelector(`[${ROLE_ATTR}="level-progress"]`);
+    const readout = panel3.querySelector(`[${ROLE_ATTR}="level-progress"]`);
     const match = normText(readout?.textContent).match(/(\d+(?:\.\d+)?)%/);
     return match ? `${match[1]}%` : "";
   }
@@ -4061,21 +4061,21 @@
     if (!match) return value || "";
     return `${Number(Number(match[1]).toFixed(1))}%`;
   }
-  function centralProgressText(text) {
-    const value = normText(text);
+  function centralProgressText(text2) {
+    const value = normText(text2);
     if (!value) return "";
     return value.replace(/\s*[-–]\s*\d+(?:\.\d+)?%\s*[•·]\s*/i, " • ").replace(/\s*[•·]\s*\d+(?:\.\d+)?%\s*[•·]\s*/i, " • ").replace(/\s{2,}/g, " ").trim();
   }
-  function skillActionsFrame(panel2) {
-    let cur = panel2?.parentElement || null;
+  function skillActionsFrame(panel3) {
+    let cur = panel3?.parentElement || null;
     for (let depth = 0; cur && depth < 8; depth += 1, cur = cur.parentElement) {
       const heading = cur.querySelector?.("h1,h2,h3,h4");
       if (heading && /^skill actions$/i.test(normText(heading.textContent))) return cur;
     }
     return null;
   }
-  function ensureSkillActionsFrame(panel2) {
-    const frame2 = skillActionsFrame(panel2);
+  function ensureSkillActionsFrame(panel3) {
+    const frame2 = skillActionsFrame(panel3);
     if (!frame2) return;
     if (!frame2.classList.contains("fs-skills-section-frame")) frame2.classList.add("fs-skills-section-frame");
     const paint2 = () => {
@@ -4091,19 +4091,19 @@
   function setOwnData(el2, key, value) {
     if (el2.dataset[key] !== value) el2.dataset[key] = value;
   }
-  function ensureSkillPresentation(panel2, meta) {
-    ensureSkillActionsFrame(panel2);
-    const identity = panel2.querySelector(`[${ROLE_ATTR}="identity"]`);
-    const title = panel2.querySelector(`[${ROLE_ATTR}="action-title"]`);
-    const levelProgress = panel2.querySelector(`[${ROLE_ATTR}="level-progress"]`);
+  function ensureSkillPresentation(panel3, meta) {
+    ensureSkillActionsFrame(panel3);
+    const identity = panel3.querySelector(`[${ROLE_ATTR}="identity"]`);
+    const title = panel3.querySelector(`[${ROLE_ATTR}="action-title"]`);
+    const levelProgress = panel3.querySelector(`[${ROLE_ATTR}="level-progress"]`);
     if (identity) {
       setOwnData(identity, "iwCleanText", meta.label);
     }
     if (title) setOwnData(title, "iwCleanText", textWithoutLeadingGlyph(title.textContent));
     if (levelProgress) setOwnData(levelProgress, "iwProgressDisplay", centralProgressText(levelProgress.textContent));
-    const identityZone = panel2.querySelector(`[${ZONE_ATTR}="identity"]`);
+    const identityZone = panel3.querySelector(`[${ZONE_ATTR}="identity"]`);
     if (identityZone) {
-      const percentValue = progressPercent(panel2);
+      const percentValue = progressPercent(panel3);
       let percent2 = identityZone.querySelector(":scope > .fs-skill-identity-percent");
       if (percentValue) {
         if (!percent2) {
@@ -4127,9 +4127,9 @@
       const fill = progress.querySelector(".fs-skill-identity-progress-fill");
       if (fill) fill.style.width = percentValue || "0%";
     }
-    const contentZone = panel2.querySelector(`[${ZONE_ATTR}="content"]`);
+    const contentZone = panel3.querySelector(`[${ZONE_ATTR}="content"]`);
     if (contentZone) {
-      const amount2 = baseExpValue(panel2);
+      const amount2 = baseExpValue(panel3);
       let plaque = contentZone.querySelector(":scope > .fs-skill-base-exp");
       if (amount2) {
         if (!plaque) {
@@ -4145,21 +4145,21 @@
       }
     }
   }
-  function applyPanelTreatment(panel2, type, meta) {
-    annotateStructure(panel2, type, meta);
-    syncRequirementState(panel2);
-    ensureSkillArtwork(panel2, type, meta);
-    ensureSkillPresentation(panel2, meta);
-    panel2.querySelectorAll("button").forEach(styleButton);
-    neutraliseReadouts(panel2);
-    neutraliseIngredients(panel2);
+  function applyPanelTreatment(panel3, type, meta) {
+    annotateStructure(panel3, type, meta);
+    syncRequirementState(panel3);
+    ensureSkillArtwork(panel3, type, meta);
+    ensureSkillPresentation(panel3, meta);
+    panel3.querySelectorAll("button").forEach(styleButton);
+    neutraliseReadouts(panel3);
+    neutraliseIngredients(panel3);
   }
   var SKILL_CLASSES = Object.keys(SKILL_META).map((type) => `fs-skill--${type}`);
-  function clearPanelInlineTreatment(panel2) {
-    buttonStyleOwner.restoreWithin(panel2);
-    readoutStyleOwner.restoreWithin(panel2);
-    ingredientStyleOwner.restoreWithin(panel2);
-    panel2.querySelectorAll("[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]").forEach((el2) => {
+  function clearPanelInlineTreatment(panel3) {
+    buttonStyleOwner.restoreWithin(panel3);
+    readoutStyleOwner.restoreWithin(panel3);
+    ingredientStyleOwner.restoreWithin(panel3);
+    panel3.querySelectorAll("[data-iw-readout], [data-iw-ingr], [data-iw-btn-state]").forEach((el2) => {
       delete el2.dataset.iwReadout;
       delete el2.dataset.iwIngr;
       delete el2.dataset.iwBtnState;
@@ -4168,52 +4168,52 @@
       ingredientStyleSnapshots.delete(el2);
     });
   }
-  function ownsPanel(panel2) {
-    return panel2.hasAttribute(RENDERED_ATTR2) || panel2.classList.contains("fs-skill-panel");
+  function ownsPanel(panel3) {
+    return panel3.hasAttribute(RENDERED_ATTR2) || panel3.classList.contains("fs-skill-panel");
   }
-  function clearPanelChrome(panel2) {
-    structureSignatures.delete(panel2);
-    clearIngredientHighlights(panel2);
-    clearIngredientLists(panel2);
-    clearPanelInlineTreatment(panel2);
-    SkillsArtService.clearPanel(panel2);
-    panel2.querySelectorAll(".fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp").forEach((el2) => el2.remove());
-    panel2.querySelectorAll("[data-iw-clean-text], [data-iw-base-exp], [data-iw-progress-display]").forEach((el2) => {
+  function clearPanelChrome(panel3) {
+    structureSignatures.delete(panel3);
+    clearIngredientHighlights(panel3);
+    clearIngredientLists(panel3);
+    clearPanelInlineTreatment(panel3);
+    SkillsArtService.clearPanel(panel3);
+    panel3.querySelectorAll(".fs-skill-medallion-art, .fs-skill-identity-percent, .fs-skill-identity-progress, .fs-skill-base-exp").forEach((el2) => el2.remove());
+    panel3.querySelectorAll("[data-iw-clean-text], [data-iw-base-exp], [data-iw-progress-display]").forEach((el2) => {
       delete el2.dataset.iwCleanText;
       delete el2.dataset.iwBaseExp;
       delete el2.dataset.iwProgressDisplay;
     });
-    clearStructureRoles(panel2);
-    panel2.classList.remove("fs-skill-panel", ...SKILL_CLASSES);
-    delete panel2.dataset.fsSkillLabel;
-    delete panel2.dataset.fsSkillRune;
-    delete panel2.dataset.fsSkillFlavour;
-    delete panel2.dataset.iwSkillGlyph;
-    delete panel2.dataset.iwSkill;
-    if (panel2.dataset.iwUi === "skill-panel") delete panel2.dataset.iwUi;
-    panel2.removeAttribute(RENDERED_ATTR2);
+    clearStructureRoles(panel3);
+    panel3.classList.remove("fs-skill-panel", ...SKILL_CLASSES);
+    delete panel3.dataset.fsSkillLabel;
+    delete panel3.dataset.fsSkillRune;
+    delete panel3.dataset.fsSkillFlavour;
+    delete panel3.dataset.iwSkillGlyph;
+    delete panel3.dataset.iwSkill;
+    if (panel3.dataset.iwUi === "skill-panel") delete panel3.dataset.iwUi;
+    panel3.removeAttribute(RENDERED_ATTR2);
   }
-  function applyPanelChrome(panel2, type, meta) {
-    if (!panel2.classList.contains("fs-skill-panel")) panel2.classList.add("fs-skill-panel");
+  function applyPanelChrome(panel3, type, meta) {
+    if (!panel3.classList.contains("fs-skill-panel")) panel3.classList.add("fs-skill-panel");
     for (const cls of SKILL_CLASSES) {
-      if (cls !== `fs-skill--${type}` && panel2.classList.contains(cls)) panel2.classList.remove(cls);
+      if (cls !== `fs-skill--${type}` && panel3.classList.contains(cls)) panel3.classList.remove(cls);
     }
-    if (!panel2.classList.contains(`fs-skill--${type}`)) panel2.classList.add(`fs-skill--${type}`);
-    setOwnData(panel2, "iwUi", "skill-panel");
-    setOwnData(panel2, "iwSkill", type);
-    setOwnData(panel2, "iwSkillGlyph", meta.glyph);
-    if (panel2.dataset.fsSkillLabel !== meta.label) panel2.dataset.fsSkillLabel = meta.label;
+    if (!panel3.classList.contains(`fs-skill--${type}`)) panel3.classList.add(`fs-skill--${type}`);
+    setOwnData(panel3, "iwUi", "skill-panel");
+    setOwnData(panel3, "iwSkill", type);
+    setOwnData(panel3, "iwSkillGlyph", meta.glyph);
+    if (panel3.dataset.fsSkillLabel !== meta.label) panel3.dataset.fsSkillLabel = meta.label;
   }
-  function renderPanel(panel2, skillType) {
-    if (!panel2 || !panel2.isConnected) return;
+  function renderPanel(panel3, skillType) {
+    if (!panel3 || !panel3.isConnected) return;
     if (!SKILL_META[skillType]) {
-      if (ownsPanel(panel2)) clearPanelChrome(panel2);
+      if (ownsPanel(panel3)) clearPanelChrome(panel3);
       return;
     }
     const meta = SKILL_META[skillType];
-    applyPanelChrome(panel2, skillType, meta);
-    if (panel2.getAttribute(RENDERED_ATTR2) !== skillType) panel2.setAttribute(RENDERED_ATTR2, skillType);
-    applyPanelTreatment(panel2, skillType, meta);
+    applyPanelChrome(panel3, skillType, meta);
+    if (panel3.getAttribute(RENDERED_ATTR2) !== skillType) panel3.setAttribute(RENDERED_ATTR2, skillType);
+    applyPanelTreatment(panel3, skillType, meta);
   }
   function clearSkillPanels() {
     guardEach("skill:teardown", document.querySelectorAll(".compact-panel"), clearPanelChrome);
@@ -4254,33 +4254,33 @@
   function sampleProgress(samples, key, pct, at = nowMs()) {
     const none = { reset: false, durationMs: null };
     if (pct === null || !Number.isFinite(pct)) return none;
-    const state2 = samples.get(key);
-    if (!state2) {
+    const state3 = samples.get(key);
+    if (!state3) {
       samples.set(key, { pct, at, deltas: [], afterReset: false });
       return none;
     }
-    if (Math.abs(pct - state2.pct) < PROGRESS_EPSILON) return none;
+    if (Math.abs(pct - state3.pct) < PROGRESS_EPSILON) return none;
     const out = { reset: false, durationMs: null };
-    if (pct < state2.pct - PROGRESS_EPSILON) {
+    if (pct < state3.pct - PROGRESS_EPSILON) {
       out.reset = true;
-      state2.afterReset = true;
+      state3.afterReset = true;
     } else {
-      const delta = at - state2.at;
-      if (delta >= 60 && delta <= 4e3 && !state2.afterReset) {
-        state2.deltas.push(delta);
-        if (state2.deltas.length > 5) state2.deltas.shift();
-        if (state2.deltas.length >= 3) {
-          const ms = Math.min(4e3, Math.max(60, median(state2.deltas))) * PROGRESS_LEAD_BIAS;
-          if (state2.appliedDurationMs === void 0 || Math.abs(ms - state2.appliedDurationMs) >= PROGRESS_DURATION_EPSILON_MS) {
-            state2.appliedDurationMs = ms;
+      const delta = at - state3.at;
+      if (delta >= 60 && delta <= 4e3 && !state3.afterReset) {
+        state3.deltas.push(delta);
+        if (state3.deltas.length > 5) state3.deltas.shift();
+        if (state3.deltas.length >= 3) {
+          const ms = Math.min(4e3, Math.max(60, median(state3.deltas))) * PROGRESS_LEAD_BIAS;
+          if (state3.appliedDurationMs === void 0 || Math.abs(ms - state3.appliedDurationMs) >= PROGRESS_DURATION_EPSILON_MS) {
+            state3.appliedDurationMs = ms;
             out.durationMs = ms;
           }
         }
       }
-      state2.afterReset = false;
+      state3.afterReset = false;
     }
-    state2.pct = pct;
-    state2.at = at;
+    state3.pct = pct;
+    state3.at = at;
     return out;
   }
   function formatDuration(ms) {
@@ -4300,26 +4300,26 @@
   function setText(el2, value) {
     if (el2 && el2.textContent !== value) el2.textContent = value;
   }
-  function markSections(panel2) {
+  function markSections(panel3) {
     const desired = /* @__PURE__ */ new Map();
     for (const [name, selector] of [
       ["requirements", '[data-iw-skill-role="requirement"]'],
       ["materials", "[data-iw-skill-ingredient-list],.fs-skill-ingredient-grid"],
       ["details", '[data-iw-skill-role="action-detail"]'],
       ["rewards", '[data-iw-skill-role="reward"]']
-    ]) panel2.querySelectorAll(selector).forEach((el2) => desired.set(el2, name));
-    const content = panel2.querySelector('[data-iw-skill-zone="content"]');
+    ]) panel3.querySelectorAll(selector).forEach((el2) => desired.set(el2, name));
+    const content = panel3.querySelector('[data-iw-skill-zone="content"]');
     content?.querySelectorAll("p,span").forEach((el2) => {
       if (el2.closest('[class*="iw-skill-v2"],.fs-skill-ingredient-grid,button,a,[data-iw-skill-role="level-progress"]')) return;
       if (el2.querySelector("p,span,button,a")) return;
-      const text = (el2.textContent || "").trim();
-      if (/missing materials|will queue|queued|queue first/i.test(text)) desired.set(el2, "queue");
-      else if (/^(?:gather|harvest|obtain|found|source).*\b(?:from|in|at)\b/i.test(text) && !el2.matches('[data-iw-skill-role="action-title"]')) desired.set(el2, "sources");
+      const text2 = (el2.textContent || "").trim();
+      if (/missing materials|will queue|queued|queue first/i.test(text2)) desired.set(el2, "queue");
+      else if (/^(?:gather|harvest|obtain|found|source).*\b(?:from|in|at)\b/i.test(text2) && !el2.matches('[data-iw-skill-role="action-title"]')) desired.set(el2, "sources");
     });
     desired.forEach((name, el2) => {
       if (name === "details" && /queue|missing materials/i.test(el2.textContent || "")) desired.set(el2, "queue");
     });
-    panel2.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => {
+    panel3.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => {
       const next = desired.get(el2);
       if (!next) delete el2.dataset.iwSkillV2Section;
       else if (el2.dataset.iwSkillV2Section !== next) el2.dataset.iwSkillV2Section = next;
@@ -4329,17 +4329,17 @@
       el2.dataset.iwSkillV2Section = name;
     });
   }
-  function levelReadout(panel2) {
-    const zone = panel2.querySelector('[data-iw-skill-zone="identity"]');
+  function levelReadout(panel3) {
+    const zone = panel3.querySelector('[data-iw-skill-zone="identity"]');
     if (!zone) return;
-    const text = panel2.querySelector('[data-iw-skill-role="level-progress"]')?.textContent || "";
+    const text2 = panel3.querySelector('[data-iw-skill-role="level-progress"]')?.textContent || "";
     const zoneText = zone.textContent || "";
-    const pct = (panel2.querySelector(".fs-skill-identity-percent")?.textContent || "").match(/(\d+(?:\.\d+)?)\s*%/) || text.match(/(\d+(?:\.\d+)?)\s*%/) || zoneText.match(/(\d+(?:\.\d+)?)\s*%/);
-    const lvl = text.match(/\bLv\s*([\d]+(?:\s*\+\s*\d+)?|-)/i) || zoneText.match(/\bLv\s*([\d]+(?:\s*\+\s*\d+)?|-)/i);
+    const pct = (panel3.querySelector(".fs-skill-identity-percent")?.textContent || "").match(/(\d+(?:\.\d+)?)\s*%/) || text2.match(/(\d+(?:\.\d+)?)\s*%/) || zoneText.match(/(\d+(?:\.\d+)?)\s*%/);
+    const lvl = text2.match(/\bLv\s*([\d]+(?:\s*\+\s*\d+)?|-)/i) || zoneText.match(/\bLv\s*([\d]+(?:\s*\+\s*\d+)?|-)/i);
     const value = pct ? Math.max(0, Math.min(100, Number(pct[1]))) : 0;
     const progress = `${Number.isFinite(value) ? value : 0}%`;
-    if (panel2.style.getPropertyValue("--iw-skill-v2-progress") !== progress) {
-      panel2.style.setProperty("--iw-skill-v2-progress", progress);
+    if (panel3.style.getPropertyValue("--iw-skill-v2-progress") !== progress) {
+      panel3.style.setProperty("--iw-skill-v2-progress", progress);
     }
     let out = zone.querySelector(":scope > [data-iw-skill-v2-level-readout]");
     if (!out) {
@@ -4355,7 +4355,7 @@
     }
     setText(out.children[0], lvl ? `Lv ${lvl[1].replace(/\s+/g, " ")}` : "Lv —");
     setText(out.children[1], pct ? `${pct[1]}%` : "—");
-    xpLine(panel2, zone, text);
+    xpLine(panel3, zone, text2);
   }
   var XP_LINE = "data-iw-skill-v2-xp";
   function xpLineText(readout) {
@@ -4365,10 +4365,10 @@
     if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     event.stopPropagation();
-    const panel2 = event.currentTarget.closest(".compact-panel");
-    panel2?.querySelector('[data-iw-skill-role="level-progress"]')?.click();
+    const panel3 = event.currentTarget.closest(".compact-panel");
+    panel3?.querySelector('[data-iw-skill-role="level-progress"]')?.click();
   }
-  function xpLine(panel2, zone, readoutText) {
+  function xpLine(panel3, zone, readoutText) {
     const value = xpLineText(readoutText);
     let line = zone.querySelector(`:scope > [${XP_LINE}]`);
     if (!value) {
@@ -4387,16 +4387,16 @@
     }
     setText(line, value);
   }
-  function removeRetiredNodes(panel2) {
-    panel2.querySelectorAll("[data-iw-skill-v2-summary], [data-iw-skill-v2-break], [data-iw-skill-v2-expand], [data-iw-skill-v2-tabs]").forEach((el2) => el2.remove());
+  function removeRetiredNodes(panel3) {
+    panel3.querySelectorAll("[data-iw-skill-v2-summary], [data-iw-skill-v2-break], [data-iw-skill-v2-expand], [data-iw-skill-v2-tabs]").forEach((el2) => el2.remove());
   }
-  function ensureActionGlyph(panel2) {
-    const zone = panel2.querySelector('[data-iw-skill-zone="commands"]');
+  function ensureActionGlyph(panel3) {
+    const zone = panel3.querySelector('[data-iw-skill-zone="commands"]');
     const ACTION = '[data-iw-skill-role="action-button"]';
     const btn = zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
     const host = btn?.parentElement;
     if (!host) return null;
-    panel2.querySelectorAll("[data-iw-skill-v2-action-glyph]").forEach((el2) => {
+    panel3.querySelectorAll("[data-iw-skill-v2-action-glyph]").forEach((el2) => {
       if (el2.parentElement !== host) el2.remove();
     });
     const existing = host.querySelector(":scope > [data-iw-skill-v2-action-glyph]");
@@ -4408,30 +4408,30 @@
     host.appendChild(glyph);
     return glyph;
   }
-  function ensureActionLabel(panel2) {
-    const btn = actionButtonOf(panel2);
+  function ensureActionLabel(panel3) {
+    const btn = actionButtonOf(panel3);
     const host = btn?.parentElement;
     if (!host) return null;
-    const labels = [...panel2.querySelectorAll("[data-iw-skill-v2-action-label]")];
-    let label5 = labels.find((el2) => el2.parentElement === host) || null;
+    const labels = [...panel3.querySelectorAll("[data-iw-skill-v2-action-label]")];
+    let label6 = labels.find((el2) => el2.parentElement === host) || null;
     labels.forEach((el2) => {
-      if (el2 !== label5) el2.remove();
+      if (el2 !== label6) el2.remove();
     });
-    if (!label5) {
-      label5 = document.createElement("span");
-      label5.dataset.iwSkillV2ActionLabel = "1";
-      host.appendChild(label5);
+    if (!label6) {
+      label6 = document.createElement("span");
+      label6.dataset.iwSkillV2ActionLabel = "1";
+      host.appendChild(label6);
     }
-    if (label5.className !== "iw-skill-v2-action-label") label5.className = "iw-skill-v2-action-label";
-    if (label5.getAttribute("aria-hidden") !== "true") label5.setAttribute("aria-hidden", "true");
-    if (label5.hasAttribute("style")) label5.removeAttribute("style");
-    setText(label5, (btn.textContent || "").replace(/\s+/g, " ").trim());
-    return label5;
+    if (label6.className !== "iw-skill-v2-action-label") label6.className = "iw-skill-v2-action-label";
+    if (label6.getAttribute("aria-hidden") !== "true") label6.setAttribute("aria-hidden", "true");
+    if (label6.hasAttribute("style")) label6.removeAttribute("style");
+    setText(label6, (btn.textContent || "").replace(/\s+/g, " ").trim());
+    return label6;
   }
   var LABEL_CEILING_PX = 9.5;
   var LABEL_FLOOR_PX = 4;
-  function labelTextBox(label5) {
-    const walker = document.createTreeWalker(label5, NodeFilter.SHOW_TEXT);
+  function labelTextBox(label6) {
+    const walker = document.createTreeWalker(label6, NodeFilter.SHOW_TEXT);
     const range = document.createRange();
     let left = Infinity, right = -Infinity;
     for (let node2 = walker.nextNode(); node2; node2 = walker.nextNode()) {
@@ -4446,32 +4446,32 @@
   }
   var fillSamples = /* @__PURE__ */ new WeakMap();
   var FILL = ':scope > span[style*="width"]';
-  function smoothActionFill(panel2) {
-    const btn = actionButtonOf(panel2);
+  function smoothActionFill(panel3) {
+    const btn = actionButtonOf(panel3);
     const width = btn?.querySelector(FILL)?.style.width || "";
     if (!/^\d+(?:\.\d+)?%$/.test(width)) return;
-    const { reset, durationMs } = sampleProgress(fillSamples, panel2, parseFloat(width));
+    const { reset, durationMs } = sampleProgress(fillSamples, panel3, parseFloat(width));
     if (reset) {
-      panel2.dataset.iwSkillV2FillReset = "1";
+      panel3.dataset.iwSkillV2FillReset = "1";
       raf(() => {
-        delete panel2.dataset.iwSkillV2FillReset;
+        delete panel3.dataset.iwSkillV2FillReset;
       });
     }
-    if (durationMs !== null) panel2.style.setProperty("--iw-skill-v2-fill-duration", formatDuration(durationMs));
+    if (durationMs !== null) panel3.style.setProperty("--iw-skill-v2-fill-duration", formatDuration(durationMs));
   }
-  function actionButtonOf(panel2) {
-    const zone = panel2.querySelector('[data-iw-skill-zone="commands"]');
+  function actionButtonOf(panel3) {
+    const zone = panel3.querySelector('[data-iw-skill-zone="commands"]');
     const ACTION = '[data-iw-skill-role="action-button"]';
     return zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
   }
   var LONG_ACTION_SECONDS = 11;
   function durationSeconds(value) {
-    const text = String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
-    const clock = /^(?:(\d+):)?(\d+):([0-5]\d)$/.exec(text);
+    const text2 = String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+    const clock = /^(?:(\d+):)?(\d+):([0-5]\d)$/.exec(text2);
     if (clock) return Number(clock[1] || 0) * 3600 + Number(clock[2]) * 60 + Number(clock[3]);
-    const shortClock = /^(\d+):([0-5]\d)$/.exec(text);
+    const shortClock = /^(\d+):([0-5]\d)$/.exec(text2);
     if (shortClock) return Number(shortClock[1]) * 60 + Number(shortClock[2]);
-    const units = /^(?:(\d+)\s*h(?:ours?)?\s*)?(?:(\d+)\s*m(?:in(?:utes?)?)?\s*)?(?:(\d+)\s*s(?:ec(?:onds?)?)?)?$/.exec(text);
+    const units = /^(?:(\d+)\s*h(?:ours?)?\s*)?(?:(\d+)\s*m(?:in(?:utes?)?)?\s*)?(?:(\d+)\s*s(?:ec(?:onds?)?)?)?$/.exec(text2);
     if (!units || !units.slice(1).some(Boolean)) return null;
     return Number(units[1] || 0) * 3600 + Number(units[2] || 0) * 60 + Number(units[3] || 0);
   }
@@ -4480,77 +4480,77 @@
     if (!host) return null;
     for (const el2 of host.querySelectorAll("time,span,p,strong,div")) {
       if (el2.childElementCount || el2.closest('[data-iw-panel-part="progress"]')) continue;
-      const text = (el2.textContent || "").replace(/\s+/g, " ").trim();
-      const seconds = durationSeconds(text);
-      if (seconds !== null) return { text, seconds };
+      const text2 = (el2.textContent || "").replace(/\s+/g, " ").trim();
+      const seconds = durationSeconds(text2);
+      if (seconds !== null) return { text: text2, seconds };
     }
     return null;
   }
-  function clearLongActionTimer(panel2, glyph = panel2.querySelector("[data-iw-skill-v2-action-glyph]")) {
+  function clearLongActionTimer(panel3, glyph = panel3.querySelector("[data-iw-skill-v2-action-glyph]")) {
     if (glyph?.hasAttribute("data-iw-skill-v2-action-timer")) {
       glyph.removeAttribute("data-iw-skill-v2-action-timer");
       setText(glyph, "");
     }
-    delete panel2.dataset.iwSkillV2LongAction;
+    delete panel3.dataset.iwSkillV2LongAction;
   }
-  function syncLongActionTimer(panel2, glyph, remaining = currentActionRemaining) {
-    const running = !!actionButtonOf(panel2)?.querySelector(FILL);
-    if (!running) return clearLongActionTimer(panel2, glyph);
+  function syncLongActionTimer(panel3, glyph, remaining = currentActionRemaining) {
+    const running = !!actionButtonOf(panel3)?.querySelector(FILL);
+    if (!running) return clearLongActionTimer(panel3, glyph);
     if (typeof remaining === "function") remaining = remaining();
-    const startedLong = panel2.dataset.iwSkillV2LongAction === "1";
-    if (!startedLong && !(remaining?.seconds > LONG_ACTION_SECONDS)) return clearLongActionTimer(panel2, glyph);
+    const startedLong = panel3.dataset.iwSkillV2LongAction === "1";
+    if (!startedLong && !(remaining?.seconds > LONG_ACTION_SECONDS)) return clearLongActionTimer(panel3, glyph);
     if (!remaining || !glyph) return;
-    setData2(panel2, "iwSkillV2LongAction", "1");
+    setData2(panel3, "iwSkillV2LongAction", "1");
     if (!glyph.hasAttribute("data-iw-skill-v2-action-timer")) glyph.setAttribute("data-iw-skill-v2-action-timer", "1");
     setText(glyph, remaining.text);
   }
   var CURRENT_ACTION_HOSTS = '[data-iw-panel="current-action"], [id="current-action-panel"]';
-  function touchesHost(roots, host) {
-    return roots.some((r) => r === host || host.contains(r) || r?.contains?.(host));
+  function touchesHost(roots2, host) {
+    return roots2.some((r) => r === host || host.contains(r) || r?.contains?.(host));
   }
-  function syncTimersOnTick(roots) {
-    if (!Array.isArray(roots) || !roots.length) return;
+  function syncTimersOnTick(roots2) {
+    if (!Array.isArray(roots2) || !roots2.length) return;
     const candidates = [...document.querySelectorAll(CURRENT_ACTION_HOSTS)];
-    if (!candidates.some((host2) => touchesHost(roots, host2))) return;
+    if (!candidates.some((host2) => touchesHost(roots2, host2))) return;
     const host = pickRendered(candidates);
-    if (!host || !touchesHost(roots, host)) return;
+    if (!host || !touchesHost(roots2, host)) return;
     let remaining;
     const readOnce = () => remaining === void 0 ? remaining = currentActionRemaining() : remaining;
-    document.querySelectorAll(".compact-panel.fs-skill-panel[data-iw-skill-v2]").forEach((panel2) => {
-      if (!panel2.isConnected) return;
-      if (panel2.dataset.iwSkillV2LongAction !== "1" && !actionButtonOf(panel2)?.querySelector(FILL)) return;
-      syncLongActionTimer(panel2, panel2.querySelector("[data-iw-skill-v2-action-glyph]"), readOnce);
+    document.querySelectorAll(".compact-panel.fs-skill-panel[data-iw-skill-v2]").forEach((panel3) => {
+      if (!panel3.isConnected) return;
+      if (panel3.dataset.iwSkillV2LongAction !== "1" && !actionButtonOf(panel3)?.querySelector(FILL)) return;
+      syncLongActionTimer(panel3, panel3.querySelector("[data-iw-skill-v2-action-glyph]"), readOnce);
     });
   }
-  function fitActionLabel(panel2) {
-    const zone = panel2.querySelector('[data-iw-skill-zone="commands"]');
+  function fitActionLabel(panel3) {
+    const zone = panel3.querySelector('[data-iw-skill-zone="commands"]');
     const ACTION = '[data-iw-skill-role="action-button"]';
     const btn = zone?.matches(ACTION) ? zone : zone?.querySelector(ACTION);
     if (!btn) return;
-    const visual = panel2.querySelector("[data-iw-skill-v2-action-label]");
-    const label5 = (btn.textContent || "").replace(/\s+/g, " ").trim();
-    const key = `${label5}|${panel2.dataset.iwSkillLayout || ""}|${btn.style.getPropertyValue("width")}|${getLayoutEpoch()}`;
-    if (!label5 || panel2.dataset.iwSkillV2LabelFit === key) return;
-    panel2.dataset.iwSkillV2LabelFit = key;
-    const text = labelTextBox(visual || btn);
-    if (!text || !(text.width > 0)) return;
+    const visual = panel3.querySelector("[data-iw-skill-v2-action-label]");
+    const label6 = (btn.textContent || "").replace(/\s+/g, " ").trim();
+    const key = `${label6}|${panel3.dataset.iwSkillLayout || ""}|${btn.style.getPropertyValue("width")}|${getLayoutEpoch()}`;
+    if (!label6 || panel3.dataset.iwSkillV2LabelFit === key) return;
+    panel3.dataset.iwSkillV2LabelFit = key;
+    const text2 = labelTextBox(visual || btn);
+    if (!text2 || !(text2.width > 0)) return;
     const cs = getComputedStyle(visual || btn);
     const room = (visual || btn).clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     const current = parseFloat(cs.fontSize);
     if (!(room > 0) || !(current > 0)) return;
     const tracking = parseFloat(cs.letterSpacing) || 0;
-    const width = text.width - tracking;
+    const width = text2.width - tracking;
     const fit = Math.floor(current * (room / width) * 10) / 10;
     const size = `${Math.max(LABEL_FLOOR_PX, Math.min(LABEL_CEILING_PX, fit))}px`;
-    if (panel2.style.getPropertyValue("--iw-skill-v2-action-label-font") !== size) panel2.style.setProperty("--iw-skill-v2-action-label-font", size);
+    if (panel3.style.getPropertyValue("--iw-skill-v2-action-label-font") !== size) panel3.style.setProperty("--iw-skill-v2-action-label-font", size);
   }
-  function controlsHost(panel2) {
-    return panel2.querySelector('[data-iw-skill-layout-shell="1"]') || panel2;
+  function controlsHost(panel3) {
+    return panel3.querySelector('[data-iw-skill-layout-shell="1"]') || panel3;
   }
   var MATERIAL_PARTS = /^(.*?)\s*([\d,]+\s*\/\s*[\d,]+)\s*$/;
   var MATERIAL_COUNT_PARTS = /^([\d,]+)\s*\/\s*([\d,]+)$/;
-  function ensureDetailBody(panel2) {
-    const host = controlsHost(panel2);
+  function ensureDetailBody(panel3) {
+    const host = controlsHost(panel3);
     if (!host) return null;
     let body = host.querySelector(":scope > [data-iw-skill-v2-body]");
     if (!body) {
@@ -4561,7 +4561,7 @@
       host.appendChild(body);
     }
     const selected = FRAME_SECTIONS.flatMap((name) => {
-      const sections = [...panel2.querySelectorAll(`[data-iw-skill-v2-section="${name}"]`)];
+      const sections = [...panel3.querySelectorAll(`[data-iw-skill-v2-section="${name}"]`)];
       const grid = sections.find((el2) => el2.classList.contains("fs-skill-ingredient-grid"));
       return grid ? [grid] : sections.filter((el2) => !sections.some((other) => other !== el2 && other.contains(el2)));
     });
@@ -4575,8 +4575,8 @@
       state: el2.dataset.iwIngredientState || "",
       kind: "material"
     })) : [{ text: (section.textContent || "").replace(/\s+/g, " ").trim(), state: "", kind: "" }]);
-    const signature3 = rows.map((r) => `${r.kind}:${r.state}:${r.text}`).join(String.fromCharCode(31));
-    if (body.dataset.iwSkillV2BodySignature === signature3) return body;
+    const signature5 = rows.map((r) => `${r.kind}:${r.state}:${r.text}`).join(String.fromCharCode(31));
+    if (body.dataset.iwSkillV2BodySignature === signature5) return body;
     const frag = document.createDocumentFragment();
     for (const row of rows) {
       const el2 = document.createElement("span");
@@ -4609,11 +4609,11 @@
       frag.appendChild(el2);
     }
     body.replaceChildren(frag);
-    body.dataset.iwSkillV2BodySignature = signature3;
+    body.dataset.iwSkillV2BodySignature = signature5;
     return body;
   }
-  function ensureFootRow(panel2) {
-    const host = controlsHost(panel2);
+  function ensureFootRow(panel3) {
+    const host = controlsHost(panel3);
     if (!host) return null;
     let row = host.querySelector(":scope > [data-iw-skill-v2-controls]");
     if (!row) {
@@ -4625,14 +4625,14 @@
     }
     return row;
   }
-  function syncRequirementNote(panel2) {
-    const unmet = [...new Set([...panel2.querySelectorAll('[data-iw-skill-v2-section="requirements"][data-iw-req-state="unmet"]')].map((el2) => (el2.textContent || "").replace(/\s+/g, " ").trim()).filter(Boolean))];
-    const existing = panel2.querySelector("[data-iw-skill-v2-controls]");
+  function syncRequirementNote(panel3) {
+    const unmet = [...new Set([...panel3.querySelectorAll('[data-iw-skill-v2-section="requirements"][data-iw-req-state="unmet"]')].map((el2) => (el2.textContent || "").replace(/\s+/g, " ").trim()).filter(Boolean))];
+    const existing = panel3.querySelector("[data-iw-skill-v2-controls]");
     if (!unmet.length) {
       existing?.remove();
       return null;
     }
-    const row = ensureFootRow(panel2);
+    const row = ensureFootRow(panel3);
     if (!row) return null;
     let note = row.querySelector(":scope > [data-iw-skill-v2-req-note]");
     if (!note) {
@@ -4645,45 +4645,45 @@
     setText(note, unmet.join(" · "));
     return row;
   }
-  function enhanceSkillCardV2(panel2, skillType) {
-    if (!panel2 || !panel2.isConnected || !skillType || skillType === "unknown") return null;
-    if (panel2.style.getPropertyValue("--iw-skill-v2-btn-font")) panel2.style.removeProperty("--iw-skill-v2-btn-font");
-    setData2(panel2, "iwSkillV2", "1");
-    setData2(panel2, "iwSkillV2Type", skillType);
-    setData2(panel2, "iwSkillV2State", "expanded");
-    markSections(panel2);
-    levelReadout(panel2);
-    const glyph = ensureActionGlyph(panel2);
-    ensureActionLabel(panel2);
-    fitActionLabel(panel2);
-    smoothActionFill(panel2);
-    syncLongActionTimer(panel2, glyph);
-    removeRetiredNodes(panel2);
-    const row = syncRequirementNote(panel2);
-    ensureDetailBody(panel2);
+  function enhanceSkillCardV2(panel3, skillType) {
+    if (!panel3 || !panel3.isConnected || !skillType || skillType === "unknown") return null;
+    if (panel3.style.getPropertyValue("--iw-skill-v2-btn-font")) panel3.style.removeProperty("--iw-skill-v2-btn-font");
+    setData2(panel3, "iwSkillV2", "1");
+    setData2(panel3, "iwSkillV2Type", skillType);
+    setData2(panel3, "iwSkillV2State", "expanded");
+    markSections(panel3);
+    levelReadout(panel3);
+    const glyph = ensureActionGlyph(panel3);
+    ensureActionLabel(panel3);
+    fitActionLabel(panel3);
+    smoothActionFill(panel3);
+    syncLongActionTimer(panel3, glyph);
+    removeRetiredNodes(panel3);
+    const row = syncRequirementNote(panel3);
+    ensureDetailBody(panel3);
     return row;
   }
-  function clearSkillCardV2(panel2) {
-    if (!panel2) return;
-    panel2.querySelectorAll("[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-xp],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]").forEach((el2) => el2.remove());
-    panel2.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => delete el2.dataset.iwSkillV2Section);
-    panel2.style.removeProperty("--iw-skill-v2-progress");
-    panel2.style.removeProperty("--iw-skill-v2-btn-font");
-    panel2.style.removeProperty("--iw-skill-v2-action-label-font");
-    panel2.style.removeProperty("--iw-skill-v2-fill-duration");
-    delete panel2.dataset.iwSkillV2FillReset;
-    delete panel2.dataset.iwSkillV2LongAction;
-    fillSamples.delete(panel2);
-    delete panel2.dataset.iwSkillV2LabelFit;
-    delete panel2.dataset.iwSkillV2;
-    delete panel2.dataset.iwSkillV2Type;
-    delete panel2.dataset.iwSkillV2State;
-    delete panel2.dataset.iwSkillV2Tab;
+  function clearSkillCardV2(panel3) {
+    if (!panel3) return;
+    panel3.querySelectorAll("[data-iw-skill-v2-controls],[data-iw-skill-v2-expand],[data-iw-skill-v2-level-readout],[data-iw-skill-v2-xp],[data-iw-skill-v2-action-glyph],[data-iw-skill-v2-action-label],[data-iw-skill-v2-summary],[data-iw-skill-v2-break],[data-iw-skill-v2-body],[data-iw-skill-v2-req-note]").forEach((el2) => el2.remove());
+    panel3.querySelectorAll("[data-iw-skill-v2-section]").forEach((el2) => delete el2.dataset.iwSkillV2Section);
+    panel3.style.removeProperty("--iw-skill-v2-progress");
+    panel3.style.removeProperty("--iw-skill-v2-btn-font");
+    panel3.style.removeProperty("--iw-skill-v2-action-label-font");
+    panel3.style.removeProperty("--iw-skill-v2-fill-duration");
+    delete panel3.dataset.iwSkillV2FillReset;
+    delete panel3.dataset.iwSkillV2LongAction;
+    fillSamples.delete(panel3);
+    delete panel3.dataset.iwSkillV2LabelFit;
+    delete panel3.dataset.iwSkillV2;
+    delete panel3.dataset.iwSkillV2Type;
+    delete panel3.dataset.iwSkillV2State;
+    delete panel3.dataset.iwSkillV2Tab;
   }
-  function reconcile(panel2, skill) {
-    if (!panel2?.isConnected) return;
-    if (!skill || skill === "unknown" || !panel2.classList.contains("fs-skill-panel")) return clearSkillCardV2(panel2);
-    enhanceSkillCardV2(panel2, skill);
+  function reconcile(panel3, skill) {
+    if (!panel3?.isConnected) return;
+    if (!skill || skill === "unknown" || !panel3.classList.contains("fs-skill-panel")) return clearSkillCardV2(panel3);
+    enhanceSkillCardV2(panel3, skill);
   }
   function bindOnce() {
     if (bound) return;
@@ -4700,9 +4700,9 @@
     bindOnce();
     document.fonts?.ready?.then(() => guard("skill-v2:fonts", () => {
       if (!active) return;
-      document.querySelectorAll(".compact-panel[data-iw-skill-v2-label-fit]").forEach((panel2) => {
-        delete panel2.dataset.iwSkillV2LabelFit;
-        fitActionLabel(panel2);
+      document.querySelectorAll(".compact-panel[data-iw-skill-v2-label-fit]").forEach((panel3) => {
+        delete panel3.dataset.iwSkillV2LabelFit;
+        fitActionLabel(panel3);
       });
     }));
     const root = document.documentElement;
@@ -4744,8 +4744,8 @@
   }
   function textLeaves(root) {
     return [...root.querySelectorAll("p,span,div,strong,em,h1,h2,h3,h4")].filter((el2) => !el2.closest('button,a,[role="button"],.fs-quest-sigil')).filter((el2) => {
-      const own5 = [...el2.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
-      return own5 && normText2(el2.textContent).length <= 220;
+      const own8 = [...el2.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
+      return own8 && normText2(el2.textContent).length <= 220;
     });
   }
   function questButtons(card) {
@@ -4753,9 +4753,9 @@
     let turnIn = null;
     let skip = null;
     for (const btn of all) {
-      const label5 = normText2(btn.textContent) || normText2(btn.getAttribute("aria-label"));
-      if (!turnIn && /turn\s*in/i.test(label5)) turnIn = btn;
-      else if (!skip && /^skip\b/i.test(label5)) skip = btn;
+      const label6 = normText2(btn.textContent) || normText2(btn.getAttribute("aria-label"));
+      if (!turnIn && /turn\s*in/i.test(label6)) turnIn = btn;
+      else if (!skip && /^skip\b/i.test(label6)) skip = btn;
     }
     return { turnIn, skip, all };
   }
@@ -4920,21 +4920,21 @@
       body.insertBefore(sigil, body.firstChild);
     }
     if (sigil.dataset.iwQuestGlyph !== style.glyph) sigil.dataset.iwQuestGlyph = style.glyph;
-    let icon3 = sigil.querySelector(":scope > .fs-quest-sigil-icon");
+    let icon4 = sigil.querySelector(":scope > .fs-quest-sigil-icon");
     if (ref && ref.name && AtlasService.isReady()) {
-      const target = icon3 || Object.assign(document.createElement("span"), { className: "fs-quest-sigil-icon" });
+      const target = icon4 || Object.assign(document.createElement("span"), { className: "fs-quest-sigil-icon" });
       if (AtlasService.paint(target, { id: ref.id, name: ref.name })) {
-        if (!icon3) {
+        if (!icon4) {
           target.setAttribute("aria-hidden", "true");
           sigil.appendChild(target);
         }
         if (sigil.dataset.iwQuestIcon !== "1") sigil.dataset.iwQuestIcon = "1";
       } else {
-        icon3?.remove();
+        icon4?.remove();
         delete sigil.dataset.iwQuestIcon;
       }
     } else {
-      icon3?.remove();
+      icon4?.remove();
       delete sigil.dataset.iwQuestIcon;
       if (ref && ref.name && !AtlasService.isReady() && !card.dataset.iwQuestIconPending) {
         card.dataset.iwQuestIconPending = "1";
@@ -4954,8 +4954,8 @@
         ring.className = "fs-quest-sigil-pct";
         sigil.appendChild(ring);
       }
-      const label5 = `${pct}%`;
-      if (ring.textContent !== label5) ring.textContent = label5;
+      const label6 = `${pct}%`;
+      if (ring.textContent !== label6) ring.textContent = label6;
     } else {
       ring?.remove();
     }
@@ -5008,8 +5008,8 @@
     if (card.style.getPropertyValue("--fs-quest-accent") !== style.accent) {
       card.style.setProperty("--fs-quest-accent", style.accent);
     }
-    const state2 = questState(card);
-    if (card.getAttribute(STATE_ATTR) !== state2) card.setAttribute(STATE_ATTR, state2);
+    const state3 = questState(card);
+    if (card.getAttribute(STATE_ATTR) !== state3) card.setAttribute(STATE_ATTR, state3);
     if (card.getAttribute(RENDERED_ATTR3) !== "1") card.setAttribute(RENDERED_ATTR3, "1");
     ensureObjectiveTrigger(ref);
     ensureDecoration(card, style, ref);
@@ -5181,11 +5181,11 @@
   function setText2(el2, value) {
     if (el2 && el2.textContent !== value) el2.textContent = value;
   }
-  function owned(tag, className, text) {
+  function owned(tag, className, text2) {
     const el2 = document.createElement(tag);
     el2.className = className;
     el2.dataset.iwBossOwned = "1";
-    if (text) el2.textContent = text;
+    if (text2) el2.textContent = text2;
     return el2;
   }
   function controlProgress(card) {
@@ -5237,16 +5237,16 @@
     }
     crest.appendChild(owned("span", "iw-control-crystal-core"));
   }
-  function stopStrengthImpact(panel2) {
-    impactCleanup.get(panel2)?.();
-    impactCleanup.delete(panel2);
-    for (const animation of impactAnimations.get(panel2) || []) animation?.cancel?.();
-    impactAnimations.delete(panel2);
+  function stopStrengthImpact(panel3) {
+    impactCleanup.get(panel3)?.();
+    impactCleanup.delete(panel3);
+    for (const animation of impactAnimations.get(panel3) || []) animation?.cancel?.();
+    impactAnimations.delete(panel3);
   }
-  function playStrengthImpact(panel2, previous, strengths) {
+  function playStrengthImpact(panel3, previous, strengths) {
     const preference = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
     if (preference?.matches) {
-      stopStrengthImpact(panel2);
+      stopStrengthImpact(panel3);
       return;
     }
     if (!previous) return;
@@ -5254,33 +5254,33 @@
     if (previous.red !== strengths.red.value) changed.push("red");
     if (previous.blue !== strengths.blue.value) changed.push("blue");
     if (!changed.length) return;
-    stopStrengthImpact(panel2);
+    stopStrengthImpact(panel3);
     const mobile = typeof matchMedia === "function" && matchMedia("(max-width: 760px)").matches;
     const animations = [];
     for (const team of changed) {
-      const energy = panel2.querySelector(`.iw-control-impact-${team}`);
+      const energy = panel3.querySelector(`.iw-control-impact-${team}`);
       if (energy?.animate) animations.push(energy.animate([
         { opacity: 0, transform: "translateX(-100%) scaleX(.45)" },
         { opacity: mobile ? 0.4 : 0.65, transform: "translateX(65%) scaleX(1.1)", offset: 0.42 },
         { opacity: 0, transform: "translateX(330%) scaleX(.6)" }
       ], { duration: mobile ? 1e3 : 1250, delay: team === "blue" ? 170 : 0, easing: "cubic-bezier(.3,.1,.3,1)" }));
     }
-    impactAnimations.set(panel2, animations);
+    impactAnimations.set(panel3, animations);
     const onPreference = () => {
-      if (preference.matches) stopStrengthImpact(panel2);
+      if (preference.matches) stopStrengthImpact(panel3);
     };
     preference?.addEventListener?.("change", onPreference);
-    impactCleanup.set(panel2, () => preference?.removeEventListener?.("change", onPreference));
+    impactCleanup.set(panel3, () => preference?.removeEventListener?.("change", onPreference));
     const finished = animations.map((animation) => animation.finished).filter(Boolean);
     if (finished.length) Promise.allSettled(finished).then(() => {
-      if (impactAnimations.get(panel2) === animations) stopStrengthImpact(panel2);
+      if (impactAnimations.get(panel3) === animations) stopStrengthImpact(panel3);
     });
   }
   function ensureDominion(card) {
-    let panel2 = card.querySelector(".iw-control-dominion");
-    if (panel2) return panel2;
-    panel2 = owned("section", "iw-control-dominion");
-    panel2.setAttribute("aria-label", "Zone dominion status");
+    let panel3 = card.querySelector(".iw-control-dominion");
+    if (panel3) return panel3;
+    panel3 = owned("section", "iw-control-dominion");
+    panel3.setAttribute("aria-label", "Zone dominion status");
     const crest = owned("div", "iw-control-crest");
     crest.setAttribute("aria-hidden", "true");
     ensureCrestLayers(crest);
@@ -5304,13 +5304,13 @@
     meter.append(meterHead, track);
     const factions = owned("div", "iw-control-factions");
     factions.append(owned("span", "iw-control-faction iw-control-faction-red", "Crimson Oath"), owned("span", "iw-control-versus", "✦"), owned("span", "iw-control-faction iw-control-faction-blue", "Azure Covenant"));
-    panel2.append(crest, readout, meter, factions);
-    card.appendChild(panel2);
-    return panel2;
+    panel3.append(crest, readout, meter, factions);
+    card.appendChild(panel3);
+    return panel3;
   }
   function updateDominion(card, team) {
-    const panel2 = ensureDominion(card);
-    ensureCrestLayers(panel2.querySelector(".iw-control-crest"));
+    const panel3 = ensureDominion(card);
+    ensureCrestLayers(panel3.querySelector(".iw-control-crest"));
     const hp = [...card.querySelectorAll("p")].find((el2) => !el2.closest("[data-iw-boss-owned]") && /\b[\d,.]+(?:\s*\/\s*[\d,.]+)?\s*HP\b/i.test(norm(el2.textContent)));
     const progress = controlProgress(card);
     const nativeStrengths = controlStrengths(card);
@@ -5319,7 +5319,7 @@
     const split = totalStrength > 0 ? strengths.red.value / totalStrength * 100 : 50;
     const percent2 = progress.percent;
     const value = strengths ? `${strengths.red.raw} · ${strengths.blue.raw}` : hp ? norm(hp.textContent) : team === "contested" ? "Under siege" : "Fortified";
-    const state2 = team === "red" ? "Crimson Dominion" : team === "blue" ? "Azure Dominion" : "Ward contested";
+    const state3 = team === "red" ? "Crimson Dominion" : team === "blue" ? "Azure Dominion" : "Ward contested";
     card.querySelectorAll('[data-iw-boss-role="control-strength"]').forEach((row) => row.removeAttribute("data-iw-boss-role"));
     const hiddenStrengths = strengths || (nativeStrengths?.red.team === "red" && nativeStrengths?.blue.team === "blue" ? nativeStrengths : null);
     if (hiddenStrengths) {
@@ -5328,25 +5328,25 @@
     }
     mark(hp, "data-iw-boss-role", "control-hp");
     mark(progress.track, "data-iw-boss-role", "control-progress");
-    panel2.querySelector(".iw-control-crest").dataset.iwControlCrest = team;
-    setText2(panel2.querySelector(".iw-control-state"), state2);
-    setText2(panel2.querySelector(".iw-control-meter-label"), strengths ? "Ward Strength" : "Ward Integrity");
-    setText2(panel2.querySelector(".iw-control-meter-value"), value);
-    const meter = panel2.querySelector(".iw-control-meter");
-    const fill = panel2.querySelector(".iw-control-meter-fill");
+    panel3.querySelector(".iw-control-crest").dataset.iwControlCrest = team;
+    setText2(panel3.querySelector(".iw-control-state"), state3);
+    setText2(panel3.querySelector(".iw-control-meter-label"), strengths ? "Ward Strength" : "Ward Integrity");
+    setText2(panel3.querySelector(".iw-control-meter-value"), value);
+    const meter = panel3.querySelector(".iw-control-meter");
+    const fill = panel3.querySelector(".iw-control-meter-fill");
     if (strengths) {
-      playStrengthImpact(panel2, strengthHistory.get(card), strengths);
+      playStrengthImpact(panel3, strengthHistory.get(card), strengths);
       strengthHistory.set(card, { red: strengths.red.value, blue: strengths.blue.value });
       meter.dataset.iwControlSource = "factions";
       fill.style.width = "100%";
       fill.style.setProperty("--iw-control-split", `${Number(split.toFixed(1))}%`);
     } else {
       strengthHistory.delete(card);
-      stopStrengthImpact(panel2);
+      stopStrengthImpact(panel3);
       delete meter.dataset.iwControlSource;
       fill.style.width = `${percent2 ?? 100}%`;
     }
-    const track = panel2.querySelector(".iw-control-meter-track");
+    const track = panel3.querySelector(".iw-control-meter-track");
     track.setAttribute("aria-label", strengths ? "Ward strength balance" : "Ward integrity");
     if (strengths) {
       track.setAttribute("aria-valuemin", "0");
@@ -5366,9 +5366,9 @@
     }
   }
   function rewards(card, boss) {
-    const signature3 = `${boss.key}:${ItemDatabase.revision()}:${AtlasService.revision()}`;
+    const signature5 = `${boss.key}:${ItemDatabase.revision()}:${AtlasService.revision()}`;
     let section = card.querySelector(".iw-boss-rewards");
-    if (section && signatures.get(card) === signature3) return;
+    if (section && signatures.get(card) === signature5) return;
     const ids2 = [.../* @__PURE__ */ new Set([...boss.ids, ...ItemDatabase.all().filter((item) => item.acquisition_type === "BossDrop" && `${item.acquisition_summary} ${item.acquisition_detail}`.includes(boss.name)).map((item) => item.item_id), "trader_token", "boss_upgrade_orb"])];
     if (!section) {
       section = owned("details", "iw-boss-rewards");
@@ -5382,21 +5382,21 @@
     for (const id of ids2) {
       const item = ItemDatabase.find({ id }) || fallback.get(id);
       if (!item) continue;
-      const tile2 = owned("button", "iw-boss-reward");
-      tile2.type = "button";
-      tile2.dataset.iwTooltipTrigger = "1";
-      tile2.dataset.iwItem = id;
-      tile2.dataset.iwItemName = item.name;
-      tile2.setAttribute("aria-label", `${item.name} — item details`);
-      registerTooltipItem(tile2, item);
-      const icon3 = owned("span", "iw-boss-reward-icon");
-      icon3.setAttribute("aria-hidden", "true");
-      if (!AtlasService.paint(icon3, id === "boss_upgrade_orb" ? { name: "Copper Upgrade Orb", id: "copper_upgrade_orb" } : { id, name: item.name })) icon3.textContent = "◆";
-      tile2.append(icon3, owned("span", "iw-boss-reward-name", item.name));
-      list.appendChild(tile2);
+      const tile3 = owned("button", "iw-boss-reward");
+      tile3.type = "button";
+      tile3.dataset.iwTooltipTrigger = "1";
+      tile3.dataset.iwItem = id;
+      tile3.dataset.iwItemName = item.name;
+      tile3.setAttribute("aria-label", `${item.name} — item details`);
+      registerTooltipItem(tile3, item);
+      const icon4 = owned("span", "iw-boss-reward-icon");
+      icon4.setAttribute("aria-hidden", "true");
+      if (!AtlasService.paint(icon4, id === "boss_upgrade_orb" ? { name: "Copper Upgrade Orb", id: "copper_upgrade_orb" } : { id, name: item.name })) icon4.textContent = "◆";
+      tile3.append(icon4, owned("span", "iw-boss-reward-name", item.name));
+      list.appendChild(tile3);
     }
     section.appendChild(list);
-    signatures.set(card, signature3);
+    signatures.set(card, signature5);
   }
   function decorateWorldBossPanel({ root, heading }) {
     if (!root.querySelector(".iw-boss-notice")) {
@@ -5409,9 +5409,9 @@
       if (card.querySelector(".compact-panel")) continue;
       const header = [...card.children].find((el2) => !el2.hasAttribute("data-iw-boss-owned"));
       const title = header?.querySelector("p") || (header?.matches("p") ? header : null);
-      const label5 = norm(title?.textContent);
-      const boss = BOSSES.find((entry2) => label5.includes(entry2.name));
-      const control = /controls Zone\s+\d+|Zone\s+\d+.*(?:Race to capture|contested)/i.test(label5);
+      const label6 = norm(title?.textContent);
+      const boss = BOSSES.find((entry2) => label6.includes(entry2.name));
+      const control = /controls Zone\s+\d+|Zone\s+\d+.*(?:Race to capture|contested)/i.test(label6);
       if (!boss && !control) continue;
       mark(card, "data-iw-encounter", boss ? boss.key : "zone");
       mark(header, "data-iw-boss-role", "header");
@@ -5437,10 +5437,10 @@
       let status = null;
       for (const p of card.querySelectorAll("p")) {
         if (p.closest("[data-iw-boss-owned]") || p === title) continue;
-        const text = norm(p.textContent);
-        if (/^(Solo|Raid|Mythic)$/i.test(text)) mark(p, "data-iw-boss-role", "difficulty");
-        else if (/^Buff on kill:/.test(text)) mark(p, "data-iw-boss-role", "buff");
-        else if (/^(Respawns|Buff active|No world buff|Protected for)|\d\s*HP$/.test(text)) {
+        const text2 = norm(p.textContent);
+        if (/^(Solo|Raid|Mythic)$/i.test(text2)) mark(p, "data-iw-boss-role", "difficulty");
+        else if (/^Buff on kill:/.test(text2)) mark(p, "data-iw-boss-role", "buff");
+        else if (/^(Respawns|Buff active|No world buff|Protected for)|\d\s*HP$/.test(text2)) {
           mark(p, "data-iw-boss-role", "timer");
           if (p.parentElement !== card && p.parentElement !== header) status = p.parentElement;
         }
@@ -5457,12 +5457,12 @@
       }
       if (boss) rewards(card, boss);
       else {
-        const team = /red team controls/i.test(label5) ? "red" : /blue team controls/i.test(label5) ? "blue" : "contested";
+        const team = /red team controls/i.test(label6) ? "red" : /blue team controls/i.test(label6) ? "blue" : "contested";
         mark(card, "data-iw-control", team);
         for (const el2 of card.children) {
           if (el2.hasAttribute("data-iw-boss-owned") || el2 === header) continue;
-          const text = norm(el2.textContent);
-          if (/Red Team/.test(text) && /Blue Team/.test(text)) mark(el2, "data-iw-boss-role", "control-teams");
+          const text2 = norm(el2.textContent);
+          if (/Red Team/.test(text2) && /Blue Team/.test(text2)) mark(el2, "data-iw-boss-role", "control-teams");
           else if (/^Queue\b/.test(norm(el2.firstElementChild?.textContent))) mark(el2, "data-iw-boss-role", "control-queue");
         }
         updateDominion(card, team);
@@ -5536,11 +5536,11 @@
   function unmark(el2, key) {
     if (el2 && el2.hasAttribute(key)) el2.removeAttribute(key);
   }
-  function owned2(tag, className, text) {
+  function owned2(tag, className, text2) {
     const el2 = document.createElement(tag);
     el2.className = className;
     el2.dataset.iwVillageOwned = "1";
-    if (text) el2.textContent = text;
+    if (text2) el2.textContent = text2;
     return el2;
   }
   function nativeChildren(el2) {
@@ -5601,13 +5601,13 @@
     const effects = vacant ? null : rest[1] || null;
     const buildingName = name ? label(name.textContent) : "";
     const building = resolveBuilding(buildingName);
-    const state2 = vacant ? "vacant" : name ? "installed" : "unknown";
-    if (state2 === "unknown") {
+    const state3 = vacant ? "vacant" : name ? "installed" : "unknown";
+    if (state3 === "unknown") {
       undecorateSlot(card);
       return false;
     }
     mark2(card, "data-iw-village", "slot");
-    mark2(card, "data-iw-village-state", state2);
+    mark2(card, "data-iw-village-state", state3);
     mark2(head, "data-iw-village-role", "head");
     mark2(copy, "data-iw-village-role", "copy");
     mark2(index, "data-iw-village-role", "index");
@@ -5617,11 +5617,11 @@
     const actions = head ? nativeChildren(head)[1] : null;
     if (actions) {
       mark2(actions, "data-iw-village-role", actions.tagName === "BUTTON" ? "action" : "actions");
-      for (const button2 of actions.tagName === "BUTTON" ? [actions] : actions.querySelectorAll("button")) {
-        mark2(button2, "data-iw-village-role", "action");
-        const verb = label(button2.textContent).toLowerCase();
+      for (const button3 of actions.tagName === "BUTTON" ? [actions] : actions.querySelectorAll("button")) {
+        mark2(button3, "data-iw-village-role", "action");
+        const verb = label(button3.textContent).toLowerCase();
         mark2(
-          button2,
+          button3,
           "data-iw-village-action",
           verb.startsWith("destroy") ? "destroy" : verb.startsWith("uninstall") ? "uninstall" : verb.startsWith("install") ? "install" : verb.startsWith("cancel") ? "cancel" : "other"
         );
@@ -5679,7 +5679,7 @@
     return `${norm2(head?.textContent)} ${controls} ${nativeChildren(card).length} ${ItemDatabase.revision()}`;
   }
   function houseTier(card, nameEl) {
-    const tierLine = [...card.querySelectorAll("p")].map((el2) => norm2(el2.textContent)).find((text) => /^current tier\s*:/i.test(text));
+    const tierLine = [...card.querySelectorAll("p")].map((el2) => norm2(el2.textContent)).find((text2) => /^current tier\s*:/i.test(text2));
     const digits = tierLine ? /^current tier\s*:\s*(\d+)/i.exec(tierLine) : null;
     if (digits) return Number(digits[1]) || null;
     const named = VILLAGE_HOUSES[label(nameEl?.textContent).toLowerCase()];
@@ -5714,16 +5714,16 @@
     mark2(card, "data-iw-village-tier", String(tier ?? 0));
     mark2(nameEl, "data-iw-village-role", "house-name");
     for (const line of lines.slice(1)) {
-      const text = norm2(line.textContent);
-      if (/^current tier\s*:/i.test(text)) mark2(line, "data-iw-village-role", "house-tier");
-      else if (/^salvage material owned\s*:/i.test(text)) mark2(line, "data-iw-village-role", "house-salvage");
-      else if (/^next upgrade\s*:/i.test(text)) mark2(line, "data-iw-village-role", "house-next");
-      else if (/^maximum housing tier reached/i.test(text)) mark2(line, "data-iw-village-role", "house-max");
+      const text2 = norm2(line.textContent);
+      if (/^current tier\s*:/i.test(text2)) mark2(line, "data-iw-village-role", "house-tier");
+      else if (/^salvage material owned\s*:/i.test(text2)) mark2(line, "data-iw-village-role", "house-salvage");
+      else if (/^next upgrade\s*:/i.test(text2)) mark2(line, "data-iw-village-role", "house-next");
+      else if (/^maximum housing tier reached/i.test(text2)) mark2(line, "data-iw-village-role", "house-max");
       else mark2(line, "data-iw-village-role", "house-note");
     }
-    for (const button2 of card.querySelectorAll("button")) {
-      mark2(button2, "data-iw-village-role", "action");
-      mark2(button2, "data-iw-village-action", "upgrade");
+    for (const button3 of card.querySelectorAll("button")) {
+      mark2(button3, "data-iw-village-role", "action");
+      mark2(button3, "data-iw-village-action", "upgrade");
     }
     ensureArt(card, HOUSE_BY_TIER.find((house) => house.tier === tier) || null, "house");
     ensureTierTrack(card, tier);
@@ -5818,42 +5818,42 @@
     if (row.button.getAttribute("aria-expanded") !== expanded) {
       row.button.setAttribute("aria-expanded", expanded);
     }
-    const label5 = `${open ? "Collapse" : "Expand"} ${row.name}`;
-    if (row.button.getAttribute("title") !== label5) row.button.setAttribute("title", label5);
+    const label6 = `${open ? "Collapse" : "Expand"} ${row.name}`;
+    if (row.button.getAttribute("title") !== label6) row.button.setAttribute("title", label6);
   }
   var ids = 0;
-  function icon(own5, file, fallback2) {
-    const box = own5("span", "iw-vs-entry-icon");
+  function icon(own8, file, fallback2) {
+    const box = own8("span", "iw-vs-entry-icon");
     box.setAttribute("aria-hidden", "true");
     if (!file) {
       box.textContent = fallback2;
       return box;
     }
-    const img = own5("img", "iw-vs-entry-sprite");
+    const img = own8("img", "iw-vs-entry-sprite");
     img.src = assetUrl(`assets/${file}`);
     img.alt = "";
     img.decoding = "async";
     box.append(img);
     return box;
   }
-  function statList(own5, rows) {
-    const list = own5("dl", "iw-vs-stats");
+  function statList(own8, rows) {
+    const list = own8("dl", "iw-vs-stats");
     for (const row of rows) {
-      const line = own5("div", "iw-vs-stat");
+      const line = own8("div", "iw-vs-stat");
       if (row.kind) line.dataset.iwVsStatKind = row.kind;
-      line.append(own5("dt", "", row.label), own5("dd", "", row.value));
+      line.append(own8("dt", "", row.label), own8("dd", "", row.value));
       list.append(line);
     }
     return list;
   }
-  function chevron(own5) {
-    const mark6 = own5("span", "iw-vs-chevron");
-    mark6.setAttribute("aria-hidden", "true");
-    return mark6;
+  function chevron(own8) {
+    const mark7 = own8("span", "iw-vs-chevron");
+    mark7.setAttribute("aria-hidden", "true");
+    return mark7;
   }
-  function wire(key, name, box, button2) {
-    const row = { key, name, entry: box, button: button2 };
-    button2.addEventListener("click", (event) => {
+  function wire(key, name, box, button3) {
+    const row = { key, name, entry: box, button: button3 };
+    button3.addEventListener("click", (event) => {
       event.preventDefault();
       const closed = prefs.get(key) === false;
       if (closed) prefs.delete(key);
@@ -5866,29 +5866,29 @@
     applyEntry(row);
     return row;
   }
-  function entry(own5, { key, name, meta, file, fallback: fallback2, rows, notes, empty }) {
-    const box = own5("div", "iw-vs-entry");
+  function entry(own8, { key, name, meta, file, fallback: fallback2, rows, notes, empty }) {
+    const box = own8("div", "iw-vs-entry");
     box.dataset.iwVsEntry = key;
-    const button2 = own5("button", "iw-vs-entry-head");
-    button2.type = "button";
-    button2.dataset.iwVsToggle = "1";
+    const button3 = own8("button", "iw-vs-entry-head");
+    button3.type = "button";
+    button3.dataset.iwVsToggle = "1";
     const bodyId = `iw-vs-entry-${ids += 1}`;
-    button2.setAttribute("aria-controls", bodyId);
-    button2.setAttribute("aria-expanded", "true");
-    const label5 = own5("span", "iw-vs-entry-label");
-    label5.append(own5("span", "iw-vs-entry-name", name));
-    if (meta) label5.append(own5("span", "iw-vs-entry-meta", meta));
-    button2.append(icon(own5, file, fallback2), label5, chevron(own5));
-    const body = own5("div", "iw-vs-entry-body");
+    button3.setAttribute("aria-controls", bodyId);
+    button3.setAttribute("aria-expanded", "true");
+    const label6 = own8("span", "iw-vs-entry-label");
+    label6.append(own8("span", "iw-vs-entry-name", name));
+    if (meta) label6.append(own8("span", "iw-vs-entry-meta", meta));
+    button3.append(icon(own8, file, fallback2), label6, chevron(own8));
+    const body = own8("div", "iw-vs-entry-body");
     body.id = bodyId;
     const lines = notes || [];
-    if (rows.length) body.append(statList(own5, rows));
-    for (const note of lines) body.append(own5("p", "iw-vs-entry-note", note));
+    if (rows.length) body.append(statList(own8, rows));
+    for (const note of lines) body.append(own8("p", "iw-vs-entry-note", note));
     if (!rows.length && !lines.length) {
-      body.append(own5("p", "iw-vs-entry-note", empty || "No recorded effects."));
+      body.append(own8("p", "iw-vs-entry-note", empty || "No recorded effects."));
     }
-    box.append(button2, body);
-    wire(key, name, box, button2);
+    box.append(button3, body);
+    wire(key, name, box, button3);
     return box;
   }
   function buildingItem(slot) {
@@ -5945,25 +5945,25 @@
     }
     return rows;
   }
-  function buildVillageLedger({ snapshot: snapshot2, house, perks: perks2, own: own5 }) {
+  function buildVillageLedger({ snapshot: snapshot2, house, perks: perks2, own: own8 }) {
     void loadPreferences();
     live = [];
-    const ledger = own5("div", "iw-vs-ledger");
+    const ledger = own8("div", "iw-vs-ledger");
     ledger.dataset.iwVillageLedger = "1";
-    const head = own5("div", "iw-vs-ledger-head");
-    head.append(own5("div", "iw-vs-ledger-title", "Buildings"));
-    const sectionToggle = own5("button", "iw-vs-ledger-toggle");
+    const head = own8("div", "iw-vs-ledger-head");
+    head.append(own8("div", "iw-vs-ledger-title", "Buildings"));
+    const sectionToggle = own8("button", "iw-vs-ledger-toggle");
     sectionToggle.type = "button";
     sectionToggle.dataset.iwVsToggle = "section";
     sectionToggle.setAttribute("aria-expanded", "true");
-    sectionToggle.append(chevron(own5));
+    sectionToggle.append(chevron(own8));
     head.append(sectionToggle);
-    const list = own5("div", "iw-vs-ledger-list");
+    const list = own8("div", "iw-vs-ledger-list");
     list.id = `iw-vs-list-${ids += 1}`;
     sectionToggle.setAttribute("aria-controls", list.id);
     ledger.append(head, list);
     wire("ledger", "the building list", ledger, sectionToggle);
-    list.append(entry(own5, {
+    list.append(entry(own8, {
       key: "home",
       name: house?.name || "No House",
       meta: `Home · tier ${snapshot2.tier}`,
@@ -5976,11 +5976,11 @@
     const installed = [];
     for (const slot of snapshot2.slots) {
       if (slot.state !== "installed") {
-        const line = own5("div", "iw-vs-ledger-vacant");
+        const line = own8("div", "iw-vs-ledger-vacant");
         line.dataset.iwVsSlotState = slot.state;
         line.append(
-          own5("span", "", `Slot ${slot.slot}`),
-          own5("span", "", slot.state === "locked" ? "Locked · upgrade housing" : "Empty plot")
+          own8("span", "", `Slot ${slot.slot}`),
+          own8("span", "", slot.state === "locked" ? "Locked · upgrade housing" : "Empty plot")
         );
         list.append(line);
         continue;
@@ -5988,7 +5988,7 @@
       const item = buildingItem(slot);
       if (item) installed.push(item);
       const tier = Number(item?.tier);
-      list.append(entry(own5, {
+      list.append(entry(own8, {
         key: `building:${slot.name.toLowerCase()}`,
         name: slot.name,
         meta: `Slot ${slot.slot}${Number.isFinite(tier) ? ` · tier ${tier}` : ""}`,
@@ -5998,21 +5998,21 @@
         empty: ItemDatabase.isReady() ? "This building records no effects." : "Effects arrive with the item database."
       }));
     }
-    const totals = own5("section", "iw-vs-totals");
+    const totals = own8("section", "iw-vs-totals");
     totals.dataset.iwVillageTotals = "1";
-    const title = own5("div", "iw-vs-totals-title", "Overall stats");
+    const title = own8("div", "iw-vs-totals-title", "Overall stats");
     title.setAttribute("role", "heading");
     title.setAttribute("aria-level", "3");
     totals.append(title);
     const rows = totalBenefits(installed);
-    if (rows.length) totals.append(statList(own5, rows));
+    if (rows.length) totals.append(statList(own8, rows));
     let note;
     if (!ItemDatabase.isReady()) note = "Waiting on the item database before totalling your buildings.";
     else if (!installed.length) note = "No installed buildings yet, so nothing is counted here.";
     else {
       note = `Summed from ${installed.length} installed building${installed.length === 1 ? "" : "s"}. Housing is not counted.`;
     }
-    totals.append(own5("p", "iw-vs-totals-note", note));
+    totals.append(own8("p", "iw-vs-totals-note", note));
     ledger.append(totals);
     return ledger;
   }
@@ -6083,11 +6083,11 @@
     }
     return { tier, capacity: addons.totalSlots, slots };
   }
-  function own(tag, cls, text) {
+  function own(tag, cls, text2) {
     const el2 = document.createElement(tag);
     el2.className = cls;
     el2.dataset.iwVillageSceneOwned = "1";
-    if (text) el2.textContent = text;
+    if (text2) el2.textContent = text2;
     return el2;
   }
   function art(file, fallback2) {
@@ -6109,8 +6109,8 @@
     if (!Number.isInteger(tier)) return;
     const lines = [];
     for (const line of house.querySelectorAll("p")) {
-      const text = line.textContent.replace(/\s+/g, " ").trim();
-      const tail = /^current tier\s*:\s*\d+\s*[•·|–—-]\s*(.+)$/i.exec(text);
+      const text2 = line.textContent.replace(/\s+/g, " ").trim();
+      const tail = /^current tier\s*:\s*\d+\s*[•·|–—-]\s*(.+)$/i.exec(text2);
       if (!tail) continue;
       for (const part of tail[1].split(/\s*[•·|]\s*/)) {
         const value = part.trim();
@@ -6481,7 +6481,7 @@
       }
       ctx.restore();
     }
-    const tile2 = layer(256, 256), tc = tile2.getContext("2d"), tp = tc.createImageData(256, 256);
+    const tile3 = layer(256, 256), tc = tile3.getContext("2d"), tp = tc.createImageData(256, 256);
     for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
       const v = 0.5 + 0.5 * Math.sin(TAU * y / 256 + 0.45 * Math.sin(TAU * x / 256));
       tp.data.set([255, 125, 32, Math.round(10 + v * v * v * 105)], (y * 256 + x) * 4);
@@ -6513,7 +6513,7 @@
       px.forEach(([a, b], i) => i ? mc.lineTo(a - x, b - y) : mc.moveTo(a - x, b - y));
       mc.closePath();
       mc.fill();
-      const flow = layer(w, h), fc2 = flow.getContext("2d"), pattern = fc2.createPattern(tile2, "repeat");
+      const flow = layer(w, h), fc2 = flow.getContext("2d"), pattern = fc2.createPattern(tile3, "repeat");
       const length = Math.hypot(...d);
       return { x, y, w, h, mask, flow, fc: fc2, pattern, dx: d[0] / length, dy: d[1] / length, cycles };
     });
@@ -6534,8 +6534,8 @@
       ctx.restore();
     }
     function cloud(x, y, w, h, alpha, u, flip = false, material = "smoke", part = 0) {
-      const sprites = material === "steam" ? steam : breath;
-      plume(ctx, sprites[part % 4], x, y, w, h, alpha, 0.11 * Math.sin(TAU * u), flip);
+      const sprites2 = material === "steam" ? steam : breath;
+      plume(ctx, sprites2[part % 4], x, y, w, h, alpha, 0.11 * Math.sin(TAU * u), flip);
     }
     function glow(x, y, rx, ry, color, alpha) {
       ctx.save();
@@ -6598,7 +6598,7 @@
         cloud(width * 0.48 + u * width * 0.03, height * 0.72 - u * height * 0.08, width * (0.32 + u * 0.09), height * (0.16 + u * 0.07), cue.debris * 0.24, u);
       }
     }
-    function render3(seconds, { battle = false, ambient = true, lava = true, atmosphere = true, cloudMotion = true, bossMotion = true, eyeLight = true } = {}) {
+    function render4(seconds, { battle = false, ambient = true, lava = true, atmosphere = true, cloudMotion = true, bossMotion = true, eyeLight = true } = {}) {
       if (destroyed) return getArenaCue(seconds, false);
       const phase2 = frac(seconds / ARENA_PERIOD), battleActive = battle && BATTLE_EFFECTS_ENABLED, cue = getArenaCue(seconds, battleActive);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -6649,7 +6649,7 @@
       if (battleActive) hazards(cue);
       return cue;
     }
-    return { render: render3, width, height, period: ARENA_PERIOD, destroy() {
+    return { render: render4, width, height, period: ARENA_PERIOD, destroy() {
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
       canvas.width = canvas.height = 1;
@@ -6663,17 +6663,17 @@
     return createArenaScene(canvas, { background: environment, smoke, ...options });
   }
   function clearAshmawScene(arena) {
-    const state2 = scenes.get(arena);
-    if (!state2) return;
-    state2.disposed = true;
-    cancelAnimationFrame(state2.frame);
-    state2.visible?.disconnect();
-    state2.renderer?.destroy();
-    state2.renderer = null;
-    document.removeEventListener("visibilitychange", state2.resume);
-    state2.motion.removeEventListener("change", state2.resume);
-    state2.art.remove();
-    state2.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state3 = scenes.get(arena);
+    if (!state3) return;
+    state3.disposed = true;
+    cancelAnimationFrame(state3.frame);
+    state3.visible?.disconnect();
+    state3.renderer?.destroy();
+    state3.renderer = null;
+    document.removeEventListener("visibilitychange", state3.resume);
+    state3.motion.removeEventListener("change", state3.resume);
+    state3.art.remove();
+    state3.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes.delete(arena);
   }
@@ -6698,34 +6698,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes.set(arena, state2);
+    const state3 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes.set(arena, state3);
     const start3 = performance.now();
     let last = 0;
-    state2.resume = () => {
-      cancelAnimationFrame(state2.frame);
-      state2.frame = 0;
-      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
-      if (state2.motion.matches) {
-        state2.renderer.render(0);
+    state3.resume = () => {
+      cancelAnimationFrame(state3.frame);
+      state3.frame = 0;
+      if (!state3.renderer || state3.disposed || document.hidden || !state3.onScreen) return;
+      if (state3.motion.matches) {
+        state3.renderer.render(0);
         return;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearAshmawScene(arena);
         return;
       }
-      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
+      if (state3.disposed || document.hidden || !state3.onScreen || state3.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state2.renderer.render((now - start3) / 1e3);
+        state3.renderer.render((now - start3) / 1e3);
         last = now;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state2.resume);
-    state2.motion.addEventListener("change", state2.resume);
+    document.addEventListener("visibilitychange", state3.resume);
+    state3.motion.addEventListener("change", state3.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -6734,34 +6734,34 @@
     env.src = assetUrl("assets/raids/ashmaw/arena.png");
     for (const [key, name] of Object.entries({ cloudAtlas: "clouds", smokeAtlas: "furnace-smoke", steamAtlas: "steam" })) textures[key].src = assetUrl("assets/raids/ashmaw/" + name + ".png");
     loaded.then(([background, cloudAtlas, smokeAtlas, steamAtlas]) => {
-      if (state2.disposed || !arena.isConnected) return;
+      if (state3.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
-      if (arena.querySelector(bossSelector) !== boss || boss.parentElement !== state2.stage || nativeBackground2 && !/ashmaw/i.test(nativeBackground2)) {
+      if (arena.querySelector(bossSelector) !== boss || boss.parentElement !== state3.stage || nativeBackground2 && !/ashmaw/i.test(nativeBackground2)) {
         clearAshmawScene(arena);
         return;
       }
       arena.setAttribute("data-iw-raid-scene", "ashmaw");
-      state2.stage.setAttribute("data-iw-raid-boss-stage", "ashmaw");
+      state3.stage.setAttribute("data-iw-raid-boss-stage", "ashmaw");
       try {
-        state2.renderer = createAshmawRenderer(canvas, background, null, { cloudAtlas, smokeAtlas, steamAtlas, maxWidth: 1440 });
-        if (!state2.renderer) return;
-        state2.renderer.render(0);
+        state3.renderer = createAshmawRenderer(canvas, background, null, { cloudAtlas, smokeAtlas, steamAtlas, maxWidth: 1440 });
+        if (!state3.renderer) return;
+        state3.renderer.render(0);
       } catch {
-        state2.renderer?.destroy();
-        state2.renderer = null;
+        state3.renderer?.destroy();
+        state3.renderer = null;
         return;
       }
       art2.setAttribute("data-iw-animated", "");
       if (typeof IntersectionObserver === "function") {
-        state2.visible = new IntersectionObserver(([entry2]) => {
-          state2.onScreen = entry2.isIntersecting;
-          state2.resume();
+        state3.visible = new IntersectionObserver(([entry2]) => {
+          state3.onScreen = entry2.isIntersecting;
+          state3.resume();
         });
-        state2.visible.observe(arena);
+        state3.visible.observe(arena);
       }
-      state2.resume();
+      state3.resume();
     }).catch(() => {
-      if (!state2.disposed) clearAshmawScene(arena);
+      if (!state3.disposed) clearAshmawScene(arena);
     });
   }
   function clearAshmawScenes(root) {
@@ -7069,7 +7069,7 @@
       }
       ctx.restore();
     }
-    function render3(seconds, { ambient = true, cloudMotion = true, atmosphere = true, courtyardMist = true, bossMotion = true, bodyClouds = true, hairMotion = true, spectralWisps = true, lightning = true, spores: drift = true } = {}) {
+    function render4(seconds, { ambient = true, cloudMotion = true, atmosphere = true, courtyardMist = true, bossMotion = true, bodyClouds = true, hairMotion = true, spectralWisps = true, lightning = true, spores: drift = true } = {}) {
       const phase2 = frac2(seconds / THESSALY_PERIOD), cue = { t: phase2 * THESSALY_PERIOD, battle: false };
       if (destroyed) return cue;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -7088,7 +7088,7 @@
       if (ambient && drift) motes(phase2);
       return cue;
     }
-    return { render: render3, width, height, period: THESSALY_PERIOD, destroy() {
+    return { render: render4, width, height, period: THESSALY_PERIOD, destroy() {
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
       canvas.width = canvas.height = 1;
@@ -7101,17 +7101,17 @@
     return createThessalyArenaScene(canvas, { background: environment, ...assets, ...options });
   }
   function clearThessalyScene(arena) {
-    const state2 = scenes2.get(arena);
-    if (!state2) return;
-    state2.disposed = true;
-    cancelAnimationFrame(state2.frame);
-    state2.visible?.disconnect();
-    state2.renderer?.destroy();
-    state2.renderer = null;
-    document.removeEventListener("visibilitychange", state2.resume);
-    state2.motion.removeEventListener("change", state2.resume);
-    state2.art.remove();
-    state2.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state3 = scenes2.get(arena);
+    if (!state3) return;
+    state3.disposed = true;
+    cancelAnimationFrame(state3.frame);
+    state3.visible?.disconnect();
+    state3.renderer?.destroy();
+    state3.renderer = null;
+    document.removeEventListener("visibilitychange", state3.resume);
+    state3.motion.removeEventListener("change", state3.resume);
+    state3.art.remove();
+    state3.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes2.delete(arena);
   }
@@ -7136,34 +7136,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes2.set(arena, state2);
+    const state3 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes2.set(arena, state3);
     const start3 = performance.now();
     let last = 0;
-    state2.resume = () => {
-      cancelAnimationFrame(state2.frame);
-      state2.frame = 0;
-      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
-      if (state2.motion.matches) {
-        state2.renderer.render(0);
+    state3.resume = () => {
+      cancelAnimationFrame(state3.frame);
+      state3.frame = 0;
+      if (!state3.renderer || state3.disposed || document.hidden || !state3.onScreen) return;
+      if (state3.motion.matches) {
+        state3.renderer.render(0);
         return;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearThessalyScene(arena);
         return;
       }
-      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
+      if (state3.disposed || document.hidden || !state3.onScreen || state3.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state2.renderer.render((now - start3) / 1e3);
+        state3.renderer.render((now - start3) / 1e3);
         last = now;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state2.resume);
-    state2.motion.addEventListener("change", state2.resume);
+    document.addEventListener("visibilitychange", state3.resume);
+    state3.motion.addEventListener("change", state3.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -7172,27 +7172,27 @@
     env.src = assetUrl("assets/raids/thessaly/arena-storm.png");
     for (const [key, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist", hair: "hair-wisps", body: "body-clouds" })) textures[key].src = assetUrl("assets/raids/thessaly/" + name + ".png");
     loaded.then(([background, ...images]) => {
-      if (state2.disposed || !arena.isConnected) return;
+      if (state3.disposed || !arena.isConnected) return;
       arena.setAttribute("data-iw-raid-scene", "thessaly");
-      state2.stage.setAttribute("data-iw-raid-boss-stage", "thessaly");
+      state3.stage.setAttribute("data-iw-raid-boss-stage", "thessaly");
       const assets = Object.fromEntries(Object.keys(textures).map((key, index) => [key, images[index]]));
       try {
-        state2.renderer = createThessalyRenderer(canvas, background, assets, { maxWidth: 1440 });
+        state3.renderer = createThessalyRenderer(canvas, background, assets, { maxWidth: 1440 });
       } catch {
       }
-      if (!state2.renderer) return;
+      if (!state3.renderer) return;
       art2.setAttribute("data-iw-animated", "");
-      state2.renderer.render(0);
+      state3.renderer.render(0);
       if (typeof IntersectionObserver === "function") {
-        state2.visible = new IntersectionObserver(([entry2]) => {
-          state2.onScreen = entry2.isIntersecting;
-          state2.resume();
+        state3.visible = new IntersectionObserver(([entry2]) => {
+          state3.onScreen = entry2.isIntersecting;
+          state3.resume();
         });
-        state2.visible.observe(arena);
+        state3.visible.observe(arena);
       }
-      state2.resume();
+      state3.resume();
     }).catch(() => {
-      if (!state2.disposed) clearThessalyScene(arena);
+      if (!state3.disposed) clearThessalyScene(arena);
     });
   }
   function clearThessalyScenes(root) {
@@ -7459,7 +7459,7 @@
       }
       ctx.restore();
     }
-    function render3(seconds, { ambient = true, clouds: clouds2 = true, mist: mist2 = true, shroud = true, curse = true, embers = true, foreground = true } = {}) {
+    function render4(seconds, { ambient = true, clouds: clouds2 = true, mist: mist2 = true, shroud = true, curse = true, embers = true, foreground = true } = {}) {
       if (destroyed) return { t: 0 };
       const t = Math.round((seconds % MORWENNA_PERIOD + MORWENNA_PERIOD) % MORWENNA_PERIOD * 1e9) / 1e9;
       const phase2 = t / MORWENNA_PERIOD;
@@ -7477,7 +7477,7 @@
       }
       return { t };
     }
-    return { render: render3, period: MORWENNA_PERIOD, destroy() {
+    return { render: render4, period: MORWENNA_PERIOD, destroy() {
       if (destroyed) return;
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
@@ -7492,17 +7492,17 @@
     return createMorwennaArenaScene(canvas, { background: environment, ...assets, ...options });
   }
   function clearMorwennaScene(arena) {
-    const state2 = scenes3.get(arena);
-    if (!state2) return;
-    state2.disposed = true;
-    cancelAnimationFrame(state2.frame);
-    state2.visible?.disconnect();
-    state2.renderer?.destroy();
-    state2.renderer = null;
-    document.removeEventListener("visibilitychange", state2.resume);
-    state2.motion.removeEventListener("change", state2.resume);
-    state2.art.remove();
-    state2.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state3 = scenes3.get(arena);
+    if (!state3) return;
+    state3.disposed = true;
+    cancelAnimationFrame(state3.frame);
+    state3.visible?.disconnect();
+    state3.renderer?.destroy();
+    state3.renderer = null;
+    document.removeEventListener("visibilitychange", state3.resume);
+    state3.motion.removeEventListener("change", state3.resume);
+    state3.art.remove();
+    state3.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes3.delete(arena);
   }
@@ -7527,34 +7527,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes3.set(arena, state2);
+    const state3 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes3.set(arena, state3);
     const start3 = performance.now();
     let last = 0;
-    state2.resume = () => {
-      cancelAnimationFrame(state2.frame);
-      state2.frame = 0;
-      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
-      if (state2.motion.matches) {
-        state2.renderer.render(0);
+    state3.resume = () => {
+      cancelAnimationFrame(state3.frame);
+      state3.frame = 0;
+      if (!state3.renderer || state3.disposed || document.hidden || !state3.onScreen) return;
+      if (state3.motion.matches) {
+        state3.renderer.render(0);
         return;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearMorwennaScene(arena);
         return;
       }
-      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
+      if (state3.disposed || document.hidden || !state3.onScreen || state3.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state2.renderer.render((now - start3) / 1e3);
+        state3.renderer.render((now - start3) / 1e3);
         last = now;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state2.resume);
-    state2.motion.addEventListener("change", state2.resume);
+    document.addEventListener("visibilitychange", state3.resume);
+    state3.motion.addEventListener("change", state3.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -7563,33 +7563,33 @@
     env.src = assetUrl("assets/raids/morwenna/arena.png");
     for (const [key, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key].src = assetUrl("assets/raids/morwenna/" + name + ".png");
     loaded.then(([background, clouds, mist]) => {
-      if (state2.disposed || !arena.isConnected) return;
+      if (state3.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
-      if (arena.querySelector(bossSelector2) !== boss || boss.parentElement !== state2.stage || nativeBackground2 && !/morwenna/i.test(nativeBackground2)) {
+      if (arena.querySelector(bossSelector2) !== boss || boss.parentElement !== state3.stage || nativeBackground2 && !/morwenna/i.test(nativeBackground2)) {
         clearMorwennaScene(arena);
         return;
       }
       arena.setAttribute("data-iw-raid-scene", "morwenna");
-      state2.stage.setAttribute("data-iw-raid-boss-stage", "morwenna");
+      state3.stage.setAttribute("data-iw-raid-boss-stage", "morwenna");
       try {
-        state2.renderer = createMorwennaRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
-        state2.renderer.render(0);
+        state3.renderer = createMorwennaRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
+        state3.renderer.render(0);
       } catch {
-        state2.renderer?.destroy();
-        state2.renderer = null;
+        state3.renderer?.destroy();
+        state3.renderer = null;
         return;
       }
       art2.setAttribute("data-iw-animated", "");
       if (typeof IntersectionObserver === "function") {
-        state2.visible = new IntersectionObserver(([entry2]) => {
-          state2.onScreen = entry2.isIntersecting;
-          state2.resume();
+        state3.visible = new IntersectionObserver(([entry2]) => {
+          state3.onScreen = entry2.isIntersecting;
+          state3.resume();
         });
-        state2.visible.observe(arena);
+        state3.visible.observe(arena);
       }
-      state2.resume();
+      state3.resume();
     }).catch(() => {
-      if (!state2.disposed) clearMorwennaScene(arena);
+      if (!state3.disposed) clearMorwennaScene(arena);
     });
   }
   function clearMorwennaScenes(root) {
@@ -7816,7 +7816,7 @@
       }
       ctx.restore();
     }
-    function render3(seconds, { clouds: clouds2 = true, mist: mist2 = true, boss = true, snow = true, foreground = true, ambient = true } = {}) {
+    function render4(seconds, { clouds: clouds2 = true, mist: mist2 = true, boss = true, snow = true, foreground = true, ambient = true } = {}) {
       if (destroyed) return { t: 0 };
       const t = Math.round((seconds % GRIMJAW_PERIOD + GRIMJAW_PERIOD) % GRIMJAW_PERIOD * 1e9) / 1e9, phase2 = t / GRIMJAW_PERIOD;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -7832,7 +7832,7 @@
       }
       return { t };
     }
-    return { render: render3, period: GRIMJAW_PERIOD, destroy() {
+    return { render: render4, period: GRIMJAW_PERIOD, destroy() {
       if (destroyed) return;
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
@@ -7847,17 +7847,17 @@
     return createGrimjawArenaScene(canvas, { background: environment, ...assets, ...options });
   }
   function clearGrimjawScene(arena) {
-    const state2 = scenes4.get(arena);
-    if (!state2) return;
-    state2.disposed = true;
-    cancelAnimationFrame(state2.frame);
-    state2.visible?.disconnect();
-    state2.renderer?.destroy();
-    state2.renderer = null;
-    document.removeEventListener("visibilitychange", state2.resume);
-    state2.motion.removeEventListener("change", state2.resume);
-    state2.art.remove();
-    state2.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state3 = scenes4.get(arena);
+    if (!state3) return;
+    state3.disposed = true;
+    cancelAnimationFrame(state3.frame);
+    state3.visible?.disconnect();
+    state3.renderer?.destroy();
+    state3.renderer = null;
+    document.removeEventListener("visibilitychange", state3.resume);
+    state3.motion.removeEventListener("change", state3.resume);
+    state3.art.remove();
+    state3.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes4.delete(arena);
   }
@@ -7882,34 +7882,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes4.set(arena, state2);
+    const state3 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes4.set(arena, state3);
     const start3 = performance.now();
     let last = 0;
-    state2.resume = () => {
-      cancelAnimationFrame(state2.frame);
-      state2.frame = 0;
-      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
-      if (state2.motion.matches) {
-        state2.renderer.render(0);
+    state3.resume = () => {
+      cancelAnimationFrame(state3.frame);
+      state3.frame = 0;
+      if (!state3.renderer || state3.disposed || document.hidden || !state3.onScreen) return;
+      if (state3.motion.matches) {
+        state3.renderer.render(0);
         return;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearGrimjawScene(arena);
         return;
       }
-      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
+      if (state3.disposed || document.hidden || !state3.onScreen || state3.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state2.renderer.render((now - start3) / 1e3);
+        state3.renderer.render((now - start3) / 1e3);
         last = now;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state2.resume);
-    state2.motion.addEventListener("change", state2.resume);
+    document.addEventListener("visibilitychange", state3.resume);
+    state3.motion.addEventListener("change", state3.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -7918,33 +7918,33 @@
     env.src = assetUrl("assets/raids/grimjaw/arena.png");
     for (const [key, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key].src = assetUrl("assets/raids/grimjaw/" + name + ".png");
     loaded.then(([background, clouds, mist]) => {
-      if (state2.disposed || !arena.isConnected) return;
+      if (state3.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
-      if (arena.querySelector(bossSelector3) !== boss || boss.parentElement !== state2.stage || nativeBackground2 && !/grimjaw/i.test(nativeBackground2)) {
+      if (arena.querySelector(bossSelector3) !== boss || boss.parentElement !== state3.stage || nativeBackground2 && !/grimjaw/i.test(nativeBackground2)) {
         clearGrimjawScene(arena);
         return;
       }
       arena.setAttribute("data-iw-raid-scene", "grimjaw");
-      state2.stage.setAttribute("data-iw-raid-boss-stage", "grimjaw");
+      state3.stage.setAttribute("data-iw-raid-boss-stage", "grimjaw");
       try {
-        state2.renderer = createGrimjawRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
-        state2.renderer.render(0);
+        state3.renderer = createGrimjawRenderer(canvas, background, { clouds, mist }, { maxWidth: 1440 });
+        state3.renderer.render(0);
       } catch {
-        state2.renderer?.destroy();
-        state2.renderer = null;
+        state3.renderer?.destroy();
+        state3.renderer = null;
         return;
       }
       art2.setAttribute("data-iw-animated", "");
       if (typeof IntersectionObserver === "function") {
-        state2.visible = new IntersectionObserver(([entry2]) => {
-          state2.onScreen = entry2.isIntersecting;
-          state2.resume();
+        state3.visible = new IntersectionObserver(([entry2]) => {
+          state3.onScreen = entry2.isIntersecting;
+          state3.resume();
         });
-        state2.visible.observe(arena);
+        state3.visible.observe(arena);
       }
-      state2.resume();
+      state3.resume();
     }).catch(() => {
-      if (!state2.disposed) clearGrimjawScene(arena);
+      if (!state3.disposed) clearGrimjawScene(arena);
     });
   }
   function clearGrimjawScenes(root) {
@@ -8172,7 +8172,7 @@
         plume(ctx, air[3], 0.54 - 0.72 * (u - 0.5), 0.68 + i * 0.1, 0.73, 0.045, 0.13 * fade2(u), -0.09);
       }
     }
-    function render3(seconds, { clouds = true, mist = true, ice: ice2 = true, water: water2 = true, snow: snow2 = true, foreground = true, ambient = true } = {}) {
+    function render4(seconds, { clouds = true, mist = true, ice: ice2 = true, water: water2 = true, snow: snow2 = true, foreground = true, ambient = true } = {}) {
       if (destroyed) return { t: 0 };
       const t = Math.round((seconds % SKARTH_PERIOD + SKARTH_PERIOD) % SKARTH_PERIOD * 1e9) / 1e9, phase2 = t / SKARTH_PERIOD;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -8196,7 +8196,7 @@
       }
       return { t };
     }
-    return { render: render3, period: SKARTH_PERIOD, destroy() {
+    return { render: render4, period: SKARTH_PERIOD, destroy() {
       if (destroyed) return;
       destroyed = true;
       for (const c of buffers) c.width = c.height = 1;
@@ -8211,17 +8211,17 @@
     return createSkarthArenaScene(canvas, { background: environment, ...assets, ...options });
   }
   function clearSkarthScene(arena) {
-    const state2 = scenes5.get(arena);
-    if (!state2) return;
-    state2.disposed = true;
-    cancelAnimationFrame(state2.frame);
-    state2.visible?.disconnect();
-    state2.renderer?.destroy();
-    state2.renderer = null;
-    document.removeEventListener("visibilitychange", state2.resume);
-    state2.motion.removeEventListener("change", state2.resume);
-    state2.art.remove();
-    state2.stage.removeAttribute("data-iw-raid-boss-stage");
+    const state3 = scenes5.get(arena);
+    if (!state3) return;
+    state3.disposed = true;
+    cancelAnimationFrame(state3.frame);
+    state3.visible?.disconnect();
+    state3.renderer?.destroy();
+    state3.renderer = null;
+    document.removeEventListener("visibilitychange", state3.resume);
+    state3.motion.removeEventListener("change", state3.resume);
+    state3.art.remove();
+    state3.stage.removeAttribute("data-iw-raid-boss-stage");
     arena.removeAttribute("data-iw-raid-scene");
     scenes5.delete(arena);
   }
@@ -8246,34 +8246,34 @@
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
     arena.append(art2);
-    const state2 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
-    scenes5.set(arena, state2);
+    const state3 = { art: art2, stage: boss.parentElement, frame: 0, disposed: false, onScreen: true, motion: matchMedia("(prefers-reduced-motion: reduce)") };
+    scenes5.set(arena, state3);
     const start3 = performance.now();
     let last = 0;
-    state2.resume = () => {
-      cancelAnimationFrame(state2.frame);
-      state2.frame = 0;
-      if (!state2.renderer || state2.disposed || document.hidden || !state2.onScreen) return;
-      if (state2.motion.matches) {
-        state2.renderer.render(0);
+    state3.resume = () => {
+      cancelAnimationFrame(state3.frame);
+      state3.frame = 0;
+      if (!state3.renderer || state3.disposed || document.hidden || !state3.onScreen) return;
+      if (state3.motion.matches) {
+        state3.renderer.render(0);
         return;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     };
     function tick(now) {
       if (!arena.isConnected) {
         clearSkarthScene(arena);
         return;
       }
-      if (state2.disposed || document.hidden || !state2.onScreen || state2.motion.matches) return;
+      if (state3.disposed || document.hidden || !state3.onScreen || state3.motion.matches) return;
       if (now - last >= 1e3 / 30) {
-        state2.renderer.render((now - start3) / 1e3);
+        state3.renderer.render((now - start3) / 1e3);
         last = now;
       }
-      state2.frame = requestAnimationFrame(tick);
+      state3.frame = requestAnimationFrame(tick);
     }
-    document.addEventListener("visibilitychange", state2.resume);
-    state2.motion.addEventListener("change", state2.resume);
+    document.addEventListener("visibilitychange", state3.resume);
+    state3.motion.addEventListener("change", state3.resume);
     const load2 = (img) => new Promise((resolve2, reject) => {
       img.onload = () => resolve2(img);
       img.onerror = () => reject(new Error("Raid art unavailable"));
@@ -8282,33 +8282,33 @@
     env.src = assetUrl("assets/raids/skarth/arena.png");
     for (const [key, name] of Object.entries({ atmosphere: "atmosphere", ice: "ice", water: "water" })) textures[key].src = assetUrl("assets/raids/skarth/" + name + ".png");
     loaded.then(([background, atmosphere, ice, water]) => {
-      if (state2.disposed || !arena.isConnected) return;
+      if (state3.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
-      if (arena.querySelector(bossSelector4) !== boss || boss.parentElement !== state2.stage || nativeBackground2 && !/skarth/i.test(nativeBackground2)) {
+      if (arena.querySelector(bossSelector4) !== boss || boss.parentElement !== state3.stage || nativeBackground2 && !/skarth/i.test(nativeBackground2)) {
         clearSkarthScene(arena);
         return;
       }
       arena.setAttribute("data-iw-raid-scene", "skarth");
-      state2.stage.setAttribute("data-iw-raid-boss-stage", "skarth");
+      state3.stage.setAttribute("data-iw-raid-boss-stage", "skarth");
       try {
-        state2.renderer = createSkarthRenderer(canvas, background, { atmosphere, ice, water }, { maxWidth: 1440 });
-        state2.renderer.render(0);
+        state3.renderer = createSkarthRenderer(canvas, background, { atmosphere, ice, water }, { maxWidth: 1440 });
+        state3.renderer.render(0);
       } catch {
-        state2.renderer?.destroy();
-        state2.renderer = null;
+        state3.renderer?.destroy();
+        state3.renderer = null;
         return;
       }
       art2.setAttribute("data-iw-animated", "");
       if (typeof IntersectionObserver === "function") {
-        state2.visible = new IntersectionObserver(([entry2]) => {
-          state2.onScreen = entry2.isIntersecting;
-          state2.resume();
+        state3.visible = new IntersectionObserver(([entry2]) => {
+          state3.onScreen = entry2.isIntersecting;
+          state3.resume();
         });
-        state2.visible.observe(arena);
+        state3.visible.observe(arena);
       }
-      state2.resume();
+      state3.resume();
     }).catch(() => {
-      if (!state2.disposed) clearSkarthScene(arena);
+      if (!state3.disposed) clearSkarthScene(arena);
     });
   }
   function clearSkarthScenes(root) {
@@ -8454,8 +8454,8 @@
     }
   }
   function updateToggle(toggle, spec) {
-    const text = spec.text();
-    if (toggle.textContent !== text) toggle.textContent = text;
+    const text2 = spec.text();
+    if (toggle.textContent !== text2) toggle.textContent = text2;
     const pressed = String(spec.pressed());
     if (toggle.getAttribute("aria-pressed") !== pressed) toggle.setAttribute("aria-pressed", pressed);
   }
@@ -8521,11 +8521,11 @@
     const v = String(value);
     if (el2.getAttribute(key) !== v) el2.setAttribute(key, v);
   }
-  function el(tag, className, text) {
+  function el(tag, className, text2) {
     const node2 = document.createElement(tag);
     if (className) node2.className = className;
     node2.setAttribute(OWNED, "1");
-    if (text != null) node2.textContent = text;
+    if (text2 != null) node2.textContent = text2;
     return node2;
   }
   function percent(fill) {
@@ -8538,18 +8538,18 @@
     if (/(?:^|\s)bg-(?:amber|yellow|orange)-/.test(cls)) return "warn";
     return "good";
   }
-  function skillKey(text) {
-    const t = stripGlyph(text).toLowerCase();
+  function skillKey(text2) {
+    const t = stripGlyph(text2).toLowerCase();
     for (const key of SKILLS) if (t.startsWith(key)) return key;
     for (const [alias, key] of Object.entries(SKILL_ALIASES)) if (t.startsWith(alias)) return key;
     return null;
   }
-  function artFor(text) {
-    for (const [re, art2, name] of EFFECT_ART) if (re.test(text)) return { art: art2, name };
+  function artFor(text2) {
+    for (const [re, art2, name] of EFFECT_ART) if (re.test(text2)) return { art: art2, name };
     return null;
   }
-  function glyphOf(text) {
-    const m = /^[^\p{L}\p{N}]+/u.exec(norm3(text));
+  function glyphOf(text2) {
+    const m = /^[^\p{L}\p{N}]+/u.exec(norm3(text2));
     return m ? m[0].trim() : "";
   }
   function decorateBoss(arena) {
@@ -8568,9 +8568,9 @@
       set(nameEl, "data-iw-raid-epithet", comma > 0 ? raw.slice(comma + 1).trim() : "");
     } else set(arena, "data-iw-raid-encounter", null);
     const fill = summary.querySelector('[data-iw-guild-role="boss-hp"] > *');
-    const text = [...summary.querySelectorAll(":scope > p")].find((p) => /hp/i.test(p.textContent));
+    const text2 = [...summary.querySelectorAll(":scope > p")].find((p) => /hp/i.test(p.textContent));
     const pct = percent(fill);
-    set(text, "data-iw-raid-pct", pct == null ? null : `${pct}%`);
+    set(text2, "data-iw-raid-pct", pct == null ? null : `${pct}%`);
   }
   function decorateOutcome(arena) {
     const card = arena.querySelector(':scope > [data-iw-guild-role="outcome"]');
@@ -8587,8 +8587,8 @@
   function decorateCast(arena) {
     const tg = arena.querySelector('[data-iw-guild-role="telegraph"]');
     if (!tg) return;
-    const text = norm3(tg.textContent);
-    const m = /^(.+?)\s*(?:\(([^)]*)\))?\s+in\s+(\d+(?:\.\d+)?)\s*s(?:ec(?:onds?)?)?\.?$/i.exec(text);
+    const text2 = norm3(tg.textContent);
+    const m = /^(.+?)\s*(?:\(([^)]*)\))?\s+in\s+(\d+(?:\.\d+)?)\s*s(?:ec(?:onds?)?)?\.?$/i.exec(text2);
     if (!m) {
       for (const key of ["data-iw-raid-cast", "data-iw-raid-cast-name", "data-iw-raid-cast-scope", "data-iw-raid-cast-secs", "data-iw-raid-cast-urgency", "data-iw-raid-cast-step"]) set(tg, key, null);
       return;
@@ -8613,12 +8613,12 @@
         set(line, "data-iw-raid-fx-kind", null);
         continue;
       }
-      const text = norm3(line.textContent);
-      const left = /(\d+)\s*s\s*left/i.exec(text);
-      const tanking = /^\W*(.+?)\s+is\s+tanking\b/i.exec(text);
-      const res = /=\s*(\d+)\s*\/\s*(\d+)\s*needed/i.exec(text);
+      const text2 = norm3(line.textContent);
+      const left = /(\d+)\s*s\s*left/i.exec(text2);
+      const tanking = /^\W*(.+?)\s+is\s+tanking\b/i.exec(text2);
+      const res = /=\s*(\d+)\s*\/\s*(\d+)\s*needed/i.exec(text2);
       if (res) {
-        resist = { have: +res[1], need: +res[2], glyph: glyphOf(text) };
+        resist = { have: +res[1], need: +res[2], glyph: glyphOf(text2) };
         set(line, "data-iw-raid-fx-kind", "resist");
         set(line, "data-iw-raid-resist", `${res[1]} / ${res[2]}`);
         set(line, "data-iw-raid-resist-step", String(Math.min(10, Math.round(10 * res[1] / Math.max(1, res[2])))));
@@ -8629,22 +8629,22 @@
         set(line, "data-iw-raid-fx-kind", "taunt");
         continue;
       }
-      const art2 = artFor(text);
+      const art2 = artFor(text2);
       set(line, "data-iw-raid-fx-kind", art2 ? art2.art : "other");
-      shared.push({ art: art2?.art || null, name: art2?.name || stripGlyph(text).replace(/\s+active\b.*$/i, ""), glyph: glyphOf(text), value: left ? `${left[1]}s` : "", title: text });
+      shared.push({ art: art2?.art || null, name: art2?.name || stripGlyph(text2).replace(/\s+active\b.*$/i, ""), glyph: glyphOf(text2), value: left ? `${left[1]}s` : "", title: text2 });
     }
     return { shared, tank, resist };
   }
   function readOwnEffects(raider) {
-    const own5 = [];
+    const own8 = [];
     for (const span of raider.querySelectorAll("[title]")) {
       if (span.closest(`[${OWNED}]`)) continue;
       const title = norm3(span.title);
       const art2 = artFor(title);
       const num = /^(\d[\d,]*)\s+/.exec(title);
-      own5.push({ art: art2?.art || null, name: art2?.name || title, glyph: norm3(span.textContent), value: art2?.art === "shield" && num ? num[1] : "", title });
+      own8.push({ art: art2?.art || null, name: art2?.name || title, glyph: norm3(span.textContent), value: art2?.art === "shield" && num ? num[1] : "", title });
     }
-    return own5;
+    return own8;
   }
   function chip(effect, withLabel) {
     const node2 = el("span", "iw-raid-chip");
@@ -8652,9 +8652,9 @@
     if (effect.tone) node2.dataset.iwRaidTone = effect.tone;
     node2.title = effect.title || effect.name;
     node2.setAttribute("aria-label", `${effect.name}${effect.value ? ` ${effect.value}` : ""}`);
-    const icon3 = el("i", "iw-raid-chip-icon", effect.art ? null : effect.glyph || "•");
-    icon3.setAttribute("aria-hidden", "true");
-    node2.append(icon3);
+    const icon4 = el("i", "iw-raid-chip-icon", effect.art ? null : effect.glyph || "•");
+    icon4.setAttribute("aria-hidden", "true");
+    node2.append(icon4);
     if (withLabel) node2.append(el("span", "iw-raid-chip-name", effect.name));
     if (effect.value) node2.append(el("b", "iw-raid-chip-value", effect.value));
     return node2;
@@ -8711,8 +8711,8 @@
     set(floor, "data-iw-raid-party", count ? `${count} raider${count === 1 ? "" : "s"} · ${downed ? `${downed} down` : "all standing"}` : null);
     return party;
   }
-  var secsOf = (text) => {
-    const m = /(\d+)\s*s\b/.exec(text || "");
+  var secsOf = (text2) => {
+    const m = /(\d+)\s*s\b/.exec(text2 || "");
     return m ? Number(m[1]) : null;
   };
   function timerSpecs(raid, party) {
@@ -8742,8 +8742,8 @@
   }
   function buildTimer(spec) {
     const bar = el("div", "iw-raid-timer");
-    const icon3 = el("i", "iw-raid-chip-icon", spec.art ? null : spec.glyph || "•");
-    bar.append(el("i", "iw-raid-timer-fill"), icon3, el("span", "iw-raid-timer-name"), el("span", "iw-raid-timer-who"), el("b", "iw-raid-timer-secs"));
+    const icon4 = el("i", "iw-raid-chip-icon", spec.art ? null : spec.glyph || "•");
+    bar.append(el("i", "iw-raid-timer-fill"), icon4, el("span", "iw-raid-timer-name"), el("span", "iw-raid-timer-who"), el("b", "iw-raid-timer-secs"));
     return bar;
   }
   function setText3(node2, value) {
@@ -8810,13 +8810,13 @@
     event.preventDefault();
     event.stopPropagation();
     const head = event.currentTarget;
-    const panel2 = head.parentElement;
-    const dock = panel2.parentElement;
+    const panel3 = head.parentElement;
+    const dock = panel3.parentElement;
     const arena = docks.get(dock);
-    const key = panel2.dataset.iwRaidDock;
+    const key = panel3.dataset.iwRaidDock;
     const open = folds.get(key) !== true;
     folds.set(key, open);
-    syncDockPanel(panel2, open);
+    syncDockPanel(panel3, open);
     if (!arena) return;
     decorateDock(arena);
     if (key !== "log") return;
@@ -8830,41 +8830,41 @@
     const arena = docks.get(event.currentTarget.closest(".iw-raid-dock"));
     gameSkills(arena)?.querySelector('[data-iw-guild-role="effects-toggle"]')?.click();
   }
-  function syncDockPanel(panel2, open) {
-    set(panel2, "data-iw-raid-fold", open ? "open" : "closed");
-    const head = panel2.firstElementChild;
+  function syncDockPanel(panel3, open) {
+    set(panel3, "data-iw-raid-fold", open ? "open" : "closed");
+    const head = panel3.firstElementChild;
     set(head, "aria-expanded", String(open));
   }
   function dockPanel(key, title, glyph) {
-    const panel2 = el("section", "iw-raid-dock-panel");
-    panel2.dataset.iwRaidDock = key;
+    const panel3 = el("section", "iw-raid-dock-panel");
+    panel3.dataset.iwRaidDock = key;
     const head = el("button", "iw-raid-dock-head");
     head.type = "button";
     if (glyph) head.append(el("span", "iw-raid-dock-glyph", glyph));
     head.append(el("span", "iw-raid-dock-title", title), el("i", "iw-raid-dock-chevron"));
     head.addEventListener("click", onDockHead);
-    panel2.append(head, el("div", "iw-raid-dock-body"));
-    return panel2;
+    panel3.append(head, el("div", "iw-raid-dock-body"));
+    return panel3;
   }
-  function fillLog(panel2, arena) {
+  function fillLog(panel3, arena) {
     const lines = logLines(gameLog(arena));
     const sig = lines.join("\n");
-    if (dockSigs.get(panel2) === sig) return;
-    dockSigs.set(panel2, sig);
-    const body = panel2.lastElementChild;
+    if (dockSigs.get(panel3) === sig) return;
+    dockSigs.set(panel3, sig);
+    const body = panel3.lastElementChild;
     const pinned = !body.firstChild || body.scrollHeight - body.scrollTop - body.clientHeight < 12;
     const top = body.scrollTop;
     body.replaceChildren(...(lines.length ? lines : ["The fight begins…"]).map((line) => el("p", "iw-raid-dock-line", line)));
     body.scrollTop = pinned ? body.scrollHeight : top;
   }
-  function fillSkills(panel2, arena) {
+  function fillSkills(panel3, arena) {
     const skills = gameSkills(arena);
     const toggle = skills?.querySelector('[data-iw-guild-role="effects-toggle"]');
     const rows = skills ? [...skills.children].filter((c) => c !== toggle && !c.hasAttribute(OWNED)) : [];
     const sig = `${toggle ? norm3(toggle.textContent) : ""}\0${rows.map((r) => `${r.className}|${r.textContent}`).join("")}`;
-    if (dockSigs.get(panel2) === sig) return;
-    dockSigs.set(panel2, sig);
-    const body = panel2.lastElementChild;
+    if (dockSigs.get(panel3) === sig) return;
+    dockSigs.set(panel3, sig);
+    const body = panel3.lastElementChild;
     const kids = rows.map((row) => {
       const copy = copyOf(row);
       for (const attr of ["data-iw-raid-fx-kind", "data-iw-raid-resist-step"]) if (row.hasAttribute(attr)) copy.setAttribute(attr, row.getAttribute(attr));
@@ -8899,14 +8899,14 @@
       dock.append(dockPanel("log", "Combat log"), dockPanel("skills", "Raid skills", "⚡"));
       docks.set(dock, arena);
     }
-    const anchor3 = dockAnchor(arena);
-    if (anchor3.nextElementSibling !== dock) anchor3.after(dock);
+    const anchor4 = dockAnchor(arena);
+    if (anchor4.nextElementSibling !== dock) anchor4.after(dock);
     const [logPanel, skillsPanel] = dock.children;
-    for (const [panel2, present, fill] of [[logPanel, hasLog, fillLog], [skillsPanel, hasSkills, fillSkills]]) {
-      const open = folds.get(panel2.dataset.iwRaidDock) === true;
-      set(panel2, "hidden", present ? null : "");
-      syncDockPanel(panel2, open);
-      if (present && open) fill(panel2, arena);
+    for (const [panel3, present, fill] of [[logPanel, hasLog, fillLog], [skillsPanel, hasSkills, fillSkills]]) {
+      const open = folds.get(panel3.dataset.iwRaidDock) === true;
+      set(panel3, "hidden", present ? null : "");
+      syncDockPanel(panel3, open);
+      if (present && open) fill(panel3, arena);
     }
   }
   function pruneRaidDocks(root) {
@@ -9003,11 +9003,11 @@
   var chosenBoss = null;
   var chosenDiff = "normal";
   var signature2 = "";
-  function own2(tag, cls, text) {
+  function own2(tag, cls, text2) {
     const el2 = document.createElement(tag);
     if (cls) el2.className = cls;
     el2.setAttribute(OWNED2, "1");
-    if (text != null) el2.textContent = text;
+    if (text2 != null) el2.textContent = text2;
     return el2;
   }
   function onLeaderboards() {
@@ -9024,17 +9024,17 @@
     const keys = Object.keys(board || {});
     return [...BOSS_ORDER.filter((k) => keys.includes(k)), ...keys.filter((k) => !BOSS_ORDER.includes(k)).sort()];
   }
-  function tab(text, pressed, onClick, kind2) {
-    const button2 = own2("button", "iw-raid-lb-tab", text);
-    button2.type = "button";
-    button2.dataset.iwRaidLbTab = kind2;
-    button2.setAttribute("aria-pressed", String(pressed));
-    button2.addEventListener("click", (event) => {
+  function tab(text2, pressed, onClick, kind2) {
+    const button3 = own2("button", "iw-raid-lb-tab", text2);
+    button3.type = "button";
+    button3.dataset.iwRaidLbTab = kind2;
+    button3.setAttribute("aria-pressed", String(pressed));
+    button3.addEventListener("click", (event) => {
       event.preventDefault();
       onClick();
       render2(true);
     });
-    return button2;
+    return button3;
   }
   function render2(force = false) {
     if (!panel) return;
@@ -9062,9 +9062,9 @@
         chosenDiff = d.key;
       }, "difficulty")));
       kids.push(bossTabs, diffTabs);
-      const label5 = DIFFICULTY_KEYS.find((d) => d.key === chosenDiff)?.label || chosenDiff;
+      const label6 = DIFFICULTY_KEYS.find((d) => d.key === chosenDiff)?.label || chosenDiff;
       if (!entries.length) {
-        kids.push(own2("p", "iw-raid-lb-note", `No guild has defeated ${titleCase(chosenBoss)} on ${label5} yet.`));
+        kids.push(own2("p", "iw-raid-lb-note", `No guild has defeated ${titleCase(chosenBoss)} on ${label6} yet.`));
       } else {
         const list = own2("ol", "iw-raid-lb-list");
         entries.slice(0, 10).forEach((entry2, i) => {
@@ -9225,26 +9225,26 @@
       lead.textContent = "🧪 Test:";
       bar.append(lead);
       for (const spec of TOGGLES2) {
-        const button2 = document.createElement("button");
-        button2.type = "button";
-        button2.setAttribute(TEST2, spec.key);
-        button2.setAttribute("data-iw-guild-role", "test-toggle");
-        button2.title = spec.title;
-        button2.textContent = spec.text;
-        button2.addEventListener("click", (event) => {
+        const button3 = document.createElement("button");
+        button3.type = "button";
+        button3.setAttribute(TEST2, spec.key);
+        button3.setAttribute("data-iw-guild-role", "test-toggle");
+        button3.title = spec.title;
+        button3.textContent = spec.text;
+        button3.addEventListener("click", (event) => {
           event.preventDefault();
           event.stopPropagation();
           if (spec.key === "popup") setLobbyTestPopup(!lobbyTestPopupOn(), () => redecorate());
           else state[spec.key] = !state[spec.key];
           redecorate();
         });
-        bar.append(button2);
+        bar.append(button3);
       }
     }
     if (bar.previousElementSibling !== head) head.after(bar);
-    for (const button2 of bar.querySelectorAll("button")) {
-      const pressed = String(!!pressedOf(button2.getAttribute(TEST2)));
-      if (button2.getAttribute("aria-pressed") !== pressed) button2.setAttribute("aria-pressed", pressed);
+    for (const button3 of bar.querySelectorAll("button")) {
+      const pressed = String(!!pressedOf(button3.getAttribute(TEST2)));
+      if (button3.getAttribute("aria-pressed") !== pressed) button3.setAttribute("aria-pressed", pressed);
     }
   }
   function syncLobbyPreview(root, redecorate) {
@@ -9295,11 +9295,11 @@
     }
     if (el2.getAttribute(key) !== value) el2.setAttribute(key, value);
   }
-  function own3(tag, cls, text) {
+  function own3(tag, cls, text2) {
     const el2 = document.createElement(tag);
     if (cls) el2.className = cls;
     el2.setAttribute(OWNED3, "1");
-    if (text != null) el2.textContent = text;
+    if (text2 != null) el2.textContent = text2;
     return el2;
   }
   function toneOf2(span) {
@@ -9341,17 +9341,17 @@
   function readLines(card) {
     const out = { stats: null, req: null, tip: null, notice: null };
     for (const div of card.querySelectorAll(':scope > div[data-iw-guild-role="notice"]')) {
-      const text = norm4(div.textContent);
-      if (CLAIMED.test(text) || AVAILABLE.test(text)) {
+      const text2 = norm4(div.textContent);
+      if (CLAIMED.test(text2) || AVAILABLE.test(text2)) {
         out.notice = div;
         break;
       }
     }
     for (const p of card.querySelectorAll(":scope > p")) {
-      const text = norm4(p.textContent);
-      if (!out.stats && /^ATK\b/.test(text)) out.stats = p;
-      else if (!out.req && /^Requires Combat\b/.test(text)) out.req = p;
-      else if (!out.tip && /^Tip:/.test(text)) out.tip = p;
+      const text2 = norm4(p.textContent);
+      if (!out.stats && /^ATK\b/.test(text2)) out.stats = p;
+      else if (!out.req && /^Requires Combat\b/.test(text2)) out.req = p;
+      else if (!out.tip && /^Tip:/.test(text2)) out.tip = p;
     }
     return out;
   }
@@ -9404,18 +9404,18 @@
       roles.append(el2);
     });
     const tip = own3("p", "iw-bc-tip");
-    tip.append(own3("b", "iw-bc-tip-label", "Tip:"), " ", ...plan.tip.map(([text, bold]) => bold ? own3("b", null, text) : text));
+    tip.append(own3("b", "iw-bc-tip-label", "Tip:"), " ", ...plan.tip.map(([text2, bold]) => bold ? own3("b", null, text2) : text2));
     box.append(roles, tip);
     return box;
   }
   function buildLoot(div) {
-    const text = div && norm4(div.textContent);
-    const claimed = text && CLAIMED.exec(text);
-    const open = !claimed && text && AVAILABLE.exec(text);
+    const text2 = div && norm4(div.textContent);
+    const claimed = text2 && CLAIMED.exec(text2);
+    const open = !claimed && text2 && AVAILABLE.exec(text2);
     if (!claimed && !open) return null;
     const [, , countdown, reset] = claimed || open;
     const bar = own3("div", "iw-bc-loot");
-    bar.title = text;
+    bar.title = text2;
     bar.dataset.iwBcLoot = claimed ? "claimed" : "available";
     const tone2 = div.getAttribute("data-iw-guild-tone");
     if (tone2) bar.dataset.iwBcTone = tone2;
@@ -9432,10 +9432,10 @@
     );
     return bar;
   }
-  function place(anchor3, node2) {
-    if (anchor3.nextElementSibling !== node2) anchor3.after(node2);
+  function place(anchor4, node2) {
+    if (anchor4.nextElementSibling !== node2) anchor4.after(node2);
   }
-  function setPart(card, cls, anchor3, node2, src, srcKey) {
+  function setPart(card, cls, anchor4, node2, src, srcKey) {
     const old = card.querySelector(`:scope > .${cls}[${OWNED3}]`);
     if (!node2) {
       old?.remove();
@@ -9443,7 +9443,7 @@
       return;
     }
     if (old) old.replaceWith(node2);
-    place(anchor3, node2);
+    place(anchor4, node2);
     mark3(src, SRC, srcKey);
   }
   function ensureArt2(card, name, key) {
@@ -9535,11 +9535,11 @@
     }
     if (el2.getAttribute(key) !== value) el2.setAttribute(key, value);
   }
-  function own4(tag, cls, text) {
+  function own4(tag, cls, text2) {
     const el2 = document.createElement(tag);
     if (cls) el2.className = cls;
     el2.setAttribute(OWNED4, "1");
-    if (text != null) el2.textContent = text;
+    if (text2 != null) el2.textContent = text2;
     return el2;
   }
   function titleOf(card) {
@@ -9595,13 +9595,13 @@
     }
     const selected = boss.querySelector('[data-iw-guild-role="boss-tab"][data-iw-guild-state="selected"]');
     const key = bossKeyOf(selected?.title || boss.querySelector('[data-iw-guild-role="boss-name"]')?.textContent);
-    const board2 = raidBoard();
+    const board3 = raidBoard();
     const pills = [...row.querySelectorAll('[data-iw-guild-role="difficulty"]')];
     const cells = pills.map((pill) => {
       const diff = DIFFICULTY_KEYS.find((d) => d.test.test(label2(pill.textContent)));
-      const best = diff && key && board2 ? board2[key]?.[diff.key]?.[0] : null;
+      const best = diff && key && board3 ? board3[key]?.[diff.key]?.[0] : null;
       return {
-        text: best ? `🏆 ${formatRaidTime(best)} · ${best.guildName}` : board2 ? "No clear yet" : "…",
+        text: best ? `🏆 ${formatRaidTime(best)} · ${best.guildName}` : board3 ? "No clear yet" : "…",
         title: best ? `${diff.label} record: ${best.guildName} · ${formatRaidTime(best)}` : `${diff?.label || ""} record`
       };
     });
@@ -9825,10 +9825,10 @@
       if (/guild points/i.test(span.title)) role(span, "points");
     }
     syncPartyPreviewToggle(root, head, decorateArena);
-    for (const button2 of head.querySelectorAll("button")) {
-      if (button2.hasAttribute("data-iw-collapse")) continue;
-      role(button2, "head-link");
-      mark5(button2, "data-iw-guild-tone", /^(leave|disband|kick|decline)\b/i.test(label3(button2.textContent)) ? "bad" : null);
+    for (const button3 of head.querySelectorAll("button")) {
+      if (button3.hasAttribute("data-iw-collapse")) continue;
+      role(button3, "head-link");
+      mark5(button3, "data-iw-guild-tone", /^(leave|disband|kick|decline)\b/i.test(label3(button3.textContent)) ? "bad" : null);
     }
   }
   var READY_LABEL = /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up|mark ready)$/i;
@@ -9860,12 +9860,12 @@
     }
     const difficulties = [...card.querySelectorAll("button")].filter((b) => !pills.includes(b) && /\b(practice|normal|hard|heroic|mythic)\b/i.test(label3(b.textContent)));
     role(difficulties[0]?.parentElement, "difficulties");
-    for (const button2 of difficulties) {
-      role(button2, "difficulty");
+    for (const button3 of difficulties) {
+      role(button3, "difficulty");
       mark5(
-        button2,
+        button3,
         "data-iw-guild-state",
-        selectedBy(button2, /(?:^|\s)border-ember(?:\s|$)/) ? "selected" : /🔒/u.test(button2.textContent) || button2.disabled ? "locked" : null
+        selectedBy(button3, /(?:^|\s)border-ember(?:\s|$)/) ? "selected" : /🔒/u.test(button3.textContent) || button3.disabled ? "locked" : null
       );
     }
     for (const p of card.querySelectorAll(":scope > p")) {
@@ -9895,13 +9895,13 @@
   }
   function decorateRosterRow(row) {
     for (const el2 of row.querySelectorAll("span, div")) {
-      const text = label3(el2.textContent);
+      const text2 = label3(el2.textContent);
       const cls = String(el2.className || "");
-      if (!el2.childElementCount && /^ready$/i.test(text)) {
+      if (!el2.childElementCount && /^ready$/i.test(text2)) {
         role(el2, "ready-badge");
         tone(el2);
-      } else if (!el2.childElementCount && /^not ready$/i.test(text)) role(el2, "not-ready");
-      else if (!el2.childElementCount && !text && /\brounded-full\b/.test(cls) && /\bh-1\.5\b/.test(cls)) {
+      } else if (!el2.childElementCount && /^not ready$/i.test(text2)) role(el2, "not-ready");
+      else if (!el2.childElementCount && !text2 && /\brounded-full\b/.test(cls) && /\bh-1\.5\b/.test(cls)) {
         role(el2, "dot");
         mark5(el2, "data-iw-guild-state", toneOf3(el2) === "good" ? "online" : null);
       } else if (/guild points/i.test(el2.title)) role(el2, "points");
@@ -9910,14 +9910,14 @@
         tone(el2);
       } else if (el2.tagName === "DIV" && /\bborder-sky-/.test(cls) && /\brounded-lg\b/.test(cls)) role(el2, "lend-pill");
     }
-    for (const button2 of row.querySelectorAll("button")) {
-      const picker = button2.closest(".relative")?.querySelector("button");
-      if (/^kick\b/i.test(button2.title)) role(button2, "kick");
-      else if (picker && picker !== button2) {
-        role(button2, "option");
-        mark5(button2, "data-iw-guild-state", toneOf3(button2) === "info" || button2.getAttribute("aria-selected") === "true" ? "selected" : null);
-      } else if (/\bborder-sky-/.test(String(button2.className))) role(button2, "picker");
-      else role(button2, "member-name");
+    for (const button3 of row.querySelectorAll("button")) {
+      const picker = button3.closest(".relative")?.querySelector("button");
+      if (/^kick\b/i.test(button3.title)) role(button3, "kick");
+      else if (picker && picker !== button3) {
+        role(button3, "option");
+        mark5(button3, "data-iw-guild-state", toneOf3(button3) === "info" || button3.getAttribute("aria-selected") === "true" ? "selected" : null);
+      } else if (/\bborder-sky-/.test(String(button3.className))) role(button3, "picker");
+      else role(button3, "member-name");
     }
   }
   function decorateMembers(card) {
@@ -9955,24 +9955,24 @@
       role(p, "line");
       tone(p);
     }
-    for (const button2 of card.querySelectorAll("button")) {
-      role(button2, "drink");
-      role(button2.parentElement !== card ? button2.parentElement : null, "potion");
+    for (const button3 of card.querySelectorAll("button")) {
+      role(button3, "drink");
+      role(button3.parentElement !== card ? button3.parentElement : null, "potion");
     }
   }
   function decorateLoadout(card) {
     role(card.querySelector(":scope > p"), "card-title");
     role(card.querySelector("select"), "select");
-    for (const button2 of card.querySelectorAll("button")) role(button2, "cta");
+    for (const button3 of card.querySelectorAll("button")) role(button3, "cta");
   }
   function decorateReady(card) {
-    for (const button2 of card.querySelectorAll("button")) {
-      if (!READY_LABEL.test(label3(button2.textContent))) {
-        role(button2, "start");
+    for (const button3 of card.querySelectorAll("button")) {
+      if (!READY_LABEL.test(label3(button3.textContent))) {
+        role(button3, "start");
         continue;
       }
-      role(button2, "ready-toggle");
-      mark5(button2, "data-iw-guild-state", toneOf3(button2) === "good" ? "ready" : null);
+      role(button3, "ready-toggle");
+      mark5(button3, "data-iw-guild-state", toneOf3(button3) === "good" ? "ready" : null);
     }
     for (const p of card.querySelectorAll(":scope > p")) role(p, "note");
   }
@@ -9988,13 +9988,13 @@
     role(field, "field");
     const composer = [...card.querySelectorAll(":scope > div")].find((div) => div.contains(field) && div.querySelector("button"));
     role(composer, "composer");
-    for (const button2 of composer ? composer.querySelectorAll("button") : []) role(button2, "cta");
+    for (const button3 of composer ? composer.querySelectorAll("button") : []) role(button3, "cta");
   }
   function decoratePickup(card) {
     const ps = card.querySelectorAll("p");
     role(ps[0], "card-title");
     for (const p of [...ps].slice(1)) role(p, "note");
-    for (const button2 of card.querySelectorAll("button")) role(button2, "cta");
+    for (const button3 of card.querySelectorAll("button")) role(button3, "cta");
   }
   function decorateDirectory(card) {
     const toggle = card.querySelector(":scope > button");
@@ -10008,11 +10008,11 @@
       role(row, "guild-row");
       mark5(row, "data-iw-guild-state", /\S\s+\S/.test(String(row.className).trim()) || row.children.length > 1 ? "open" : null);
       const line = row.firstElementChild;
-      for (const button2 of line ? line.querySelectorAll(":scope > button") : []) {
-        if (button2.querySelector("span")) role(button2, "guild-name");
+      for (const button3 of line ? line.querySelectorAll(":scope > button") : []) {
+        if (button3.querySelector("span")) role(button3, "guild-name");
         else {
-          role(button2, "apply");
-          tone(button2);
+          role(button3, "apply");
+          tone(button3);
         }
       }
       for (const span of line ? line.querySelectorAll(":scope > span") : []) {
@@ -10028,9 +10028,9 @@
     role(head?.querySelector("span"), "rc-timer");
     for (const p of card.querySelectorAll(":scope > p")) role(p, "rc-roster");
     for (const el2 of card.querySelectorAll(":scope > div:not(:first-child) span")) tone(el2);
-    for (const button2 of card.querySelectorAll("button")) {
-      role(button2, "rc-action");
-      tone(button2);
+    for (const button3 of card.querySelectorAll("button")) {
+      role(button3, "rc-action");
+      tone(button3);
     }
   }
   function decorateChat(card) {
@@ -10040,7 +10040,7 @@
     role(input, "chat-input");
     const composer = input?.parentElement !== card ? input?.parentElement : null;
     role(composer, "composer");
-    for (const button2 of composer ? composer.querySelectorAll("button") : []) role(button2, "cta");
+    for (const button3 of composer ? composer.querySelectorAll("button") : []) role(button3, "cta");
     for (const box of card.querySelectorAll(":scope > div")) {
       if (box !== composer && /\boverflow-y-auto\b/.test(String(box.className))) role(box, "chat-feed");
     }
@@ -10072,16 +10072,16 @@
     reconcileSkarthScene(arena);
     const boss = arena.querySelector('img[src*="boss-"],img[alt^="Ashmaw"],img[alt^="Thessaly"],img[alt^="Morwenna"],img[alt^="Grimjaw"],img[alt^="Skarth"]');
     if (boss?.parentElement?.parentElement !== arena) role(boss?.parentElement?.parentElement, "boss-summary");
-    for (const panel2 of arena.querySelectorAll(".raid-readable-panel")) {
-      if (panel2.tagName === "BUTTON" || panel2.parentElement !== arena && panel2.parentElement?.parentElement === arena) {
-        role(panel2, "combat-log");
-        if (panel2.parentElement !== arena && panel2.parentElement?.parentElement === arena) role(panel2.parentElement, "combat-log-region");
+    for (const panel3 of arena.querySelectorAll(".raid-readable-panel")) {
+      if (panel3.tagName === "BUTTON" || panel3.parentElement !== arena && panel3.parentElement?.parentElement === arena) {
+        role(panel3, "combat-log");
+        if (panel3.parentElement !== arena && panel3.parentElement?.parentElement === arena) role(panel3.parentElement, "combat-log-region");
         continue;
       }
-      const gameButtons = panel2.querySelectorAll("button:not([data-iw-raid-owned])");
-      role(panel2, gameButtons.length ? "effects" : "telegraph");
-      tone(panel2, gameButtons.length ? "info" : toneOf3(panel2));
-      for (const button2 of gameButtons) role(button2, "effects-toggle");
+      const gameButtons = panel3.querySelectorAll("button:not([data-iw-raid-owned])");
+      role(panel3, gameButtons.length ? "effects" : "telegraph");
+      tone(panel3, gameButtons.length ? "info" : toneOf3(panel3));
+      for (const button3 of gameButtons) role(button3, "effects-toggle");
     }
     for (const track of arena.querySelectorAll("div")) {
       if (!isTrack2(track) || track.closest(".raid-arena-floor")) continue;
@@ -10106,11 +10106,11 @@
       if (kids.length && kids.every((k) => k.tagName === "BUTTON")) {
         role(box, "actions");
         tone(box, null);
-        for (const button2 of kids) role(button2, "action");
+        for (const button3 of kids) role(button3, "action");
       } else if (box.querySelector(":scope > p")) {
         role(box, "outcome");
         tone(box);
-        for (const button2 of box.querySelectorAll(":scope > button")) role(button2, "outcome-close");
+        for (const button3 of box.querySelectorAll(":scope > button")) role(button3, "outcome-close");
       }
     }
     decorateRaidHud(arena);
@@ -10166,8 +10166,8 @@
     return normText3(el2?.textContent).replace(/^[^\p{L}\p{N}]+/u, "");
   }
   function nameText(el2) {
-    const own5 = [...el2?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
-    return labelText({ textContent: own5 }) || labelText(el2);
+    const own8 = [...el2?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
+    return labelText({ textContent: own8 }) || labelText(el2);
   }
   function frameTitle(frame2, found = frameLandmarks(frame2)) {
     return found.sectionTitle || found.roleHeading || found.heading;
@@ -10201,8 +10201,8 @@
     }
   }
   function collapseTarget(frame2) {
-    const panel2 = frame2.closest?.(".panel");
-    if (panel2 && !panel2.querySelector(".panel")) return panel2;
+    const panel3 = frame2.closest?.(".panel");
+    if (panel3 && !panel3.querySelector(".panel")) return panel3;
     return frame2;
   }
   function frameKey(target, title, found = frameLandmarks(target)) {
@@ -10227,7 +10227,7 @@
     for (const [key, value] of preferences) if (value) bag[key] = true;
     void storageSet(STORE_KEY2, bag);
   }
-  function applyState(frame2, button2, key, name) {
+  function applyState(frame2, button3, key, name) {
     const collapsed = preferences.get(key) === true;
     const want = collapsed ? "1" : null;
     if ((frame2.dataset.iwCollapsed || null) !== want) {
@@ -10235,31 +10235,31 @@
       else delete frame2.dataset.iwCollapsed;
     }
     const expanded = collapsed ? "false" : "true";
-    if (button2.getAttribute("aria-expanded") !== expanded) button2.setAttribute("aria-expanded", expanded);
-    const label5 = `${collapsed ? "Expand" : "Collapse"} ${name}`;
-    if (button2.getAttribute("aria-label") !== label5) button2.setAttribute("aria-label", label5);
-    if (button2.getAttribute("title") !== label5) button2.setAttribute("title", label5);
+    if (button3.getAttribute("aria-expanded") !== expanded) button3.setAttribute("aria-expanded", expanded);
+    const label6 = `${collapsed ? "Expand" : "Collapse"} ${name}`;
+    if (button3.getAttribute("aria-label") !== label6) button3.setAttribute("aria-label", label6);
+    if (button3.getAttribute("title") !== label6) button3.setAttribute("title", label6);
   }
   function ensureToggle(head, frame2, key, name) {
-    let button2 = head.querySelector(":scope > [data-iw-collapse]");
-    if (button2) return button2;
-    button2 = document.createElement("button");
-    button2.type = "button";
-    button2.dataset.iwCollapse = "1";
-    button2.setAttribute("aria-expanded", "true");
-    button2.setAttribute("aria-label", `Collapse ${name}`);
-    button2.setAttribute("title", `Collapse ${name}`);
-    button2.addEventListener("click", (event) => {
+    let button3 = head.querySelector(":scope > [data-iw-collapse]");
+    if (button3) return button3;
+    button3 = document.createElement("button");
+    button3.type = "button";
+    button3.dataset.iwCollapse = "1";
+    button3.setAttribute("aria-expanded", "true");
+    button3.setAttribute("aria-label", `Collapse ${name}`);
+    button3.setAttribute("title", `Collapse ${name}`);
+    button3.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
       const next = preferences.get(key) !== true;
       preferences.set(key, next);
       touched2.add(key);
       persist2();
-      applyState(frame2, button2, key, name);
+      applyState(frame2, button3, key, name);
     });
-    head.append(button2);
-    return button2;
+    head.append(button3);
+    return button3;
   }
   function decorateCollapsibleFrames(root = document) {
     void loadPreferences2();
@@ -10276,14 +10276,14 @@
       if (head.dataset.iwCollapseHead !== "1") head.dataset.iwCollapseHead = "1";
       markSpine(head, title);
       const name = nameText(title) || "section";
-      const button2 = ensureToggle(head, target, key, name);
-      live2.add(button2);
-      applyState(target, button2, key, name);
+      const button3 = ensureToggle(head, target, key, name);
+      live2.add(button3);
+      applyState(target, button3, key, name);
     }
-    for (const button2 of root.querySelectorAll("[data-iw-collapse]")) {
-      const head = button2.parentElement;
-      if (live2.has(button2) || targets.has(head?.parentElement)) continue;
-      button2.remove();
+    for (const button3 of root.querySelectorAll("[data-iw-collapse]")) {
+      const head = button3.parentElement;
+      if (live2.has(button3) || targets.has(head?.parentElement)) continue;
+      button3.remove();
       if (head) {
         delete head.dataset.iwCollapseHead;
         spines.delete(head);
@@ -10329,8 +10329,8 @@
       el2.removeAttribute(ROLE2);
     });
   }
-  function norm7(text) {
-    return (text || "").replace(/\s+/g, " ").trim();
+  function norm7(text2) {
+    return (text2 || "").replace(/\s+/g, " ").trim();
   }
   function looksLikeShell(el2) {
     return !!el2 && el2.querySelector(":scope > header");
@@ -10397,8 +10397,8 @@
         resolution = null;
         return;
       }
-      const text = norm7(notice.textContent);
-      if (!text || text.length > MAX_NOTICE_CHARS) {
+      const text2 = norm7(notice.textContent);
+      if (!text2 || text2.length > MAX_NOTICE_CHARS) {
         clearMarks();
         resolution = null;
         return;
@@ -10522,10 +10522,10 @@
   }
 
   // src/skins/legacy/modules/ArcaneCacheLootView.js
-  var node = (tag, className, text) => {
+  var node = (tag, className, text2) => {
     const el2 = document.createElement(tag);
     el2.className = className;
-    if (text !== void 0) el2.textContent = text;
+    if (text2 !== void 0) el2.textContent = text2;
     return el2;
   };
   var number = (value) => value.toLocaleString("en-US");
@@ -10625,20 +10625,20 @@
           card.dataset.rarity = entry2.rarity;
           const face = node("article", "reward-face");
           const head = node("div", "reward-head");
-          const icon3 = node("span", "reward-icon", "✦");
-          icon3.setAttribute("aria-hidden", "true");
+          const icon4 = node("span", "reward-icon", "✦");
+          icon4.setAttribute("aria-hidden", "true");
           const identity = node("div", "reward-identity");
           identity.append(node("h3", "", entry2.name), node("span", "sr-only", entry2.rarity));
           head.append(identity, node("span", "quantity", `×${number(entry2.quantity)}`));
           const art2 = node("div", "reward-art");
-          art2.append(icon3);
+          art2.append(icon4);
           const description = node("ul", "reward-description");
           description.setAttribute("aria-label", "Item stats");
           const requirement = node("p", "reward-requirement");
           face.append(head, art2, description, requirement);
           card.append(face);
           cards.push(card);
-          icons.push({ el: icon3, entry: entry2 });
+          icons.push({ el: icon4, entry: entry2 });
           detailNodes.push({ entry: entry2, description, requirement });
           rewards2.append(card);
         }
@@ -10649,11 +10649,11 @@
             row.dataset.rewardId = entry2.id;
             row.dataset.quantity = String(entry2.quantity);
             row.dataset.rarity = entry2.rarity;
-            const icon3 = node("span", entry2.kind === "currency" ? "loot-icon gold-icon" : "loot-icon", entry2.kind === "currency" ? "✦" : "◆");
-            icon3.setAttribute("aria-hidden", "true");
-            row.append(icon3, node("span", "loot-name", entry2.name), node("span", "loot-quantity", `×${number(entry2.quantity)}`));
+            const icon4 = node("span", entry2.kind === "currency" ? "loot-icon gold-icon" : "loot-icon", entry2.kind === "currency" ? "✦" : "◆");
+            icon4.setAttribute("aria-hidden", "true");
+            row.append(icon4, node("span", "loot-name", entry2.name), node("span", "loot-quantity", `×${number(entry2.quantity)}`));
             rows.append(row);
-            icons.push({ el: icon3, entry: entry2 });
+            icons.push({ el: icon4, entry: entry2 });
           }
         }
         commonGroup.hidden = listed.list.length === 0;
@@ -10688,84 +10688,84 @@
   var active2 = null;
   var toolbarButton = null;
   var bulkButton = null;
-  var make = (tag, className, text) => {
+  var make = (tag, className, text2) => {
     const el2 = document.createElement(tag);
     if (className) el2.className = className;
-    if (text !== void 0) el2.textContent = text;
+    if (text2 !== void 0) el2.textContent = text2;
     return el2;
   };
-  var button = (className, label5, action) => {
-    const el2 = make("button", className, label5);
+  var button = (className, label6, action) => {
+    const el2 = make("button", className, label6);
     el2.type = "button";
     el2.addEventListener("click", action);
     return el2;
   };
-  function later(run, delay, action) {
+  function later(run2, delay, action) {
     const timer = setTimeout(() => {
-      run.timers.delete(timer);
-      if (active2 === run && isRuntimeActive()) action();
+      run2.timers.delete(timer);
+      if (active2 === run2 && isRuntimeActive()) action();
     }, delay);
-    run.timers.add(timer);
+    run2.timers.add(timer);
   }
-  function clearTimers(run) {
-    for (const timer of run.timers) clearTimeout(timer);
-    run.timers.clear();
+  function clearTimers(run2) {
+    for (const timer of run2.timers) clearTimeout(timer);
+    run2.timers.clear();
   }
-  function close(run = active2) {
-    if (!run || active2 !== run) return;
+  function close(run2 = active2) {
+    if (!run2 || active2 !== run2) return;
     active2 = null;
-    clearTimers(run);
-    run.motion.removeEventListener("change", run.onMotion);
-    run.loot.dispose();
-    run.dialog.close();
-    run.dialog.remove();
-    const focusTarget = run.returnFocus?.isConnected ? run.returnFocus : run.count > 1 ? bulkButton : toolbarButton;
+    clearTimers(run2);
+    run2.motion.removeEventListener("change", run2.onMotion);
+    run2.loot.dispose();
+    run2.dialog.close();
+    run2.dialog.remove();
+    const focusTarget = run2.returnFocus?.isConnected ? run2.returnFocus : run2.count > 1 ? bulkButton : toolbarButton;
     if (focusTarget?.isConnected) focusTarget.focus({ preventScroll: true });
   }
-  function phase(run, name) {
-    run.phase = name;
-    run.scene.dataset.phase = name;
+  function phase(run2, name) {
+    run2.phase = name;
+    run2.scene.dataset.phase = name;
   }
-  function waiting(run) {
-    phase(run, "waiting");
-    run.open.disabled = false;
-    run.status.textContent = run.count > 1 ? `${run.count} caches. One extraordinary haul.` : "Something extraordinary is waiting inside.";
-    run.countSelect.disabled = false;
-    run.open.focus({ preventScroll: true });
+  function waiting(run2) {
+    phase(run2, "waiting");
+    run2.open.disabled = false;
+    run2.status.textContent = run2.count > 1 ? `${run2.count} caches. One extraordinary haul.` : "Something extraordinary is waiting inside.";
+    run2.countSelect.disabled = false;
+    run2.open.focus({ preventScroll: true });
   }
-  function reveal(run) {
-    phase(run, "revealed");
-    run.heading.textContent = "Treasures revealed";
-    run.status.textContent = run.count > 1 ? `${run.count} caches opened · Rare treasures above, the rest below.` : "A little magic. A worthy haul.";
-    run.actions.hidden = false;
-    run.announce.textContent = `${run.count} ${run.count === 1 ? "cache" : "caches"} opened. ` + run.loot.reveal();
-    run.replay.focus({ preventScroll: true });
+  function reveal(run2) {
+    phase(run2, "revealed");
+    run2.heading.textContent = "Treasures revealed";
+    run2.status.textContent = run2.count > 1 ? `${run2.count} caches opened · Rare treasures above, the rest below.` : "A little magic. A worthy haul.";
+    run2.actions.hidden = false;
+    run2.announce.textContent = `${run2.count} ${run2.count === 1 ? "cache" : "caches"} opened. ` + run2.loot.reveal();
+    run2.replay.focus({ preventScroll: true });
   }
-  function openChest(run) {
-    if (active2 !== run || run.phase !== "waiting") return;
-    run.open.disabled = true;
-    run.countSelect.disabled = true;
-    run.open.blur();
-    phase(run, "opening");
-    run.status.textContent = "The seal is breaking…";
-    run.announce.textContent = "Opening Arcane Cache.";
-    later(run, run.motion.matches ? 240 : CACHE_OPENING_MS, () => reveal(run));
+  function openChest(run2) {
+    if (active2 !== run2 || run2.phase !== "waiting") return;
+    run2.open.disabled = true;
+    run2.countSelect.disabled = true;
+    run2.open.blur();
+    phase(run2, "opening");
+    run2.status.textContent = "The seal is breaking…";
+    run2.announce.textContent = "Opening Arcane Cache.";
+    later(run2, run2.motion.matches ? 240 : CACHE_OPENING_MS, () => reveal(run2));
   }
-  function drop(run) {
-    clearTimers(run);
-    run.heading.textContent = "Arcane Cache";
-    run.status.textContent = "A sealed cache of untold possibilities.";
-    run.announce.textContent = "";
-    run.actions.hidden = true;
-    prepareLoot(run);
-    run.open.disabled = true;
-    phase(run, "dropping");
-    later(run, run.motion.matches ? 120 : CACHE_DROP_MS, () => waiting(run));
+  function drop(run2) {
+    clearTimers(run2);
+    run2.heading.textContent = "Arcane Cache";
+    run2.status.textContent = "A sealed cache of untold possibilities.";
+    run2.announce.textContent = "";
+    run2.actions.hidden = true;
+    prepareLoot(run2);
+    run2.open.disabled = true;
+    phase(run2, "dropping");
+    later(run2, run2.motion.matches ? 120 : CACHE_DROP_MS, () => waiting(run2));
   }
-  function prepareLoot(run) {
-    run.loot.prepare(run.count);
-    run.openLabel.textContent = run.count > 1 ? `Break ${run.count} seals` : "Break the seal";
-    run.replay.textContent = run.count > 1 ? `Open another ${run.count}` : "Open another";
+  function prepareLoot(run2) {
+    run2.loot.prepare(run2.count);
+    run2.openLabel.textContent = run2.count > 1 ? `Break ${run2.count} seals` : "Break the seal";
+    run2.replay.textContent = run2.count > 1 ? `Open another ${run2.count}` : "Open another";
   }
   function showArcaneCacheDemo(trigger = toolbarButton, count = 1) {
     if (!isRuntimeActive() || active2) return;
@@ -10776,7 +10776,7 @@
     const shadow = shell.attachShadow({ mode: "open" });
     const style = make("style", "", arcane_cache_default);
     const scene = make("section", "scene");
-    const run = {
+    const run2 = {
       dialog,
       shadow,
       scene,
@@ -10786,42 +10786,42 @@
       motion: matchMedia("(prefers-reduced-motion: reduce)"),
       returnFocus: trigger || document.activeElement
     };
-    active2 = run;
+    active2 = run2;
     scene.dataset.bulk = String(count > 1);
     scene.style.setProperty("--drop-duration", `${CACHE_DROP_MS}ms`);
     scene.style.setProperty("--open-duration", `${CACHE_OPENING_MS}ms`);
     scene.style.setProperty("--cache-corners", `url("${assetUrl("assets/inventory/panel_corners.webp")}")`);
     scene.style.setProperty("--cache-ground", `url("${assetUrl("assets/skills_panel_texture.webp")}")`);
-    run.announce = make("p", "sr-only");
-    run.announce.setAttribute("role", "status");
-    run.announce.setAttribute("aria-live", "polite");
-    run.loot = createCacheLootView(run.announce);
-    scene.dataset.reduced = String(run.motion.matches);
-    phase(run, "loading");
-    const exit = button("exit", "×", () => close(run));
+    run2.announce = make("p", "sr-only");
+    run2.announce.setAttribute("role", "status");
+    run2.announce.setAttribute("aria-live", "polite");
+    run2.loot = createCacheLootView(run2.announce);
+    scene.dataset.reduced = String(run2.motion.matches);
+    phase(run2, "loading");
+    const exit = button("exit", "×", () => close(run2));
     exit.setAttribute("aria-label", "Close Arcane Cache");
     const mast = make("header", "mast");
     const overline = make("p", "overline", "A LITTLE WONDER, SEALED AWAY");
-    run.heading = make("h1", "", "Arcane Cache");
-    run.status = make("p", "status", "Summoning your cache…");
-    mast.append(overline, run.heading, run.status);
+    run2.heading = make("h1", "", "Arcane Cache");
+    run2.status = make("p", "status", "Summoning your cache…");
+    mast.append(overline, run2.heading, run2.status);
     const batch = make("label", "batch-choice", "OPEN TOGETHER");
     batch.hidden = count === 1;
-    run.countSelect = make("select", "batch-size");
-    run.countSelect.setAttribute("aria-label", "Number of caches");
+    run2.countSelect = make("select", "batch-size");
+    run2.countSelect.setAttribute("aria-label", "Number of caches");
     for (const size of [20, 50, 100]) {
       const option = make("option", "", `${size} caches`);
       option.value = String(size);
-      run.countSelect.append(option);
+      run2.countSelect.append(option);
     }
-    run.countSelect.value = String(count);
-    run.countSelect.addEventListener("change", () => {
-      if (run.phase !== "waiting") return;
-      run.count = Number(run.countSelect.value);
-      prepareLoot(run);
-      run.status.textContent = `${run.count} caches. One extraordinary haul.`;
+    run2.countSelect.value = String(count);
+    run2.countSelect.addEventListener("change", () => {
+      if (run2.phase !== "waiting") return;
+      run2.count = Number(run2.countSelect.value);
+      prepareLoot(run2);
+      run2.status.textContent = `${run2.count} caches. One extraordinary haul.`;
     });
-    batch.append(run.countSelect);
+    batch.append(run2.countSelect);
     mast.append(batch);
     const stage = make("div", "stage");
     const halo = make("div", "halo");
@@ -10831,8 +10831,8 @@
     seal.append(make("span", "", "✧"), make("span", "", "✦"), make("span", "", "✧"));
     const chest = make("div", "chest");
     chest.setAttribute("aria-hidden", "true");
-    for (const state2 of ["closed", "open"]) {
-      const sprite = make("span", `chest-sprite chest-${state2}`);
+    for (const state3 of ["closed", "open"]) {
+      const sprite = make("span", `chest-sprite chest-${state3}`);
       sprite.style.backgroundImage = `url("${assetUrl(ART)}")`;
       chest.append(sprite);
     }
@@ -10863,70 +10863,70 @@
       mote.style.setProperty("--delay", `${970 + i % 6 * 30}ms`);
       motes.append(mote);
     }
-    run.open = button("open-cache", "", () => openChest(run));
-    run.open.setAttribute("aria-label", "Open Arcane Cache");
-    run.open.disabled = true;
+    run2.open = button("open-cache", "", () => openChest(run2));
+    run2.open.setAttribute("aria-label", "Open Arcane Cache");
+    run2.open.disabled = true;
     const tapHint = make("span", "tap-hint", "CLICK THE CHEST TO OPEN");
-    run.openLabel = make("span", "", "Break the seal");
-    run.open.append(make("span", "chest-hit-area"), run.openLabel);
-    stage.append(halo, seal, rays, runes, chest, shockwave, echo, flash, motes, run.loot.rewards, run.loot.empty, run.open, tapHint);
-    run.actions = make("div", "actions");
-    run.actions.hidden = true;
-    run.replay = button("replay", "Open another", () => drop(run));
-    run.actions.append(run.replay, button("done", "Done", () => close(run)));
+    run2.openLabel = make("span", "", "Break the seal");
+    run2.open.append(make("span", "chest-hit-area"), run2.openLabel);
+    stage.append(halo, seal, rays, runes, chest, shockwave, echo, flash, motes, run2.loot.rewards, run2.loot.empty, run2.open, tapHint);
+    run2.actions = make("div", "actions");
+    run2.actions.hidden = true;
+    run2.replay = button("replay", "Open another", () => drop(run2));
+    run2.actions.append(run2.replay, button("done", "Done", () => close(run2)));
     const footer = make("footer", "footer");
     footer.append(make("span", "demo-label", "PREVIEW"), make("span", "", "Sample loot · No items are granted"));
-    scene.append(exit, mast, stage, run.loot.summary, run.actions, footer, run.announce);
+    scene.append(exit, mast, stage, run2.loot.summary, run2.actions, footer, run2.announce);
     shadow.append(style, scene);
     dialog.append(shell);
     dialog.addEventListener("cancel", (event) => {
       event.preventDefault();
-      close(run);
+      close(run2);
     });
-    dialog.addEventListener("close", () => close(run));
-    run.onMotion = () => {
-      scene.dataset.reduced = String(run.motion.matches);
-      if (!run.motion.matches) return;
-      if (run.phase === "opening") {
-        clearTimers(run);
-        reveal(run);
-      } else if (run.phase === "dropping") {
-        clearTimers(run);
-        waiting(run);
+    dialog.addEventListener("close", () => close(run2));
+    run2.onMotion = () => {
+      scene.dataset.reduced = String(run2.motion.matches);
+      if (!run2.motion.matches) return;
+      if (run2.phase === "opening") {
+        clearTimers(run2);
+        reveal(run2);
+      } else if (run2.phase === "dropping") {
+        clearTimers(run2);
+        waiting(run2);
       }
     };
-    run.motion.addEventListener("change", run.onMotion);
+    run2.motion.addEventListener("change", run2.onMotion);
     document.body.append(dialog);
     try {
       dialog.showModal();
     } catch (err) {
-      close(run);
+      close(run2);
       warnOnce("cache:modal", err);
       return;
     }
     exit.focus({ preventScroll: true });
     const art2 = new Image();
     const failed = () => {
-      if (active2 !== run || run.phase !== "loading") return;
-      clearTimers(run);
-      phase(run, "error");
-      run.status.textContent = "Chest artwork could not load. Close and try again.";
-      run.announce.textContent = run.status.textContent;
+      if (active2 !== run2 || run2.phase !== "loading") return;
+      clearTimers(run2);
+      phase(run2, "error");
+      run2.status.textContent = "Chest artwork could not load. Close and try again.";
+      run2.announce.textContent = run2.status.textContent;
     };
     art2.onload = () => {
-      if (active2 === run && run.phase === "loading") drop(run);
+      if (active2 === run2 && run2.phase === "loading") drop(run2);
     };
     art2.onerror = failed;
     art2.src = assetUrl(ART);
-    later(run, 8e3, failed);
+    later(run2, 8e3, failed);
   }
   function ensureArcaneCacheButton(track) {
     if (!track || !isRuntimeActive()) return;
     if (toolbarButton?.parentElement === track && bulkButton?.parentElement === track) return;
     toolbarButton?.remove();
     bulkButton?.remove();
-    const trigger = (label5, key, count) => {
-      const el2 = button("", label5, (event) => showArcaneCacheDemo(event.currentTarget, count));
+    const trigger = (label6, key, count) => {
+      const el2 = button("", label6, (event) => showArcaneCacheDemo(event.currentTarget, count));
       el2.dataset.iwNavLink = key;
       el2.dataset.iwCacheTrigger = "1";
       el2.dataset.iwUi = "nav-tab";
@@ -10968,20 +10968,20 @@
   var decorated = /* @__PURE__ */ new Set();
   var label4 = (el2) => String(el2.textContent || "").replace(/\s+/g, " ").trim();
   var STATES = ["idle", "hover", "clicked"];
-  function loadoutPair(el2, text = label4(el2)) {
-    if (!/^(I|II)$/.test(text)) return false;
+  function loadoutPair(el2, text2 = label4(el2)) {
+    if (!/^(I|II)$/.test(text2)) return false;
     const peers = [...el2.parentElement?.querySelectorAll("button") || []];
     return peers.length === 2 && peers.some((p) => label4(p) === "I") && peers.some((p) => label4(p) === "II");
   }
-  function kind(el2, text) {
+  function kind(el2, text2) {
     if (el2.matches("[data-iw-collapse]")) return "";
     if (el2.matches('[data-fs-preserved-action="control"]')) {
       return el2.dataset.fsActionKind === "icon" ? "icon" : "text";
     }
     if (el2.matches('[data-iw-inventory-control="filter"], [data-iw-inventory-control="page"], [data-iw-ui="nav-tab"], [data-iw-ui="zone-action"], [data-iw-panel-part="send"], [data-iw-guild-role="action"], [data-iw-guild-role="outcome-close"], [data-iw-raid-lb-tab], .iw-rc-popup button')) return "text";
-    if (loadoutPair(el2, text())) return "icon";
-    if (/^change zone$/i.test(text())) return "text";
-    if ((!text() || /^[⏱⏲⏰⌚︎️]+$/u.test(text())) && [...el2.parentElement?.children || []].some((p) => p.matches("button") && /^change zone$/i.test(label4(p)))) return "icon";
+    if (loadoutPair(el2, text2())) return "icon";
+    if (/^change zone$/i.test(text2())) return "text";
+    if ((!text2() || /^[⏱⏲⏰⌚︎️]+$/u.test(text2())) && [...el2.parentElement?.children || []].some((p) => p.matches("button") && /^change zone$/i.test(label4(p)))) return "icon";
     return "";
   }
   function clear(el2) {
@@ -10993,13 +10993,13 @@
     const next = /* @__PURE__ */ new Set();
     for (const el2 of root.querySelectorAll(CONTROL)) {
       let cached;
-      const text = () => cached === void 0 ? cached = label4(el2) : cached;
-      const shape = kind(el2, text);
+      const text2 = () => cached === void 0 ? cached = label4(el2) : cached;
+      const shape = kind(el2, text2);
       if (!shape) continue;
       next.add(el2);
       if (el2.dataset.iwCompactButton !== shape) el2.dataset.iwCompactButton = shape;
       const nativeSelection = el2.getAttribute("aria-pressed") ?? el2.getAttribute("aria-selected");
-      const selected = loadoutPair(el2, text()) && (nativeSelection !== null ? nativeSelection === "true" : el2.dataset.state === "active" || /(?:bg|text|border)-(?:orange|amber|primary|accent|ember)/i.test(String(el2.className || "")));
+      const selected = loadoutPair(el2, text2()) && (nativeSelection !== null ? nativeSelection === "true" : el2.dataset.state === "active" || /(?:bg|text|border)-(?:orange|amber|primary|accent|ember)/i.test(String(el2.className || "")));
       if (selected && el2.dataset.iwCompactSelected !== "true") el2.dataset.iwCompactSelected = "true";
       if (!selected && el2.hasAttribute("data-iw-compact-selected")) delete el2.dataset.iwCompactSelected;
       const present = /* @__PURE__ */ new Set();
@@ -11007,10 +11007,10 @@
         const layerState = child.getAttribute("data-iw-compact-layer");
         if (layerState !== null) present.add(layerState);
       }
-      for (const state2 of STATES) {
-        if (present.has(state2)) continue;
+      for (const state3 of STATES) {
+        if (present.has(state3)) continue;
         const layer = el2.ownerDocument.createElement("span");
-        layer.dataset.iwCompactLayer = state2;
+        layer.dataset.iwCompactLayer = state3;
         layer.setAttribute("aria-hidden", "true");
         el2.append(layer);
       }
@@ -11070,13 +11070,13 @@
   }
   function sameTextShell(el2, stop2, maxDepth = 4) {
     if (!el2) return null;
-    const text = normText4(el2.textContent);
+    const text2 = normText4(el2.textContent);
     let cur = el2;
     for (let depth = 0; depth < maxDepth; depth += 1) {
       const parent = cur.parentElement;
       if (!parent || parent === stop2) break;
       if (parent.matches?.("button, a, input, select, textarea")) break;
-      if (normText4(parent.textContent) !== text) break;
+      if (normText4(parent.textContent) !== text2) break;
       cur = parent;
     }
     return cur;
@@ -11111,8 +11111,8 @@
     if (!root) return 0;
     const seen = /* @__PURE__ */ new Set();
     for (const btn of root.querySelectorAll('button, a, [role="tab"]')) {
-      const label5 = navLabelText(btn);
-      if (NAV_LABELS.includes(label5)) seen.add(label5);
+      const label6 = navLabelText(btn);
+      if (NAV_LABELS.includes(label6)) seen.add(label6);
     }
     return seen.size;
   }
@@ -11133,13 +11133,13 @@
     const buttons = [...document.querySelectorAll('button, a, [role="tab"]')];
     const byLabel = /* @__PURE__ */ new Map();
     for (const btn of buttons) {
-      const label5 = navLabelText(btn);
-      if (!NAV_LABELS.includes(label5)) continue;
-      if (!byLabel.has(label5)) byLabel.set(label5, []);
-      byLabel.get(label5).push(btn);
+      const label6 = navLabelText(btn);
+      if (!NAV_LABELS.includes(label6)) continue;
+      if (!byLabel.has(label6)) byLabel.set(label6, []);
+      byLabel.get(label6).push(btn);
     }
     if (byLabel.size < 4) return null;
-    const tabs = NAV_LABELS.map((label5) => byLabel.has(label5) ? pickRendered(byLabel.get(label5)) : null).filter(Boolean);
+    const tabs = NAV_LABELS.map((label6) => byLabel.has(label6) ? pickRendered(byLabel.get(label6)) : null).filter(Boolean);
     const track = commonAncestor2(tabs);
     if (!track) return null;
     setNavRole(track, "main-nav");
@@ -11161,7 +11161,7 @@
     const semanticActive = tabs.map((btn) => deriveTabActive(btn));
     const hasSemanticActive = semanticActive.some(Boolean);
     const routeSegments = (value) => new Set(String(value || "").toLowerCase().split(/[^a-z0-9-]+/).filter(Boolean));
-    const routeLabel = (segments) => NAV_LABELS.find((label5) => segments.has(NAV_ROUTE_KEYS[label5] || label5));
+    const routeLabel = (segments) => NAV_LABELS.find((label6) => segments.has(NAV_ROUTE_KEYS[label6] || label6));
     const pathRoute = routeLabel(routeSegments(location.pathname));
     const hashRoute = routeLabel(routeSegments(location.hash));
     const rootRoute = !location.hash && /^\/$/.test(location.pathname || "/") ? "game" : "";
@@ -11173,10 +11173,10 @@
     tabs.forEach((btn, index) => {
       const wasActive = btn.dataset.iwState === "active";
       setRole4(btn, "nav-tab");
-      const tab2 = navLabelText(btn);
-      if (btn.dataset.iwTab !== tab2) btn.dataset.iwTab = tab2;
-      const active3 = hasRouteActive ? routeActive[index] : hasSemanticActive ? semanticActive[index] : firstClassification ? warmActive[index] : wasActive;
-      if (active3) {
+      const tab3 = navLabelText(btn);
+      if (btn.dataset.iwTab !== tab3) btn.dataset.iwTab = tab3;
+      const active5 = hasRouteActive ? routeActive[index] : hasSemanticActive ? semanticActive[index] : firstClassification ? warmActive[index] : wasActive;
+      if (active5) {
         if (!wasActive) btn.dataset.iwState = "active";
       } else if ("iwState" in btn.dataset) delete btn.dataset.iwState;
     });
@@ -11215,9 +11215,9 @@
     let zones = false;
     let next = false;
     for (const btn of document.querySelectorAll("button")) {
-      const text = nearestButtonLabel(btn);
-      if (/zones/.test(text)) zones = true;
-      if (/next\s+zone/.test(text)) next = true;
+      const text2 = nearestButtonLabel(btn);
+      if (/zones/.test(text2)) zones = true;
+      if (/next\s+zone/.test(text2)) next = true;
       if (zones && next) return true;
     }
     return false;
@@ -11228,8 +11228,8 @@
     const zoneLabel = (el2) => /^zone\s*\d+\s*:/i.test(normText4(el2.textContent).replace(/^[^a-z0-9]+/i, ""));
     const matches = [...document.querySelectorAll("div,span,p,strong")].filter((el2) => zoneLabel(el2) && el2.childElementCount <= 2);
     const labels = matches.filter((el2) => !matches.some((other) => other !== el2 && el2.contains(other)));
-    for (const label5 of labels) {
-      let host = label5.parentElement;
+    for (const label6 of labels) {
+      let host = label6.parentElement;
       for (let depth = 0; host && depth < 5; depth += 1, host = host.parentElement) {
         if (host.querySelector('header, [data-iw-ui="main-nav"], [data-iw-ui="nav-tab"]')) break;
         const buttons = [...host.querySelectorAll("button")];
@@ -11238,8 +11238,8 @@
           setRole4(host, "zone-bar");
           const zoneButtons = [];
           buttons.forEach((btn) => {
-            const text = buttonLabelText(btn);
-            const match = /^(zones|previous\s+zone|next\s+zone)$/.exec(text);
+            const text2 = buttonLabelText(btn);
+            const match = /^(zones|previous\s+zone|next\s+zone)$/.exec(text2);
             if (match) {
               setRole4(btn, "zone-action");
               const tone2 = match[1].startsWith("zones") ? "zones" : match[1].startsWith("previous") ? "prev" : "next";
@@ -11252,7 +11252,7 @@
             if (btn.parentElement?.querySelector(':scope > [data-iw-ui="zone-action"]')) return;
             if (btn.dataset.iwZoneLink !== "1") btn.dataset.iwZoneLink = "1";
           });
-          const title = sameTextShell(label5, host, 2);
+          const title = sameTextShell(label6, host, 2);
           setRole4(title, "zone-title");
           zoneBarResolutions.push({ host, title, buttons: zoneButtons });
           break;
@@ -11283,17 +11283,17 @@
     const firstByPanel = /* @__PURE__ */ new Map();
     const orphans = [];
     for (const h of all) {
-      const panel2 = h.closest(".panel");
-      if (panel2) {
-        if (!firstByPanel.has(panel2)) firstByPanel.set(panel2, h);
+      const panel3 = h.closest(".panel");
+      if (panel3) {
+        if (!firstByPanel.has(panel3)) firstByPanel.set(panel3, h);
       } else orphans.push(h);
     }
     headingIndexValue = { all, firstByPanel, orphans };
     headingIndexToken = passToken;
     return headingIndexValue;
   }
-  function panelHeading(panel2) {
-    return headingIndex().firstByPanel.get(panel2) || null;
+  function panelHeading(panel3) {
+    return headingIndex().firstByPanel.get(panel3) || null;
   }
   function sectionFrameResolutionValid(entry2) {
     return entry2.epoch === getLayoutEpoch() && entry2.frame.isConnected && entry2.frame.dataset.iwUi === "section-frame" && !inOverlay(entry2.frame) && !ownedElsewhere(entry2.frame) && // A panel with no heading YET is legal (an async route paints the card
@@ -11325,11 +11325,11 @@
     }
     sectionFrameResolutions = [];
     sectionFrameSeen = new Set(targets);
-    for (const panel2 of panels) {
-      const heading = panelHeading(panel2);
-      setRole4(panel2, "section-frame");
+    for (const panel3 of panels) {
+      const heading = panelHeading(panel3);
+      setRole4(panel3, "section-frame");
       if (heading) setRole4(heading, "section-title");
-      sectionFrameResolutions.push({ heading, frame: panel2, epoch: getLayoutEpoch() });
+      sectionFrameResolutions.push({ heading, frame: panel3, epoch: getLayoutEpoch() });
     }
     for (const heading of orphans) {
       const ownPanel = heading.closest(".panel");
@@ -11364,8 +11364,8 @@
     return entry2.epoch === getLayoutEpoch() && entry2.heading.isConnected && entry2.root.isConnected && entry2.root.contains(entry2.heading);
   }
   function bossPanelRoot(heading) {
-    const panel2 = heading.closest(".panel");
-    if (panel2) return panel2;
+    const panel3 = heading.closest(".panel");
+    if (panel3) return panel3;
     const entry2 = (sectionFrameResolutions || []).find((e) => e.heading === heading);
     return entry2 ? entry2.frame : null;
   }
@@ -11451,8 +11451,8 @@
   }
   function villageHeadings() {
     const matches = headingIndex().all.filter((heading) => {
-      const text = villageLabel(heading);
-      return /^village$/i.test(text) || /^village add-?ons$/i.test(text);
+      const text2 = villageLabel(heading);
+      return /^village$/i.test(text2) || /^village add-?ons$/i.test(text2);
     });
     return preferRendered(matches);
   }
@@ -11525,25 +11525,25 @@
       return !/^\s*[\d,.]+\s*xp\s*\/\s*hr\s*$/i.test(normText4(child.textContent));
     });
   }
-  function panelHostMatches(candidate, panel2, heading) {
-    if (panel2 === "current-action") {
+  function panelHostMatches(candidate, panel3, heading) {
+    if (panel3 === "current-action") {
       return !!findCurrentActionProgress(candidate);
     }
-    if (panel2 === "action-log") {
+    if (panel3 === "action-log") {
       const hasControl = [...candidate.querySelectorAll(GAME_CONTROL + ",a")].some((el2) => /^view\s+all$/i.test(normText4(el2.textContent)));
       const hasRate = /\b[\d,.]+\s*xp\s*\/\s*hr\b/i.test(normText4(candidate.textContent));
       return (hasControl || hasRate) && hasPanelBodyOutsideHeading(candidate, heading);
     }
-    if (panel2 === "world-chat") {
+    if (panel3 === "world-chat") {
       return !![...candidate.querySelectorAll("input,textarea")].find((el2) => /message\s+world\s+chat/i.test(el2.getAttribute("placeholder") || ""));
     }
     return false;
   }
-  function findActivityPanelHost(heading, panel2) {
+  function findActivityPanelHost(heading, panel3) {
     const ownPanel = heading.closest?.(".panel") || null;
     let cur = heading.parentElement;
     for (let depth = 0; cur && cur !== document.body && depth < 6; depth += 1, cur = cur.parentElement) {
-      if (panelHostMatches(cur, panel2, heading)) return cur;
+      if (panelHostMatches(cur, panel3, heading)) return cur;
       if (cur === ownPanel) break;
     }
     const panelEl = heading.closest?.(".panel");
@@ -11567,8 +11567,8 @@
   }
   var FEED_TIME = /^\d{1,2}:\d{2}:\d{2}(?:\s?[ap]\.?\s?m\.?)?$/i;
   function classifyFeed(host) {
-    let markers = matchingLeaves(host, (text) => FEED_TIME.test(text));
-    if (!markers.length) markers = matchingLeaves(host, (text) => text === "system");
+    let markers = matchingLeaves(host, (text2) => FEED_TIME.test(text2));
+    if (!markers.length) markers = matchingLeaves(host, (text2) => text2 === "system");
     let feed = markers.length > 1 ? commonAncestor2(markers) : markers.length === 1 ? directChildUnder2(markers[0], host) : null;
     if (feed === host) {
       feed = null;
@@ -11589,8 +11589,8 @@
   function classifyCurrentAction(host) {
     const track = setPanelPart(findCurrentActionProgress(host), "progress");
     smoothActionProgress(track);
-    const queued3 = matchingLeaves(host, (text) => text === "queued")[0];
-    let cur = queued3?.parentElement;
+    const queued4 = matchingLeaves(host, (text2) => text2 === "queued")[0];
+    let cur = queued4?.parentElement;
     for (let depth = 0; cur && cur !== host && depth < 3; depth += 1, cur = cur.parentElement) {
       if (cur.querySelector(GAME_CONTROL) && normText4(cur.textContent).length > 6) {
         setPanelPart(cur, "queue");
@@ -11623,19 +11623,19 @@
     return entry2.epoch === getLayoutEpoch() && entry2.heading.isConnected && entry2.host.isConnected && entry2.host.dataset.iwUi === "section-frame" && entry2.host.dataset.iwPanel === entry2.panel && entry2.host.contains(entry2.heading);
   }
   function runActivityPanel(entry2) {
-    const { host, heading, panel: panel2 } = entry2;
+    const { host, heading, panel: panel3 } = entry2;
     classifyPanelHeader(host, heading);
-    if (panel2 === "current-action") classifyCurrentAction(host);
-    else if (panel2 === "action-log") classifyActionLog(host);
+    if (panel3 === "current-action") classifyCurrentAction(host);
+    else if (panel3 === "action-log") classifyActionLog(host);
     else classifyWorldChat(host);
   }
   function activityPanelLabelNodes() {
     const seen = /* @__PURE__ */ new Set();
     const collected = [];
-    const push = (el2, panel2) => {
-      if (!el2 || !panel2 || seen.has(el2)) return;
+    const push = (el2, panel3) => {
+      if (!el2 || !panel3 || seen.has(el2)) return;
       seen.add(el2);
-      collected.push({ node: el2, panel: panel2 });
+      collected.push({ node: el2, panel: panel3 });
     };
     for (const el2 of document.querySelectorAll('h1,h2,h3,h4,[role="heading"]')) {
       push(el2, ACTIVITY_PANELS.get(normText4(el2.textContent).toLowerCase()));
@@ -11645,10 +11645,10 @@
     }
     const haveBeforeId = new Set(collected.map((o) => o.panel));
     if (!haveBeforeId.has("current-action")) {
-      const byId = pickRendered([...document.querySelectorAll('[id="current-action-panel"]')]);
-      if (byId) {
-        const label5 = [...byId.querySelectorAll('h1,h2,h3,h4,[role="heading"],p,span,div,strong,b')].find((el2) => el2.childElementCount === 0 && normText4(el2.textContent).length > 0 && normText4(el2.textContent).length <= 40);
-        push(label5 || byId, "current-action");
+      const byId2 = pickRendered([...document.querySelectorAll('[id="current-action-panel"]')]);
+      if (byId2) {
+        const label6 = [...byId2.querySelectorAll('h1,h2,h3,h4,[role="heading"],p,span,div,strong,b')].find((el2) => el2.childElementCount === 0 && normText4(el2.textContent).length > 0 && normText4(el2.textContent).length <= 40);
+        push(label6 || byId2, "current-action");
       }
     }
     const have = new Set(collected.map((o) => o.panel));
@@ -11657,9 +11657,9 @@
         if (seen.has(el2)) continue;
         for (const n of el2.childNodes) {
           if (n.nodeType !== 3) continue;
-          const panel2 = ACTIVITY_PANELS.get(normText4(n.textContent).toLowerCase());
-          if (panel2 && !have.has(panel2)) {
-            push(el2, panel2);
+          const panel3 = ACTIVITY_PANELS.get(normText4(n.textContent).toLowerCase());
+          if (panel3 && !have.has(panel3)) {
+            push(el2, panel3);
             break;
           }
         }
@@ -11696,14 +11696,14 @@
       }
     }
     activityPanelResolutions = [];
-    for (const { node: heading, panel: panel2 } of labels) {
-      const host = findActivityPanelHost(heading, panel2);
+    for (const { node: heading, panel: panel3 } of labels) {
+      const host = findActivityPanelHost(heading, panel3);
       if (!host) continue;
       if (activityPanelResolutions.some((e) => e.host === host)) continue;
       setRole4(host, "section-frame");
       setRole4(heading, "section-title");
-      setPanel(host, panel2);
-      const entry2 = { heading, host, panel: panel2, epoch: getLayoutEpoch() };
+      setPanel(host, panel3);
+      const entry2 = { heading, host, panel: panel3, epoch: getLayoutEpoch() };
       activityPanelResolutions.push(entry2);
       runActivityPanel(entry2);
     }
@@ -11840,9 +11840,9 @@
     on("iw:text-flush", (event) => guard("ui:raid-text", () => refreshRaidText(event.detail?.parents || [])));
     on("iw:text-flush", (event) => guard("ui:guild-lobby-text", () => refreshGuildLobbyText(event.detail?.parents || [])));
     on("iw:skill-panel", (event) => {
-      const panel2 = event.detail?.panel;
-      if (!panel2) return;
-      const entry2 = (bossPanelResolutions || []).find((entry3) => bossPanelResolutionValid(entry3) && entry3.root.contains(panel2));
+      const panel3 = event.detail?.panel;
+      if (!panel3) return;
+      const entry2 = (bossPanelResolutions || []).find((entry3) => bossPanelResolutionValid(entry3) && entry3.root.contains(panel3));
       if (entry2) guard("ui:boss-state", () => decorateWorldBossPanel(entry2));
     });
     const redecorateBosses = () => {
@@ -11920,9 +11920,9 @@
     for (const input of document.querySelectorAll(`[${ATTR}] input`)) {
       if (input.checked !== enabled2) input.checked = enabled2;
     }
-    for (const label5 of document.querySelectorAll(`[${ATTR}]`)) {
-      const state2 = enabled2 ? "on" : "off";
-      if (label5.getAttribute(ATTR) !== state2) label5.setAttribute(ATTR, state2);
+    for (const label6 of document.querySelectorAll(`[${ATTR}]`)) {
+      const state3 = enabled2 ? "on" : "off";
+      if (label6.getAttribute(ATTR) !== state3) label6.setAttribute(ATTR, state3);
     }
   }
   function setEnabled(value, persist3) {
@@ -11941,9 +11941,9 @@
     setEnabled(stored, false);
   }
   function buildToggle() {
-    const label5 = document.createElement("label");
-    label5.setAttribute(ATTR, enabled2 ? "on" : "off");
-    label5.title = "Zone themes: match the skin to your zone. Off uses the standard Ashen Iron theme everywhere.";
+    const label6 = document.createElement("label");
+    label6.setAttribute(ATTR, enabled2 ? "on" : "off");
+    label6.title = "Zone themes: match the skin to your zone. Off uses the standard Ashen Iron theme everywhere.";
     const input = document.createElement("input");
     input.type = "checkbox";
     input.setAttribute("role", "switch");
@@ -11952,11 +11952,11 @@
     const track = document.createElement("span");
     track.className = "iw-theme-toggle-track";
     track.setAttribute("aria-hidden", "true");
-    const text = document.createElement("span");
-    text.className = "iw-theme-toggle-text";
-    text.textContent = "Zone themes";
-    label5.append(input, track, text);
-    return label5;
+    const text2 = document.createElement("span");
+    text2.className = "iw-theme-toggle-text";
+    text2.textContent = "Zone themes";
+    label6.append(input, track, text2);
+    return label6;
   }
   function ensureZoneThemeToggle() {
     for (const bar of document.querySelectorAll('[data-iw-ui="zone-bar"]')) {
@@ -12073,8 +12073,8 @@
   }
   function findLiveHeader() {
     const candidates = [...document.querySelectorAll("header")].filter((header) => {
-      const text = norm8(header.textContent);
-      return /combat\s+lv\s*\d+/i.test(text) && /players\s+online\s*:\s*\d+/i.test(text) && /atk\s*\d+.*def\s*\d+.*hp\s*\d+/i.test(text);
+      const text2 = norm8(header.textContent);
+      return /combat\s+lv\s*\d+/i.test(text2) && /players\s+online\s*:\s*\d+/i.test(text2) && /atk\s*\d+.*def\s*\d+.*hp\s*\d+/i.test(text2);
     });
     return pickVisible(candidates);
   }
@@ -12138,11 +12138,11 @@
     (iconButtons.length ? iconButtons : [...utilities.querySelectorAll(":scope > button")]).forEach((btn) => setRole5(btn, "utility-button"));
     return utilities;
   }
-  function statKind(text) {
-    if (/\batk\s*\d+\b.*\bdef\s*\d+\b.*\bhp\s*\d+\b/i.test(text)) return "combat";
-    if (/\bboosted\b/i.test(text)) return "boost";
-    if (/\b\d+\s*[dhm]\b[^]*\bleft\b/i.test(text)) return "timer";
-    if (/^[^\w]*[\d,]+$/.test(text)) return "gold";
+  function statKind(text2) {
+    if (/\batk\s*\d+\b.*\bdef\s*\d+\b.*\bhp\s*\d+\b/i.test(text2)) return "combat";
+    if (/\bboosted\b/i.test(text2)) return "boost";
+    if (/\b\d+\s*[dhm]\b[^]*\bleft\b/i.test(text2)) return "timer";
+    if (/^[^\w]*[\d,]+$/.test(text2)) return "gold";
     return "other";
   }
   function classifyStatus(layout, region) {
@@ -12207,8 +12207,8 @@
       let candidate = shell.nextElementSibling;
       while (candidate && candidate.matches("script,style")) candidate = candidate.nextElementSibling;
       if (!candidate) continue;
-      const text = norm8(candidate.textContent);
-      if (!text || text.length > 260 || /zone\s*\d+\s*:/i.test(text)) continue;
+      const text2 = norm8(candidate.textContent);
+      if (!text2 || text2.length > 260 || /zone\s*\d+\s*:/i.test(text2)) continue;
       return candidate;
     }
     return null;
@@ -12438,9 +12438,9 @@
       const rows = children.filter((row) => {
         const cells = [...row.children];
         if (cells.length !== 2) return false;
-        const label5 = normText5(cells[0].textContent);
+        const label6 = normText5(cells[0].textContent);
         const value = normText5(cells[1].textContent);
-        return !!label5 && /^-?[\d,.]+$/.test(value);
+        return !!label6 && /^-?[\d,.]+$/.test(value);
       });
       if (rows.length >= 2) return { surface, rows };
     }
@@ -12454,10 +12454,10 @@
     setData3(match.surface, "iwOverlayContent", PLAYER_STATS);
     const keep = /* @__PURE__ */ new Set();
     for (const row of match.rows) {
-      const [label5, value] = row.children;
-      setData3(label5, "iwOverlayRole", STAT_LABEL);
+      const [label6, value] = row.children;
+      setData3(label6, "iwOverlayRole", STAT_LABEL);
       setData3(value, "iwOverlayRole", STAT_VALUE);
-      keep.add(label5);
+      keep.add(label6);
       keep.add(value);
     }
     match.surface.querySelectorAll("[data-iw-overlay-role]").forEach((el2) => {
@@ -12532,68 +12532,68 @@
   }
   function releaseHost(host, exceptPopup = null) {
     if (!host?.isConnected) return;
-    for (const [popup2, owner] of popupHosts) {
-      if (popup2 !== exceptPopup && owner === host) return;
+    for (const [popup3, owner] of popupHosts) {
+      if (popup3 !== exceptPopup && owner === host) return;
     }
     host.removeAttribute(OVERLAY_HOST_ATTR);
   }
-  function clearPopupTag(popup2) {
-    const host = popupHosts.get(popup2);
-    popupHosts.delete(popup2);
-    if (popup2?.dataset?.iwOverlay === POPUP) delete popup2.dataset.iwOverlay;
-    tagged.delete(popup2);
-    releaseHost(host, popup2);
+  function clearPopupTag(popup3) {
+    const host = popupHosts.get(popup3);
+    popupHosts.delete(popup3);
+    if (popup3?.dataset?.iwOverlay === POPUP) delete popup3.dataset.iwOverlay;
+    tagged.delete(popup3);
+    releaseHost(host, popup3);
   }
-  function tagPopup(popup2, frame2) {
-    const host = directChildUnder3(frame2, popup2);
+  function tagPopup(popup3, frame2) {
+    const host = directChildUnder3(frame2, popup3);
     if (!host) return false;
-    const previous = popupHosts.get(popup2);
+    const previous = popupHosts.get(popup3);
     if (previous && previous !== host) {
-      popupHosts.delete(popup2);
-      releaseHost(previous, popup2);
+      popupHosts.delete(popup3);
+      releaseHost(previous, popup3);
     }
-    if (popup2.dataset.iwOverlay !== POPUP) popup2.dataset.iwOverlay = POPUP;
+    if (popup3.dataset.iwOverlay !== POPUP) popup3.dataset.iwOverlay = POPUP;
     host.setAttribute(OVERLAY_HOST_ATTR, "1");
-    popupHosts.set(popup2, host);
-    tagged.add(popup2);
+    popupHosts.set(popup3, host);
+    tagged.add(popup3);
     return true;
   }
-  function matchingExpandedController(popup2) {
-    if (!popup2?.id) return null;
+  function matchingExpandedController(popup3) {
+    if (!popup3?.id) return null;
     for (const control of document.querySelectorAll("[aria-controls]")) {
-      if (control.getAttribute("aria-controls") !== popup2.id) continue;
+      if (control.getAttribute("aria-controls") !== popup3.id) continue;
       if (control.getAttribute("aria-expanded") === "true") return control;
     }
     return null;
   }
-  function capturedInventoryFilterPopup(popup2, frame2) {
+  function capturedInventoryFilterPopup(popup3, frame2) {
     if (!frame2?.matches?.('[data-iw-inventory-root="1"]')) return false;
-    const parent = popup2.parentElement;
+    const parent = popup3.parentElement;
     if (!parent) return false;
     const trigger = [...parent.children].find((el2) => {
-      if (el2 === popup2 || !el2.matches?.('button, [role="button"]')) return false;
-      const label5 = `${el2.getAttribute("aria-label") || ""} ${el2.getAttribute("title") || ""}`;
-      return /filter inventory/i.test(label5);
+      if (el2 === popup3 || !el2.matches?.('button, [role="button"]')) return false;
+      const label6 = `${el2.getAttribute("aria-label") || ""} ${el2.getAttribute("title") || ""}`;
+      return /filter inventory/i.test(label6);
     });
     if (!trigger) return false;
-    return popup2.parentElement === trigger.parentElement && popup2.querySelectorAll('button, [role="button"], input, [role="option"], [role="menuitem"]').length >= 2;
+    return popup3.parentElement === trigger.parentElement && popup3.querySelectorAll('button, [role="button"], input, [role="option"], [role="menuitem"]').length >= 2;
   }
-  function popupSemantics(popup2, frame2) {
-    const role2 = String(popup2.getAttribute("role") || "").toLowerCase();
+  function popupSemantics(popup3, frame2) {
+    const role2 = String(popup3.getAttribute("role") || "").toLowerCase();
     if (["menu", "listbox", "dialog"].includes(role2)) return true;
-    if (matchingExpandedController(popup2)) return true;
-    return capturedInventoryFilterPopup(popup2, frame2);
+    if (matchingExpandedController(popup3)) return true;
+    return capturedInventoryFilterPopup(popup3, frame2);
   }
-  function classifyContainedPopup(popup2) {
-    if (!popup2 || !visible(popup2)) return null;
-    if (popup2.matches?.(".iw-tip, #iw-tip") || popup2.closest?.(".iw-tip, #iw-tip")) return null;
-    if (popup2.matches?.(ALREADY_FRAMED)) return null;
-    const cs = getComputedStyle(popup2);
+  function classifyContainedPopup(popup3) {
+    if (!popup3 || !visible(popup3)) return null;
+    if (popup3.matches?.(".iw-tip, #iw-tip") || popup3.closest?.(".iw-tip, #iw-tip")) return null;
+    if (popup3.matches?.(ALREADY_FRAMED)) return null;
+    const cs = getComputedStyle(popup3);
     if (!["absolute", "fixed"].includes(cs.position)) return null;
-    if (!popup2.querySelector('button, a, input, select, [role="button"], [role="option"], [role="menuitem"]')) return null;
-    const frame2 = popup2.closest?.(FRAMED_SURFACE);
-    if (!frame2 || frame2 === popup2) return null;
-    return popupSemantics(popup2, frame2) ? frame2 : null;
+    if (!popup3.querySelector('button, a, input, select, [role="button"], [role="option"], [role="menuitem"]')) return null;
+    const frame2 = popup3.closest?.(FRAMED_SURFACE);
+    if (!frame2 || frame2 === popup3) return null;
+    return popupSemantics(popup3, frame2) ? frame2 : null;
   }
   function popupCandidates() {
     const out = new Set(document.querySelectorAll(
@@ -12636,10 +12636,10 @@
         }
         if (el2.dataset.iwOverlay === PANEL) classifyOverlayContent(el2);
       }
-      for (const popup2 of popupCandidates()) {
-        if (popup2.dataset?.iwOverlay === POPUP) continue;
-        const frame2 = classifyContainedPopup(popup2);
-        if (frame2) tagPopup(popup2, frame2);
+      for (const popup3 of popupCandidates()) {
+        if (popup3.dataset?.iwOverlay === POPUP) continue;
+        const frame2 = classifyContainedPopup(popup3);
+        if (frame2) tagPopup(popup3, frame2);
       }
       const seen = /* @__PURE__ */ new Set();
       const candidates = document.querySelectorAll(
@@ -12698,10 +12698,10 @@
     inject("overlay", overlay_default);
     injectUIFoundationStyles();
   }
-  function scanRoots(roots) {
+  function scanRoots(roots2) {
     if (!ItemDatabase.isReady()) return;
     const unique = /* @__PURE__ */ new Set();
-    for (const root of roots || []) {
+    for (const root of roots2 || []) {
       if (root && root.isConnected) unique.add(root);
     }
     guardEach("scan-roots", unique, (root) => scanForItemNames(root));
@@ -12715,11 +12715,11 @@
     guard("init:quest-panel", initQuestPanelRenderer);
     guard("init:ui-foundation", initUIFoundation);
     on("iw:dom-flush", (e) => {
-      const roots = e.detail?.roots || [];
-      if (!roots.length) {
+      const roots2 = e.detail?.roots || [];
+      if (!roots2.length) {
         guard("paint:document", () => paintBackground());
       } else {
-        guardEach("paint:root", roots, (root) => paintBackground(root));
+        guardEach("paint:root", roots2, (root) => paintBackground(root));
       }
       guard("frame:overlays", frameOverlays);
     });
@@ -12781,9 +12781,1306 @@
     start: () => start,
     stop: () => stop
   });
+
+  // src/skins/fantasy/core/Runtime.js
+  var hasChrome2 = typeof chrome !== "undefined" && !!chrome.runtime?.id;
+  var runtimeActive2 = false;
+  function setRuntimeActive2(active5) {
+    runtimeActive2 = active5 !== false;
+  }
+  function isRuntimeActive2() {
+    return runtimeActive2;
+  }
+  function assetUrl2(path) {
+    const clean = String(path || "").replace(/^\/+/, "");
+    if (hasChrome2 && typeof chrome.runtime.getURL === "function") return chrome.runtime.getURL(clean);
+    return clean;
+  }
+  var warned = /* @__PURE__ */ new Set();
+  function warnOnce2(key, err) {
+    if (warned.has(key)) return;
+    warned.add(key);
+    console.warn(`[IW Fantasy Skin] fantasy ${key}:`, err && err.message ? err.message : err);
+  }
+  function guard2(label6, fn) {
+    if (!runtimeActive2) return false;
+    try {
+      fn();
+      return true;
+    } catch (err) {
+      warnOnce2(`guard:${label6}`, err);
+      return false;
+    }
+  }
+  var raf2 = typeof window !== "undefined" && window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : ((fn) => setTimeout(fn, 16));
+
+  // src/skins/fantasy/core/StyleInjector.js
+  var STYLE_ATTR = "data-iw-fantasy-style";
+  function rewriteAssetUrls2(css) {
+    return String(css || "").replace(
+      /url\(\s*(['"]?)\.\.\/assets\/([^)'"\s]+)\1\s*\)/g,
+      (_match, _quote, path) => `url("${assetUrl2(`assets/${path}`)}")`
+    );
+  }
+  function inject2(id, css) {
+    if (document.querySelector(`style[${STYLE_ATTR}="${id}"]`)) return;
+    const style = document.createElement("style");
+    style.setAttribute(STYLE_ATTR, id);
+    style.textContent = rewriteAssetUrls2(css);
+    (document.head || document.documentElement).appendChild(style);
+  }
+  function removeAll2() {
+    document.querySelectorAll(`style[${STYLE_ATTR}]`).forEach((el2) => el2.remove());
+  }
+  function remove(id) {
+    document.querySelector(`style[${STYLE_ATTR}="${id}"]`)?.remove();
+  }
+  function setSheet(id, css) {
+    let style = document.querySelector(`style[${STYLE_ATTR}="${id}"]`);
+    if (!style) {
+      style = document.createElement("style");
+      style.setAttribute(STYLE_ATTR, id);
+      (document.head || document.documentElement).appendChild(style);
+    }
+    if (style.textContent !== css) style.textContent = css;
+  }
+
+  // src/skins/fantasy/core/Viewport.js
+  function isRendered2(el2) {
+    if (!el2?.isConnected) return false;
+    if (typeof el2.checkVisibility === "function") return el2.checkVisibility();
+    const rect = el2.getBoundingClientRect?.();
+    return !!rect && (rect.width > 0 || rect.height > 0);
+  }
+  function pickRendered2(candidates) {
+    return candidates.find(isRendered2) || candidates[0] || null;
+  }
+  var BREAKPOINTS2 = [640, 768, 1024, 1280, 1536];
+  var layoutEpoch2 = 0;
+  var queries2 = [];
+  var bumpHandler2 = null;
+  function getLayoutEpoch2() {
+    return layoutEpoch2;
+  }
+  function startLayoutWatch2(onCross) {
+    if (queries2.length) return;
+    if (typeof matchMedia !== "function") return;
+    bumpHandler2 = () => {
+      layoutEpoch2 += 1;
+      onCross?.();
+    };
+    queries2 = BREAKPOINTS2.map((px) => matchMedia(`(min-width: ${px}px)`));
+    for (const mq of queries2) {
+      mq.addEventListener("change", bumpHandler2);
+    }
+  }
+  function stopLayoutWatch2() {
+    for (const mq of queries2) mq.removeEventListener("change", bumpHandler2);
+    queries2 = [];
+    bumpHandler2 = null;
+  }
+
+  // src/skins/fantasy/core/Watcher.js
+  var OWNED_ATTR = "data-iw-fantasy-owned";
+  var OWNED5 = `[${OWNED_ATTR}]`;
+  var observer = null;
+  var queued3 = false;
+  var structural = false;
+  var textParents = /* @__PURE__ */ new Set();
+  var handlers = { onFlush: null, onText: null };
+  var isOwnedNode = (n) => n.nodeType === 1 && n.matches(OWNED5);
+  var insideOwned = (n) => !!(n.nodeType === 1 ? n : n.parentElement)?.closest(OWNED5);
+  function schedule() {
+    if (queued3) return;
+    queued3 = true;
+    raf2(run);
+  }
+  function run() {
+    queued3 = false;
+    if (!observer) return;
+    if (structural) {
+      structural = false;
+      textParents.clear();
+      guard2("flush", () => handlers.onFlush?.());
+      return;
+    }
+    if (textParents.size) {
+      const parents = [...textParents];
+      textParents.clear();
+      guard2("text-flush", () => handlers.onText?.(parents));
+    }
+  }
+  function onMutations(records) {
+    for (const m of records) {
+      if (insideOwned(m.target)) continue;
+      if (m.type === "characterData") {
+        if (m.target.parentElement) textParents.add(m.target.parentElement);
+        continue;
+      }
+      if (m.type === "childList") {
+        const nodes = [...m.addedNodes, ...m.removedNodes];
+        if (nodes.length && nodes.every(isOwnedNode)) continue;
+        if (nodes.length && nodes.every((n) => n.nodeType === 3)) {
+          textParents.add(m.target);
+          continue;
+        }
+      }
+      structural = true;
+    }
+    if (structural || textParents.size) schedule();
+  }
+  function startWatcher2({ onFlush, onText }) {
+    if (observer) return;
+    handlers = { onFlush, onText };
+    observer = new MutationObserver(onMutations);
+    observer.iwProfile = "fantasy";
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["class", "style", "disabled", "aria-disabled", "aria-pressed", "aria-selected", "aria-current", "data-state"]
+    });
+    guard2("layout-watch", () => startLayoutWatch2(() => {
+      structural = true;
+      schedule();
+    }));
+    structural = true;
+    schedule();
+  }
+  function requestPass() {
+    if (!observer) return;
+    structural = true;
+    schedule();
+  }
+  function stopWatcher2() {
+    observer?.disconnect();
+    observer = null;
+    stopLayoutWatch2();
+    queued3 = false;
+    structural = false;
+    textParents.clear();
+    handlers = { onFlush: null, onText: null };
+  }
+
+  // src/skins/fantasy/core/NativeFeatures.js
+  var FEATURE_TOKENS = {
+    lobby: ["data-iw-guild-slot", "iw-rc-popup", "iw-guild-records"],
+    bossCard: ["data-iw-boss-card", "iw-bc-"],
+    leaderboard: ["iw-raid-lb"],
+    result: ["data-iw-raid-result"],
+    // The skill sheet and the work-order board are the GAME'S own markup (its
+    // `.iw-ss-*` / `.iw-wo-*` classes, 2026-10-16), and the game's stock CSS
+    // already names them. So these count only in the port's Fantasy theme
+    // sheet: the day that sheet styles them, the port has taken them over.
+    skillSheet: { sheet: /\/reskin-bc\//, tokens: [".iw-ss-", ".iw-skill-tab"] },
+    workOrders: { sheet: /\/reskin-bc\//, tokens: [".iw-wo-"] }
+  };
+  var tokensOf = (spec) => Array.isArray(spec) ? spec : spec.tokens;
+  var sheetAllowed = (spec, href) => Array.isArray(spec) || spec.sheet.test(href || "");
+  var signature3 = null;
+  var native = /* @__PURE__ */ new Set();
+  function ownSheet(sheet) {
+    return !!sheet.ownerNode?.hasAttribute?.(STYLE_ATTR);
+  }
+  function sheetsSignature() {
+    const parts = [];
+    for (const sheet of document.styleSheets) {
+      if (ownSheet(sheet)) continue;
+      let count = -1;
+      try {
+        count = sheet.cssRules.length;
+      } catch {
+      }
+      parts.push(`${sheet.href || "inline"}#${count}`);
+    }
+    return parts.join("|");
+  }
+  function scan() {
+    const found = /* @__PURE__ */ new Set();
+    const walk = (rules, tokens) => {
+      for (const rule of rules) {
+        const sel = rule.selectorText;
+        if (sel) {
+          for (const [feature, spec] of tokens) if (!found.has(feature) && tokensOf(spec).some((t) => sel.includes(t))) found.add(feature);
+        }
+        if (rule.cssRules && rule.cssRules.length > 0) walk(rule.cssRules, tokens);
+      }
+    };
+    for (const sheet of document.styleSheets) {
+      if (ownSheet(sheet)) continue;
+      const tokens = Object.entries(FEATURE_TOKENS).filter(([, spec]) => sheetAllowed(spec, sheet.href));
+      if (!tokens.length) continue;
+      let rules;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        continue;
+      }
+      walk(rules, tokens);
+    }
+    return found;
+  }
+  function nativeFeatures() {
+    const sig = sheetsSignature();
+    if (sig !== signature3) {
+      signature3 = sig;
+      native = scan();
+    }
+    return native;
+  }
+  function resetNativeFeatures() {
+    signature3 = null;
+    native = /* @__PURE__ */ new Set();
+  }
+
+  // src/skins/fantasy/core/dom.js
+  var norm9 = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  var label5 = (value) => norm9(value).replace(/^[^\p{L}\p{N}]+/u, "");
+  var written = /* @__PURE__ */ new Map();
+  function release(el2, key) {
+    const map = written.get(key);
+    if (!map?.has(el2)) return;
+    if (el2.getAttribute(key) === map.get(el2)) el2.removeAttribute(key);
+    map.delete(el2);
+  }
+  function mark6(el2, key, value) {
+    if (!el2) return;
+    if (value == null) {
+      release(el2, key);
+      return;
+    }
+    if (el2.getAttribute(key) !== value) el2.setAttribute(key, value);
+    let map = written.get(key);
+    if (!map) written.set(key, map = /* @__PURE__ */ new Map());
+    map.set(el2, value);
+  }
+  function unmark2(attrs, root = null) {
+    for (const attr of attrs) {
+      const map = written.get(attr);
+      if (!map) continue;
+      for (const el2 of [...map.keys()]) {
+        if (root && root !== el2 && !root.contains(el2)) continue;
+        release(el2, attr);
+      }
+    }
+  }
+  function pruneWritten() {
+    for (const map of written.values()) for (const el2 of map.keys()) if (!el2.isConnected) map.delete(el2);
+  }
+  function removeOwned(attr, root = document) {
+    root.querySelectorAll(`[${attr}][${OWNED_ATTR}]`).forEach((node2) => node2.remove());
+  }
+  function ownerOf(attr) {
+    return function own8(tag, cls, text2) {
+      const el2 = document.createElement(tag);
+      if (cls) el2.className = cls;
+      el2.setAttribute(attr, "1");
+      el2.setAttribute(OWNED_ATTR, "1");
+      if (text2 != null) el2.textContent = text2;
+      return el2;
+    };
+  }
+  function plate(button3, own8) {
+    button3.dataset.iwCompactButton = "text";
+    for (const state3 of ["idle", "hover", "clicked"]) {
+      const layer = own8("span");
+      layer.dataset.iwCompactLayer = state3;
+      layer.setAttribute("aria-hidden", "true");
+      button3.append(layer);
+    }
+    return button3;
+  }
+
+  // src/skins/fantasy/raid/RaidLeaderboards.js
+  var OWNED6 = "data-iw-raid-lb";
+  var TTL_MS2 = 6e4;
+  var RETRY_MS3 = 2e4;
+  var DIFFICULTY_KEYS2 = [
+    { key: "easy", label: "Practice", test: /^practice\b/i },
+    { key: "normal", label: "Normal", test: /^normal\b/i },
+    { key: "hard", label: "Hard", test: /^hard\b/i }
+  ];
+  var BOSS_ORDER2 = ["ashmaw", "thessaly", "morwenna", "grimjaw", "skarth"];
+  function bossKeyOf2(name) {
+    const m = new RegExp("^[^\\p{L}]*(\\p{L}+)", "u").exec(String(name || ""));
+    return m ? m[1].toLowerCase() : null;
+  }
+  function formatRaidTime2(entry2) {
+    const ms = entry2?.elapsedMs ?? (entry2?.elapsedSec != null ? entry2.elapsedSec * 1e3 : null);
+    if (ms == null || !Number.isFinite(+ms)) return "—";
+    const cs = Math.max(0, Math.round(ms / 10));
+    return `${Math.floor(cs / 6e3)}:${String(Math.floor(cs % 6e3 / 100)).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}`;
+  }
+  var titleCase2 = (key) => key.charAt(0).toUpperCase() + key.slice(1);
+  var leagueOf3 = (path) => /^\/ssf(?:\/|$)/.test(path) ? "ssf" : "standard";
+  var board2 = null;
+  var nextRead3 = 0;
+  var request3 = null;
+  var listeners2 = /* @__PURE__ */ new Set();
+  function raidBoard2() {
+    return board2;
+  }
+  function refreshRaidBoard2(onUpdate) {
+    if (onUpdate) listeners2.add(onUpdate);
+    if (request3 || Date.now() < nextRead3 || document.visibilityState === "hidden") return;
+    const controller2 = new AbortController();
+    request3 = controller2;
+    nextRead3 = Date.now() + TTL_MS2;
+    const timeout = setTimeout(() => controller2.abort(), 1e4);
+    fetch("/api/guild/raid/leaderboard", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: controller2.signal,
+      headers: { "x-idleworlds-league": leagueOf3(location.pathname) }
+    }).then((response) => response.ok ? response.json() : Promise.reject(new Error("leaderboard unavailable"))).then((data) => {
+      if (!isRuntimeActive2() || !data || typeof data.leaderboard !== "object") return;
+      board2 = data.leaderboard || {};
+      for (const fn of [...listeners2]) fn();
+    }).catch(() => {
+      nextRead3 = Date.now() + RETRY_MS3;
+    }).finally(() => {
+      clearTimeout(timeout);
+      if (request3 === controller2) request3 = null;
+    });
+  }
+  var panel2 = null;
+  var anchor3 = null;
+  var anchorEpoch3 = -1;
+  var chosenBoss2 = null;
+  var chosenDiff2 = "normal";
+  var signature4 = "";
+  var own5 = ownerOf(OWNED6);
+  function onLeaderboards2() {
+    return /^\/(?:ssf\/)?leaderboards\/?$/.test(location.pathname);
+  }
+  function findAnchor3() {
+    if (anchor3?.isConnected && anchorEpoch3 === getLayoutEpoch2()) return anchor3;
+    const headings = [...document.querySelectorAll(".panel h2")].filter((h) => !h.closest(`[${OWNED6}], [role="dialog"], [data-iw-overlay]`) && /^leaderboards$/i.test(h.textContent.replace(/^[^\p{L}]+/u, "").trim()));
+    anchor3 = pickRendered2(headings.map((h) => h.closest(".panel")).filter(Boolean));
+    anchorEpoch3 = getLayoutEpoch2();
+    return anchor3;
+  }
+  function bossKeys2() {
+    const keys = Object.keys(board2 || {});
+    return [...BOSS_ORDER2.filter((k) => keys.includes(k)), ...keys.filter((k) => !BOSS_ORDER2.includes(k)).sort()];
+  }
+  function tab2(text2, pressed, onClick, kind2) {
+    const button3 = own5("button", "iw-raid-lb-tab", text2);
+    button3.type = "button";
+    button3.dataset.iwRaidLbTab = kind2;
+    button3.setAttribute("aria-pressed", String(pressed));
+    button3.addEventListener("click", (event) => {
+      event.preventDefault();
+      onClick();
+      render3(true);
+    });
+    return plate(button3, own5);
+  }
+  function render3(force = false) {
+    if (!panel2) return;
+    const keys = bossKeys2();
+    if (!chosenBoss2 || !keys.includes(chosenBoss2)) chosenBoss2 = keys[0] || null;
+    const entries = chosenBoss2 && board2?.[chosenBoss2]?.[chosenDiff2] || [];
+    const sig = JSON.stringify([!!board2, keys, chosenBoss2, chosenDiff2, entries.slice(0, 10).map((e) => [e.sessionId, e.guildName, e.elapsedMs, e.elapsedSec, e.isPickup, e.isTestGuild])]);
+    if (!force && sig === signature4) return;
+    signature4 = sig;
+    const body = panel2.querySelector(".iw-raid-lb-body");
+    const kids = [];
+    if (!board2) {
+      kids.push(own5("p", "iw-raid-lb-note", "Loading raid leaderboard…"));
+    } else if (!keys.length) {
+      kids.push(own5("p", "iw-raid-lb-note", "No raid has been cleared yet."));
+    } else {
+      const bossTabs = own5("div", "iw-raid-lb-tabs");
+      bossTabs.dataset.iwRaidLbRow = "boss";
+      bossTabs.append(...keys.map((k) => tab2(titleCase2(k), k === chosenBoss2, () => {
+        chosenBoss2 = k;
+      }, "boss")));
+      const diffTabs = own5("div", "iw-raid-lb-tabs");
+      diffTabs.dataset.iwRaidLbRow = "difficulty";
+      diffTabs.append(...DIFFICULTY_KEYS2.map((d) => tab2(d.label, d.key === chosenDiff2, () => {
+        chosenDiff2 = d.key;
+      }, "difficulty")));
+      kids.push(bossTabs, diffTabs);
+      const label6 = DIFFICULTY_KEYS2.find((d) => d.key === chosenDiff2)?.label || chosenDiff2;
+      if (!entries.length) {
+        kids.push(own5("p", "iw-raid-lb-note", `No guild has defeated ${titleCase2(chosenBoss2)} on ${label6} yet.`));
+      } else {
+        const list = own5("ol", "iw-raid-lb-list");
+        entries.slice(0, 10).forEach((entry2, i) => {
+          const row = own5("li", "iw-raid-lb-row");
+          row.dataset.iwRaidLbRank = String(i + 1);
+          const name = own5("span", "iw-raid-lb-name");
+          name.append(own5("span", "iw-raid-lb-rank", `#${i + 1}`), own5("span", "iw-raid-lb-guild", entry2.guildName || "Unknown"));
+          if (entry2.isPickup) name.append(own5("span", "iw-raid-lb-tag", "pickup"));
+          if (entry2.isTestGuild) name.append(own5("span", "iw-raid-lb-tag", "test"));
+          row.append(name, own5("span", "iw-raid-lb-time", formatRaidTime2(entry2)));
+          list.append(row);
+        });
+        kids.push(list);
+      }
+    }
+    body.replaceChildren(...kids);
+  }
+  function reconcileRaidLeaderboards2() {
+    if (!isRuntimeActive2()) return;
+    const target = onLeaderboards2() ? findAnchor3() : null;
+    if (!target) {
+      panel2?.remove();
+      panel2 = null;
+      signature4 = "";
+      return;
+    }
+    if (!panel2?.isConnected || panel2.previousElementSibling !== target) {
+      panel2?.remove();
+      panel2 = own5("section", "iw-raid-lb");
+      panel2.dataset.iwUi = "section-frame";
+      panel2.dataset.iwPanel = "raid-leaderboard";
+      panel2.setAttribute("aria-label", "Raid leaderboards");
+      const head = own5("div", "iw-raid-lb-head");
+      const h2 = own5("h2", "iw-raid-lb-title", "⚔️ Raid Leaderboards");
+      h2.dataset.iwUi = "section-title";
+      head.append(h2, own5("span", "iw-raid-lb-sub", "Fastest clears"));
+      panel2.append(head, own5("div", "iw-raid-lb-body"));
+      target.after(panel2);
+      signature4 = "";
+    }
+    render3();
+    refreshRaidBoard2(rerender);
+  }
+  var rerender = () => render3();
+  function clearRaidLeaderboards2() {
+    panel2?.remove();
+    panel2 = null;
+    anchor3 = null;
+    signature4 = "";
+    listeners2.clear();
+    board2 = null;
+    nextRead3 = 0;
+    request3?.abort();
+    request3 = null;
+    removeOwned(OWNED6);
+  }
+
+  // src/skins/fantasy/raid/RaidBossCard.js
+  var OWNED7 = "data-iw-boss-card-owned";
+  var CARD2 = "data-iw-boss-card";
+  var SRC2 = "data-iw-boss-card-src";
+  var ATTRS4 = [CARD2, SRC2];
+  var BOSSES3 = /* @__PURE__ */ new Set(["ashmaw", "thessaly", "morwenna", "grimjaw", "skarth"]);
+  var norm10 = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  var cap2 = (value) => value ? value[0].toUpperCase() + value.slice(1) : value;
+  var STATS2 = /^ATK ([\d,]+) • DEF ([\d,]+) • HP ([\d,]+) • (\S+) ([\p{L}]+)-based abilities \(([^)]+)\)$/u;
+  var REQ2 = /^Requires Combat (\d+)\+ to join\. Wants (\d+) ([\p{L}]+) resist total to mitigate most ([\p{L}]+) damage — a level (\d+) ([\p{L}]+) lend covers (\d+) of that, bring the rest on gear\.$/u;
+  var CLAIMED2 = /^✅ You['’]ve claimed (.+?)['’]s loot this week\. You can keep raiding it for leaderboard times, but it won['’]t drop loot for you again until the weekly reset in ([^.]+)\.\s*Weekly reset: (.+?), same time for everyone\.$/u;
+  var AVAILABLE2 = /^🎁 Loot available this week\. Your first (.+?) clear on Normal or Hard rolls loot for everyone in the group, alive or not\. After that it['’]s claimed until the weekly reset in ([^.]+)\.\s*Weekly reset: (.+?), same time for everyone\.$/u;
+  var TIP2 = "Tip: bring a tank (Combat lend → Challenge) so the big single hits land on them, plus healers and Cleanse. Fortify (Smithing) makes tanking much safer.";
+  var TACTICS2 = {
+    ashmaw: { roles: [1, 2, 2, 3], tip: [["Watch out for "], ["Cinderstorm", 1], [": only "], ["Ward", 1], [" mitigates it, boosting resistances raid-wide. "], ["Veil", 1], [" helps dodge "], ["Claw Rake", 1], ["."]] },
+    thessaly: { roles: [1, 2, 2, 3], tip: [["Watch out for "], ["Stormsurge", 1], [": it hits harder the more max HP you have. "], ["Ward", 1], [" boosts lightning resist raid-wide; "], ["Cleanse", 1], [" Voltaic Wound before it jumps."]] },
+    morwenna: { roles: [1, 2, 3, 2], tip: [["Watch out for "], ["Soulrend Mark", 1], [": "], ["Cleanse", 1], [" it before it expires, or the marked raider dies and the raid takes 35% of max HP. Only "], ["Ward", 1], [" mitigates Hollow Wave."]] },
+    grimjaw: { roles: [2, 2, 2, 2], tip: [["Watch out for "], ["Soul Anchor", 1], [": 2 stacks kill the tank outright, so swap "], ["Challenge", 1], [" to the second tank before it reapplies. Only "], ["Ward", 1], [" mitigates Absolute Zero."]] },
+    skarth: { roles: [1, 2, 2, 3], tip: [["Watch out for "], ["Blizzard", 1], [": only "], ["Ward", 1], [" mitigates it. "], ["Cleanse", 1], [" Frostbite before it runs out, or it jumps to another raider."]] }
+  };
+  var ROLES2 = [["Tank", "Tanks", "combat", null], ["Healer", "Healers", "spellcrafting", null], ["Support", "Support", "jewelcrafting", null], ["DPS", "DPS", null, "⚔"]];
+  var sigs2 = /* @__PURE__ */ new WeakMap();
+  var lastCard2 = null;
+  var own6 = ownerOf(OWNED7);
+  function toneOf4(span) {
+    const cls = String(span?.className || "");
+    if (/(?:^|\s)text-(?:rose|red)-/.test(cls)) return "hard";
+    if (/(?:^|\s)text-(?:emerald|green)-/.test(cls)) return "easy";
+    return null;
+  }
+  function icon3(skill) {
+    const el2 = own6("span", "iw-bc-icon");
+    el2.setAttribute("aria-hidden", "true");
+    el2.dataset.iwBcSkill = skill;
+    return el2;
+  }
+  function badge2(skill, glyph) {
+    if (skill) return icon3(skill);
+    const el2 = own6("span", "iw-bc-glyph", glyph);
+    el2.setAttribute("aria-hidden", "true");
+    return el2;
+  }
+  function chip3(labelText2, value, tone2) {
+    const el2 = own6("span", "iw-bc-stat");
+    const v = own6("b", "iw-bc-stat-value", value);
+    if (tone2) v.dataset.iwBcTone = tone2;
+    el2.append(own6("span", "iw-bc-stat-label", labelText2), v);
+    return el2;
+  }
+  function tile2({ skill, glyph, labelText: labelText2, value, sub, title, kind: kind2 }) {
+    const el2 = own6("div", "iw-bc-tile");
+    el2.title = title;
+    if (kind2) el2.dataset.iwBcKind = kind2;
+    el2.append(badge2(skill, glyph));
+    const body = own6("div", "iw-bc-tile-body");
+    body.append(own6("span", "iw-bc-tile-label", labelText2), own6("span", "iw-bc-tile-value", value));
+    if (sub) body.append(own6("span", "iw-bc-tile-sub", sub));
+    el2.append(body);
+    return el2;
+  }
+  function readLines2(card) {
+    const out = { stats: null, req: null, tip: null, notice: null };
+    for (const div of card.querySelectorAll(':scope > div[data-iw-guild-role="notice"]')) {
+      const text2 = norm10(div.textContent);
+      if (CLAIMED2.test(text2) || AVAILABLE2.test(text2)) {
+        out.notice = div;
+        break;
+      }
+    }
+    for (const p of card.querySelectorAll(":scope > p")) {
+      const text2 = norm10(p.textContent);
+      if (!out.stats && /^ATK\b/.test(text2)) out.stats = p;
+      else if (!out.req && /^Requires Combat\b/.test(text2)) out.req = p;
+      else if (!out.tip && /^Tip:/.test(text2)) out.tip = p;
+    }
+    return out;
+  }
+  function buildStats2(p) {
+    const m = p && STATS2.exec(norm10(p.textContent));
+    if (!m) return null;
+    const [, atk, def, hp, glyph, element, abilities] = m;
+    const spans = p.querySelectorAll(":scope > span");
+    const strip = own6("div", "iw-bc-stats");
+    strip.title = norm10(p.textContent);
+    strip.append(chip3("ATK", atk, toneOf4(spans[0])), chip3("DEF", def), chip3("HP", hp, toneOf4(spans[1])));
+    const kind2 = own6("span", "iw-bc-element");
+    kind2.append(
+      own6("b", "iw-bc-element-name", `${glyph} ${cap2(element)}`),
+      own6("span", "iw-bc-element-list", abilities.split(/\s*,\s*/).join(" · "))
+    );
+    strip.append(kind2);
+    return strip;
+  }
+  function buildRequirements2(p, glyph) {
+    const m = p && REQ2.exec(norm10(p.textContent));
+    if (!m) return null;
+    const [, combat, resist, element] = m;
+    const sentence = norm10(p.textContent);
+    const row = own6("div", "iw-bc-tiles");
+    row.append(
+      tile2({ skill: "combat", labelText: "To join", value: `Combat ${combat}+`, title: sentence }),
+      tile2({
+        glyph: glyph || "🛡️",
+        labelText: "Recommended",
+        value: `${resist} ${cap2(element)} resist`,
+        sub: `mitigates most ${element} damage`,
+        title: sentence,
+        kind: "advice"
+      })
+    );
+    return row;
+  }
+  function buildTactics2(p, key) {
+    const plan = TACTICS2[key];
+    if (!p || !plan || norm10(p.textContent) !== TIP2) return null;
+    const box = own6("div", "iw-bc-tactics");
+    box.title = TIP2;
+    box.append(own6("span", "iw-bc-tactics-label", `${cap2(key)}: Recommended Team Loadout`));
+    const roles = own6("div", "iw-bc-roles");
+    ROLES2.forEach(([one, many, skill, glyph], i) => {
+      const n = plan.roles[i];
+      const el2 = own6("span", "iw-bc-role");
+      el2.append(badge2(skill, glyph), own6("b", "iw-bc-role-count", String(n)), own6("span", null, n === 1 ? one : many));
+      roles.append(el2);
+    });
+    const tip = own6("p", "iw-bc-tip");
+    tip.append(own6("b", "iw-bc-tip-label", "Tip:"), " ", ...plan.tip.map(([text2, bold]) => bold ? own6("b", null, text2) : text2));
+    box.append(roles, tip);
+    return box;
+  }
+  function buildLoot2(div) {
+    const text2 = div && norm10(div.textContent);
+    const claimed = text2 && CLAIMED2.exec(text2);
+    const open = !claimed && text2 && AVAILABLE2.exec(text2);
+    if (!claimed && !open) return null;
+    const [, , countdown, reset] = claimed || open;
+    const bar = own6("div", "iw-bc-loot");
+    bar.title = text2;
+    bar.dataset.iwBcLoot = claimed ? "claimed" : "available";
+    const tone2 = div.getAttribute("data-iw-guild-tone");
+    if (tone2) bar.dataset.iwBcTone = tone2;
+    const when = own6("span", "iw-bc-loot-when");
+    when.append(
+      own6("span", "iw-bc-loot-label", claimed ? "Loot again in" : "Resets in"),
+      own6("b", "iw-bc-loot-count", countdown),
+      own6("span", "iw-bc-loot-reset", `${reset}, same for everyone`)
+    );
+    bar.append(
+      own6("span", "iw-bc-loot-state", claimed ? "✅ Loot claimed this week" : "🎁 Loot available this week"),
+      own6("span", "iw-bc-loot-rule", claimed ? "Repeat runs count for leaderboard times only, no loot." : `Your first ${open[1]} clear on Normal or Hard rolls loot for the whole group, alive or not.`),
+      when
+    );
+    return bar;
+  }
+  function place2(anchor4, node2) {
+    if (anchor4.nextElementSibling !== node2) anchor4.after(node2);
+  }
+  function setPart2(card, cls, anchor4, node2, src, srcKey) {
+    const old = card.querySelector(`:scope > .${cls}[${OWNED7}]`);
+    if (!node2) {
+      old?.remove();
+      mark6(src, SRC2, null);
+      return;
+    }
+    if (old) old.replaceWith(node2);
+    place2(anchor4, node2);
+    mark6(src, SRC2, srcKey);
+  }
+  function ensureArt3(card, name, key) {
+    let art2 = card.querySelector(`:scope > .iw-bc-art[${OWNED7}]`);
+    if (!art2) {
+      art2 = own6("div", "iw-bc-art");
+      art2.setAttribute("aria-hidden", "true");
+      art2.append(own6("span", "iw-bc-portrait"));
+    }
+    if (art2.dataset.iwBcBoss !== key) art2.dataset.iwBcBoss = key;
+    if (name.previousElementSibling !== art2) name.before(art2);
+  }
+  function decorateBossCard2(root) {
+    if (!root) return;
+    const card = root.querySelector('[data-iw-guild-card="boss"]');
+    for (const el2 of root.querySelectorAll(`[${CARD2}]`)) if (el2 !== card) clearBossCard2(el2);
+    for (const node2 of root.querySelectorAll(`[${OWNED7}][data-iw-fantasy-owned]`)) {
+      const host = node2.parentElement;
+      if (host !== card && !node2.parentElement?.closest(`[${OWNED7}]`)) node2.remove();
+    }
+    if (card) decorateCard2(card);
+  }
+  function refreshBossCardText2(parents) {
+    if (!lastCard2?.isConnected) return;
+    if (lastCard2.getAttribute("data-iw-guild-card") !== "boss") {
+      clearBossCard2(lastCard2);
+      lastCard2 = null;
+      return;
+    }
+    for (const parent of parents) {
+      if (parent && lastCard2.contains(parent) && !parent.closest(`[${OWNED7}]`)) {
+        decorateCard2(lastCard2);
+        return;
+      }
+    }
+  }
+  function decorateCard2(card) {
+    lastCard2 = card;
+    const name = card.querySelector(':scope > [data-iw-guild-role="boss-name"]');
+    const selected = card.querySelector('[data-iw-guild-role="boss-tab"][data-iw-guild-state="selected"]');
+    const key = bossKeyOf2(selected?.title || name?.textContent);
+    if (!name || !BOSSES3.has(key)) {
+      clearBossCard2(card);
+      return;
+    }
+    const lines = readLines2(card);
+    const spans = lines.stats ? [...lines.stats.querySelectorAll(":scope > span")].map((s) => s.className).join("|") : "";
+    const sig = [
+      key,
+      norm10(lines.stats?.textContent),
+      spans,
+      norm10(lines.req?.textContent),
+      norm10(lines.tip?.textContent),
+      norm10(lines.notice?.textContent),
+      lines.notice?.getAttribute("data-iw-guild-tone") || ""
+    ].join("\0");
+    const owned3 = card.querySelectorAll(`:scope > [${OWNED7}]`).length;
+    if (sigs2.get(card) === sig && owned3 && card.getAttribute(CARD2) === key) {
+      const art2 = card.querySelector(`:scope > .iw-bc-art[${OWNED7}]`);
+      if (art2 && name.previousElementSibling !== art2) name.before(art2);
+      for (const [cls, src] of [["iw-bc-stats", lines.stats], ["iw-bc-tiles", lines.req], ["iw-bc-tactics", lines.tip], ["iw-bc-loot", lines.notice]]) {
+        const node2 = card.querySelector(`:scope > .${cls}[${OWNED7}]`);
+        if (node2 && src) place2(src, node2);
+      }
+      return;
+    }
+    sigs2.set(card, sig);
+    mark6(card, CARD2, key);
+    ensureArt3(card, name, key);
+    setPart2(card, "iw-bc-stats", lines.stats, buildStats2(lines.stats), lines.stats, "stats");
+    const glyph = STATS2.exec(norm10(lines.stats?.textContent))?.[4];
+    setPart2(card, "iw-bc-tiles", lines.req, buildRequirements2(lines.req, glyph), lines.req, "req");
+    setPart2(card, "iw-bc-tactics", lines.tip, buildTactics2(lines.tip, key), lines.tip, "tip");
+    setPart2(card, "iw-bc-loot", lines.notice, buildLoot2(lines.notice), lines.notice, "notice");
+    for (const el2 of card.querySelectorAll(`:scope > [${SRC2}="notice"]`)) if (el2 !== lines.notice) mark6(el2, SRC2, null);
+  }
+  function clearBossCard2(root) {
+    if (!root) return;
+    if (lastCard2 && (root === lastCard2 || root.contains?.(lastCard2))) lastCard2 = null;
+    removeOwned(OWNED7, root);
+    unmark2(ATTRS4, root);
+  }
+
+  // src/skins/fantasy/raid/GuildLobby.js
+  var OWNED8 = "data-iw-guild-lobby-owned";
+  var SLOT2 = "data-iw-guild-slot";
+  var WRAP2 = "data-iw-guild-wrap";
+  var LAYOUT2 = "data-iw-guild-layout";
+  var ATTRS5 = [SLOT2, WRAP2, LAYOUT2, "data-iw-guild-record"];
+  var own7 = ownerOf(OWNED8);
+  var READY_BUTTON = /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up|mark ready)$/i;
+  function titleOf2(card) {
+    return label5(card.querySelector('[data-iw-guild-role="card-title"], p')?.textContent);
+  }
+  function slotOf2(card) {
+    const kind2 = card.getAttribute("data-iw-guild-card");
+    const title = titleOf2(card);
+    if (kind2 === "boss" || kind2 === "leaderboard" || kind2 === "members" || kind2 === "lend" || kind2 === "prep" || kind2 === "chat" || kind2 === "ready-check") return kind2;
+    if (kind2 === "ready") return "start";
+    if (kind2 === "form" && /^invite\b/i.test(title)) return "invite";
+    if (/^raid loadout$/i.test(title)) return "loadout";
+    if (/^my raid history$/i.test(title)) return "history";
+    if (card.querySelector('[data-iw-guild-role="start"], [data-iw-guild-role="ready-toggle"]')) return "start";
+    if ([...card.querySelectorAll("button")].some((b) => READY_BUTTON.test(label5(b.textContent)))) return "start";
+    return "other";
+  }
+  var lastRoot2 = null;
+  function decorateLayout2(root) {
+    const boss = root.querySelector('[data-iw-guild-card="boss"]');
+    const left = boss?.parentElement;
+    const columns = left?.parentElement;
+    const lobby = !!(boss && left && columns && left !== root && columns.parentElement === root);
+    mark6(root, LAYOUT2, lobby ? "lobby" : null);
+    if (!lobby) {
+      for (const el2 of root.querySelectorAll(`[${WRAP2}], [${SLOT2}]`)) {
+        mark6(el2, WRAP2, null);
+        mark6(el2, SLOT2, null);
+      }
+      return;
+    }
+    const wraps = /* @__PURE__ */ new Set([left, columns]);
+    const cards = [...root.querySelectorAll("[data-iw-guild-card]")].filter((c) => !c.parentElement?.closest("[data-iw-guild-card]"));
+    for (const card of cards) {
+      mark6(card, SLOT2, slotOf2(card));
+      for (let p = card.parentElement; p && p !== root; p = p.parentElement) wraps.add(p);
+    }
+    for (const el2 of root.querySelectorAll(`[${WRAP2}]`)) if (!wraps.has(el2)) mark6(el2, WRAP2, null);
+    for (const el2 of wraps) mark6(el2, WRAP2, "1");
+    for (const child of root.children) {
+      if (child.hasAttribute(OWNED8) || child.hasAttribute(WRAP2) || child.hasAttribute("data-iw-guild-card")) continue;
+      const after = !!(columns.compareDocumentPosition(child) & Node.DOCUMENT_POSITION_FOLLOWING);
+      mark6(child, SLOT2, after ? "footer" : null);
+    }
+  }
+  function decorateRecords2(root) {
+    const boss = root.querySelector('[data-iw-guild-card="boss"]');
+    const row = boss?.querySelector('[data-iw-guild-role="difficulties"]');
+    for (const old of root.querySelectorAll(`.iw-guild-records[${OWNED8}]`)) if (!row || old.previousElementSibling !== row) old.remove();
+    let records = row ? boss.querySelector(`:scope .iw-guild-records[${OWNED8}]`) : null;
+    if (!row) return;
+    const selected = boss.querySelector('[data-iw-guild-role="boss-tab"][data-iw-guild-state="selected"]');
+    const key = bossKeyOf2(selected?.title || boss.querySelector('[data-iw-guild-role="boss-name"]')?.textContent);
+    const board3 = raidBoard2();
+    const pills = [...row.querySelectorAll('[data-iw-guild-role="difficulty"]')];
+    const cells = pills.map((pill) => {
+      const diff = DIFFICULTY_KEYS2.find((d) => d.test.test(label5(pill.textContent)));
+      const best = diff && key && board3 ? board3[key]?.[diff.key]?.[0] : null;
+      return {
+        text: best ? `🏆 ${formatRaidTime2(best)} · ${best.guildName}` : board3 ? "No clear yet" : "…",
+        title: best ? `${diff.label} record: ${best.guildName} · ${formatRaidTime2(best)}` : `${diff?.label || ""} record`
+      };
+    });
+    const sig = JSON.stringify(cells);
+    if (records && records.previousElementSibling === row && records.dataset.sig === sig) return;
+    if (!records) {
+      records = own7("div", "iw-guild-records");
+      records.setAttribute("aria-label", "Record times");
+    }
+    if (records.previousElementSibling !== row) row.after(records);
+    records.dataset.sig = sig;
+    records.replaceChildren(...cells.map((c) => {
+      const cell = own7("span", "iw-guild-record", c.text);
+      cell.title = c.title;
+      return cell;
+    }));
+  }
+  var dismissed2 = /* @__PURE__ */ new WeakSet();
+  var popup2 = null;
+  var popupCard2 = null;
+  function readyCheckFor2(root) {
+    const card = root.querySelector('[data-iw-guild-card="ready-check"]');
+    if (!card) return null;
+    const buttons = [...card.querySelectorAll("button")];
+    if (buttons.some((b) => /^start now\b/i.test(label5(b.textContent)))) return null;
+    const confirm = buttons.find((b) => /^confirm\b/i.test(label5(b.textContent)));
+    if (!confirm) return null;
+    return { card, confirm };
+  }
+  function closePopup2() {
+    popup2?.remove();
+    popup2 = null;
+    popupCard2 = null;
+  }
+  function onPopupConfirm2(event) {
+    event.preventDefault();
+    const check = lastRoot2 && readyCheckFor2(lastRoot2);
+    check?.confirm.click();
+    if (popupCard2) dismissed2.add(popupCard2);
+    closePopup2();
+  }
+  function onPopupDismiss2(event) {
+    event.preventDefault();
+    if (popupCard2) dismissed2.add(popupCard2);
+    closePopup2();
+  }
+  function setPopupText2(title, timer) {
+    if (!popup2) return;
+    const [titleEl, timerEl] = [popup2.querySelector(".iw-rc-title"), popup2.querySelector(".iw-rc-timer")];
+    if (titleEl && titleEl.textContent !== title) titleEl.textContent = title;
+    if (timerEl && timerEl.textContent !== timer) timerEl.textContent = timer;
+  }
+  function syncPopupText2() {
+    if (!popup2 || !popupCard2) return;
+    setPopupText2(
+      norm9(popupCard2.querySelector('[data-iw-guild-role="rc-title"]')?.textContent) || "Ready check started",
+      norm9(popupCard2.querySelector('[data-iw-guild-role="rc-timer"]')?.textContent)
+    );
+  }
+  function button2(cls, text2, onClick) {
+    const el2 = own7("button", cls, text2);
+    el2.type = "button";
+    el2.addEventListener("click", onClick);
+    return plate(el2, own7);
+  }
+  function openPopup2() {
+    closePopup2();
+    popup2 = own7("div", "iw-rc-popup");
+    popup2.setAttribute("role", "alertdialog");
+    popup2.setAttribute("aria-live", "assertive");
+    popup2.setAttribute("aria-label", "Raid ready check");
+    const head = own7("div", "iw-rc-head");
+    head.append(own7("p", "iw-rc-title"), own7("span", "iw-rc-timer"));
+    const note = own7("p", "iw-rc-note", "Your raid is about to start. Confirm you are here, or you will be left out of this attempt.");
+    const actions = own7("div", "iw-rc-actions");
+    actions.append(button2("iw-rc-confirm", "Confirm — I’m here!", onPopupConfirm2), button2("iw-rc-dismiss", "Dismiss", onPopupDismiss2));
+    popup2.append(head, note, actions);
+    document.body.append(popup2);
+  }
+  function decoratePopup2(root) {
+    const check = readyCheckFor2(root);
+    if (!check || dismissed2.has(check.card)) {
+      if (popupCard2 && (root.contains(popupCard2) || !popupCard2.isConnected)) closePopup2();
+      return;
+    }
+    if (!popup2 || popupCard2 !== check.card || !popup2.isConnected) {
+      openPopup2();
+      popupCard2 = check.card;
+    }
+    syncPopupText2();
+  }
+  function decorateGuildLobby2(root, { bossCard = true, frame: frame2 = true, onBoard } = {}) {
+    if (!root) return;
+    if (root.querySelector('[data-iw-guild-card="boss"], [data-iw-guild-card="ready-check"]')) lastRoot2 = root;
+    if (!frame2) {
+      clearLobbyFrame(root);
+      decoratePopup2(root);
+      return;
+    }
+    decorateLayout2(root);
+    if (bossCard) decorateBossCard2(root);
+    else clearBossCard2(root);
+    decorateRecords2(root);
+    decoratePopup2(root);
+    if (root.querySelector('[data-iw-guild-card="boss"]')) refreshRaidBoard2(onBoard);
+  }
+  function clearLobbyFrame(root) {
+    clearBossCard2(root);
+    removeOwned(OWNED8, root);
+    unmark2(ATTRS5, root);
+  }
+  function refreshGuildLobbyText2(parents) {
+    refreshBossCardText2(parents);
+    if (lastRoot2?.isConnected && !lastRoot2.querySelector('[data-iw-guild-card="boss"]')) {
+      lastRoot2.querySelectorAll(`.iw-guild-records[${OWNED8}]`).forEach((node2) => node2.remove());
+    }
+    if (!popup2 || !popupCard2) return;
+    for (const parent of parents) {
+      if (parent && popupCard2.contains(parent)) {
+        syncPopupText2();
+        return;
+      }
+    }
+  }
+  function pruneGuildLobby2() {
+    if (popupCard2 && !popupCard2.isConnected) closePopup2();
+  }
+  function clearGuildLobby2(root) {
+    closePopup2();
+    if (!root) return;
+    clearBossCard2(root);
+    removeOwned(OWNED8, root);
+    unmark2(ATTRS5, root);
+    if (lastRoot2 && (root === lastRoot2 || root.contains?.(lastRoot2))) lastRoot2 = null;
+  }
+
+  // src/skins/fantasy/raid/RaidResult.js
+  var RESULT_ATTRS = ["data-iw-raid-result", "data-iw-raid-result-glyph", "data-iw-raid-result-word", "data-iw-raid-result-boss"];
+  var HEADLINE = /^([^\p{L}\p{N}]*)([\p{L}][^.!]*)[.!]\s*(.*?)\.?$/u;
+  function decorateOutcome2(arena) {
+    const card = arena.querySelector(':scope > [data-iw-guild-role="outcome"]');
+    if (!card) return;
+    const head = card.querySelector(":scope > p");
+    const m = HEADLINE.exec(norm9(head?.textContent));
+    const tone2 = card.getAttribute("data-iw-guild-tone");
+    const kind2 = !m ? null : tone2 === "good" ? "victory" : tone2 === "bad" ? "wipe" : "other";
+    mark6(card, "data-iw-raid-result", kind2);
+    mark6(card, "data-iw-raid-result-glyph", m ? m[1].trim() || null : null);
+    mark6(head, "data-iw-raid-result-word", m ? m[2].trim() : null);
+    mark6(head, "data-iw-raid-result-boss", m ? m[3].trim() || null : null);
+  }
+  function decorateRaidResults(root) {
+    for (const arena of root.querySelectorAll("[data-iw-raid-hud]")) decorateOutcome2(arena);
+  }
+  function refreshRaidResultText(parents) {
+    for (const parent of parents) {
+      const card = parent?.closest?.('[data-iw-raid-hud] > [data-iw-guild-role="outcome"]');
+      const arena = card?.parentElement;
+      if (arena) decorateOutcome2(arena);
+    }
+  }
+  function clearRaidResults(root = null) {
+    unmark2(RESULT_ATTRS, root);
+  }
+
+  // src/skins/fantasy/raid/tabs.js
+  var GUILD_TAB = /^my guild\b/i;
+  var RAIDS_TAB = /^raids?\b/i;
+  var ACCENT = /(?:^|\s)(?:bg|border)-(?:ember|orange|amber|primary|accent)(?:\/|\s|$)/;
+  var GUILD_ONLY = /^(?:boss progression|guild log)$/i;
+  function selectedByState(el2) {
+    return el2.getAttribute("aria-selected") === "true" || el2.getAttribute("aria-pressed") === "true" || el2.getAttribute("data-state") === "active" || el2.getAttribute("aria-current") === "page";
+  }
+  function activeGuildTab(scope = document) {
+    const picked = scope.querySelector('[data-iw-guild-role="view-tab"][data-iw-guild-state="selected"]');
+    if (picked) {
+      const text2 = label5(picked.textContent);
+      if (RAIDS_TAB.test(text2)) return "raids";
+      if (GUILD_TAB.test(text2)) return "guild";
+    }
+    const buttons = [...scope.querySelectorAll('button, [role="tab"], a')];
+    for (const raids of buttons) {
+      if (!RAIDS_TAB.test(label5(raids.textContent))) continue;
+      const guild = [...raids.parentElement?.children || []].find((el2) => el2 !== raids && GUILD_TAB.test(label5(el2.textContent)));
+      if (!guild) continue;
+      const [r, g] = [selectedByState(raids), selectedByState(guild)];
+      if (r !== g) return r ? "raids" : "guild";
+      const [ra, ga] = [ACCENT.test(String(raids.className || "")), ACCENT.test(String(guild.className || ""))];
+      if (ra !== ga) return ra ? "raids" : "guild";
+    }
+    return null;
+  }
+  function onRaidsTab(root, tab3) {
+    if (tab3) return tab3 === "raids";
+    for (const el2 of root.querySelectorAll("h2, h3, p")) {
+      if (el2.closest("[data-iw-fantasy-owned]")) continue;
+      if (GUILD_ONLY.test(label5(el2.textContent))) return false;
+    }
+    return true;
+  }
+
+  // src/skins/fantasy/raid/index.js
+  var ROOTS = '[data-iw-guild="root"]';
+  var active3 = { lobby: false, bossCard: false, leaderboard: false, result: false };
+  function roots() {
+    return [...document.querySelectorAll(ROOTS)];
+  }
+  function settle() {
+    const native2 = nativeFeatures();
+    const next = {
+      lobby: !native2.has("lobby"),
+      bossCard: !native2.has("bossCard"),
+      leaderboard: !native2.has("leaderboard"),
+      result: !native2.has("result")
+    };
+    if (active3.lobby && !next.lobby) clearGuildLobby2(document.body);
+    if (active3.bossCard && !next.bossCard) clearBossCard2(document.body);
+    if (active3.leaderboard && !next.leaderboard) clearRaidLeaderboards2();
+    if (active3.result && !next.result) clearRaidResults();
+    active3 = next;
+    return next;
+  }
+  function raidPass() {
+    pruneWritten();
+    const on2 = settle();
+    const list = roots();
+    const tab3 = on2.lobby && list.length ? activeGuildTab(document) : null;
+    for (const root of list) {
+      if (on2.lobby) guard2("raid:lobby", () => decorateGuildLobby2(root, { bossCard: on2.bossCard, frame: onRaidsTab(root, tab3), onBoard: requestPass }));
+      if (on2.result) guard2("raid:result", () => decorateRaidResults(root));
+    }
+    if (on2.lobby) guard2("raid:lobby-prune", pruneGuildLobby2);
+    if (on2.leaderboard) guard2("raid:leaderboard", reconcileRaidLeaderboards2);
+  }
+  function raidText(parents) {
+    if (active3.lobby) guard2("raid:lobby-text", () => refreshGuildLobbyText2(parents));
+    if (active3.result) guard2("raid:result-text", () => refreshRaidResultText(parents));
+  }
+  function clearRaid() {
+    clearGuildLobby2(document.body);
+    clearBossCard2(document.body);
+    clearRaidLeaderboards2();
+    clearRaidResults();
+    active3 = { lobby: false, bossCard: false, leaderboard: false, result: false };
+  }
+
+  // src/skins/fantasy/core/ItemAtlas.js
+  var ITEM_INDEX = "assets/item_icons_index.csv";
+  var GEAR_INDEX = "assets/gear_icons_manifest.json";
+  var ITEM_SIZE = { width: 1280, height: 6144 };
+  var GEAR_SIZE = { width: 1280, height: 19840 };
+  var state2 = "idle";
+  var revision = 0;
+  var byId = /* @__PURE__ */ new Map();
+  var byName = /* @__PURE__ */ new Map();
+  var listeners3 = /* @__PURE__ */ new Set();
+  var nameKey = (value) => String(value || "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]/g, "");
+  function windowOf(atlas, size, x, y, w, h) {
+    const pct = (n) => `${+n.toFixed(4)}%`;
+    return {
+      atlas,
+      size: `${pct(100 * size.width / w)} ${pct(100 * size.height / h)}`,
+      pos: `${pct(size.width === w ? 0 : 100 * x / (size.width - w))} ${pct(size.height === h ? 0 : 100 * y / (size.height - h))}`
+    };
+  }
+  function parseCsvLine(line) {
+    const out = [];
+    let cur = "";
+    let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (quoted) {
+        if (c === '"' && line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else if (c === '"') quoted = false;
+        else cur += c;
+      } else if (c === '"') quoted = true;
+      else if (c === ",") {
+        out.push(cur);
+        cur = "";
+      } else cur += c;
+    }
+    out.push(cur);
+    return out;
+  }
+  function indexItems(csv) {
+    const lines = csv.split(/\r?\n/).filter(Boolean);
+    const head = parseCsvLine(lines.shift());
+    const col = (name2) => head.indexOf(name2);
+    const [id, name, x, y, w, h] = ["item_id", "name", "x", "y", "width", "height"].map(col);
+    for (const line of lines) {
+      const f = parseCsvLine(line);
+      const win = windowOf("item", ITEM_SIZE, +f[x], +f[y], +f[w], +f[h]);
+      byId.set(f[id], win);
+      const key = nameKey(f[name]);
+      if (key && !byName.has(key)) byName.set(key, win);
+    }
+  }
+  function indexGear(manifest) {
+    for (const icon4 of manifest.icons || []) {
+      const key = nameKey(icon4.name);
+      if (key && !byName.has(key)) byName.set(key, windowOf("gear", GEAR_SIZE, icon4.x, icon4.y, icon4.width, icon4.height));
+    }
+  }
+  function loadItemAtlas() {
+    if (state2 !== "idle") return;
+    state2 = "loading";
+    const get = (path, kind2) => fetch(assetUrl2(path)).then((r) => {
+      if (!r.ok) throw new Error(`${path}: ${r.status}`);
+      return r[kind2]();
+    });
+    Promise.all([get(ITEM_INDEX, "text"), get(GEAR_INDEX, "json")]).then(([csv, gear]) => {
+      indexItems(csv);
+      indexGear(gear);
+      state2 = "ready";
+      revision += 1;
+      for (const fn of listeners3) fn();
+    }).catch((err) => {
+      state2 = "failed";
+      warnOnce2("item-atlas", err);
+    });
+  }
+  function onItemAtlas(fn) {
+    listeners3.add(fn);
+    return () => listeners3.delete(fn);
+  }
+  function findItemSprite({ id, name } = {}) {
+    if (state2 !== "ready") return null;
+    return id && byId.get(id) || byName.get(nameKey(name)) || null;
+  }
+
+  // src/skins/fantasy/styles/skills.css
+  var skills_default = ':is(:root,#iwf){--iwf-item-atlas: url(../assets/item_icons_atlas.png);--iwf-gear-atlas: url(../assets/gear_icons_atlas.png);--iwf-edge: var(--iw-th-edge-soft, #3b3a33);--iwf-edge-mid: var(--iw-th-edge-mid, #57513f);--iwf-edge-faint: var(--iw-th-edge-faint, #2a2a25);--iwf-accent: var(--iw-th-accent, #d8a64a);--iwf-brass: var(--iw-th-brass, #b8975a);--iwf-ground: linear-gradient(180deg, color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent), color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));--iwf-text-hi: #f1e6cc;--iwf-text: #d9cdb2;--iwf-text-dim: #a59a83;--iwf-running: #34d399;--iwf-item: 50px}@media(max-width:1024px){:is(:root,#iwf){--iwf-item: 44px}}@media(max-width:768px){:is(:root,#iwf){--iwf-item: 40px}}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/combat.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/mining.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/smithing.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/gathering.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/alchemy.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/jewelcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/spellcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/tailoring.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/woodcutting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/construction.svg)}:is(:root,#iwf) [data-iw-fantasy-lead=icon]::first-letter{font-size:0;letter-spacing:0}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-tint: #e4574f}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-tint: #8fa4c0}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-tint: #f0793f}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-tint: #6dd48a}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-tint: #57c6cf}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-tint: #62d0e8}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-tint: #b492ea}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-tint: #e88fb8}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-tint: #c99a63}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-tint: #9aa7b8}:is(:root,#iwf) [data-iw-fantasy-skill]{--iwf-medal: var(--iwf-skill-icon) center / 54% auto no-repeat, radial-gradient(circle at 50% 38%, #221e17, #0a0a08 72%)}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 40% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 60% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 80% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 100% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 100% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 100% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-medal: url(../assets/skills-medallions/woodcutting.webp) center / 100% 100% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-medal: url(../assets/skills-medallions/construction.webp) center / 100% 100% no-repeat}:is(:root,#iwf) .iw-skill-tabs{container-type:inline-size;gap:8px}:is(:root,#iwf) .iw-skill-tab{--iwf-tint-on: var(--iwf-tint, var(--iwf-accent));--iwf-med: clamp(32px, 7.4cqw, 50px);--iwf-ring-gap: clamp(3px, 1cqw, 6px);--iwf-ring-w: clamp(3px, .65cqw, 4px);grid-template-columns:minmax(0,1fr);grid-template-areas:"icon" "lv" "name" "bar";grid-template-rows:auto auto auto auto;justify-items:center;align-content:center;aspect-ratio:1 / 1;gap:0;padding:clamp(5px,1.6cqw,12px) clamp(2px,.9cqw,6px) clamp(4px,1.3cqw,10px);text-align:center;border-radius:5px;border:1px solid var(--iwf-edge);background:radial-gradient(ellipse at 50% 34%,color-mix(in srgb,var(--iwf-tint-on) 16%,transparent),transparent 62%),var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,235,190,.05),0 3px 10px rgba(0,0,0,.25)}:is(:root,#iwf) .iw-skill-tab::before{content:"";position:absolute;left:10px;right:10px;top:0;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--iwf-tint-on) 55%,var(--iwf-brass)) 50%,transparent);opacity:.7}:is(:root,#iwf) .iw-skill-tab:hover{border-color:color-mix(in srgb,var(--iwf-tint-on) 45%,var(--iwf-edge));box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 22px color-mix(in srgb,var(--iwf-tint-on) 10%,transparent),0 4px 14px rgba(0,0,0,.35)}:is(:root,#iwf) .iw-skill-tab:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-skill-tab.is-active{border-color:var(--iwf-accent);background:radial-gradient(ellipse at 50% 34%,color-mix(in srgb,var(--iwf-tint-on) 30%,transparent),transparent 66%),var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iwf-accent) 40%,transparent),0 0 14px -5px var(--iwf-accent)}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon{grid-area:icon;position:relative;z-index:1;display:block;width:var(--iwf-med);height:var(--iwf-med);margin:var(--iwf-ring-gap);border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);box-shadow:0 3px 9px rgba(0,0,0,.55);opacity:1;filter:none}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon::after{content:"";position:absolute;inset:calc(-1 * var(--iwf-ring-gap));border-radius:50%;pointer-events:none;background:conic-gradient(color-mix(in srgb,var(--iwf-tint-on) 78%,#fff) 0 var(--iwf-pct, 0%),#2a241b var(--iwf-pct, 0%) 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));filter:drop-shadow(0 0 3px color-mix(in srgb,var(--iwf-tint-on) 55%,transparent));opacity:.8}:is(:root,#iwf) .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon::after,:is(:root,#iwf) .iw-skill-tab:hover[data-iw-fantasy-skill] .iw-skill-tab-icon::after{opacity:1}:is(:root,#iwf) .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon{box-shadow:0 3px 9px rgba(0,0,0,.55),0 0 16px -2px color-mix(in srgb,var(--iwf-tint-on) 60%,transparent)}:is(:root,#iwf) .iw-skill-tab-lv{grid-area:lv;position:relative;z-index:2;min-width:clamp(24px,6cqw,38px);margin-top:calc(-1 * var(--iwf-ring-gap) - clamp(4px,1.2cqw,8px));padding:1px clamp(3px,1cqw,7px) 2px;border:1px solid color-mix(in srgb,var(--iwf-brass) 55%,#3a3226);border-radius:4px 4px 9px 9px;background:linear-gradient(#1b1812,#0b0c0e);box-shadow:inset 0 0 0 2px #1d1a14,0 2px 4px rgba(0,0,0,.6);font-size:clamp(9.5px,1.95cqw,12.5px);line-height:1.15;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-skill-tab.is-active .iw-skill-tab-lv{border-color:var(--iwf-accent);color:#fff}:is(:root,#iwf) .iw-skill-tab-name{grid-area:name;max-width:100%;margin-top:clamp(3px,1cqw,7px);font-family:var(--iw-font-head, serif);font-size:clamp(8px,1.72cqw,11px);font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:color-mix(in srgb,var(--iwf-tint-on) 45%,var(--iwf-text-dim));text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-skill-tab.is-active .iw-skill-tab-name{color:color-mix(in srgb,var(--iwf-tint-on) 62%,var(--iwf-text-hi))}:is(:root,#iwf) .iw-skill-tab-bar{grid-area:bar;width:80%;height:3px;margin-top:4px;border-radius:1px;background:#000a}:is(:root,#iwf) .iw-skill-tab-bar>span{background:linear-gradient(90deg,var(--iwf-brass),var(--iwf-accent))}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-pct][data-iw-fantasy-skill] .iw-skill-tab-bar{display:none}:is(:root,#iwf) .iw-skill-tab-live{top:6px;right:6px;z-index:3;background:var(--iwf-running);box-shadow:0 0 0 1px #000,0 0 6px var(--iwf-running)}:is(:root,#iwf) .iw-skill-sheet{--iwf-sheet-r: 8px;--iwf-pad-x: 16px;--iwf-indent: 34px;--iwf-divider: linear-gradient(90deg, transparent, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 14%, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 86%, transparent);--iwf-rule: var(--iw-th-rule-soft, rgba(255,255,255,.06));gap:0;border-radius:var(--iwf-sheet-r);border:1px solid var(--iwf-edge-mid);background:var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,235,190,.05),0 6px 18px -10px #000}:is(:root,#iwf) .iw-skill-sheet>*+*{border-style:solid;border-width:1px 0 0;border-image:var(--iwf-divider) 1}:is(:root,#iwf) .iw-ss-head{gap:14px;padding:14px var(--iwf-pad-x) 13px;border:0;border-radius:calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px) 0 0;background:radial-gradient(ellipse 60% 120% at 0 0,color-mix(in srgb,var(--iwf-tint, var(--iw-th-edge, #6b5d3d)) 16%,transparent),transparent 70%),linear-gradient(180deg,rgba(255,235,190,.025),transparent);box-shadow:none}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-head:last-child{border-radius:calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{flex:0 0 auto;width:54px;aspect-ratio:1 / 1;border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)) drop-shadow(0 0 10px color-mix(in srgb,var(--iwf-tint, transparent) 22%,transparent))}:is(:root,#iwf) .iw-ss-name{gap:6px 10px}:is(:root,#iwf) .iw-ss-name>span:first-child{font-family:var(--iw-font-head, serif);font-size:18px;letter-spacing:.04em;color:var(--iwf-text-hi);text-shadow:0 1px 0 #000,0 0 12px color-mix(in srgb,var(--iwf-tint, transparent) 25%,transparent)}:is(:root,#iwf) .iw-ss-level{border-radius:3px;border-color:color-mix(in srgb,var(--iwf-brass) 70%,transparent);background:linear-gradient(180deg,#221c12,#120f0a);color:color-mix(in srgb,var(--iwf-brass) 55%,#fff1d2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iw-ss-boost{color:#86efac}:is(:root,#iwf) .iw-ss-xpbar{height:7px;margin-top:8px;border-radius:4px;background:linear-gradient(180deg,#050506,#111013);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iwf-brass) 22%,transparent),inset 0 1px 2px #000}:is(:root,#iwf) .iw-ss-xpbar>span{border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.28),transparent 55%),linear-gradient(90deg,color-mix(in srgb,var(--iwf-tint, var(--iwf-brass)) 55%,#2a2118),color-mix(in srgb,var(--iwf-tint, var(--iwf-accent)) 80%,#fff));box-shadow:0 0 6px -1px color-mix(in srgb,var(--iwf-tint, var(--iwf-accent)) 70%,transparent)}:is(:root,#iwf) .iw-ss-sub{margin-top:6px;color:var(--iwf-text-dim);font-family:var(--iw-font-flav, var(--iw-font-ui, inherit))}:is(:root,#iwf) .iw-ss-zone{--iwf-zone: rgba(56,189,248,.75);gap:12px;padding:12px var(--iwf-pad-x);border:0;border-radius:0;box-shadow:inset 3px 0 0 var(--iwf-zone)}:is(:root,#iwf) .iw-ss-zone.is-down{--iwf-zone: rgba(251,146,60,.75)}:is(:root,#iwf) .iw-ss-banner>.iw-ss-zone{padding-right:calc(var(--iwf-pad-x) + 26px)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-zone:last-child,:is(:root,#iwf) .iw-skill-sheet>.iw-ss-banner:last-child>.iw-ss-zone{border-radius:0 0 calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-zone-text{line-height:1.45}:is(:root,#iwf) .iw-ss-zone-text small{margin-top:2px}:is(:root,#iwf) .iw-ss-zone-go{border-radius:4px;border-color:color-mix(in srgb,var(--iwf-zone) 85%,#000)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iwf-zone) 38%,#0d1418),color-mix(in srgb,var(--iwf-zone) 18%,#070a0c))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.4),0 2px 6px -3px #000!important;text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-ss-zone-go:hover{border-color:var(--iwf-zone)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iwf-zone) 52%,#0d1418),color-mix(in srgb,var(--iwf-zone) 26%,#070a0c))!important}:is(:root,#iwf) .iw-ss-zone-go:focus-visible,:is(:root,#iwf) .iw-ss-x:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-ss-x{top:8px;right:8px;border-radius:4px;border-color:transparent!important;background-image:none!important;box-shadow:none!important}:is(:root,#iwf) .iw-ss-x:hover{border-color:rgba(255,255,255,.12)!important}:is(:root,#iwf) .iw-ss-rows{gap:0}:is(:root,#iwf) .iw-ss-group{gap:0}:is(:root,#iwf) .iw-ss-group+.iw-ss-group,:is(:root,#iwf) .iw-ss-group+.iw-ss-row,:is(:root,#iwf) .iw-ss-row+.iw-ss-group{border-top:1px solid var(--iwf-rule)}:is(:root,#iwf) .iw-ss-group-head{gap:10px;padding:10px var(--iwf-pad-x);border-radius:0;border:0!important;background-image:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 2px 0 0 color-mix(in srgb,var(--iwf-brass) 45%,transparent)!important;font-family:var(--iw-font-head, serif);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--iwf-text)}:is(:root,#iwf) .iw-ss-group-head:hover{background-image:linear-gradient(90deg,color-mix(in srgb,var(--iwf-brass) 10%,transparent),transparent 70%),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 2px 0 0 var(--iwf-brass)!important;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-group-head:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:-2px}:is(:root,#iwf) .iw-ss-group.is-open>.iw-ss-group-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--iwf-accent) 14%,transparent),transparent 65%),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 3px 0 0 var(--iwf-accent),inset 0 -1px 0 var(--iwf-rule)!important;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-caret{width:10px;text-align:center;color:var(--iwf-brass)}:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-caret{color:var(--iwf-accent);transform:rotate(90deg)}:is(:root,#iwf) .iw-ss-group-count{padding:1px 8px;border:1px solid var(--iwf-edge-faint);border-radius:999px;background:rgba(0,0,0,.3);font-family:var(--iw-font-ui, inherit);font-size:10.5px;letter-spacing:.02em;text-transform:none;font-variant-numeric:tabular-nums;color:var(--iwf-text-dim)}:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-group-count{border-color:color-mix(in srgb,var(--iwf-accent) 35%,var(--iwf-edge-faint));color:var(--iwf-text)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-group:last-child:not(.is-open)>.iw-ss-group-head{border-radius:0 0 calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-row{gap:12px;min-height:52px;padding:10px var(--iwf-pad-x) 10px calc(var(--iwf-pad-x) - 3px);border-radius:0;border:0 solid transparent;border-left-width:3px;background:transparent;box-shadow:none}:is(:root,#iwf) .iw-ss-row+.iw-ss-row{border-top:1px solid var(--iwf-rule)}:is(:root,#iwf) .iw-ss-group>.iw-ss-rows>.iw-ss-row{padding-left:calc(var(--iwf-indent) - 3px);background:linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.06))}:is(:root,#iwf) .iw-ss-row:hover{background:linear-gradient(90deg,rgba(255,235,190,.035),transparent 70%)}:is(:root,#iwf) .iw-ss-row.is-best{border-left-color:var(--iwf-accent);background:linear-gradient(90deg,color-mix(in srgb,var(--iwf-accent) 13%,transparent),transparent 60%)}:is(:root,#iwf) .iw-ss-row.is-running{border-left-color:var(--iwf-running);background:linear-gradient(90deg,color-mix(in srgb,var(--iwf-running) 14%,transparent),transparent 65%);box-shadow:inset 0 0 18px -12px var(--iwf-running)}:is(:root,#iwf) .iw-ss-row.is-locked{opacity:.55;filter:saturate(.4)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-row:last-child,:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-group:last-child>.iw-ss-rows>.iw-ss-row:last-child{border-bottom-left-radius:calc(var(--iwf-sheet-r) - 1px);border-bottom-right-radius:calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-rowname{gap:4px 10px;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-link{text-decoration-color:color-mix(in srgb,var(--iwf-brass) 55%,transparent)}:is(:root,#iwf) .iw-ss-link:hover{color:#fff;text-decoration-color:var(--iwf-accent)}:is(:root,#iwf) .iw-ss-xp{font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--iwf-brass) 65%,#fff1d2)}:is(:root,#iwf) .iw-ss-badge{align-self:center;border-radius:2px;background:linear-gradient(180deg,color-mix(in srgb,var(--iwf-accent) 85%,#fff),var(--iwf-accent));color:#170f05;box-shadow:0 0 8px -2px var(--iwf-accent)}:is(:root,#iwf) :is(.iw-ss-detail,.iw-ss-lock,.iw-ss-gear,.iw-ss-warn){margin-top:4px;line-height:1.35}:is(:root,#iwf) .iw-ss-detail{color:var(--iwf-text-dim)}:is(:root,#iwf) .iw-ss-lock{color:#fca5a5}:is(:root,#iwf) .iw-ss-gear{color:#a5b4fc}:is(:root,#iwf) .iw-ss-warn{color:#fcd34d}:is(:root,#iwf) .iw-ss-running{min-width:84px;text-align:center;color:#6ee7b7;text-shadow:0 0 8px rgba(52,211,153,.45);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iw-ss-empty{padding:12px var(--iwf-pad-x);color:var(--iwf-text-dim);font-style:italic}@media(max-width:480px){:is(:root,#iwf) .iw-skill-sheet{--iwf-pad-x: 12px;--iwf-indent: 22px}:is(:root,#iwf) .iw-ss-head{gap:10px}:is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{width:44px}:is(:root,#iwf) .iw-ss-zone{flex-wrap:wrap;row-gap:8px}:is(:root,#iwf) .iw-ss-zone-text{flex:1 1 calc(100% - 48px)}:is(:root,#iwf) .iw-ss-zone-go{margin-left:auto}:is(:root,#iwf) .iw-ss-running{min-width:64px}}:is(:root,#iwf) .iw-ss-main:has(>.iw-ss-detail[data-iw-fantasy-icon]){position:relative;min-height:var(--iwf-item);display:flex;flex-direction:column;justify-content:center}:is(:root,#iwf) .iw-ss-rows:has(>.iw-ss-row>.iw-ss-main>.iw-ss-detail[data-iw-fantasy-icon])>.iw-ss-row>.iw-ss-main{padding-left:calc(var(--iwf-item) + 12px)}:is(:root,#iwf) .iw-ss-detail[data-iw-fantasy-icon]::before{content:"";position:absolute;left:0;top:50%;width:var(--iwf-item);height:var(--iwf-item);transform:translateY(-50%);pointer-events:none;background-image:var(--iwf-sprite-img);background-size:var(--iwf-sprite-size);background-position:var(--iwf-sprite-pos);background-repeat:no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}:is(:root,#iwf) .iw-ss-start{border-radius:4px;border:1px solid color-mix(in srgb,var(--iw-th-cta, #c9852f) 75%,#000)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta-hi, #e6a24a) 42%,#1a140c),color-mix(in srgb,var(--iw-th-cta, #c9852f) 26%,#0c0a07))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.45),0 2px 6px -3px #000!important;color:#fff4dc;font-family:var(--iw-font-head, serif);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-ss-start:hover:not(:disabled){border-color:var(--iw-th-cta-hi, #e6a24a)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta-hi, #e6a24a) 58%,#1a140c),color-mix(in srgb,var(--iw-th-cta, #c9852f) 36%,#0c0a07))!important}:is(:root,#iwf) .iw-ss-start:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-ss-start:disabled{border-color:var(--iwf-edge-faint)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.25))!important;box-shadow:none!important;color:rgba(255,255,255,.38);text-shadow:none}\n';
+
+  // src/skins/fantasy/styles/quests.css
+  var quests_default = ':is(:root,#iwf) .iw-wo-board{--iwq-edge: var(--iw-th-edge-soft, #3b3a33);--iwq-edge-faint: var(--iw-th-edge-faint, #2a2a25);--iwq-brass: var(--iw-th-brass, #b8975a);--iwq-accent: var(--iw-th-accent, #d8a64a);--iwq-ground: linear-gradient(180deg, color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent), color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));--iwq-ready: #34d399;--iwq-bounty: #f87171;--iwq-item: 50px}@media(max-width:1024px){:is(:root,#iwf) .iw-wo-board{--iwq-item: 44px}}@media(max-width:768px){:is(:root,#iwf) .iw-wo-board{--iwq-item: 40px}}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=combat]{--iwq-icon: url(../assets/skills-ui/action-icons/combat.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=mining]{--iwq-icon: url(../assets/skills-ui/action-icons/mining.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=smithing]{--iwq-icon: url(../assets/skills-ui/action-icons/smithing.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=gathering]{--iwq-icon: url(../assets/skills-ui/action-icons/gathering.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=alchemy]{--iwq-icon: url(../assets/skills-ui/action-icons/alchemy.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=jewelcrafting]{--iwq-icon: url(../assets/skills-ui/action-icons/jewelcrafting.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=spellcrafting]{--iwq-icon: url(../assets/skills-ui/action-icons/spellcrafting.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=tailoring]{--iwq-icon: url(../assets/skills-ui/action-icons/tailoring.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=woodcutting]{--iwq-icon: url(../assets/skills-ui/action-icons/woodcutting.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=construction]{--iwq-icon: url(../assets/skills-ui/action-icons/construction.svg)}:is(:root,#iwf) .iw-wo-board [data-iw-fantasy-lead=icon]::first-letter{font-size:0;letter-spacing:0}:is(:root,#iwf) .iw-wo-head>span:first-child:not(.iw-wo-sub){position:relative;padding-left:15px;font-family:var(--iw-font-head, serif);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--iwq-brass) 55%,#fff1d2);text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-wo-head>span:first-child:not(.iw-wo-sub)::before{content:"";position:absolute;left:1px;top:50%;width:7px;height:7px;transform:translateY(-50%) rotate(45deg);border:1px solid var(--iwq-brass);background:linear-gradient(135deg,color-mix(in srgb,var(--iwq-accent) 70%,#fff),var(--iwq-brass));box-shadow:0 0 6px -1px var(--iwq-accent)}:is(:root,#iwf) .iw-wo-sub{color:var(--iw-th-text-dim, #a59a83)}:is(:root,#iwf) .iw-wo-tile{gap:5px;padding:8px 9px 9px;border-radius:5px;border:1px solid var(--iwq-edge-faint);background:var(--iwq-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),inset 0 -10px 14px -12px #000}:is(:root,#iwf) .iw-wo-tile:hover{border-color:var(--iwq-edge)}:is(:root,#iwf) .iw-wo-tile.is-ready{border-color:color-mix(in srgb,var(--iwq-ready) 62%,transparent);background:radial-gradient(ellipse at 50% 0,color-mix(in srgb,var(--iwq-ready) 16%,transparent),transparent 70%),var(--iwq-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 0 12px -5px var(--iwq-ready)}:is(:root,#iwf) .iw-wo-tile.is-bounty:not(.is-ready){border-color:color-mix(in srgb,var(--iwq-bounty) 60%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--iwq-bounty) 12%,transparent),transparent 65%),var(--iwq-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 3px 0 0 color-mix(in srgb,var(--iwq-bounty) 80%,transparent)}:is(:root,#iwf) .iw-wo-skill{font-family:var(--iw-font-head, serif);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--iw-th-text-dim, #b3a689)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill]{position:relative;padding-left:21px}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill]::before{content:"";position:absolute;left:0;top:50%;width:17px;height:17px;transform:translateY(-50%);background:var(--iwq-icon) center / contain no-repeat;filter:drop-shadow(0 1px 1px #000);opacity:.85}:is(:root,#iwf) .iw-wo-reroll{color:var(--iwq-brass);border-radius:2px}:is(:root,#iwf) .iw-wo-reroll:hover{color:var(--iwq-accent);background:rgba(255,255,255,.06)}:is(:root,#iwf) .iw-wo-reroll.is-off{opacity:.3;cursor:not-allowed}:is(:root,#iwf) .iw-wo-reroll.is-off:hover{color:var(--iwq-brass);background:none}:is(:root,#iwf) .iw-wo-item{font-family:var(--iw-font-ui, inherit);color:#f3e9d2}:is(:root,#iwf) .iw-wo-item[data-iw-fantasy-icon]{position:relative;display:block;min-height:var(--iwq-item);padding:calc((var(--iwq-item) - 1.3em) / 2) 0 0 calc(var(--iwq-item) + 10px);line-height:1.3}:is(:root,#iwf) .iw-wo-item[data-iw-fantasy-icon]::after{content:"";position:absolute;left:0;top:0;width:var(--iwq-item);height:var(--iwq-item);pointer-events:none;background-image:var(--iwf-sprite-img);background-size:var(--iwf-sprite-size);background-position:var(--iwf-sprite-pos);background-repeat:no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}:is(:root,#iwf) .iw-wo-bar{height:4px;border-radius:1px;background:#000b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}:is(:root,#iwf) .iw-wo-bar>span{background:linear-gradient(90deg,#10b981,#6ee7b7)}:is(:root,#iwf) .iw-wo-meta{color:var(--iw-th-text-dim, #a59a83)}:is(:root,#iwf) .iw-wo-reward{color:color-mix(in srgb,var(--iwq-brass) 55%,#fff1d2)}:is(:root,#iwf) .iw-wo-btn{height:26px;min-height:26px;padding:0 11px;border-radius:2px;border:1px solid color-mix(in srgb,var(--iw-good, #82b88a) 44%,var(--iwq-edge-faint))!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-good, #82b88a) 9%,#100e0a),#0a0907)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),inset 0 -7px 10px -8px rgba(0,0,0,.95)!important;color:var(--iw-good, #82b88a);font-family:var(--iw-font-head, serif);font-size:10.5px;font-weight:600;line-height:24px;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}:is(:root,#iwf) .iw-wo-btn:hover:not(:disabled){border-color:var(--iw-good, #82b88a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 0 10px -3px color-mix(in srgb,var(--iw-good, #82b88a) 45%,transparent)!important;color:color-mix(in srgb,var(--iw-good, #82b88a) 70%,#fff)}:is(:root,#iwf) .iw-wo-btn:focus-visible{outline:2px solid var(--iwq-accent);outline-offset:2px}:is(:root,#iwf) .iw-wo-btn.is-batch{padding:0 9px;border-color:var(--iwq-brass)!important;background-image:linear-gradient(180deg,#100e0a,#0a0907)!important;color:#ffe9c4;letter-spacing:.04em;text-transform:none}:is(:root,#iwf) .iw-wo-btn.is-batch:hover:not(:disabled){border-color:var(--iw-th-hairline-hi, #e0c48a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 0 10px -3px rgba(216,121,31,.35)!important;color:#fff3df}:is(:root,#iwf) .iw-wo-btn:disabled{opacity:.45;border-color:var(--iwq-edge-faint)!important;background-image:linear-gradient(180deg,#100e0a,#0a0907)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),inset 0 -7px 10px -8px rgba(0,0,0,.95)!important;color:var(--iw-faint, #666052)}\n';
+
+  // src/skins/fantasy/skills/index.js
+  var SKILL_ATTR = "data-iw-fantasy-skill";
+  var ICON_ATTR = "data-iw-fantasy-icon";
+  var LEAD_ATTR = "data-iw-fantasy-lead";
+  var PCT_ATTR = "data-iw-fantasy-pct";
+  var ATTRS6 = [SKILL_ATTR, ICON_ATTR, LEAD_ATTR, PCT_ATTR];
+  var PCT_RULES = Array.from({ length: 101 }, (_, n) => `:is(:root,#iwf) .iw-skill-tab[${PCT_ATTR}="${n}"]{--iwf-pct:${n}%}`).join("\n");
+  function tabPercent(tab3) {
+    const width = tab3.querySelector(".iw-skill-tab-bar > span")?.style.width || "";
+    const m = width.match(/^([\d.]+)%$/);
+    return m ? String(Math.max(0, Math.min(100, Math.round(+m[1])))) : null;
+  }
+  var SHEET_ROOTS = ".iw-skill-tabs, .iw-skill-sheet";
+  var BOARD_ROOTS = ".iw-wo-board";
+  var NAMED = ".iw-skill-tab-name, .iw-ss-name, .iw-ss-detail, .iw-wo-skill, .iw-wo-item";
+  var SKILLS2 = {
+    combat: "combat",
+    bounty: "combat",
+    mining: "mining",
+    smithing: "smithing",
+    gathering: "gathering",
+    herbalism: "gathering",
+    herbing: "gathering",
+    alchemy: "alchemy",
+    jewelcrafting: "jewelcrafting",
+    spellcrafting: "spellcrafting",
+    tailoring: "tailoring",
+    woodcutting: "woodcutting",
+    construction: "construction"
+  };
+  var PICTO = new RegExp("\\p{Extended_Pictographic}", "gu");
+  var LEADING = new RegExp("^\\s*\\p{Extended_Pictographic}", "u");
+  function skillKey2(text2) {
+    const word = label5(text2).split(/\s/)[0]?.toLowerCase() || "";
+    return SKILLS2[word] || null;
+  }
+  function materialName(text2) {
+    const s = String(text2 || "");
+    if ((s.match(PICTO) || []).length !== 1) return null;
+    const m = label5(s).match(/^(.*?)\s+[\d.,]+[kmb]?\s*\/\s*[\d.,]+[kmb]?$/i);
+    return m ? m[1] : null;
+  }
+  var sprites = /* @__PURE__ */ new Map();
+  function spriteSheet() {
+    let css = "";
+    for (const [key, win] of sprites) {
+      css += `[${ICON_ATTR}="${key}"]{--iwf-sprite-img:var(--iwf-${win.atlas}-atlas);--iwf-sprite-size:${win.size};--iwf-sprite-pos:${win.pos}}
+`;
+    }
+    return css;
+  }
+  function markItem(el2, query) {
+    const win = findItemSprite(query);
+    const key = win ? `${win.atlas}-${nameKey(query.id) || nameKey(query.name)}` : null;
+    if (key && !sprites.has(key)) {
+      sprites.set(key, win);
+      setSheet("item-icons", spriteSheet());
+    }
+    mark6(el2, ICON_ATTR, key);
+    mark6(el2, LEAD_ATTR, key && LEADING.test(el2.textContent || "") ? "icon" : null);
+  }
+  function markSkill(el2, text2, { lead = false } = {}) {
+    const key = skillKey2(text2);
+    mark6(el2, SKILL_ATTR, key);
+    if (lead) mark6(el2, LEAD_ATTR, key && LEADING.test(el2.textContent || "") ? "icon" : null);
+  }
+  function decorateSkillSheet() {
+    for (const tab3 of document.querySelectorAll(".iw-skill-tab")) {
+      markSkill(tab3, tab3.querySelector(".iw-skill-tab-name")?.textContent);
+      mark6(tab3, PCT_ATTR, tabPercent(tab3));
+    }
+    for (const head of document.querySelectorAll(".iw-ss-head")) {
+      markSkill(head, head.querySelector(".iw-ss-name > span:first-child")?.textContent);
+    }
+    for (const line of document.querySelectorAll(".iw-ss-detail")) {
+      const name = materialName(line.textContent);
+      if (name) markItem(line, { name });
+      else {
+        mark6(line, ICON_ATTR, null);
+        mark6(line, LEAD_ATTR, null);
+      }
+    }
+  }
+  function decorateWorkOrders() {
+    for (const skill of document.querySelectorAll(".iw-wo-skill")) markSkill(skill, skill.textContent, { lead: true });
+    for (const item of document.querySelectorAll(".iw-wo-item")) {
+      markItem(item, { id: item.getAttribute("data-iw-item"), name: label5(item.textContent) });
+    }
+    for (const title of document.querySelectorAll(".iw-wo-head > span:first-child:not(.iw-wo-sub)")) {
+      mark6(title, LEAD_ATTR, LEADING.test(title.textContent || "") ? "icon" : null);
+    }
+  }
+  var active4 = { skillSheet: false, workOrders: false };
+  var unsubscribe2 = null;
+  function clearUnder(selector) {
+    for (const root of document.querySelectorAll(selector)) unmark2(ATTRS6, root);
+  }
+  function settle2() {
+    const native2 = nativeFeatures();
+    const present = { skillSheet: !!document.querySelector(SHEET_ROOTS), workOrders: !!document.querySelector(BOARD_ROOTS) };
+    const next = { skillSheet: !native2.has("skillSheet"), workOrders: !native2.has("workOrders") };
+    if (next.skillSheet && present.skillSheet) inject2("skills", `${skills_default}
+${PCT_RULES}`);
+    else remove("skills");
+    if (!next.skillSheet && active4.skillSheet) clearUnder(SHEET_ROOTS);
+    if (next.workOrders && present.workOrders) inject2("quests", quests_default);
+    else remove("quests");
+    if (!next.workOrders && active4.workOrders) clearUnder(BOARD_ROOTS);
+    if (!next.skillSheet && !next.workOrders) {
+      remove("item-icons");
+      sprites.clear();
+    }
+    active4 = next;
+    return { skillSheet: next.skillSheet && present.skillSheet, workOrders: next.workOrders && present.workOrders };
+  }
+  function skillsPass() {
+    pruneWritten();
+    const on2 = settle2();
+    if (on2.skillSheet && document.querySelector(".iw-ss-detail") || on2.workOrders) {
+      if (!unsubscribe2) unsubscribe2 = onItemAtlas(requestPass);
+      loadItemAtlas();
+    }
+    if (on2.skillSheet) guard2("skills:sheet", decorateSkillSheet);
+    if (on2.workOrders) guard2("skills:work-orders", decorateWorkOrders);
+  }
+  function skillsText(parents) {
+    if (!active4.skillSheet && !active4.workOrders) return;
+    if (parents.some((p) => p.closest?.(NAMED))) skillsPass();
+  }
+  function clearSkills() {
+    unmark2(ATTRS6);
+    remove("skills");
+    remove("quests");
+    remove("item-icons");
+    sprites.clear();
+    unsubscribe2?.();
+    unsubscribe2 = null;
+    active4 = { skillSheet: false, workOrders: false };
+  }
+
+  // src/skins/fantasy/styles/raid.css
+  var raid_default = ':root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{--iw-res-hi: #fff2c8;--iw-res-mid: #e8b44c;--iw-res-lo: #87561a;--iw-res-ring: #d6a64a;--iw-res-ray: rgba(255, 204, 110, .15);--iw-res-glow: rgba(255, 186, 76, .42);--iw-res-band: rgba(13, 10, 6, .9);--iw-res-warm: rgba(255, 186, 76, .16);--iw-res-ink: #f1e4c2;isolation:isolate;overflow:visible!important;width:min(100%,540px);gap:12px;padding:54px 40px 24px!important;border:0!important;border-image:none!important;border-radius:0!important;background:linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center top / 100% 1px no-repeat,linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center bottom / 100% 1px no-repeat,radial-gradient(ellipse 60% 75% at 50% 28%,var(--iw-res-warm),transparent 70%),linear-gradient(90deg,transparent,var(--iw-res-band) 16%,var(--iw-res-band) 84%,transparent)!important;box-shadow:none!important;filter:none!important}@media(prefers-reduced-motion:no-preference){:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{animation:iw-res-in .7s cubic-bezier(.2,.9,.3,1.15) both}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{animation:iw-res-spin 80s linear infinite}}@keyframes iw-res-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}@keyframes iw-res-spin{to{transform:rotate(1turn)}}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=wipe]{--iw-res-hi: #f4c7b8;--iw-res-mid: #c44430;--iw-res-lo: #4c0e09;--iw-res-ring: #9e3d2d;--iw-res-ray: rgba(205, 64, 44, .12);--iw-res-glow: rgba(220, 72, 50, .38);--iw-res-band: rgba(14, 7, 6, .9);--iw-res-warm: rgba(196, 58, 40, .14);--iw-res-ink: #e9d0c7}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=other]{--iw-res-hi: #f4f0e6;--iw-res-mid: #b9b2a2;--iw-res-lo: #4d4a42;--iw-res-ring: #8f8877;--iw-res-ray: rgba(230, 224, 210, .08);--iw-res-glow: rgba(230, 224, 210, .25);--iw-res-warm: rgba(230, 224, 210, .08);--iw-res-ink: #ece6d8}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{content:"";position:absolute;z-index:-1;left:50%;top:0;width:380px;height:380px;margin:-190px 0 0 -190px;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from 0deg,var(--iw-res-ray) 0deg 5deg,transparent 5deg 15deg);-webkit-mask:radial-gradient(circle,#000 14%,transparent 66%);mask:radial-gradient(circle,#000 14%,transparent 66%)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{content:attr(data-iw-raid-result-glyph);position:absolute;z-index:1;left:50%;top:0;transform:translate(-50%,-50%);display:grid;place-items:center;width:68px;height:68px;border-radius:50%;pointer-events:none;font-size:31px;line-height:1;background:radial-gradient(circle at 50% 32%,color-mix(in srgb,var(--iw-res-lo) 55%,#2a1d0c),#0d0905 72%);border:2px solid var(--iw-res-ring);box-shadow:0 0 0 4px rgba(0,0,0,.6),0 0 0 5px var(--iw-res-lo),0 0 26px var(--iw-res-glow),inset 0 2px 7px color-mix(in srgb,var(--iw-res-hi) 30%,transparent)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type{display:flex!important;flex-direction:column;align-items:center;gap:10px;font-size:0!important;line-height:0!important;text-shadow:none!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{content:attr(data-iw-raid-result-word);padding:0 .12em;font:700 clamp(36px,4.4vw,52px)/1 var(--iw-font-head);letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(180deg,var(--iw-res-hi) 8%,var(--iw-res-mid) 52%,var(--iw-res-lo) 96%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.85)) drop-shadow(0 0 16px var(--iw-res-glow))}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{content:attr(data-iw-raid-result-boss);padding:0 58px;font:700 12px/1.2 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-res-ink);text-shadow:0 1px 3px #000;background:linear-gradient(90deg,transparent,var(--iw-res-ring)) left center / 46px 1px no-repeat,linear-gradient(90deg,var(--iw-res-ring),transparent) right center / 46px 1px no-repeat}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{max-width:42ch;margin:2px 0 4px!important;font:italic 500 13px/1.5 var(--iw-font-ui)!important;letter-spacing:.01em;text-transform:none;color:var(--iw-res-ink)!important;opacity:.88;text-shadow:0 1px 2px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p::before{content:"";display:block;width:7px;height:7px;margin:0 auto 12px;transform:rotate(45deg);background:var(--iw-res-ring);box-shadow:0 0 8px var(--iw-res-glow)}@media(max-width:699px){:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{align-self:end;padding:44px 18px 18px!important;gap:10px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{width:280px;height:280px;margin:-140px 0 0 -140px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{width:56px;height:56px;font-size:26px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{font-size:clamp(28px,9vw,36px)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{padding:0 40px;font-size:10.5px;letter-spacing:.22em;background-size:30px 1px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{font-size:12px!important}}:root [data-iw-guild=root][data-iw-guild-layout=lobby]{display:grid!important;grid-template-columns:minmax(0,1fr);grid-auto-flow:row;gap:12px!important;align-items:start}:root [data-iw-guild-layout=lobby] [data-iw-guild-wrap]{display:contents!important}:root [data-iw-guild-layout=lobby]>*,:root [data-iw-guild-layout=lobby] [data-iw-guild-wrap]>*{grid-column:1 / -1;min-width:0;margin:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=leaderboard]{display:none!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=boss]{order:20}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=chat]{order:21}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=lend]{order:22}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]{order:23}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=loadout]{order:24}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]{order:25}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=members]{order:26}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=other]{order:50}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=start]{order:60}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=history]{order:70}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=footer]{order:80}@media(min-width:1024px){:root [data-iw-guild=root][data-iw-guild-layout=lobby]{grid-template-columns:repeat(2,minmax(0,1fr))}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=lend]{order:10;grid-column:1;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]{order:11;grid-column:2;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=boss]{order:20;grid-column:1}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=members]{order:21;grid-column:2;grid-row:span 4;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=chat]{order:30;grid-column:1}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]{order:40;grid-column:1;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=loadout]{order:41;grid-column:1}}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite],:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]:has(~[data-iw-guild-slot=loadout]){margin-bottom:-12px!important;border-bottom-color:transparent!important;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]~[data-iw-guild-slot=invite],:root [data-iw-guild-layout=lobby]:has([data-iw-guild-slot=invite]) [data-iw-guild-slot=members],:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]~[data-iw-guild-slot=loadout]{border-top-color:var(--iw-th-edge-faint)!important;border-top-left-radius:0!important;border-top-right-radius:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite] [data-iw-guild-role=note]{display:none!important}.iw-guild-records{display:flex;gap:6px;margin-top:2px}.iw-guild-record{flex:1 1 0;min-width:0;text-align:center;font:600 10.5px/1.3 var(--iw-font-ui);color:var(--iw-dim, #938a79);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root [data-iw-boss-card]{--iw-bc-r1: 2;--iw-bc-r2: 3;--iw-bc-r3: 4;--iw-bc-end: 5;--iw-bc-face: 78px;--iw-bc-indent: calc(var(--iw-bc-face) + 30px);display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start!important}:root [data-iw-boss-card]:not(:has(>[data-iw-guild-role=boss-tabs])){--iw-bc-r1: 1;--iw-bc-r2: 2;--iw-bc-r3: 3;--iw-bc-end: 4}:root [data-iw-boss-card]>[data-iw-guild-role=boss-tabs]{grid-row:1!important;grid-column:1!important}:root [data-iw-boss-card]>[data-iw-boss-card-src]{display:none!important}:root [data-iw-boss-card]>.iw-bc-art{grid-column:1;grid-row:var(--iw-bc-r1) / var(--iw-bc-end);position:relative;z-index:0;margin:0!important;min-height:132px;border:1px solid var(--iw-th-edge-soft, #3a3226);border-radius:2px;background:linear-gradient(90deg,rgba(9,8,7,.96) 0%,rgba(9,8,7,.9) 36%,rgba(9,8,7,.62) 54%,rgba(9,8,7,0) 74%),linear-gradient(0deg,rgba(9,8,7,.7),rgba(9,8,7,0) 42%),var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / 150% auto no-repeat,#0b0a08;box-shadow:inset 0 0 0 1px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,226,191,.06);pointer-events:none}:root [data-iw-boss-card] .iw-bc-portrait{position:absolute;left:14px;top:12px;width:var(--iw-bc-face);height:var(--iw-bc-face);background:var(--iw-bc-face-art, none) center / contain no-repeat;filter:drop-shadow(0 3px 6px rgba(0,0,0,.85))}.iw-bc-art[data-iw-bc-boss=ashmaw]{--iw-bc-banner: url(../assets/raids/lobby/ashmaw-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/ashmaw-portrait.webp);--iw-bc-focus: 38% 26%}.iw-bc-art[data-iw-bc-boss=thessaly]{--iw-bc-banner: url(../assets/raids/lobby/thessaly-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/thessaly-portrait.webp);--iw-bc-focus: 59% 0%}.iw-bc-art[data-iw-bc-boss=morwenna]{--iw-bc-banner: url(../assets/raids/lobby/morwenna-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/morwenna-portrait.webp);--iw-bc-focus: 56% 0%}.iw-bc-art[data-iw-bc-boss=grimjaw]{--iw-bc-banner: url(../assets/raids/lobby/grimjaw-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/grimjaw-portrait.webp);--iw-bc-focus: 53% 2%}.iw-bc-art[data-iw-bc-boss=skarth]{--iw-bc-banner: url(../assets/raids/lobby/skarth-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/skarth-portrait.webp);--iw-bc-focus: 74% 6%}:root [data-iw-boss-card]>:is([data-iw-guild-role=boss-name],[data-iw-guild-role=lore],.iw-bc-stats){grid-column:1;position:relative;z-index:1;margin:0!important;padding-left:var(--iw-bc-indent)!important;padding-right:16px!important}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=boss-name]{grid-row:var(--iw-bc-r1);padding-top:16px!important;font-size:19px!important;line-height:1.2!important;text-shadow:0 1px 0 #000,0 0 12px rgba(0,0,0,.9)!important}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=lore]{grid-row:var(--iw-bc-r2);max-width:620px;padding-top:3px!important;font-size:13.5px!important;color:#e4dac6!important;text-shadow:0 1px 1px #000,0 0 6px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.85)!important}:root [data-iw-boss-card]>.iw-bc-stats{grid-row:var(--iw-bc-r3);padding-top:10px!important;padding-bottom:14px!important;align-self:end}.iw-bc-stats{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.iw-bc-stat{display:inline-flex;align-items:baseline;gap:6px;padding:3px 9px;border:1px solid rgba(200,168,97,.30);border-radius:2px;background:rgba(8,7,6,.72);box-shadow:inset 0 1px 0 rgba(255,226,191,.05)}.iw-bc-stat-label{font:700 9.5px/1 var(--iw-font-ui);letter-spacing:.12em;color:var(--iw-th-accent-dim, #a88d5d)}.iw-bc-stat-value{font:700 13px/1.15 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6);font-variant-numeric:tabular-nums}.iw-bc-stat-value[data-iw-bc-tone=hard]{color:#fda4af}.iw-bc-stat-value[data-iw-bc-tone=easy]{color:#6ee7b7}.iw-bc-element{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:2px 7px;margin-left:4px;font:500 11.5px/1.3 var(--iw-font-ui);text-shadow:0 1px 2px #000}.iw-bc-element-name{font-weight:700;color:var(--iw-text-hi, #f0e8d6)}.iw-bc-element-list{color:#b9ad97}.iw-bc-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:6px}.iw-bc-tile{display:flex;align-items:center;gap:10px;min-width:0;padding:7px 10px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-guild-warn-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-guild-warn-rail) 9%,rgba(0,0,0,.3))}.iw-bc-tile[data-iw-bc-kind=advice]{border-left-color:var(--iw-guild-info-rail);background:color-mix(in srgb,var(--iw-guild-info-rail) 8%,rgba(0,0,0,.3));--iw-bc-tile-ink: var(--iw-guild-info)}.iw-bc-tile-body{display:flex;flex-direction:column;min-width:0}.iw-bc-tile-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--iw-bc-tile-ink, var(--iw-guild-warn)) 72%,#5a554c)}.iw-bc-tile-value{font:700 13.5px/1.25 var(--iw-font-ui);color:var(--iw-bc-tile-ink, var(--iw-guild-warn));font-variant-numeric:tabular-nums}.iw-bc-tile-sub{font:500 10.5px/1.3 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-icon{flex:0 0 auto;width:22px;height:22px;background:var(--iw-bc-skill-art, none) center / contain no-repeat;opacity:.9}.iw-bc-glyph{flex:0 0 auto;width:22px;text-align:center;font-size:17px;line-height:1}.iw-bc-icon[data-iw-bc-skill=alchemy]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-alchemy.png)}.iw-bc-icon[data-iw-bc-skill=combat]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-combat.png)}.iw-bc-icon[data-iw-bc-skill=construction]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-construction.png)}.iw-bc-icon[data-iw-bc-skill=gathering]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-gathering.png)}.iw-bc-icon[data-iw-bc-skill=jewelcrafting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-jewelcrafting.png)}.iw-bc-icon[data-iw-bc-skill=mining]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-mining.png)}.iw-bc-icon[data-iw-bc-skill=smithing]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-smithing.png)}.iw-bc-icon[data-iw-bc-skill=spellcrafting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-spellcrafting.png)}.iw-bc-icon[data-iw-bc-skill=tailoring]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-tailoring.png)}.iw-bc-icon[data-iw-bc-skill=woodcutting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-woodcutting.png)}.iw-bc-tactics{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:8px 10px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-guild-info-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-guild-info-rail) 8%,rgba(0,0,0,.3));font:500 11.5px/1.35 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-tactics-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--iw-guild-info) 72%,#3c5a6b)}.iw-bc-roles{display:flex;flex-wrap:wrap;gap:6px}.iw-bc-role{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 7px;border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 45%,transparent);border-radius:2px;background:rgba(8,7,6,.55);color:var(--iw-text, #d8cfbd);font-weight:600}.iw-bc-role-count{font:700 14px/1 var(--iw-font-ui);color:var(--iw-guild-info);font-variant-numeric:tabular-nums}.iw-bc-role>.iw-bc-icon{width:16px;height:16px}.iw-bc-role>.iw-bc-glyph{width:16px;font-size:13px;color:var(--iw-guild-info)}.iw-bc-tip{margin:0;color:var(--iw-text, #d8cfbd)}.iw-bc-tip>b{color:var(--iw-guild-info);font-weight:700}.iw-bc-tip>.iw-bc-tip-label{color:var(--iw-text-hi, #f0e8d6)}.iw-bc-loot{--iw-bc-rail: var(--iw-guild-warn-rail);--iw-bc-ink: var(--iw-guild-warn);display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:4px 14px;padding:8px 12px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-bc-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-bc-rail) 10%,rgba(0,0,0,.3));font:500 11.5px/1.35 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-loot[data-iw-bc-tone=good]{--iw-bc-rail: var(--iw-guild-good-rail);--iw-bc-ink: var(--iw-guild-good)}.iw-bc-loot[data-iw-bc-tone=bad]{--iw-bc-rail: var(--iw-guild-bad-rail);--iw-bc-ink: var(--iw-guild-bad)}.iw-bc-loot[data-iw-bc-tone=info]{--iw-bc-rail: var(--iw-guild-info-rail);--iw-bc-ink: var(--iw-guild-info)}.iw-bc-loot-state{font-weight:700;font-size:12.5px;color:var(--iw-bc-ink);white-space:nowrap}.iw-bc-loot-when{display:grid;grid-template-columns:auto auto;align-items:baseline;justify-content:end;gap:0 6px;text-align:right}.iw-bc-loot-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--iw-faint, #6f675a)}.iw-bc-loot-count{font:700 14px/1.2 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6);font-variant-numeric:tabular-nums}.iw-bc-loot-reset{grid-column:1 / -1;font-size:10px;color:var(--iw-faint, #6f675a)}@media(max-width:640px){.iw-bc-loot{grid-template-columns:minmax(0,1fr);gap:3px}.iw-bc-loot-when{justify-content:start;text-align:left}.iw-bc-tile{padding:5px 9px}}@media(max-width:640px){:root [data-iw-boss-card]{--iw-bc-face: 58px}:root [data-iw-boss-card]>.iw-bc-art{background:linear-gradient(180deg,rgba(9,8,7,.25) 0%,rgba(9,8,7,.82) 52%,rgba(9,8,7,.95) 100%),linear-gradient(90deg,rgba(9,8,7,.75),rgba(9,8,7,0) 70%),var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / cover no-repeat,#0b0a08}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=boss-name]{display:flex!important;align-items:center;min-height:calc(var(--iw-bc-face) + 22px);padding-top:10px!important;font-size:17px!important}:root [data-iw-boss-card]>:is([data-iw-guild-role=lore],.iw-bc-stats){padding-left:12px!important;padding-right:12px!important}:root [data-iw-boss-card] .iw-bc-portrait{left:10px;top:10px}.iw-bc-element{margin-left:0}}.iw-rc-popup{position:fixed;z-index:2147483000;top:16px;left:50%;transform:translateX(-50%);width:min(440px,calc(100vw - 24px));box-sizing:border-box;padding:20px 24px 18px;border:1px solid transparent;border-radius:var(--iw-r-panel, 3px);border-image:var(--iw-corner-filigree) 50% / 25px 23px / 0 stretch;background:linear-gradient(90deg,rgba(240,180,92,.14),transparent 60%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a, #1a1611),var(--iw-th-ground-b, #0d0c0a));background-blend-mode:normal,soft-light,normal;box-shadow:0 0 0 1px #c9963f,inset 0 0 0 1px rgba(0,0,0,.7),0 14px 40px rgba(0,0,0,.75),0 0 34px -10px rgba(240,180,92,.7);color:var(--iw-text-hi, #f0e8d6);font-family:var(--iw-font-ui)}@media(prefers-reduced-motion:no-preference){.iw-rc-popup{animation:iw-rc-in .28s cubic-bezier(.2,.9,.3,1.2) both}}@keyframes iw-rc-in{from{opacity:0;transform:translate(-50%,-14px)}to{opacity:1;transform:translate(-50%,0)}}.iw-rc-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.iw-rc-title{margin:0;font:700 15px/1.25 var(--iw-font-head);letter-spacing:.03em;color:#f5d58a;text-shadow:0 1px 0 #000}.iw-rc-timer{flex:none;font:800 15px/1 var(--iw-font-ui);color:#f0b45c;font-variant-numeric:tabular-nums}.iw-rc-note{margin:8px 0 14px;font:500 12px/1.45 var(--iw-font-ui);color:var(--iw-dim, #b7ad99)}.iw-rc-actions{display:flex;gap:8px}.iw-rc-actions>button{--iw-compact-cap: 12px;flex:1 1 0;height:36px;padding:0 14px;margin:0;border:0;background:none;cursor:pointer;font:700 12px/1 var(--iw-font-head);letter-spacing:.08em;text-transform:uppercase;color:var(--iw-text-hi, #f0e8d6)!important;text-shadow:0 1px 2px #000}.iw-rc-actions>.iw-rc-confirm{color:#ffd2ad!important;box-shadow:0 0 14px rgba(217,120,74,.3)!important}.iw-rc-actions>.iw-rc-confirm>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-cta-hi, #d9784a)!important}.iw-raid-lb-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}.iw-raid-lb-title{margin:0}.iw-raid-lb-sub{font:500 11px/1 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-raid-lb-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.iw-raid-lb-tab{--iw-compact-cap: 10px;height:28px;padding:0 12px;margin:0;border:0;background:none;cursor:pointer;font:700 11px/1 var(--iw-font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--iw-dim, #938a79)!important}.iw-raid-lb-tab[aria-pressed=true]{color:var(--iw-text-hi, #f0e8d6)!important}.iw-raid-lb-tab[aria-pressed=true]>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}.iw-raid-lb-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px}.iw-raid-lb-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 10px;border:1px solid var(--iw-th-edge-faint, #29251d);border-radius:2px;background:rgba(0,0,0,.22);font:500 12.5px/1.25 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6)}.iw-raid-lb-name{display:flex;align-items:baseline;gap:8px;min-width:0}.iw-raid-lb-rank{flex:none;width:2.2em;font-weight:800;color:var(--iw-dim, #938a79);font-variant-numeric:tabular-nums}.iw-raid-lb-row[data-iw-raid-lb-rank="1"] .iw-raid-lb-rank{color:#f1c35b}.iw-raid-lb-row[data-iw-raid-lb-rank="2"] .iw-raid-lb-rank{color:#c9ccd2}.iw-raid-lb-row[data-iw-raid-lb-rank="3"] .iw-raid-lb-rank{color:#d08a52}.iw-raid-lb-guild{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.iw-raid-lb-tag{flex:none;padding:1px 5px;border:1px solid rgba(125,190,230,.35);border-radius:2px;font:600 9.5px/1.2 var(--iw-font-ui);letter-spacing:.04em;text-transform:uppercase;color:#a9d4ef}.iw-raid-lb-time{flex:none;font-weight:700;font-variant-numeric:tabular-nums;color:var(--iw-text-hi, #f0e8d6)}.iw-raid-lb-note{margin:6px 0 2px;font:italic 500 12px/1.4 var(--iw-font-ui);color:var(--iw-dim, #938a79)}html:not([data-iw-compact-atlas]) .iw-rc-actions>button,html:not([data-iw-compact-atlas]) .iw-raid-lb-tab{border:1px solid var(--iw-th-edge-mid, #3a3127)!important;border-radius:var(--iw-r-control, 2px);background:linear-gradient(180deg,var(--iw-ink-700, #1e1b15),var(--iw-ink-900, #0b0c0a))!important}html:not([data-iw-compact-atlas]) .iw-rc-actions>button:hover,html:not([data-iw-compact-atlas]) .iw-raid-lb-tab:hover{border-color:var(--iw-th-hairline-hi, #b48edc)!important}html:not([data-iw-compact-atlas]) .iw-rc-actions>.iw-rc-confirm,html:not([data-iw-compact-atlas]) .iw-raid-lb-tab[aria-pressed=true]{border-color:var(--iw-th-cta-hi, #d9784a)!important}\n';
+
+  // src/skins/fantasy/index.js
+  function flush() {
+    raidPass();
+    skillsPass();
+  }
+  function text(parents) {
+    raidText(parents);
+    skillsText(parents);
+  }
   function start() {
+    setRuntimeActive2(true);
+    inject2("raid", raid_default);
+    startWatcher2({ onFlush: flush, onText: text });
   }
   function stop() {
+    stopWatcher2();
+    clearRaid();
+    clearSkills();
+    removeAll2();
+    resetNativeFeatures();
+    setRuntimeActive2(false);
   }
 
   // src/shared/ExtensionSettings.js
@@ -12822,30 +14119,30 @@
 
   // src/shared/SkinController.js
   function createSkinController({ skins, waitUntilReady }) {
-    let active3 = null;
+    let active5 = null;
     let requested = null;
-    let revision = 0;
+    let revision2 = 0;
     let readiness = null;
     let pending = Promise.resolve();
     function update({ enabled: enabled3, theme }) {
       const next = enabled3 !== false && Object.hasOwn(skins, theme) ? theme : null;
       if (next === requested) return pending;
       requested = next;
-      const token = ++revision;
-      if (active3 !== null) {
-        skins[active3].stop();
-        active3 = null;
+      const token = ++revision2;
+      if (active5 !== null) {
+        skins[active5].stop();
+        active5 = null;
       }
       if (next === null) return pending = Promise.resolve();
       readiness ??= Promise.resolve().then(waitUntilReady);
       pending = readiness.then(() => {
-        if (token !== revision) return;
-        active3 = next;
+        if (token !== revision2) return;
+        active5 = next;
         try {
           skins[next].start();
         } catch (err) {
           skins[next].stop();
-          active3 = null;
+          active5 = null;
           requested = null;
           throw err;
         }

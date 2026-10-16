@@ -52,6 +52,9 @@ const EXCLUDE = [
   // The raid UI kit ships only its separate sprites; the atlas, its ImageGen
   // sources and the standalone preview are design material.
   /^assets\/raids\/ui-kit-v1\/(?!sprites\/)/i,
+  // Skill medallion sources (1254px, ~2.4 MB each); the skin ships the 224px
+  // WebPs cut from them.
+  /^assets\/skills-medallions\/[^/]+-v\d+\.png$/i,
 ];
 
 async function walk(dir) {

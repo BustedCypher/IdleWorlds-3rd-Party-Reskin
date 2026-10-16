@@ -67,8 +67,41 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
 - `src/skins/legacy/index.js` — existing reskin boot order and teardown.
   All previous modules/styles belong to Legacy; its Runtime flag must stay
   inactive whenever any other profile is selected.
-- `src/skins/fantasy/` — clean Fantasy reskin compartment. Initially no rules
-  or services. Add its own reversible presentation; never import Legacy here.
+- `src/skins/fantasy/` — the Fantasy profile. Never import Legacy here
+  (`tests/skin-boundaries`); infrastructure is FORKED into `core/` (Runtime,
+  Viewport, StyleInjector with its own `data-iw-fantasy-style`, and one
+  budgeted `Watcher` calling its passes directly, not via `iw:*` events).
+  **The game's own `data-skin="fantasy"` theme IS this skin, ported natively**
+  (it loads `/reskin-bc/theme/fantasy.css` and runs the skin's Legacy code as
+  delivered on 2026-10-07, reskin `37c608b`), so Fantasy layers on top of the
+  port: it READS the port's `data-iw-*` tags and must never write one the
+  port writes. `raid/` ports the raid UI Legacy gained after that delivery
+  (Victory/Wipe banner, lobby grid + records + ready-check pop-up, boss card,
+  raid leaderboard; `styles/raid.css` is Legacy's guild.css delta verbatim).
+  Each feature stands down once a port stylesheet styles it
+  (`core/NativeFeatures.js`), and teardown removes an attribute only where it
+  still holds the value Fantasy wrote (`core/dom.js`), never by a
+  document-wide sweep. Every owned node carries `data-iw-fantasy-owned`.
+  `tests/fantasy-raid.test.mjs` emulates the port with Legacy's own
+  GuildPanels minus the post-delivery changes.
+  `skills/` reskins the game's OWN Skills sheet (`.iw-skill-tabs`,
+  `.iw-ss-*`) and Work Orders board (`.iw-wo-*`), live since 2026-10-16 and
+  unknown to the port (the `iw-` prefix there is the game dev's). It creates
+  no nodes: it writes `data-iw-fantasy-skill` / `-icon` / `-lead` and
+  `styles/skills.css` + `styles/quests.css` draw action-icon and atlas
+  sprites (`core/ItemAtlas.js`, item by id, gear by name). Every item sprite
+  paints at least inventory size (the port's `.fs-inv-icon` sprite: 50 / 44 /
+  40px at >1024 / ≤1024 / ≤768px; `--iwf-item`, `--iwq-item`), bare, no
+  ring (Curtis, 2026-10-17). Leading emoji are
+  collapsed with `::first-letter { font-size: 0; letter-spacing: 0 }` ONLY
+  where `-lead="icon"` says one was seen and replaced; flex/grid containers
+  have no first letter. Rules are prefixed `:is(:root,#iwf)` to outrank the
+  port's (0,40,1) `!important` button slate, so every game state is restated.
+  Stand-down tokens are counted only in `/reskin-bc/` sheets, because the
+  game's stock CSS names the same classes. `tests/fantasy-skills.test.mjs`
+  runs on `tests/fixtures/live-2026-10-16/` (markup regenerated from a live
+  capture by `claude/fixture-from-capture.mjs`, plus that day's game CSS and
+  port `fantasy.css`).
 - `src/shared/HydrationGate.js` + `src/page/hydration-signal.js` — hold the
   FIRST boot until React has hydrated (appending skin nodes mid-hydration made
   React throw #418 and re-render the tree). The signal is a separate

@@ -1,0 +1,216 @@
+/* ============================================================================
+   Fantasy — the game's Bounties & Work Orders board (`.iw-wo-*`), 2026-10-16.
+
+   Same contract as skills.css (read its header): game nodes, Fantasy's own
+   data-iw-fantasy-* marks only, every rule under `:is(:root,#iwf)`, and
+   `!important` only on the port's generic button surface properties.
+   Variables (--iwf-*) and the discipline icons come from skills.css when it
+   is injected; every use here carries its own fallback, because the two
+   sheets stand down independently.
+
+   STATE (rule 5), restated because the prefix outranks the game's rules:
+   ready tile (green), bounty tile (red rail), disabled Turn in, the batch
+   control, a spent reroll (is-off).
+   ========================================================================= */
+
+:is(:root,#iwf) .iw-wo-board {
+  --iwq-edge: var(--iw-th-edge-soft, #3b3a33);
+  --iwq-edge-faint: var(--iw-th-edge-faint, #2a2a25);
+  --iwq-brass: var(--iw-th-brass, #b8975a);
+  --iwq-accent: var(--iw-th-accent, #d8a64a);
+  --iwq-ground: linear-gradient(180deg,
+      color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent),
+      color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));
+  --iwq-ready: #34d399;
+  --iwq-bounty: #f87171;
+  --iwq-item: 50px;
+}
+@media (max-width: 1024px) { :is(:root,#iwf) .iw-wo-board { --iwq-item: 44px; } }
+@media (max-width: 768px) { :is(:root,#iwf) .iw-wo-board { --iwq-item: 40px; } }
+
+/* The discipline icons, repeated so the board stands alone. */
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="combat"] { --iwq-icon: url('../assets/skills-ui/action-icons/combat.svg'); }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="mining"] { --iwq-icon: url('../assets/skills-ui/action-icons/mining.svg'); }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="smithing"] { --iwq-icon: url('../assets/skills-ui/action-icons/smithing.svg'); }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="gathering"] { --iwq-icon: url('../assets/skills-ui/action-icons/gathering.svg'); }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="alchemy"] { --iwq-icon: url('../assets/skills-ui/action-icons/alchemy.svg'); }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="jewelcrafting"] { --iwq-icon: url('../assets/skills-ui/action-icons/jewelcrafting.svg'); }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="spellcrafting"] { --iwq-icon: url('../assets/skills-ui/action-icons/spellcrafting.svg'); }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="tailoring"] { --iwq-icon: url('../assets/skills-ui/action-icons/tailoring.svg'); }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="woodcutting"] { --iwq-icon: url('../assets/skills-ui/action-icons/woodcutting.svg'); }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill="construction"] { --iwq-icon: url('../assets/skills-ui/action-icons/construction.svg'); }
+
+/* Leading emoji the module saw and replaced (see skills.css). */
+:is(:root,#iwf) .iw-wo-board [data-iw-fantasy-lead="icon"]::first-letter { font-size: 0; letter-spacing: 0; }
+
+/* ── heading ──────────────────────────────────────────────────────────── */
+
+:is(:root,#iwf) .iw-wo-head > span:first-child:not(.iw-wo-sub) {
+  position: relative;
+  padding-left: 15px;
+  font-family: var(--iw-font-head, serif);
+  font-size: 12.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--iwq-brass) 55%, #fff1d2);
+  text-shadow: 0 1px 0 #000;
+}
+:is(:root,#iwf) .iw-wo-head > span:first-child:not(.iw-wo-sub)::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translateY(-50%) rotate(45deg);
+  border: 1px solid var(--iwq-brass);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--iwq-accent) 70%, #fff) , var(--iwq-brass));
+  box-shadow: 0 0 6px -1px var(--iwq-accent);
+}
+:is(:root,#iwf) .iw-wo-sub { color: var(--iw-th-text-dim, #a59a83); }
+
+/* ── tiles ────────────────────────────────────────────────────────────── */
+
+:is(:root,#iwf) .iw-wo-tile {
+  gap: 5px;
+  padding: 8px 9px 9px;
+  border-radius: 5px;
+  border: 1px solid var(--iwq-edge-faint);
+  background: var(--iwq-ground), url('../assets/skills_panel_texture.webp') center / cover;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), inset 0 -10px 14px -12px #000;
+}
+:is(:root,#iwf) .iw-wo-tile:hover { border-color: var(--iwq-edge); }
+:is(:root,#iwf) .iw-wo-tile.is-ready {
+  border-color: color-mix(in srgb, var(--iwq-ready) 62%, transparent);
+  background:
+    radial-gradient(ellipse at 50% 0, color-mix(in srgb, var(--iwq-ready) 16%, transparent), transparent 70%),
+    var(--iwq-ground), url('../assets/skills_panel_texture.webp') center / cover;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 0 12px -5px var(--iwq-ready);
+}
+:is(:root,#iwf) .iw-wo-tile.is-bounty:not(.is-ready) {
+  border-color: color-mix(in srgb, var(--iwq-bounty) 60%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--iwq-bounty) 12%, transparent), transparent 65%),
+    var(--iwq-ground), url('../assets/skills_panel_texture.webp') center / cover;
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--iwq-bounty) 80%, transparent);
+}
+
+:is(:root,#iwf) .iw-wo-skill {
+  font-family: var(--iw-font-head, serif);
+  font-size: 10px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--iw-th-text-dim, #b3a689);
+}
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill] { position: relative; padding-left: 21px; }
+:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 17px;
+  height: 17px;
+  transform: translateY(-50%);
+  background: var(--iwq-icon) center / contain no-repeat;
+  filter: drop-shadow(0 1px 1px #000);
+  opacity: .85;
+}
+:is(:root,#iwf) .iw-wo-reroll { color: var(--iwq-brass); border-radius: 2px; }
+:is(:root,#iwf) .iw-wo-reroll:hover { color: var(--iwq-accent); background: rgba(255,255,255,.06); }
+:is(:root,#iwf) .iw-wo-reroll.is-off { opacity: .3; cursor: not-allowed; }
+:is(:root,#iwf) .iw-wo-reroll.is-off:hover { color: var(--iwq-brass); background: none; }
+
+/* The item's real atlas sprite, bare and at inventory size (the inventory
+   paints its sprite edge to edge in a 52 / 46 / 42px box with a 1px border,
+   so 50 / 44 / 40px; --iwq-item tracks the same breakpoints). No ring: the
+   art is the icon. The sprite is absolutely placed, so it is never the
+   line's ::first-letter. */
+:is(:root,#iwf) .iw-wo-item {
+  font-family: var(--iw-font-ui, inherit);
+  color: #f3e9d2;
+}
+/* Stays a block: a flex or grid container has no ::first-letter, so the
+   emoji would come back. A one-line name sits level with the sprite. */
+:is(:root,#iwf) .iw-wo-item[data-iw-fantasy-icon] {
+  position: relative;
+  display: block;
+  min-height: var(--iwq-item);
+  padding: calc((var(--iwq-item) - 1.3em) / 2) 0 0 calc(var(--iwq-item) + 10px);
+  line-height: 1.3;
+}
+:is(:root,#iwf) .iw-wo-item[data-iw-fantasy-icon]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--iwq-item);
+  height: var(--iwq-item);
+  pointer-events: none;
+  background-image: var(--iwf-sprite-img);
+  background-size: var(--iwf-sprite-size);
+  background-position: var(--iwf-sprite-pos);
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.75));
+}
+
+:is(:root,#iwf) .iw-wo-bar {
+  height: 4px;
+  border-radius: 1px;
+  background: #000b;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+}
+/* Progress keeps the game's green: a full green bar is half of "ready". */
+:is(:root,#iwf) .iw-wo-bar > span { background: linear-gradient(90deg, #10b981, #6ee7b7); }
+:is(:root,#iwf) .iw-wo-meta { color: var(--iw-th-text-dim, #a59a83); }
+:is(:root,#iwf) .iw-wo-reward { color: color-mix(in srgb, var(--iwq-brass) 55%, #fff1d2); }
+
+/* ── buttons ───────────────────────────────────────────────────────── */
+
+/* Commands use the inventory palette
+   (green = ready, as the game paints it) over a faint green wash; the batch
+   control takes the "equip" kind's brass; disabled is the inventory's
+   disabled chip. */
+:is(:root,#iwf) .iw-wo-btn {
+  height: 26px;
+  min-height: 26px;
+  padding: 0 11px;
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--iw-good, #82b88a) 44%, var(--iwq-edge-faint)) !important;
+  background-image: linear-gradient(180deg,
+      color-mix(in srgb, var(--iw-good, #82b88a) 9%, #100e0a), #0a0907) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), inset 0 -7px 10px -8px rgba(0,0,0,.95) !important;
+  color: var(--iw-good, #82b88a);
+  font-family: var(--iw-font-head, serif);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+:is(:root,#iwf) .iw-wo-btn:hover:not(:disabled) {
+  border-color: var(--iw-good, #82b88a) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 0 10px -3px color-mix(in srgb, var(--iw-good, #82b88a) 45%, transparent) !important;
+  color: color-mix(in srgb, var(--iw-good, #82b88a) 70%, #fff);
+}
+:is(:root,#iwf) .iw-wo-btn:focus-visible { outline: 2px solid var(--iwq-accent); outline-offset: 2px; }
+:is(:root,#iwf) .iw-wo-btn.is-batch {
+  padding: 0 9px;
+  border-color: var(--iwq-brass) !important;
+  background-image: linear-gradient(180deg, #100e0a, #0a0907) !important;
+  color: #ffe9c4;
+  letter-spacing: .04em;
+  text-transform: none;
+}
+:is(:root,#iwf) .iw-wo-btn.is-batch:hover:not(:disabled) {
+  border-color: var(--iw-th-hairline-hi, #e0c48a) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 0 10px -3px rgba(216,121,31,.35) !important;
+  color: #fff3df;
+}
+:is(:root,#iwf) .iw-wo-btn:disabled {
+  opacity: .45;
+  border-color: var(--iwq-edge-faint) !important;
+  background-image: linear-gradient(180deg, #100e0a, #0a0907) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), inset 0 -7px 10px -8px rgba(0,0,0,.95) !important;
+  color: var(--iw-faint, #666052);
+}

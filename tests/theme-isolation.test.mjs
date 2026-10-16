@@ -44,11 +44,18 @@ async function harness(initial = {}, { holdRead = false, hydrated = true, holdIt
   let clicks = 0; native.addEventListener('click', () => clicks++);
   w.eval(bundle);
   async function settled(ms = 180) { await pause(ms); }
-  function clean() {
+  // Fantasy runs its own single observer (src/skins/fantasy/core/Watcher.js,
+  // tagged `iwProfile`); every other one is Legacy's and must be gone.
+  function clean({ fantasy = true } = {}) {
     assert.equal(w.document.querySelectorAll('style[data-iw-style]').length, 0, 'Fantasy must not inherit a Legacy stylesheet');
+    const fantasyObservers = [...observers].filter(o => o.iwProfile === 'fantasy').length;
+    assert.equal(fantasyObservers, fantasy ? 1 : 0, fantasy ? 'Fantasy runs exactly one observer' : 'a disabled skin observes nothing');
+    assert.equal(w.document.querySelectorAll('style[data-iw-fantasy-style]').length, fantasy ? 1 : 0,
+      fantasy ? 'Fantasy injects its one stylesheet' : 'a disabled skin leaves no Fantasy stylesheet');
     assert.equal(w.document.querySelectorAll('.iw-tip,.fs-inv-row,.fs-name-wrap,[data-iw-village-scene-owned]').length, 0, 'Fantasy must have no Legacy surfaces, including the detached tooltip');
-    assert.equal(observers.size, 0, 'Legacy observer must be disconnected');
-    const ownedAttributes = [...w.document.querySelectorAll('*')].flatMap(el => [...el.attributes]
+    assert.equal(observers.size - fantasyObservers, 0, 'Legacy observer must be disconnected');
+    // Fantasy's own <style> is counted above; every other skin attribute is Legacy's.
+    const ownedAttributes = [...w.document.querySelectorAll('*:not(style[data-iw-fantasy-style])')].flatMap(el => [...el.attributes]
       .filter(attr => /^(data-iw-|data-fs-)/.test(attr.name)).map(attr => `${el.tagName}:${attr.name}`));
     assert.deepEqual(ownedAttributes, [], 'Legacy must remove its role and ownership attributes');
     assert.ok([...timers.values()].every(ms => ms < 10_000), 'Legacy refresh timers must be stopped');
@@ -61,7 +68,7 @@ async function harness(initial = {}, { holdRead = false, hydrated = true, holdIt
 
 let h = await harness({ 'iw-skin-theme': 'fantasy' });
 try { await h.settled(); h.clean(); assert.equal(h.requests.length, 0, 'a fresh Fantasy session must not fetch Legacy data');
-  assert.equal(h.w.document.body.innerHTML, h.original, 'empty Fantasy must preserve native markup'); } finally { h.close(); }
+  assert.equal(h.w.document.body.innerHTML, h.original, 'Fantasy off the raid surfaces must preserve native markup'); } finally { h.close(); }
 
 h = await harness();
 try {
@@ -78,9 +85,10 @@ try {
   h.change({ 'iw-skin-theme': 'legacy' }); await h.settled();
   assert.equal(h.w.document.querySelectorAll('style[data-iw-style]').length, 7);
   assert.equal(h.w.document.querySelectorAll('.iw-tip').length, 1, 'switching back mounts one tooltip');
-  h.change({ 'iw-skin-enabled': false }); await h.settled(); h.clean();
-  h.change({ 'iw-skin-theme': 'fantasy' }); await h.settled(); h.clean();
+  h.change({ 'iw-skin-enabled': false }); await h.settled(); h.clean({ fantasy: false });
+  h.change({ 'iw-skin-theme': 'fantasy' }); await h.settled(); h.clean({ fantasy: false });
   h.change({ 'iw-skin-enabled': true }); await h.settled(); h.clean();
+  h.change({ 'iw-skin-enabled': false }); await h.settled(); h.clean({ fantasy: false });
 } finally { h.close(); }
 
 h = await harness({}, { holdRead: true });
@@ -107,4 +115,4 @@ try {
   assert.ok(h.requests.some(url => url.endsWith('/items.json')), 'returning to Legacy retries a canceled data load');
 } finally { h.close(); }
 
-console.log('theme isolation: empty Fantasy, round trips, callbacks, startup races, late responses PASS');
+console.log('theme isolation: Fantasy alone, round trips, callbacks, startup races, late responses PASS');
