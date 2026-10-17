@@ -166,21 +166,36 @@
 
 /* ── buttons ───────────────────────────────────────────────────────── */
 
-/* Commands use the inventory palette
-   (green = ready, as the game paints it) over a faint green wash; the batch
-   control takes the "equip" kind's brass; disabled is the inventory's
-   disabled chip. */
+/* The inventory's control, label for label. Its face is the port's
+   compact-ghost-v3 atlas (CompactButtons + compact-buttons.css), the same
+   three-slice art the nav rail's tabs wear: the port appends three layer
+   spans to every inventory control and nav tab and keys them on
+   data-iw-compact-*. Fantasy writes neither the spans nor those attributes
+   (they are the port's, and this sheet creates no nodes), so it paints the
+   same atlas cells from the same variables on the button itself:
+     ::before  left cap, ::after  right cap  (each --iwq-cap wide),
+     the button's own background  the middle strip, clipped to the padding
+     box between two transparent cap-wide side borders.
+   The port's own geometry (inherited from <html>) wins when present; the
+   fallbacks are its compact-ghost-v3 values. Without the atlas (the port
+   sets it only for a known zone theme) the button keeps the inventory's
+   CSS plate below.
+
+   Labels keep the inventory palette: Turn in green (the game paints it green
+   for "ready", rule 5; the inventory's "equipped" label), the batch control
+   the "set" kind's gold, disabled the inventory's faint label at .45. */
 :is(:root,#iwf) .iw-wo-btn {
+  --iwq-cap: 10px;
   height: 26px;
   min-height: 26px;
   padding: 0 11px;
-  border-radius: 2px;
-  border: 1px solid color-mix(in srgb, var(--iw-good, #82b88a) 44%, var(--iwq-edge-faint)) !important;
-  background-image: linear-gradient(180deg,
-      color-mix(in srgb, var(--iw-good, #82b88a) 9%, #100e0a), #0a0907) !important;
+  border-radius: 2px !important;
+  border: 1px solid var(--iw-th-edge-faint, var(--iwq-edge-faint)) !important;
+  background: linear-gradient(180deg, #100e0a, #0a0907) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.035), inset 0 -7px 10px -8px rgba(0,0,0,.95) !important;
+  filter: none !important;
   color: var(--iw-good, #82b88a);
-  font-family: var(--iw-font-head, serif);
+  font-family: var(--iw-font-ui, inherit) !important;
   font-size: 10.5px;
   font-weight: 600;
   line-height: 24px;
@@ -190,27 +205,54 @@
 }
 :is(:root,#iwf) .iw-wo-btn:hover:not(:disabled) {
   border-color: var(--iw-good, #82b88a) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 0 10px -3px color-mix(in srgb, var(--iw-good, #82b88a) 45%, transparent) !important;
-  color: color-mix(in srgb, var(--iw-good, #82b88a) 70%, #fff);
-}
-:is(:root,#iwf) .iw-wo-btn:focus-visible { outline: 2px solid var(--iwq-accent); outline-offset: 2px; }
-:is(:root,#iwf) .iw-wo-btn.is-batch {
-  padding: 0 9px;
-  border-color: var(--iwq-brass) !important;
-  background-image: linear-gradient(180deg, #100e0a, #0a0907) !important;
-  color: #ffe9c4;
-  letter-spacing: .04em;
-  text-transform: none;
-}
-:is(:root,#iwf) .iw-wo-btn.is-batch:hover:not(:disabled) {
-  border-color: var(--iw-th-hairline-hi, #e0c48a) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 0 10px -3px rgba(216,121,31,.35) !important;
-  color: #fff3df;
 }
+:is(:root,#iwf) .iw-wo-btn:focus-visible { outline: 2px solid var(--iw-th-accent, var(--iwq-accent)); outline-offset: 2px; }
+:is(:root,#iwf) .iw-wo-btn.is-batch { color: var(--iw-gold, var(--iwq-accent)); }
+:is(:root,#iwf) .iw-wo-btn.is-batch:hover:not(:disabled) { border-color: var(--iw-line-hot, var(--iwq-brass)) !important; }
 :is(:root,#iwf) .iw-wo-btn:disabled {
   opacity: .45;
-  border-color: var(--iwq-edge-faint) !important;
-  background-image: linear-gradient(180deg, #100e0a, #0a0907) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), inset 0 -7px 10px -8px rgba(0,0,0,.95) !important;
+  border-color: var(--iw-th-edge-faint, var(--iwq-edge-faint)) !important;
+  background: linear-gradient(180deg, #100e0a, #0a0907) !important;
   color: var(--iw-faint, #666052);
+}
+
+/* The atlas face. */
+:is(:root,#iwf)[data-iw-compact-atlas="compact-ghost-v3"] .iw-wo-btn {
+  --iwq-y: 2.9411764705882355%;
+  position: relative;
+  isolation: isolate;
+  padding: 0 1px;
+  border-style: solid !important;
+  border-width: 0 var(--iwq-cap) !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  background: var(--iw-compact-atlas) var(--iw-compact-mid-x, 21.428571428571427%) var(--iwq-y)
+    / var(--iw-compact-mid-size, 150% 326.6666666666667%) no-repeat padding-box padding-box !important;
+  box-shadow: none !important;
+}
+:is(:root,#iwf)[data-iw-compact-atlas="compact-ghost-v3"] .iw-wo-btn::before,
+:is(:root,#iwf)[data-iw-compact-atlas="compact-ghost-v3"] .iw-wo-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--iwq-cap);
+  pointer-events: none;
+  background: var(--iw-compact-atlas) var(--iw-compact-left-x, 1.2658227848101267%) var(--iwq-y)
+    / var(--iw-compact-cap-size, 1680% 326.6666666666667%) no-repeat;
+}
+:is(:root,#iwf)[data-iw-compact-atlas="compact-ghost-v3"] .iw-wo-btn::before { left: calc(-1 * var(--iwq-cap)); }
+:is(:root,#iwf)[data-iw-compact-atlas="compact-ghost-v3"] .iw-wo-btn::after {
+  right: calc(-1 * var(--iwq-cap));
+  background-position-x: var(--iw-compact-right-x, 78.48101265822785%);
+}
+:is(:root,#iwf)[data-iw-compact-atlas="compact-ghost-v3"] .iw-wo-btn:not(:disabled):is(:hover,:focus-visible) { --iwq-y: 50%; }
+:is(:root,#iwf)[data-iw-compact-atlas="compact-ghost-v3"] .iw-wo-btn:not(:disabled):active { --iwq-y: 97.05882352941177%; }
+:is(:root,#iwf)[data-iw-compact-atlas="compact-ghost-v3"] .iw-wo-btn:hover:not(:disabled),
+:is(:root,#iwf)[data-iw-compact-atlas="compact-ghost-v3"] .iw-wo-btn:disabled {
+  border-color: transparent !important;
+  background: var(--iw-compact-atlas) var(--iw-compact-mid-x, 21.428571428571427%) var(--iwq-y)
+    / var(--iw-compact-mid-size, 150% 326.6666666666667%) no-repeat padding-box padding-box !important;
+  box-shadow: none !important;
 }

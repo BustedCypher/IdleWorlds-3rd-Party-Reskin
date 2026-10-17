@@ -5,8 +5,8 @@
  * Every activation has a matching, complete teardown in stop().
  *
  * Boot order: the profile's runtime flag, its stylesheet, then the ONE
- * watcher, whose first pass runs on the next frame. The skills/quests
- * sheets are injected by their own pass (each stands down on its own).
+ * watcher, whose first pass runs on the next frame. The skills/quests and
+ * chrome sheets are injected by their own passes, only where their surfaces exist.
  */
 
 import { setRuntimeActive } from './core/Runtime.js';
@@ -15,16 +15,19 @@ import { startWatcher, stopWatcher } from './core/Watcher.js';
 import { resetNativeFeatures } from './core/NativeFeatures.js';
 import { raidPass, raidText, clearRaid } from './raid/index.js';
 import { skillsPass, skillsText, clearSkills } from './skills/index.js';
+import { chromePass, chromeText, clearChrome } from './chrome/index.js';
 import raidCss from './styles/raid.css';
 
 function flush() {
   raidPass();
   skillsPass();
+  chromePass();
 }
 
 function text(parents) {
   raidText(parents);
   skillsText(parents);
+  chromeText(parents);
 }
 
 export function start() {
@@ -37,6 +40,7 @@ export function stop() {
   stopWatcher();
   clearRaid();
   clearSkills();
+  clearChrome();
   removeAll();
   resetNativeFeatures();
   setRuntimeActive(false);

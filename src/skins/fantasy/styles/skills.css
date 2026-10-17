@@ -34,6 +34,9 @@
   --iwf-text: #d9cdb2;
   --iwf-text-dim: #a59a83;
   --iwf-running: #34d399;
+  /* The game's own boosted-level green (.iw-ss-boost), lighter than the
+     running green so a boosted tile never reads as the running one. */
+  --iwf-boost: #86efac;
   /* Every item sprite is at least the inventory's: its icon box is
      52 / 46 / 42px with a 1px border and the sprite fills it. */
   --iwf-item: 50px;
@@ -116,24 +119,34 @@
 }
 :is(:root,#iwf) .iw-skill-tab {
   --iwf-tint-on: var(--iwf-tint, var(--iwf-accent));
-  --iwf-med: clamp(32px, 7.4cqw, 50px);
+  --iwf-med: clamp(32px, 7.4cqw, 64px);
   --iwf-ring-gap: clamp(3px, 1cqw, 6px);
   --iwf-ring-w: clamp(3px, .65cqw, 4px);
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "icon" "lv" "name" "bar";
+  /* The name heads the tile, over the medallion (Curtis, 2026-10-17), so the
+     tile is a portrait, not a square. A longer name than fits (phones)
+     grows the tile, and grid rows keep a row's tiles one height. */
+  grid-template-areas: "name" "icon" "lv" "bar";
   grid-template-rows: auto auto auto auto;
   justify-items: center;
   align-content: center;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 5 / 6;
   gap: 0;
   padding: clamp(5px, 1.6cqw, 12px) clamp(2px, .9cqw, 6px) clamp(4px, 1.3cqw, 10px);
   text-align: center;
   border-radius: 5px;
   border: 1px solid var(--iwf-edge);
-  background:
+  /* A token, so the running tile can lay its fill over the same ground. */
+  --iwf-tab-bg:
     radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--iwf-tint-on) 16%, transparent), transparent 62%),
     var(--iwf-ground), url('../assets/skills_panel_texture.webp') center / cover;
+  background: var(--iwf-tab-bg);
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,235,190,.05), 0 3px 10px rgba(0,0,0,.25);
+}
+/* A one-column sheet (~180px tiles) would stand 220px tall at 5:6; past
+   that the tile keeps its cell's width and a fixed height instead. */
+@container (min-width: 760px) {
+  :is(:root,#iwf) .iw-skill-tab { aspect-ratio: auto; min-height: 188px; }
 }
 /* The forged gold hairline across the top. */
 :is(:root,#iwf) .iw-skill-tab::before {
@@ -156,9 +169,10 @@
    its ring glows brighter than the rest. */
 :is(:root,#iwf) .iw-skill-tab.is-active {
   border-color: var(--iwf-accent);
-  background:
+  --iwf-tab-bg:
     radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--iwf-tint-on) 30%, transparent), transparent 66%),
     var(--iwf-ground), url('../assets/skills_panel_texture.webp') center / cover;
+  background: var(--iwf-tab-bg);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--iwf-accent) 40%, transparent), 0 0 14px -5px var(--iwf-accent);
 }
 
@@ -215,12 +229,15 @@
 
 :is(:root,#iwf) .iw-skill-tab-name {
   grid-area: name;
+  /* The game hides the name at <=420px; every tile keeps it here. */
+  display: block;
   max-width: 100%;
-  margin-top: clamp(3px, 1cqw, 7px);
+  margin-bottom: clamp(3px, 1cqw, 7px);
   font-family: var(--iw-font-head, serif);
-  font-size: clamp(8px, 1.72cqw, 11px);
+  font-size: clamp(7px, 1.72cqw, 11px);
   font-weight: 700;
-  letter-spacing: .04em;
+  line-height: 1.2;
+  letter-spacing: clamp(0px, .12cqw, .04em);
   text-transform: uppercase;
   color: color-mix(in srgb, var(--iwf-tint-on) 45%, var(--iwf-text-dim));
   text-shadow: 0 1px 0 #000;
@@ -246,6 +263,70 @@
   z-index: 3;
   background: var(--iwf-running);
   box-shadow: 0 0 0 1px #000, 0 0 6px var(--iwf-running);
+}
+
+/* Daily XP Boost (skills/index.js reads the boost line): a still, quiet
+   green underglow BEHIND the tile (Curtis, 2026-10-17: no pulse, nothing
+   drawn over the tile). z-index -1 on a tile that is not itself a stacking
+   context puts the glow under the tile's own background, inside the tab
+   strip's context (its z-index: 1), so only the spill past the tile's
+   edges shows, heaviest at the foot. It never reads as the running fill,
+   which sits INSIDE the tile. */
+:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-boost="daily"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 8px 18px -6px color-mix(in srgb, var(--iwf-boost) 55%, transparent),
+    0 0 14px -2px color-mix(in srgb, var(--iwf-boost) 30%, transparent);
+}
+
+/* ── the running fill ─────────────────────────────────────────────────── */
+
+/* --iwf-run is the game's Current Action bar, copied onto the Skill
+   Actions panel (skills/index.js). It grows left to right behind the
+   running row while the sheet renders that row; when it does not (another
+   skill's sheet is open, or the row's group is folded) the running tile
+   carries it instead. Both read the one value, so the hand-off keeps its
+   place, and the tile's layers are always present (at 0 width when idle)
+   so the hand-off itself animates: the tile grows to the bar in one tick.
+
+   The fill is a background layer sized by --iwf-run, so no pseudo-element
+   is repurposed and nothing stacks over the row's controls. Its transition
+   lasts one measured reading gap (--iwf-run-tick, a generated sheet); a
+   completion snaps (-run-reset) rather than sliding back. */
+:is(:root,#iwf) {
+  --iwf-run-fill: linear-gradient(90deg,
+      color-mix(in srgb, var(--iwf-running) 5%, transparent),
+      color-mix(in srgb, var(--iwf-running) 22%, transparent) calc(100% - 2px),
+      color-mix(in srgb, var(--iwf-running) 80%, #fff) calc(100% - 2px));
+}
+:is(:root,#iwf) [data-iw-fantasy-run] .iw-ss-rows > .iw-ss-row.is-running {
+  background:
+    var(--iwf-run-fill) 0 0 / var(--iwf-run, 0%) 100% no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--iwf-running) 14%, transparent), transparent 65%);
+  transition: background-size var(--iwf-run-tick, 300ms) linear, border-color .15s;
+}
+:is(:root,#iwf) [data-iw-fantasy-run] .iw-skill-tab:has(> .iw-skill-tab-live) {
+  background:
+    var(--iwf-run-fill) 0 0 / var(--iwf-tile-run, 0%) 100% no-repeat,
+    linear-gradient(90deg, #0d8a5f, var(--iwf-running)) 0 100% / var(--iwf-tile-run, 0%) 3px no-repeat,
+    var(--iwf-tab-bg);
+  transition: background-size var(--iwf-run-tick, 300ms) linear, border-color .15s;
+}
+:is(:root,#iwf) [data-iw-fantasy-run]:not(:has(.iw-ss-row.is-running)) .iw-skill-tab:has(> .iw-skill-tab-live) {
+  --iwf-tile-run: var(--iwf-run);
+  border-color: color-mix(in srgb, var(--iwf-running) 55%, var(--iwf-edge));
+}
+:is(:root,#iwf) [data-iw-fantasy-run][data-iw-fantasy-run-reset] .iw-ss-rows > .iw-ss-row.is-running,
+:is(:root,#iwf) [data-iw-fantasy-run][data-iw-fantasy-run-reset] .iw-skill-tab:has(> .iw-skill-tab-live) { transition: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  :is(:root,#iwf) [data-iw-fantasy-run] .iw-ss-rows > .iw-ss-row.is-running,
+  :is(:root,#iwf) [data-iw-fantasy-run] .iw-skill-tab:has(> .iw-skill-tab-live) { transition: none; }
 }
 
 /* ── the sheet: ONE frame ────────────────────────────────────────────── */
@@ -497,6 +578,31 @@
 /* A phone column: less frame padding, a smaller indent, and the banner's
    button drops under its text rather than squeezing it. */
 @media (max-width: 480px) {
+  /* A ~50px tile cannot hold "JEWELCRAFTING" (66px at 7.5px Cinzel) on
+     one line at a legible size, and the browser has no hyphenation for it,
+     so the four long names break at their join instead of clipping. The
+     game's text is collapsed and the same name redrawn in two lines; the
+     key is the pass's skill mark, itself read from that text. A tile sized
+     by a ratio ignores row stretch, so the ratio goes and rows align. */
+  :is(:root,#iwf) .iw-skill-tab { aspect-ratio: auto; padding-inline: 1px; }
+  /* The name spans a phone tile's top, so the "Running now" dot (state,
+     rule 5) moves to the foot corner beside the level plaque. */
+  :is(:root,#iwf) .iw-skill-tab-live { top: auto; bottom: 4px; right: 4px; width: 5px; height: 5px; }
+  :is(:root,#iwf) .iw-skill-tab-name { font-size: 7.5px; letter-spacing: 0; }
+  :is(:root,#iwf) .iw-skill-tab:is([data-iw-fantasy-skill="jewelcrafting"], [data-iw-fantasy-skill="spellcrafting"], [data-iw-fantasy-skill="woodcutting"], [data-iw-fantasy-skill="construction"]) .iw-skill-tab-name {
+    font-size: 0;
+    letter-spacing: 0;
+    overflow: visible;
+  }
+  :is(:root,#iwf) .iw-skill-tab:is([data-iw-fantasy-skill="jewelcrafting"], [data-iw-fantasy-skill="spellcrafting"], [data-iw-fantasy-skill="woodcutting"], [data-iw-fantasy-skill="construction"]) .iw-skill-tab-name::before {
+    display: block;
+    font-size: 7.5px;
+    white-space: pre;
+  }
+  :is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill="jewelcrafting"] .iw-skill-tab-name::before { content: "Jewel-\A crafting"; }
+  :is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill="spellcrafting"] .iw-skill-tab-name::before { content: "Spell-\A crafting"; }
+  :is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill="woodcutting"] .iw-skill-tab-name::before { content: "Wood-\A cutting"; }
+  :is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill="construction"] .iw-skill-tab-name::before { content: "Construc-\A tion"; }
   :is(:root,#iwf) .iw-skill-sheet { --iwf-pad-x: 12px; --iwf-indent: 22px; }
   :is(:root,#iwf) .iw-ss-head { gap: 10px; }
   :is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon { width: 44px; }

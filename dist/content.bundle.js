@@ -15,8 +15,8 @@
   // src/skins/legacy/modules/Runtime.js
   var hasChrome = typeof chrome !== "undefined" && !!chrome.runtime?.id;
   var runtimeActive = true;
-  function setRuntimeActive(active5) {
-    runtimeActive = active5 !== false;
+  function setRuntimeActive(active6) {
+    runtimeActive = active6 !== false;
   }
   function isRuntimeActive() {
     return runtimeActive;
@@ -317,8 +317,8 @@
   var pendingNameRoots = /* @__PURE__ */ new Set();
   var pendingTextParents = /* @__PURE__ */ new Set();
   var flushQueued = false;
-  function addIfConnected(set2, el2) {
-    if (isElement(el2)) set2.add(el2);
+  function addIfConnected(set3, el2) {
+    if (isElement(el2)) set3.add(el2);
   }
   function addNameRoot(el2) {
     if (!isElement(el2)) return;
@@ -356,20 +356,20 @@
     flushQueued = true;
     raf(flushPending);
   }
-  function takeConnected(set2) {
-    for (const el2 of set2) {
-      set2.delete(el2);
+  function takeConnected(set3) {
+    for (const el2 of set3) {
+      set3.delete(el2);
       if (el2?.isConnected) return el2;
     }
     return null;
   }
-  function takeNameRoot(set2, taken) {
-    for (const el2 of set2) {
-      set2.delete(el2);
+  function takeNameRoot(set3, taken) {
+    for (const el2 of set3) {
+      set3.delete(el2);
       if (!el2?.isConnected) continue;
       let covered = false;
       for (let node2 = el2.parentElement; node2 && !covered; node2 = node2.parentElement) {
-        covered = set2.has(node2) || taken.has(node2);
+        covered = set3.has(node2) || taken.has(node2);
       }
       if (!covered) return el2;
     }
@@ -386,14 +386,14 @@
     const takenNameRoots = /* @__PURE__ */ new Set();
     let cursor = 0, idle = 0, remaining = budget;
     while (remaining > 0 && idle < groups.length) {
-      const [key, set2] = groups[cursor];
+      const [key, set3] = groups[cursor];
       cursor = (cursor + 1) % groups.length;
       let el2;
-      if (set2 === pendingNameRoots) {
-        el2 = takeNameRoot(set2, takenNameRoots);
+      if (set3 === pendingNameRoots) {
+        el2 = takeNameRoot(set3, takenNameRoots);
         if (el2) takenNameRoots.add(el2);
       } else {
-        el2 = takeConnected(set2);
+        el2 = takeConnected(set3);
       }
       if (el2) {
         out[key].push(el2);
@@ -2278,7 +2278,7 @@
       }
       return state3;
     }
-    function set2(el2, prop, value, priority = "important") {
+    function set3(el2, prop, value, priority = "important") {
       if (!el2?.style) return false;
       const state3 = stateFor(el2, prop);
       const beforeValue = el2.style.getPropertyValue(prop);
@@ -2316,7 +2316,7 @@
     function restoreAll() {
       for (const el2 of trackedElements()) restoreElement(el2);
     }
-    return { set: set2, restoreElement, restoreWithin, restoreAll };
+    return { set: set3, restoreElement, restoreWithin, restoreAll };
   }
 
   // src/skins/legacy/styles/inventory.css
@@ -2483,11 +2483,11 @@
   var FILTER_LABEL = /^(all|gear|materials|consumables|drops)$/;
   function filterTabRow(buttons, labelOf) {
     const rows = /* @__PURE__ */ new Map();
-    for (const button3 of buttons) {
-      const label6 = labelOf(button3);
-      if (!FILTER_LABEL.test(label6) || !button3.parentElement) continue;
-      if (!rows.has(button3.parentElement)) rows.set(button3.parentElement, /* @__PURE__ */ new Set());
-      rows.get(button3.parentElement).add(label6);
+    for (const button4 of buttons) {
+      const label6 = labelOf(button4);
+      if (!FILTER_LABEL.test(label6) || !button4.parentElement) continue;
+      if (!rows.has(button4.parentElement)) rows.set(button4.parentElement, /* @__PURE__ */ new Set());
+      rows.get(button4.parentElement).add(label6);
     }
     let best = null, most = 0;
     for (const [row, labels] of rows) if (labels.size > most) {
@@ -2513,21 +2513,21 @@
       }
     }
     const buttons = [...root.querySelectorAll(notInRow('button, a, [role="button"]'))];
-    const labelOf = (button3) => String(button3.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+    const labelOf = (button4) => String(button4.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
     const tabRow = filterTabRow(buttons, labelOf);
-    for (const button3 of buttons) {
-      const text2 = labelOf(button3);
+    for (const button4 of buttons) {
+      const text2 = labelOf(button4);
       let role2 = "";
       if (FILTER_LABEL.test(text2)) {
-        if (button3.parentElement === tabRow) role2 = "filter";
+        if (button4.parentElement === tabRow) role2 = "filter";
       } else if (/^(prev|previous|next)$/.test(text2)) role2 = "page";
-      else if ((!text2 || text2.length <= 2) && button3.querySelector("svg")) role2 = "icon";
-      if (role2) setAttr2(button3, INVENTORY_CONTROL_ATTR, role2);
+      else if ((!text2 || text2.length <= 2) && button4.querySelector("svg")) role2 = "icon";
+      if (role2) setAttr2(button4, INVENTORY_CONTROL_ATTR, role2);
       if (role2 === "filter") {
-        const cls = String(button3.className || "");
-        const active5 = button3.getAttribute("aria-selected") === "true" || button3.getAttribute("aria-current") === "page" || button3.dataset?.state === "active" || /(?:bg|text|border)-(?:orange|amber|primary|accent)|data-\[state=active\]/i.test(cls);
-        if (active5) setAttr2(button3, INVENTORY_FILTER_STATE_ATTR, "active");
-        else button3.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
+        const cls = String(button4.className || "");
+        const active6 = button4.getAttribute("aria-selected") === "true" || button4.getAttribute("aria-current") === "page" || button4.dataset?.state === "active" || /(?:bg|text|border)-(?:orange|amber|primary|accent)|data-\[state=active\]/i.test(cls);
+        if (active6) setAttr2(button4, INVENTORY_FILTER_STATE_ATTR, "active");
+        else button4.removeAttribute(INVENTORY_FILTER_STATE_ATTR);
       }
     }
     const previousRow = filterRows.get(root);
@@ -4018,16 +4018,16 @@
       artHost.dataset.iwSkillArt = type;
       identityZone.appendChild(artHost);
     }
-    const paint2 = () => {
+    const paint3 = () => {
       if (!isRuntimeActive() || !artHost.isConnected || !panel3.isConnected) return;
       SkillsArtService.decoratePanel(panel3);
       if (SkillsArtService.paintIcon(artHost, type)) setOwnData(artHost, "iwSkillArtReady", "1");
     };
     if (SkillsArtService.isReady()) {
-      paint2();
+      paint3();
     } else if (!artHost.dataset.iwSkillArtPending) {
       artHost.dataset.iwSkillArtPending = "1";
-      SkillsArtService.ready().then(paint2).catch(() => {
+      SkillsArtService.ready().then(paint3).catch(() => {
       }).finally(() => {
         if (artHost.isConnected) delete artHost.dataset.iwSkillArtPending;
       });
@@ -4078,11 +4078,11 @@
     const frame2 = skillActionsFrame(panel3);
     if (!frame2) return;
     if (!frame2.classList.contains("fs-skills-section-frame")) frame2.classList.add("fs-skills-section-frame");
-    const paint2 = () => {
+    const paint3 = () => {
       if (isRuntimeActive() && frame2.isConnected) SkillsArtService.decoratePanel(frame2);
     };
-    if (SkillsArtService.isReady()) paint2();
-    else SkillsArtService.ready().then(paint2).catch(() => {
+    if (SkillsArtService.isReady()) paint3();
+    else SkillsArtService.ready().then(paint3).catch(() => {
     });
   }
   function setOwnText(el2, value) {
@@ -4744,8 +4744,8 @@
   }
   function textLeaves(root) {
     return [...root.querySelectorAll("p,span,div,strong,em,h1,h2,h3,h4")].filter((el2) => !el2.closest('button,a,[role="button"],.fs-quest-sigil')).filter((el2) => {
-      const own8 = [...el2.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
-      return own8 && normText2(el2.textContent).length <= 220;
+      const own9 = [...el2.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
+      return own9 && normText2(el2.textContent).length <= 220;
     });
   }
   function questButtons(card) {
@@ -4961,14 +4961,14 @@
     }
   }
   function ensureAtlas(card) {
-    const paint2 = () => {
+    const paint3 = () => {
       if (!isRuntimeActive() || !card.isConnected) return;
       SkillsArtService.decoratePanel(card);
     };
-    if (SkillsArtService.isReady()) paint2();
+    if (SkillsArtService.isReady()) paint3();
     else if (!card.dataset.iwQuestArtPending) {
       card.dataset.iwQuestArtPending = "1";
-      SkillsArtService.ready().then(paint2).catch(() => {
+      SkillsArtService.ready().then(paint3).catch(() => {
       }).finally(() => {
         if (card.isConnected) delete card.dataset.iwQuestArtPending;
       });
@@ -5617,11 +5617,11 @@
     const actions = head ? nativeChildren(head)[1] : null;
     if (actions) {
       mark2(actions, "data-iw-village-role", actions.tagName === "BUTTON" ? "action" : "actions");
-      for (const button3 of actions.tagName === "BUTTON" ? [actions] : actions.querySelectorAll("button")) {
-        mark2(button3, "data-iw-village-role", "action");
-        const verb = label(button3.textContent).toLowerCase();
+      for (const button4 of actions.tagName === "BUTTON" ? [actions] : actions.querySelectorAll("button")) {
+        mark2(button4, "data-iw-village-role", "action");
+        const verb = label(button4.textContent).toLowerCase();
         mark2(
-          button3,
+          button4,
           "data-iw-village-action",
           verb.startsWith("destroy") ? "destroy" : verb.startsWith("uninstall") ? "uninstall" : verb.startsWith("install") ? "install" : verb.startsWith("cancel") ? "cancel" : "other"
         );
@@ -5721,9 +5721,9 @@
       else if (/^maximum housing tier reached/i.test(text2)) mark2(line, "data-iw-village-role", "house-max");
       else mark2(line, "data-iw-village-role", "house-note");
     }
-    for (const button3 of card.querySelectorAll("button")) {
-      mark2(button3, "data-iw-village-role", "action");
-      mark2(button3, "data-iw-village-action", "upgrade");
+    for (const button4 of card.querySelectorAll("button")) {
+      mark2(button4, "data-iw-village-role", "action");
+      mark2(button4, "data-iw-village-action", "upgrade");
     }
     ensureArt(card, HOUSE_BY_TIER.find((house) => house.tier === tier) || null, "house");
     ensureTierTrack(card, tier);
@@ -5822,38 +5822,38 @@
     if (row.button.getAttribute("title") !== label6) row.button.setAttribute("title", label6);
   }
   var ids = 0;
-  function icon(own8, file, fallback2) {
-    const box = own8("span", "iw-vs-entry-icon");
+  function icon(own9, file, fallback2) {
+    const box = own9("span", "iw-vs-entry-icon");
     box.setAttribute("aria-hidden", "true");
     if (!file) {
       box.textContent = fallback2;
       return box;
     }
-    const img = own8("img", "iw-vs-entry-sprite");
+    const img = own9("img", "iw-vs-entry-sprite");
     img.src = assetUrl(`assets/${file}`);
     img.alt = "";
     img.decoding = "async";
     box.append(img);
     return box;
   }
-  function statList(own8, rows) {
-    const list = own8("dl", "iw-vs-stats");
+  function statList(own9, rows) {
+    const list = own9("dl", "iw-vs-stats");
     for (const row of rows) {
-      const line = own8("div", "iw-vs-stat");
+      const line = own9("div", "iw-vs-stat");
       if (row.kind) line.dataset.iwVsStatKind = row.kind;
-      line.append(own8("dt", "", row.label), own8("dd", "", row.value));
+      line.append(own9("dt", "", row.label), own9("dd", "", row.value));
       list.append(line);
     }
     return list;
   }
-  function chevron(own8) {
-    const mark7 = own8("span", "iw-vs-chevron");
+  function chevron(own9) {
+    const mark7 = own9("span", "iw-vs-chevron");
     mark7.setAttribute("aria-hidden", "true");
     return mark7;
   }
-  function wire(key, name, box, button3) {
-    const row = { key, name, entry: box, button: button3 };
-    button3.addEventListener("click", (event) => {
+  function wire(key, name, box, button4) {
+    const row = { key, name, entry: box, button: button4 };
+    button4.addEventListener("click", (event) => {
       event.preventDefault();
       const closed = prefs.get(key) === false;
       if (closed) prefs.delete(key);
@@ -5866,29 +5866,29 @@
     applyEntry(row);
     return row;
   }
-  function entry(own8, { key, name, meta, file, fallback: fallback2, rows, notes, empty }) {
-    const box = own8("div", "iw-vs-entry");
+  function entry(own9, { key, name, meta, file, fallback: fallback2, rows, notes, empty }) {
+    const box = own9("div", "iw-vs-entry");
     box.dataset.iwVsEntry = key;
-    const button3 = own8("button", "iw-vs-entry-head");
-    button3.type = "button";
-    button3.dataset.iwVsToggle = "1";
+    const button4 = own9("button", "iw-vs-entry-head");
+    button4.type = "button";
+    button4.dataset.iwVsToggle = "1";
     const bodyId = `iw-vs-entry-${ids += 1}`;
-    button3.setAttribute("aria-controls", bodyId);
-    button3.setAttribute("aria-expanded", "true");
-    const label6 = own8("span", "iw-vs-entry-label");
-    label6.append(own8("span", "iw-vs-entry-name", name));
-    if (meta) label6.append(own8("span", "iw-vs-entry-meta", meta));
-    button3.append(icon(own8, file, fallback2), label6, chevron(own8));
-    const body = own8("div", "iw-vs-entry-body");
+    button4.setAttribute("aria-controls", bodyId);
+    button4.setAttribute("aria-expanded", "true");
+    const label6 = own9("span", "iw-vs-entry-label");
+    label6.append(own9("span", "iw-vs-entry-name", name));
+    if (meta) label6.append(own9("span", "iw-vs-entry-meta", meta));
+    button4.append(icon(own9, file, fallback2), label6, chevron(own9));
+    const body = own9("div", "iw-vs-entry-body");
     body.id = bodyId;
     const lines = notes || [];
-    if (rows.length) body.append(statList(own8, rows));
-    for (const note of lines) body.append(own8("p", "iw-vs-entry-note", note));
+    if (rows.length) body.append(statList(own9, rows));
+    for (const note of lines) body.append(own9("p", "iw-vs-entry-note", note));
     if (!rows.length && !lines.length) {
-      body.append(own8("p", "iw-vs-entry-note", empty || "No recorded effects."));
+      body.append(own9("p", "iw-vs-entry-note", empty || "No recorded effects."));
     }
-    box.append(button3, body);
-    wire(key, name, box, button3);
+    box.append(button4, body);
+    wire(key, name, box, button4);
     return box;
   }
   function buildingItem(slot) {
@@ -5945,25 +5945,25 @@
     }
     return rows;
   }
-  function buildVillageLedger({ snapshot: snapshot2, house, perks: perks2, own: own8 }) {
+  function buildVillageLedger({ snapshot: snapshot2, house, perks: perks2, own: own9 }) {
     void loadPreferences();
     live = [];
-    const ledger = own8("div", "iw-vs-ledger");
+    const ledger = own9("div", "iw-vs-ledger");
     ledger.dataset.iwVillageLedger = "1";
-    const head = own8("div", "iw-vs-ledger-head");
-    head.append(own8("div", "iw-vs-ledger-title", "Buildings"));
-    const sectionToggle = own8("button", "iw-vs-ledger-toggle");
+    const head = own9("div", "iw-vs-ledger-head");
+    head.append(own9("div", "iw-vs-ledger-title", "Buildings"));
+    const sectionToggle = own9("button", "iw-vs-ledger-toggle");
     sectionToggle.type = "button";
     sectionToggle.dataset.iwVsToggle = "section";
     sectionToggle.setAttribute("aria-expanded", "true");
-    sectionToggle.append(chevron(own8));
+    sectionToggle.append(chevron(own9));
     head.append(sectionToggle);
-    const list = own8("div", "iw-vs-ledger-list");
+    const list = own9("div", "iw-vs-ledger-list");
     list.id = `iw-vs-list-${ids += 1}`;
     sectionToggle.setAttribute("aria-controls", list.id);
     ledger.append(head, list);
     wire("ledger", "the building list", ledger, sectionToggle);
-    list.append(entry(own8, {
+    list.append(entry(own9, {
       key: "home",
       name: house?.name || "No House",
       meta: `Home · tier ${snapshot2.tier}`,
@@ -5976,11 +5976,11 @@
     const installed = [];
     for (const slot of snapshot2.slots) {
       if (slot.state !== "installed") {
-        const line = own8("div", "iw-vs-ledger-vacant");
+        const line = own9("div", "iw-vs-ledger-vacant");
         line.dataset.iwVsSlotState = slot.state;
         line.append(
-          own8("span", "", `Slot ${slot.slot}`),
-          own8("span", "", slot.state === "locked" ? "Locked · upgrade housing" : "Empty plot")
+          own9("span", "", `Slot ${slot.slot}`),
+          own9("span", "", slot.state === "locked" ? "Locked · upgrade housing" : "Empty plot")
         );
         list.append(line);
         continue;
@@ -5988,7 +5988,7 @@
       const item = buildingItem(slot);
       if (item) installed.push(item);
       const tier = Number(item?.tier);
-      list.append(entry(own8, {
+      list.append(entry(own9, {
         key: `building:${slot.name.toLowerCase()}`,
         name: slot.name,
         meta: `Slot ${slot.slot}${Number.isFinite(tier) ? ` · tier ${tier}` : ""}`,
@@ -5998,21 +5998,21 @@
         empty: ItemDatabase.isReady() ? "This building records no effects." : "Effects arrive with the item database."
       }));
     }
-    const totals = own8("section", "iw-vs-totals");
+    const totals = own9("section", "iw-vs-totals");
     totals.dataset.iwVillageTotals = "1";
-    const title = own8("div", "iw-vs-totals-title", "Overall stats");
+    const title = own9("div", "iw-vs-totals-title", "Overall stats");
     title.setAttribute("role", "heading");
     title.setAttribute("aria-level", "3");
     totals.append(title);
     const rows = totalBenefits(installed);
-    if (rows.length) totals.append(statList(own8, rows));
+    if (rows.length) totals.append(statList(own9, rows));
     let note;
     if (!ItemDatabase.isReady()) note = "Waiting on the item database before totalling your buildings.";
     else if (!installed.length) note = "No installed buildings yet, so nothing is counted here.";
     else {
       note = `Summed from ${installed.length} installed building${installed.length === 1 ? "" : "s"}. Housing is not counted.`;
     }
-    totals.append(own8("p", "iw-vs-totals-note", note));
+    totals.append(own9("p", "iw-vs-totals-note", note));
     ledger.append(totals);
     return ledger;
   }
@@ -8431,33 +8431,33 @@
     const arenas = () => [...root.querySelectorAll(".raid-battle-backdrop")];
     const live2 = !!head && arenas().length > 0;
     for (const [key, spec] of Object.entries(TOGGLES)) {
-      let toggle = head?.querySelector(`:scope > [${TEST}="${key}"]`);
+      let toggle2 = head?.querySelector(`:scope > [${TEST}="${key}"]`);
       if (!live2) {
-        toggle?.remove();
+        toggle2?.remove();
         continue;
       }
-      if (!toggle) {
-        toggle = document.createElement("button");
-        toggle.type = "button";
-        toggle.setAttribute(TEST, key);
-        toggle.title = spec.title;
-        toggle.addEventListener("click", (event) => {
+      if (!toggle2) {
+        toggle2 = document.createElement("button");
+        toggle2.type = "button";
+        toggle2.setAttribute(TEST, key);
+        toggle2.title = spec.title;
+        toggle2.addEventListener("click", (event) => {
           event.preventDefault();
           event.stopPropagation();
           spec.advance();
-          updateToggle(toggle, spec);
+          updateToggle(toggle2, spec);
           for (const arena of arenas()) redecorate(arena);
         });
-        head.append(toggle);
+        head.append(toggle2);
       }
-      updateToggle(toggle, spec);
+      updateToggle(toggle2, spec);
     }
   }
-  function updateToggle(toggle, spec) {
+  function updateToggle(toggle2, spec) {
     const text2 = spec.text();
-    if (toggle.textContent !== text2) toggle.textContent = text2;
+    if (toggle2.textContent !== text2) toggle2.textContent = text2;
     const pressed = String(spec.pressed());
-    if (toggle.getAttribute("aria-pressed") !== pressed) toggle.setAttribute("aria-pressed", pressed);
+    if (toggle2.getAttribute("aria-pressed") !== pressed) toggle2.setAttribute("aria-pressed", pressed);
   }
   function clearRaidPartyPreview(root) {
     if (!root) return;
@@ -8636,15 +8636,15 @@
     return { shared, tank, resist };
   }
   function readOwnEffects(raider) {
-    const own8 = [];
+    const own9 = [];
     for (const span of raider.querySelectorAll("[title]")) {
       if (span.closest(`[${OWNED}]`)) continue;
       const title = norm3(span.title);
       const art2 = artFor(title);
       const num = /^(\d[\d,]*)\s+/.exec(title);
-      own8.push({ art: art2?.art || null, name: art2?.name || title, glyph: norm3(span.textContent), value: art2?.art === "shield" && num ? num[1] : "", title });
+      own9.push({ art: art2?.art || null, name: art2?.name || title, glyph: norm3(span.textContent), value: art2?.art === "shield" && num ? num[1] : "", title });
     }
-    return own8;
+    return own9;
   }
   function chip(effect, withLabel) {
     const node2 = el("span", "iw-raid-chip");
@@ -8859,9 +8859,9 @@
   }
   function fillSkills(panel3, arena) {
     const skills = gameSkills(arena);
-    const toggle = skills?.querySelector('[data-iw-guild-role="effects-toggle"]');
-    const rows = skills ? [...skills.children].filter((c) => c !== toggle && !c.hasAttribute(OWNED)) : [];
-    const sig = `${toggle ? norm3(toggle.textContent) : ""}\0${rows.map((r) => `${r.className}|${r.textContent}`).join("")}`;
+    const toggle2 = skills?.querySelector('[data-iw-guild-role="effects-toggle"]');
+    const rows = skills ? [...skills.children].filter((c) => c !== toggle2 && !c.hasAttribute(OWNED)) : [];
+    const sig = `${toggle2 ? norm3(toggle2.textContent) : ""}\0${rows.map((r) => `${r.className}|${r.textContent}`).join("")}`;
     if (dockSigs.get(panel3) === sig) return;
     dockSigs.set(panel3, sig);
     const body = panel3.lastElementChild;
@@ -8870,8 +8870,8 @@
       for (const attr of ["data-iw-raid-fx-kind", "data-iw-raid-resist-step"]) if (row.hasAttribute(attr)) copy.setAttribute(attr, row.getAttribute(attr));
       return copy;
     });
-    if (toggle) {
-      const more = el("button", "iw-raid-dock-more", norm3(toggle.querySelector("span")?.textContent || toggle.textContent).replace(/^\(|\)$/g, ""));
+    if (toggle2) {
+      const more = el("button", "iw-raid-dock-more", norm3(toggle2.querySelector("span")?.textContent || toggle2.textContent).replace(/^\(|\)$/g, ""));
       more.type = "button";
       more.addEventListener("click", onDockToggle);
       kids.push(more);
@@ -9025,16 +9025,16 @@
     return [...BOSS_ORDER.filter((k) => keys.includes(k)), ...keys.filter((k) => !BOSS_ORDER.includes(k)).sort()];
   }
   function tab(text2, pressed, onClick, kind2) {
-    const button3 = own2("button", "iw-raid-lb-tab", text2);
-    button3.type = "button";
-    button3.dataset.iwRaidLbTab = kind2;
-    button3.setAttribute("aria-pressed", String(pressed));
-    button3.addEventListener("click", (event) => {
+    const button4 = own2("button", "iw-raid-lb-tab", text2);
+    button4.type = "button";
+    button4.dataset.iwRaidLbTab = kind2;
+    button4.setAttribute("aria-pressed", String(pressed));
+    button4.addEventListener("click", (event) => {
       event.preventDefault();
       onClick();
       render2(true);
     });
-    return button3;
+    return button4;
   }
   function render2(force = false) {
     if (!panel) return;
@@ -9225,26 +9225,26 @@
       lead.textContent = "🧪 Test:";
       bar.append(lead);
       for (const spec of TOGGLES2) {
-        const button3 = document.createElement("button");
-        button3.type = "button";
-        button3.setAttribute(TEST2, spec.key);
-        button3.setAttribute("data-iw-guild-role", "test-toggle");
-        button3.title = spec.title;
-        button3.textContent = spec.text;
-        button3.addEventListener("click", (event) => {
+        const button4 = document.createElement("button");
+        button4.type = "button";
+        button4.setAttribute(TEST2, spec.key);
+        button4.setAttribute("data-iw-guild-role", "test-toggle");
+        button4.title = spec.title;
+        button4.textContent = spec.text;
+        button4.addEventListener("click", (event) => {
           event.preventDefault();
           event.stopPropagation();
           if (spec.key === "popup") setLobbyTestPopup(!lobbyTestPopupOn(), () => redecorate());
           else state[spec.key] = !state[spec.key];
           redecorate();
         });
-        bar.append(button3);
+        bar.append(button4);
       }
     }
     if (bar.previousElementSibling !== head) head.after(bar);
-    for (const button3 of bar.querySelectorAll("button")) {
-      const pressed = String(!!pressedOf(button3.getAttribute(TEST2)));
-      if (button3.getAttribute("aria-pressed") !== pressed) button3.setAttribute("aria-pressed", pressed);
+    for (const button4 of bar.querySelectorAll("button")) {
+      const pressed = String(!!pressedOf(button4.getAttribute(TEST2)));
+      if (button4.getAttribute("aria-pressed") !== pressed) button4.setAttribute("aria-pressed", pressed);
     }
   }
   function syncLobbyPreview(root, redecorate) {
@@ -9825,10 +9825,10 @@
       if (/guild points/i.test(span.title)) role(span, "points");
     }
     syncPartyPreviewToggle(root, head, decorateArena);
-    for (const button3 of head.querySelectorAll("button")) {
-      if (button3.hasAttribute("data-iw-collapse")) continue;
-      role(button3, "head-link");
-      mark5(button3, "data-iw-guild-tone", /^(leave|disband|kick|decline)\b/i.test(label3(button3.textContent)) ? "bad" : null);
+    for (const button4 of head.querySelectorAll("button")) {
+      if (button4.hasAttribute("data-iw-collapse")) continue;
+      role(button4, "head-link");
+      mark5(button4, "data-iw-guild-tone", /^(leave|disband|kick|decline)\b/i.test(label3(button4.textContent)) ? "bad" : null);
     }
   }
   var READY_LABEL = /^(?:✓\s*)?(?:ready|not ready|unready|cancel ready|ready up|mark ready)$/i;
@@ -9860,12 +9860,12 @@
     }
     const difficulties = [...card.querySelectorAll("button")].filter((b) => !pills.includes(b) && /\b(practice|normal|hard|heroic|mythic)\b/i.test(label3(b.textContent)));
     role(difficulties[0]?.parentElement, "difficulties");
-    for (const button3 of difficulties) {
-      role(button3, "difficulty");
+    for (const button4 of difficulties) {
+      role(button4, "difficulty");
       mark5(
-        button3,
+        button4,
         "data-iw-guild-state",
-        selectedBy(button3, /(?:^|\s)border-ember(?:\s|$)/) ? "selected" : /🔒/u.test(button3.textContent) || button3.disabled ? "locked" : null
+        selectedBy(button4, /(?:^|\s)border-ember(?:\s|$)/) ? "selected" : /🔒/u.test(button4.textContent) || button4.disabled ? "locked" : null
       );
     }
     for (const p of card.querySelectorAll(":scope > p")) {
@@ -9910,14 +9910,14 @@
         tone(el2);
       } else if (el2.tagName === "DIV" && /\bborder-sky-/.test(cls) && /\brounded-lg\b/.test(cls)) role(el2, "lend-pill");
     }
-    for (const button3 of row.querySelectorAll("button")) {
-      const picker = button3.closest(".relative")?.querySelector("button");
-      if (/^kick\b/i.test(button3.title)) role(button3, "kick");
-      else if (picker && picker !== button3) {
-        role(button3, "option");
-        mark5(button3, "data-iw-guild-state", toneOf3(button3) === "info" || button3.getAttribute("aria-selected") === "true" ? "selected" : null);
-      } else if (/\bborder-sky-/.test(String(button3.className))) role(button3, "picker");
-      else role(button3, "member-name");
+    for (const button4 of row.querySelectorAll("button")) {
+      const picker = button4.closest(".relative")?.querySelector("button");
+      if (/^kick\b/i.test(button4.title)) role(button4, "kick");
+      else if (picker && picker !== button4) {
+        role(button4, "option");
+        mark5(button4, "data-iw-guild-state", toneOf3(button4) === "info" || button4.getAttribute("aria-selected") === "true" ? "selected" : null);
+      } else if (/\bborder-sky-/.test(String(button4.className))) role(button4, "picker");
+      else role(button4, "member-name");
     }
   }
   function decorateMembers(card) {
@@ -9955,24 +9955,24 @@
       role(p, "line");
       tone(p);
     }
-    for (const button3 of card.querySelectorAll("button")) {
-      role(button3, "drink");
-      role(button3.parentElement !== card ? button3.parentElement : null, "potion");
+    for (const button4 of card.querySelectorAll("button")) {
+      role(button4, "drink");
+      role(button4.parentElement !== card ? button4.parentElement : null, "potion");
     }
   }
   function decorateLoadout(card) {
     role(card.querySelector(":scope > p"), "card-title");
     role(card.querySelector("select"), "select");
-    for (const button3 of card.querySelectorAll("button")) role(button3, "cta");
+    for (const button4 of card.querySelectorAll("button")) role(button4, "cta");
   }
   function decorateReady(card) {
-    for (const button3 of card.querySelectorAll("button")) {
-      if (!READY_LABEL.test(label3(button3.textContent))) {
-        role(button3, "start");
+    for (const button4 of card.querySelectorAll("button")) {
+      if (!READY_LABEL.test(label3(button4.textContent))) {
+        role(button4, "start");
         continue;
       }
-      role(button3, "ready-toggle");
-      mark5(button3, "data-iw-guild-state", toneOf3(button3) === "good" ? "ready" : null);
+      role(button4, "ready-toggle");
+      mark5(button4, "data-iw-guild-state", toneOf3(button4) === "good" ? "ready" : null);
     }
     for (const p of card.querySelectorAll(":scope > p")) role(p, "note");
   }
@@ -9988,19 +9988,19 @@
     role(field, "field");
     const composer = [...card.querySelectorAll(":scope > div")].find((div) => div.contains(field) && div.querySelector("button"));
     role(composer, "composer");
-    for (const button3 of composer ? composer.querySelectorAll("button") : []) role(button3, "cta");
+    for (const button4 of composer ? composer.querySelectorAll("button") : []) role(button4, "cta");
   }
   function decoratePickup(card) {
     const ps = card.querySelectorAll("p");
     role(ps[0], "card-title");
     for (const p of [...ps].slice(1)) role(p, "note");
-    for (const button3 of card.querySelectorAll("button")) role(button3, "cta");
+    for (const button4 of card.querySelectorAll("button")) role(button4, "cta");
   }
   function decorateDirectory(card) {
-    const toggle = card.querySelector(":scope > button");
-    role(toggle, "disclosure");
-    role(toggle?.querySelector("p"), "card-title");
-    for (const span of toggle ? toggle.querySelectorAll(":scope > span") : []) role(span, "disclosure-hint");
+    const toggle2 = card.querySelector(":scope > button");
+    role(toggle2, "disclosure");
+    role(toggle2?.querySelector("p"), "card-title");
+    for (const span of toggle2 ? toggle2.querySelectorAll(":scope > span") : []) role(span, "disclosure-hint");
     for (const p of card.querySelectorAll(":scope > p")) role(p, "note");
     const list = [...card.querySelectorAll(":scope > div")].find((div) => /\boverflow-y-auto\b/.test(String(div.className)));
     role(list, "directory");
@@ -10008,11 +10008,11 @@
       role(row, "guild-row");
       mark5(row, "data-iw-guild-state", /\S\s+\S/.test(String(row.className).trim()) || row.children.length > 1 ? "open" : null);
       const line = row.firstElementChild;
-      for (const button3 of line ? line.querySelectorAll(":scope > button") : []) {
-        if (button3.querySelector("span")) role(button3, "guild-name");
+      for (const button4 of line ? line.querySelectorAll(":scope > button") : []) {
+        if (button4.querySelector("span")) role(button4, "guild-name");
         else {
-          role(button3, "apply");
-          tone(button3);
+          role(button4, "apply");
+          tone(button4);
         }
       }
       for (const span of line ? line.querySelectorAll(":scope > span") : []) {
@@ -10028,9 +10028,9 @@
     role(head?.querySelector("span"), "rc-timer");
     for (const p of card.querySelectorAll(":scope > p")) role(p, "rc-roster");
     for (const el2 of card.querySelectorAll(":scope > div:not(:first-child) span")) tone(el2);
-    for (const button3 of card.querySelectorAll("button")) {
-      role(button3, "rc-action");
-      tone(button3);
+    for (const button4 of card.querySelectorAll("button")) {
+      role(button4, "rc-action");
+      tone(button4);
     }
   }
   function decorateChat(card) {
@@ -10040,7 +10040,7 @@
     role(input, "chat-input");
     const composer = input?.parentElement !== card ? input?.parentElement : null;
     role(composer, "composer");
-    for (const button3 of composer ? composer.querySelectorAll("button") : []) role(button3, "cta");
+    for (const button4 of composer ? composer.querySelectorAll("button") : []) role(button4, "cta");
     for (const box of card.querySelectorAll(":scope > div")) {
       if (box !== composer && /\boverflow-y-auto\b/.test(String(box.className))) role(box, "chat-feed");
     }
@@ -10081,7 +10081,7 @@
       const gameButtons = panel3.querySelectorAll("button:not([data-iw-raid-owned])");
       role(panel3, gameButtons.length ? "effects" : "telegraph");
       tone(panel3, gameButtons.length ? "info" : toneOf3(panel3));
-      for (const button3 of gameButtons) role(button3, "effects-toggle");
+      for (const button4 of gameButtons) role(button4, "effects-toggle");
     }
     for (const track of arena.querySelectorAll("div")) {
       if (!isTrack2(track) || track.closest(".raid-arena-floor")) continue;
@@ -10106,11 +10106,11 @@
       if (kids.length && kids.every((k) => k.tagName === "BUTTON")) {
         role(box, "actions");
         tone(box, null);
-        for (const button3 of kids) role(button3, "action");
+        for (const button4 of kids) role(button4, "action");
       } else if (box.querySelector(":scope > p")) {
         role(box, "outcome");
         tone(box);
-        for (const button3 of box.querySelectorAll(":scope > button")) role(button3, "outcome-close");
+        for (const button4 of box.querySelectorAll(":scope > button")) role(button4, "outcome-close");
       }
     }
     decorateRaidHud(arena);
@@ -10166,8 +10166,8 @@
     return normText3(el2?.textContent).replace(/^[^\p{L}\p{N}]+/u, "");
   }
   function nameText(el2) {
-    const own8 = [...el2?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
-    return labelText({ textContent: own8 }) || labelText(el2);
+    const own9 = [...el2?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
+    return labelText({ textContent: own9 }) || labelText(el2);
   }
   function frameTitle(frame2, found = frameLandmarks(frame2)) {
     return found.sectionTitle || found.roleHeading || found.heading;
@@ -10227,7 +10227,7 @@
     for (const [key, value] of preferences) if (value) bag[key] = true;
     void storageSet(STORE_KEY2, bag);
   }
-  function applyState(frame2, button3, key, name) {
+  function applyState(frame2, button4, key, name) {
     const collapsed = preferences.get(key) === true;
     const want = collapsed ? "1" : null;
     if ((frame2.dataset.iwCollapsed || null) !== want) {
@@ -10235,31 +10235,31 @@
       else delete frame2.dataset.iwCollapsed;
     }
     const expanded = collapsed ? "false" : "true";
-    if (button3.getAttribute("aria-expanded") !== expanded) button3.setAttribute("aria-expanded", expanded);
+    if (button4.getAttribute("aria-expanded") !== expanded) button4.setAttribute("aria-expanded", expanded);
     const label6 = `${collapsed ? "Expand" : "Collapse"} ${name}`;
-    if (button3.getAttribute("aria-label") !== label6) button3.setAttribute("aria-label", label6);
-    if (button3.getAttribute("title") !== label6) button3.setAttribute("title", label6);
+    if (button4.getAttribute("aria-label") !== label6) button4.setAttribute("aria-label", label6);
+    if (button4.getAttribute("title") !== label6) button4.setAttribute("title", label6);
   }
   function ensureToggle(head, frame2, key, name) {
-    let button3 = head.querySelector(":scope > [data-iw-collapse]");
-    if (button3) return button3;
-    button3 = document.createElement("button");
-    button3.type = "button";
-    button3.dataset.iwCollapse = "1";
-    button3.setAttribute("aria-expanded", "true");
-    button3.setAttribute("aria-label", `Collapse ${name}`);
-    button3.setAttribute("title", `Collapse ${name}`);
-    button3.addEventListener("click", (event) => {
+    let button4 = head.querySelector(":scope > [data-iw-collapse]");
+    if (button4) return button4;
+    button4 = document.createElement("button");
+    button4.type = "button";
+    button4.dataset.iwCollapse = "1";
+    button4.setAttribute("aria-expanded", "true");
+    button4.setAttribute("aria-label", `Collapse ${name}`);
+    button4.setAttribute("title", `Collapse ${name}`);
+    button4.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
       const next = preferences.get(key) !== true;
       preferences.set(key, next);
       touched2.add(key);
       persist2();
-      applyState(frame2, button3, key, name);
+      applyState(frame2, button4, key, name);
     });
-    head.append(button3);
-    return button3;
+    head.append(button4);
+    return button4;
   }
   function decorateCollapsibleFrames(root = document) {
     void loadPreferences2();
@@ -10276,14 +10276,14 @@
       if (head.dataset.iwCollapseHead !== "1") head.dataset.iwCollapseHead = "1";
       markSpine(head, title);
       const name = nameText(title) || "section";
-      const button3 = ensureToggle(head, target, key, name);
-      live2.add(button3);
-      applyState(target, button3, key, name);
+      const button4 = ensureToggle(head, target, key, name);
+      live2.add(button4);
+      applyState(target, button4, key, name);
     }
-    for (const button3 of root.querySelectorAll("[data-iw-collapse]")) {
-      const head = button3.parentElement;
-      if (live2.has(button3) || targets.has(head?.parentElement)) continue;
-      button3.remove();
+    for (const button4 of root.querySelectorAll("[data-iw-collapse]")) {
+      const head = button4.parentElement;
+      if (live2.has(button4) || targets.has(head?.parentElement)) continue;
+      button4.remove();
       if (head) {
         delete head.dataset.iwCollapseHead;
         spines.delete(head);
@@ -10700,72 +10700,72 @@
     el2.addEventListener("click", action);
     return el2;
   };
-  function later(run2, delay, action) {
+  function later(run3, delay, action) {
     const timer = setTimeout(() => {
-      run2.timers.delete(timer);
-      if (active2 === run2 && isRuntimeActive()) action();
+      run3.timers.delete(timer);
+      if (active2 === run3 && isRuntimeActive()) action();
     }, delay);
-    run2.timers.add(timer);
+    run3.timers.add(timer);
   }
-  function clearTimers(run2) {
-    for (const timer of run2.timers) clearTimeout(timer);
-    run2.timers.clear();
+  function clearTimers(run3) {
+    for (const timer of run3.timers) clearTimeout(timer);
+    run3.timers.clear();
   }
-  function close(run2 = active2) {
-    if (!run2 || active2 !== run2) return;
+  function close(run3 = active2) {
+    if (!run3 || active2 !== run3) return;
     active2 = null;
-    clearTimers(run2);
-    run2.motion.removeEventListener("change", run2.onMotion);
-    run2.loot.dispose();
-    run2.dialog.close();
-    run2.dialog.remove();
-    const focusTarget = run2.returnFocus?.isConnected ? run2.returnFocus : run2.count > 1 ? bulkButton : toolbarButton;
+    clearTimers(run3);
+    run3.motion.removeEventListener("change", run3.onMotion);
+    run3.loot.dispose();
+    run3.dialog.close();
+    run3.dialog.remove();
+    const focusTarget = run3.returnFocus?.isConnected ? run3.returnFocus : run3.count > 1 ? bulkButton : toolbarButton;
     if (focusTarget?.isConnected) focusTarget.focus({ preventScroll: true });
   }
-  function phase(run2, name) {
-    run2.phase = name;
-    run2.scene.dataset.phase = name;
+  function phase(run3, name) {
+    run3.phase = name;
+    run3.scene.dataset.phase = name;
   }
-  function waiting(run2) {
-    phase(run2, "waiting");
-    run2.open.disabled = false;
-    run2.status.textContent = run2.count > 1 ? `${run2.count} caches. One extraordinary haul.` : "Something extraordinary is waiting inside.";
-    run2.countSelect.disabled = false;
-    run2.open.focus({ preventScroll: true });
+  function waiting(run3) {
+    phase(run3, "waiting");
+    run3.open.disabled = false;
+    run3.status.textContent = run3.count > 1 ? `${run3.count} caches. One extraordinary haul.` : "Something extraordinary is waiting inside.";
+    run3.countSelect.disabled = false;
+    run3.open.focus({ preventScroll: true });
   }
-  function reveal(run2) {
-    phase(run2, "revealed");
-    run2.heading.textContent = "Treasures revealed";
-    run2.status.textContent = run2.count > 1 ? `${run2.count} caches opened · Rare treasures above, the rest below.` : "A little magic. A worthy haul.";
-    run2.actions.hidden = false;
-    run2.announce.textContent = `${run2.count} ${run2.count === 1 ? "cache" : "caches"} opened. ` + run2.loot.reveal();
-    run2.replay.focus({ preventScroll: true });
+  function reveal(run3) {
+    phase(run3, "revealed");
+    run3.heading.textContent = "Treasures revealed";
+    run3.status.textContent = run3.count > 1 ? `${run3.count} caches opened · Rare treasures above, the rest below.` : "A little magic. A worthy haul.";
+    run3.actions.hidden = false;
+    run3.announce.textContent = `${run3.count} ${run3.count === 1 ? "cache" : "caches"} opened. ` + run3.loot.reveal();
+    run3.replay.focus({ preventScroll: true });
   }
-  function openChest(run2) {
-    if (active2 !== run2 || run2.phase !== "waiting") return;
-    run2.open.disabled = true;
-    run2.countSelect.disabled = true;
-    run2.open.blur();
-    phase(run2, "opening");
-    run2.status.textContent = "The seal is breaking…";
-    run2.announce.textContent = "Opening Arcane Cache.";
-    later(run2, run2.motion.matches ? 240 : CACHE_OPENING_MS, () => reveal(run2));
+  function openChest(run3) {
+    if (active2 !== run3 || run3.phase !== "waiting") return;
+    run3.open.disabled = true;
+    run3.countSelect.disabled = true;
+    run3.open.blur();
+    phase(run3, "opening");
+    run3.status.textContent = "The seal is breaking…";
+    run3.announce.textContent = "Opening Arcane Cache.";
+    later(run3, run3.motion.matches ? 240 : CACHE_OPENING_MS, () => reveal(run3));
   }
-  function drop(run2) {
-    clearTimers(run2);
-    run2.heading.textContent = "Arcane Cache";
-    run2.status.textContent = "A sealed cache of untold possibilities.";
-    run2.announce.textContent = "";
-    run2.actions.hidden = true;
-    prepareLoot(run2);
-    run2.open.disabled = true;
-    phase(run2, "dropping");
-    later(run2, run2.motion.matches ? 120 : CACHE_DROP_MS, () => waiting(run2));
+  function drop(run3) {
+    clearTimers(run3);
+    run3.heading.textContent = "Arcane Cache";
+    run3.status.textContent = "A sealed cache of untold possibilities.";
+    run3.announce.textContent = "";
+    run3.actions.hidden = true;
+    prepareLoot(run3);
+    run3.open.disabled = true;
+    phase(run3, "dropping");
+    later(run3, run3.motion.matches ? 120 : CACHE_DROP_MS, () => waiting(run3));
   }
-  function prepareLoot(run2) {
-    run2.loot.prepare(run2.count);
-    run2.openLabel.textContent = run2.count > 1 ? `Break ${run2.count} seals` : "Break the seal";
-    run2.replay.textContent = run2.count > 1 ? `Open another ${run2.count}` : "Open another";
+  function prepareLoot(run3) {
+    run3.loot.prepare(run3.count);
+    run3.openLabel.textContent = run3.count > 1 ? `Break ${run3.count} seals` : "Break the seal";
+    run3.replay.textContent = run3.count > 1 ? `Open another ${run3.count}` : "Open another";
   }
   function showArcaneCacheDemo(trigger = toolbarButton, count = 1) {
     if (!isRuntimeActive() || active2) return;
@@ -10776,7 +10776,7 @@
     const shadow = shell.attachShadow({ mode: "open" });
     const style = make("style", "", arcane_cache_default);
     const scene = make("section", "scene");
-    const run2 = {
+    const run3 = {
       dialog,
       shadow,
       scene,
@@ -10786,42 +10786,42 @@
       motion: matchMedia("(prefers-reduced-motion: reduce)"),
       returnFocus: trigger || document.activeElement
     };
-    active2 = run2;
+    active2 = run3;
     scene.dataset.bulk = String(count > 1);
     scene.style.setProperty("--drop-duration", `${CACHE_DROP_MS}ms`);
     scene.style.setProperty("--open-duration", `${CACHE_OPENING_MS}ms`);
     scene.style.setProperty("--cache-corners", `url("${assetUrl("assets/inventory/panel_corners.webp")}")`);
     scene.style.setProperty("--cache-ground", `url("${assetUrl("assets/skills_panel_texture.webp")}")`);
-    run2.announce = make("p", "sr-only");
-    run2.announce.setAttribute("role", "status");
-    run2.announce.setAttribute("aria-live", "polite");
-    run2.loot = createCacheLootView(run2.announce);
-    scene.dataset.reduced = String(run2.motion.matches);
-    phase(run2, "loading");
-    const exit = button("exit", "×", () => close(run2));
+    run3.announce = make("p", "sr-only");
+    run3.announce.setAttribute("role", "status");
+    run3.announce.setAttribute("aria-live", "polite");
+    run3.loot = createCacheLootView(run3.announce);
+    scene.dataset.reduced = String(run3.motion.matches);
+    phase(run3, "loading");
+    const exit = button("exit", "×", () => close(run3));
     exit.setAttribute("aria-label", "Close Arcane Cache");
     const mast = make("header", "mast");
     const overline = make("p", "overline", "A LITTLE WONDER, SEALED AWAY");
-    run2.heading = make("h1", "", "Arcane Cache");
-    run2.status = make("p", "status", "Summoning your cache…");
-    mast.append(overline, run2.heading, run2.status);
+    run3.heading = make("h1", "", "Arcane Cache");
+    run3.status = make("p", "status", "Summoning your cache…");
+    mast.append(overline, run3.heading, run3.status);
     const batch = make("label", "batch-choice", "OPEN TOGETHER");
     batch.hidden = count === 1;
-    run2.countSelect = make("select", "batch-size");
-    run2.countSelect.setAttribute("aria-label", "Number of caches");
+    run3.countSelect = make("select", "batch-size");
+    run3.countSelect.setAttribute("aria-label", "Number of caches");
     for (const size of [20, 50, 100]) {
       const option = make("option", "", `${size} caches`);
       option.value = String(size);
-      run2.countSelect.append(option);
+      run3.countSelect.append(option);
     }
-    run2.countSelect.value = String(count);
-    run2.countSelect.addEventListener("change", () => {
-      if (run2.phase !== "waiting") return;
-      run2.count = Number(run2.countSelect.value);
-      prepareLoot(run2);
-      run2.status.textContent = `${run2.count} caches. One extraordinary haul.`;
+    run3.countSelect.value = String(count);
+    run3.countSelect.addEventListener("change", () => {
+      if (run3.phase !== "waiting") return;
+      run3.count = Number(run3.countSelect.value);
+      prepareLoot(run3);
+      run3.status.textContent = `${run3.count} caches. One extraordinary haul.`;
     });
-    batch.append(run2.countSelect);
+    batch.append(run3.countSelect);
     mast.append(batch);
     const stage = make("div", "stage");
     const halo = make("div", "halo");
@@ -10863,62 +10863,62 @@
       mote.style.setProperty("--delay", `${970 + i % 6 * 30}ms`);
       motes.append(mote);
     }
-    run2.open = button("open-cache", "", () => openChest(run2));
-    run2.open.setAttribute("aria-label", "Open Arcane Cache");
-    run2.open.disabled = true;
+    run3.open = button("open-cache", "", () => openChest(run3));
+    run3.open.setAttribute("aria-label", "Open Arcane Cache");
+    run3.open.disabled = true;
     const tapHint = make("span", "tap-hint", "CLICK THE CHEST TO OPEN");
-    run2.openLabel = make("span", "", "Break the seal");
-    run2.open.append(make("span", "chest-hit-area"), run2.openLabel);
-    stage.append(halo, seal, rays, runes, chest, shockwave, echo, flash, motes, run2.loot.rewards, run2.loot.empty, run2.open, tapHint);
-    run2.actions = make("div", "actions");
-    run2.actions.hidden = true;
-    run2.replay = button("replay", "Open another", () => drop(run2));
-    run2.actions.append(run2.replay, button("done", "Done", () => close(run2)));
+    run3.openLabel = make("span", "", "Break the seal");
+    run3.open.append(make("span", "chest-hit-area"), run3.openLabel);
+    stage.append(halo, seal, rays, runes, chest, shockwave, echo, flash, motes, run3.loot.rewards, run3.loot.empty, run3.open, tapHint);
+    run3.actions = make("div", "actions");
+    run3.actions.hidden = true;
+    run3.replay = button("replay", "Open another", () => drop(run3));
+    run3.actions.append(run3.replay, button("done", "Done", () => close(run3)));
     const footer = make("footer", "footer");
     footer.append(make("span", "demo-label", "PREVIEW"), make("span", "", "Sample loot · No items are granted"));
-    scene.append(exit, mast, stage, run2.loot.summary, run2.actions, footer, run2.announce);
+    scene.append(exit, mast, stage, run3.loot.summary, run3.actions, footer, run3.announce);
     shadow.append(style, scene);
     dialog.append(shell);
     dialog.addEventListener("cancel", (event) => {
       event.preventDefault();
-      close(run2);
+      close(run3);
     });
-    dialog.addEventListener("close", () => close(run2));
-    run2.onMotion = () => {
-      scene.dataset.reduced = String(run2.motion.matches);
-      if (!run2.motion.matches) return;
-      if (run2.phase === "opening") {
-        clearTimers(run2);
-        reveal(run2);
-      } else if (run2.phase === "dropping") {
-        clearTimers(run2);
-        waiting(run2);
+    dialog.addEventListener("close", () => close(run3));
+    run3.onMotion = () => {
+      scene.dataset.reduced = String(run3.motion.matches);
+      if (!run3.motion.matches) return;
+      if (run3.phase === "opening") {
+        clearTimers(run3);
+        reveal(run3);
+      } else if (run3.phase === "dropping") {
+        clearTimers(run3);
+        waiting(run3);
       }
     };
-    run2.motion.addEventListener("change", run2.onMotion);
+    run3.motion.addEventListener("change", run3.onMotion);
     document.body.append(dialog);
     try {
       dialog.showModal();
     } catch (err) {
-      close(run2);
+      close(run3);
       warnOnce("cache:modal", err);
       return;
     }
     exit.focus({ preventScroll: true });
     const art2 = new Image();
     const failed = () => {
-      if (active2 !== run2 || run2.phase !== "loading") return;
-      clearTimers(run2);
-      phase(run2, "error");
-      run2.status.textContent = "Chest artwork could not load. Close and try again.";
-      run2.announce.textContent = run2.status.textContent;
+      if (active2 !== run3 || run3.phase !== "loading") return;
+      clearTimers(run3);
+      phase(run3, "error");
+      run3.status.textContent = "Chest artwork could not load. Close and try again.";
+      run3.announce.textContent = run3.status.textContent;
     };
     art2.onload = () => {
-      if (active2 === run2 && run2.phase === "loading") drop(run2);
+      if (active2 === run3 && run3.phase === "loading") drop(run3);
     };
     art2.onerror = failed;
     art2.src = assetUrl(ART);
-    later(run2, 8e3, failed);
+    later(run3, 8e3, failed);
   }
   function ensureArcaneCacheButton(track) {
     if (!track || !isRuntimeActive()) return;
@@ -11175,8 +11175,8 @@
       setRole4(btn, "nav-tab");
       const tab3 = navLabelText(btn);
       if (btn.dataset.iwTab !== tab3) btn.dataset.iwTab = tab3;
-      const active5 = hasRouteActive ? routeActive[index] : hasSemanticActive ? semanticActive[index] : firstClassification ? warmActive[index] : wasActive;
-      if (active5) {
+      const active6 = hasRouteActive ? routeActive[index] : hasSemanticActive ? semanticActive[index] : firstClassification ? warmActive[index] : wasActive;
+      if (active6) {
         if (!wasActive) btn.dataset.iwState = "active";
       } else if ("iwState" in btn.dataset) delete btn.dataset.iwState;
     });
@@ -12785,8 +12785,8 @@
   // src/skins/fantasy/core/Runtime.js
   var hasChrome2 = typeof chrome !== "undefined" && !!chrome.runtime?.id;
   var runtimeActive2 = false;
-  function setRuntimeActive2(active5) {
-    runtimeActive2 = active5 !== false;
+  function setRuntimeActive2(active6) {
+    runtimeActive2 = active6 !== false;
   }
   function isRuntimeActive2() {
     return runtimeActive2;
@@ -13072,7 +13072,7 @@
     root.querySelectorAll(`[${attr}][${OWNED_ATTR}]`).forEach((node2) => node2.remove());
   }
   function ownerOf(attr) {
-    return function own8(tag, cls, text2) {
+    return function own9(tag, cls, text2) {
       const el2 = document.createElement(tag);
       if (cls) el2.className = cls;
       el2.setAttribute(attr, "1");
@@ -13081,15 +13081,15 @@
       return el2;
     };
   }
-  function plate(button3, own8) {
-    button3.dataset.iwCompactButton = "text";
+  function plate(button4, own9) {
+    button4.dataset.iwCompactButton = "text";
     for (const state3 of ["idle", "hover", "clicked"]) {
-      const layer = own8("span");
+      const layer = own9("span");
       layer.dataset.iwCompactLayer = state3;
       layer.setAttribute("aria-hidden", "true");
-      button3.append(layer);
+      button4.append(layer);
     }
-    return button3;
+    return button4;
   }
 
   // src/skins/fantasy/raid/RaidLeaderboards.js
@@ -13167,16 +13167,16 @@
     return [...BOSS_ORDER2.filter((k) => keys.includes(k)), ...keys.filter((k) => !BOSS_ORDER2.includes(k)).sort()];
   }
   function tab2(text2, pressed, onClick, kind2) {
-    const button3 = own5("button", "iw-raid-lb-tab", text2);
-    button3.type = "button";
-    button3.dataset.iwRaidLbTab = kind2;
-    button3.setAttribute("aria-pressed", String(pressed));
-    button3.addEventListener("click", (event) => {
+    const button4 = own5("button", "iw-raid-lb-tab", text2);
+    button4.type = "button";
+    button4.dataset.iwRaidLbTab = kind2;
+    button4.setAttribute("aria-pressed", String(pressed));
+    button4.addEventListener("click", (event) => {
       event.preventDefault();
       onClick();
       render3(true);
     });
-    return plate(button3, own5);
+    return plate(button4, own5);
   }
   function render3(force = false) {
     if (!panel2) return;
@@ -13911,27 +13911,253 @@
     return id && byId.get(id) || byName.get(nameKey(name)) || null;
   }
 
+  // src/skins/fantasy/skills/queue.js
+  var QUEUE_OWNED = "data-iw-fantasy-queue-owned";
+  var QUEUE_ATTR = "data-iw-fantasy-queue";
+  var own8 = ownerOf(QUEUE_OWNED);
+  var PANEL2 = "#current-action-panel";
+  var CANCEL = 'button[aria-label="Cancel current action"]';
+  var VERBS = {
+    fight: "combat",
+    mine: "mining",
+    smelt: "smithing",
+    smith: "smithing",
+    forge: "smithing",
+    gather: "gathering",
+    harvest: "gathering",
+    forage: "gathering",
+    brew: "alchemy",
+    weave: "tailoring",
+    sew: "tailoring",
+    tailor: "tailoring",
+    chop: "woodcutting",
+    build: "construction",
+    enchant: "spellcrafting",
+    inscribe: "spellcrafting"
+  };
+  function verbSkill(name) {
+    const word = label5(name).split(/\s/)[0]?.toLowerCase() || "";
+    return VERBS[word] || skillKey2(word);
+  }
+  function parseQueueRow(text2, eta = "") {
+    const time = norm9(eta);
+    let t = label5(text2);
+    if (time && t.endsWith(time)) t = t.slice(0, -time.length).trim();
+    const m = t.match(/^\d+\.\s*(.*?)(?:\s*\(x\s*([\d,]+)\))?$/i);
+    return m ? { name: m[1], times: m[2] || "", eta: time } : { name: t, times: "", eta: time };
+  }
+  function readPanel(panel3) {
+    if (!panel3) return null;
+    const rows = [...panel3.querySelectorAll('[draggable="true"]')];
+    const inRow = (el2) => rows.some((r) => r.contains(el2));
+    const toggles = [...panel3.querySelectorAll("button")].filter((b) => !b.hasAttribute("aria-label") && !inRow(b) && label5(b.textContent));
+    return {
+      cancel: !!panel3.querySelector(CANCEL),
+      rows: rows.map((r) => {
+        const p = r.querySelector("p");
+        const eta = p?.querySelector("span")?.textContent || "";
+        const remove2 = r.querySelector("button[aria-label]");
+        return { ...parseQueueRow(p?.textContent || r.textContent, eta), remove: remove2?.getAttribute("aria-label") || "" };
+      }),
+      toggles: toggles.map((b) => norm9(b.textContent))
+    };
+  }
+  var livePanel = () => document.querySelector(PANEL2);
+  function press(find) {
+    const target = find(livePanel());
+    if (target && !target.disabled) target.click();
+  }
+  var gameRows = () => [...livePanel()?.querySelectorAll('[draggable="true"]') || []];
+  function replayDrag(from, to) {
+    const rows = gameRows();
+    const a = rows[from], b = rows[to];
+    if (!a || !b || a === b) return;
+    const dataTransfer = new DataTransfer();
+    const fire = (el2, type) => el2.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, composed: true, dataTransfer }));
+    fire(a, "dragstart");
+    fire(b, "dragenter");
+    fire(b, "dragover");
+    fire(b, "drop");
+    fire(a, "dragend");
+  }
+  var set2 = (el2, text2) => {
+    if (el2.textContent !== text2) el2.textContent = text2;
+  };
+  var toggle = (el2, on2) => {
+    if (el2.hidden === on2) el2.hidden = !on2;
+  };
+  function button3(cls, text2, title, onClick) {
+    const b = own8("button", cls, text2);
+    b.type = "button";
+    if (title) {
+      b.title = title;
+      b.setAttribute("aria-label", title);
+    }
+    b.addEventListener("click", (event) => {
+      event.preventDefault();
+      guard2("queue:press", onClick);
+    });
+    return b;
+  }
+  function buildFrame() {
+    const frame2 = own8("section", "iwf-queue");
+    frame2.setAttribute("aria-label", "Action queue");
+    const head = own8("div", "iwf-q-head");
+    const title = own8("h3", "iwf-q-title", "Action Queue");
+    const count = own8("span", "iwf-q-count");
+    const cancel = button3("iwf-q-x iwf-q-cancel", "✕", "Cancel current action", () => press((p) => p?.querySelector(CANCEL)));
+    head.append(title, count, cancel);
+    const list = own8("ol", "iwf-q-list");
+    const toggles = own8("div", "iwf-q-toggles");
+    frame2.append(head, list, toggles);
+    frame2.iwf = { count, cancel, list, toggles, drag: null };
+    return frame2;
+  }
+  function rowNode(frame2, index) {
+    const li = own8("li", "iwf-q-row");
+    li.draggable = true;
+    const grip = own8("span", "iwf-q-grip", "⋮⋮");
+    grip.setAttribute("aria-hidden", "true");
+    const n = own8("span", "iwf-q-n");
+    const icon4 = own8("span", "iwf-q-icon");
+    icon4.setAttribute("aria-hidden", "true");
+    const name = own8("span", "iwf-q-name");
+    const times = own8("small", "iwf-q-times");
+    const eta = own8("span", "iwf-q-eta");
+    const remove2 = button3("iwf-q-x", "✕", "", () => press((p) => {
+      const rows = [...p?.querySelectorAll('[draggable="true"]') || []];
+      const want = li.dataset.remove;
+      const row = rows[+li.dataset.index];
+      const hit = row?.querySelector("button[aria-label]");
+      return hit?.getAttribute("aria-label") === want ? hit : rows.map((r) => r.querySelector("button[aria-label]")).find((b) => b?.getAttribute("aria-label") === want);
+    }));
+    name.append(times);
+    li.append(grip, n, icon4, name, eta, remove2);
+    li.iwf = { n, icon: icon4, name, times, eta, remove: remove2 };
+    li.addEventListener("dragstart", (event) => {
+      frame2.iwf.drag = +li.dataset.index;
+      event.dataTransfer?.setData("text/plain", li.dataset.index);
+      li.setAttribute("data-dragging", "");
+    });
+    li.addEventListener("dragend", () => {
+      frame2.iwf.drag = null;
+      li.removeAttribute("data-dragging");
+    });
+    li.addEventListener("dragover", (event) => {
+      if (frame2.iwf.drag != null) event.preventDefault();
+    });
+    li.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const from = frame2.iwf.drag;
+      frame2.iwf.drag = null;
+      if (from != null) guard2("queue:reorder", () => replayDrag(from, +li.dataset.index));
+    });
+    li.dataset.index = String(index);
+    return li;
+  }
+  function paint2(frame2, model) {
+    const { count, cancel, list, toggles } = frame2.iwf;
+    set2(count, model.rows.length ? `${model.rows.length} queued` : "Nothing queued");
+    toggle(cancel, model.cancel);
+    while (list.children.length > model.rows.length) list.lastElementChild.remove();
+    while (list.children.length < model.rows.length) list.append(rowNode(frame2, list.children.length));
+    model.rows.forEach((row, i) => {
+      const li = list.children[i];
+      const f = li.iwf;
+      li.dataset.index = String(i);
+      if (li.dataset.remove !== row.remove) li.dataset.remove = row.remove;
+      set2(f.n, String(i + 1));
+      const key = verbSkill(row.name) || "";
+      if ((li.getAttribute("data-iw-fantasy-skill") || "") !== key) {
+        if (key) li.setAttribute("data-iw-fantasy-skill", key);
+        else li.removeAttribute("data-iw-fantasy-skill");
+      }
+      if (f.name.firstChild?.nodeType !== 3) f.name.prepend(document.createTextNode(""));
+      if (f.name.firstChild.data !== row.name) f.name.firstChild.data = row.name;
+      set2(f.times, row.times ? `×${row.times}` : "");
+      set2(f.eta, row.eta);
+      if (f.remove.title !== row.remove) {
+        f.remove.title = row.remove;
+        f.remove.setAttribute("aria-label", row.remove || "Remove");
+      }
+      toggle(f.remove, !!row.remove);
+    });
+    while (toggles.children.length > model.toggles.length) toggles.lastElementChild.remove();
+    model.toggles.forEach((text2, i) => {
+      let b = toggles.children[i];
+      if (!b) {
+        b = button3("iwf-q-more", "", "", () => press((p) => [...p?.querySelectorAll("button") || []].filter((x) => !x.hasAttribute("aria-label") && !x.closest('[draggable="true"]') && label5(x.textContent))[i]));
+        toggles.append(b);
+      }
+      set2(b, text2);
+    });
+    toggle(toggles, model.toggles.length > 0);
+  }
+  function queuePass() {
+    const panel3 = livePanel();
+    const model = readPanel(panel3);
+    const sheets = model ? [...document.querySelectorAll(".iw-skill-sheet")] : [];
+    const hosts = /* @__PURE__ */ new Set();
+    for (const sheet of sheets) {
+      let frame2 = sheet.parentElement.querySelector(`:scope > .iwf-queue[${QUEUE_OWNED}]`);
+      if (!frame2) frame2 = buildFrame();
+      if (sheet.nextElementSibling !== frame2) sheet.after(frame2);
+      hosts.add(frame2);
+    }
+    for (const stale of document.querySelectorAll(`.iwf-queue[${QUEUE_OWNED}]`)) if (!hosts.has(stale)) stale.remove();
+    for (const frame2 of hosts) paint2(frame2, model);
+    for (const p of document.querySelectorAll(PANEL2)) mark6(p, QUEUE_ATTR, hosts.size ? "mirrored" : null);
+  }
+  function queueText(parents) {
+    if (parents.some((p) => p.closest?.(PANEL2))) guard2("queue:text", queuePass);
+  }
+  function clearQueue() {
+    removeOwned(QUEUE_OWNED);
+    unmark2([QUEUE_ATTR]);
+  }
+
   // src/skins/fantasy/styles/skills.css
-  var skills_default = ':is(:root,#iwf){--iwf-item-atlas: url(../assets/item_icons_atlas.png);--iwf-gear-atlas: url(../assets/gear_icons_atlas.png);--iwf-edge: var(--iw-th-edge-soft, #3b3a33);--iwf-edge-mid: var(--iw-th-edge-mid, #57513f);--iwf-edge-faint: var(--iw-th-edge-faint, #2a2a25);--iwf-accent: var(--iw-th-accent, #d8a64a);--iwf-brass: var(--iw-th-brass, #b8975a);--iwf-ground: linear-gradient(180deg, color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent), color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));--iwf-text-hi: #f1e6cc;--iwf-text: #d9cdb2;--iwf-text-dim: #a59a83;--iwf-running: #34d399;--iwf-item: 50px}@media(max-width:1024px){:is(:root,#iwf){--iwf-item: 44px}}@media(max-width:768px){:is(:root,#iwf){--iwf-item: 40px}}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/combat.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/mining.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/smithing.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/gathering.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/alchemy.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/jewelcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/spellcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/tailoring.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/woodcutting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/construction.svg)}:is(:root,#iwf) [data-iw-fantasy-lead=icon]::first-letter{font-size:0;letter-spacing:0}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-tint: #e4574f}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-tint: #8fa4c0}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-tint: #f0793f}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-tint: #6dd48a}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-tint: #57c6cf}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-tint: #62d0e8}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-tint: #b492ea}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-tint: #e88fb8}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-tint: #c99a63}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-tint: #9aa7b8}:is(:root,#iwf) [data-iw-fantasy-skill]{--iwf-medal: var(--iwf-skill-icon) center / 54% auto no-repeat, radial-gradient(circle at 50% 38%, #221e17, #0a0a08 72%)}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 40% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 60% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 80% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 100% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 100% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 100% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-medal: url(../assets/skills-medallions/woodcutting.webp) center / 100% 100% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-medal: url(../assets/skills-medallions/construction.webp) center / 100% 100% no-repeat}:is(:root,#iwf) .iw-skill-tabs{container-type:inline-size;gap:8px}:is(:root,#iwf) .iw-skill-tab{--iwf-tint-on: var(--iwf-tint, var(--iwf-accent));--iwf-med: clamp(32px, 7.4cqw, 50px);--iwf-ring-gap: clamp(3px, 1cqw, 6px);--iwf-ring-w: clamp(3px, .65cqw, 4px);grid-template-columns:minmax(0,1fr);grid-template-areas:"icon" "lv" "name" "bar";grid-template-rows:auto auto auto auto;justify-items:center;align-content:center;aspect-ratio:1 / 1;gap:0;padding:clamp(5px,1.6cqw,12px) clamp(2px,.9cqw,6px) clamp(4px,1.3cqw,10px);text-align:center;border-radius:5px;border:1px solid var(--iwf-edge);background:radial-gradient(ellipse at 50% 34%,color-mix(in srgb,var(--iwf-tint-on) 16%,transparent),transparent 62%),var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,235,190,.05),0 3px 10px rgba(0,0,0,.25)}:is(:root,#iwf) .iw-skill-tab::before{content:"";position:absolute;left:10px;right:10px;top:0;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--iwf-tint-on) 55%,var(--iwf-brass)) 50%,transparent);opacity:.7}:is(:root,#iwf) .iw-skill-tab:hover{border-color:color-mix(in srgb,var(--iwf-tint-on) 45%,var(--iwf-edge));box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 22px color-mix(in srgb,var(--iwf-tint-on) 10%,transparent),0 4px 14px rgba(0,0,0,.35)}:is(:root,#iwf) .iw-skill-tab:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-skill-tab.is-active{border-color:var(--iwf-accent);background:radial-gradient(ellipse at 50% 34%,color-mix(in srgb,var(--iwf-tint-on) 30%,transparent),transparent 66%),var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iwf-accent) 40%,transparent),0 0 14px -5px var(--iwf-accent)}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon{grid-area:icon;position:relative;z-index:1;display:block;width:var(--iwf-med);height:var(--iwf-med);margin:var(--iwf-ring-gap);border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);box-shadow:0 3px 9px rgba(0,0,0,.55);opacity:1;filter:none}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon::after{content:"";position:absolute;inset:calc(-1 * var(--iwf-ring-gap));border-radius:50%;pointer-events:none;background:conic-gradient(color-mix(in srgb,var(--iwf-tint-on) 78%,#fff) 0 var(--iwf-pct, 0%),#2a241b var(--iwf-pct, 0%) 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));filter:drop-shadow(0 0 3px color-mix(in srgb,var(--iwf-tint-on) 55%,transparent));opacity:.8}:is(:root,#iwf) .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon::after,:is(:root,#iwf) .iw-skill-tab:hover[data-iw-fantasy-skill] .iw-skill-tab-icon::after{opacity:1}:is(:root,#iwf) .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon{box-shadow:0 3px 9px rgba(0,0,0,.55),0 0 16px -2px color-mix(in srgb,var(--iwf-tint-on) 60%,transparent)}:is(:root,#iwf) .iw-skill-tab-lv{grid-area:lv;position:relative;z-index:2;min-width:clamp(24px,6cqw,38px);margin-top:calc(-1 * var(--iwf-ring-gap) - clamp(4px,1.2cqw,8px));padding:1px clamp(3px,1cqw,7px) 2px;border:1px solid color-mix(in srgb,var(--iwf-brass) 55%,#3a3226);border-radius:4px 4px 9px 9px;background:linear-gradient(#1b1812,#0b0c0e);box-shadow:inset 0 0 0 2px #1d1a14,0 2px 4px rgba(0,0,0,.6);font-size:clamp(9.5px,1.95cqw,12.5px);line-height:1.15;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-skill-tab.is-active .iw-skill-tab-lv{border-color:var(--iwf-accent);color:#fff}:is(:root,#iwf) .iw-skill-tab-name{grid-area:name;max-width:100%;margin-top:clamp(3px,1cqw,7px);font-family:var(--iw-font-head, serif);font-size:clamp(8px,1.72cqw,11px);font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:color-mix(in srgb,var(--iwf-tint-on) 45%,var(--iwf-text-dim));text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-skill-tab.is-active .iw-skill-tab-name{color:color-mix(in srgb,var(--iwf-tint-on) 62%,var(--iwf-text-hi))}:is(:root,#iwf) .iw-skill-tab-bar{grid-area:bar;width:80%;height:3px;margin-top:4px;border-radius:1px;background:#000a}:is(:root,#iwf) .iw-skill-tab-bar>span{background:linear-gradient(90deg,var(--iwf-brass),var(--iwf-accent))}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-pct][data-iw-fantasy-skill] .iw-skill-tab-bar{display:none}:is(:root,#iwf) .iw-skill-tab-live{top:6px;right:6px;z-index:3;background:var(--iwf-running);box-shadow:0 0 0 1px #000,0 0 6px var(--iwf-running)}:is(:root,#iwf) .iw-skill-sheet{--iwf-sheet-r: 8px;--iwf-pad-x: 16px;--iwf-indent: 34px;--iwf-divider: linear-gradient(90deg, transparent, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 14%, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 86%, transparent);--iwf-rule: var(--iw-th-rule-soft, rgba(255,255,255,.06));gap:0;border-radius:var(--iwf-sheet-r);border:1px solid var(--iwf-edge-mid);background:var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,235,190,.05),0 6px 18px -10px #000}:is(:root,#iwf) .iw-skill-sheet>*+*{border-style:solid;border-width:1px 0 0;border-image:var(--iwf-divider) 1}:is(:root,#iwf) .iw-ss-head{gap:14px;padding:14px var(--iwf-pad-x) 13px;border:0;border-radius:calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px) 0 0;background:radial-gradient(ellipse 60% 120% at 0 0,color-mix(in srgb,var(--iwf-tint, var(--iw-th-edge, #6b5d3d)) 16%,transparent),transparent 70%),linear-gradient(180deg,rgba(255,235,190,.025),transparent);box-shadow:none}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-head:last-child{border-radius:calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{flex:0 0 auto;width:54px;aspect-ratio:1 / 1;border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)) drop-shadow(0 0 10px color-mix(in srgb,var(--iwf-tint, transparent) 22%,transparent))}:is(:root,#iwf) .iw-ss-name{gap:6px 10px}:is(:root,#iwf) .iw-ss-name>span:first-child{font-family:var(--iw-font-head, serif);font-size:18px;letter-spacing:.04em;color:var(--iwf-text-hi);text-shadow:0 1px 0 #000,0 0 12px color-mix(in srgb,var(--iwf-tint, transparent) 25%,transparent)}:is(:root,#iwf) .iw-ss-level{border-radius:3px;border-color:color-mix(in srgb,var(--iwf-brass) 70%,transparent);background:linear-gradient(180deg,#221c12,#120f0a);color:color-mix(in srgb,var(--iwf-brass) 55%,#fff1d2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iw-ss-boost{color:#86efac}:is(:root,#iwf) .iw-ss-xpbar{height:7px;margin-top:8px;border-radius:4px;background:linear-gradient(180deg,#050506,#111013);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iwf-brass) 22%,transparent),inset 0 1px 2px #000}:is(:root,#iwf) .iw-ss-xpbar>span{border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.28),transparent 55%),linear-gradient(90deg,color-mix(in srgb,var(--iwf-tint, var(--iwf-brass)) 55%,#2a2118),color-mix(in srgb,var(--iwf-tint, var(--iwf-accent)) 80%,#fff));box-shadow:0 0 6px -1px color-mix(in srgb,var(--iwf-tint, var(--iwf-accent)) 70%,transparent)}:is(:root,#iwf) .iw-ss-sub{margin-top:6px;color:var(--iwf-text-dim);font-family:var(--iw-font-flav, var(--iw-font-ui, inherit))}:is(:root,#iwf) .iw-ss-zone{--iwf-zone: rgba(56,189,248,.75);gap:12px;padding:12px var(--iwf-pad-x);border:0;border-radius:0;box-shadow:inset 3px 0 0 var(--iwf-zone)}:is(:root,#iwf) .iw-ss-zone.is-down{--iwf-zone: rgba(251,146,60,.75)}:is(:root,#iwf) .iw-ss-banner>.iw-ss-zone{padding-right:calc(var(--iwf-pad-x) + 26px)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-zone:last-child,:is(:root,#iwf) .iw-skill-sheet>.iw-ss-banner:last-child>.iw-ss-zone{border-radius:0 0 calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-zone-text{line-height:1.45}:is(:root,#iwf) .iw-ss-zone-text small{margin-top:2px}:is(:root,#iwf) .iw-ss-zone-go{border-radius:4px;border-color:color-mix(in srgb,var(--iwf-zone) 85%,#000)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iwf-zone) 38%,#0d1418),color-mix(in srgb,var(--iwf-zone) 18%,#070a0c))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.4),0 2px 6px -3px #000!important;text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-ss-zone-go:hover{border-color:var(--iwf-zone)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iwf-zone) 52%,#0d1418),color-mix(in srgb,var(--iwf-zone) 26%,#070a0c))!important}:is(:root,#iwf) .iw-ss-zone-go:focus-visible,:is(:root,#iwf) .iw-ss-x:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-ss-x{top:8px;right:8px;border-radius:4px;border-color:transparent!important;background-image:none!important;box-shadow:none!important}:is(:root,#iwf) .iw-ss-x:hover{border-color:rgba(255,255,255,.12)!important}:is(:root,#iwf) .iw-ss-rows{gap:0}:is(:root,#iwf) .iw-ss-group{gap:0}:is(:root,#iwf) .iw-ss-group+.iw-ss-group,:is(:root,#iwf) .iw-ss-group+.iw-ss-row,:is(:root,#iwf) .iw-ss-row+.iw-ss-group{border-top:1px solid var(--iwf-rule)}:is(:root,#iwf) .iw-ss-group-head{gap:10px;padding:10px var(--iwf-pad-x);border-radius:0;border:0!important;background-image:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 2px 0 0 color-mix(in srgb,var(--iwf-brass) 45%,transparent)!important;font-family:var(--iw-font-head, serif);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--iwf-text)}:is(:root,#iwf) .iw-ss-group-head:hover{background-image:linear-gradient(90deg,color-mix(in srgb,var(--iwf-brass) 10%,transparent),transparent 70%),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 2px 0 0 var(--iwf-brass)!important;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-group-head:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:-2px}:is(:root,#iwf) .iw-ss-group.is-open>.iw-ss-group-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--iwf-accent) 14%,transparent),transparent 65%),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 3px 0 0 var(--iwf-accent),inset 0 -1px 0 var(--iwf-rule)!important;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-caret{width:10px;text-align:center;color:var(--iwf-brass)}:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-caret{color:var(--iwf-accent);transform:rotate(90deg)}:is(:root,#iwf) .iw-ss-group-count{padding:1px 8px;border:1px solid var(--iwf-edge-faint);border-radius:999px;background:rgba(0,0,0,.3);font-family:var(--iw-font-ui, inherit);font-size:10.5px;letter-spacing:.02em;text-transform:none;font-variant-numeric:tabular-nums;color:var(--iwf-text-dim)}:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-group-count{border-color:color-mix(in srgb,var(--iwf-accent) 35%,var(--iwf-edge-faint));color:var(--iwf-text)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-group:last-child:not(.is-open)>.iw-ss-group-head{border-radius:0 0 calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-row{gap:12px;min-height:52px;padding:10px var(--iwf-pad-x) 10px calc(var(--iwf-pad-x) - 3px);border-radius:0;border:0 solid transparent;border-left-width:3px;background:transparent;box-shadow:none}:is(:root,#iwf) .iw-ss-row+.iw-ss-row{border-top:1px solid var(--iwf-rule)}:is(:root,#iwf) .iw-ss-group>.iw-ss-rows>.iw-ss-row{padding-left:calc(var(--iwf-indent) - 3px);background:linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.06))}:is(:root,#iwf) .iw-ss-row:hover{background:linear-gradient(90deg,rgba(255,235,190,.035),transparent 70%)}:is(:root,#iwf) .iw-ss-row.is-best{border-left-color:var(--iwf-accent);background:linear-gradient(90deg,color-mix(in srgb,var(--iwf-accent) 13%,transparent),transparent 60%)}:is(:root,#iwf) .iw-ss-row.is-running{border-left-color:var(--iwf-running);background:linear-gradient(90deg,color-mix(in srgb,var(--iwf-running) 14%,transparent),transparent 65%);box-shadow:inset 0 0 18px -12px var(--iwf-running)}:is(:root,#iwf) .iw-ss-row.is-locked{opacity:.55;filter:saturate(.4)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-row:last-child,:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-group:last-child>.iw-ss-rows>.iw-ss-row:last-child{border-bottom-left-radius:calc(var(--iwf-sheet-r) - 1px);border-bottom-right-radius:calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-rowname{gap:4px 10px;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-link{text-decoration-color:color-mix(in srgb,var(--iwf-brass) 55%,transparent)}:is(:root,#iwf) .iw-ss-link:hover{color:#fff;text-decoration-color:var(--iwf-accent)}:is(:root,#iwf) .iw-ss-xp{font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--iwf-brass) 65%,#fff1d2)}:is(:root,#iwf) .iw-ss-badge{align-self:center;border-radius:2px;background:linear-gradient(180deg,color-mix(in srgb,var(--iwf-accent) 85%,#fff),var(--iwf-accent));color:#170f05;box-shadow:0 0 8px -2px var(--iwf-accent)}:is(:root,#iwf) :is(.iw-ss-detail,.iw-ss-lock,.iw-ss-gear,.iw-ss-warn){margin-top:4px;line-height:1.35}:is(:root,#iwf) .iw-ss-detail{color:var(--iwf-text-dim)}:is(:root,#iwf) .iw-ss-lock{color:#fca5a5}:is(:root,#iwf) .iw-ss-gear{color:#a5b4fc}:is(:root,#iwf) .iw-ss-warn{color:#fcd34d}:is(:root,#iwf) .iw-ss-running{min-width:84px;text-align:center;color:#6ee7b7;text-shadow:0 0 8px rgba(52,211,153,.45);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iw-ss-empty{padding:12px var(--iwf-pad-x);color:var(--iwf-text-dim);font-style:italic}@media(max-width:480px){:is(:root,#iwf) .iw-skill-sheet{--iwf-pad-x: 12px;--iwf-indent: 22px}:is(:root,#iwf) .iw-ss-head{gap:10px}:is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{width:44px}:is(:root,#iwf) .iw-ss-zone{flex-wrap:wrap;row-gap:8px}:is(:root,#iwf) .iw-ss-zone-text{flex:1 1 calc(100% - 48px)}:is(:root,#iwf) .iw-ss-zone-go{margin-left:auto}:is(:root,#iwf) .iw-ss-running{min-width:64px}}:is(:root,#iwf) .iw-ss-main:has(>.iw-ss-detail[data-iw-fantasy-icon]){position:relative;min-height:var(--iwf-item);display:flex;flex-direction:column;justify-content:center}:is(:root,#iwf) .iw-ss-rows:has(>.iw-ss-row>.iw-ss-main>.iw-ss-detail[data-iw-fantasy-icon])>.iw-ss-row>.iw-ss-main{padding-left:calc(var(--iwf-item) + 12px)}:is(:root,#iwf) .iw-ss-detail[data-iw-fantasy-icon]::before{content:"";position:absolute;left:0;top:50%;width:var(--iwf-item);height:var(--iwf-item);transform:translateY(-50%);pointer-events:none;background-image:var(--iwf-sprite-img);background-size:var(--iwf-sprite-size);background-position:var(--iwf-sprite-pos);background-repeat:no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}:is(:root,#iwf) .iw-ss-start{border-radius:4px;border:1px solid color-mix(in srgb,var(--iw-th-cta, #c9852f) 75%,#000)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta-hi, #e6a24a) 42%,#1a140c),color-mix(in srgb,var(--iw-th-cta, #c9852f) 26%,#0c0a07))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.45),0 2px 6px -3px #000!important;color:#fff4dc;font-family:var(--iw-font-head, serif);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-ss-start:hover:not(:disabled){border-color:var(--iw-th-cta-hi, #e6a24a)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta-hi, #e6a24a) 58%,#1a140c),color-mix(in srgb,var(--iw-th-cta, #c9852f) 36%,#0c0a07))!important}:is(:root,#iwf) .iw-ss-start:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-ss-start:disabled{border-color:var(--iwf-edge-faint)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.25))!important;box-shadow:none!important;color:rgba(255,255,255,.38);text-shadow:none}\n';
+  var skills_default = ':is(:root,#iwf){--iwf-item-atlas: url(../assets/item_icons_atlas.png);--iwf-gear-atlas: url(../assets/gear_icons_atlas.png);--iwf-edge: var(--iw-th-edge-soft, #3b3a33);--iwf-edge-mid: var(--iw-th-edge-mid, #57513f);--iwf-edge-faint: var(--iw-th-edge-faint, #2a2a25);--iwf-accent: var(--iw-th-accent, #d8a64a);--iwf-brass: var(--iw-th-brass, #b8975a);--iwf-ground: linear-gradient(180deg, color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent), color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));--iwf-text-hi: #f1e6cc;--iwf-text: #d9cdb2;--iwf-text-dim: #a59a83;--iwf-running: #34d399;--iwf-boost: #86efac;--iwf-item: 50px}@media(max-width:1024px){:is(:root,#iwf){--iwf-item: 44px}}@media(max-width:768px){:is(:root,#iwf){--iwf-item: 40px}}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/combat.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/mining.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/smithing.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/gathering.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/alchemy.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/jewelcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/spellcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/tailoring.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/woodcutting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/construction.svg)}:is(:root,#iwf) [data-iw-fantasy-lead=icon]::first-letter{font-size:0;letter-spacing:0}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-tint: #e4574f}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-tint: #8fa4c0}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-tint: #f0793f}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-tint: #6dd48a}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-tint: #57c6cf}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-tint: #62d0e8}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-tint: #b492ea}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-tint: #e88fb8}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-tint: #c99a63}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-tint: #9aa7b8}:is(:root,#iwf) [data-iw-fantasy-skill]{--iwf-medal: var(--iwf-skill-icon) center / 54% auto no-repeat, radial-gradient(circle at 50% 38%, #221e17, #0a0a08 72%)}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 40% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 60% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 80% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 100% 0% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 100% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 100% / 600% 200% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-medal: url(../assets/skills-medallions/woodcutting.webp) center / 100% 100% no-repeat}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-medal: url(../assets/skills-medallions/construction.webp) center / 100% 100% no-repeat}:is(:root,#iwf) .iw-skill-tabs{container-type:inline-size;gap:8px}:is(:root,#iwf) .iw-skill-tab{--iwf-tint-on: var(--iwf-tint, var(--iwf-accent));--iwf-med: clamp(32px, 7.4cqw, 64px);--iwf-ring-gap: clamp(3px, 1cqw, 6px);--iwf-ring-w: clamp(3px, .65cqw, 4px);grid-template-columns:minmax(0,1fr);grid-template-areas:"name" "icon" "lv" "bar";grid-template-rows:auto auto auto auto;justify-items:center;align-content:center;aspect-ratio:5 / 6;gap:0;padding:clamp(5px,1.6cqw,12px) clamp(2px,.9cqw,6px) clamp(4px,1.3cqw,10px);text-align:center;border-radius:5px;border:1px solid var(--iwf-edge);--iwf-tab-bg: radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--iwf-tint-on) 16%, transparent), transparent 62%), var(--iwf-ground), url(../assets/skills_panel_texture.webp) center / cover;background:var(--iwf-tab-bg);box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,235,190,.05),0 3px 10px rgba(0,0,0,.25)}@container (min-width: 760px){:is(:root,#iwf) .iw-skill-tab{aspect-ratio:auto;min-height:188px}}:is(:root,#iwf) .iw-skill-tab::before{content:"";position:absolute;left:10px;right:10px;top:0;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--iwf-tint-on) 55%,var(--iwf-brass)) 50%,transparent);opacity:.7}:is(:root,#iwf) .iw-skill-tab:hover{border-color:color-mix(in srgb,var(--iwf-tint-on) 45%,var(--iwf-edge));box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 22px color-mix(in srgb,var(--iwf-tint-on) 10%,transparent),0 4px 14px rgba(0,0,0,.35)}:is(:root,#iwf) .iw-skill-tab:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-skill-tab.is-active{border-color:var(--iwf-accent);--iwf-tab-bg: radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--iwf-tint-on) 30%, transparent), transparent 66%), var(--iwf-ground), url(../assets/skills_panel_texture.webp) center / cover;background:var(--iwf-tab-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iwf-accent) 40%,transparent),0 0 14px -5px var(--iwf-accent)}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon{grid-area:icon;position:relative;z-index:1;display:block;width:var(--iwf-med);height:var(--iwf-med);margin:var(--iwf-ring-gap);border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);box-shadow:0 3px 9px rgba(0,0,0,.55);opacity:1;filter:none}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon::after{content:"";position:absolute;inset:calc(-1 * var(--iwf-ring-gap));border-radius:50%;pointer-events:none;background:conic-gradient(color-mix(in srgb,var(--iwf-tint-on) 78%,#fff) 0 var(--iwf-pct, 0%),#2a241b var(--iwf-pct, 0%) 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));filter:drop-shadow(0 0 3px color-mix(in srgb,var(--iwf-tint-on) 55%,transparent));opacity:.8}:is(:root,#iwf) .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon::after,:is(:root,#iwf) .iw-skill-tab:hover[data-iw-fantasy-skill] .iw-skill-tab-icon::after{opacity:1}:is(:root,#iwf) .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon{box-shadow:0 3px 9px rgba(0,0,0,.55),0 0 16px -2px color-mix(in srgb,var(--iwf-tint-on) 60%,transparent)}:is(:root,#iwf) .iw-skill-tab-lv{grid-area:lv;position:relative;z-index:2;min-width:clamp(24px,6cqw,38px);margin-top:calc(-1 * var(--iwf-ring-gap) - clamp(4px,1.2cqw,8px));padding:1px clamp(3px,1cqw,7px) 2px;border:1px solid color-mix(in srgb,var(--iwf-brass) 55%,#3a3226);border-radius:4px 4px 9px 9px;background:linear-gradient(#1b1812,#0b0c0e);box-shadow:inset 0 0 0 2px #1d1a14,0 2px 4px rgba(0,0,0,.6);font-size:clamp(9.5px,1.95cqw,12.5px);line-height:1.15;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-skill-tab.is-active .iw-skill-tab-lv{border-color:var(--iwf-accent);color:#fff}:is(:root,#iwf) .iw-skill-tab-name{grid-area:name;display:block;max-width:100%;margin-bottom:clamp(3px,1cqw,7px);font-family:var(--iw-font-head, serif);font-size:clamp(7px,1.72cqw,11px);font-weight:700;line-height:1.2;letter-spacing:clamp(0px,.12cqw,.04em);text-transform:uppercase;color:color-mix(in srgb,var(--iwf-tint-on) 45%,var(--iwf-text-dim));text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-skill-tab.is-active .iw-skill-tab-name{color:color-mix(in srgb,var(--iwf-tint-on) 62%,var(--iwf-text-hi))}:is(:root,#iwf) .iw-skill-tab-bar{grid-area:bar;width:80%;height:3px;margin-top:4px;border-radius:1px;background:#000a}:is(:root,#iwf) .iw-skill-tab-bar>span{background:linear-gradient(90deg,var(--iwf-brass),var(--iwf-accent))}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-pct][data-iw-fantasy-skill] .iw-skill-tab-bar{display:none}:is(:root,#iwf) .iw-skill-tab-live{top:6px;right:6px;z-index:3;background:var(--iwf-running);box-shadow:0 0 0 1px #000,0 0 6px var(--iwf-running)}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-boost=daily]::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;box-shadow:0 8px 18px -6px color-mix(in srgb,var(--iwf-boost) 55%,transparent),0 0 14px -2px color-mix(in srgb,var(--iwf-boost) 30%,transparent)}:is(:root,#iwf){--iwf-run-fill: linear-gradient(90deg, color-mix(in srgb, var(--iwf-running) 5%, transparent), color-mix(in srgb, var(--iwf-running) 22%, transparent) calc(100% - 2px), color-mix(in srgb, var(--iwf-running) 80%, #fff) calc(100% - 2px))}:is(:root,#iwf) [data-iw-fantasy-run] .iw-ss-rows>.iw-ss-row.is-running{background:var(--iwf-run-fill) 0 0 / var(--iwf-run, 0%) 100% no-repeat,linear-gradient(90deg,color-mix(in srgb,var(--iwf-running) 14%,transparent),transparent 65%);transition:background-size var(--iwf-run-tick, 300ms) linear,border-color .15s}:is(:root,#iwf) [data-iw-fantasy-run] .iw-skill-tab:has(>.iw-skill-tab-live){background:var(--iwf-run-fill) 0 0 / var(--iwf-tile-run, 0%) 100% no-repeat,linear-gradient(90deg,#0d8a5f,var(--iwf-running)) 0 100% / var(--iwf-tile-run, 0%) 3px no-repeat,var(--iwf-tab-bg);transition:background-size var(--iwf-run-tick, 300ms) linear,border-color .15s}:is(:root,#iwf) [data-iw-fantasy-run]:not(:has(.iw-ss-row.is-running)) .iw-skill-tab:has(>.iw-skill-tab-live){--iwf-tile-run: var(--iwf-run);border-color:color-mix(in srgb,var(--iwf-running) 55%,var(--iwf-edge))}:is(:root,#iwf) [data-iw-fantasy-run][data-iw-fantasy-run-reset] .iw-ss-rows>.iw-ss-row.is-running,:is(:root,#iwf) [data-iw-fantasy-run][data-iw-fantasy-run-reset] .iw-skill-tab:has(>.iw-skill-tab-live){transition:none}@media(prefers-reduced-motion:reduce){:is(:root,#iwf) [data-iw-fantasy-run] .iw-ss-rows>.iw-ss-row.is-running,:is(:root,#iwf) [data-iw-fantasy-run] .iw-skill-tab:has(>.iw-skill-tab-live){transition:none}}:is(:root,#iwf) .iw-skill-sheet{--iwf-sheet-r: 8px;--iwf-pad-x: 16px;--iwf-indent: 34px;--iwf-divider: linear-gradient(90deg, transparent, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 14%, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 86%, transparent);--iwf-rule: var(--iw-th-rule-soft, rgba(255,255,255,.06));gap:0;border-radius:var(--iwf-sheet-r);border:1px solid var(--iwf-edge-mid);background:var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,235,190,.05),0 6px 18px -10px #000}:is(:root,#iwf) .iw-skill-sheet>*+*{border-style:solid;border-width:1px 0 0;border-image:var(--iwf-divider) 1}:is(:root,#iwf) .iw-ss-head{gap:14px;padding:14px var(--iwf-pad-x) 13px;border:0;border-radius:calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px) 0 0;background:radial-gradient(ellipse 60% 120% at 0 0,color-mix(in srgb,var(--iwf-tint, var(--iw-th-edge, #6b5d3d)) 16%,transparent),transparent 70%),linear-gradient(180deg,rgba(255,235,190,.025),transparent);box-shadow:none}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-head:last-child{border-radius:calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{flex:0 0 auto;width:54px;aspect-ratio:1 / 1;border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)) drop-shadow(0 0 10px color-mix(in srgb,var(--iwf-tint, transparent) 22%,transparent))}:is(:root,#iwf) .iw-ss-name{gap:6px 10px}:is(:root,#iwf) .iw-ss-name>span:first-child{font-family:var(--iw-font-head, serif);font-size:18px;letter-spacing:.04em;color:var(--iwf-text-hi);text-shadow:0 1px 0 #000,0 0 12px color-mix(in srgb,var(--iwf-tint, transparent) 25%,transparent)}:is(:root,#iwf) .iw-ss-level{border-radius:3px;border-color:color-mix(in srgb,var(--iwf-brass) 70%,transparent);background:linear-gradient(180deg,#221c12,#120f0a);color:color-mix(in srgb,var(--iwf-brass) 55%,#fff1d2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iw-ss-boost{color:#86efac}:is(:root,#iwf) .iw-ss-xpbar{height:7px;margin-top:8px;border-radius:4px;background:linear-gradient(180deg,#050506,#111013);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iwf-brass) 22%,transparent),inset 0 1px 2px #000}:is(:root,#iwf) .iw-ss-xpbar>span{border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.28),transparent 55%),linear-gradient(90deg,color-mix(in srgb,var(--iwf-tint, var(--iwf-brass)) 55%,#2a2118),color-mix(in srgb,var(--iwf-tint, var(--iwf-accent)) 80%,#fff));box-shadow:0 0 6px -1px color-mix(in srgb,var(--iwf-tint, var(--iwf-accent)) 70%,transparent)}:is(:root,#iwf) .iw-ss-sub{margin-top:6px;color:var(--iwf-text-dim);font-family:var(--iw-font-flav, var(--iw-font-ui, inherit))}:is(:root,#iwf) .iw-ss-zone{--iwf-zone: rgba(56,189,248,.75);gap:12px;padding:12px var(--iwf-pad-x);border:0;border-radius:0;box-shadow:inset 3px 0 0 var(--iwf-zone)}:is(:root,#iwf) .iw-ss-zone.is-down{--iwf-zone: rgba(251,146,60,.75)}:is(:root,#iwf) .iw-ss-banner>.iw-ss-zone{padding-right:calc(var(--iwf-pad-x) + 26px)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-zone:last-child,:is(:root,#iwf) .iw-skill-sheet>.iw-ss-banner:last-child>.iw-ss-zone{border-radius:0 0 calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-zone-text{line-height:1.45}:is(:root,#iwf) .iw-ss-zone-text small{margin-top:2px}:is(:root,#iwf) .iw-ss-zone-go{border-radius:4px;border-color:color-mix(in srgb,var(--iwf-zone) 85%,#000)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iwf-zone) 38%,#0d1418),color-mix(in srgb,var(--iwf-zone) 18%,#070a0c))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.4),0 2px 6px -3px #000!important;text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-ss-zone-go:hover{border-color:var(--iwf-zone)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iwf-zone) 52%,#0d1418),color-mix(in srgb,var(--iwf-zone) 26%,#070a0c))!important}:is(:root,#iwf) .iw-ss-zone-go:focus-visible,:is(:root,#iwf) .iw-ss-x:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-ss-x{top:8px;right:8px;border-radius:4px;border-color:transparent!important;background-image:none!important;box-shadow:none!important}:is(:root,#iwf) .iw-ss-x:hover{border-color:rgba(255,255,255,.12)!important}:is(:root,#iwf) .iw-ss-rows{gap:0}:is(:root,#iwf) .iw-ss-group{gap:0}:is(:root,#iwf) .iw-ss-group+.iw-ss-group,:is(:root,#iwf) .iw-ss-group+.iw-ss-row,:is(:root,#iwf) .iw-ss-row+.iw-ss-group{border-top:1px solid var(--iwf-rule)}:is(:root,#iwf) .iw-ss-group-head{gap:10px;padding:10px var(--iwf-pad-x);border-radius:0;border:0!important;background-image:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 2px 0 0 color-mix(in srgb,var(--iwf-brass) 45%,transparent)!important;font-family:var(--iw-font-head, serif);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--iwf-text)}:is(:root,#iwf) .iw-ss-group-head:hover{background-image:linear-gradient(90deg,color-mix(in srgb,var(--iwf-brass) 10%,transparent),transparent 70%),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 2px 0 0 var(--iwf-brass)!important;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-group-head:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:-2px}:is(:root,#iwf) .iw-ss-group.is-open>.iw-ss-group-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--iwf-accent) 14%,transparent),transparent 65%),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 3px 0 0 var(--iwf-accent),inset 0 -1px 0 var(--iwf-rule)!important;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-caret{width:10px;text-align:center;color:var(--iwf-brass)}:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-caret{color:var(--iwf-accent);transform:rotate(90deg)}:is(:root,#iwf) .iw-ss-group-count{padding:1px 8px;border:1px solid var(--iwf-edge-faint);border-radius:999px;background:rgba(0,0,0,.3);font-family:var(--iw-font-ui, inherit);font-size:10.5px;letter-spacing:.02em;text-transform:none;font-variant-numeric:tabular-nums;color:var(--iwf-text-dim)}:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-group-count{border-color:color-mix(in srgb,var(--iwf-accent) 35%,var(--iwf-edge-faint));color:var(--iwf-text)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-group:last-child:not(.is-open)>.iw-ss-group-head{border-radius:0 0 calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-row{gap:12px;min-height:52px;padding:10px var(--iwf-pad-x) 10px calc(var(--iwf-pad-x) - 3px);border-radius:0;border:0 solid transparent;border-left-width:3px;background:transparent;box-shadow:none}:is(:root,#iwf) .iw-ss-row+.iw-ss-row{border-top:1px solid var(--iwf-rule)}:is(:root,#iwf) .iw-ss-group>.iw-ss-rows>.iw-ss-row{padding-left:calc(var(--iwf-indent) - 3px);background:linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.06))}:is(:root,#iwf) .iw-ss-row:hover{background:linear-gradient(90deg,rgba(255,235,190,.035),transparent 70%)}:is(:root,#iwf) .iw-ss-row.is-best{border-left-color:var(--iwf-accent);background:linear-gradient(90deg,color-mix(in srgb,var(--iwf-accent) 13%,transparent),transparent 60%)}:is(:root,#iwf) .iw-ss-row.is-running{border-left-color:var(--iwf-running);background:linear-gradient(90deg,color-mix(in srgb,var(--iwf-running) 14%,transparent),transparent 65%);box-shadow:inset 0 0 18px -12px var(--iwf-running)}:is(:root,#iwf) .iw-ss-row.is-locked{opacity:.55;filter:saturate(.4)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-row:last-child,:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-group:last-child>.iw-ss-rows>.iw-ss-row:last-child{border-bottom-left-radius:calc(var(--iwf-sheet-r) - 1px);border-bottom-right-radius:calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-rowname{gap:4px 10px;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-link{text-decoration-color:color-mix(in srgb,var(--iwf-brass) 55%,transparent)}:is(:root,#iwf) .iw-ss-link:hover{color:#fff;text-decoration-color:var(--iwf-accent)}:is(:root,#iwf) .iw-ss-xp{font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--iwf-brass) 65%,#fff1d2)}:is(:root,#iwf) .iw-ss-badge{align-self:center;border-radius:2px;background:linear-gradient(180deg,color-mix(in srgb,var(--iwf-accent) 85%,#fff),var(--iwf-accent));color:#170f05;box-shadow:0 0 8px -2px var(--iwf-accent)}:is(:root,#iwf) :is(.iw-ss-detail,.iw-ss-lock,.iw-ss-gear,.iw-ss-warn){margin-top:4px;line-height:1.35}:is(:root,#iwf) .iw-ss-detail{color:var(--iwf-text-dim)}:is(:root,#iwf) .iw-ss-lock{color:#fca5a5}:is(:root,#iwf) .iw-ss-gear{color:#a5b4fc}:is(:root,#iwf) .iw-ss-warn{color:#fcd34d}:is(:root,#iwf) .iw-ss-running{min-width:84px;text-align:center;color:#6ee7b7;text-shadow:0 0 8px rgba(52,211,153,.45);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iw-ss-empty{padding:12px var(--iwf-pad-x);color:var(--iwf-text-dim);font-style:italic}@media(max-width:480px){:is(:root,#iwf) .iw-skill-tab{aspect-ratio:auto;padding-inline:1px}:is(:root,#iwf) .iw-skill-tab-live{top:auto;bottom:4px;right:4px;width:5px;height:5px}:is(:root,#iwf) .iw-skill-tab-name{font-size:7.5px;letter-spacing:0}:is(:root,#iwf) .iw-skill-tab:is([data-iw-fantasy-skill=jewelcrafting],[data-iw-fantasy-skill=spellcrafting],[data-iw-fantasy-skill=woodcutting],[data-iw-fantasy-skill=construction]) .iw-skill-tab-name{font-size:0;letter-spacing:0;overflow:visible}:is(:root,#iwf) .iw-skill-tab:is([data-iw-fantasy-skill=jewelcrafting],[data-iw-fantasy-skill=spellcrafting],[data-iw-fantasy-skill=woodcutting],[data-iw-fantasy-skill=construction]) .iw-skill-tab-name::before{display:block;font-size:7.5px;white-space:pre}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill=jewelcrafting] .iw-skill-tab-name::before{content:"Jewel-\\a crafting"}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill=spellcrafting] .iw-skill-tab-name::before{content:"Spell-\\a crafting"}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill=woodcutting] .iw-skill-tab-name::before{content:"Wood-\\a cutting"}:is(:root,#iwf) .iw-skill-tab[data-iw-fantasy-skill=construction] .iw-skill-tab-name::before{content:"Construc-\\ation"}:is(:root,#iwf) .iw-skill-sheet{--iwf-pad-x: 12px;--iwf-indent: 22px}:is(:root,#iwf) .iw-ss-head{gap:10px}:is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{width:44px}:is(:root,#iwf) .iw-ss-zone{flex-wrap:wrap;row-gap:8px}:is(:root,#iwf) .iw-ss-zone-text{flex:1 1 calc(100% - 48px)}:is(:root,#iwf) .iw-ss-zone-go{margin-left:auto}:is(:root,#iwf) .iw-ss-running{min-width:64px}}:is(:root,#iwf) .iw-ss-main:has(>.iw-ss-detail[data-iw-fantasy-icon]){position:relative;min-height:var(--iwf-item);display:flex;flex-direction:column;justify-content:center}:is(:root,#iwf) .iw-ss-rows:has(>.iw-ss-row>.iw-ss-main>.iw-ss-detail[data-iw-fantasy-icon])>.iw-ss-row>.iw-ss-main{padding-left:calc(var(--iwf-item) + 12px)}:is(:root,#iwf) .iw-ss-detail[data-iw-fantasy-icon]::before{content:"";position:absolute;left:0;top:50%;width:var(--iwf-item);height:var(--iwf-item);transform:translateY(-50%);pointer-events:none;background-image:var(--iwf-sprite-img);background-size:var(--iwf-sprite-size);background-position:var(--iwf-sprite-pos);background-repeat:no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}:is(:root,#iwf) .iw-ss-start{border-radius:4px;border:1px solid color-mix(in srgb,var(--iw-th-cta, #c9852f) 75%,#000)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta-hi, #e6a24a) 42%,#1a140c),color-mix(in srgb,var(--iw-th-cta, #c9852f) 26%,#0c0a07))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.45),0 2px 6px -3px #000!important;color:#fff4dc;font-family:var(--iw-font-head, serif);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-ss-start:hover:not(:disabled){border-color:var(--iw-th-cta-hi, #e6a24a)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta-hi, #e6a24a) 58%,#1a140c),color-mix(in srgb,var(--iw-th-cta, #c9852f) 36%,#0c0a07))!important}:is(:root,#iwf) .iw-ss-start:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-ss-start:disabled{border-color:var(--iwf-edge-faint)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.25))!important;box-shadow:none!important;color:rgba(255,255,255,.38);text-shadow:none}\n';
+
+  // src/skins/fantasy/styles/queue.css
+  var queue_default = ':is(:root,#iwf) body:has(:not([data-iw-collapsed="1"])>.iwf-queue[data-iw-fantasy-queue-owned]) #current-action-panel[data-iw-fantasy-queue=mirrored]{display:none!important}:is(:root,#iwf) .iwf-queue{--iwf-q-divider: linear-gradient(90deg, transparent, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 14%, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 86%, transparent);margin-top:12px;border:1px solid var(--iwf-edge-mid);border-radius:8px;background:var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,235,190,.05),0 6px 18px -10px #000;color:var(--iwf-text);font-size:12px}:is(:root,#iwf) .iwf-queue [hidden]{display:none!important}:is(:root,#iwf) .iwf-q-head{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 16px}:is(:root,#iwf) .iwf-q-title{margin:0;font-family:var(--iw-font-head, serif);font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--iwf-text-hi)}:is(:root,#iwf) .iwf-q-count{margin-right:auto;padding:1px 8px;border:1px solid var(--iwf-edge-faint);border-radius:999px;background:rgba(0,0,0,.3);font-size:10.5px;font-variant-numeric:tabular-nums;color:var(--iwf-text-dim)}:is(:root,#iwf) .iwf-q-list{list-style:none;margin:0;padding:0}:is(:root,#iwf) .iwf-q-row{display:flex;align-items:center;gap:9px;min-height:40px;padding:5px 8px 5px 8px;border-top:1px solid var(--iw-th-rule-soft, rgba(255,255,255,.06));cursor:grab}:is(:root,#iwf) .iwf-q-head+.iwf-q-list>.iwf-q-row:first-child{border-top:1px solid;border-image:var(--iwf-q-divider) 1}:is(:root,#iwf) .iwf-q-row:hover{background:linear-gradient(90deg,rgba(255,235,190,.035),transparent 70%)}:is(:root,#iwf) .iwf-q-row[data-dragging]{opacity:.45}:is(:root,#iwf) .iwf-q-grip{width:10px;color:#5d5647;font-size:12px;letter-spacing:-2px}:is(:root,#iwf) .iwf-q-n{width:14px;text-align:right;font-size:10.5px;font-weight:700;color:var(--iwf-brass);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iwf-q-icon{flex:none;width:26px;height:26px;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,.6)}:is(:root,#iwf) .iwf-q-row[data-iw-fantasy-skill] .iwf-q-icon{background:var(--iwf-medal)}:is(:root,#iwf) .iwf-q-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:var(--iwf-text-hi)}:is(:root,#iwf) .iwf-q-times{margin-left:5px;font-size:11px;font-weight:500;color:var(--iwf-text-dim)}:is(:root,#iwf) .iwf-q-eta{flex:none;font-size:11px;color:var(--iwf-text-dim);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iwf-queue button{border-radius:4px!important;font-family:var(--iw-font-ui, inherit)!important;transition:border-color .13s,color .13s!important;border:1px solid transparent;border-color:transparent!important;background-image:none!important;background-color:transparent;box-shadow:none!important;cursor:pointer}:is(:root,#iwf) .iwf-q-x{flex:none;width:26px;height:26px;padding:0;font-size:11px;line-height:1;color:rgba(255,255,255,.45)}:is(:root,#iwf) .iwf-q-x:hover{border-color:rgba(255,255,255,.14)!important;color:#fff}:is(:root,#iwf) .iwf-queue button:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:1px}:is(:root,#iwf) .iwf-q-toggles{border-top:1px solid var(--iw-th-rule-soft, rgba(255,255,255,.06))}:is(:root,#iwf) .iwf-q-more{display:block;width:100%;padding:8px 16px 9px;text-align:left;font-size:11px;color:var(--iwf-text-dim)}:is(:root,#iwf) .iwf-q-more:hover{color:var(--iwf-text-hi)}@media(max-width:480px){:is(:root,#iwf) .iwf-q-grip{display:none}:is(:root,#iwf) .iwf-q-x{width:32px;height:32px}}\n';
 
   // src/skins/fantasy/styles/quests.css
-  var quests_default = ':is(:root,#iwf) .iw-wo-board{--iwq-edge: var(--iw-th-edge-soft, #3b3a33);--iwq-edge-faint: var(--iw-th-edge-faint, #2a2a25);--iwq-brass: var(--iw-th-brass, #b8975a);--iwq-accent: var(--iw-th-accent, #d8a64a);--iwq-ground: linear-gradient(180deg, color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent), color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));--iwq-ready: #34d399;--iwq-bounty: #f87171;--iwq-item: 50px}@media(max-width:1024px){:is(:root,#iwf) .iw-wo-board{--iwq-item: 44px}}@media(max-width:768px){:is(:root,#iwf) .iw-wo-board{--iwq-item: 40px}}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=combat]{--iwq-icon: url(../assets/skills-ui/action-icons/combat.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=mining]{--iwq-icon: url(../assets/skills-ui/action-icons/mining.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=smithing]{--iwq-icon: url(../assets/skills-ui/action-icons/smithing.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=gathering]{--iwq-icon: url(../assets/skills-ui/action-icons/gathering.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=alchemy]{--iwq-icon: url(../assets/skills-ui/action-icons/alchemy.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=jewelcrafting]{--iwq-icon: url(../assets/skills-ui/action-icons/jewelcrafting.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=spellcrafting]{--iwq-icon: url(../assets/skills-ui/action-icons/spellcrafting.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=tailoring]{--iwq-icon: url(../assets/skills-ui/action-icons/tailoring.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=woodcutting]{--iwq-icon: url(../assets/skills-ui/action-icons/woodcutting.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=construction]{--iwq-icon: url(../assets/skills-ui/action-icons/construction.svg)}:is(:root,#iwf) .iw-wo-board [data-iw-fantasy-lead=icon]::first-letter{font-size:0;letter-spacing:0}:is(:root,#iwf) .iw-wo-head>span:first-child:not(.iw-wo-sub){position:relative;padding-left:15px;font-family:var(--iw-font-head, serif);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--iwq-brass) 55%,#fff1d2);text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-wo-head>span:first-child:not(.iw-wo-sub)::before{content:"";position:absolute;left:1px;top:50%;width:7px;height:7px;transform:translateY(-50%) rotate(45deg);border:1px solid var(--iwq-brass);background:linear-gradient(135deg,color-mix(in srgb,var(--iwq-accent) 70%,#fff),var(--iwq-brass));box-shadow:0 0 6px -1px var(--iwq-accent)}:is(:root,#iwf) .iw-wo-sub{color:var(--iw-th-text-dim, #a59a83)}:is(:root,#iwf) .iw-wo-tile{gap:5px;padding:8px 9px 9px;border-radius:5px;border:1px solid var(--iwq-edge-faint);background:var(--iwq-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),inset 0 -10px 14px -12px #000}:is(:root,#iwf) .iw-wo-tile:hover{border-color:var(--iwq-edge)}:is(:root,#iwf) .iw-wo-tile.is-ready{border-color:color-mix(in srgb,var(--iwq-ready) 62%,transparent);background:radial-gradient(ellipse at 50% 0,color-mix(in srgb,var(--iwq-ready) 16%,transparent),transparent 70%),var(--iwq-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 0 12px -5px var(--iwq-ready)}:is(:root,#iwf) .iw-wo-tile.is-bounty:not(.is-ready){border-color:color-mix(in srgb,var(--iwq-bounty) 60%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--iwq-bounty) 12%,transparent),transparent 65%),var(--iwq-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 3px 0 0 color-mix(in srgb,var(--iwq-bounty) 80%,transparent)}:is(:root,#iwf) .iw-wo-skill{font-family:var(--iw-font-head, serif);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--iw-th-text-dim, #b3a689)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill]{position:relative;padding-left:21px}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill]::before{content:"";position:absolute;left:0;top:50%;width:17px;height:17px;transform:translateY(-50%);background:var(--iwq-icon) center / contain no-repeat;filter:drop-shadow(0 1px 1px #000);opacity:.85}:is(:root,#iwf) .iw-wo-reroll{color:var(--iwq-brass);border-radius:2px}:is(:root,#iwf) .iw-wo-reroll:hover{color:var(--iwq-accent);background:rgba(255,255,255,.06)}:is(:root,#iwf) .iw-wo-reroll.is-off{opacity:.3;cursor:not-allowed}:is(:root,#iwf) .iw-wo-reroll.is-off:hover{color:var(--iwq-brass);background:none}:is(:root,#iwf) .iw-wo-item{font-family:var(--iw-font-ui, inherit);color:#f3e9d2}:is(:root,#iwf) .iw-wo-item[data-iw-fantasy-icon]{position:relative;display:block;min-height:var(--iwq-item);padding:calc((var(--iwq-item) - 1.3em) / 2) 0 0 calc(var(--iwq-item) + 10px);line-height:1.3}:is(:root,#iwf) .iw-wo-item[data-iw-fantasy-icon]::after{content:"";position:absolute;left:0;top:0;width:var(--iwq-item);height:var(--iwq-item);pointer-events:none;background-image:var(--iwf-sprite-img);background-size:var(--iwf-sprite-size);background-position:var(--iwf-sprite-pos);background-repeat:no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}:is(:root,#iwf) .iw-wo-bar{height:4px;border-radius:1px;background:#000b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}:is(:root,#iwf) .iw-wo-bar>span{background:linear-gradient(90deg,#10b981,#6ee7b7)}:is(:root,#iwf) .iw-wo-meta{color:var(--iw-th-text-dim, #a59a83)}:is(:root,#iwf) .iw-wo-reward{color:color-mix(in srgb,var(--iwq-brass) 55%,#fff1d2)}:is(:root,#iwf) .iw-wo-btn{height:26px;min-height:26px;padding:0 11px;border-radius:2px;border:1px solid color-mix(in srgb,var(--iw-good, #82b88a) 44%,var(--iwq-edge-faint))!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-good, #82b88a) 9%,#100e0a),#0a0907)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),inset 0 -7px 10px -8px rgba(0,0,0,.95)!important;color:var(--iw-good, #82b88a);font-family:var(--iw-font-head, serif);font-size:10.5px;font-weight:600;line-height:24px;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}:is(:root,#iwf) .iw-wo-btn:hover:not(:disabled){border-color:var(--iw-good, #82b88a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 0 10px -3px color-mix(in srgb,var(--iw-good, #82b88a) 45%,transparent)!important;color:color-mix(in srgb,var(--iw-good, #82b88a) 70%,#fff)}:is(:root,#iwf) .iw-wo-btn:focus-visible{outline:2px solid var(--iwq-accent);outline-offset:2px}:is(:root,#iwf) .iw-wo-btn.is-batch{padding:0 9px;border-color:var(--iwq-brass)!important;background-image:linear-gradient(180deg,#100e0a,#0a0907)!important;color:#ffe9c4;letter-spacing:.04em;text-transform:none}:is(:root,#iwf) .iw-wo-btn.is-batch:hover:not(:disabled){border-color:var(--iw-th-hairline-hi, #e0c48a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 0 10px -3px rgba(216,121,31,.35)!important;color:#fff3df}:is(:root,#iwf) .iw-wo-btn:disabled{opacity:.45;border-color:var(--iwq-edge-faint)!important;background-image:linear-gradient(180deg,#100e0a,#0a0907)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),inset 0 -7px 10px -8px rgba(0,0,0,.95)!important;color:var(--iw-faint, #666052)}\n';
+  var quests_default = ':is(:root,#iwf) .iw-wo-board{--iwq-edge: var(--iw-th-edge-soft, #3b3a33);--iwq-edge-faint: var(--iw-th-edge-faint, #2a2a25);--iwq-brass: var(--iw-th-brass, #b8975a);--iwq-accent: var(--iw-th-accent, #d8a64a);--iwq-ground: linear-gradient(180deg, color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent), color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));--iwq-ready: #34d399;--iwq-bounty: #f87171;--iwq-item: 50px}@media(max-width:1024px){:is(:root,#iwf) .iw-wo-board{--iwq-item: 44px}}@media(max-width:768px){:is(:root,#iwf) .iw-wo-board{--iwq-item: 40px}}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=combat]{--iwq-icon: url(../assets/skills-ui/action-icons/combat.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=mining]{--iwq-icon: url(../assets/skills-ui/action-icons/mining.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=smithing]{--iwq-icon: url(../assets/skills-ui/action-icons/smithing.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=gathering]{--iwq-icon: url(../assets/skills-ui/action-icons/gathering.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=alchemy]{--iwq-icon: url(../assets/skills-ui/action-icons/alchemy.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=jewelcrafting]{--iwq-icon: url(../assets/skills-ui/action-icons/jewelcrafting.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=spellcrafting]{--iwq-icon: url(../assets/skills-ui/action-icons/spellcrafting.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=tailoring]{--iwq-icon: url(../assets/skills-ui/action-icons/tailoring.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=woodcutting]{--iwq-icon: url(../assets/skills-ui/action-icons/woodcutting.svg)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill=construction]{--iwq-icon: url(../assets/skills-ui/action-icons/construction.svg)}:is(:root,#iwf) .iw-wo-board [data-iw-fantasy-lead=icon]::first-letter{font-size:0;letter-spacing:0}:is(:root,#iwf) .iw-wo-head>span:first-child:not(.iw-wo-sub){position:relative;padding-left:15px;font-family:var(--iw-font-head, serif);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--iwq-brass) 55%,#fff1d2);text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-wo-head>span:first-child:not(.iw-wo-sub)::before{content:"";position:absolute;left:1px;top:50%;width:7px;height:7px;transform:translateY(-50%) rotate(45deg);border:1px solid var(--iwq-brass);background:linear-gradient(135deg,color-mix(in srgb,var(--iwq-accent) 70%,#fff),var(--iwq-brass));box-shadow:0 0 6px -1px var(--iwq-accent)}:is(:root,#iwf) .iw-wo-sub{color:var(--iw-th-text-dim, #a59a83)}:is(:root,#iwf) .iw-wo-tile{gap:5px;padding:8px 9px 9px;border-radius:5px;border:1px solid var(--iwq-edge-faint);background:var(--iwq-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),inset 0 -10px 14px -12px #000}:is(:root,#iwf) .iw-wo-tile:hover{border-color:var(--iwq-edge)}:is(:root,#iwf) .iw-wo-tile.is-ready{border-color:color-mix(in srgb,var(--iwq-ready) 62%,transparent);background:radial-gradient(ellipse at 50% 0,color-mix(in srgb,var(--iwq-ready) 16%,transparent),transparent 70%),var(--iwq-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 0 12px -5px var(--iwq-ready)}:is(:root,#iwf) .iw-wo-tile.is-bounty:not(.is-ready){border-color:color-mix(in srgb,var(--iwq-bounty) 60%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--iwq-bounty) 12%,transparent),transparent 65%),var(--iwq-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 3px 0 0 color-mix(in srgb,var(--iwq-bounty) 80%,transparent)}:is(:root,#iwf) .iw-wo-skill{font-family:var(--iw-font-head, serif);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--iw-th-text-dim, #b3a689)}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill]{position:relative;padding-left:21px}:is(:root,#iwf) .iw-wo-skill[data-iw-fantasy-skill]::before{content:"";position:absolute;left:0;top:50%;width:17px;height:17px;transform:translateY(-50%);background:var(--iwq-icon) center / contain no-repeat;filter:drop-shadow(0 1px 1px #000);opacity:.85}:is(:root,#iwf) .iw-wo-reroll{color:var(--iwq-brass);border-radius:2px}:is(:root,#iwf) .iw-wo-reroll:hover{color:var(--iwq-accent);background:rgba(255,255,255,.06)}:is(:root,#iwf) .iw-wo-reroll.is-off{opacity:.3;cursor:not-allowed}:is(:root,#iwf) .iw-wo-reroll.is-off:hover{color:var(--iwq-brass);background:none}:is(:root,#iwf) .iw-wo-item{font-family:var(--iw-font-ui, inherit);color:#f3e9d2}:is(:root,#iwf) .iw-wo-item[data-iw-fantasy-icon]{position:relative;display:block;min-height:var(--iwq-item);padding:calc((var(--iwq-item) - 1.3em) / 2) 0 0 calc(var(--iwq-item) + 10px);line-height:1.3}:is(:root,#iwf) .iw-wo-item[data-iw-fantasy-icon]::after{content:"";position:absolute;left:0;top:0;width:var(--iwq-item);height:var(--iwq-item);pointer-events:none;background-image:var(--iwf-sprite-img);background-size:var(--iwf-sprite-size);background-position:var(--iwf-sprite-pos);background-repeat:no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}:is(:root,#iwf) .iw-wo-bar{height:4px;border-radius:1px;background:#000b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}:is(:root,#iwf) .iw-wo-bar>span{background:linear-gradient(90deg,#10b981,#6ee7b7)}:is(:root,#iwf) .iw-wo-meta{color:var(--iw-th-text-dim, #a59a83)}:is(:root,#iwf) .iw-wo-reward{color:color-mix(in srgb,var(--iwq-brass) 55%,#fff1d2)}:is(:root,#iwf) .iw-wo-btn{--iwq-cap: 10px;height:26px;min-height:26px;padding:0 11px;border-radius:2px!important;border:1px solid var(--iw-th-edge-faint, var(--iwq-edge-faint))!important;background:linear-gradient(180deg,#100e0a,#0a0907)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),inset 0 -7px 10px -8px rgba(0,0,0,.95)!important;filter:none!important;color:var(--iw-good, #82b88a);font-family:var(--iw-font-ui, inherit)!important;font-size:10.5px;font-weight:600;line-height:24px;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}:is(:root,#iwf) .iw-wo-btn:hover:not(:disabled){border-color:var(--iw-good, #82b88a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 0 10px -3px rgba(216,121,31,.35)!important}:is(:root,#iwf) .iw-wo-btn:focus-visible{outline:2px solid var(--iw-th-accent, var(--iwq-accent));outline-offset:2px}:is(:root,#iwf) .iw-wo-btn.is-batch{color:var(--iw-gold, var(--iwq-accent))}:is(:root,#iwf) .iw-wo-btn.is-batch:hover:not(:disabled){border-color:var(--iw-line-hot, var(--iwq-brass))!important}:is(:root,#iwf) .iw-wo-btn:disabled{opacity:.45;border-color:var(--iw-th-edge-faint, var(--iwq-edge-faint))!important;background:linear-gradient(180deg,#100e0a,#0a0907)!important;color:var(--iw-faint, #666052)}:is(:root,#iwf)[data-iw-compact-atlas=compact-ghost-v3] .iw-wo-btn{--iwq-y: 2.9411764705882355%;position:relative;isolation:isolate;padding:0 1px;border-style:solid!important;border-width:0 var(--iwq-cap)!important;border-color:transparent!important;border-radius:0!important;background:var(--iw-compact-atlas) var(--iw-compact-mid-x, 21.428571428571427%) var(--iwq-y) / var(--iw-compact-mid-size, 150% 326.6666666666667%) no-repeat padding-box padding-box!important;box-shadow:none!important}:is(:root,#iwf)[data-iw-compact-atlas=compact-ghost-v3] .iw-wo-btn::before,:is(:root,#iwf)[data-iw-compact-atlas=compact-ghost-v3] .iw-wo-btn::after{content:"";position:absolute;top:0;bottom:0;width:var(--iwq-cap);pointer-events:none;background:var(--iw-compact-atlas) var(--iw-compact-left-x, 1.2658227848101267%) var(--iwq-y) / var(--iw-compact-cap-size, 1680% 326.6666666666667%) no-repeat}:is(:root,#iwf)[data-iw-compact-atlas=compact-ghost-v3] .iw-wo-btn::before{left:calc(-1 * var(--iwq-cap))}:is(:root,#iwf)[data-iw-compact-atlas=compact-ghost-v3] .iw-wo-btn::after{right:calc(-1 * var(--iwq-cap));background-position-x:var(--iw-compact-right-x, 78.48101265822785%)}:is(:root,#iwf)[data-iw-compact-atlas=compact-ghost-v3] .iw-wo-btn:not(:disabled):is(:hover,:focus-visible){--iwq-y: 50%}:is(:root,#iwf)[data-iw-compact-atlas=compact-ghost-v3] .iw-wo-btn:not(:disabled):active{--iwq-y: 97.05882352941177%}:is(:root,#iwf)[data-iw-compact-atlas=compact-ghost-v3] .iw-wo-btn:hover:not(:disabled),:is(:root,#iwf)[data-iw-compact-atlas=compact-ghost-v3] .iw-wo-btn:disabled{border-color:transparent!important;background:var(--iw-compact-atlas) var(--iw-compact-mid-x, 21.428571428571427%) var(--iwq-y) / var(--iw-compact-mid-size, 150% 326.6666666666667%) no-repeat padding-box padding-box!important;box-shadow:none!important}\n';
 
   // src/skins/fantasy/skills/index.js
   var SKILL_ATTR = "data-iw-fantasy-skill";
   var ICON_ATTR = "data-iw-fantasy-icon";
   var LEAD_ATTR = "data-iw-fantasy-lead";
   var PCT_ATTR = "data-iw-fantasy-pct";
-  var ATTRS6 = [SKILL_ATTR, ICON_ATTR, LEAD_ATTR, PCT_ATTR];
+  var BOOST_ATTR = "data-iw-fantasy-boost";
+  var RUN_ATTR = "data-iw-fantasy-run";
+  var RUN_RESET_ATTR = "data-iw-fantasy-run-reset";
+  var ATTRS6 = [SKILL_ATTR, ICON_ATTR, LEAD_ATTR, PCT_ATTR, BOOST_ATTR, RUN_ATTR, RUN_RESET_ATTR];
   var PCT_RULES = Array.from({ length: 101 }, (_, n) => `:is(:root,#iwf) .iw-skill-tab[${PCT_ATTR}="${n}"]{--iwf-pct:${n}%}`).join("\n");
   function tabPercent(tab3) {
     const width = tab3.querySelector(".iw-skill-tab-bar > span")?.style.width || "";
     const m = width.match(/^([\d.]+)%$/);
     return m ? String(Math.max(0, Math.min(100, Math.round(+m[1])))) : null;
   }
+  var RUN_RULES = Array.from({ length: 201 }, (_, n) => `:is(:root,#iwf) [${RUN_ATTR}="${n / 2}"]{--iwf-run:${n / 2}%}`).join("\n");
+  var RUN_FILL = '#current-action-panel [style*="width"]';
+  function runPercent(root = document) {
+    for (const el2 of root.querySelectorAll(RUN_FILL)) {
+      const m = (el2.style.width || "").match(/^([\d.]+)%$/);
+      if (m) return String(Math.max(0, Math.min(100, Math.round(+m[1] * 2) / 2)));
+    }
+    return null;
+  }
+  function boostedSkills(text2) {
+    const m = label5(text2).match(/^daily xp boost\s*:\s*(.*)$/i);
+    if (!m) return /* @__PURE__ */ new Set();
+    return new Set(m[1].split("+").map((part) => skillKey2(part)).filter(Boolean));
+  }
   var SHEET_ROOTS = ".iw-skill-tabs, .iw-skill-sheet";
   var BOARD_ROOTS = ".iw-wo-board";
-  var NAMED = ".iw-skill-tab-name, .iw-ss-name, .iw-ss-detail, .iw-wo-skill, .iw-wo-item";
+  var BOOST_LINE = "[data-iw-skill-boost]";
+  var NAMED = `.iw-skill-tab-name, .iw-ss-name, .iw-ss-detail, .iw-wo-skill, .iw-wo-item, ${BOOST_LINE}`;
   var SKILLS2 = {
     combat: "combat",
     bounty: "combat",
@@ -13983,10 +14209,15 @@
     mark6(el2, SKILL_ATTR, key);
     if (lead) mark6(el2, LEAD_ATTR, key && LEADING.test(el2.textContent || "") ? "icon" : null);
   }
+  var panelOf = (tabs) => tabs.closest(".panel") || tabs.parentElement;
   function decorateSkillSheet() {
-    for (const tab3 of document.querySelectorAll(".iw-skill-tab")) {
-      markSkill(tab3, tab3.querySelector(".iw-skill-tab-name")?.textContent);
-      mark6(tab3, PCT_ATTR, tabPercent(tab3));
+    for (const tabs of document.querySelectorAll(".iw-skill-tabs")) {
+      const boosted = boostedSkills(panelOf(tabs)?.querySelector(BOOST_LINE)?.textContent);
+      for (const tab3 of tabs.querySelectorAll(".iw-skill-tab")) {
+        markSkill(tab3, tab3.querySelector(".iw-skill-tab-name")?.textContent);
+        mark6(tab3, PCT_ATTR, tabPercent(tab3));
+        mark6(tab3, BOOST_ATTR, boosted.has(tab3.getAttribute(SKILL_ATTR)) ? "daily" : null);
+      }
     }
     for (const head of document.querySelectorAll(".iw-ss-head")) {
       markSkill(head, head.querySelector(".iw-ss-name > span:first-child")?.textContent);
@@ -14000,6 +14231,43 @@
       }
     }
   }
+  var run2 = { value: null, at: 0, gaps: [], skip: false, tick: null };
+  function sampleRun(value, now) {
+    const pct = +value;
+    const reset = run2.value != null && pct < +run2.value;
+    if (run2.value != null && !reset && !run2.skip) {
+      const gap = now - run2.at;
+      if (gap > 40 && gap < 5e3) run2.gaps = [...run2.gaps, gap].slice(-5);
+    }
+    run2.skip = reset;
+    run2.value = value;
+    run2.at = now;
+    if (run2.gaps.length >= 3) {
+      const sorted = [...run2.gaps].sort((a, b) => a - b);
+      const tick = Math.round(Math.max(80, Math.min(4e3, sorted[sorted.length >> 1] * 1.12)));
+      if (!run2.tick || Math.abs(tick - run2.tick) / run2.tick > 0.15) {
+        run2.tick = tick;
+        setSheet("run-tick", `:is(:root,#iwf){--iwf-run-tick:${tick}ms}`);
+      }
+    }
+    return reset;
+  }
+  function decorateRun() {
+    const value = runPercent();
+    const reset = value != null && value !== run2.value && sampleRun(value, performance.now());
+    for (const tabs of document.querySelectorAll(".iw-skill-tabs")) {
+      const panel3 = panelOf(tabs);
+      mark6(panel3, RUN_ATTR, value);
+      if (reset) {
+        mark6(panel3, RUN_RESET_ATTR, "1");
+        raf2(() => mark6(panel3, RUN_RESET_ATTR, null));
+      }
+    }
+    if (value == null) {
+      run2.value = null;
+      run2.skip = false;
+    }
+  }
   function decorateWorkOrders() {
     for (const skill of document.querySelectorAll(".iw-wo-skill")) markSkill(skill, skill.textContent, { lead: true });
     for (const item of document.querySelectorAll(".iw-wo-item")) {
@@ -14011,6 +14279,10 @@
   }
   var active4 = { skillSheet: false, workOrders: false };
   var unsubscribe2 = null;
+  function resetRun() {
+    remove("run-tick");
+    Object.assign(run2, { value: null, at: 0, gaps: [], skip: false, tick: null });
+  }
   function clearUnder(selector) {
     for (const root of document.querySelectorAll(selector)) unmark2(ATTRS6, root);
   }
@@ -14019,9 +14291,17 @@
     const present = { skillSheet: !!document.querySelector(SHEET_ROOTS), workOrders: !!document.querySelector(BOARD_ROOTS) };
     const next = { skillSheet: !native2.has("skillSheet"), workOrders: !native2.has("workOrders") };
     if (next.skillSheet && present.skillSheet) inject2("skills", `${skills_default}
-${PCT_RULES}`);
-    else remove("skills");
-    if (!next.skillSheet && active4.skillSheet) clearUnder(SHEET_ROOTS);
+${queue_default}
+${PCT_RULES}
+${RUN_RULES}`);
+    else {
+      remove("skills");
+      resetRun();
+    }
+    if (!next.skillSheet && active4.skillSheet) {
+      clearUnder(SHEET_ROOTS);
+      unmark2([RUN_ATTR, RUN_RESET_ATTR]);
+    }
     if (next.workOrders && present.workOrders) inject2("quests", quests_default);
     else remove("quests");
     if (!next.workOrders && active4.workOrders) clearUnder(BOARD_ROOTS);
@@ -14040,21 +14320,95 @@ ${PCT_RULES}`);
       loadItemAtlas();
     }
     if (on2.skillSheet) guard2("skills:sheet", decorateSkillSheet);
+    if (on2.skillSheet) guard2("skills:run", decorateRun);
+    if (on2.skillSheet) guard2("skills:queue", queuePass);
+    else clearQueue();
     if (on2.workOrders) guard2("skills:work-orders", decorateWorkOrders);
   }
   function skillsText(parents) {
     if (!active4.skillSheet && !active4.workOrders) return;
     if (parents.some((p) => p.closest?.(NAMED))) skillsPass();
+    else if (active4.skillSheet) queueText(parents);
   }
   function clearSkills() {
     unmark2(ATTRS6);
     remove("skills");
     remove("quests");
     remove("item-icons");
+    resetRun();
+    clearQueue();
     sprites.clear();
     unsubscribe2?.();
     unsubscribe2 = null;
     active4 = { skillSheet: false, workOrders: false };
+  }
+
+  // src/skins/fantasy/styles/chrome.css
+  var chrome_default = ':is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=folded]{display:none!important}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=merged]{font-size:0!important;gap:0!important}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=merged]>*{display:none!important}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=merged]::after{content:attr(data-iw-fantasy-potion-text);display:block;min-width:0;white-space:pre-line;overflow-wrap:anywhere;font-size:11.5px;line-height:1.3;color:inherit}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion-state=none]::after{opacity:.72}@media(max-width:860px){:is(:root,#iwf) [data-iw-header=status-grid]:has(>[data-iw-fantasy-potion=folded]):has(>:nth-child(even):last-child)>:last-child:not([data-iw-fantasy-potion=folded]),:is(:root,#iwf) [data-iw-header=status-grid]:has(>:nth-child(even):last-child)>[data-iw-fantasy-potion=merged]:has(+[data-iw-fantasy-potion=folded]:last-child){grid-column:1 / -1!important}}@media(min-width:1280px){:is(:root,#iwf) [data-iw-ui=nav-tab]{padding-inline:22px!important}}@media(max-width:1279px){:is(:root,#iwf) :is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-pad: 18px}}@media(max-width:767px){:is(:root,#iwf) :is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-pad: clamp(7px, 2.6cqi, 14px)}:is(:root,#iwf) :is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]):has(>[data-iw-tab=guild]){--iw-nav-pad: clamp(6px, 2.2cqi, 12px)}}@media(max-width:767px){:is(:root,#iwf) [data-iw-chrome=zone-actions]>[data-iw-zone-action=prev]{order:1!important}:is(:root,#iwf) [data-iw-chrome=zone-actions]>[data-iw-zone-action=zones]{order:2!important}:is(:root,#iwf) [data-iw-chrome=zone-actions]>[data-iw-zone-action=next]{order:3!important}:is(:root,#iwf) [data-iw-chrome=notice][class*=emerald]{display:none!important}}:is(:root,#iwf) [data-iw-skill-boost="1"]{margin-block:3px 0!important;padding:1px 0 1px 7px!important;border:0!important;border-left:2px solid #67ab83!important;border-radius:0!important;background:none!important;font-size:9.5px!important;line-height:1.35!important;letter-spacing:.06em!important}\n';
+
+  // src/skins/fantasy/chrome/index.js
+  var POTION_ATTR = "data-iw-fantasy-potion";
+  var POTION_TEXT_ATTR = "data-iw-fantasy-potion-text";
+  var POTION_STATE_ATTR = "data-iw-fantasy-potion-state";
+  var ATTRS7 = [POTION_ATTR, POTION_TEXT_ATTR, POTION_STATE_ATTR];
+  var SURFACES = '[data-iw-header="status-grid"], [data-iw-chrome], [data-iw-skill-boost]';
+  var ICON = { atk: "⚔️", def: "🛡️" };
+  function potionKind(text2) {
+    const t = norm9(text2);
+    if (/^\s*⚔/u.test(t) || /\batk\b[^•·]*\bpotion\b/i.test(t)) return "atk";
+    if (/^\s*🛡/u.test(t) || /\bdef\b[^•·]*\bpotion\b/i.test(t)) return "def";
+    return null;
+  }
+  function potionDetail(text2) {
+    const t = label5(text2);
+    return /^no (atk|def) potions? active$/i.test(t) ? null : t;
+  }
+  function potionSummary(atkText, defText) {
+    const atk = potionDetail(atkText);
+    const def = potionDetail(defText);
+    if (!atk && !def) return `${ICON.atk}${ICON.def} No potions active`;
+    return `${ICON.atk} ${atk || "No ATK potion"}
+${ICON.def} ${def || "No DEF potion"}`;
+  }
+  function decoratePotions() {
+    const seen = /* @__PURE__ */ new Set();
+    for (const grid of document.querySelectorAll('[data-iw-header="status-grid"]')) {
+      const chips = { atk: null, def: null };
+      for (const card of grid.children) {
+        const kind2 = potionKind(card.textContent);
+        if (kind2 && !chips[kind2]) chips[kind2] = card;
+      }
+      if (!chips.atk || !chips.def) continue;
+      const summary = potionSummary(chips.atk.textContent, chips.def.textContent);
+      mark6(chips.atk, POTION_ATTR, "merged");
+      mark6(chips.atk, POTION_TEXT_ATTR, summary);
+      mark6(chips.atk, POTION_STATE_ATTR, summary.includes("\n") ? "active" : "none");
+      mark6(chips.def, POTION_ATTR, "folded");
+      seen.add(chips.atk).add(chips.def);
+    }
+    for (const el2 of document.querySelectorAll(`[${POTION_ATTR}]`)) {
+      if (!seen.has(el2)) unmark2(ATTRS7, el2);
+    }
+  }
+  var active5 = false;
+  function chromePass() {
+    pruneWritten();
+    active5 = !!document.querySelector(SURFACES);
+    if (!active5) {
+      remove("chrome");
+      return;
+    }
+    inject2("chrome", chrome_default);
+    guard2("chrome:potions", decoratePotions);
+  }
+  function chromeText(parents) {
+    if (!active5) return;
+    if (parents.some((p) => p.closest?.('[data-iw-header="status-card"]'))) guard2("chrome:potions", decoratePotions);
+  }
+  function clearChrome() {
+    unmark2(ATTRS7);
+    remove("chrome");
+    active5 = false;
   }
 
   // src/skins/fantasy/styles/raid.css
@@ -14064,10 +14418,12 @@ ${PCT_RULES}`);
   function flush() {
     raidPass();
     skillsPass();
+    chromePass();
   }
   function text(parents) {
     raidText(parents);
     skillsText(parents);
+    chromeText(parents);
   }
   function start() {
     setRuntimeActive2(true);
@@ -14078,6 +14434,7 @@ ${PCT_RULES}`);
     stopWatcher2();
     clearRaid();
     clearSkills();
+    clearChrome();
     removeAll2();
     resetNativeFeatures();
     setRuntimeActive2(false);
@@ -14119,7 +14476,7 @@ ${PCT_RULES}`);
 
   // src/shared/SkinController.js
   function createSkinController({ skins, waitUntilReady }) {
-    let active5 = null;
+    let active6 = null;
     let requested = null;
     let revision2 = 0;
     let readiness = null;
@@ -14129,20 +14486,20 @@ ${PCT_RULES}`);
       if (next === requested) return pending;
       requested = next;
       const token = ++revision2;
-      if (active5 !== null) {
-        skins[active5].stop();
-        active5 = null;
+      if (active6 !== null) {
+        skins[active6].stop();
+        active6 = null;
       }
       if (next === null) return pending = Promise.resolve();
       readiness ??= Promise.resolve().then(waitUntilReady);
       pending = readiness.then(() => {
         if (token !== revision2) return;
-        active5 = next;
+        active6 = next;
         try {
           skins[next].start();
         } catch (err) {
           skins[next].stop();
-          active5 = null;
+          active6 = null;
           requested = null;
           throw err;
         }

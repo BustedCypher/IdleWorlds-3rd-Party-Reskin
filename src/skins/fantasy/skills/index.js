@@ -9,7 +9,7 @@
  * developer's, not ours: these are game nodes, React's to render.
  *
  * So this module never creates a node. It reads the game's text and writes
- * three attributes in its own namespace, which styles/skills.css and
+ * attributes in its own namespace, which styles/skills.css and
  * styles/quests.css draw from:
  *
  *   data-iw-fantasy-skill  the discipline a tab / sheet head / tile names
@@ -18,6 +18,11 @@
  *                          replaces it, so the CSS may collapse it with
  *                          ::first-letter. Never written on a guess, so a
  *                          line that loses its emoji keeps its first letter.
+ *   data-iw-fantasy-pct    a tab's XP bar, copied (the ring)
+ *   data-iw-fantasy-boost  "daily": the boost line names this tab's skill
+ *   data-iw-fantasy-run    on the Skill Actions panel: the Current Action
+ *                          bar, copied (the running fill); -run-reset for
+ *                          the one frame a completion snaps back
  *
  * Nothing is hidden that is not replaced: no skill key, no sprite, no mark,
  * and the game's emoji stays. A material line naming several items keeps all
@@ -28,19 +33,24 @@
  */
 
 import { nativeFeatures } from '../core/NativeFeatures.js';
-import { guard } from '../core/Runtime.js';
+import { guard, raf } from '../core/Runtime.js';
 import { inject, remove, setSheet } from '../core/StyleInjector.js';
 import { requestPass } from '../core/Watcher.js';
 import { label, mark, unmark, pruneWritten } from '../core/dom.js';
 import { loadItemAtlas, onItemAtlas, findItemSprite, nameKey } from '../core/ItemAtlas.js';
+import { queuePass, queueText, clearQueue } from './queue.js';
 import skillsCss from '../styles/skills.css';
+import queueCss from '../styles/queue.css';
 import questsCss from '../styles/quests.css';
 
 export const SKILL_ATTR = 'data-iw-fantasy-skill';
 export const ICON_ATTR = 'data-iw-fantasy-icon';
 export const LEAD_ATTR = 'data-iw-fantasy-lead';
 export const PCT_ATTR = 'data-iw-fantasy-pct';
-const ATTRS = [SKILL_ATTR, ICON_ATTR, LEAD_ATTR, PCT_ATTR];
+export const BOOST_ATTR = 'data-iw-fantasy-boost';
+export const RUN_ATTR = 'data-iw-fantasy-run';
+export const RUN_RESET_ATTR = 'data-iw-fantasy-run-reset';
+const ATTRS = [SKILL_ATTR, ICON_ATTR, LEAD_ATTR, PCT_ATTR, BOOST_ATTR, RUN_ATTR, RUN_RESET_ATTR];
 
 /*
  * The tab's XP ring. The game gives a tab's progress only as its bar's
@@ -57,11 +67,41 @@ export function tabPercent(tab) {
   return m ? String(Math.max(0, Math.min(100, Math.round(+m[1])))) : null;
 }
 
+/*
+ * The running action's fill. The game paints the action's progress only on
+ * the Current Action bar, as that bar's INLINE width; the pass copies it, to
+ * the nearest half percent, into data-iw-fantasy-run on the Skill Actions
+ * panel and 201 static rules turn it into --iwf-run. The panel holds both the
+ * running row and the tiles, so skills.css alone decides which one shows the
+ * fill (the row while the sheet renders it, else the running tile), and
+ * the two read one value. The skin never computes progress (rule 5).
+ */
+const RUN_RULES = Array.from({ length: 201 }, (_, n) => `:is(:root,#iwf) [${RUN_ATTR}="${n / 2}"]{--iwf-run:${n / 2}%}`).join('\n');
+const RUN_FILL = '#current-action-panel [style*="width"]';
+
+/** The game's Current Action fill as a half-percent string, or null. */
+export function runPercent(root = document) {
+  for (const el of root.querySelectorAll(RUN_FILL)) {
+    const m = (el.style.width || '').match(/^([\d.]+)%$/);
+    if (m) return String(Math.max(0, Math.min(100, Math.round(+m[1] * 2) / 2)));
+  }
+  return null;
+}
+
+/** "Daily XP Boost: Gathering + Smithing + Tailoring + 20 % XP" -> skill keys. */
+export function boostedSkills(text) {
+  const m = label(text).match(/^daily xp boost\s*:\s*(.*)$/i);
+  if (!m) return new Set();
+  return new Set(m[1].split('+').map(part => skillKey(part)).filter(Boolean));
+}
+
 const SHEET_ROOTS = '.iw-skill-tabs, .iw-skill-sheet';
 const BOARD_ROOTS = '.iw-wo-board';
+// The port's tag on the Skill Actions boost line: read, never written.
+const BOOST_LINE = '[data-iw-skill-boost]';
 // Text ticks that can change what a mark says. The running timer and the
 // counts tick every second and name nothing, so they never re-run the pass.
-const NAMED = '.iw-skill-tab-name, .iw-ss-name, .iw-ss-detail, .iw-wo-skill, .iw-wo-item';
+const NAMED = `.iw-skill-tab-name, .iw-ss-name, .iw-ss-detail, .iw-wo-skill, .iw-wo-item, ${BOOST_LINE}`;
 
 /** Discipline names as the game prints them -> the action-icon set's keys. */
 const SKILLS = {
@@ -124,10 +164,17 @@ function markSkill(el, text, { lead = false } = {}) {
 
 /* ── the two menus ────────────────────────────────────────────────────── */
 
+/** The panel that holds a tab strip: the tiles' and the sheet's common frame. */
+const panelOf = tabs => tabs.closest('.panel') || tabs.parentElement;
+
 function decorateSkillSheet() {
-  for (const tab of document.querySelectorAll('.iw-skill-tab')) {
-    markSkill(tab, tab.querySelector('.iw-skill-tab-name')?.textContent);
-    mark(tab, PCT_ATTR, tabPercent(tab));
+  for (const tabs of document.querySelectorAll('.iw-skill-tabs')) {
+    const boosted = boostedSkills(panelOf(tabs)?.querySelector(BOOST_LINE)?.textContent);
+    for (const tab of tabs.querySelectorAll('.iw-skill-tab')) {
+      markSkill(tab, tab.querySelector('.iw-skill-tab-name')?.textContent);
+      mark(tab, PCT_ATTR, tabPercent(tab));
+      mark(tab, BOOST_ATTR, boosted.has(tab.getAttribute(SKILL_ATTR)) ? 'daily' : null);
+    }
   }
   for (const head of document.querySelectorAll('.iw-ss-head')) {
     markSkill(head, head.querySelector('.iw-ss-name > span:first-child')?.textContent);
@@ -137,6 +184,58 @@ function decorateSkillSheet() {
     if (name) markItem(line, { name });
     else { mark(line, ICON_ATTR, null); mark(line, LEAD_ATTR, null); }
   }
+}
+
+/*
+ * The fill's transition must last as long as the gap between two readings,
+ * or it stalls (too short) or lags (too long); see
+ * docs/traps/current-action-progress.md. That gap is MEASURED: the median of
+ * the last five changes of the copied value, with a 1.12x lead so jitter
+ * retargets a running transition instead of letting it finish early. The gap
+ * into and out of a completion is not a tick (the game's first write of a
+ * new action lands ~2x late), so neither is sampled. The result is written
+ * to a generated sheet, never inline on a game node, and only when it moves
+ * by more than 15%.
+ */
+const RUN_TICK_FALLBACK = 300;
+const run = { value: null, at: 0, gaps: [], skip: false, tick: null };
+
+function sampleRun(value, now) {
+  const pct = +value;
+  const reset = run.value != null && pct < +run.value;
+  if (run.value != null && !reset && !run.skip) {
+    const gap = now - run.at;
+    if (gap > 40 && gap < 5000) run.gaps = [...run.gaps, gap].slice(-5);
+  }
+  run.skip = reset;
+  run.value = value;
+  run.at = now;
+  if (run.gaps.length >= 3) {
+    const sorted = [...run.gaps].sort((a, b) => a - b);
+    const tick = Math.round(Math.max(80, Math.min(4000, sorted[sorted.length >> 1] * 1.12)));
+    if (!run.tick || Math.abs(tick - run.tick) / run.tick > 0.15) {
+      run.tick = tick;
+      setSheet('run-tick', `:is(:root,#iwf){--iwf-run-tick:${tick}ms}`);
+    }
+  }
+  return reset;
+}
+
+function decorateRun() {
+  const value = runPercent();
+  const reset = value != null && value !== run.value && sampleRun(value, performance.now());
+  for (const tabs of document.querySelectorAll('.iw-skill-tabs')) {
+    const panel = panelOf(tabs);
+    mark(panel, RUN_ATTR, value);
+    // A completion snaps back rather than sliding a whole bar backwards. The
+    // tag is invisible to the Watcher, so it is released on the next frame
+    // by this module itself, once the snapped frame has painted.
+    if (reset) {
+      mark(panel, RUN_RESET_ATTR, '1');
+      raf(() => mark(panel, RUN_RESET_ATTR, null));
+    }
+  }
+  if (value == null) { run.value = null; run.skip = false; }
 }
 
 function decorateWorkOrders() {
@@ -157,6 +256,11 @@ function decorateWorkOrders() {
 let active = { skillSheet: false, workOrders: false };
 let unsubscribe = null;
 
+function resetRun() {
+  remove('run-tick');
+  Object.assign(run, { value: null, at: 0, gaps: [], skip: false, tick: null });
+}
+
 function clearUnder(selector) {
   for (const root of document.querySelectorAll(selector)) unmark(ATTRS, root);
 }
@@ -170,9 +274,13 @@ function settle() {
   const native = nativeFeatures();
   const present = { skillSheet: !!document.querySelector(SHEET_ROOTS), workOrders: !!document.querySelector(BOARD_ROOTS) };
   const next = { skillSheet: !native.has('skillSheet'), workOrders: !native.has('workOrders') };
-  if (next.skillSheet && present.skillSheet) inject('skills', `${skillsCss}\n${PCT_RULES}`);
-  else remove('skills');
-  if (!next.skillSheet && active.skillSheet) clearUnder(SHEET_ROOTS);
+  if (next.skillSheet && present.skillSheet) inject('skills', `${skillsCss}\n${queueCss}\n${PCT_RULES}\n${RUN_RULES}`);
+  else { remove('skills'); resetRun(); }
+  if (!next.skillSheet && active.skillSheet) {
+    clearUnder(SHEET_ROOTS);
+    // The run tags sit on the panel, above both roots.
+    unmark([RUN_ATTR, RUN_RESET_ATTR]);
+  }
   if (next.workOrders && present.workOrders) inject('quests', questsCss);
   else remove('quests');
   if (!next.workOrders && active.workOrders) clearUnder(BOARD_ROOTS);
@@ -189,6 +297,9 @@ export function skillsPass() {
     loadItemAtlas();
   }
   if (on.skillSheet) guard('skills:sheet', decorateSkillSheet);
+  if (on.skillSheet) guard('skills:run', decorateRun);
+  if (on.skillSheet) guard('skills:queue', queuePass);
+  else clearQueue();
   if (on.workOrders) guard('skills:work-orders', decorateWorkOrders);
 }
 
@@ -196,6 +307,7 @@ export function skillsPass() {
 export function skillsText(parents) {
   if (!active.skillSheet && !active.workOrders) return;
   if (parents.some(p => p.closest?.(NAMED))) skillsPass();
+  else if (active.skillSheet) queueText(parents);
 }
 
 export function clearSkills() {
@@ -203,6 +315,8 @@ export function clearSkills() {
   remove('skills');
   remove('quests');
   remove('item-icons');
+  resetRun();
+  clearQueue();
   sprites.clear();
   unsubscribe?.();
   unsubscribe = null;

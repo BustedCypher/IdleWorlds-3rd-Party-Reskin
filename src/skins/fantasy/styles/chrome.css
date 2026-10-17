@@ -1,0 +1,94 @@
+/*
+ * Fantasy chrome: the header, nav rail, zone bar and the Skill Actions boost
+ * line, layered on the port's own tags (chrome/index.js). Rules are prefixed
+ * :is(:root,#iwf) so they outrank the port's single-attribute !important rules.
+ */
+
+/* ── Header: the ATK + DEF potion chips as ONE frame ─────────────────────
+   The ATK chip keeps its grid cell and frame; the DEF chip folds away. The
+   chip's own text (a game text node) is collapsed with font-size 0, and the
+   summary chrome/index.js wrote is drawn in its place. */
+:is(:root,#iwf) [data-iw-header="status-grid"] > [data-iw-fantasy-potion="folded"] {
+  display: none !important;
+}
+:is(:root,#iwf) [data-iw-header="status-grid"] > [data-iw-fantasy-potion="merged"] {
+  font-size: 0 !important;
+  gap: 0 !important;
+}
+:is(:root,#iwf) [data-iw-header="status-grid"] > [data-iw-fantasy-potion="merged"] > * {
+  display: none !important;
+}
+:is(:root,#iwf) [data-iw-header="status-grid"] > [data-iw-fantasy-potion="merged"]::after {
+  content: attr(data-iw-fantasy-potion-text);
+  display: block;
+  min-width: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: inherit;
+}
+/* Neither potion up: an empty slot, so it reads quieter than a live buff. */
+:is(:root,#iwf) [data-iw-header="status-grid"] > [data-iw-fantasy-potion-state="none"]::after {
+  opacity: .72;
+}
+/* Phone/tablet grid flows two to a row; folding one chip can leave the last
+   card alone on its row, so let it take the full width instead of a hole. */
+@media (max-width: 860px) {
+  :is(:root,#iwf) [data-iw-header="status-grid"]:has(> [data-iw-fantasy-potion="folded"]):has(> :nth-child(even):last-child) > :last-child:not([data-iw-fantasy-potion="folded"]),
+  :is(:root,#iwf) [data-iw-header="status-grid"]:has(> :nth-child(even):last-child) > [data-iw-fantasy-potion="merged"]:has(+ [data-iw-fantasy-potion="folded"]:last-child) {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ── Nav rail: room between the label and the frame's ends ───────────────
+   The tabs' font is fitted to the row from --iw-nav-pad (the port's clamp),
+   so raising the pad here also re-fits the font: nothing can overflow. The
+   compact frame's caps are 12px, so the old 5-12px pads put the label on them. */
+@media (min-width: 1280px) {
+  :is(:root,#iwf) [data-iw-ui="nav-tab"] {
+    padding-inline: 22px !important;
+  }
+}
+@media (max-width: 1279px) {
+  :is(:root,#iwf) :is([data-iw-ui="main-nav"],[data-iw-ui="section-frame"]):has(> [data-iw-ui="nav-tab"]) {
+    --iw-nav-pad: 18px;
+  }
+}
+@media (max-width: 767px) {
+  /* cqi resolves at the tab, against the row's own iw-nav-row container. */
+  :is(:root,#iwf) :is([data-iw-ui="main-nav"],[data-iw-ui="section-frame"]):has(> [data-iw-ui="nav-tab"]) {
+    --iw-nav-pad: clamp(7px, 2.6cqi, 14px);
+  }
+  :is(:root,#iwf) :is([data-iw-ui="main-nav"],[data-iw-ui="section-frame"]):has(> [data-iw-ui="nav-tab"]):has(> [data-iw-tab="guild"]) {
+    --iw-nav-pad: clamp(6px, 2.2cqi, 12px);
+  }
+}
+
+/* ── Phone: zone bar and the last-action notice ────────────────────────── */
+@media (max-width: 767px) {
+  /* "Previous Zone" first, then "Zones", then "Next Zone". Order only: each
+     button keeps its own look, which the port keys on data-iw-zone-action. */
+  :is(:root,#iwf) [data-iw-chrome="zone-actions"] > [data-iw-zone-action="prev"] { order: 1 !important; }
+  :is(:root,#iwf) [data-iw-chrome="zone-actions"] > [data-iw-zone-action="zones"] { order: 2 !important; }
+  :is(:root,#iwf) [data-iw-chrome="zone-actions"] > [data-iw-zone-action="next"] { order: 3 !important; }
+
+  /* The green "Sunforged Ore x5" strip, the last action's result. Only the
+     emerald (success) notice: any other message the game puts here stays. */
+  :is(:root,#iwf) [data-iw-chrome="notice"][class*="emerald"] {
+    display: none !important;
+  }
+}
+
+/* ── Skill Actions: a slim Daily XP Boost line ─────────────────────────── */
+:is(:root,#iwf) [data-iw-skill-boost="1"] {
+  margin-block: 3px 0 !important;
+  padding: 1px 0 1px 7px !important;
+  border: 0 !important;
+  border-left: 2px solid #67ab83 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  font-size: 9.5px !important;
+  line-height: 1.35 !important;
+  letter-spacing: .06em !important;
+}

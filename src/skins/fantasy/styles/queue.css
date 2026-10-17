@@ -1,0 +1,127 @@
+/* ============================================================================
+   Fantasy — the action queue copy (skills/queue.js), at the foot of the
+   Skill Actions panel. Rides the `skills` injection, after skills.css, and
+   uses its tokens (--iwf-*, the medallions).
+
+   Its buttons are the skin's OWN, but the port's generic control rule
+   (ui-system.css `button:not(…)`, ~(0,40,1) !important) still paints them:
+   it sets border-radius, font-family, box-shadow, transition, border-color
+   and background-image !important, so those are restated here at the
+   :is(:root,#iwf) weight, and nothing else is.
+   ========================================================================= */
+
+/* The game's Current Action panel is hidden only while a copy was drawn
+   from it AND that copy is on screen (its Skill Actions panel is not
+   collapsed). Otherwise it is the game's again. */
+:is(:root,#iwf) body:has(:not([data-iw-collapsed="1"]) > .iwf-queue[data-iw-fantasy-queue-owned]) #current-action-panel[data-iw-fantasy-queue="mirrored"] {
+  display: none !important;
+}
+
+:is(:root,#iwf) .iwf-queue {
+  --iwf-q-divider: linear-gradient(90deg, transparent, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 14%, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 86%, transparent);
+  margin-top: 12px;
+  border: 1px solid var(--iwf-edge-mid);
+  border-radius: 8px;
+  background: var(--iwf-ground), url('../assets/skills_panel_texture.webp') center / cover;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,235,190,.05), 0 6px 18px -10px #000;
+  color: var(--iwf-text);
+  font-size: 12px;
+}
+:is(:root,#iwf) .iwf-queue [hidden] { display: none !important; }
+
+:is(:root,#iwf) .iwf-q-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px 9px 16px;
+}
+:is(:root,#iwf) .iwf-q-title {
+  margin: 0;
+  font-family: var(--iw-font-head, serif);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--iwf-text-hi);
+}
+:is(:root,#iwf) .iwf-q-count {
+  margin-right: auto;
+  padding: 1px 8px;
+  border: 1px solid var(--iwf-edge-faint);
+  border-radius: 999px;
+  background: rgba(0,0,0,.3);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--iwf-text-dim);
+}
+
+/* Queued rows: grip, place, medallion, name (× count), time, remove. */
+:is(:root,#iwf) .iwf-q-list { list-style: none; margin: 0; padding: 0; }
+:is(:root,#iwf) .iwf-q-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 5px 8px 5px 8px;
+  border-top: 1px solid var(--iw-th-rule-soft, rgba(255,255,255,.06));
+  cursor: grab;
+}
+:is(:root,#iwf) .iwf-q-head + .iwf-q-list > .iwf-q-row:first-child { border-top: 1px solid; border-image: var(--iwf-q-divider) 1; }
+:is(:root,#iwf) .iwf-q-row:hover { background: linear-gradient(90deg, rgba(255,235,190,.035), transparent 70%); }
+:is(:root,#iwf) .iwf-q-row[data-dragging] { opacity: .45; }
+:is(:root,#iwf) .iwf-q-grip { width: 10px; color: #5d5647; font-size: 12px; letter-spacing: -2px; }
+:is(:root,#iwf) .iwf-q-n { width: 14px; text-align: right; font-size: 10.5px; font-weight: 700; color: var(--iwf-brass); font-variant-numeric: tabular-nums; }
+:is(:root,#iwf) .iwf-q-icon { flex: none; width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,.6); }
+:is(:root,#iwf) .iwf-q-row[data-iw-fantasy-skill] .iwf-q-icon { background: var(--iwf-medal); }
+:is(:root,#iwf) .iwf-q-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--iwf-text-hi);
+}
+:is(:root,#iwf) .iwf-q-times { margin-left: 5px; font-size: 11px; font-weight: 500; color: var(--iwf-text-dim); }
+:is(:root,#iwf) .iwf-q-eta { flex: none; font-size: 11px; color: var(--iwf-text-dim); font-variant-numeric: tabular-nums; }
+
+/* The skin's own buttons, restating the port slate's !important set. */
+:is(:root,#iwf) .iwf-queue button {
+  border-radius: 4px !important;
+  font-family: var(--iw-font-ui, inherit) !important;
+  transition: border-color .13s, color .13s !important;
+  border: 1px solid transparent;
+  border-color: transparent !important;
+  background-image: none !important;
+  background-color: transparent;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+:is(:root,#iwf) .iwf-q-x {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+  color: rgba(255,255,255,.45);
+}
+:is(:root,#iwf) .iwf-q-x:hover { border-color: rgba(255,255,255,.14) !important; color: #fff; }
+:is(:root,#iwf) .iwf-queue button:focus-visible { outline: 2px solid var(--iwf-accent); outline-offset: 1px; }
+:is(:root,#iwf) .iwf-q-toggles { border-top: 1px solid var(--iw-th-rule-soft, rgba(255,255,255,.06)); }
+:is(:root,#iwf) .iwf-q-more {
+  display: block;
+  width: 100%;
+  padding: 8px 16px 9px;
+  text-align: left;
+  font-size: 11px;
+  color: var(--iwf-text-dim);
+}
+:is(:root,#iwf) .iwf-q-more:hover { color: var(--iwf-text-hi); }
+
+@media (max-width: 480px) {
+  :is(:root,#iwf) .iwf-q-grip { display: none; }
+  /* Touch: the remove target stays thumb-sized. */
+  :is(:root,#iwf) .iwf-q-x { width: 32px; height: 32px; }
+}

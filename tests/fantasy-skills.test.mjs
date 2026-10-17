@@ -178,14 +178,17 @@ check('icons: every icon on screen actually loaded', shownSvgs.length >= 8 && sh
   && STANDALONE.every(k => assetHits.get(`/assets/skills-medallions/${k}.webp`)),
   JSON.stringify([...assetHits.keys()].filter(p => /action-icons|medallions/.test(p))));
 
-// The Toolkit's collapsed card: square tiles, the XP ring is the game's bar.
+// The Toolkit's collapsed card, as portrait tiles headed by the skill name
+// (2026-10-17); the XP ring is the game's bar.
 const rings = await tab.evaluate(() => [...document.querySelectorAll('.iw-skill-tab')].map(t => {
   const r = t.getBoundingClientRect();
-  return { ratio: r.width / r.height, bar: parseFloat(t.querySelector('.iw-skill-tab-bar > span').style.width),
+  const name = t.querySelector('.iw-skill-tab-name').getBoundingClientRect(), icon = t.querySelector('.iw-skill-tab-icon').getBoundingClientRect();
+  return { ratio: r.width / r.height, nameAbove: name.height > 0 && name.bottom <= icon.top && name.top >= r.top, bar: parseFloat(t.querySelector('.iw-skill-tab-bar > span').style.width),
     pct: t.getAttribute('data-iw-fantasy-pct'), ring: getComputedStyle(t.querySelector('.iw-skill-tab-icon'), '::after').backgroundImage,
     barShown: getComputedStyle(t.querySelector('.iw-skill-tab-bar')).display !== 'none' };
 }));
-check('tabs: square tiles', rings.every(r => Math.abs(r.ratio - 1) < 0.02), rings.map(r => r.ratio.toFixed(3)).join());
+check('tabs: portrait tiles, one shape', rings.every(r => r.ratio < 0.95 && Math.abs(r.ratio - rings[0].ratio) < 0.01), rings.map(r => r.ratio.toFixed(3)).join());
+check('tabs: the skill name heads the tile, above the medallion', rings.every(r => r.nameAbove));
 check('tabs: each ring reads its bar (rounded %)', rings.every(r => r.pct === String(Math.round(r.bar))), JSON.stringify(rings.map(r => [r.bar, r.pct])));
 check('tabs: the ring sweep is the reading (conic to that %)', rings.every(r => /conic-gradient/.test(r.ring) && r.ring.includes(` ${r.pct}%`)),
   rings.map(r => r.ring.slice(0, 120)).join(' | '));
@@ -309,7 +312,8 @@ const state = await tab.evaluate(() => {
     btnOn: getComputedStyle(document.querySelector('.iw-wo-btn:not(:disabled):not(.is-batch)')).backgroundImage,
     btnOff: getComputedStyle(document.querySelector('.iw-wo-btn:disabled')).backgroundImage,
     btnOffColor: cs(document.querySelector('.iw-wo-btn:disabled'), 'color'), btnOnColor: cs(document.querySelector('.iw-wo-btn:not(:disabled)'), 'color'),
-    batch: cs(document.querySelector('.iw-wo-btn.is-batch')), btnOnBorder: cs(document.querySelector('.iw-wo-btn:not(:disabled):not(.is-batch)')),
+    btnOffOpacity: cs(document.querySelector('.iw-wo-btn:disabled'), 'opacity'),
+    batch: cs(document.querySelector('.iw-wo-btn.is-batch'), 'color'), btnOnLabel: cs(document.querySelector('.iw-wo-btn:not(:disabled):not(.is-batch)'), 'color'),
     rowRunning: cs(running), rowPlain: cs(plain), rowBest: cs(best), lockedOpacity: cs(locked, 'opacity'),
     rerollOff: cs(off, 'opacity'), rerollOn: cs(reroll, 'opacity'),
     groupHead: getComputedStyle(document.querySelector('.iw-ss-group-head')).backgroundImage,
@@ -320,13 +324,45 @@ const state = await tab.evaluate(() => {
 check('state: the active tab reads differently', state.tabActive !== state.tabIdle, `${state.tabActive} vs ${state.tabIdle}`);
 check('state: ready, bounty and plain tiles are three different frames', new Set([state.tilePlain, state.tileReady, state.tileBounty]).size === 3
   && /inset/.test(state.bountyRail), JSON.stringify([state.tilePlain, state.tileReady, state.tileBounty, state.bountyRail]));
-check('state: disabled Turn in differs from enabled', state.btnOn !== state.btnOff && state.btnOnColor !== state.btnOffColor);
-check('state: the batch control keeps its own frame', state.batch !== state.btnOnBorder, `${state.batch} vs ${state.btnOnBorder}`);
+// The inventory's control: one face for every kind, state carried by the
+// label colour and the disabled fade, as on the inventory's Equip / Sell.
+check('state: disabled Turn in differs from enabled (label + .45 fade)', state.btnOnColor !== state.btnOffColor && parseFloat(state.btnOffOpacity) < 0.6,
+  JSON.stringify([state.btnOnColor, state.btnOffColor, state.btnOffOpacity]));
+check('state: the batch control keeps its own label', state.batch !== state.btnOnLabel, `${state.batch} vs ${state.btnOnLabel}`);
 check('state: running, best and plain rows are three different frames; locked fades', new Set([state.rowRunning, state.rowPlain, state.rowBest]).size === 3
   && parseFloat(state.lockedOpacity) < 0.6, JSON.stringify([state.rowRunning, state.rowPlain, state.rowBest, state.lockedOpacity]));
 check('state: a spent reroll is dimmed', parseFloat(state.rerollOff) <= 0.3 && parseFloat(state.rerollOn) === 1);
 check('cascade: Fantasy\'s surface beats the port\'s !important slate', state.btnOn !== control.btn && state.groupHead !== control.head,
   `${state.btnOn} | ${control.btn}`);
+
+/* The port's compact-ghost-v3 atlas (the face of the inventory's controls
+   and the nav tabs), emulated as the port sets it: data-iw-compact-atlas +
+   --iw-compact-atlas on <html>. The buttons paint its cells: middle strip on
+   the button, caps on ::before / ::after; hover moves to the hover row;
+   without the atlas the CSS plate returns. */
+const ATLAS = '/reskin-bc/assets/skills-ui/buttons/compact-ghost-v3/voidborn.png';
+await tab.evaluate(atlas => {
+  document.documentElement.dataset.iwCompactAtlas = 'compact-ghost-v3';
+  document.documentElement.style.setProperty('--iw-compact-atlas', `url("${atlas}")`);
+}, ATLAS);
+await settle(tab);
+const face = sel => tab.evaluate(sel => {
+  const b = document.querySelector(sel), g = p => getComputedStyle(b, p);
+  return { mid: g().backgroundImage, midY: g().backgroundPositionY, left: g('::before').backgroundImage, right: g('::after').backgroundImage,
+    capW: g('::before').width, capSize: g('::after').backgroundSize, h: b.getBoundingClientRect().height };
+}, sel);
+const ON = '.iw-wo-btn:not(:disabled):not(.is-batch)';
+const idle = await face(ON);
+check('atlas: Turn in paints the compact atlas (strip + both caps)', [idle.mid, idle.left, idle.right].every(v => v.includes('compact-ghost-v3/voidborn.png'))
+  && idle.capW === '10px' && /^1680%/.test(idle.capSize) && idle.h === 26, JSON.stringify(idle));
+check('atlas: batch and disabled wear the same face', (await face('.iw-wo-btn.is-batch')).mid === idle.mid && (await face('.iw-wo-btn:disabled')).mid === idle.mid);
+await tab.hover(ON);
+const hover = await face(ON);
+await tab.mouse.move(0, 0);
+check('atlas: hover moves to the hover row', idle.midY !== hover.midY && hover.midY === '50%', `${idle.midY} -> ${hover.midY}`);
+await tab.evaluate(() => { delete document.documentElement.dataset.iwCompactAtlas; document.documentElement.style.removeProperty('--iw-compact-atlas'); });
+await settle(tab);
+check('atlas: without it the CSS plate returns', /linear-gradient/.test((await face(ON)).mid));
 
 /* ── 6. text tick ─────────────────────────────────────────────────────── */
 
@@ -365,6 +401,217 @@ await tab.evaluate(() => window.Fantasy.stop());
 check('stop(): the page is restored byte for byte, no Fantasy sheets left', await tab.evaluate(p => document.body.innerHTML === p
   && !document.querySelector('style[data-iw-fantasy-style]'), pristine));
 check('stop(): emoji are back', await tab.evaluate(() => emojiWidth(document.querySelector('.iw-skill-tab-icon')) > 8));
+await tab.close();
+
+/* ── 7b. daily boost + running fill ───────────────────────────────────── */
+
+tab = await open();
+await tab.evaluate(helpers);
+await start(tab);
+const waitFrames = (n = 3) => frames(tab, n);
+const boost = await tab.evaluate(() => [...document.querySelectorAll('.iw-skill-tab')]
+  .filter(t => t.getAttribute('data-iw-fantasy-boost') === 'daily').map(t => t.getAttribute('data-iw-fantasy-skill')).sort().join());
+check('boost: the three skills the boost line names are marked', boost === 'gathering,smithing,tailoring', boost);
+const halo = await tab.evaluate(() => {
+  const on = getComputedStyle(document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="smithing"]'), '::after');
+  const off = getComputedStyle(document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="mining"]'), '::after');
+  return { anim: on.animationName, z: on.zIndex, shadow: on.boxShadow, off: off.content };
+});
+check('boost: a marked tile has a still underglow, an unmarked one none', halo.anim === 'none' && halo.z === '-1' && /rgb|color\(/.test(halo.shadow) && !/inset/.test(halo.shadow) && halo.off === 'none', JSON.stringify(halo));
+// Painted, not just computed: the glow shows past the tile's foot and never
+// over the tile itself. Gathering is boosted and carries no ticking live dot.
+const glowShots = async () => {
+  const box = await tab.locator('.iw-skill-tab[data-iw-fantasy-skill="gathering"]').boundingBox();
+  return {
+    inside: await tab.screenshot({ clip: { x: box.x + 4, y: box.y + 4, width: box.width - 8, height: box.height - 8 } }),
+    below: await tab.screenshot({ clip: { x: box.x + 8, y: box.y + box.height + 1, width: box.width - 16, height: 6 } }),
+  };
+};
+const glowOn = await glowShots();
+await tab.evaluate(() => document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="gathering"]').removeAttribute('data-iw-fantasy-boost'));
+await waitFrames();
+const glowOff = await glowShots();
+await tab.evaluate(() => document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="gathering"]').setAttribute('data-iw-fantasy-boost', 'daily'));
+await waitFrames();
+check('boost: the underglow paints below the tile (negative control: unmarked differs there)', !glowOn.below.equals(glowOff.below));
+check('boost: nothing is painted over the tile itself', glowOn.inside.equals(glowOff.inside));
+await tab.addStyleTag({ content: '#iwf-neg, .iw-skill-tab[data-iw-fantasy-boost]::after { z-index: 4 !important; box-shadow: inset 0 0 20px #86efac !important; }' });
+await waitFrames();
+const glowOver = await glowShots();
+await tab.evaluate(() => document.querySelectorAll('style:not([data-iw-fantasy-style])').forEach(s => s.textContent.includes('#iwf-neg') && s.remove()));
+await waitFrames();
+check('negative control: a glow raised over the tile is caught', !glowOver.inside.equals(glowOff.inside));
+await tab.evaluate(() => {
+  const line = document.querySelector('[data-iw-skill-boost]').firstChild;
+  line.textContent = 'Daily XP Boost: Mining + 20 % XP';
+});
+await settle(tab);
+const boost2 = await tab.evaluate(() => [...document.querySelectorAll('[data-iw-fantasy-boost]')].map(t => t.getAttribute('data-iw-fantasy-skill')).join());
+check('boost: a text tick on the boost line moves the halo (negative control: the old three lose it)', boost2 === 'mining', boost2);
+
+const runState = () => tab.evaluate(() => {
+  const panel = document.querySelector('.iw-skill-tabs').closest('.panel');
+  const row = document.querySelector('.iw-ss-row.is-running') || document.querySelector('[data-was-running]');
+  const tile = document.querySelector('.iw-skill-tab:has(> .iw-skill-tab-live)');
+  return {
+    attr: panel.getAttribute('data-iw-fantasy-run'),
+    rowRun: getComputedStyle(row).getPropertyValue('--iwf-run').trim(),
+    rowSize: getComputedStyle(row).backgroundSize.split(',')[0].trim().split(' ')[0],
+    tileRun: getComputedStyle(tile).getPropertyValue('--iwf-tile-run').trim(),
+    tileSize: getComputedStyle(tile).backgroundSize.split(',')[0].trim().split(' ')[0],
+    tileLayers: getComputedStyle(tile).backgroundSize.split(',').length,
+  };
+});
+const before = await runState();
+check('run: no Current Action bar, no fill (the row keeps its look)', before.attr === null && before.rowRun === '' && before.tileLayers === 3, JSON.stringify(before));
+await tab.evaluate(() => document.body.insertAdjacentHTML('beforeend',
+  '<div id="current-action-panel" class="panel"><div class="h-2 overflow-hidden rounded-full"><div class="h-full" style="width: 37.2%;"></div></div></div>'));
+await settle(tab); await tab.waitForTimeout(400);
+const onRow = await runState();
+check('run: the panel copies the Current Action bar to the half percent', onRow.attr === '37', JSON.stringify(onRow));
+check('run: the running row fills to the bar', onRow.rowRun === '37%' && onRow.rowSize === '37%', JSON.stringify(onRow));
+check('run: while the row shows, the running tile holds no fill', onRow.tileRun === '' && onRow.tileSize === '0%' && onRow.tileLayers === 5, JSON.stringify(onRow));
+await tab.evaluate(() => { const row = document.querySelector('.iw-ss-row.is-running'); row.setAttribute('data-was-running', ''); row.classList.remove('is-running'); });
+await settle(tab); await tab.waitForTimeout(400);
+const onTile = await runState();
+check('run: no running row on screen, the running tile takes the same fill', onTile.tileRun === '37%' && onTile.tileSize === '37%', JSON.stringify(onTile));
+await tab.evaluate(() => document.querySelector('[data-was-running]').classList.add('is-running'));
+await settle(tab); await tab.waitForTimeout(400);
+const back = await runState();
+check('run: the row back on screen takes the fill back from the tile', back.rowSize === '37%' && back.tileSize === '0%', JSON.stringify(back));
+
+const reset = await tab.evaluate(async () => {
+  const fill = document.querySelector('#current-action-panel [style]'); const panel = document.querySelector('.iw-skill-tabs').closest('.panel');
+  const seen = []; const frame = () => new Promise(r => requestAnimationFrame(r));
+  fill.style.width = '80%'; for (let i = 0; i < 3; i++) await frame();
+  fill.style.width = '4%';
+  for (let i = 0; i < 5; i++) { await frame(); seen.push(panel.getAttribute('data-iw-fantasy-run-reset')); }
+  return { seen, value: panel.getAttribute('data-iw-fantasy-run') };
+});
+check('run: a completion is tagged for a frame, then released', reset.seen.includes('1') && reset.seen.at(-1) === null && reset.value === '4', JSON.stringify(reset));
+const forward = await tab.evaluate(async () => {
+  const fill = document.querySelector('#current-action-panel [style]'); const panel = document.querySelector('.iw-skill-tabs').closest('.panel');
+  const seen = []; const frame = () => new Promise(r => requestAnimationFrame(r));
+  fill.style.width = '12%';
+  for (let i = 0; i < 4; i++) { await frame(); seen.push(panel.getAttribute('data-iw-fantasy-run-reset')); }
+  return seen;
+});
+check('negative control: a forward step is never tagged as a completion', forward.every(v => v === null), JSON.stringify(forward));
+
+const tick = await tab.evaluate(async () => {
+  const fill = document.querySelector('#current-action-panel [style]');
+  const sheet = () => document.querySelector('style[data-iw-fantasy-style="run-tick"]')?.textContent || '';
+  fill.style.width = '20%'; await new Promise(r => setTimeout(r, 400));
+  for (const w of [24, 28, 32, 36, 40, 44]) { fill.style.width = `${w}%`; await new Promise(r => setTimeout(r, 400)); }
+  const m = sheet().match(/--iwf-run-tick:(\d+)ms/);
+  return { ms: m ? +m[1] : null };
+});
+check('run: the transition lasts one measured reading gap (400ms x 1.12)', tick.ms > 400 && tick.ms < 560, JSON.stringify(tick));
+
+await tab.evaluate(() => document.getElementById('current-action-panel').remove());
+await settle(tab);
+const gone = await runState();
+check('negative control: the bar gone, the fill and its tag are gone', gone.attr === null && gone.tileLayers === 3, JSON.stringify(gone));
+await tab.evaluate(() => window.Fantasy.stop());
+const left = await tab.evaluate(() => ({
+  marks: document.querySelectorAll('[data-iw-fantasy-boost], [data-iw-fantasy-run], [data-iw-fantasy-run-reset]').length,
+  sheet: !!document.querySelector('style[data-iw-fantasy-style="run-tick"]'),
+}));
+check('stop(): boost and run marks and the tick sheet are removed', left.marks === 0 && !left.sheet, JSON.stringify(left));
+await tab.close();
+
+/* ── 7c. the action queue copy ────────────────────────────────────────── */
+
+const queued = await readFile(resolve(ROOT, 'tests/fixtures/current-action-2026-10-08/queued.html'), 'utf8');
+const idleCa = await readFile(resolve(ROOT, 'tests/fixtures/current-action-2026-10-08/idle.html'), 'utf8');
+tab = await open();
+await tab.evaluate(helpers);
+await start(tab);
+check('queue: no Current Action panel, no copy', await tab.evaluate(() => !document.querySelector('.iwf-queue')));
+await tab.evaluate(html => {
+  document.body.insertAdjacentHTML('beforeend', `<div id="ca-host">${html}</div>`);
+  // Record every press the copy hands to the game's own controls.
+  window.pressed = [];
+  const panel = document.getElementById('current-action-panel');
+  panel.addEventListener('click', e => { const b = e.target.closest('button'); if (b) pressed.push(b.getAttribute('aria-label') || b.textContent.trim()); });
+  for (const type of ['dragstart', 'drop']) panel.addEventListener(type, e => {
+    const rows = [...panel.querySelectorAll('[draggable="true"]')];
+    pressed.push(`${type}:${rows.indexOf(e.target.closest('[draggable="true"]'))}:${!!e.dataTransfer}`);
+  });
+}, queued);
+await settle(tab);
+const q = await tab.evaluate(() => {
+  const frame = document.querySelector('.iwf-queue');
+  const sheet = document.querySelector('.iw-skill-sheet');
+  return {
+    afterSheet: sheet.nextElementSibling === frame,
+    owned: frame?.hasAttribute('data-iw-fantasy-owned'),
+    hidden: getComputedStyle(document.getElementById('current-action-panel')).display === 'none',
+    text: frame?.textContent,
+    cancel: !frame?.querySelector('.iwf-q-cancel').hidden,
+    count: frame?.querySelector('.iwf-q-count').textContent,
+    rows: [...frame.querySelectorAll('.iwf-q-row')].map(r => [r.querySelector('.iwf-q-name').firstChild.data, r.querySelector('.iwf-q-times').textContent, r.querySelector('.iwf-q-eta').textContent, r.getAttribute('data-iw-fantasy-skill')]),
+    icon: getComputedStyle(frame.querySelector('.iwf-q-row .iwf-q-icon')).backgroundImage,
+    more: [...frame.querySelectorAll('.iwf-q-more')].map(b => b.textContent),
+  };
+});
+check('queue: the copy sits right after the sheet, owned', q.afterSheet && q.owned, JSON.stringify(q));
+check('queue: the Current Action panel is hidden while the copy shows', q.hidden);
+check('queue: the running action is not copied, only its cancel', !/crafts left|4s/.test(q.text) && q.cancel && q.rows.length === 3, JSON.stringify(q));
+check('queue: every queued row, with count, time and discipline', JSON.stringify(q.rows) === JSON.stringify([
+  ['Mine Sunforged', '×5', '~1m 30s', 'mining'], ['Smith Astral Bar', '', '', 'smithing'], ['Fight Phoenixes', '×20', '~6m 40s', 'combat']]), JSON.stringify(q.rows));
+check('queue: a row paints its discipline medallion', /skills_icons_atlas/.test(q.icon), q.icon);
+check('queue: the list toggle and the count are carried', q.more.join() === '+1 more queued' && q.count === '3 queued', JSON.stringify(q));
+
+await tab.evaluate(async () => {
+  const frame = document.querySelector('.iwf-queue');
+  frame.querySelectorAll('.iwf-q-row')[1].querySelector('.iwf-q-x').click();
+  frame.querySelector('.iwf-q-cancel').click();
+  frame.querySelector('.iwf-q-more').click();
+  const rows = frame.querySelectorAll('.iwf-q-row');
+  const dt = new DataTransfer();
+  rows[0].dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
+  rows[2].dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+});
+const presses = await tab.evaluate(() => pressed);
+check('queue: remove, cancel and the toggle press the game\'s own buttons', presses.slice(0, 3).join('|') === 'Remove Smith Astral Bar from queue|Cancel current action|+1 more queued', presses.join('|'));
+check('queue: a drop on the copy replays the drag on the game\'s rows', presses.includes('dragstart:0:true') && presses.includes('drop:2:true'), presses.join('|'));
+
+const ticked = await tab.evaluate(async () => {
+  const span = document.querySelector('#current-action-panel [draggable="true"] span');
+  span.lastChild.data = span.lastChild.data.replace('30s', '29s');
+  [...document.querySelectorAll('#current-action-panel [draggable="true"]')][2].remove();
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 60))));
+  const frame = document.querySelector('.iwf-queue');
+  return { eta: frame.querySelector('.iwf-q-eta').textContent, rows: frame.querySelectorAll('.iwf-q-row').length };
+});
+check('queue: the copy follows the game (a ticking time, a row gone)', ticked.eta === '~1m 29s' && ticked.rows === 2, JSON.stringify(ticked));
+
+const collapsed = await tab.evaluate(async () => {
+  const panel = document.querySelector('.iw-skill-tabs').closest('.panel');
+  panel.setAttribute('data-iw-collapsed', '1');
+  const shown = getComputedStyle(document.getElementById('current-action-panel')).display !== 'none';
+  panel.removeAttribute('data-iw-collapsed');
+  return shown;
+});
+check('negative control: Skill Actions collapsed, the game\'s panel is back', collapsed);
+
+await tab.evaluate(html => { document.getElementById('ca-host').innerHTML = html; }, idleCa);
+await settle(tab);
+const idleQ = await tab.evaluate(() => {
+  const frame = document.querySelector('.iwf-queue');
+  return { count: frame.querySelector('.iwf-q-count').textContent, text: frame.textContent,
+    rows: frame.querySelectorAll('.iwf-q-row').length, cancel: frame.querySelector('.iwf-q-cancel').hidden, more: frame.querySelector('.iwf-q-toggles').hidden };
+});
+check('queue: idle, nothing queued and no cancel', idleQ.count === 'Nothing queued' && !/Choose one skill row/.test(idleQ.text) && idleQ.rows === 0 && idleQ.cancel && idleQ.more, JSON.stringify(idleQ));
+
+await tab.evaluate(() => window.Fantasy.stop());
+const queueLeft = await tab.evaluate(() => ({
+  frames: document.querySelectorAll('.iwf-queue').length,
+  tag: document.querySelectorAll('[data-iw-fantasy-queue]').length,
+  shown: getComputedStyle(document.getElementById('current-action-panel')).display !== 'none',
+}));
+check('stop(): the copy is gone and the game\'s panel is back', queueLeft.frames === 0 && queueLeft.tag === 0 && queueLeft.shown, JSON.stringify(queueLeft));
 await tab.close();
 
 /* ── 8. stand-down ────────────────────────────────────────────────────── */

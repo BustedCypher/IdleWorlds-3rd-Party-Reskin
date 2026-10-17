@@ -89,7 +89,26 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   unknown to the port (the `iw-` prefix there is the game dev's). It creates
   no nodes: it writes `data-iw-fantasy-skill` / `-icon` / `-lead` and
   `styles/skills.css` + `styles/quests.css` draw action-icon and atlas
-  sprites (`core/ItemAtlas.js`, item by id, gear by name). Every item sprite
+  sprites (`core/ItemAtlas.js`, item by id, gear by name). It also marks the
+  tiles the port's `[data-iw-skill-boost]` line names (`-boost="daily"`,
+  a pulsing halo) and copies the Current Action bar's inline width onto the
+  Skill Actions panel (`-run`, half-percent steps, `-run-reset` for one
+  frame at a completion), so the running row fills behind its text, and
+  when the sheet does not render that row (another skill open, its group
+  folded) the `.iw-skill-tab-live` tile takes the fill, by `:has()` alone.
+  The fill's transition is the measured gap between readings, written to a
+  generated sheet (`run-tick`), never inline. `skills/queue.js` is the one
+  part that DOES create nodes: a copy of the Current Action panel's QUEUE
+  (`.iwf-queue`, `data-iw-fantasy-queue-owned`) right after the sheet; the
+  running action is not copied (the row/tile fill carries it), only its
+  cancel. The copy's
+  controls press the game's own buttons (cancel, remove by index + label,
+  the "+N more" toggle; reorder replays HTML5 drag events on the game's
+  rows, unverified live). `#current-action-panel` is hidden by
+  `styles/queue.css` only while it is tagged `data-iw-fantasy-queue=
+  "mirrored"` AND a copy sits in a panel that is not `data-iw-collapsed`.
+  Written against the 2026-10-08 markup (`tests/fixtures/current-action-
+  2026-10-08/`); a live capture should replace it. Every item sprite
   paints at least inventory size (the port's `.fs-inv-icon` sprite: 50 / 44 /
   40px at >1024 / ≤1024 / ≤768px; `--iwf-item`, `--iwq-item`), bare, no
   ring (Curtis, 2026-10-17). Leading emoji are
