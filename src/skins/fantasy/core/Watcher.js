@@ -62,6 +62,9 @@ function run() {
 function onMutations(records) {
   for (const m of records) {
     if (insideOwned(m.target)) continue;
+    // Only the native action's jump title supplies state we copy. Other
+    // tooltips can tick without scheduling a structural pass.
+    if (m.type === 'attributes' && m.attributeName === 'title' && !m.target.closest('#current-action-panel')) continue;
     if (m.type === 'characterData') {
       if (m.target.parentElement) textParents.add(m.target.parentElement);
       continue;
@@ -90,7 +93,7 @@ export function startWatcher({ onFlush, onText }) {
     subtree: true,
     characterData: true,
     attributes: true,
-    attributeFilter: ['class', 'style', 'disabled', 'aria-disabled', 'aria-pressed', 'aria-selected', 'aria-current', 'data-state', 'data-iw-theme-toggle', 'data-iw-item', 'data-iw-item-name'],
+    attributeFilter: ['class', 'style', 'title', 'disabled', 'aria-disabled', 'aria-pressed', 'aria-selected', 'aria-current', 'data-state', 'data-iw-theme-toggle', 'data-iw-item', 'data-iw-item-name'],
   });
   guard('layout-watch', () => startLayoutWatch(() => { structural = true; schedule(); }));
   structural = true;

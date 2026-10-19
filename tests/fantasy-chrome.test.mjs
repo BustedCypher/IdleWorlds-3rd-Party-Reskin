@@ -7,8 +7,8 @@
  *   - the ATK + DEF potion chips read as ONE frame with a summary; the combat
  *     line is never taken for a potion; an active potion keeps its detail;
  *     a grid with only one potion chip is left alone (negative control);
- *   - header travel controls are hidden on phone and desktop; phone hides
- *     the emerald last-action notice and keeps any other notice;
+ *   - header travel controls are hidden on phone and desktop; both hide
+ *     the emerald last-action notice and keep any other notice;
  *   - nav tabs gain padding without overflowing the row; the Daily XP Boost
  *     line is shorter than the port draws it;
  *   - stop() removes every attribute and the sheet.
@@ -126,7 +126,7 @@ const readState = tab => tab.evaluate(() => {
   check('the game text is untouched', s.marks[0].own === '⚔️ No ATK potion active' && s.marks[1].own === '🛡️ No DEF potion active');
   check('the combat line is not a potion', !s.combat);
   check('desktop: travel is removed from the page header', s.zoneHidden);
-  check('desktop: the notice stays', s.notice !== 'none');
+  check('desktop: the green last-action notice is hidden', s.notice === 'none');
   check('nav tabs gain padding', s.navPad > before.navPad && s.navPad >= 18, `${before.navPad} -> ${s.navPad}`);
   check('Daily XP Boost line is slimmer', s.boostH < before.boostH, `${before.boostH} -> ${s.boostH}`);
 
@@ -173,11 +173,11 @@ for (const width of [360, 390]) {
   check(`${width}px: nav padding grows`, s.navPad > before.navPad, `${before.navPad} -> ${s.navPad}`);
   await tab.context().close();
 }
-{
-  const tab = await open(390, { notice: 'plain' });
+for (const width of [390, 1400]) {
+  const tab = await open(width, { notice: 'plain' });
   await start(tab);
   const s = await readState(tab);
-  check('phone: a non-green notice stays', s.notice !== 'none');
+  check(`${width}px: a non-green notice stays`, s.notice !== 'none');
   await tab.context().close();
 }
 

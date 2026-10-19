@@ -16,6 +16,10 @@
  *                  raid-boss gear and raid drops, one small atlas per raid,
  *                  item_id-keyed (vendor-assets.mjs, 2026-10-08)
  *
+ *   Expansion art — assets/item-expansions/index.json / october-2026/*.png
+ *                   exact item IDs/names for Raidforged, profession trinkets
+ *                   and October event/consumable additions; checked first.
+ *
  * Resolution order (see resolve()):
  *   1. item_id match in the item atlas               (authoritative)
  *   1b. item_id match in a raid atlas                (authoritative)
@@ -35,6 +39,7 @@
 import { applyCloakAlias } from './aliases.js';
 import { normaliseItemName } from './normaliseItemName.js';
 import { assetUrl, warnOnce } from './Runtime.js';
+import { findExpansionIcon } from '../../../shared/ItemExpansionIcons.js';
 
 // Atlas assets ship INSIDE the extension (see assets/ and npm run vendor).
 //
@@ -379,6 +384,8 @@ class _AtlasService {
   }
 
   resolve(ref = {}) {
+    const expansion = findExpansionIcon(ref);
+    if (expansion) return { atlas: 'expansion', entry: expansion, badge: expansion.badge };
     const id   = ref.id !== undefined && ref.id !== null ? String(ref.id) : null;
     const name = ref.name || '';
 
@@ -455,6 +462,13 @@ class _AtlasService {
 
   /** Paint one manifest/index entry from either atlas into any sized element. */
   _applySprite(el, atlas, entry) {
+    if (atlas === 'expansion') {
+      el.style.backgroundImage = `url("${assetUrl(entry.path)}")`;
+      el.style.backgroundSize = 'contain';
+      el.style.backgroundPosition = 'center';
+      el.style.backgroundRepeat = 'no-repeat';
+      return;
+    }
     const isGear = atlas === 'gear';
     const raid = atlas === 'raid' ? this._raidAtlases?.[entry.raid] : null;
     const atlasUrl = raid ? raid.url : isGear ? GEAR_ATLAS_URL : ITEM_ATLAS_URL;

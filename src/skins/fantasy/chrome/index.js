@@ -34,7 +34,7 @@ export const POTION_TEXT_ATTR = 'data-iw-fantasy-potion-text';
 export const POTION_STATE_ATTR = 'data-iw-fantasy-potion-state';
 const ATTRS = [POTION_ATTR, POTION_TEXT_ATTR, POTION_STATE_ATTR];
 
-const SURFACES = '[data-iw-header="status-grid"], [data-iw-chrome], [data-iw-skill-boost], .iw-ss-zone, .iw-skill-tabs';
+const SURFACES = '[data-iw-header="status-grid"], [data-iw-chrome], [data-iw-ui="nav-tab"], [data-iw-skill-boost], .iw-ss-zone, .iw-skill-tabs';
 const ICON = { atk: '⚔️', def: '🛡️' };
 
 /** "atk" / "def" for a potion chip, null for any other status card. The

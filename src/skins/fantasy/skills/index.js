@@ -35,17 +35,16 @@
  * The user-selected skill-card art/layout and selected-skill frame stay active
  * independently. The frame decorates the header medallion without taking
  * ownership of the native recipe, progress or queue behavior.
- * reserved.js adds only owned, disabled mobile placeholders after real tabs.
  */
 
 import { nativeFeatures } from '../core/NativeFeatures.js';
 import { guard, raf } from '../core/Runtime.js';
 import { inject, remove, setSheet } from '../core/StyleInjector.js';
 import { requestPass } from '../core/Watcher.js';
-import { label, mark, unmark, pruneWritten } from '../core/dom.js';
+import { isRendered } from '../core/Viewport.js';
+import { label, mark, unmark, pruneWritten, ownerOf, removeOwned } from '../core/dom.js';
 import { loadItemAtlas, onItemAtlas, findItemSprite, nameKey } from '../core/ItemAtlas.js';
 import { queuePass, queueText, clearQueue } from './queue.js';
-import { reservedSlots, clearReserved } from './reserved.js';
 import { materialsPass, clearMaterials } from './materials.js';
 import skillsCss from '../styles/skills.css';
 import cardsCss from '../styles/skill-cards.css';
@@ -63,6 +62,19 @@ export const RUN_RESET_ATTR = 'data-iw-fantasy-run-reset';
 export const CARDS_ATTR = 'data-iw-fantasy-cards';
 export const FRAME_ATTR = 'data-iw-fantasy-skill-frame';
 const ATTRS = [SKILL_ATTR, ICON_ATTR, LEAD_ATTR, PCT_ATTR, BOOST_ATTR, RUN_ATTR, RUN_RESET_ATTR, CARDS_ATTR, FRAME_ATTR];
+const LOCATION_OWNED = 'data-iw-fantasy-skill-location-owned';
+const ownLocation = ownerOf(LOCATION_OWNED);
+const REMOTE_ACTION = '#current-action-panel button[title^="Jump to Zone "]';
+const ACTION_WORDS = {
+  fight: ['combat', 'Fighting'], mine: ['mining', 'Mining'],
+  gather: ['gathering', 'Gathering'], harvest: ['gathering', 'Harvesting'],
+  smelt: ['smithing', 'Smelting'], smith: ['smithing', 'Smithing'], forge: ['smithing', 'Forging'],
+  brew: ['alchemy', 'Brewing'], weave: ['tailoring', 'Weaving'],
+  chop: ['woodcutting', 'Woodcutting'], build: ['construction', 'Building'],
+  assemble: ['construction', 'Assembling'], upgrade: [null, 'Upgrading'],
+  cut: ['jewelcrafting', 'Cutting'], prospect: ['jewelcrafting', 'Prospecting'],
+  craft: [null, 'Crafting'],
+};
 
 /*
  * The tab's XP ring. The game gives a tab's progress only as its bar's
@@ -188,7 +200,6 @@ function decorateSkillCards() {
       mark(tab, PCT_ATTR, tabPercent(tab));
       mark(tab, BOOST_ATTR, boosted.has(tab.getAttribute(SKILL_ATTR)) ? 'daily' : null);
     }
-    reservedSlots(tabs);
   }
 }
 
@@ -199,6 +210,46 @@ function decorateSkillFrame() {
       markSkill(head, head.querySelector('.iw-ss-name > span:first-child')?.textContent);
     }
   }
+}
+
+/** The native jump control exists only when the running action is in another
+ * zone. Read its title even when our queue hides the Current Action panel;
+ * queued rows and pending starts must never supply a running location. */
+function decorateActionLocation() {
+  const actions = [...document.querySelectorAll(REMOTE_ACTION)].filter(button =>
+    !button.closest('[draggable]') && button.closest('#current-action-panel').querySelector('button[aria-label="Cancel current action"]'));
+  // Queue mirroring hides the action panel itself, so inspect its column.
+  // Batch visibility reads before adding or updating any of the notes.
+  const rendered = new Set(actions.filter(button => isRendered(button.closest('#current-action-panel').parentElement)));
+  const used = new Set();
+  for (const sheet of document.querySelectorAll('.iw-skill-sheet')) {
+    const name = sheet.querySelector('.iw-ss-name');
+    const selected = skillKey(name?.firstElementChild?.textContent);
+    const panel = sheet.closest('.panel') || sheet.parentElement;
+    let candidates = actions;
+    for (let ancestor = sheet.parentElement; ancestor; ancestor = ancestor.parentElement) {
+      const local = actions.filter(button => ancestor.contains(button));
+      if (local.length) { candidates = local; break; }
+    }
+    const source = candidates.find(button => rendered.has(button)) || candidates[0];
+    const zone = source?.title.match(/^Jump to Zone ([1-9]\d*)$/)?.[1];
+    const action = label(source?.textContent);
+    const verb = action.split(/\s/)[0]?.toLowerCase();
+    const mana = verb === 'harvest' && /\bmana\b/i.test(action);
+    const words = mana ? ['spellcrafting', 'Harvesting Mana'] : ACTION_WORDS[verb];
+    const liveTab = panel?.querySelector('.iw-skill-tab:has(.iw-skill-tab-live) .iw-skill-tab-name');
+    const running = words?.[0] || skillKey(liveTab?.textContent);
+    if (!name || !selected || !zone || !words || running !== selected) continue;
+    let note = name.querySelector(`[${LOCATION_OWNED}]`);
+    if (!note) {
+      note = ownLocation('span', 'iwf-skill-location');
+      name.firstElementChild.after(note);
+    }
+    const text = `Currently ${words[1]} in Zone ${zone}`;
+    if (note.textContent !== text) note.textContent = text;
+    used.add(note);
+  }
+  for (const note of document.querySelectorAll(`[${LOCATION_OWNED}]`)) if (!used.has(note)) note.remove();
 }
 
 function decorateSkillSheet() {
@@ -298,7 +349,7 @@ function settle() {
   const present = { skillSheet: !!document.querySelector(SHEET_ROOTS), workOrders: !!document.querySelector(BOARD_ROOTS) };
   const next = { skillCards: present.skillSheet, skillSheet: !native.has('skillSheet'), workOrders: !native.has('workOrders') };
   // Native sheet styling must not retire the explicitly selected card art,
-  // mobile grid, XP rings, or owned Reserved slots.
+  // five-column grid or XP rings.
   if (next.skillCards) inject('skill-cards', `${cardsCss}\n${PCT_RULES}`);
   else remove('skill-cards');
   if (next.skillSheet && present.skillSheet) inject('skills', `${skillsCss}\n${queueCss}\n${RUN_RULES}`);
@@ -324,8 +375,9 @@ export function skillsPass() {
   pruneWritten();
   const on = settle();
   if (on.skillCards) guard('skills:cards', decorateSkillCards);
-  else clearReserved();
   if (on.skillCards) guard('skills:frame', decorateSkillFrame);
+  if (on.skillCards) guard('skills:location', decorateActionLocation);
+  else removeOwned(LOCATION_OWNED);
   if ((on.skillSheet && document.querySelector('.iw-ss-detail')) || on.workOrders) {
     if (!unsubscribe) unsubscribe = onItemAtlas(requestPass);
     loadItemAtlas();
@@ -343,7 +395,10 @@ export function skillsPass() {
 export function skillsText(parents) {
   if (!active.skillCards && !active.skillSheet && !active.workOrders) return;
   if (parents.some(p => p.closest?.(NAMED))) skillsPass();
-  else if (active.skillSheet) queueText(parents);
+  else {
+    if (parents.some(p => p.closest?.(REMOTE_ACTION))) guard('skills:location-text', decorateActionLocation);
+    if (active.skillSheet) queueText(parents);
+  }
 }
 
 export function clearSkills() {
@@ -356,7 +411,7 @@ export function clearSkills() {
   resetRun();
   clearMaterials();
   clearQueue();
-  clearReserved();
+  removeOwned(LOCATION_OWNED);
   sprites.clear();
   unsubscribe?.();
   unsubscribe = null;

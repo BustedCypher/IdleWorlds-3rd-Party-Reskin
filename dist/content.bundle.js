@@ -29,38 +29,38 @@
     return clean;
   }
   var LOCAL_FALLBACK = /* @__PURE__ */ new Map();
-  var storageGet = async function storageGet2(key2) {
+  var storageGet = async function storageGet2(key3) {
     if (hasChrome && chrome.storage?.local) {
       try {
-        const bag = await chrome.storage.local.get(key2);
-        return bag?.[key2] ?? null;
+        const bag = await chrome.storage.local.get(key3);
+        return bag?.[key3] ?? null;
       } catch (err) {
-        warnOnce(`storageGet:${key2}`, err);
+        warnOnce(`storageGet:${key3}`, err);
         return null;
       }
     }
-    return LOCAL_FALLBACK.has(key2) ? LOCAL_FALLBACK.get(key2) : null;
+    return LOCAL_FALLBACK.has(key3) ? LOCAL_FALLBACK.get(key3) : null;
   };
-  var storageSet = async function storageSet2(key2, value) {
+  var storageSet = async function storageSet2(key3, value) {
     if (hasChrome && chrome.storage?.local) {
       try {
-        await chrome.storage.local.set({ [key2]: value });
+        await chrome.storage.local.set({ [key3]: value });
         return true;
       } catch (err) {
-        warnOnce(`storageSet:${key2}`, err);
+        warnOnce(`storageSet:${key3}`, err);
         return false;
       }
     }
-    LOCAL_FALLBACK.set(key2, value);
+    LOCAL_FALLBACK.set(key3, value);
     return true;
   };
-  function onStorageChanged(key2, handler) {
+  function onStorageChanged(key3, handler) {
     if (!hasChrome || !chrome.storage?.onChanged) return () => {
     };
     const listener = (changes, area2) => {
-      if (area2 !== "local" || !(key2 in changes)) return;
+      if (area2 !== "local" || !(key3 in changes)) return;
       try {
-        handler(changes[key2].newValue);
+        handler(changes[key3].newValue);
       } catch (err) {
         warnOnce("storage-change", err);
       }
@@ -69,11 +69,11 @@
     return () => chrome.storage.onChanged.removeListener(listener);
   }
   var _warned = /* @__PURE__ */ new Set();
-  function warnOnce(key2, err) {
-    if (_warned.has(key2)) return;
-    _warned.add(key2);
+  function warnOnce(key3, err) {
+    if (_warned.has(key3)) return;
+    _warned.add(key3);
     const detail = err && err.message ? err.message : err;
-    console.warn(`[IW Fantasy Skin] ${key2}:`, detail);
+    console.warn(`[IW Fantasy Skin] ${key3}:`, detail);
   }
   function guard(label6, fn) {
     if (!runtimeActive) return false;
@@ -382,11 +382,11 @@
       ["bgRoots", pendingBgRoots],
       ["nameRoots", pendingNameRoots]
     ];
-    const out = Object.fromEntries(groups.map(([key2]) => [key2, []]));
+    const out = Object.fromEntries(groups.map(([key3]) => [key3, []]));
     const takenNameRoots = /* @__PURE__ */ new Set();
     let cursor = 0, idle = 0, remaining = budget;
     while (remaining > 0 && idle < groups.length) {
-      const [key2, set5] = groups[cursor];
+      const [key3, set5] = groups[cursor];
       cursor = (cursor + 1) % groups.length;
       let el2;
       if (set5 === pendingNameRoots) {
@@ -396,7 +396,7 @@
         el2 = takeConnected(set5);
       }
       if (el2) {
-        out[key2].push(el2);
+        out[key3].push(el2);
         remaining -= 1;
         idle = 0;
       } else idle += 1;
@@ -531,6 +531,286 @@
     } catch (e) {
     }
     return s.replace(/[\u0300-\u036f]/g, "").replace(/[\u2018\u2019\u02bc`\u00b4]/g, "'").replace(/&/g, " and ").replace(/'/g, "").replace(/\blv\.\s*/gi, "lv ").replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase();
+  }
+
+  // assets/item-expansions/index.json
+  var item_expansions_default = {
+    version: 1,
+    source: "BustedCypher/idleWorlds-game-sprites-BC@3ad7e2563e342098c535727f35d6827b7ee75cd4",
+    source_generated_at: "2026-10-19T10:36:31.220Z",
+    items: [
+      {
+        item_id: "cinderforged_blade",
+        name: "Cinderforged Blade",
+        path: "assets/item-expansions/october-2026/cinderforged_blade.png"
+      },
+      {
+        item_id: "cinderforged_bulwark",
+        name: "Cinderforged Bulwark",
+        path: "assets/item-expansions/october-2026/cinderforged_bulwark.png"
+      },
+      {
+        item_id: "cinderforged_helm",
+        name: "Cinderforged Helm",
+        path: "assets/item-expansions/october-2026/cinderforged_helm.png"
+      },
+      {
+        item_id: "cinderforged_breastplate",
+        name: "Cinderforged Breastplate",
+        path: "assets/item-expansions/october-2026/cinderforged_breastplate.png"
+      },
+      {
+        item_id: "cinderforged_gauntlets",
+        name: "Cinderforged Gauntlets",
+        path: "assets/item-expansions/october-2026/cinderforged_gauntlets.png"
+      },
+      {
+        item_id: "cinderforged_greaves",
+        name: "Cinderforged Greaves",
+        path: "assets/item-expansions/october-2026/cinderforged_greaves.png"
+      },
+      {
+        item_id: "cinderforged_sabatons",
+        name: "Cinderforged Sabatons",
+        path: "assets/item-expansions/october-2026/cinderforged_sabatons.png"
+      },
+      {
+        item_id: "stormforged_blade",
+        name: "Stormforged Blade",
+        path: "assets/item-expansions/october-2026/stormforged_blade.png"
+      },
+      {
+        item_id: "stormforged_bulwark",
+        name: "Stormforged Bulwark",
+        path: "assets/item-expansions/october-2026/stormforged_bulwark.png"
+      },
+      {
+        item_id: "stormforged_helm",
+        name: "Stormforged Helm",
+        path: "assets/item-expansions/october-2026/stormforged_helm.png"
+      },
+      {
+        item_id: "stormforged_breastplate",
+        name: "Stormforged Breastplate",
+        path: "assets/item-expansions/october-2026/stormforged_breastplate.png"
+      },
+      {
+        item_id: "stormforged_gauntlets",
+        name: "Stormforged Gauntlets",
+        path: "assets/item-expansions/october-2026/stormforged_gauntlets.png"
+      },
+      {
+        item_id: "stormforged_greaves",
+        name: "Stormforged Greaves",
+        path: "assets/item-expansions/october-2026/stormforged_greaves.png"
+      },
+      {
+        item_id: "stormforged_sabatons",
+        name: "Stormforged Sabatons",
+        path: "assets/item-expansions/october-2026/stormforged_sabatons.png"
+      },
+      {
+        item_id: "hollowforged_blade",
+        name: "Hollowforged Blade",
+        path: "assets/item-expansions/october-2026/hollowforged_blade.png"
+      },
+      {
+        item_id: "hollowforged_bulwark",
+        name: "Hollowforged Bulwark",
+        path: "assets/item-expansions/october-2026/hollowforged_bulwark.png"
+      },
+      {
+        item_id: "hollowforged_helm",
+        name: "Hollowforged Helm",
+        path: "assets/item-expansions/october-2026/hollowforged_helm.png"
+      },
+      {
+        item_id: "hollowforged_breastplate",
+        name: "Hollowforged Breastplate",
+        path: "assets/item-expansions/october-2026/hollowforged_breastplate.png"
+      },
+      {
+        item_id: "hollowforged_gauntlets",
+        name: "Hollowforged Gauntlets",
+        path: "assets/item-expansions/october-2026/hollowforged_gauntlets.png"
+      },
+      {
+        item_id: "hollowforged_greaves",
+        name: "Hollowforged Greaves",
+        path: "assets/item-expansions/october-2026/hollowforged_greaves.png"
+      },
+      {
+        item_id: "hollowforged_sabatons",
+        name: "Hollowforged Sabatons",
+        path: "assets/item-expansions/october-2026/hollowforged_sabatons.png"
+      },
+      {
+        item_id: "anchorforged_blade",
+        name: "Anchorforged Blade",
+        path: "assets/item-expansions/october-2026/anchorforged_blade.png"
+      },
+      {
+        item_id: "anchorforged_bulwark",
+        name: "Anchorforged Bulwark",
+        path: "assets/item-expansions/october-2026/anchorforged_bulwark.png"
+      },
+      {
+        item_id: "anchorforged_helm",
+        name: "Anchorforged Helm",
+        path: "assets/item-expansions/october-2026/anchorforged_helm.png"
+      },
+      {
+        item_id: "anchorforged_breastplate",
+        name: "Anchorforged Breastplate",
+        path: "assets/item-expansions/october-2026/anchorforged_breastplate.png"
+      },
+      {
+        item_id: "anchorforged_gauntlets",
+        name: "Anchorforged Gauntlets",
+        path: "assets/item-expansions/october-2026/anchorforged_gauntlets.png"
+      },
+      {
+        item_id: "anchorforged_greaves",
+        name: "Anchorforged Greaves",
+        path: "assets/item-expansions/october-2026/anchorforged_greaves.png"
+      },
+      {
+        item_id: "anchorforged_sabatons",
+        name: "Anchorforged Sabatons",
+        path: "assets/item-expansions/october-2026/anchorforged_sabatons.png"
+      },
+      {
+        item_id: "welcome_back_xp_potion",
+        name: "Welcome-Back XP Potion",
+        path: "assets/item-expansions/october-2026/welcome_back_xp_potion.png"
+      },
+      {
+        item_id: "premium_token",
+        name: "Premium Membership Token",
+        path: "assets/item-expansions/october-2026/premium_token.png"
+      },
+      {
+        item_id: "hollow_candy",
+        name: "Hollow Candy",
+        path: "assets/item-expansions/october-2026/hollow_candy.png"
+      },
+      {
+        item_id: "hollow_scroll",
+        name: "Hollow Scroll",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "deepvein_lodestone",
+        name: "Deepvein Lodestone",
+        path: "assets/item-expansions/october-2026/deepvein_lodestone.png"
+      },
+      {
+        item_id: "emberheart_anvilstone",
+        name: "Emberheart Anvilstone",
+        path: "assets/item-expansions/october-2026/emberheart_anvilstone.png"
+      },
+      {
+        item_id: "rimebloom_satchel",
+        name: "Rimebloom Satchel",
+        path: "assets/item-expansions/october-2026/rimebloom_satchel.png"
+      },
+      {
+        item_id: "stormwoven_grimoire",
+        name: "Stormwoven Grimoire",
+        path: "assets/item-expansions/october-2026/stormwoven_grimoire.png"
+      },
+      {
+        item_id: "astral_loupe",
+        name: "Astral Loupe",
+        path: "assets/item-expansions/october-2026/astral_loupe.png"
+      },
+      {
+        item_id: "cinderthread_spindle",
+        name: "Cinderthread Spindle",
+        path: "assets/item-expansions/october-2026/cinderthread_spindle.png"
+      },
+      {
+        item_id: "rimebark_charm",
+        name: "Rimebark Charm",
+        path: "assets/item-expansions/october-2026/rimebark_charm.png"
+      },
+      {
+        item_id: "stormset_plumb_line",
+        name: "Stormset Plumb Line",
+        path: "assets/item-expansions/october-2026/stormset_plumb_line.png"
+      },
+      {
+        item_id: "hollow_lantern",
+        name: "Hollow Lantern",
+        path: "assets/item-expansions/october-2026/hollow_lantern.png"
+      },
+      {
+        item_id: "hollow_skeleton_key",
+        name: "Skeleton Key",
+        path: "assets/item-expansions/october-2026/hollow_skeleton_key.png"
+      },
+      {
+        item_id: "hollow_scroll_combat",
+        name: "Hollow Scroll of Combat",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "hollow_scroll_mining",
+        name: "Hollow Scroll of Mining",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "hollow_scroll_smithing",
+        name: "Hollow Scroll of Smithing",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "hollow_scroll_herbing",
+        name: "Hollow Scroll of Gathering",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "hollow_scroll_alchemy",
+        name: "Hollow Scroll of Alchemy",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "hollow_scroll_jewelcrafting",
+        name: "Hollow Scroll of Jewelcrafting",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "hollow_scroll_spellcrafting",
+        name: "Hollow Scroll of Spellcrafting",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "hollow_scroll_tailoring",
+        name: "Hollow Scroll of Tailoring",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "hollow_scroll_woodcutting",
+        name: "Hollow Scroll of Woodcutting",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      },
+      {
+        item_id: "hollow_scroll_construction",
+        name: "Hollow Scroll of Construction",
+        path: "assets/item-expansions/october-2026/hollow_scroll.png"
+      }
+    ]
+  };
+
+  // src/shared/ItemExpansionIcons.js
+  var key = (value) => String(value || "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]/g, "");
+  var byId = new Map(item_expansions_default.items.map((item) => [item.item_id, item]));
+  var byName = new Map(item_expansions_default.items.map((item) => [key(item.name), item]));
+  var UPGRADE = /\s*\+\s*(\d+)\s*$/;
+  function findExpansionIcon({ id, name } = {}) {
+    const match = UPGRADE.exec(name || "");
+    const item = byId.get(String(id || "")) || byName.get(key(String(name || "").replace(UPGRADE, "")));
+    return item ? { ...item, badge: match ? Number(match[1]) : 0 } : null;
   }
 
   // src/skins/legacy/modules/AtlasService.js
@@ -711,8 +991,8 @@
       };
       this._gearByName = /* @__PURE__ */ new Map();
       for (const icon5 of manifest.icons) {
-        const key2 = normalise(icon5.name);
-        if (key2) this._gearByName.set(key2, icon5);
+        const key3 = normalise(icon5.name);
+        if (key3) this._gearByName.set(key3, icon5);
       }
       const sample = manifest.icons[0] || {};
       if (!Number.isFinite(Number(sample.x)) || !Number.isFinite(Number(sample.y))) {
@@ -740,8 +1020,8 @@
         if (row.item_id !== void 0 && row.item_id !== null && row.item_id !== "") {
           this._itemById.set(String(row.item_id), row);
         }
-        const key2 = normalise(row.name);
-        if (key2 && !this._itemByName.has(key2)) this._itemByName.set(key2, row);
+        const key3 = normalise(row.name);
+        if (key3 && !this._itemByName.has(key3)) this._itemByName.set(key3, row);
         const x = Number(row.x);
         const y = Number(row.y);
         const w = Number(row.width);
@@ -772,21 +1052,23 @@
         if (!atlas.atlas || !(width > 0) || !(height > 0)) throw new Error(`Raid atlas ${raid} has no size`);
         atlases[raid] = { url: assetUrl(atlas.atlas), width, height };
       }
-      const byId3 = /* @__PURE__ */ new Map();
-      const byName3 = /* @__PURE__ */ new Map();
+      const byId4 = /* @__PURE__ */ new Map();
+      const byName4 = /* @__PURE__ */ new Map();
       for (const item of index.items) {
         const atlas = atlases[item.raid];
         const [x, y, w, h] = [item.x, item.y, item.width, item.height].map(Number);
         if (!atlas || ![x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0 || x + w > atlas.width || y + h > atlas.height) continue;
-        if (item.item_id) byId3.set(String(item.item_id), item);
-        const key2 = normalise(item.name);
-        if (key2 && !byName3.has(key2)) byName3.set(key2, item);
+        if (item.item_id) byId4.set(String(item.item_id), item);
+        const key3 = normalise(item.name);
+        if (key3 && !byName4.has(key3)) byName4.set(key3, item);
       }
       this._raidAtlases = atlases;
-      this._raidById = byId3;
-      this._raidByName = byName3;
+      this._raidById = byId4;
+      this._raidByName = byName4;
     }
     resolve(ref = {}) {
+      const expansion = findExpansionIcon(ref);
+      if (expansion) return { atlas: "expansion", entry: expansion, badge: expansion.badge };
       const id = ref.id !== void 0 && ref.id !== null ? String(ref.id) : null;
       const name = ref.name || "";
       if (id && this._itemById && this._itemById.has(id)) {
@@ -844,6 +1126,13 @@
     }
     /** Paint one manifest/index entry from either atlas into any sized element. */
     _applySprite(el2, atlas, entry3) {
+      if (atlas === "expansion") {
+        el2.style.backgroundImage = `url("${assetUrl(entry3.path)}")`;
+        el2.style.backgroundSize = "contain";
+        el2.style.backgroundPosition = "center";
+        el2.style.backgroundRepeat = "no-repeat";
+        return;
+      }
       const isGear = atlas === "gear";
       const raid = atlas === "raid" ? this._raidAtlases?.[entry3.raid] : null;
       const atlasUrl = raid ? raid.url : isGear ? GEAR_ATLAS_URL : ITEM_ATLAS_URL;
@@ -1058,8 +1347,8 @@
         if (item.item_id !== void 0 && item.item_id !== null && item.item_id !== "") {
           this._byId.set(String(item.item_id), item);
         }
-        const key2 = normaliseItemName(item.name);
-        if (key2 && !this._byName.has(key2)) this._byName.set(key2, item);
+        const key3 = normaliseItemName(item.name);
+        if (key3 && !this._byName.has(key3)) this._byName.set(key3, item);
       }
       this._revision += 1;
       document.dispatchEvent(new CustomEvent("iw:item-db-updated", {
@@ -2092,10 +2381,10 @@
     return "detail";
   }
   function isNameFragment(text2, nameParts) {
-    const key2 = compareKey(text2);
-    if (!key2) return true;
-    if (key2 === compareKey(nameParts.full) || key2 === compareKey(nameParts.base)) return true;
-    if (nameParts.level && key2 === compareKey(`Lv ${nameParts.level}`)) return true;
+    const key3 = compareKey(text2);
+    if (!key3) return true;
+    if (key3 === compareKey(nameParts.full) || key3 === compareKey(nameParts.base)) return true;
+    if (nameParts.level && key3 === compareKey(`Lv ${nameParts.level}`)) return true;
     return false;
   }
   function isStableStatNoise(text2) {
@@ -2106,9 +2395,9 @@
     return false;
   }
   function isLikelyAggregate(text2, nameParts) {
-    const key2 = compareKey(text2);
+    const key3 = compareKey(text2);
     const base = compareKey(nameParts.base);
-    if (!key2 || !base || !key2.startsWith(base)) return false;
+    if (!key3 || !base || !key3.startsWith(base)) return false;
     return /(?:\btier\b|\b(?:atk|def|hp)\s*[+-]?\d|\bxp\b.*\/task|\brequires?\b|\bloadout\b|\bupgrad)/i.test(text2);
   }
   function resolveInventoryItemName(texts, getByName) {
@@ -2163,9 +2452,9 @@
       const m = UPGRADE_ROLL_STATS.exec(s);
       if (!m) continue;
       const text2 = m[1].replace(/\s+/g, " ").trim();
-      const key2 = compareKey(text2);
-      if (!text2 || rolledKeys.has(key2)) continue;
-      rolledKeys.add(key2);
+      const key3 = compareKey(text2);
+      if (!text2 || rolledKeys.has(key3)) continue;
+      rolledKeys.add(key3);
       rolledStats.push({ text: text2, kind: "effect", count: 1 });
     }
     const ORB_MAX = 4;
@@ -2176,10 +2465,10 @@
     const atomics = [];
     for (const text2 of source) {
       if (text2.length > 220 || isLikelyAggregate(text2, nameParts)) continue;
-      const key2 = compareKey(text2);
+      const key3 = compareKey(text2);
       const containsAtomic = atomics.some((shorter) => {
         const shortKey = compareKey(shorter);
-        return shorter.length < text2.length && shortKey.length >= 5 && key2.includes(shortKey);
+        return shorter.length < text2.length && shortKey.length >= 5 && key3.includes(shortKey);
       });
       if (containsAtomic) continue;
       atomics.push(text2);
@@ -2189,9 +2478,9 @@
       if (isNameFragment(text2, nameParts)) continue;
       if (ACTION_WORDS.test(text2) || QUANTITY.test(text2) || LEVEL_ONLY.test(text2) || NUMBER_ONLY.test(text2)) continue;
       if (REQUIREMENT.test(text2)) {
-        const key3 = compareKey(text2);
-        if (!requirementKeys.has(key3)) {
-          requirementKeys.add(key3);
+        const key4 = compareKey(text2);
+        if (!requirementKeys.has(key4)) {
+          requirementKeys.add(key4);
           requirements.push(text2);
         }
         continue;
@@ -2200,12 +2489,12 @@
       if (suppressNotUpgradable && NOT_UPGRADABLE.test(text2)) continue;
       const interesting = LOADOUT.test(text2) || SOCKET_EFFECT.test(text2) || DYNAMIC_EFFECT.test(text2) || UPGRADE_STATE.test(text2) || SET_STATE.test(text2);
       if (!interesting) continue;
-      const key2 = compareKey(text2);
-      const current = counts.get(key2);
+      const key3 = compareKey(text2);
+      const current = counts.get(key3);
       if (current) {
         current.count += 1;
       } else {
-        counts.set(key2, { text: text2, kind: kindFor(text2), count: 1 });
+        counts.set(key3, { text: text2, kind: kindFor(text2), count: 1 });
       }
     }
     const order = { loadout: 0, socket: 1, effect: 2, set: 3, status: 4, detail: 5 };
@@ -2395,12 +2684,12 @@
     const ordered = deNested.sort((a, b) => a.text.length - b.text.length);
     const kept = [];
     for (const rec of ordered) {
-      const { text: text2, key: key2 } = rec;
-      if (nameKey3 && key2.startsWith(nameKey3) && /(?:\btier\b|\b(?:atk|def|hp)\s*[+-]?\d|\bxp\b.*\/task|\brequires?\b|\bupgrad|\bloadout\b)/i.test(text2)) {
+      const { text: text2, key: key3 } = rec;
+      if (nameKey3 && key3.startsWith(nameKey3) && /(?:\btier\b|\b(?:atk|def|hp)\s*[+-]?\d|\bxp\b.*\/task|\brequires?\b|\bupgrad|\bloadout\b)/i.test(text2)) {
         continue;
       }
       const containsAtomic = kept.some(
-        (shorter) => shorter.text.length < text2.length && shorter.key.length >= 5 && key2.includes(shorter.key)
+        (shorter) => shorter.text.length < text2.length && shorter.key.length >= 5 && key3.includes(shorter.key)
       );
       if (containsAtomic) continue;
       kept.push(rec);
@@ -3060,8 +3349,8 @@
   function setVar(panel3, name, value) {
     panel3.style.setProperty(name, value);
   }
-  function setData(el2, key2, value) {
-    if (el2.dataset[key2] !== value) el2.dataset[key2] = value;
+  function setData(el2, key3, value) {
+    if (el2.dataset[key3] !== value) el2.dataset[key3] = value;
   }
   function clearThemeVariables(host) {
     if (!host?.style) return;
@@ -3102,8 +3391,8 @@
     );
     setVar(panel3, "--fs-skills-nav-prev", `url("${assetUrl(NAV_PREV_URL)}")`);
     setVar(panel3, "--fs-skills-nav-next", `url("${assetUrl(NAV_NEXT_URL)}")`);
-    for (const [key2, token] of Object.entries(UI_TOKENS)) {
-      const entry3 = uiByKey.get(key2);
+    for (const [key3, token] of Object.entries(UI_TOKENS)) {
+      const entry3 = uiByKey.get(key3);
       if (!entry3) continue;
       const sprite = spriteGeometry(uiIndex, entry3);
       setVar(panel3, `--fs-ui-${token}-size`, sprite.size);
@@ -3163,8 +3452,8 @@
     isReady() {
       return !!iconIndex && !!uiIndex;
     },
-    paintIcon(host, key2) {
-      const entry3 = iconByKey.get(key2) || iconByKey.get(ICON_ALIASES[key2]) || iconByKey.get("generic");
+    paintIcon(host, key3) {
+      const entry3 = iconByKey.get(key3) || iconByKey.get(ICON_ALIASES[key3]) || iconByKey.get("generic");
       return paint(host, iconIndex, entry3);
     },
     decoratePanel(panel3) {
@@ -3179,8 +3468,8 @@
     clearThemeVariables(host) {
       clearThemeVariables(host);
     },
-    iconEntry(key2) {
-      return iconByKey.get(key2) || iconByKey.get(ICON_ALIASES[key2]) || null;
+    iconEntry(key3) {
+      return iconByKey.get(key3) || iconByKey.get(ICON_ALIASES[key3]) || null;
     }
   };
 
@@ -4088,8 +4377,8 @@
   function setOwnText(el2, value) {
     if (el2 && el2.textContent !== value) el2.textContent = value;
   }
-  function setOwnData(el2, key2, value) {
-    if (el2.dataset[key2] !== value) el2.dataset[key2] = value;
+  function setOwnData(el2, key3, value) {
+    if (el2.dataset[key3] !== value) el2.dataset[key3] = value;
   }
   function ensureSkillPresentation(panel3, meta) {
     ensureSkillActionsFrame(panel3);
@@ -4251,12 +4540,12 @@
     const mid = sorted.length >> 1;
     return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
   }
-  function sampleProgress(samples, key2, pct, at = nowMs()) {
+  function sampleProgress(samples, key3, pct, at = nowMs()) {
     const none = { reset: false, durationMs: null };
     if (pct === null || !Number.isFinite(pct)) return none;
-    const state3 = samples.get(key2);
+    const state3 = samples.get(key3);
     if (!state3) {
-      samples.set(key2, { pct, at, deltas: [], afterReset: false });
+      samples.set(key3, { pct, at, deltas: [], afterReset: false });
       return none;
     }
     if (Math.abs(pct - state3.pct) < PROGRESS_EPSILON) return none;
@@ -4292,10 +4581,10 @@
   var FRAME_SECTIONS = ["materials", "sources", "details"];
   var bound = false;
   var active = false;
-  function setData2(el2, key2, value) {
+  function setData2(el2, key3, value) {
     if (!el2) return;
     const next = String(value);
-    if (el2.dataset[key2] !== next) el2.dataset[key2] = next;
+    if (el2.dataset[key3] !== next) el2.dataset[key3] = next;
   }
   function setText(el2, value) {
     if (el2 && el2.textContent !== value) el2.textContent = value;
@@ -4529,9 +4818,9 @@
     if (!btn) return;
     const visual = panel3.querySelector("[data-iw-skill-v2-action-label]");
     const label6 = (btn.textContent || "").replace(/\s+/g, " ").trim();
-    const key2 = `${label6}|${panel3.dataset.iwSkillLayout || ""}|${btn.style.getPropertyValue("width")}|${getLayoutEpoch()}`;
-    if (!label6 || panel3.dataset.iwSkillV2LabelFit === key2) return;
-    panel3.dataset.iwSkillV2LabelFit = key2;
+    const key3 = `${label6}|${panel3.dataset.iwSkillLayout || ""}|${btn.style.getPropertyValue("width")}|${getLayoutEpoch()}`;
+    if (!label6 || panel3.dataset.iwSkillV2LabelFit === key3) return;
+    panel3.dataset.iwSkillV2LabelFit = key3;
     const text2 = labelTextBox(visual || btn);
     if (!text2 || !(text2.width > 0)) return;
     const cs = getComputedStyle(visual || btn);
@@ -5151,21 +5440,21 @@
   var signatures = /* @__PURE__ */ new WeakMap();
   var rewardPreferences = /* @__PURE__ */ new Map();
   function bindRewardDisclosure(section, boss) {
-    const key2 = `iw-boss-rewards-collapsed:${boss.key}`;
-    let preference = rewardPreferences.get(key2);
+    const key3 = `iw-boss-rewards-collapsed:${boss.key}`;
+    let preference = rewardPreferences.get(key3);
     if (!preference) {
       preference = { collapsed: false, changed: false };
-      preference.ready = storageGet(key2).then((value) => {
+      preference.ready = storageGet(key3).then((value) => {
         if (!preference.changed) preference.collapsed = value === true;
       });
-      rewardPreferences.set(key2, preference);
+      rewardPreferences.set(key3, preference);
     }
     section.open = !preference.collapsed;
     section.addEventListener("toggle", () => {
       if (!section.isConnected || preference.collapsed === !section.open) return;
       preference.collapsed = !section.open;
       preference.changed = true;
-      void storageSet(key2, preference.collapsed);
+      void storageSet(key3, preference.collapsed);
     });
     void preference.ready.then(() => {
       if (section.isConnected) section.open = !preference.collapsed;
@@ -5175,8 +5464,8 @@
   var impactAnimations = /* @__PURE__ */ new WeakMap();
   var impactCleanup = /* @__PURE__ */ new WeakMap();
   var norm = (value) => String(value || "").replace(/\s+/g, " ").trim();
-  function mark(el2, key2, value) {
-    if (el2 && el2.getAttribute(key2) !== value) el2.setAttribute(key2, value);
+  function mark(el2, key3, value) {
+    if (el2 && el2.getAttribute(key3) !== value) el2.setAttribute(key3, value);
   }
   function setText2(el2, value) {
     if (el2 && el2.textContent !== value) el2.textContent = value;
@@ -5530,11 +5819,11 @@
   var houseSignatures = /* @__PURE__ */ new WeakMap();
   var norm2 = (value) => String(value || "").replace(/\s+/g, " ").trim();
   var label = (value) => norm2(value).replace(/^[^\p{L}\p{N}]+/u, "");
-  function mark2(el2, key2, value) {
-    if (el2 && el2.getAttribute(key2) !== value) el2.setAttribute(key2, value);
+  function mark2(el2, key3, value) {
+    if (el2 && el2.getAttribute(key3) !== value) el2.setAttribute(key3, value);
   }
-  function unmark(el2, key2) {
-    if (el2 && el2.hasAttribute(key2)) el2.removeAttribute(key2);
+  function unmark(el2, key3) {
+    if (el2 && el2.hasAttribute(key3)) el2.removeAttribute(key3);
   }
   function owned2(tag, className, text2) {
     const el2 = document.createElement(tag);
@@ -5798,8 +6087,8 @@
     prefs = /* @__PURE__ */ new Map();
     loading = storageGet(STORE_KEY).then((bag) => {
       if (!bag || typeof bag !== "object") return;
-      for (const [key2, value] of Object.entries(bag)) {
-        if (value === false && !touched.has(key2)) prefs.set(key2, false);
+      for (const [key3, value] of Object.entries(bag)) {
+        if (value === false && !touched.has(key3)) prefs.set(key3, false);
       }
       for (const row of live) applyEntry(row);
     }).catch((err) => warnOnce("village-ledger:load", err));
@@ -5807,7 +6096,7 @@
   }
   function persist() {
     const bag = {};
-    for (const [key2, value] of prefs) if (value === false) bag[key2] = false;
+    for (const [key3, value] of prefs) if (value === false) bag[key3] = false;
     void storageSet(STORE_KEY, bag);
   }
   function applyEntry(row) {
@@ -5851,14 +6140,14 @@
     mark7.setAttribute("aria-hidden", "true");
     return mark7;
   }
-  function wire(key2, name, box, button4) {
-    const row = { key: key2, name, entry: box, button: button4 };
+  function wire(key3, name, box, button4) {
+    const row = { key: key3, name, entry: box, button: button4 };
     button4.addEventListener("click", (event) => {
       event.preventDefault();
-      const closed = prefs.get(key2) === false;
-      if (closed) prefs.delete(key2);
-      else prefs.set(key2, false);
-      touched.add(key2);
+      const closed = prefs.get(key3) === false;
+      if (closed) prefs.delete(key3);
+      else prefs.set(key3, false);
+      touched.add(key3);
       persist();
       applyEntry(row);
     });
@@ -5866,9 +6155,9 @@
     applyEntry(row);
     return row;
   }
-  function entry(own14, { key: key2, name, meta, file, fallback: fallback2, rows, notes, empty }) {
+  function entry(own14, { key: key3, name, meta, file, fallback: fallback2, rows, notes, empty }) {
     const box = own14("div", "iw-vs-entry");
-    box.dataset.iwVsEntry = key2;
+    box.dataset.iwVsEntry = key3;
     const button4 = own14("button", "iw-vs-entry-head");
     button4.type = "button";
     button4.dataset.iwVsToggle = "1";
@@ -5888,7 +6177,7 @@
       body.append(own14("p", "iw-vs-entry-note", empty || "No recorded effects."));
     }
     box.append(button4, body);
-    wire(key2, name, box, button4);
+    wire(key3, name, box, button4);
     return box;
   }
   function buildingItem(slot) {
@@ -6061,7 +6350,7 @@
     const tier = player?.housing?.tier;
     const addons = player?.villageAddons;
     if (!Number.isInteger(tier) || tier < 0 || tier > 5 || !addons || !Number.isInteger(addons.totalSlots) || addons.totalSlots < 0 || addons.totalSlots > 5 || !Array.isArray(addons.installed)) return null;
-    const slots = Array.from({ length: 5 }, (_, i) => ({
+    const slots2 = Array.from({ length: 5 }, (_, i) => ({
       slot: i + 1,
       state: i < addons.totalSlots ? "empty" : "locked",
       name: "",
@@ -6072,8 +6361,8 @@
       if (!Number.isInteger(row.slot) || row.slot < 1 || row.slot > addons.totalSlots) return null;
       const entry3 = buildings.find((b) => row.itemKey === `construction_building_tier_${b.tier}`) || VILLAGE_BUILDINGS[String(row.name || "").replace(/\s+/g, " ").trim().toLowerCase()];
       if (!entry3 && !row.name) return null;
-      if (slots[row.slot - 1].state === "installed") return null;
-      slots[row.slot - 1] = {
+      if (slots2[row.slot - 1].state === "installed") return null;
+      slots2[row.slot - 1] = {
         slot: row.slot,
         state: "installed",
         name: row.name || entry3.name,
@@ -6081,7 +6370,7 @@
         itemKey: row.itemKey || (entry3 ? `construction_building_tier_${entry3.tier}` : "")
       };
     }
-    return { tier, capacity: addons.totalSlots, slots };
+    return { tier, capacity: addons.totalSlots, slots: slots2 };
   }
   function own(tag, cls, text2) {
     const el2 = document.createElement(tag);
@@ -6140,9 +6429,9 @@
     message = status;
     if (!frame) return;
     const housePerks = perks.tier === snapshot?.tier ? perks.lines : [];
-    const key2 = JSON.stringify([snapshot, status, housePerks, ItemDatabase.revision()]);
-    if (signature === key2) return;
-    signature = key2;
+    const key3 = JSON.stringify([snapshot, status, housePerks, ItemDatabase.revision()]);
+    if (signature === key3) return;
+    signature = key3;
     for (const child of [...frame.children]) {
       if (child.dataset.iwVillageSceneOwned === "1") child.remove();
     }
@@ -6732,7 +7021,7 @@
     });
     const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
     env.src = assetUrl("assets/raids/ashmaw/arena.png");
-    for (const [key2, name] of Object.entries({ cloudAtlas: "clouds", smokeAtlas: "furnace-smoke", steamAtlas: "steam" })) textures[key2].src = assetUrl("assets/raids/ashmaw/" + name + ".png");
+    for (const [key3, name] of Object.entries({ cloudAtlas: "clouds", smokeAtlas: "furnace-smoke", steamAtlas: "steam" })) textures[key3].src = assetUrl("assets/raids/ashmaw/" + name + ".png");
     loaded.then(([background, cloudAtlas, smokeAtlas, steamAtlas]) => {
       if (state3.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
@@ -7131,7 +7420,7 @@
     const art2 = document.createElement("div");
     art2.setAttribute("data-iw-thessaly-art", "");
     art2.setAttribute("aria-hidden", "true");
-    const env = new Image(), textures = Object.fromEntries(["clouds", "mist", "hair", "body"].map((key2) => [key2, new Image()])), canvas = document.createElement("canvas");
+    const env = new Image(), textures = Object.fromEntries(["clouds", "mist", "hair", "body"].map((key3) => [key3, new Image()])), canvas = document.createElement("canvas");
     for (const image of [env, ...Object.values(textures)]) image.crossOrigin = "anonymous";
     env.setAttribute("data-iw-art", "environment");
     art2.append(env, canvas);
@@ -7170,12 +7459,12 @@
     });
     const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
     env.src = assetUrl("assets/raids/thessaly/arena-storm.png");
-    for (const [key2, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist", hair: "hair-wisps", body: "body-clouds" })) textures[key2].src = assetUrl("assets/raids/thessaly/" + name + ".png");
+    for (const [key3, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist", hair: "hair-wisps", body: "body-clouds" })) textures[key3].src = assetUrl("assets/raids/thessaly/" + name + ".png");
     loaded.then(([background, ...images]) => {
       if (state3.disposed || !arena.isConnected) return;
       arena.setAttribute("data-iw-raid-scene", "thessaly");
       state3.stage.setAttribute("data-iw-raid-boss-stage", "thessaly");
-      const assets = Object.fromEntries(Object.keys(textures).map((key2, index) => [key2, images[index]]));
+      const assets = Object.fromEntries(Object.keys(textures).map((key3, index) => [key3, images[index]]));
       try {
         state3.renderer = createThessalyRenderer(canvas, background, assets, { maxWidth: 1440 });
       } catch {
@@ -7561,7 +7850,7 @@
     });
     const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
     env.src = assetUrl("assets/raids/morwenna/arena.png");
-    for (const [key2, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key2].src = assetUrl("assets/raids/morwenna/" + name + ".png");
+    for (const [key3, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key3].src = assetUrl("assets/raids/morwenna/" + name + ".png");
     loaded.then(([background, clouds, mist]) => {
       if (state3.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
@@ -7916,7 +8205,7 @@
     });
     const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
     env.src = assetUrl("assets/raids/grimjaw/arena.png");
-    for (const [key2, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key2].src = assetUrl("assets/raids/grimjaw/" + name + ".png");
+    for (const [key3, name] of Object.entries({ clouds: "storm-clouds", mist: "courtyard-mist" })) textures[key3].src = assetUrl("assets/raids/grimjaw/" + name + ".png");
     loaded.then(([background, clouds, mist]) => {
       if (state3.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
@@ -8280,7 +8569,7 @@
     });
     const loaded = Promise.all([load2(env), ...Object.values(textures).map((image) => load2(image).catch(() => null))]);
     env.src = assetUrl("assets/raids/skarth/arena.png");
-    for (const [key2, name] of Object.entries({ atmosphere: "atmosphere", ice: "ice", water: "water" })) textures[key2].src = assetUrl("assets/raids/skarth/" + name + ".png");
+    for (const [key3, name] of Object.entries({ atmosphere: "atmosphere", ice: "ice", water: "water" })) textures[key3].src = assetUrl("assets/raids/skarth/" + name + ".png");
     loaded.then(([background, atmosphere, ice, water]) => {
       if (state3.disposed || !arena.isConnected) return;
       const nativeBackground2 = arena.style.getPropertyValue("--raid-bg-image");
@@ -8430,8 +8719,8 @@
   function syncPartyPreviewToggle(root, head, redecorate) {
     const arenas = () => [...root.querySelectorAll(".raid-battle-backdrop")];
     const live2 = !!head && arenas().length > 0;
-    for (const [key2, spec] of Object.entries(TOGGLES)) {
-      let toggle2 = head?.querySelector(`:scope > [${TEST}="${key2}"]`);
+    for (const [key3, spec] of Object.entries(TOGGLES)) {
+      let toggle2 = head?.querySelector(`:scope > [${TEST}="${key3}"]`);
       if (!live2) {
         toggle2?.remove();
         continue;
@@ -8439,7 +8728,7 @@
       if (!toggle2) {
         toggle2 = document.createElement("button");
         toggle2.type = "button";
-        toggle2.setAttribute(TEST, key2);
+        toggle2.setAttribute(TEST, key3);
         toggle2.title = spec.title;
         toggle2.addEventListener("click", (event) => {
           event.preventDefault();
@@ -8512,14 +8801,14 @@
   var timerMax = /* @__PURE__ */ new Map();
   var timerSets = /* @__PURE__ */ new WeakMap();
   var folds = /* @__PURE__ */ new Map();
-  function set(el2, key2, value) {
+  function set(el2, key3, value) {
     if (!el2) return;
     if (value == null || value === false) {
-      if (el2.hasAttribute(key2)) el2.removeAttribute(key2);
+      if (el2.hasAttribute(key3)) el2.removeAttribute(key3);
       return;
     }
     const v = String(value);
-    if (el2.getAttribute(key2) !== v) el2.setAttribute(key2, v);
+    if (el2.getAttribute(key3) !== v) el2.setAttribute(key3, v);
   }
   function el(tag, className, text2) {
     const node2 = document.createElement(tag);
@@ -8540,8 +8829,8 @@
   }
   function skillKey(text2) {
     const t = stripGlyph(text2).toLowerCase();
-    for (const key2 of SKILLS) if (t.startsWith(key2)) return key2;
-    for (const [alias, key2] of Object.entries(SKILL_ALIASES)) if (t.startsWith(alias)) return key2;
+    for (const key3 of SKILLS) if (t.startsWith(key3)) return key3;
+    for (const [alias, key3] of Object.entries(SKILL_ALIASES)) if (t.startsWith(alias)) return key3;
     return null;
   }
   function artFor(text2) {
@@ -8590,7 +8879,7 @@
     const text2 = norm3(tg.textContent);
     const m = /^(.+?)\s*(?:\(([^)]*)\))?\s+in\s+(\d+(?:\.\d+)?)\s*s(?:ec(?:onds?)?)?\.?$/i.exec(text2);
     if (!m) {
-      for (const key2 of ["data-iw-raid-cast", "data-iw-raid-cast-name", "data-iw-raid-cast-scope", "data-iw-raid-cast-secs", "data-iw-raid-cast-urgency", "data-iw-raid-cast-step"]) set(tg, key2, null);
+      for (const key3 of ["data-iw-raid-cast", "data-iw-raid-cast-name", "data-iw-raid-cast-scope", "data-iw-raid-cast-secs", "data-iw-raid-cast-urgency", "data-iw-raid-cast-step"]) set(tg, key3, null);
       return;
     }
     const name = m[1].trim();
@@ -8813,13 +9102,13 @@
     const panel3 = head.parentElement;
     const dock = panel3.parentElement;
     const arena = docks.get(dock);
-    const key2 = panel3.dataset.iwRaidDock;
-    const open = folds.get(key2) !== true;
-    folds.set(key2, open);
+    const key3 = panel3.dataset.iwRaidDock;
+    const open = folds.get(key3) !== true;
+    folds.set(key3, open);
     syncDockPanel(panel3, open);
     if (!arena) return;
     decorateDock(arena);
-    if (key2 !== "log") return;
+    if (key3 !== "log") return;
     const log = gameLog(arena);
     if (open && log?.tagName === "BUTTON") log.click();
     if (!open && log && log.tagName !== "BUTTON") [...log.querySelectorAll("button")].find((b) => /close/i.test(b.textContent))?.click();
@@ -8835,9 +9124,9 @@
     const head = panel3.firstElementChild;
     set(head, "aria-expanded", String(open));
   }
-  function dockPanel(key2, title, glyph) {
+  function dockPanel(key3, title, glyph) {
     const panel3 = el("section", "iw-raid-dock-panel");
-    panel3.dataset.iwRaidDock = key2;
+    panel3.dataset.iwRaidDock = key3;
     const head = el("button", "iw-raid-dock-head");
     head.type = "button";
     if (glyph) head.append(el("span", "iw-raid-dock-glyph", glyph));
@@ -8964,7 +9253,7 @@
     const cs = Math.max(0, Math.round(ms / 10));
     return `${Math.floor(cs / 6e3)}:${String(Math.floor(cs % 6e3 / 100)).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}`;
   }
-  var titleCase = (key2) => key2.charAt(0).toUpperCase() + key2.slice(1);
+  var titleCase = (key3) => key3.charAt(0).toUpperCase() + key3.slice(1);
   var leagueOf2 = (path) => /^\/ssf(?:\/|$)/.test(path) ? "ssf" : "standard";
   var board = null;
   var nextRead2 = 0;
@@ -9212,7 +9501,7 @@
     { key: "ready", text: "Ready check", title: "Testing feature: show a ready-check card (no pop-up)" },
     { key: "popup", text: "Pop-up", title: "Testing feature: show the ready-check pop-up" }
   ];
-  var pressedOf = (key2) => key2 === "popup" ? lobbyTestPopupOn() : state[key2];
+  var pressedOf = (key3) => key3 === "popup" ? lobbyTestPopupOn() : state[key3];
   function syncBar(root, head, redecorate) {
     let bar = root.querySelector(`:scope > [${TEST2}="bar"]`);
     if (!bar) {
@@ -9287,13 +9576,13 @@
   var ROLES = [["Tank", "Tanks", "combat", null], ["Healer", "Healers", "spellcrafting", null], ["Support", "Support", "jewelcrafting", null], ["DPS", "DPS", null, "⚔"]];
   var sigs = /* @__PURE__ */ new WeakMap();
   var lastCard = null;
-  function mark3(el2, key2, value) {
+  function mark3(el2, key3, value) {
     if (!el2) return;
     if (value == null) {
-      if (el2.hasAttribute(key2)) el2.removeAttribute(key2);
+      if (el2.hasAttribute(key3)) el2.removeAttribute(key3);
       return;
     }
-    if (el2.getAttribute(key2) !== value) el2.setAttribute(key2, value);
+    if (el2.getAttribute(key3) !== value) el2.setAttribute(key3, value);
   }
   function own3(tag, cls, text2) {
     const el2 = document.createElement(tag);
@@ -9390,12 +9679,12 @@
     );
     return row;
   }
-  function buildTactics(p, key2) {
-    const plan = TACTICS[key2];
+  function buildTactics(p, key3) {
+    const plan = TACTICS[key3];
     if (!p || !plan || norm4(p.textContent) !== TIP) return null;
     const box = own3("div", "iw-bc-tactics");
     box.title = TIP;
-    box.append(own3("span", "iw-bc-tactics-label", `${cap(key2)}: Recommended Team Loadout`));
+    box.append(own3("span", "iw-bc-tactics-label", `${cap(key3)}: Recommended Team Loadout`));
     const roles = own3("div", "iw-bc-roles");
     ROLES.forEach(([one, many, skill, glyph], i) => {
       const n = plan.roles[i];
@@ -9446,14 +9735,14 @@
     place(anchor4, node2);
     mark3(src, SRC, srcKey);
   }
-  function ensureArt2(card, name, key2) {
+  function ensureArt2(card, name, key3) {
     let art2 = card.querySelector(`:scope > .iw-bc-art[${OWNED3}]`);
     if (!art2) {
       art2 = own3("div", "iw-bc-art");
       art2.setAttribute("aria-hidden", "true");
       art2.append(own3("span", "iw-bc-portrait"));
     }
-    if (art2.dataset.iwBcBoss !== key2) art2.dataset.iwBcBoss = key2;
+    if (art2.dataset.iwBcBoss !== key3) art2.dataset.iwBcBoss = key3;
     if (name.previousElementSibling !== art2) name.before(art2);
   }
   function decorateBossCard(root) {
@@ -9473,15 +9762,15 @@
     lastCard = card;
     const name = card.querySelector(':scope > [data-iw-guild-role="boss-name"]');
     const selected = card.querySelector('[data-iw-guild-role="boss-tab"][data-iw-guild-state="selected"]');
-    const key2 = bossKeyOf(selected?.title || name?.textContent);
-    if (!name || !BOSSES2.has(key2)) {
+    const key3 = bossKeyOf(selected?.title || name?.textContent);
+    if (!name || !BOSSES2.has(key3)) {
       clearBossCard(card);
       return;
     }
     const lines = readLines(card);
     const spans = lines.stats ? [...lines.stats.querySelectorAll(":scope > span")].map((s) => s.className).join("|") : "";
     const sig = [
-      key2,
+      key3,
       norm4(lines.stats?.textContent),
       spans,
       norm4(lines.req?.textContent),
@@ -9490,7 +9779,7 @@
       lines.notice?.getAttribute("data-iw-guild-tone") || ""
     ].join("\0");
     const owned3 = card.querySelectorAll(`:scope > [${OWNED3}]`).length;
-    if (sigs.get(card) === sig && owned3 && card.getAttribute(CARD) === key2) {
+    if (sigs.get(card) === sig && owned3 && card.getAttribute(CARD) === key3) {
       const art2 = card.querySelector(`:scope > .iw-bc-art[${OWNED3}]`);
       if (art2 && name.previousElementSibling !== art2) name.before(art2);
       for (const [cls, src] of [["iw-bc-stats", lines.stats], ["iw-bc-tiles", lines.req], ["iw-bc-tactics", lines.tip], ["iw-bc-loot", lines.notice]]) {
@@ -9500,12 +9789,12 @@
       return;
     }
     sigs.set(card, sig);
-    mark3(card, CARD, key2);
-    ensureArt2(card, name, key2);
+    mark3(card, CARD, key3);
+    ensureArt2(card, name, key3);
     setPart(card, "iw-bc-stats", lines.stats, buildStats(lines.stats), lines.stats, "stats");
     const glyph = STATS.exec(norm4(lines.stats?.textContent))?.[4];
     setPart(card, "iw-bc-tiles", lines.req, buildRequirements(lines.req, glyph), lines.req, "req");
-    setPart(card, "iw-bc-tactics", lines.tip, buildTactics(lines.tip, key2), lines.tip, "tip");
+    setPart(card, "iw-bc-tactics", lines.tip, buildTactics(lines.tip, key3), lines.tip, "tip");
     setPart(card, "iw-bc-loot", lines.notice, buildLoot(lines.notice), lines.notice, "notice");
     for (const el2 of card.querySelectorAll(`:scope > [${SRC}="notice"]`)) if (el2 !== lines.notice) mark3(el2, SRC, null);
   }
@@ -9527,13 +9816,13 @@
   var ATTRS2 = [SLOT, WRAP, LAYOUT, "data-iw-guild-record"];
   var norm5 = (value) => String(value || "").replace(/\s+/g, " ").trim();
   var label2 = (value) => norm5(value).replace(/^[^\p{L}\p{N}]+/u, "");
-  function mark4(el2, key2, value) {
+  function mark4(el2, key3, value) {
     if (!el2) return;
     if (value == null) {
-      if (el2.hasAttribute(key2)) el2.removeAttribute(key2);
+      if (el2.hasAttribute(key3)) el2.removeAttribute(key3);
       return;
     }
-    if (el2.getAttribute(key2) !== value) el2.setAttribute(key2, value);
+    if (el2.getAttribute(key3) !== value) el2.setAttribute(key3, value);
   }
   function own4(tag, cls, text2) {
     const el2 = document.createElement(tag);
@@ -9594,12 +9883,12 @@
       return;
     }
     const selected = boss.querySelector('[data-iw-guild-role="boss-tab"][data-iw-guild-state="selected"]');
-    const key2 = bossKeyOf(selected?.title || boss.querySelector('[data-iw-guild-role="boss-name"]')?.textContent);
+    const key3 = bossKeyOf(selected?.title || boss.querySelector('[data-iw-guild-role="boss-name"]')?.textContent);
     const board3 = raidBoard();
     const pills = [...row.querySelectorAll('[data-iw-guild-role="difficulty"]')];
     const cells = pills.map((pill) => {
       const diff = DIFFICULTY_KEYS.find((d) => d.test.test(label2(pill.textContent)));
-      const best = diff && key2 && board3 ? board3[key2]?.[diff.key]?.[0] : null;
+      const best = diff && key3 && board3 ? board3[key3]?.[diff.key]?.[0] : null;
       return {
         text: best ? `🏆 ${formatRaidTime(best)} · ${best.guildName}` : board3 ? "No clear yet" : "…",
         title: best ? `${diff.label} record: ${best.guildName} · ${formatRaidTime(best)}` : `${diff?.label || ""} record`
@@ -9783,13 +10072,13 @@
   var label3 = (value) => norm6(value).replace(/^[^\p{L}\p{N}]+/u, "");
   var ROLE = "data-iw-guild-role";
   var ATTRS3 = ["data-iw-guild", "data-iw-guild-card", ROLE, "data-iw-guild-tone", "data-iw-guild-state"];
-  function mark5(el2, key2, value) {
+  function mark5(el2, key3, value) {
     if (!el2) return;
     if (value == null) {
-      if (el2.hasAttribute(key2)) el2.removeAttribute(key2);
+      if (el2.hasAttribute(key3)) el2.removeAttribute(key3);
       return;
     }
-    if (el2.getAttribute(key2) !== value) el2.setAttribute(key2, value);
+    if (el2.getAttribute(key3) !== value) el2.setAttribute(key3, value);
   }
   var role = (el2, value) => mark5(el2, ROLE, value);
   function toneOf3(el2) {
@@ -10216,19 +10505,19 @@
     preferences = /* @__PURE__ */ new Map();
     loading2 = storageGet(STORE_KEY2).then((bag) => {
       if (!bag || typeof bag !== "object") return;
-      for (const [key2, value] of Object.entries(bag)) {
-        if (value === true && !touched2.has(key2)) preferences.set(key2, true);
+      for (const [key3, value] of Object.entries(bag)) {
+        if (value === true && !touched2.has(key3)) preferences.set(key3, true);
       }
     }).catch((err) => warnOnce("collapse:load", err));
     return loading2;
   }
   function persist2() {
     const bag = {};
-    for (const [key2, value] of preferences) if (value) bag[key2] = true;
+    for (const [key3, value] of preferences) if (value) bag[key3] = true;
     void storageSet(STORE_KEY2, bag);
   }
-  function applyState(frame2, button4, key2, name) {
-    const collapsed = preferences.get(key2) === true;
+  function applyState(frame2, button4, key3, name) {
+    const collapsed = preferences.get(key3) === true;
     const want = collapsed ? "1" : null;
     if ((frame2.dataset.iwCollapsed || null) !== want) {
       if (want) frame2.dataset.iwCollapsed = want;
@@ -10240,7 +10529,7 @@
     if (button4.getAttribute("aria-label") !== label6) button4.setAttribute("aria-label", label6);
     if (button4.getAttribute("title") !== label6) button4.setAttribute("title", label6);
   }
-  function ensureToggle(head, frame2, key2, name) {
+  function ensureToggle(head, frame2, key3, name) {
     let button4 = head.querySelector(":scope > [data-iw-collapse]");
     if (button4) return button4;
     button4 = document.createElement("button");
@@ -10252,11 +10541,11 @@
     button4.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const next = preferences.get(key2) !== true;
-      preferences.set(key2, next);
-      touched2.add(key2);
+      const next = preferences.get(key3) !== true;
+      preferences.set(key3, next);
+      touched2.add(key3);
       persist2();
-      applyState(frame2, button4, key2, name);
+      applyState(frame2, button4, key3, name);
     });
     head.append(button4);
     return button4;
@@ -10271,14 +10560,14 @@
       const found = frameLandmarks(target);
       const title = frameTitle(target, found);
       const head = title ? headOf(target, title) : null;
-      const key2 = frameKey(target, title, found);
-      if (!key2 || !head) continue;
+      const key3 = frameKey(target, title, found);
+      if (!key3 || !head) continue;
       if (head.dataset.iwCollapseHead !== "1") head.dataset.iwCollapseHead = "1";
       markSpine(head, title);
       const name = nameText(title) || "section";
-      const button4 = ensureToggle(head, target, key2, name);
+      const button4 = ensureToggle(head, target, key3, name);
       live2.add(button4);
-      applyState(target, button4, key2, name);
+      applyState(target, button4, key3, name);
     }
     for (const button4 of root.querySelectorAll("[data-iw-collapse]")) {
       const head = button4.parentElement;
@@ -10925,9 +11214,9 @@
     if (toolbarButton?.parentElement === track && bulkButton?.parentElement === track) return;
     toolbarButton?.remove();
     bulkButton?.remove();
-    const trigger = (label6, key2, count) => {
+    const trigger = (label6, key3, count) => {
       const el2 = button("", label6, (event) => showArcaneCacheDemo(event.currentTarget, count));
-      el2.dataset.iwNavLink = key2;
+      el2.dataset.iwNavLink = key3;
       el2.dataset.iwCacheTrigger = "1";
       el2.dataset.iwUi = "nav-tab";
       el2.title = `Preview ${count === 1 ? "one cache" : "20–100 caches"} (demo rewards)`;
@@ -11212,13 +11501,13 @@
     return entry3.host.isConnected && entry3.host.dataset.iwUi === "zone-bar" && (!entry3.title || entry3.title.isConnected) && entry3.buttons.every((btn) => btn.isConnected && btn.dataset.iwUi === "zone-action");
   }
   function zoneBarCandidatePresent() {
-    let zones = false;
+    let zones2 = false;
     let next = false;
     for (const btn of document.querySelectorAll("button")) {
       const text2 = nearestButtonLabel(btn);
-      if (/zones/.test(text2)) zones = true;
+      if (/zones/.test(text2)) zones2 = true;
       if (/next\s+zone/.test(text2)) next = true;
-      if (zones && next) return true;
+      if (zones2 && next) return true;
     }
     return false;
   }
@@ -11645,10 +11934,10 @@
     }
     const haveBeforeId = new Set(collected.map((o) => o.panel));
     if (!haveBeforeId.has("current-action")) {
-      const byId3 = pickRendered([...document.querySelectorAll('[id="current-action-panel"]')]);
-      if (byId3) {
-        const label6 = [...byId3.querySelectorAll('h1,h2,h3,h4,[role="heading"],p,span,div,strong,b')].find((el2) => el2.childElementCount === 0 && normText4(el2.textContent).length > 0 && normText4(el2.textContent).length <= 40);
-        push(label6 || byId3, "current-action");
+      const byId4 = pickRendered([...document.querySelectorAll('[id="current-action-panel"]')]);
+      if (byId4) {
+        const label6 = [...byId4.querySelectorAll('h1,h2,h3,h4,[role="heading"],p,span,div,strong,b')].find((el2) => el2.childElementCount === 0 && normText4(el2.textContent).length > 0 && normText4(el2.textContent).length <= 40);
+        push(label6 || byId4, "current-action");
       }
     }
     const have = new Set(collected.map((o) => o.panel));
@@ -12015,15 +12304,15 @@
     return route === "/housing" || route === "/ssf/housing" ? null : zone;
   }
   function zoneSurfaceUrl(zone, variant = "") {
-    const key2 = Number.isInteger(zone) && zone >= 1 && zone <= ZONE_SURFACE_MAX ? `${ZONE_SURFACE_DIR}/zone_${zone}${variant}.webp` : HEADER_ASSETS.headerSurface;
-    return `url("${assetUrl(key2)}")`;
+    const key3 = Number.isInteger(zone) && zone >= 1 && zone <= ZONE_SURFACE_MAX ? `${ZONE_SURFACE_DIR}/zone_${zone}${variant}.webp` : HEADER_ASSETS.headerSurface;
+    return `url("${assetUrl(key3)}")`;
   }
   function applyZoneSurface(root) {
     if (!root) return;
     const zone = presentationZoneNumber();
-    const key2 = zone == null ? "fallback" : String(zone);
-    if (root.dataset.iwZone === key2 && root.style.getPropertyValue("--iw-header-surface")) return;
-    root.dataset.iwZone = key2;
+    const key3 = zone == null ? "fallback" : String(zone);
+    if (root.dataset.iwZone === key3 && root.style.getPropertyValue("--iw-header-surface")) return;
+    root.dataset.iwZone = key3;
     root.style.setProperty("--iw-header-surface", zoneSurfaceUrl(zone));
     root.style.setProperty("--iw-header-surface-mobile", zoneSurfaceUrl(zone, "_mobile"));
   }
@@ -12033,12 +12322,12 @@
     const html2 = document.documentElement;
     if (!html2) return;
     const theme = zoneTheme(presentationZoneNumber());
-    const key2 = theme || "default";
+    const key3 = theme || "default";
     const visualTheme = theme || FALLBACK_VISUAL_THEME;
     const zoneVarsReady = theme ? !!html2.style.getPropertyValue("--iw-zone-atlas") : !html2.style.getPropertyValue("--iw-zone-atlas") && !html2.style.getPropertyValue("--iw-corner-filigree") && !html2.style.getPropertyValue("--iw-zone-separator");
     const buttonThemeReady = html2.dataset.iwCompactAtlas === "compact-ghost-v3" && !!html2.style.getPropertyValue("--iw-compact-atlas") && !!html2.style.getPropertyValue("--iw-action-idle");
-    if (html2.dataset.iwZoneTheme === key2 && zoneVarsReady && buttonThemeReady) return;
-    html2.dataset.iwZoneTheme = key2;
+    if (html2.dataset.iwZoneTheme === key3 && zoneVarsReady && buttonThemeReady) return;
+    html2.dataset.iwZoneTheme = key3;
     if (theme) {
       html2.style.setProperty("--iw-zone-atlas", `url("${assetUrl(`${THEME_ASSET_DIR}/theme_${theme}.webp`)}")`);
       html2.style.setProperty("--iw-corner-filigree", `url("${assetUrl(`${THEME_ASSET_DIR}/panel_corners_${theme}.webp`)}")`);
@@ -12054,9 +12343,9 @@
     if (el2 && el2.getAttribute(ROLE3) !== role2) el2.setAttribute(ROLE3, role2);
     return el2;
   }
-  function setAssetVar(el2, name, key2) {
-    if (!el2 || !HEADER_ASSETS[key2]) return;
-    el2.style.setProperty(name, `url("${assetUrl(HEADER_ASSETS[key2])}")`);
+  function setAssetVar(el2, name, key3) {
+    if (!el2 || !HEADER_ASSETS[key3]) return;
+    el2.style.setProperty(name, `url("${assetUrl(HEADER_ASSETS[key3])}")`);
   }
   function applyHeaderVars(root) {
     setAssetVar(root, "--iw-header-crest", "headerCrest");
@@ -12419,8 +12708,8 @@
   var tagged = /* @__PURE__ */ new Set();
   var popupHosts = /* @__PURE__ */ new Map();
   var normText5 = (value) => String(value || "").replace(/\s+/g, " ").trim();
-  function setData3(el2, key2, value) {
-    if (el2?.dataset && el2.dataset[key2] !== value) el2.dataset[key2] = value;
+  function setData3(el2, key3, value) {
+    if (el2?.dataset && el2.dataset[key3] !== value) el2.dataset[key3] = value;
   }
   function clearPlayerStatsSurface(surface) {
     if (!surface) return;
@@ -12797,10 +13086,10 @@
     return clean;
   }
   var warned = /* @__PURE__ */ new Set();
-  function warnOnce2(key2, err) {
-    if (warned.has(key2)) return;
-    warned.add(key2);
-    console.warn(`[IW Fantasy Skin] fantasy ${key2}:`, err && err.message ? err.message : err);
+  function warnOnce2(key3, err) {
+    if (warned.has(key3)) return;
+    warned.add(key3);
+    console.warn(`[IW Fantasy Skin] fantasy ${key3}:`, err && err.message ? err.message : err);
   }
   function guard2(label6, fn) {
     if (!runtimeActive2) return false;
@@ -12913,6 +13202,7 @@
   function onMutations(records) {
     for (const m of records) {
       if (insideOwned(m.target)) continue;
+      if (m.type === "attributes" && m.attributeName === "title" && !m.target.closest("#current-action-panel")) continue;
       if (m.type === "characterData") {
         if (m.target.parentElement) textParents.add(m.target.parentElement);
         continue;
@@ -12939,7 +13229,7 @@
       subtree: true,
       characterData: true,
       attributes: true,
-      attributeFilter: ["class", "style", "disabled", "aria-disabled", "aria-pressed", "aria-selected", "aria-current", "data-state", "data-iw-theme-toggle", "data-iw-item", "data-iw-item-name"]
+      attributeFilter: ["class", "style", "title", "disabled", "aria-disabled", "aria-pressed", "aria-selected", "aria-current", "data-state", "data-iw-theme-toggle", "data-iw-item", "data-iw-item-name"]
     });
     guard2("layout-watch", () => startLayoutWatch2(() => {
       structural = true;
@@ -13039,21 +13329,21 @@
   var norm9 = (value) => String(value || "").replace(/\s+/g, " ").trim();
   var label5 = (value) => norm9(value).replace(/^[^\p{L}\p{N}]+/u, "");
   var written = /* @__PURE__ */ new Map();
-  function release(el2, key2) {
-    const map = written.get(key2);
+  function release(el2, key3) {
+    const map = written.get(key3);
     if (!map?.has(el2)) return;
-    if (el2.getAttribute(key2) === map.get(el2)) el2.removeAttribute(key2);
+    if (el2.getAttribute(key3) === map.get(el2)) el2.removeAttribute(key3);
     map.delete(el2);
   }
-  function mark6(el2, key2, value) {
+  function mark6(el2, key3, value) {
     if (!el2) return;
     if (value == null) {
-      release(el2, key2);
+      release(el2, key3);
       return;
     }
-    if (el2.getAttribute(key2) !== value) el2.setAttribute(key2, value);
-    let map = written.get(key2);
-    if (!map) written.set(key2, map = /* @__PURE__ */ new Map());
+    if (el2.getAttribute(key3) !== value) el2.setAttribute(key3, value);
+    let map = written.get(key3);
+    if (!map) written.set(key3, map = /* @__PURE__ */ new Map());
     map.set(el2, value);
   }
   function unmark2(attrs, root = null) {
@@ -13113,7 +13403,7 @@
     const cs = Math.max(0, Math.round(ms / 10));
     return `${Math.floor(cs / 6e3)}:${String(Math.floor(cs % 6e3 / 100)).padStart(2, "0")}.${String(cs % 100).padStart(2, "0")}`;
   }
-  var titleCase2 = (key2) => key2.charAt(0).toUpperCase() + key2.slice(1);
+  var titleCase2 = (key3) => key3.charAt(0).toUpperCase() + key3.slice(1);
   var leagueOf3 = (path) => /^\/ssf(?:\/|$)/.test(path) ? "ssf" : "standard";
   var board2 = null;
   var nextRead3 = 0;
@@ -13377,12 +13667,12 @@
     );
     return row;
   }
-  function buildTactics2(p, key2) {
-    const plan = TACTICS2[key2];
+  function buildTactics2(p, key3) {
+    const plan = TACTICS2[key3];
     if (!p || !plan || norm10(p.textContent) !== TIP2) return null;
     const box = own6("div", "iw-bc-tactics");
     box.title = TIP2;
-    box.append(own6("span", "iw-bc-tactics-label", `${cap2(key2)}: Recommended Team Loadout`));
+    box.append(own6("span", "iw-bc-tactics-label", `${cap2(key3)}: Recommended Team Loadout`));
     const roles = own6("div", "iw-bc-roles");
     ROLES2.forEach(([one, many, skill, glyph], i) => {
       const n = plan.roles[i];
@@ -13433,14 +13723,14 @@
     place2(anchor4, node2);
     mark6(src, SRC2, srcKey);
   }
-  function ensureArt3(card, name, key2) {
+  function ensureArt3(card, name, key3) {
     let art2 = card.querySelector(`:scope > .iw-bc-art[${OWNED7}]`);
     if (!art2) {
       art2 = own6("div", "iw-bc-art");
       art2.setAttribute("aria-hidden", "true");
       art2.append(own6("span", "iw-bc-portrait"));
     }
-    if (art2.dataset.iwBcBoss !== key2) art2.dataset.iwBcBoss = key2;
+    if (art2.dataset.iwBcBoss !== key3) art2.dataset.iwBcBoss = key3;
     if (name.previousElementSibling !== art2) name.before(art2);
   }
   function decorateBossCard2(root) {
@@ -13471,15 +13761,15 @@
     lastCard2 = card;
     const name = card.querySelector(':scope > [data-iw-guild-role="boss-name"]');
     const selected = card.querySelector('[data-iw-guild-role="boss-tab"][data-iw-guild-state="selected"]');
-    const key2 = bossKeyOf2(selected?.title || name?.textContent);
-    if (!name || !BOSSES3.has(key2)) {
+    const key3 = bossKeyOf2(selected?.title || name?.textContent);
+    if (!name || !BOSSES3.has(key3)) {
       clearBossCard2(card);
       return;
     }
     const lines = readLines2(card);
     const spans = lines.stats ? [...lines.stats.querySelectorAll(":scope > span")].map((s) => s.className).join("|") : "";
     const sig = [
-      key2,
+      key3,
       norm10(lines.stats?.textContent),
       spans,
       norm10(lines.req?.textContent),
@@ -13488,7 +13778,7 @@
       lines.notice?.getAttribute("data-iw-guild-tone") || ""
     ].join("\0");
     const owned3 = card.querySelectorAll(`:scope > [${OWNED7}]`).length;
-    if (sigs2.get(card) === sig && owned3 && card.getAttribute(CARD2) === key2) {
+    if (sigs2.get(card) === sig && owned3 && card.getAttribute(CARD2) === key3) {
       const art2 = card.querySelector(`:scope > .iw-bc-art[${OWNED7}]`);
       if (art2 && name.previousElementSibling !== art2) name.before(art2);
       for (const [cls, src] of [["iw-bc-stats", lines.stats], ["iw-bc-tiles", lines.req], ["iw-bc-tactics", lines.tip], ["iw-bc-loot", lines.notice]]) {
@@ -13498,12 +13788,12 @@
       return;
     }
     sigs2.set(card, sig);
-    mark6(card, CARD2, key2);
-    ensureArt3(card, name, key2);
+    mark6(card, CARD2, key3);
+    ensureArt3(card, name, key3);
     setPart2(card, "iw-bc-stats", lines.stats, buildStats2(lines.stats), lines.stats, "stats");
     const glyph = STATS2.exec(norm10(lines.stats?.textContent))?.[4];
     setPart2(card, "iw-bc-tiles", lines.req, buildRequirements2(lines.req, glyph), lines.req, "req");
-    setPart2(card, "iw-bc-tactics", lines.tip, buildTactics2(lines.tip, key2), lines.tip, "tip");
+    setPart2(card, "iw-bc-tactics", lines.tip, buildTactics2(lines.tip, key3), lines.tip, "tip");
     setPart2(card, "iw-bc-loot", lines.notice, buildLoot2(lines.notice), lines.notice, "notice");
     for (const el2 of card.querySelectorAll(`:scope > [${SRC2}="notice"]`)) if (el2 !== lines.notice) mark6(el2, SRC2, null);
   }
@@ -13572,12 +13862,12 @@
     let records = row ? boss.querySelector(`:scope .iw-guild-records[${OWNED8}]`) : null;
     if (!row) return;
     const selected = boss.querySelector('[data-iw-guild-role="boss-tab"][data-iw-guild-state="selected"]');
-    const key2 = bossKeyOf2(selected?.title || boss.querySelector('[data-iw-guild-role="boss-name"]')?.textContent);
+    const key3 = bossKeyOf2(selected?.title || boss.querySelector('[data-iw-guild-role="boss-name"]')?.textContent);
     const board3 = raidBoard2();
     const pills = [...row.querySelectorAll('[data-iw-guild-role="difficulty"]')];
     const cells = pills.map((pill) => {
       const diff = DIFFICULTY_KEYS2.find((d) => d.test.test(label5(pill.textContent)));
-      const best = diff && key2 && board3 ? board3[key2]?.[diff.key]?.[0] : null;
+      const best = diff && key3 && board3 ? board3[key3]?.[diff.key]?.[0] : null;
       return {
         text: best ? `🏆 ${formatRaidTime2(best)} · ${best.guildName}` : board3 ? "No clear yet" : "…",
         title: best ? `${diff.label} record: ${best.guildName} · ${formatRaidTime2(best)}` : `${diff?.label || ""} record`
@@ -13833,8 +14123,8 @@
   var GEAR_SIZE = { width: 1280, height: 19840 };
   var state2 = "idle";
   var revision = 0;
-  var byId = /* @__PURE__ */ new Map();
-  var byName = /* @__PURE__ */ new Map();
+  var byId2 = /* @__PURE__ */ new Map();
+  var byName2 = /* @__PURE__ */ new Map();
   var listeners3 = /* @__PURE__ */ new Set();
   var nameKey = (value) => String(value || "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]/g, "");
   function windowOf(atlas, size, x, y, w, h) {
@@ -13874,15 +14164,15 @@
     for (const line of lines) {
       const f = parseCsvLine(line);
       const win = windowOf("item", ITEM_SIZE, +f[x], +f[y], +f[w], +f[h]);
-      byId.set(f[id], win);
-      const key2 = nameKey(f[name]);
-      if (key2 && !byName.has(key2)) byName.set(key2, win);
+      byId2.set(f[id], win);
+      const key3 = nameKey(f[name]);
+      if (key3 && !byName2.has(key3)) byName2.set(key3, win);
     }
   }
   function indexGear(manifest) {
     for (const icon5 of manifest.icons || []) {
-      const key2 = nameKey(icon5.name);
-      if (key2 && !byName.has(key2)) byName.set(key2, windowOf("gear", GEAR_SIZE, icon5.x, icon5.y, icon5.width, icon5.height));
+      const key3 = nameKey(icon5.name);
+      if (key3 && !byName2.has(key3)) byName2.set(key3, windowOf("gear", GEAR_SIZE, icon5.x, icon5.y, icon5.width, icon5.height));
     }
   }
   function loadItemAtlas() {
@@ -13909,7 +14199,7 @@
   }
   function findItemSprite({ id, name } = {}) {
     if (state2 !== "ready") return null;
-    return id && byId.get(id) || byName.get(nameKey(name)) || null;
+    return id && byId2.get(id) || byName2.get(nameKey(name)) || null;
   }
 
   // src/skins/fantasy/skills/queue.js
@@ -14068,9 +14358,9 @@
       li.dataset.index = String(i);
       if (li.dataset.remove !== row.remove) li.dataset.remove = row.remove;
       set2(f.n, String(i + 1));
-      const key2 = verbSkill(row.name) || "";
-      if ((li.getAttribute("data-iw-fantasy-skill") || "") !== key2) {
-        if (key2) li.setAttribute("data-iw-fantasy-skill", key2);
+      const key3 = verbSkill(row.name) || "";
+      if ((li.getAttribute("data-iw-fantasy-skill") || "") !== key3) {
+        if (key3) li.setAttribute("data-iw-fantasy-skill", key3);
         else li.removeAttribute("data-iw-fantasy-skill");
       }
       if (f.name.firstChild?.nodeType !== 3) f.name.prepend(document.createTextNode(""));
@@ -14115,32 +14405,6 @@
   function clearQueue() {
     removeOwned(QUEUE_OWNED);
     unmark2([QUEUE_ATTR]);
-  }
-
-  // src/skins/fantasy/skills/reserved.js
-  var RESERVED = "data-iw-fantasy-reserved";
-  var own9 = ownerOf(RESERVED);
-  function reservedSlots(tabs) {
-    const slots = [...tabs.querySelectorAll(`:scope > [${RESERVED}]`)];
-    const count = Math.max(0, Math.min(2, 12 - tabs.querySelectorAll(":scope > .iw-skill-tab").length));
-    while (slots.length > count) slots.pop().remove();
-    while (slots.length < count) {
-      const slot = own9("div", "iwf-skill-reserved");
-      slot.setAttribute("role", "tab");
-      slot.setAttribute("aria-selected", "false");
-      slot.setAttribute("aria-disabled", "true");
-      slot.setAttribute("aria-label", "Reserved, locked skill slot");
-      const name = own9("span", "iw-skill-tab-name", "Reserved");
-      const icon5 = own9("span", "iw-skill-tab-icon");
-      const level = own9("span", "iw-skill-tab-lv", "—");
-      for (const child of [name, icon5, level]) child.setAttribute("aria-hidden", "true");
-      slot.append(name, icon5, level);
-      slots.push(slot);
-    }
-    if (slots.some((slot, index) => tabs.children[tabs.children.length - slots.length + index] !== slot)) tabs.append(...slots);
-  }
-  function clearReserved() {
-    removeOwned(RESERVED);
   }
 
   // src/skins/fantasy/skills/materials.js
@@ -14218,13 +14482,13 @@
     }
     return out;
   }
-  var key = null;
+  var key2 = null;
   var ranges = [];
   function materialsPass(root = document) {
     if (!supported()) return;
     const lines = [...root.querySelectorAll(DETAIL)];
     const next = lines.map((line) => line.textContent || "").join("\0");
-    if (next === key && ranges.every((r) => r.startContainer.isConnected && r.endContainer.isConnected)) return;
+    if (next === key2 && ranges.every((r) => r.startContainer.isConnected && r.endContainer.isConnected)) return;
     const met = [];
     const short = [];
     for (const line of lines) {
@@ -14232,7 +14496,7 @@
       met.push(...r.met);
       short.push(...r.short);
     }
-    key = next;
+    key2 = next;
     ranges = [...met, ...short];
     try {
       if (met.length) CSS.highlights.set(MET, new Highlight(...met));
@@ -14240,11 +14504,11 @@
       if (short.length) CSS.highlights.set(SHORT, new Highlight(...short));
       else CSS.highlights.delete(SHORT);
     } catch {
-      key = null;
+      key2 = null;
     }
   }
   function clearMaterials() {
-    key = null;
+    key2 = null;
     ranges = [];
     if (!supported()) return;
     CSS.highlights.delete(MET);
@@ -14255,10 +14519,10 @@
   var skills_default = ':is(:root,#iwf){--iwf-run-fill: linear-gradient(90deg, color-mix(in srgb, var(--iwf-running) 5%, transparent), color-mix(in srgb, var(--iwf-running) 22%, transparent) calc(100% - 2px), color-mix(in srgb, var(--iwf-running) 80%, #fff) calc(100% - 2px))}:is(:root,#iwf) [data-iw-fantasy-run] .iw-ss-rows>.iw-ss-row.is-running{background:var(--iwf-run-fill) 0 0 / var(--iwf-run, 0%) 100% no-repeat,linear-gradient(90deg,color-mix(in srgb,var(--iwf-running) 14%,transparent),transparent 65%);transition:background-size var(--iwf-run-tick, 300ms) linear,border-color .15s}:is(:root,#iwf) [data-iw-fantasy-run] .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:has(>.iw-skill-tab-live){background:var(--iwf-run-fill) 0 0 / var(--iwf-tile-run, 0%) 100% no-repeat,linear-gradient(90deg,#0d8a5f,var(--iwf-running)) 0 100% / var(--iwf-tile-run, 0%) 3px no-repeat,var(--iwf-tab-bg);transition:background-size var(--iwf-run-tick, 300ms) linear,border-color .15s}:is(:root,#iwf) [data-iw-fantasy-run]:not(:has(.iw-ss-row.is-running)) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:has(>.iw-skill-tab-live){--iwf-tile-run: var(--iwf-run);border-color:color-mix(in srgb,var(--iwf-running) 55%,var(--iwf-edge))}:is(:root,#iwf) [data-iw-fantasy-run][data-iw-fantasy-run-reset] .iw-ss-rows>.iw-ss-row.is-running,:is(:root,#iwf) [data-iw-fantasy-run][data-iw-fantasy-run-reset] .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:has(>.iw-skill-tab-live){transition:none}@media(prefers-reduced-motion:reduce){:is(:root,#iwf) [data-iw-fantasy-run] .iw-ss-rows>.iw-ss-row.is-running,:is(:root,#iwf) [data-iw-fantasy-run] .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:has(>.iw-skill-tab-live){transition:none}}:is(:root,#iwf) .iw-skill-sheet{--iwf-sheet-r: 8px;--iwf-pad-x: 16px;--iwf-indent: 34px;--iwf-divider: linear-gradient(90deg, transparent, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 14%, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 86%, transparent);--iwf-rule: var(--iw-th-rule-soft, rgba(255,255,255,.06));gap:0;border-radius:var(--iwf-sheet-r);border:1px solid var(--iwf-edge-mid);background:var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,235,190,.05),0 6px 18px -10px #000}:is(:root,#iwf) .iw-skill-sheet>*+*{border-style:solid;border-width:1px 0 0;border-image:var(--iwf-divider) 1}:is(:root,#iwf) .iw-ss-head{gap:14px;padding:14px var(--iwf-pad-x) 13px;border:0;border-radius:calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px) 0 0;background:radial-gradient(ellipse 60% 120% at 0 0,color-mix(in srgb,var(--iwf-tint, var(--iw-th-edge, #6b5d3d)) 16%,transparent),transparent 70%),linear-gradient(180deg,rgba(255,235,190,.025),transparent);box-shadow:none}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-head:last-child{border-radius:calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{flex:0 0 auto;width:54px;aspect-ratio:1 / 1;border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)) drop-shadow(0 0 10px color-mix(in srgb,var(--iwf-tint, transparent) 22%,transparent))}:is(:root,#iwf) .iw-ss-name{gap:6px 10px}:is(:root,#iwf) .iw-ss-name>span:first-child{font-family:var(--iw-font-head, serif);font-size:18px;letter-spacing:.04em;color:var(--iwf-text-hi);text-shadow:0 1px 0 #000,0 0 12px color-mix(in srgb,var(--iwf-tint, transparent) 25%,transparent)}:is(:root,#iwf) .iw-ss-level{border-radius:3px;border-color:color-mix(in srgb,var(--iwf-brass) 70%,transparent);background:linear-gradient(180deg,#221c12,#120f0a);color:color-mix(in srgb,var(--iwf-brass) 55%,#fff1d2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iw-ss-boost{color:#86efac}:is(:root,#iwf) .iw-ss-xpbar{height:7px;margin-top:8px;border-radius:4px;background:linear-gradient(180deg,#050506,#111013);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iwf-brass) 22%,transparent),inset 0 1px 2px #000}:is(:root,#iwf) .iw-ss-xpbar>span{border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.28),transparent 55%),linear-gradient(90deg,color-mix(in srgb,var(--iwf-tint, var(--iwf-brass)) 55%,#2a2118),color-mix(in srgb,var(--iwf-tint, var(--iwf-accent)) 80%,#fff));box-shadow:0 0 6px -1px color-mix(in srgb,var(--iwf-tint, var(--iwf-accent)) 70%,transparent)}:is(:root,#iwf) .iw-ss-sub{margin-top:6px;color:var(--iwf-text-dim);font-family:var(--iw-font-flav, var(--iw-font-ui, inherit))}:is(:root,#iwf) .iw-ss-x:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-ss-x{top:8px;right:8px;border-radius:4px;border-color:transparent!important;background-image:none!important;box-shadow:none!important}:is(:root,#iwf) .iw-ss-x:hover{border-color:rgba(255,255,255,.12)!important}:is(:root,#iwf) .iw-ss-rows{gap:0}:is(:root,#iwf) .iw-ss-group{gap:0}:is(:root,#iwf) .iw-ss-group+.iw-ss-group,:is(:root,#iwf) .iw-ss-group+.iw-ss-row,:is(:root,#iwf) .iw-ss-row+.iw-ss-group{border-top:1px solid var(--iwf-rule)}:is(:root,#iwf) .iw-ss-group-head{gap:10px;padding:10px var(--iwf-pad-x);border-radius:0;border:0!important;background-image:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 2px 0 0 color-mix(in srgb,var(--iwf-brass) 45%,transparent)!important;font-family:var(--iw-font-head, serif);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--iwf-text)}:is(:root,#iwf) .iw-ss-group-head:hover{background-image:linear-gradient(90deg,color-mix(in srgb,var(--iwf-brass) 10%,transparent),transparent 70%),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 2px 0 0 var(--iwf-brass)!important;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-group-head:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:-2px}:is(:root,#iwf) .iw-ss-group.is-open>.iw-ss-group-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--iwf-accent) 14%,transparent),transparent 65%),linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24))!important;box-shadow:inset 3px 0 0 var(--iwf-accent),inset 0 -1px 0 var(--iwf-rule)!important;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-caret{width:10px;text-align:center;color:var(--iwf-brass)}:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-caret{color:var(--iwf-accent);transform:rotate(90deg)}:is(:root,#iwf) .iw-ss-group-count{padding:1px 8px;border:1px solid var(--iwf-edge-faint);border-radius:999px;background:rgba(0,0,0,.3);font-family:var(--iw-font-ui, inherit);font-size:10.5px;letter-spacing:.02em;text-transform:none;font-variant-numeric:tabular-nums;color:var(--iwf-text-dim)}:is(:root,#iwf) .iw-ss-group.is-open .iw-ss-group-count{border-color:color-mix(in srgb,var(--iwf-accent) 35%,var(--iwf-edge-faint));color:var(--iwf-text)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-group:last-child:not(.is-open)>.iw-ss-group-head{border-radius:0 0 calc(var(--iwf-sheet-r) - 1px) calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-row{gap:12px;min-height:52px;padding:10px var(--iwf-pad-x) 10px calc(var(--iwf-pad-x) - 3px);border-radius:0;border:0 solid transparent;border-left-width:3px;background:transparent;box-shadow:none}:is(:root,#iwf) .iw-ss-row+.iw-ss-row{border-top:1px solid var(--iwf-rule)}:is(:root,#iwf) .iw-ss-group>.iw-ss-rows>.iw-ss-row{padding-left:calc(var(--iwf-indent) - 3px);background:linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.06))}:is(:root,#iwf) .iw-ss-row:hover{background:linear-gradient(90deg,rgba(255,235,190,.035),transparent 70%)}:is(:root,#iwf) .iw-ss-row.is-best{border-left-color:var(--iwf-accent);background:linear-gradient(90deg,color-mix(in srgb,var(--iwf-accent) 13%,transparent),transparent 60%)}:is(:root,#iwf) .iw-ss-row.is-running{border-left-color:var(--iwf-running);background:linear-gradient(90deg,color-mix(in srgb,var(--iwf-running) 14%,transparent),transparent 65%);box-shadow:inset 0 0 18px -12px var(--iwf-running)}:is(:root,#iwf) .iw-ss-row.is-locked{opacity:.55;filter:saturate(.4)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-row:last-child,:is(:root,#iwf) .iw-skill-sheet>.iw-ss-rows:last-child>.iw-ss-group:last-child>.iw-ss-rows>.iw-ss-row:last-child{border-bottom-left-radius:calc(var(--iwf-sheet-r) - 1px);border-bottom-right-radius:calc(var(--iwf-sheet-r) - 1px)}:is(:root,#iwf) .iw-ss-rowname{gap:4px 10px;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-ss-link{text-decoration-color:color-mix(in srgb,var(--iwf-brass) 55%,transparent)}:is(:root,#iwf) .iw-ss-link:hover{color:#fff;text-decoration-color:var(--iwf-accent)}:is(:root,#iwf) .iw-ss-xp{font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--iwf-brass) 65%,#fff1d2)}:is(:root,#iwf) .iw-ss-badge{align-self:center;border-radius:2px;background:linear-gradient(180deg,color-mix(in srgb,var(--iwf-accent) 85%,#fff),var(--iwf-accent));color:#170f05;box-shadow:0 0 8px -2px var(--iwf-accent)}:is(:root,#iwf) :is(.iw-ss-detail,.iw-ss-lock,.iw-ss-gear,.iw-ss-warn){margin-top:4px;line-height:1.35}:is(:root,#iwf) .iw-ss-detail{color:var(--iwf-text-dim)}::highlight(iwf-material-met){color:#8fcf9c}::highlight(iwf-material-short){color:#ec8f84}:is(:root,#iwf) .iw-ss-lock{color:#fca5a5}:is(:root,#iwf) .iw-ss-gear{color:#a5b4fc}:is(:root,#iwf) .iw-ss-warn{color:#fcd34d}:is(:root,#iwf) .iw-ss-running{min-width:84px;text-align:center;color:#6ee7b7;text-shadow:0 0 8px rgba(52,211,153,.45);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iw-ss-empty{padding:12px var(--iwf-pad-x);color:var(--iwf-text-dim);font-style:italic}@media(max-width:480px){:is(:root,#iwf) .iw-skill-sheet{--iwf-pad-x: 12px;--iwf-indent: 22px}:is(:root,#iwf) .iw-ss-head{gap:10px}:is(:root,#iwf) .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{width:44px}:is(:root,#iwf) .iw-ss-running{min-width:64px}}:is(:root,#iwf) .iw-ss-main:has(>.iw-ss-detail[data-iw-fantasy-icon]){position:relative;min-height:var(--iwf-item);display:flex;flex-direction:column;justify-content:center}:is(:root,#iwf) .iw-ss-rows:has(>.iw-ss-row>.iw-ss-main>.iw-ss-detail[data-iw-fantasy-icon])>.iw-ss-row>.iw-ss-main{padding-left:calc(var(--iwf-item) + 12px)}:is(:root,#iwf) .iw-ss-detail[data-iw-fantasy-icon]::before{content:"";position:absolute;left:0;top:50%;width:var(--iwf-item);height:var(--iwf-item);transform:translateY(-50%);pointer-events:none;background-image:var(--iwf-sprite-img);background-size:var(--iwf-sprite-size);background-position:var(--iwf-sprite-pos);background-repeat:no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}:is(:root,#iwf) .iw-ss-start{border-radius:4px;border:1px solid color-mix(in srgb,var(--iw-th-cta, #c9852f) 75%,#000)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta-hi, #e6a24a) 42%,#1a140c),color-mix(in srgb,var(--iw-th-cta, #c9852f) 26%,#0c0a07))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.45),0 2px 6px -3px #000!important;color:#fff4dc;font-family:var(--iw-font-head, serif);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-ss-start:hover:not(:disabled){border-color:var(--iw-th-cta-hi, #e6a24a)!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--iw-th-cta-hi, #e6a24a) 58%,#1a140c),color-mix(in srgb,var(--iw-th-cta, #c9852f) 36%,#0c0a07))!important}:is(:root,#iwf) .iw-ss-start:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-ss-start:disabled{border-color:var(--iwf-edge-faint)!important;background-image:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.25))!important;box-shadow:none!important;color:rgba(255,255,255,.38);text-shadow:none}\n';
 
   // src/skins/fantasy/styles/skill-cards.css
-  var skill_cards_default = ':is(:root,#iwf){--iwf-item-atlas: url(../assets/item_icons_atlas.png);--iwf-gear-atlas: url(../assets/gear_icons_atlas.png);--iwf-edge: var(--iw-th-edge-soft, #3b3a33);--iwf-edge-mid: var(--iw-th-edge-mid, #57513f);--iwf-edge-faint: var(--iw-th-edge-faint, #2a2a25);--iwf-accent: var(--iw-th-accent, #d8a64a);--iwf-brass: var(--iw-th-brass, #b8975a);--iwf-ground: linear-gradient(180deg, color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent), color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));--iwf-text-hi: #f1e6cc;--iwf-text: #d9cdb2;--iwf-text-dim: #a59a83;--iwf-running: #34d399;--iwf-boost: #86efac;--iwf-item: 50px}@media(max-width:1024px){:is(:root,#iwf){--iwf-item: 44px}}@media(max-width:768px){:is(:root,#iwf){--iwf-item: 40px}}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/combat.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/mining.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/smithing.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/gathering.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/alchemy.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/jewelcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/spellcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/tailoring.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/woodcutting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/construction.svg)}:is(:root,#iwf) [data-iw-fantasy-lead=icon]::first-letter{font-size:0;letter-spacing:0}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-tint: #e4574f}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-tint: #8fa4c0}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-tint: #f0793f}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-tint: #6dd48a}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-tint: #57c6cf}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-tint: #62d0e8}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-tint: #b492ea}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-tint: #e88fb8}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-tint: #c99a63}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-tint: #9aa7b8}:is(:root,#iwf) [data-iw-fantasy-skill]{--iwf-medal: var(--iwf-skill-icon) center / 54% auto no-repeat, radial-gradient(circle at 50% 38%, #221e17, #0a0a08 72%)}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=combat]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=mining]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=smithing]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 40% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=gathering]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 60% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=alchemy]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 80% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=jewelcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 100% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=spellcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 100% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=tailoring]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 100% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=woodcutting]{--iwf-medal: url(../assets/skills-medallions/woodcutting.webp) center / 100% 100% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=construction]{--iwf-medal: url(../assets/skills-medallions/construction.webp) center / 100% 100% no-repeat}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron]{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));container-type:inline-size;gap:8px}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] :is(.iw-skill-tab,.iwf-skill-reserved){--iwf-tint-on: var(--iwf-tint, var(--iwf-accent));--iwf-med: clamp(32px, 7.4cqw, 64px);--iwf-ring-gap: clamp(3px, 1cqw, 6px);--iwf-ring-w: clamp(3px, .65cqw, 4px);grid-template-columns:minmax(0,1fr);position:relative;display:grid;min-width:0;box-sizing:border-box;grid-template-areas:"name" "icon" "lv" "bar";grid-template-rows:auto auto auto auto;justify-items:center;align-content:center;aspect-ratio:5 / 6;gap:0;padding:clamp(5px,1.6cqw,12px) clamp(2px,.9cqw,6px) clamp(4px,1.3cqw,10px);text-align:center;border-radius:5px;border:1px solid #343a33;--iwf-tab-bg: linear-gradient(#050a0826, #050a0826), url(../assets/skills-ui/soft-iron-card-v1.webp) center / 100% 100% no-repeat, linear-gradient(#101512, #101512);background:var(--iwf-tab-bg);box-shadow:0 2px 5px #0004}@container (min-width: 760px){:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab{aspect-ratio:auto;min-height:188px}}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab::before{content:none}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:hover{border-color:color-mix(in srgb,var(--iwf-tint-on) 25%,#343a33);box-shadow:inset 0 0 0 1px #d8c59612,0 2px 5px #0004}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active{border-color:color-mix(in srgb,var(--iwf-tint-on) 48%,#343a33);--iwf-tab-bg: radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--iwf-tint-on) 8%, transparent), transparent 75%), url(../assets/skills-ui/soft-iron-card-v1.webp) center / 100% 100% no-repeat, linear-gradient(#101512, #101512);background:var(--iwf-tab-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iwf-tint-on) 16%,transparent),0 2px 5px #0004}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] :is(.iw-skill-tab[data-iw-fantasy-skill],.iwf-skill-reserved) .iw-skill-tab-icon{grid-area:icon;position:relative;z-index:1;display:block;width:var(--iwf-med);height:var(--iwf-med);margin:var(--iwf-ring-gap);border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);box-shadow:0 3px 9px rgba(0,0,0,.55);opacity:1;filter:none}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon::after{content:"";position:absolute;inset:calc(-1 * var(--iwf-ring-gap));border-radius:50%;pointer-events:none;background:conic-gradient(color-mix(in srgb,var(--iwf-tint-on) 78%,#fff) 0 var(--iwf-pct, 0%),#2a241b var(--iwf-pct, 0%) 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));filter:none;opacity:.8}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon::after,:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:hover[data-iw-fantasy-skill] .iw-skill-tab-icon::after{opacity:1}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon{box-shadow:0 3px 9px rgba(0,0,0,.55)}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] :is(.iw-skill-tab,.iwf-skill-reserved) .iw-skill-tab-lv{grid-area:lv;position:relative;z-index:2;min-width:clamp(24px,6cqw,38px);margin-top:calc(-1 * var(--iwf-ring-gap) - clamp(4px,1.2cqw,8px));padding:1px clamp(3px,1cqw,7px) 2px;border:1px solid color-mix(in srgb,var(--iwf-brass) 55%,#3a3226);border-radius:4px 4px 9px 9px;background:linear-gradient(#1b1812,#0b0c0e);box-shadow:inset 0 0 0 2px #1d1a14,0 2px 4px rgba(0,0,0,.6);font-size:clamp(9.5px,1.95cqw,12.5px);line-height:1.15;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active .iw-skill-tab-lv{border-color:var(--iwf-accent);color:#fff}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] :is(.iw-skill-tab,.iwf-skill-reserved) .iw-skill-tab-name{grid-area:name;display:block;justify-self:stretch;width:100%;max-width:100%;margin-bottom:clamp(3px,1cqw,7px);font-family:var(--iw-font-head, serif);font-size:clamp(7px,1.72cqw,11px);font-weight:700;line-height:1.2;letter-spacing:clamp(0px,.12cqw,.04em);text-transform:uppercase;white-space:nowrap;color:color-mix(in srgb,var(--iwf-tint-on) 45%,var(--iwf-text-dim));text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active .iw-skill-tab-name{color:color-mix(in srgb,var(--iwf-tint-on) 62%,var(--iwf-text-hi))}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] :is(.iw-skill-tab,.iwf-skill-reserved) .iw-skill-tab-name::before{content:none;display:none}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iwf-skill-reserved{--iwf-medal: url(../assets/skills_icons_atlas.webp) 80% 100% / 600% 200% no-repeat;display:none;opacity:.4;filter:grayscale(1);pointer-events:none;user-select:none}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iwf-skill-reserved .iw-skill-tab-icon{outline:var(--iwf-ring-w) solid #4b4d46}@media(max-width:768px){:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron]{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] :is(.iw-skill-tab,.iwf-skill-reserved){--iwf-med: clamp(32px, 13cqw, 64px);--iwf-ring-gap: clamp(3px, .8cqw, 5px);padding-inline:2px}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] :is(.iw-skill-tab,.iwf-skill-reserved) .iw-skill-tab-name{transform:none;font-size:clamp(6px,calc(2.8cqw - 1.2px),16px);letter-spacing:0;color:var(--iwf-text)}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] :is(.iw-skill-tab,.iwf-skill-reserved) .iw-skill-tab-lv{font-size:clamp(11.5px,2.5cqw,16px)}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iwf-skill-reserved{display:grid}}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab-bar{grid-area:bar;width:80%;height:3px;margin-top:4px;border-radius:1px;background:#000a}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab-bar>span{background:linear-gradient(90deg,var(--iwf-brass),var(--iwf-accent))}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab[data-iw-fantasy-pct][data-iw-fantasy-skill] .iw-skill-tab-bar{display:none}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab-live{top:6px;right:6px;z-index:3;background:var(--iwf-running);box-shadow:0 0 0 1px #000,0 0 6px var(--iwf-running)}@media(max-width:480px){:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab-live{top:auto;bottom:4px;right:4px;width:5px;height:5px}}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab[data-iw-fantasy-boost=daily]::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;box-shadow:0 8px 18px -6px color-mix(in srgb,var(--iwf-boost) 55%,transparent),0 0 14px -2px color-mix(in srgb,var(--iwf-boost) 30%,transparent)}\n';
+  var skill_cards_default = ':is(:root,#iwf){--iwf-item-atlas: url(../assets/item_icons_atlas.png);--iwf-gear-atlas: url(../assets/gear_icons_atlas.png);--iwf-edge: var(--iw-th-edge-soft, #3b3a33);--iwf-edge-mid: var(--iw-th-edge-mid, #57513f);--iwf-edge-faint: var(--iw-th-edge-faint, #2a2a25);--iwf-accent: var(--iw-th-accent, #d8a64a);--iwf-brass: var(--iw-th-brass, #b8975a);--iwf-ground: linear-gradient(180deg, color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent), color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));--iwf-text-hi: #f1e6cc;--iwf-text: #d9cdb2;--iwf-text-dim: #a59a83;--iwf-running: #34d399;--iwf-boost: #86efac;--iwf-item: 50px}@media(max-width:1024px){:is(:root,#iwf){--iwf-item: 44px}}@media(max-width:768px){:is(:root,#iwf){--iwf-item: 40px}}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/combat.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/mining.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/smithing.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/gathering.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/alchemy.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/jewelcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/spellcrafting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/tailoring.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/woodcutting.svg)}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-skill-icon: url(../assets/skills-ui/action-icons/construction.svg)}:is(:root,#iwf) [data-iw-fantasy-lead=icon]::first-letter{font-size:0;letter-spacing:0}:is(:root,#iwf) [data-iw-fantasy-skill=combat]{--iwf-tint: #e4574f}:is(:root,#iwf) [data-iw-fantasy-skill=mining]{--iwf-tint: #8fa4c0}:is(:root,#iwf) [data-iw-fantasy-skill=smithing]{--iwf-tint: #f0793f}:is(:root,#iwf) [data-iw-fantasy-skill=gathering]{--iwf-tint: #6dd48a}:is(:root,#iwf) [data-iw-fantasy-skill=alchemy]{--iwf-tint: #57c6cf}:is(:root,#iwf) [data-iw-fantasy-skill=jewelcrafting]{--iwf-tint: #62d0e8}:is(:root,#iwf) [data-iw-fantasy-skill=spellcrafting]{--iwf-tint: #b492ea}:is(:root,#iwf) [data-iw-fantasy-skill=tailoring]{--iwf-tint: #e88fb8}:is(:root,#iwf) [data-iw-fantasy-skill=woodcutting]{--iwf-tint: #c99a63}:is(:root,#iwf) [data-iw-fantasy-skill=construction]{--iwf-tint: #9aa7b8}:is(:root,#iwf) [data-iw-fantasy-skill]{--iwf-medal: var(--iwf-skill-icon) center / 54% auto no-repeat, radial-gradient(circle at 50% 38%, #221e17, #0a0a08 72%)}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=combat]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=mining]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=smithing]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 40% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=gathering]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 60% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=alchemy]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 80% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=jewelcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 100% 0% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=spellcrafting]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 0% 100% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=tailoring]{--iwf-medal: url(../assets/skills_icons_atlas.webp) 20% 100% / 600% 200% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=woodcutting]{--iwf-medal: url(../assets/skills-medallions/woodcutting.webp) center / 100% 100% no-repeat}:is(:root,#iwf) :is(.iw-skill-tab,.iw-ss-head,.iwf-q-row)[data-iw-fantasy-skill=construction]{--iwf-medal: url(../assets/skills-medallions/construction.webp) center / 100% 100% no-repeat}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron]{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));container-type:inline-size;gap:8px}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab{--iwf-tint-on: var(--iwf-tint, var(--iwf-accent));--iwf-med: clamp(32px, 7.4cqw, 64px);--iwf-ring-gap: clamp(3px, 1cqw, 6px);--iwf-ring-w: clamp(3px, .65cqw, 4px);grid-template-columns:minmax(0,1fr);position:relative;display:grid;min-width:0;box-sizing:border-box;grid-template-areas:"name" "icon" "lv" "bar";grid-template-rows:auto auto auto auto;justify-items:center;align-content:center;aspect-ratio:5 / 6;gap:0;padding:clamp(5px,1.6cqw,12px) clamp(2px,.9cqw,6px) clamp(4px,1.3cqw,10px);text-align:center;border-radius:5px;border:1px solid #343a33;--iwf-tab-bg: linear-gradient(#050a0826, #050a0826), url(../assets/skills-ui/soft-iron-card-v1.webp) center / 100% 100% no-repeat, linear-gradient(#101512, #101512);background:var(--iwf-tab-bg);box-shadow:0 2px 5px #0004}@container (min-width: 760px){:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab{aspect-ratio:auto;min-height:188px}}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab::before{content:none}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:hover{border-color:color-mix(in srgb,var(--iwf-tint-on) 25%,#343a33);box-shadow:inset 0 0 0 1px #d8c59612,0 2px 5px #0004}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:2px}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active{border-color:color-mix(in srgb,var(--iwf-tint-on) 48%,#343a33);--iwf-tab-bg: radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--iwf-tint-on) 8%, transparent), transparent 75%), url(../assets/skills-ui/soft-iron-card-v1.webp) center / 100% 100% no-repeat, linear-gradient(#101512, #101512);background:var(--iwf-tab-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--iwf-tint-on) 16%,transparent),0 2px 5px #0004}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon{grid-area:icon;position:relative;z-index:1;display:block;width:var(--iwf-med);height:var(--iwf-med);margin:var(--iwf-ring-gap);border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);box-shadow:0 3px 9px rgba(0,0,0,.55);opacity:1;filter:none}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon::after{content:"";position:absolute;inset:calc(-1 * var(--iwf-ring-gap));border-radius:50%;pointer-events:none;background:conic-gradient(color-mix(in srgb,var(--iwf-tint-on) 78%,#fff) 0 var(--iwf-pct, 0%),#2a241b var(--iwf-pct, 0%) 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));mask:radial-gradient(farthest-side,transparent calc(100% - var(--iwf-ring-w)),#000 calc(100% - var(--iwf-ring-w) + .5px));filter:none;opacity:.8}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon::after,:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab:hover[data-iw-fantasy-skill] .iw-skill-tab-icon::after{opacity:1}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon{box-shadow:0 3px 9px rgba(0,0,0,.55)}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab .iw-skill-tab-lv{grid-area:lv;position:relative;z-index:2;min-width:clamp(24px,6cqw,38px);margin-top:calc(-1 * var(--iwf-ring-gap) - clamp(4px,1.2cqw,8px));padding:1px clamp(3px,1cqw,7px) 2px;border:1px solid color-mix(in srgb,var(--iwf-brass) 55%,#3a3226);border-radius:4px 4px 9px 9px;background:linear-gradient(#1b1812,#0b0c0e);box-shadow:inset 0 0 0 2px #1d1a14,0 2px 4px rgba(0,0,0,.6);font-size:clamp(9.5px,1.95cqw,12.5px);line-height:1.15;color:var(--iwf-text-hi)}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active .iw-skill-tab-lv{border-color:var(--iwf-accent);color:#fff}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab .iw-skill-tab-name{grid-area:name;display:block;justify-self:stretch;width:100%;max-width:100%;margin-bottom:clamp(3px,1cqw,7px);font-family:var(--iw-font-head, serif);font-size:clamp(7px,1.72cqw,11px);font-weight:700;line-height:1.2;letter-spacing:clamp(0px,.12cqw,.04em);text-transform:uppercase;white-space:nowrap;color:color-mix(in srgb,var(--iwf-tint-on) 45%,var(--iwf-text-dim));text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab.is-active .iw-skill-tab-name{color:color-mix(in srgb,var(--iwf-tint-on) 62%,var(--iwf-text-hi))}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab .iw-skill-tab-name::before{content:none;display:none}@media(max-width:768px){:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron]{gap:6px}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab{--iwf-med: clamp(24px, 10cqw, 64px);--iwf-ring-gap: clamp(3px, .8cqw, 5px);padding-inline:0}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab .iw-skill-tab-name{transform:none;font-size:clamp(5px,calc(2.15cqw - 1.2px),13px);letter-spacing:0;color:var(--iwf-text)}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab .iw-skill-tab-lv{font-size:clamp(11.5px,2.5cqw,16px)}}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab-bar{grid-area:bar;width:80%;height:3px;margin-top:4px;border-radius:1px;background:#000a}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab-bar>span{background:linear-gradient(90deg,var(--iwf-brass),var(--iwf-accent))}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab[data-iw-fantasy-pct][data-iw-fantasy-skill] .iw-skill-tab-bar{display:none}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab-live{top:6px;right:6px;z-index:3;background:var(--iwf-running);box-shadow:0 0 0 1px #000,0 0 6px var(--iwf-running)}@media(max-width:480px){:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab-live{top:auto;bottom:4px;right:4px;width:5px;height:5px}}:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab[data-iw-fantasy-boost=daily]::after{content:"";position:absolute;inset:0;z-index:2;box-sizing:border-box;border:2px solid var(--iwf-boost);border-radius:inherit;pointer-events:none;background:none;box-shadow:none;transform:none;animation:iwf-daily-boost-outline 2.6s ease-in-out infinite}@keyframes iwf-daily-boost-outline{0%,100%{opacity:.55}50%{opacity:1}}@media(prefers-reduced-motion:reduce){:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards=soft-iron] .iw-skill-tab[data-iw-fantasy-boost=daily]::after{animation:none;opacity:1}}\n';
 
   // src/skins/fantasy/styles/skill-frame.css
-  var skill_frame_default = ':is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]{--iwf-sheet-r: 4px;--iwf-pad-x: 16px;--iwf-frame-edge: var(--iw-th-edge-mid, #65563c);--iwf-frame-plate: var(--iw-compact-atlas, url(../assets/skills-ui/buttons/compact-ghost-v3/forged-metal.png));position:relative;gap:0;border:1px solid var(--iwf-frame-edge);border-radius:var(--iwf-sheet-r);background:linear-gradient(180deg,#101512de,#0a0d0bed),url(../assets/skills_panel_texture.webp) center / 256px 256px repeat;box-shadow:inset 0 0 0 1px #000b,inset 0 1px 0 #d7bc7420,0 6px 18px -8px #0009;overflow:visible}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]::before{content:none;border-image:none}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]::after{content:"";position:absolute;inset:4px 20px;background:linear-gradient(90deg,transparent,#b697564c 20%,#dcc48778 50%,#b697564c 80%,transparent) top / 100% 1px no-repeat,linear-gradient(90deg,transparent,#b6975633 20%,#b6975633 80%,transparent) bottom / 100% 1px no-repeat;pointer-events:none;z-index:2}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]>*+*{border-left:0;border-right:0;border-top:1px solid #514832}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]>:not(.iw-ss-head):not(.iw-ss-rows){border-radius:0;background:linear-gradient(90deg,#a78b4510,transparent 75%)}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head{gap:14px;padding:18px var(--iwf-pad-x) 16px;border:0;border-radius:var(--iwf-sheet-r) var(--iwf-sheet-r) 0 0;background:radial-gradient(ellipse at 0 0,color-mix(in srgb,var(--iwf-tint, #b8975a) 9%,transparent),transparent 75%);box-shadow:none}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{flex:0 0 auto;width:54px;aspect-ratio:1;border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);filter:drop-shadow(0 2px 3px #0009)}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-name{gap:6px 10px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-name>span:first-child{font-family:var(--iw-font-head, Georgia, serif);font-size:clamp(17px,3.8vw,23px);letter-spacing:.035em;color:#eee4c9;text-shadow:0 1px 1px #000}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-level{border:1px solid #88703e7a;border-radius:3px;background:linear-gradient(#252015,#12130f);color:#c9b88f;box-shadow:inset 0 1px 0 #e8cf8c0d}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-boost{color:#86d7a0}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-xp-chip{border-color:#816a37;border-radius:3px;background:linear-gradient(#2c2515,#16150e);color:#dfc16c;box-shadow:inset 0 1px 0 #efcf7f12}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-xpbar{height:7px;border-radius:2px;background:#080b09;box-shadow:inset 0 0 0 1px #85713d54,inset 0 1px 2px #000}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-xpbar>span{border-radius:inherit;background:linear-gradient(180deg,#ffffff24,transparent 65%),linear-gradient(90deg,color-mix(in srgb,var(--iwf-tint, #b8975a) 60%,#222b21),var(--iwf-tint, #b8975a));box-shadow:none}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-sub{color:#a59e88}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-rows{gap:0}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-row{border-right:0;border-radius:0}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-row:not(.is-running):not(.is-best):not(:hover){background:transparent}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-rowname{color:#e2d9c2}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-xp{color:#b9a575}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-lock{color:#c0a68d}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head:has(+.iw-ss-zonebar){padding-bottom:8px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar{display:grid;grid-template-columns:16px minmax(0,1fr);gap:6px 8px;min-height:0;padding:0 var(--iwf-pad-x) 12px!important;margin:0!important;border:0!important;border-image:none!important;border-radius:0!important;background:none!important;box-shadow:none!important}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar .iw-ss-zone-icon{font-size:12px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar .iw-ss-zone-text{min-width:0;font-size:11.5px;line-height:16px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar-btns{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-width:0;margin:0!important}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar .iw-ss-zone-go{box-sizing:border-box;min-width:0;min-height:28px!important;height:28px!important;padding:0 4px!important;margin:0!important;color:#ddcca4!important;font-size:12px;line-height:1.1}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button]))){--iwf-frame-y: 2.9411764705882355%;--iwf-frame-cap: 12px;position:relative;min-height:36px;padding:6px 4px;border:solid transparent!important;border-width:0 var(--iwf-frame-cap)!important;border-radius:0!important;background:var(--iwf-frame-plate) 21.428571428571427% var(--iwf-frame-y) / 150% 326.6666666666667% no-repeat padding-box padding-box!important;box-shadow:none!important;color:#ddcca4;font-family:var(--iw-font-head, Georgia, serif);text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::before,:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::after{content:"";position:absolute;inset-block:0;width:var(--iwf-frame-cap);background:var(--iwf-frame-plate) 1.2658227848101267% var(--iwf-frame-y) / 1680% 326.6666666666667% no-repeat;pointer-events:none}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::before{left:calc(-1 * var(--iwf-frame-cap))}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::after{right:calc(-1 * var(--iwf-frame-cap));background-position-x:78.48101265822785%}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] button:not(:disabled):is(:hover,:focus-visible){--iwf-frame-y: 50%}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] button:not(:disabled):active{--iwf-frame-y: 97.05882352941177%}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] button:focus-visible{outline:2px solid #d4ad63;outline-offset:2px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] button:disabled{opacity:.45;color:#8f8c7e}@media(min-width:769px){:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar-btns{display:none!important}}@media(max-width:540px){:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]{--iwf-pad-x: 12px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head{gap:10px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{width:44px}}\n';
+  var skill_frame_default = ':is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]{--iwf-sheet-r: 4px;--iwf-pad-x: 16px;--iwf-frame-edge: var(--iw-th-edge-mid, #65563c);--iwf-frame-plate: var(--iw-compact-atlas, url(../assets/skills-ui/buttons/compact-ghost-v3/forged-metal.png));position:relative;gap:0;border:1px solid var(--iwf-frame-edge);border-radius:var(--iwf-sheet-r);background:linear-gradient(180deg,#101512de,#0a0d0bed),url(../assets/skills_panel_texture.webp) center / 256px 256px repeat;box-shadow:inset 0 0 0 1px #000b,inset 0 1px 0 #d7bc7420,0 6px 18px -8px #0009;overflow:visible}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]::before{content:none;border-image:none}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]::after{content:"";position:absolute;inset:4px 20px;background:linear-gradient(90deg,transparent,#b697564c 20%,#dcc48778 50%,#b697564c 80%,transparent) top / 100% 1px no-repeat,linear-gradient(90deg,transparent,#b6975633 20%,#b6975633 80%,transparent) bottom / 100% 1px no-repeat;pointer-events:none;z-index:2}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]>*+*{border-left:0;border-right:0;border-top:1px solid #514832}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]>:not(.iw-ss-head):not(.iw-ss-rows){border-radius:0;background:linear-gradient(90deg,#a78b4510,transparent 75%)}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head{gap:14px;padding:18px var(--iwf-pad-x) 16px;border:0;border-radius:var(--iwf-sheet-r) var(--iwf-sheet-r) 0 0;background:radial-gradient(ellipse at 0 0,color-mix(in srgb,var(--iwf-tint, #b8975a) 9%,transparent),transparent 75%);box-shadow:none}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{flex:0 0 auto;width:54px;aspect-ratio:1;border-radius:50%;font-size:0;color:transparent;background:var(--iwf-medal);filter:drop-shadow(0 2px 3px #0009)}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-name{gap:6px 10px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-name>span:first-child{font-family:var(--iw-font-head, Georgia, serif);font-size:clamp(17px,3.8vw,23px);letter-spacing:.035em;color:#eee4c9;text-shadow:0 1px 1px #000}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-level{border:1px solid #88703e7a;border-radius:3px;background:linear-gradient(#252015,#12130f);color:#c9b88f;box-shadow:inset 0 1px 0 #e8cf8c0d}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iwf-skill-location{max-width:100%;color:#86d7a0;font-size:12px;font-weight:500;line-height:1.4}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-boost{color:#86d7a0}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-xp-chip{border-color:#816a37;border-radius:3px;background:linear-gradient(#2c2515,#16150e);color:#dfc16c;box-shadow:inset 0 1px 0 #efcf7f12}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-xpbar{height:7px;border-radius:2px;background:#080b09;box-shadow:inset 0 0 0 1px #85713d54,inset 0 1px 2px #000}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-xpbar>span{border-radius:inherit;background:linear-gradient(180deg,#ffffff24,transparent 65%),linear-gradient(90deg,color-mix(in srgb,var(--iwf-tint, #b8975a) 60%,#222b21),var(--iwf-tint, #b8975a));box-shadow:none}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-sub{color:#a59e88}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-rows{gap:0}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-row{border-right:0;border-radius:0}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-row:not(.is-running):not(.is-best):not(:hover){background:transparent}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-rowname{color:#e2d9c2}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-xp{color:#b9a575}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-lock{color:#c0a68d}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head:has(+.iw-ss-zonebar){padding-bottom:8px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar{display:grid;grid-template-columns:16px minmax(0,1fr);gap:6px 8px;min-height:0;padding:0 var(--iwf-pad-x) 12px!important;margin:0!important;border:0!important;border-image:none!important;border-radius:0!important;background:none!important;box-shadow:none!important}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar .iw-ss-zone-icon{font-size:12px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar .iw-ss-zone-text{min-width:0;font-size:11.5px;line-height:16px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar-btns{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-width:0;margin:0!important}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar .iw-ss-zone-go{box-sizing:border-box;min-width:0;min-height:28px!important;height:28px!important;padding:0 4px!important;margin:0!important;color:#ddcca4!important;font-size:12px;line-height:1.1}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button]))){--iwf-frame-y: 2.9411764705882355%;--iwf-frame-cap: 12px;position:relative;min-height:36px;padding:6px 4px;border:solid transparent!important;border-width:0 var(--iwf-frame-cap)!important;border-radius:0!important;background:var(--iwf-frame-plate) 21.428571428571427% var(--iwf-frame-y) / 150% 326.6666666666667% no-repeat padding-box padding-box!important;box-shadow:none!important;color:#ddcca4;font-family:var(--iw-font-head, Georgia, serif);text-shadow:0 1px 0 #000}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::before,:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::after{content:"";position:absolute;inset-block:0;width:var(--iwf-frame-cap);background:var(--iwf-frame-plate) 1.2658227848101267% var(--iwf-frame-y) / 1680% 326.6666666666667% no-repeat;pointer-events:none}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::before{left:calc(-1 * var(--iwf-frame-cap))}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] :is(button:not(:is(.iw-ss-group-head,.iw-ss-x,.iw-ss-zone-go,[data-iw-compact-button])),.iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::after{right:calc(-1 * var(--iwf-frame-cap));background-position-x:78.48101265822785%}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] button:not(:disabled):is(:hover,:focus-visible){--iwf-frame-y: 50%}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] button:not(:disabled):active{--iwf-frame-y: 97.05882352941177%}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] button:focus-visible{outline:2px solid #d4ad63;outline-offset:2px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] button:disabled{opacity:.45;color:#8f8c7e}@media(min-width:769px){:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-zonebar-btns{display:none!important}}@media(max-width:540px){:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron]{--iwf-pad-x: 12px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head{gap:10px}:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame=guild-iron] .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon{width:44px}}\n';
 
   // src/skins/fantasy/styles/queue.css
   var queue_default = ':is(:root,#iwf) body:has(:not([data-iw-collapsed="1"])>.iwf-queue[data-iw-fantasy-queue-owned]) #current-action-panel[data-iw-fantasy-queue=mirrored]{display:none!important}:is(:root,#iwf) .iwf-queue{--iwf-q-divider: linear-gradient(90deg, transparent, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 14%, color-mix(in srgb, var(--iwf-brass) 55%, transparent) 86%, transparent);margin-top:12px;border:1px solid var(--iwf-edge-mid);border-radius:8px;background:var(--iwf-ground),url(../assets/skills_panel_texture.webp) center / cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,235,190,.05),0 6px 18px -10px #000;color:var(--iwf-text);font-size:12px}:is(:root,#iwf) .iwf-queue [hidden]{display:none!important}:is(:root,#iwf) .iwf-q-head{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 16px}:is(:root,#iwf) .iwf-q-title{margin:0;font-family:var(--iw-font-head, serif);font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--iwf-text-hi)}:is(:root,#iwf) .iwf-q-count{margin-right:auto;padding:1px 8px;border:1px solid var(--iwf-edge-faint);border-radius:999px;background:rgba(0,0,0,.3);font-size:10.5px;font-variant-numeric:tabular-nums;color:var(--iwf-text-dim)}:is(:root,#iwf) .iwf-q-list{list-style:none;margin:0;padding:0}:is(:root,#iwf) .iwf-q-row{display:flex;align-items:center;gap:9px;min-height:40px;padding:5px 8px 5px 8px;border-top:1px solid var(--iw-th-rule-soft, rgba(255,255,255,.06));cursor:grab}:is(:root,#iwf) .iwf-q-head+.iwf-q-list>.iwf-q-row:first-child{border-top:1px solid;border-image:var(--iwf-q-divider) 1}:is(:root,#iwf) .iwf-q-row:hover{background:linear-gradient(90deg,rgba(255,235,190,.035),transparent 70%)}:is(:root,#iwf) .iwf-q-row[data-dragging]{opacity:.45}:is(:root,#iwf) .iwf-q-grip{width:10px;color:#5d5647;font-size:12px;letter-spacing:-2px}:is(:root,#iwf) .iwf-q-n{width:14px;text-align:right;font-size:10.5px;font-weight:700;color:var(--iwf-brass);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iwf-q-icon{flex:none;width:26px;height:26px;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,.6)}:is(:root,#iwf) .iwf-q-row[data-iw-fantasy-skill] .iwf-q-icon{background:var(--iwf-medal)}:is(:root,#iwf) .iwf-q-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:var(--iwf-text-hi)}:is(:root,#iwf) .iwf-q-times{margin-left:5px;font-size:11px;font-weight:500;color:var(--iwf-text-dim)}:is(:root,#iwf) .iwf-q-eta{flex:none;font-size:11px;color:var(--iwf-text-dim);font-variant-numeric:tabular-nums}:is(:root,#iwf) .iwf-queue button{border-radius:4px!important;font-family:var(--iw-font-ui, inherit)!important;transition:border-color .13s,color .13s!important;border:1px solid transparent;border-color:transparent!important;background-image:none!important;background-color:transparent;box-shadow:none!important;cursor:pointer}:is(:root,#iwf) .iwf-q-x{flex:none;width:26px;height:26px;padding:0;font-size:11px;line-height:1;color:rgba(255,255,255,.45)}:is(:root,#iwf) .iwf-q-x:hover{border-color:rgba(255,255,255,.14)!important;color:#fff}:is(:root,#iwf) .iwf-queue button:focus-visible{outline:2px solid var(--iwf-accent);outline-offset:1px}:is(:root,#iwf) .iwf-q-toggles{border-top:1px solid var(--iw-th-rule-soft, rgba(255,255,255,.06))}:is(:root,#iwf) .iwf-q-more{display:block;width:100%;padding:8px 16px 9px;text-align:left;font-size:11px;color:var(--iwf-text-dim)}:is(:root,#iwf) .iwf-q-more:hover{color:var(--iwf-text-hi)}@media(max-width:480px){:is(:root,#iwf) .iwf-q-grip{display:none}:is(:root,#iwf) .iwf-q-x{width:32px;height:32px}}\n';
@@ -14277,6 +14541,27 @@
   var CARDS_ATTR = "data-iw-fantasy-cards";
   var FRAME_ATTR = "data-iw-fantasy-skill-frame";
   var ATTRS6 = [SKILL_ATTR, ICON_ATTR, LEAD_ATTR, PCT_ATTR, BOOST_ATTR, RUN_ATTR, RUN_RESET_ATTR, CARDS_ATTR, FRAME_ATTR];
+  var LOCATION_OWNED = "data-iw-fantasy-skill-location-owned";
+  var ownLocation = ownerOf(LOCATION_OWNED);
+  var REMOTE_ACTION = '#current-action-panel button[title^="Jump to Zone "]';
+  var ACTION_WORDS2 = {
+    fight: ["combat", "Fighting"],
+    mine: ["mining", "Mining"],
+    gather: ["gathering", "Gathering"],
+    harvest: ["gathering", "Harvesting"],
+    smelt: ["smithing", "Smelting"],
+    smith: ["smithing", "Smithing"],
+    forge: ["smithing", "Forging"],
+    brew: ["alchemy", "Brewing"],
+    weave: ["tailoring", "Weaving"],
+    chop: ["woodcutting", "Woodcutting"],
+    build: ["construction", "Building"],
+    assemble: ["construction", "Assembling"],
+    upgrade: [null, "Upgrading"],
+    cut: ["jewelcrafting", "Cutting"],
+    prospect: ["jewelcrafting", "Prospecting"],
+    craft: [null, "Crafting"]
+  };
   var PCT_RULES = Array.from({ length: 101 }, (_, n) => `:is(:root,#iwf) .iw-skill-tab[${PCT_ATTR}="${n}"]{--iwf-pct:${n}%}`).join("\n");
   function tabPercent(tab3) {
     const width = tab3.querySelector(".iw-skill-tab-bar > span")?.style.width || "";
@@ -14331,26 +14616,26 @@
   var sprites = /* @__PURE__ */ new Map();
   function spriteSheet() {
     let css = "";
-    for (const [key2, win] of sprites) {
-      css += `[${ICON_ATTR}="${key2}"]{--iwf-sprite-img:var(--iwf-${win.atlas}-atlas);--iwf-sprite-size:${win.size};--iwf-sprite-pos:${win.pos}}
+    for (const [key3, win] of sprites) {
+      css += `[${ICON_ATTR}="${key3}"]{--iwf-sprite-img:var(--iwf-${win.atlas}-atlas);--iwf-sprite-size:${win.size};--iwf-sprite-pos:${win.pos}}
 `;
     }
     return css;
   }
   function markItem(el2, query) {
     const win = findItemSprite(query);
-    const key2 = win ? `${win.atlas}-${nameKey(query.id) || nameKey(query.name)}` : null;
-    if (key2 && !sprites.has(key2)) {
-      sprites.set(key2, win);
+    const key3 = win ? `${win.atlas}-${nameKey(query.id) || nameKey(query.name)}` : null;
+    if (key3 && !sprites.has(key3)) {
+      sprites.set(key3, win);
       setSheet("item-icons", spriteSheet());
     }
-    mark6(el2, ICON_ATTR, key2);
-    mark6(el2, LEAD_ATTR, key2 && LEADING.test(el2.textContent || "") ? "icon" : null);
+    mark6(el2, ICON_ATTR, key3);
+    mark6(el2, LEAD_ATTR, key3 && LEADING.test(el2.textContent || "") ? "icon" : null);
   }
   function markSkill(el2, text2, { lead = false } = {}) {
-    const key2 = skillKey2(text2);
-    mark6(el2, SKILL_ATTR, key2);
-    if (lead) mark6(el2, LEAD_ATTR, key2 && LEADING.test(el2.textContent || "") ? "icon" : null);
+    const key3 = skillKey2(text2);
+    mark6(el2, SKILL_ATTR, key3);
+    if (lead) mark6(el2, LEAD_ATTR, key3 && LEADING.test(el2.textContent || "") ? "icon" : null);
   }
   var panelOf = (tabs) => tabs.closest(".panel") || tabs.parentElement;
   function decorateSkillCards() {
@@ -14362,7 +14647,6 @@
         mark6(tab3, PCT_ATTR, tabPercent(tab3));
         mark6(tab3, BOOST_ATTR, boosted.has(tab3.getAttribute(SKILL_ATTR)) ? "daily" : null);
       }
-      reservedSlots(tabs);
     }
   }
   function decorateSkillFrame() {
@@ -14372,6 +14656,42 @@
         markSkill(head, head.querySelector(".iw-ss-name > span:first-child")?.textContent);
       }
     }
+  }
+  function decorateActionLocation() {
+    const actions = [...document.querySelectorAll(REMOTE_ACTION)].filter((button4) => !button4.closest("[draggable]") && button4.closest("#current-action-panel").querySelector('button[aria-label="Cancel current action"]'));
+    const rendered = new Set(actions.filter((button4) => isRendered2(button4.closest("#current-action-panel").parentElement)));
+    const used = /* @__PURE__ */ new Set();
+    for (const sheet of document.querySelectorAll(".iw-skill-sheet")) {
+      const name = sheet.querySelector(".iw-ss-name");
+      const selected = skillKey2(name?.firstElementChild?.textContent);
+      const panel3 = sheet.closest(".panel") || sheet.parentElement;
+      let candidates = actions;
+      for (let ancestor = sheet.parentElement; ancestor; ancestor = ancestor.parentElement) {
+        const local = actions.filter((button4) => ancestor.contains(button4));
+        if (local.length) {
+          candidates = local;
+          break;
+        }
+      }
+      const source = candidates.find((button4) => rendered.has(button4)) || candidates[0];
+      const zone = source?.title.match(/^Jump to Zone ([1-9]\d*)$/)?.[1];
+      const action = label5(source?.textContent);
+      const verb = action.split(/\s/)[0]?.toLowerCase();
+      const mana = verb === "harvest" && /\bmana\b/i.test(action);
+      const words = mana ? ["spellcrafting", "Harvesting Mana"] : ACTION_WORDS2[verb];
+      const liveTab = panel3?.querySelector(".iw-skill-tab:has(.iw-skill-tab-live) .iw-skill-tab-name");
+      const running = words?.[0] || skillKey2(liveTab?.textContent);
+      if (!name || !selected || !zone || !words || running !== selected) continue;
+      let note = name.querySelector(`[${LOCATION_OWNED}]`);
+      if (!note) {
+        note = ownLocation("span", "iwf-skill-location");
+        name.firstElementChild.after(note);
+      }
+      const text2 = `Currently ${words[1]} in Zone ${zone}`;
+      if (note.textContent !== text2) note.textContent = text2;
+      used.add(note);
+    }
+    for (const note of document.querySelectorAll(`[${LOCATION_OWNED}]`)) if (!used.has(note)) note.remove();
   }
   function decorateSkillSheet() {
     for (const line of document.querySelectorAll(".iw-ss-detail")) {
@@ -14472,8 +14792,9 @@ ${RUN_RULES}`);
     pruneWritten();
     const on2 = settle2();
     if (on2.skillCards) guard2("skills:cards", decorateSkillCards);
-    else clearReserved();
     if (on2.skillCards) guard2("skills:frame", decorateSkillFrame);
+    if (on2.skillCards) guard2("skills:location", decorateActionLocation);
+    else removeOwned(LOCATION_OWNED);
     if (on2.skillSheet && document.querySelector(".iw-ss-detail") || on2.workOrders) {
       if (!unsubscribe2) unsubscribe2 = onItemAtlas(requestPass);
       loadItemAtlas();
@@ -14489,7 +14810,10 @@ ${RUN_RULES}`);
   function skillsText(parents) {
     if (!active4.skillCards && !active4.skillSheet && !active4.workOrders) return;
     if (parents.some((p) => p.closest?.(NAMED))) skillsPass();
-    else if (active4.skillSheet) queueText(parents);
+    else {
+      if (parents.some((p) => p.closest?.(REMOTE_ACTION))) guard2("skills:location-text", decorateActionLocation);
+      if (active4.skillSheet) queueText(parents);
+    }
   }
   function clearSkills() {
     unmark2(ATTRS6);
@@ -14501,7 +14825,7 @@ ${RUN_RULES}`);
     resetRun();
     clearMaterials();
     clearQueue();
-    clearReserved();
+    removeOwned(LOCATION_OWNED);
     sprites.clear();
     unsubscribe2?.();
     unsubscribe2 = null;
@@ -14509,18 +14833,19 @@ ${RUN_RULES}`);
   }
 
   // src/skins/fantasy/styles/chrome.css
-  var chrome_default = ':is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=folded]{display:none!important}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=merged]{font-size:0!important;gap:0!important}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=merged]>*{display:none!important}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=merged]::after{content:attr(data-iw-fantasy-potion-text);display:block;min-width:0;white-space:pre-line;overflow-wrap:anywhere;font-size:11.5px;line-height:1.3;color:inherit}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion-state=none]::after{opacity:.72}@media(max-width:860px){:is(:root,#iwf) [data-iw-header=status-grid]:has(>[data-iw-fantasy-potion=folded]):has(>:nth-child(even):last-child)>:last-child:not([data-iw-fantasy-potion=folded]),:is(:root,#iwf) [data-iw-header=status-grid]:has(>:nth-child(even):last-child)>[data-iw-fantasy-potion=merged]:has(+[data-iw-fantasy-potion=folded]:last-child){grid-column:1 / -1!important}}@media(min-width:1280px){:is(:root,#iwf) [data-iw-ui=nav-tab]{padding-inline:22px!important}}@media(max-width:1279px){:is(:root,#iwf) :is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-pad: 18px}}@media(max-width:767px){:is(:root,#iwf) :is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-pad: clamp(7px, 2.6cqi, 14px)}:is(:root,#iwf) :is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]):has(>[data-iw-tab=guild]){--iw-nav-pad: clamp(6px, 2.2cqi, 12px)}}@media(max-width:767px){:is(:root,#iwf) [data-iw-chrome=zone-actions]>[data-iw-zone-action=prev]{order:1!important}:is(:root,#iwf) [data-iw-chrome=zone-actions]>[data-iw-zone-action=zones]{order:2!important}:is(:root,#iwf) [data-iw-chrome=zone-actions]>[data-iw-zone-action=next]{order:3!important}:is(:root,#iwf) [data-iw-chrome=notice][class*=emerald]{display:none!important}}:is(:root,#iwf) [data-iw-skill-boost="1"]{margin-block:3px 0!important;padding:1px 0 1px 7px!important;border:0!important;border-left:2px solid #67ab83!important;border-radius:0!important;background:none!important;font-size:9.5px!important;line-height:1.35!important;letter-spacing:.06em!important}:is(:root,#iwf) [data-iw-header=status-card]:not(button){border-radius:var(--iw-r-control, 2px)!important}:is(:root,#iwf) [data-iw-fantasy-nav-source],:is(:root,#iwf) [data-iw-fantasy-zone-source]{display:none!important}:is(:root,#iwf) [data-iw-fantasy-zone-group]{display:contents!important}:is(:root,#iwf) [data-iw-fantasy-nav-host=desktop]{grid-column:1 / -1!important;grid-row:3!important;min-width:0;margin:12px 0 0!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell]{grid-template-columns:minmax(0,1fr)!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell]::before{grid-row:2!important;grid-column:1 / -1!important;border:1px solid var(--iw-th-edge)!important;border-radius:4px!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 5px 18px rgba(0,0,0,.24)!important;pointer-events:none!important;z-index:0!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell]::after{content:""!important;display:block!important;position:relative!important;grid-row:2!important;grid-column:1 / -1!important;align-self:stretch!important;height:auto!important;margin:-3px -1px!important;border:solid transparent!important;border-width:34px 32px!important;border-image:var(--iw-corner-filigree) 50% / 34px 32px / 0 stretch!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent) center 3px / calc(100% - 24px) 1px no-repeat!important;background-origin:border-box!important;pointer-events:none!important;z-index:0!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-chrome=zone-text]{grid-row:2!important;grid-column:1 / -1!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;margin:0!important;padding:26px 22px!important;min-width:0!important;text-align:center!important;z-index:1}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-chrome=zone-text]>p{margin:0!important;max-width:100%;justify-content:center!important;flex-wrap:wrap!important;text-align:center!important}:is(:root,#iwf) [data-iw-fantasy-zone-surface]>p:has([data-iw-ui=zone-title]){display:block!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-ui=zone-title]{font-family:var(--iw-font-head,"Cinzel",Georgia,serif)!important;font-size:clamp(18px,2vw,23px)!important;line-height:1.3!important;white-space:normal!important;overflow-wrap:anywhere}:is(:root,#iwf) [data-iw-chrome=zone-text][data-iw-fantasy-zone-surface]{position:relative!important;padding-inline:52px!important}:is(:root,#iwf) [data-iw-fantasy-zone-travel]{display:block!important;position:absolute!important;inset:0!important;z-index:2;min-width:0}:is(:root,#iwf) [data-iw-fantasy-zone-surface] [data-iw-ui=zone-title]~[title]{position:relative!important;z-index:3!important;pointer-events:auto!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-chrome=notice]{grid-row:4!important;grid-column:1 / -1!important;justify-self:stretch!important;max-width:none!important;margin:8px 0!important}:is(:root,#iwf) [data-iw-fantasy-skill-header]{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;column-gap:8px!important;row-gap:10px!important;align-items:center}:is(:root,#iwf) [data-iw-fantasy-skill-header]>*{grid-column:1 / -1;order:3;min-width:0}:is(:root,#iwf) [data-iw-fantasy-skill-heading-row],:is(:root,#iwf) [data-iw-fantasy-skill-heading-spine]{display:contents!important}:is(:root,#iwf) [data-iw-fantasy-skill-heading-title]{grid-row:1!important;grid-column:1!important;order:0!important;margin:0!important;min-width:0;overflow-wrap:anywhere}:is(:root,#iwf) [data-iw-fantasy-skill-collapse]{grid-row:1!important;grid-column:2!important;order:0!important;position:relative!important;inset:auto!important;margin:0!important;justify-self:end!important;align-self:center!important}:is(:root,#iwf) [data-iw-fantasy-skill-header]>.iw-skill-tabs{order:1!important}:is(:root,#iwf) [data-iw-fantasy-daily-info]{grid-column:1 / -1!important;order:2!important;margin:0!important;padding:6px 0!important;border-top:1px solid var(--iw-th-edge-faint,#29251d)}:is(:root,#iwf) [data-iw-fantasy-skill-header][data-iw-collapsed="1"] [data-iw-fantasy-daily-info]{display:none!important}@media(max-width:1024px){:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-chrome=zone-text]{padding-block:20px!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell]::after{border-width:27px 25px!important;border-image-width:27px 25px!important}}@media(max-width:767px){:is(:root,#iwf) [data-iw-fantasy-nav-host=desktop]{display:none!important}:is(:root,#iwf) body:has(>[data-iw-fantasy-nav-host=mobile])::after{content:"";display:block;height:calc(96px + env(safe-area-inset-bottom))}:is(:root,#iwf):has([data-iw-fantasy-nav-host=mobile]){scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom))}}:is(:root,#iwf) .iw-ss-zone{--iwf-zone: #9d8458;gap:8px;padding:6px var(--iwf-pad-x, 12px);border:0;border-top:1px solid #29251d;border-radius:0;background:#10100d;box-shadow:none}:is(:root,#iwf) .iw-ss-zone.is-down{--iwf-zone: #938a79}:is(:root,#iwf) .iw-ss-banner>.iw-ss-zone{padding-right:calc(var(--iwf-pad-x, 12px) + 26px)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-zone:last-child,:is(:root,#iwf) .iw-skill-sheet>.iw-ss-banner:last-child>.iw-ss-zone{border-radius:0 0 calc(var(--iwf-sheet-r, 4px) - 1px) calc(var(--iwf-sheet-r, 4px) - 1px)}:is(:root,#iwf) .iw-ss-zone-icon{font-size:14px;opacity:.65}:is(:root,#iwf) .iw-ss-zone-text{font-size:11.5px;line-height:1.35;color:#a49a86}:is(:root,#iwf) .iw-ss-zone-text b{color:#c1b8a5;font-weight:500}:is(:root,#iwf) .iw-ss-zone-text small{margin-top:1px;font-size:10.5px;color:#938a79}:is(:root,#iwf) .iw-ss-zone-go{min-height:28px;padding:4px 8px;border-radius:3px;border-color:#3a3327!important;background:transparent!important;box-shadow:none!important;color:var(--iwf-zone);font-size:11px;font-weight:500;text-shadow:none}:is(:root,#iwf) .iw-ss-zone-go:hover:not(:disabled){border-color:var(--iwf-zone)!important;background:#1e1b15!important;color:#ddd6c6}:is(:root,#iwf) .iw-ss-zone-go:disabled{opacity:.45}:is(:root,#iwf) .iw-ss-zone-go:focus-visible{outline:2px solid #d4ad63!important;outline-offset:2px!important}@media(max-width:540px){:is(:root,#iwf) .iw-ss-zone{flex-wrap:wrap;row-gap:4px}:is(:root,#iwf) .iw-ss-zone-text{flex:1 1 100px}:is(:root,#iwf) .iw-ss-zone-go{min-height:32px;margin-left:auto}}\n';
+  var chrome_default = ':is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=folded]{display:none!important}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=merged]{font-size:0!important;gap:0!important}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=merged]>*{display:none!important}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion=merged]::after{content:attr(data-iw-fantasy-potion-text);display:block;min-width:0;white-space:pre-line;overflow-wrap:anywhere;font-size:11.5px;line-height:1.3;color:inherit}:is(:root,#iwf) [data-iw-header=status-grid]>[data-iw-fantasy-potion-state=none]::after{opacity:.72}@media(max-width:860px){:is(:root,#iwf) [data-iw-header=status-grid]:has(>[data-iw-fantasy-potion=folded]):has(>:nth-child(even):last-child)>:last-child:not([data-iw-fantasy-potion=folded]),:is(:root,#iwf) [data-iw-header=status-grid]:has(>:nth-child(even):last-child)>[data-iw-fantasy-potion=merged]:has(+[data-iw-fantasy-potion=folded]:last-child){grid-column:1 / -1!important}}@media(min-width:1280px){:is(:root,#iwf) [data-iw-ui=nav-tab]{padding-inline:22px!important}}@media(max-width:1279px){:is(:root,#iwf) :is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-pad: 18px}}@media(max-width:767px){:is(:root,#iwf) :is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]){--iw-nav-pad: clamp(7px, 2.6cqi, 14px)}:is(:root,#iwf) :is([data-iw-ui=main-nav],[data-iw-ui=section-frame]):has(>[data-iw-ui=nav-tab]):has(>[data-iw-tab=guild]){--iw-nav-pad: clamp(6px, 2.2cqi, 12px)}}:is(:root,#iwf) [data-iw-chrome=notice][class*=emerald]{display:none!important}@media(max-width:767px){:is(:root,#iwf) [data-iw-chrome=zone-actions]>[data-iw-zone-action=prev]{order:1!important}:is(:root,#iwf) [data-iw-chrome=zone-actions]>[data-iw-zone-action=zones]{order:2!important}:is(:root,#iwf) [data-iw-chrome=zone-actions]>[data-iw-zone-action=next]{order:3!important}}:is(:root,#iwf) [data-iw-skill-boost="1"]{margin-block:3px 0!important;padding:1px 0 1px 7px!important;border:0!important;border-left:2px solid #67ab83!important;border-radius:0!important;background:none!important;font-size:9.5px!important;line-height:1.35!important;letter-spacing:.06em!important}:is(:root,#iwf) [data-iw-header=status-card]:not(button){border-radius:var(--iw-r-control, 2px)!important}:is(:root,#iwf) [data-iw-fantasy-nav-source],:is(:root,#iwf) [data-iw-fantasy-zone-source]{display:none!important}:is(:root,#iwf) [data-iw-fantasy-zone-group]{display:contents!important}:is(:root,#iwf) [data-iw-fantasy-nav-host=desktop]{grid-column:1 / -1!important;grid-row:3!important;min-width:0;margin:12px 0 0!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell]{grid-template-columns:minmax(0,1fr)!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell]::before{grid-row:2!important;grid-column:1 / -1!important;border:1px solid var(--iw-th-edge)!important;border-radius:4px!important;background:linear-gradient(var(--iw-th-ground-wash),var(--iw-th-ground-wash)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a),var(--iw-th-ground-b))!important;background-blend-mode:normal,normal,soft-light,normal!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow),0 5px 18px rgba(0,0,0,.24)!important;pointer-events:none!important;z-index:0!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell]::after{content:""!important;display:block!important;position:relative!important;grid-row:2!important;grid-column:1 / -1!important;align-self:stretch!important;height:auto!important;margin:-3px -1px!important;border:solid transparent!important;border-width:34px 32px!important;border-image:var(--iw-corner-filigree) 50% / 34px 32px / 0 stretch!important;background:linear-gradient(90deg,transparent,var(--iw-th-hairline) 14%,var(--iw-th-hairline-hi) 50%,var(--iw-th-hairline) 86%,transparent) center 3px / calc(100% - 24px) 1px no-repeat!important;background-origin:border-box!important;pointer-events:none!important;z-index:0!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-chrome=zone-text]{grid-row:2!important;grid-column:1 / -1!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;margin:0!important;padding:26px 22px!important;min-width:0!important;text-align:center!important;z-index:1}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-chrome=zone-text]>p{margin:0!important;max-width:100%;justify-content:center!important;flex-wrap:wrap!important;text-align:center!important}:is(:root,#iwf) [data-iw-fantasy-zone-surface]>p:has([data-iw-ui=zone-title]){display:block!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-ui=zone-title]{font-family:var(--iw-font-head,"Cinzel",Georgia,serif)!important;font-size:clamp(18px,2vw,23px)!important;line-height:1.3!important;white-space:normal!important;overflow-wrap:anywhere}:is(:root,#iwf) [data-iw-chrome=zone-text][data-iw-fantasy-zone-surface]{position:relative!important;padding-inline:52px!important}:is(:root,#iwf) [data-iw-fantasy-zone-travel]{display:block!important;position:absolute!important;inset:0!important;z-index:2;min-width:0}:is(:root,#iwf) [data-iw-fantasy-zone-surface] [data-iw-ui=zone-title]~[title]{position:relative!important;z-index:3!important;pointer-events:auto!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-chrome=notice]{grid-row:4!important;grid-column:1 / -1!important;justify-self:stretch!important;max-width:none!important;margin:8px 0!important}@media(min-width:768px){:is(:root,#iwf) [data-iw-fantasy-nav-shell]::before,:is(:root,#iwf) [data-iw-fantasy-nav-shell]::after{grid-row:2 / 4!important}:is(:root,#iwf) [data-iw-fantasy-nav-host=desktop]{margin:0!important;padding:0 14px 4px}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-chrome=zone-text]{min-height:44px!important;padding-block:4px!important;gap:2px!important}:is(:root,#iwf) [data-iw-chrome=zone-text][data-iw-fantasy-zone-labelled]{padding-inline:30%!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-ui=zone-title]{font-size:clamp(16px,1.5vw,20px)!important;line-height:1.2!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell]::after{border-width:18px 24px!important;border-image-width:18px 24px!important}:is(:root,#iwf) [data-iw-fantasy-nav-host=desktop][data-iw-fantasy-nav-framed]{position:relative;padding:4px 14px;isolation:isolate}:is(:root,#iwf) [data-iw-fantasy-nav-framed]::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border:1px solid var(--iw-th-edge,#6b4f28);border-radius:4px;background:linear-gradient(var(--iw-th-ground-wash,transparent),var(--iw-th-ground-wash,transparent)),radial-gradient(circle at 18% 0%,rgba(255,255,255,.025),transparent 32%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a,#171713),var(--iw-th-ground-b,#0d0e0c));background-blend-mode:normal,normal,soft-light,normal;box-shadow:inset 0 0 0 1px rgba(0,0,0,.78),inset 0 1px 0 var(--iw-th-glow,rgba(226,164,72,.08)),0 5px 18px rgba(0,0,0,.24)}:is(:root,#iwf) [data-iw-fantasy-nav-framed]::after{content:"";position:absolute;inset:-3px -1px;pointer-events:none;border:14px solid transparent;border-inline-width:24px;border-image:var(--iw-corner-filigree) 50% / 14px 24px / 0 stretch}}:is(:root,#iwf) [data-iw-fantasy-skill-header]{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;column-gap:8px!important;row-gap:10px!important;align-items:center}:is(:root,#iwf) [data-iw-fantasy-skill-header]>*{grid-column:1 / -1;order:3;min-width:0}:is(:root,#iwf) [data-iw-fantasy-skill-heading-row],:is(:root,#iwf) [data-iw-fantasy-skill-heading-spine]{display:contents!important}:is(:root,#iwf) [data-iw-fantasy-skill-heading-title]{grid-row:1!important;grid-column:1!important;order:0!important;margin:0!important;min-width:0;overflow-wrap:anywhere}:is(:root,#iwf) [data-iw-fantasy-skill-collapse]{grid-row:1!important;grid-column:2!important;order:0!important;position:relative!important;inset:auto!important;margin:0!important;justify-self:end!important;align-self:center!important}:is(:root,#iwf) [data-iw-fantasy-skill-header]>.iw-skill-tabs{order:1!important}:is(:root,#iwf) [data-iw-fantasy-daily-info]{grid-column:1 / -1!important;order:2!important;margin:0!important;padding:6px 0!important;border-top:1px solid var(--iw-th-edge-faint,#29251d)}:is(:root,#iwf) [data-iw-fantasy-skill-header][data-iw-collapsed="1"] [data-iw-fantasy-daily-info]{display:none!important}@media(max-width:767px){:is(:root,#iwf) [data-iw-fantasy-nav-shell] [data-iw-chrome=zone-text]{padding-block:20px!important}:is(:root,#iwf) [data-iw-fantasy-nav-shell]::after{border-width:27px 25px!important;border-image-width:27px 25px!important}:is(:root,#iwf) [data-iw-fantasy-nav-host=desktop]{display:none!important}:is(:root,#iwf) body:has(>[data-iw-fantasy-nav-host=mobile])::after{content:"";display:block;height:calc(96px + env(safe-area-inset-bottom))}:is(:root,#iwf):has([data-iw-fantasy-nav-host=mobile]){scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom))}}:is(:root,#iwf) .iw-ss-zone{--iwf-zone: #9d8458;gap:8px;padding:6px var(--iwf-pad-x, 12px);border:0;border-top:1px solid #29251d;border-radius:0;background:#10100d;box-shadow:none}:is(:root,#iwf) .iw-ss-zone.is-down{--iwf-zone: #938a79}:is(:root,#iwf) .iw-ss-banner>.iw-ss-zone{padding-right:calc(var(--iwf-pad-x, 12px) + 26px)}:is(:root,#iwf) .iw-skill-sheet>.iw-ss-zone:last-child,:is(:root,#iwf) .iw-skill-sheet>.iw-ss-banner:last-child>.iw-ss-zone{border-radius:0 0 calc(var(--iwf-sheet-r, 4px) - 1px) calc(var(--iwf-sheet-r, 4px) - 1px)}:is(:root,#iwf) .iw-ss-zone-icon{font-size:14px;opacity:.65}:is(:root,#iwf) .iw-ss-zone-text{font-size:11.5px;line-height:1.35;color:#a49a86}:is(:root,#iwf) .iw-ss-zone-text b{color:#c1b8a5;font-weight:500}:is(:root,#iwf) .iw-ss-zone-text small{margin-top:1px;font-size:10.5px;color:#938a79}:is(:root,#iwf) .iw-ss-zone-go{min-height:28px;padding:4px 8px;border-radius:3px;border-color:#3a3327!important;background:transparent!important;box-shadow:none!important;color:var(--iwf-zone);font-size:11px;font-weight:500;text-shadow:none}:is(:root,#iwf) .iw-ss-zone-go:hover:not(:disabled){border-color:var(--iwf-zone)!important;background:#1e1b15!important;color:#ddd6c6}:is(:root,#iwf) .iw-ss-zone-go:disabled{opacity:.45}:is(:root,#iwf) .iw-ss-zone-go:focus-visible{outline:2px solid #d4ad63!important;outline-offset:2px!important}@media(max-width:540px){:is(:root,#iwf) .iw-ss-zone{flex-wrap:wrap;row-gap:4px}:is(:root,#iwf) .iw-ss-zone-text{flex:1 1 100px}:is(:root,#iwf) .iw-ss-zone-go{min-height:32px;margin-left:auto}}\n';
 
   // src/skins/fantasy/styles/thumb-dock.css
-  var thumb_dock_default = ':host{--dock-ground: var(--iw-th-ground-b, #0d0e0c);--dock-ground-hi: var(--iw-th-ground-a, #171713);--dock-brass: var(--iw-th-accent-dim, #9d8458);--dock-edge: var(--iw-th-edge, #6b4f28);--dock-edge-soft: var(--iw-th-edge-soft, #332b20);--dock-accent: var(--iw-th-accent, #d4ad63);--dock-text: #ddd6c6;--dock-muted: color-mix(in srgb, var(--dock-text) 75%, var(--dock-brass));display:block;min-width:0;color:var(--dock-text);color-scheme:dark;font:400 14px/1.4 var(--iw-font-ui, "Barlow", system-ui, sans-serif)}*,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}button,a{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}button,.destination{cursor:pointer}button:disabled,[aria-disabled=true]{cursor:default;opacity:.45}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--dock-accent);outline-offset:-3px}svg{width:21px;height:21px;flex:0 0 auto;color:var(--dock-brass)}.dock,.menu{position:relative;background-color:var(--dock-ground);background-image:linear-gradient(180deg,color-mix(in srgb,var(--dock-ground-hi) 94%,transparent),color-mix(in srgb,var(--dock-ground) 96%,transparent)),url(../assets/skills_panel_texture.webp);background-size:auto,256px 256px}.dock{display:flex;width:100%;padding:0 6px;border-block:1px solid var(--dock-edge);box-shadow:inset 0 1px color-mix(in srgb,var(--dock-accent) 10%,transparent),0 3px 10px #0004}.primary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:4 1 0;min-width:0}.dock>.more{flex:1 1 0}.destination{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:64px;min-width:44px;padding:10px 4px;border:0;border-radius:0;background:transparent;color:var(--dock-muted);font:500 13px/1.3 var(--iw-font-head, "Cinzel", Georgia, serif);text-decoration:none;text-align:center;text-shadow:0 1px 2px #000}.destination-label{min-width:0;overflow-wrap:anywhere}.primary>.destination+.destination::before,.dock>.more::before{content:"";position:absolute;left:0;top:24%;bottom:24%;width:1px;background:linear-gradient(transparent,color-mix(in srgb,var(--dock-edge) 75%,transparent),transparent);pointer-events:none}.destination:hover:not(:disabled):not([aria-disabled=true]),.destination:focus-visible{color:var(--dock-text);background-color:color-mix(in srgb,var(--dock-accent) 6%,transparent)}.destination:active:not(:disabled):not([aria-disabled=true]){background-color:color-mix(in srgb,var(--dock-accent) 12%,transparent)}.destination[aria-current=page],.more[aria-expanded=true]{color:var(--dock-accent);background-image:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--dock-accent) 13%,transparent),transparent 85%)}.destination[aria-current=page] svg,.more[aria-expanded=true] svg{color:var(--dock-accent)}.dock .destination[aria-current=page]::after{content:"";position:absolute;left:24%;right:24%;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--dock-accent) 28%,var(--dock-accent) 72%,transparent);pointer-events:none}.menu{position:fixed;inset:min(var(--menu-top, 160px),max(12px,calc(100dvh - 350px))) var(--menu-right, 12px) auto auto;margin:0;width:330px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto;padding:14px;color:var(--dock-text);border:1px solid var(--dock-edge);border-radius:4px;box-shadow:inset 0 1px color-mix(in srgb,var(--dock-accent) 12%,transparent),0 18px 60px #000a}.menu::backdrop{background:#07080699}.menu-head{display:flex;justify-content:space-between;align-items:center;padding:0 0 10px 4px;margin-bottom:8px;gap:8px;border-bottom:1px solid var(--dock-edge-soft)}.menu-head h2{margin:0;font:500 21px/1.2 var(--iw-font-head, "Cinzel", Georgia, serif);letter-spacing:.035em;color:var(--dock-accent)}.close{width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:3px;font:400 25px/1 system-ui;color:var(--dock-muted);background:transparent}.close:hover{color:var(--dock-text);background:color-mix(in srgb,var(--dock-accent) 8%,transparent)}.secondary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding-bottom:10px}.secondary .destination{flex-direction:column;gap:8px;min-height:76px;padding:10px 4px;font-size:12px}.secondary .destination+.destination{border-left:1px solid var(--dock-edge-soft)}.secondary .destination[aria-current=page]{box-shadow:inset 0 -2px var(--dock-accent)}.utilities{display:grid;gap:3px;border-top:1px solid var(--dock-edge-soft);padding-top:8px}.utilities .destination{min-height:44px;padding:8px 10px;justify-content:flex-start;font:400 13px/1.4 var(--iw-font-ui, "Barlow", system-ui, sans-serif);text-align:left}.theme-row{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;color:var(--dock-muted);font-size:13px}.theme-row input{width:22px;height:22px;margin:0;accent-color:var(--dock-accent)}:host([data-iw-fantasy-nav-host="mobile"]){display:none}@media(max-width:767px){:host([data-iw-fantasy-nav-host="desktop"]){display:none}:host([data-iw-fantasy-nav-host="mobile"]){display:block;position:fixed;inset:auto 0 0;z-index:20;padding:0}.dock{padding:7px max(8px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));border-bottom:0;box-shadow:0 -6px 24px #0007,inset 0 1px color-mix(in srgb,var(--dock-accent) 10%,transparent)}.dock .destination{min-height:64px;min-width:44px;flex-direction:column;gap:6px;padding:7px 2px 9px;font-size:11px;line-height:1.25}.dock .destination svg{width:23px;height:23px}.menu{inset:auto 8px calc(90px + env(safe-area-inset-bottom));width:auto;max-width:none;max-height:calc(100dvh - 106px - env(safe-area-inset-bottom))}}@media(min-width:768px)and (max-width:900px){.destination{gap:6px;font-size:12px}}@media(prefers-reduced-motion:no-preference){.destination,.close{transition:color .15s,background-color .15s}}\n';
+  var thumb_dock_default = ':host{--dock-ground: var(--iw-th-ground-b, #0d0e0c);--dock-ground-hi: var(--iw-th-ground-a, #171713);--dock-brass: var(--iw-th-accent-dim, #9d8458);--dock-edge: var(--iw-th-edge, #6b4f28);--dock-edge-soft: var(--iw-th-edge-soft, #332b20);--dock-accent: var(--iw-th-accent, #d4ad63);--dock-text: #ddd6c6;--dock-muted: color-mix(in srgb, var(--dock-text) 75%, var(--dock-brass));display:block;min-width:0;color:var(--dock-text);color-scheme:dark;font:400 14px/1.4 var(--iw-font-ui, "Barlow", system-ui, sans-serif)}*,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}button,a{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}button,.destination{cursor:pointer}button:disabled,[aria-disabled=true]{cursor:default;opacity:.45}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--dock-accent);outline-offset:-3px}svg{width:21px;height:21px;flex:0 0 auto;color:var(--dock-brass)}.dock,.menu{position:relative;background-color:var(--dock-ground);background-image:linear-gradient(180deg,color-mix(in srgb,var(--dock-ground-hi) 94%,transparent),color-mix(in srgb,var(--dock-ground) 96%,transparent)),url(../assets/skills_panel_texture.webp);background-size:auto,256px 256px}.dock{display:flex;width:100%;padding:0 6px;border-block:1px solid var(--dock-edge);box-shadow:inset 0 1px color-mix(in srgb,var(--dock-accent) 10%,transparent),0 3px 10px #0004}.primary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:4 1 0;min-width:0}.dock>.more{flex:1 1 0}:host([data-iw-fantasy-nav-host="desktop"]) .dock{padding:0;border:0;border-top:1px solid var(--dock-edge-soft);background:transparent;box-shadow:none}:host([data-iw-fantasy-nav-host="desktop"]) .primary{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(max-content,1fr);flex:6 1 0}:host([data-iw-fantasy-nav-host="desktop"]) .trailing{display:flex;flex:1 1 0;min-width:0}.trailing>.destination{flex:1}:host([data-iw-fantasy-nav-host="desktop"]) .dock>.more{flex:0 0 44px}:host([data-iw-fantasy-nav-host="desktop"]) .more .destination-label{display:none}:host([data-iw-fantasy-nav-host="desktop"]) .dock .destination{min-height:32px;padding-block:6px;gap:7px;font-size:12px}:host([data-iw-fantasy-nav-host="desktop"]) .dock svg{width:16px;height:16px}:host([data-iw-fantasy-nav-host="desktop"][data-iw-fantasy-nav-framed]) .dock{border-top:0}.destination{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:64px;min-width:44px;padding:10px 4px;border:0;border-radius:0;background:transparent;color:var(--dock-muted);font:500 13px/1.3 var(--iw-font-head, "Cinzel", Georgia, serif);text-decoration:none;text-align:center;text-shadow:0 1px 2px #000}.destination-label{min-width:0;overflow-wrap:anywhere}.primary>.destination+.destination::before,.dock>.more::before,.trailing>.destination::before{content:"";position:absolute;left:0;top:24%;bottom:24%;width:1px;background:linear-gradient(transparent,color-mix(in srgb,var(--dock-edge) 75%,transparent),transparent);pointer-events:none}.destination:hover:not(:disabled):not([aria-disabled=true]),.destination:focus-visible{color:var(--dock-text);background-color:color-mix(in srgb,var(--dock-accent) 6%,transparent)}.destination:active:not(:disabled):not([aria-disabled=true]){background-color:color-mix(in srgb,var(--dock-accent) 12%,transparent)}.destination[aria-current=page],.more[aria-expanded=true]{color:var(--dock-accent);background-image:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--dock-accent) 13%,transparent),transparent 85%)}.destination[aria-current=page] svg,.more[aria-expanded=true] svg{color:var(--dock-accent)}.dock .destination[aria-current=page]::after{content:"";position:absolute;left:24%;right:24%;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--dock-accent) 28%,var(--dock-accent) 72%,transparent);pointer-events:none}.menu{position:fixed;inset:min(var(--menu-top, 160px),max(12px,calc(100dvh - 350px))) var(--menu-right, 12px) auto auto;margin:0;width:330px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto;padding:14px;color:var(--dock-text);border:1px solid var(--dock-edge);border-radius:4px;box-shadow:inset 0 1px color-mix(in srgb,var(--dock-accent) 12%,transparent),0 18px 60px #000a}.menu::backdrop{background:#07080699}.menu-head{display:flex;justify-content:space-between;align-items:center;padding:0 0 10px 4px;margin-bottom:8px;gap:8px;border-bottom:1px solid var(--dock-edge-soft)}.menu-head h2{margin:0;font:500 21px/1.2 var(--iw-font-head, "Cinzel", Georgia, serif);letter-spacing:.035em;color:var(--dock-accent)}.close{width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:3px;font:400 25px/1 system-ui;color:var(--dock-muted);background:transparent}.close:hover{color:var(--dock-text);background:color-mix(in srgb,var(--dock-accent) 8%,transparent)}.secondary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding-bottom:10px}.secondary .destination{flex-direction:column;gap:8px;min-height:76px;padding:10px 4px;font-size:12px}.secondary .destination+.destination{border-left:1px solid var(--dock-edge-soft)}.secondary .destination[aria-current=page]{box-shadow:inset 0 -2px var(--dock-accent)}.utilities{display:grid;gap:3px;border-top:1px solid var(--dock-edge-soft);padding-top:8px}.utilities .destination{min-height:44px;padding:8px 10px;justify-content:flex-start;font:400 13px/1.4 var(--iw-font-ui, "Barlow", system-ui, sans-serif);text-align:left}.theme-row{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;color:var(--dock-muted);font-size:13px}.theme-row input{width:22px;height:22px;margin:0;accent-color:var(--dock-accent)}:host([data-iw-fantasy-nav-tools]){flex:1 0 100%;width:100%;grid-column:1 / -1}.header-utilities{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 12px;padding:3px 0 0;border:0}.header-utilities .destination,.header-utilities .theme-row{min-height:26px;padding:2px 4px;font-size:11px}.header-utilities svg{width:16px;height:16px}.header-utilities input{width:16px;height:16px}:host([data-iw-fantasy-nav-host="mobile"]){display:none}@media(max-width:767px){:host([data-iw-fantasy-nav-tools]){display:none}:host([data-iw-fantasy-nav-host="desktop"]){display:none}:host([data-iw-fantasy-nav-host="mobile"]){display:block;position:fixed;inset:auto 0 0;z-index:20;padding:0}.dock{padding:7px max(8px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));border-bottom:0;box-shadow:0 -6px 24px #0007,inset 0 1px color-mix(in srgb,var(--dock-accent) 10%,transparent)}.dock .destination{min-height:64px;min-width:44px;flex-direction:column;gap:6px;padding:7px 2px 9px;font-size:11px;line-height:1.25}.dock .destination svg{width:23px;height:23px}.menu{inset:auto 8px calc(90px + env(safe-area-inset-bottom));width:auto;max-width:none;max-height:calc(100dvh - 106px - env(safe-area-inset-bottom))}}@media(min-width:768px)and (max-width:900px){.destination{gap:6px;font-size:12px}}@media(prefers-reduced-motion:no-preference){.destination,.close{transition:color .15s,background-color .15s}}\n';
 
   // src/skins/fantasy/chrome/ThumbDock.js
   var HOST = "data-iw-fantasy-nav-host";
   var SOURCE = "data-iw-fantasy-nav-source";
   var SHELL = "data-iw-fantasy-nav-shell";
   var OWNED9 = "data-iw-fantasy-navigation-owned";
-  var own10 = ownerOf(OWNED9);
+  var own9 = ownerOf(OWNED9);
   var PRIMARY = ["game", "market", "village", "guild"];
+  var DESKTOP_PRIMARY = ["game", "market", "village", "dungeon", "guild", "leaderboards"];
   var NAMES = { game: "Game", market: "Market", village: "Village", dungeon: "Dungeon", guild: "Guild", leaderboards: "Leaderboards" };
   var PATHS = {
     game: ["m14 3 7 7", "m3 14 7 7", "m4 3 17 18", "m3 4 4-1-1 4", "m20 3 1 4-4-1", "m21 4-7 7", "m4 21 7-7"],
@@ -14539,17 +14864,17 @@ ${RUN_RULES}`);
   var sources = /* @__PURE__ */ new Map();
   var marked = /* @__PURE__ */ new Set();
   var shell = null;
-  function set3(el2, key2, value) {
+  function set3(el2, key3, value) {
     if (value == null) {
-      if (el2.hasAttribute(key2)) el2.removeAttribute(key2);
-    } else if (el2.getAttribute(key2) !== String(value)) el2.setAttribute(key2, String(value));
+      if (el2.hasAttribute(key3)) el2.removeAttribute(key3);
+    } else if (el2.getAttribute(key3) !== String(value)) el2.setAttribute(key3, String(value));
   }
-  function icon4(key2) {
+  function icon4(key3) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute(OWNED9, "1");
     svg.setAttribute("data-iw-fantasy-owned", "1");
-    for (const [name, value] of Object.entries({ viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": key2 === "more" ? 4 : 1.6, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" })) svg.setAttribute(name, value);
-    for (const d of PATHS[key2] || PATHS.utility) {
+    for (const [name, value] of Object.entries({ viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": key3 === "more" ? 4 : 1.6, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" })) svg.setAttribute(name, value);
+    for (const d of PATHS[key3] || PATHS.utility) {
       const path = document.createElementNS(svg.namespaceURI, "path");
       path.setAttribute(OWNED9, "1");
       path.setAttribute("data-iw-fantasy-owned", "1");
@@ -14559,8 +14884,8 @@ ${RUN_RULES}`);
     return svg;
   }
   function routeKey(el2) {
-    const key2 = el2.getAttribute("data-iw-tab");
-    if (NAMES[key2]) return key2;
+    const key3 = el2.getAttribute("data-iw-tab");
+    if (NAMES[key3]) return key3;
     const text2 = norm9(el2.textContent).replace(/^[^\p{L}\p{N}]+/u, "").toLowerCase();
     return text2.match(/^(game|market|village|dungeon|guild|leaderboards)(?=$|[^a-z])/i)?.[1] || null;
   }
@@ -14571,9 +14896,9 @@ ${RUN_RULES}`);
   function disabled(el2) {
     return !!el2.disabled || el2.getAttribute("aria-disabled") === "true" || !!el2.closest("fieldset[disabled]");
   }
-  function entry2(el2, key2, text2) {
+  function entry2(el2, key3, text2) {
     return {
-      key: key2,
+      key: key3,
       el: el2,
       text: text2 || norm9(el2.textContent) || el2.getAttribute("aria-label") || el2.title,
       href: el2.matches("a[href]") ? el2.href : null,
@@ -14593,7 +14918,7 @@ ${RUN_RULES}`);
     if (presence) entries.push(entry2(presence, "presence", "Who’s here?"));
     if (theme) entries.push(entry2(theme, "themes", "Zone themes"));
     if (settings2) entries.push(entry2(settings2, "settings", "Settings"));
-    const routeOf = (value) => String(value).toLowerCase().split(/[^a-z0-9-]+/).map((key2) => key2 === "housing" ? "village" : key2).find((key2) => NAMES[key2]);
+    const routeOf = (value) => String(value).toLowerCase().split(/[^a-z0-9-]+/).map((key3) => key3 === "housing" ? "village" : key3).find((key3) => NAMES[key3]);
     const route = routeOf(location.pathname) || routeOf(location.hash) || (!location.hash && location.pathname === "/" ? "game" : null);
     const active6 = entries.find((e) => e.key === route)?.key || entries.find((e) => e.el.matches('[aria-current="page"],[aria-selected="true"],[data-iw-state="active"],.bg-ember,[class*="bg-orange"],[class*="bg-amber"]'))?.key;
     return { entries, active: active6, presence, theme };
@@ -14603,10 +14928,10 @@ ${RUN_RULES}`);
     view2.dialog.close();
     set3(view2.more, "aria-expanded", "false");
   }
-  function activate(event, key2) {
+  function activate(event, key3) {
     const requestedChecked = event.target.matches?.('input[type="checkbox"]') ? event.target.checked : null;
     navigationPass();
-    const source = sources.get(key2);
+    const source = sources.get(key3);
     if (!source || !source.el.isConnected || source.disabled) {
       event.preventDefault();
       return;
@@ -14625,18 +14950,18 @@ ${RUN_RULES}`);
   }
   function control(item) {
     if (item.checkbox) {
-      const label6 = own10("label", "theme-row");
-      label6.append(own10("span", "", item.text));
-      const input = own10("input");
+      const label6 = own9("label", "theme-row");
+      label6.append(own9("span", "", item.text));
+      const input = own9("input");
       input.type = "checkbox";
       input.addEventListener("change", (event) => guard2("navigation:theme", () => activate(event, item.key)));
       label6.append(input);
       label6.iwfControl = input;
       return label6;
     }
-    const button4 = own10(item.href ? "a" : "button", "destination");
+    const button4 = own9(item.href ? "a" : "button", "destination");
     if (!item.href) button4.type = "button";
-    button4.append(icon4(item.key), own10("span", "destination-label", item.text));
+    button4.append(icon4(item.key), own9("span", "destination-label", item.text));
     button4.addEventListener("click", (event) => guard2("navigation:activate", () => activate(event, item.key)));
     button4.addEventListener("auxclick", (event) => {
       if (sources.get(item.key)?.disabled) event.preventDefault();
@@ -14661,7 +14986,7 @@ ${RUN_RULES}`);
     set3(button4, "aria-current", active6 ? "page" : null);
     if (item.href) {
       set3(button4, "href", item.href);
-      for (const key2 of ["target", "rel", "download", "referrerpolicy"]) set3(button4, key2, item.el.getAttribute(key2));
+      for (const key3 of ["target", "rel", "download", "referrerpolicy"]) set3(button4, key3, item.el.getAttribute(key3));
     }
   }
   function syncGroup(container, items, active6) {
@@ -14690,37 +15015,49 @@ ${RUN_RULES}`);
     set3(view2.more, "aria-expanded", "true");
   }
   function buildHost(layout) {
-    const host = own10("div");
+    const host = own9("div");
     host.setAttribute(HOST, layout);
     const root = host.attachShadow({ mode: "open" });
-    const style = own10("style");
+    const style = own9("style");
     style.textContent = rewriteAssetUrls2(thumb_dock_default);
-    const bar = own10("nav", "dock");
+    const bar = own9("nav", "dock");
     bar.setAttribute("aria-label", "Main navigation");
-    const primary = own10("div", "primary");
-    const more = own10("button", "destination more");
+    const primary = own9("div", "primary");
+    const more = own9("button", "destination more");
     more.type = "button";
-    more.append(icon4("more"), own10("span", "destination-label", "More"));
+    more.append(icon4("more"), own9("span", "destination-label", "More"));
     more.setAttribute("aria-haspopup", "dialog");
     more.setAttribute("aria-expanded", "false");
     more.setAttribute("aria-controls", `iwf-nav-menu-${layout}`);
-    bar.append(primary, more);
-    const dialog = own10("dialog", "menu");
+    more.setAttribute("aria-label", "More");
+    const trailing = own9("div", "trailing");
+    bar.append(primary, more, trailing);
+    const dialog = own9("dialog", "menu");
     dialog.id = `iwf-nav-menu-${layout}`;
     dialog.setAttribute("aria-labelledby", "menu-heading");
-    const head = own10("div", "menu-head");
-    const title = own10("h2", "", "More");
+    const head = own9("div", "menu-head");
+    const title = own9("h2", "", "More");
     title.id = "menu-heading";
-    const close2 = own10("button", "close", "×");
+    const close2 = own9("button", "close", "×");
     close2.type = "button";
     close2.setAttribute("aria-label", "Close navigation");
     head.append(title, close2);
-    const secondary = own10("nav", "secondary");
+    const secondary = own9("nav", "secondary");
     secondary.setAttribute("aria-label", "More destinations");
-    const utilities = own10("div", "utilities");
-    dialog.append(head, secondary, utilities);
+    const utilities = own9("div", "utilities");
+    let tools = null;
+    if (layout === "desktop") {
+      tools = own9("div");
+      tools.setAttribute("data-iw-fantasy-nav-tools", "1");
+      const toolsRoot = tools.attachShadow({ mode: "open" });
+      utilities.classList.add("header-utilities");
+      utilities.setAttribute("role", "group");
+      utilities.setAttribute("aria-label", "Game utilities");
+      toolsRoot.append(style.cloneNode(true), utilities);
+      dialog.append(head, secondary);
+    } else dialog.append(head, secondary, utilities);
     root.append(style, bar, dialog);
-    const view2 = { host, root, more, primary, dialog, secondary, utilities };
+    const view2 = { host, root, more, primary, trailing, dialog, secondary, utilities, tools };
     more.addEventListener("click", () => guard2("navigation:open", () => openMenu(view2)));
     close2.addEventListener("click", () => releaseFocus(view2));
     dialog.addEventListener("close", () => set3(more, "aria-expanded", "false"));
@@ -14755,24 +15092,36 @@ ${RUN_RULES}`);
     const [desktop, mobile] = hosts;
     if (desktop.host.nextElementSibling !== nav) nav.before(desktop.host);
     if (mobile.host.parentElement !== document.body) document.body.append(mobile.host);
-    const currentShell = nav.closest('[data-iw-chrome="shell"]');
+    const context2 = nav.closest('[data-iw-chrome="shell"]') || nav.parentElement;
+    const header = context2.querySelector(":scope > header");
+    if (desktop.tools.parentElement !== (header || nav.parentElement)) {
+      if (header) header.append(desktop.tools);
+      else nav.before(desktop.tools);
+    }
+    const currentShell = context2.matches('[data-iw-chrome="shell"]') && context2.querySelector('[data-iw-chrome="zone-text"]') ? context2 : null;
     if (shell !== currentShell) {
       if (shell) unmark2([SHELL], shell);
       shell = currentShell;
     }
     if (shell) mark6(shell, SHELL, "1");
-    const primary = PRIMARY.map((key2) => sources.get(key2)).filter(Boolean);
-    const secondary = model.entries.filter((e) => !PRIMARY.includes(e.key) && NAMES[e.key]);
-    const utilities = model.entries.filter((e) => !PRIMARY.includes(e.key) && !NAMES[e.key]);
+    set3(desktop.host, "data-iw-fantasy-nav-framed", shell ? null : "1");
     for (const view2 of hosts) {
+      const keys = view2 === desktop ? DESKTOP_PRIMARY : PRIMARY;
+      const primary = keys.map((key3) => sources.get(key3)).filter(Boolean);
+      const trailing = view2 === desktop ? model.entries.filter((e) => e.key === "toolkit") : [];
+      const secondary = model.entries.filter((e) => !keys.includes(e.key) && NAMES[e.key]);
+      const utilities = model.entries.filter((e) => !keys.includes(e.key) && !NAMES[e.key] && !trailing.includes(e) && !(view2 === desktop && e.key === "settings"));
       if (view2 === mobile !== matchMedia("(max-width: 767px)").matches) releaseFocus(view2);
       syncGroup(view2.primary, primary, model.active);
+      syncGroup(view2.trailing, trailing, model.active);
+      if (view2.trailing.hidden !== !trailing.length) view2.trailing.hidden = !trailing.length;
       syncGroup(view2.secondary, secondary, model.active);
       syncGroup(view2.utilities, utilities, model.active);
       set3(view2.more, "aria-current", secondary.some((e) => e.key === model.active) ? "page" : null);
-      const moreHidden = !secondary.length && !utilities.length;
+      const moreHidden = view2 === desktop || !secondary.length && !utilities.length;
       if (view2.more.hidden !== moreHidden) view2.more.hidden = moreHidden;
       if (view2.utilities.hidden !== !utilities.length) view2.utilities.hidden = !utilities.length;
+      if (view2.tools && view2.tools.hidden !== !utilities.length) view2.tools.hidden = !utilities.length;
     }
     const desired = /* @__PURE__ */ new Map([[nav, "nav"]]);
     if (model.presence) desired.set(model.presence, "utility");
@@ -14786,6 +15135,7 @@ ${RUN_RULES}`);
     for (const view2 of hosts) {
       releaseFocus(view2);
       view2.host.remove();
+      view2.tools?.remove();
     }
     hosts = [];
     syncMarks(/* @__PURE__ */ new Map());
@@ -14796,12 +15146,153 @@ ${RUN_RULES}`);
   }
 
   // src/skins/fantasy/styles/skill-travel.css
-  var skill_travel_default = ":host{display:block;position:absolute;inset:0;min-width:0;color:#ddd6c6;color-scheme:dark}*{box-sizing:border-box}.travel{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;width:100%;height:100%;align-items:center}button{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;width:100%;padding:0;border:0;border-radius:4px;background:transparent;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}button:hover:not(:disabled){background:rgba(157,132,88,.09)}button:focus-visible{outline:2px solid #d4ad63;outline-offset:-3px}button:disabled{opacity:.35;cursor:default}.zones{height:100%;align-self:stretch}.arrow{font:300 30px/1 system-ui}\n";
+  var skill_travel_default = ':host{--travel-icon:var(--iw-th-accent-dim,#9d8458);--travel-accent:var(--iw-th-accent,#d4ad63);--travel-text:#ddd6c6;--travel-muted:color-mix(in srgb,var(--travel-text) 75%,var(--travel-icon));display:block;position:absolute;inset:0;min-width:0;color:var(--travel-muted);color-scheme:dark}*{box-sizing:border-box}[hidden]{display:none!important}.travel{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;width:100%;height:100%;align-items:center}button{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;width:100%;padding:0;border:0;border-radius:4px;background:transparent;color:inherit;font:500 12px/1.3 var(--iw-font-head,"Cinzel",Georgia,serif);text-shadow:0 1px 2px #000;cursor:pointer;-webkit-tap-highlight-color:transparent}button:hover:not(:disabled),button:focus-visible{color:var(--travel-text);background:color-mix(in srgb,var(--travel-accent) 6%,transparent)}button:focus-visible{outline:2px solid var(--travel-accent);outline-offset:-3px}button:disabled{opacity:.45;cursor:default}.zones{height:100%;align-self:stretch}.arrow{width:16px;height:16px;flex:0 0 auto;color:var(--travel-icon)}.zone-label{display:none;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}@media(min-width:768px){:host([data-iw-fantasy-zone-labelled]) .travel{grid-template-columns:minmax(0,30fr) minmax(0,40fr) minmax(0,30fr)}button{gap:7px}.zone-label{display:block;font:inherit}.prev{justify-content:flex-start;padding-inline:12px 6px;text-align:left}.next{justify-content:flex-end;padding-inline:6px 12px;text-align:right}}\n';
+
+  // assets/skills-ui/zone-theme-map.json
+  var zones = {
+    "1": {
+      name: "Greenwake Den",
+      theme: "verdant"
+    },
+    "2": {
+      name: "Ironfang Trail",
+      theme: "forged-metal"
+    },
+    "3": {
+      name: "Silverroot Hollow",
+      theme: "verdant"
+    },
+    "4": {
+      name: "Goldfire Pass",
+      theme: "infernal"
+    },
+    "5": {
+      name: "Mythril Bastion",
+      theme: "forged-metal"
+    },
+    "6": {
+      name: "Starsteel Frontier",
+      theme: "celestial"
+    },
+    "7": {
+      name: "Obsidian Depths",
+      theme: "voidborn"
+    },
+    "8": {
+      name: "Runic Barrens",
+      theme: "runic-arcane"
+    },
+    "9": {
+      name: "Dragonfall Ridge",
+      theme: "infernal"
+    },
+    "10": {
+      name: "Aether Spires",
+      theme: "celestial"
+    },
+    "11": {
+      name: "Voidiron Abyss",
+      theme: "voidborn"
+    },
+    "12": {
+      name: "Celestial Crown",
+      theme: "celestial"
+    },
+    "13": {
+      name: "Bloodstone Scar",
+      theme: "infernal"
+    },
+    "14": {
+      name: "Moonsteel Basin",
+      theme: "lunar-spectral"
+    },
+    "15": {
+      name: "Sunforge Expanse",
+      theme: "infernal"
+    },
+    "16": {
+      name: "Nethergate Chasm",
+      theme: "infernal"
+    },
+    "17": {
+      name: "Stormglass Reach",
+      theme: "tempest-oceanic"
+    },
+    "18": {
+      name: "Kingsfall Citadel",
+      theme: "runic-arcane"
+    },
+    "19": {
+      name: "Eternium Verge",
+      theme: "voidborn"
+    },
+    "20": {
+      name: "Astral Crucible",
+      theme: "voidborn"
+    },
+    "21": {
+      name: "Gravite Maw",
+      theme: "runic-arcane"
+    },
+    "22": {
+      name: "Frostiron Shelf",
+      theme: "glacial"
+    },
+    "23": {
+      name: "Dusksteel Strand",
+      theme: "lunar-spectral"
+    },
+    "24": {
+      name: "Titanium Wastes",
+      theme: "forged-metal"
+    },
+    "25": {
+      name: "Skysteel Pinnacle",
+      theme: "celestial"
+    },
+    "26": {
+      name: "Emberium Caldera",
+      theme: "infernal"
+    },
+    "27": {
+      name: "Soulsteel Necropolis",
+      theme: "lunar-spectral"
+    },
+    "28": {
+      name: "Chronite Spiral",
+      theme: "runic-arcane"
+    },
+    "29": {
+      name: "Worldforge Core",
+      theme: "infernal"
+    },
+    "30": {
+      name: "Voidglass Sanctum",
+      theme: "voidborn"
+    },
+    "31": {
+      name: "Thalassic Abyss",
+      theme: "tempest-oceanic"
+    },
+    "32": {
+      name: "Ashspire Ruins",
+      theme: "infernal"
+    },
+    "33": {
+      name: "Glacial Abyss",
+      theme: "glacial"
+    },
+    "34": {
+      name: "Primordial Spire",
+      theme: "verdant"
+    }
+  };
 
   // src/skins/fantasy/chrome/SkillHeader.js
   var OWNED10 = "data-iw-fantasy-skill-header-owned";
   var HOST2 = "data-iw-fantasy-zone-travel";
   var SURFACE = "data-iw-fantasy-zone-surface";
+  var LABELLED = "data-iw-fantasy-zone-labelled";
   var PANEL3 = "data-iw-fantasy-skill-header";
   var HEAD = "data-iw-fantasy-skill-heading-row";
   var SPINE = "data-iw-fantasy-skill-heading-spine";
@@ -14810,15 +15301,15 @@ ${RUN_RULES}`);
   var COLLAPSE = "data-iw-fantasy-skill-collapse";
   var SOURCE2 = "data-iw-fantasy-zone-source";
   var GROUP = "data-iw-fantasy-zone-group";
-  var own11 = ownerOf(OWNED10);
+  var own10 = ownerOf(OWNED10);
   var KEYS = ["prev", "zones", "next"];
   var view = null;
   var sources2 = /* @__PURE__ */ new Map();
   var marked2 = /* @__PURE__ */ new Map();
-  function set4(el2, key2, value) {
+  function set4(el2, key3, value) {
     if (value == null) {
-      if (el2.hasAttribute(key2)) el2.removeAttribute(key2);
-    } else if (el2.getAttribute(key2) !== String(value)) el2.setAttribute(key2, String(value));
+      if (el2.hasAttribute(key3)) el2.removeAttribute(key3);
+    } else if (el2.getAttribute(key3) !== String(value)) el2.setAttribute(key3, String(value));
   }
   var disabled2 = (el2) => !!el2.disabled || el2.getAttribute("aria-disabled") === "true" || !!el2.closest("fieldset[disabled]");
   function panelModel() {
@@ -14842,10 +15333,10 @@ ${RUN_RULES}`);
   }
   function sourceModels() {
     return [...document.querySelectorAll('[data-iw-chrome="zone-actions"]')].map((group) => {
-      const controls = new Map(KEYS.map((key2) => [key2, group.querySelector(`button[data-iw-zone-action="${key2}"]`)]));
+      const controls = new Map(KEYS.map((key3) => [key3, group.querySelector(`button[data-iw-zone-action="${key3}"]`)]));
       const text2 = group.closest('[data-iw-chrome="zone-bar"]')?.querySelector('[data-iw-chrome="zone-text"]');
       const interactive = text2 && [...text2.querySelectorAll('button,a,input,select,textarea,[role="button"],[tabindex]')].some(isRendered2);
-      return text2 && !interactive && KEYS.every((key2) => controls.get(key2)) ? { group, controls, text: text2 } : null;
+      return text2 && !interactive && KEYS.every((key3) => controls.get(key3)) ? { group, controls, text: text2 } : null;
     }).filter(Boolean);
   }
   function visibleSource(group) {
@@ -14853,38 +15344,52 @@ ${RUN_RULES}`);
     while (parent && typeof getComputedStyle === "function" && getComputedStyle(parent).display === "contents") parent = parent.parentElement;
     return isRendered2(parent);
   }
+  function arrowIcon(direction) {
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const path = document.createElementNS(arrow.namespaceURI, "path");
+    for (const node2 of [arrow, path]) {
+      node2.setAttribute(OWNED10, "1");
+      node2.setAttribute("data-iw-fantasy-owned", "1");
+    }
+    for (const [key3, value] of Object.entries({ class: "arrow", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.6", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" })) arrow.setAttribute(key3, value);
+    path.setAttribute("d", direction === "prev" ? "M21 12H3m8-8-8 8 8 8" : "M3 12h18m-8-8 8 8-8 8");
+    arrow.append(path);
+    return arrow;
+  }
   function buildView() {
-    const host = own11("div");
+    const host = own10("div");
     host.setAttribute(HOST2, "1");
     const root = host.attachShadow({ mode: "open" });
-    const style = own11("style");
+    const style = own10("style");
     style.textContent = skill_travel_default;
-    const nav2 = own11("nav", "travel");
+    const nav2 = own10("nav", "travel");
     nav2.setAttribute("aria-label", "Zone travel");
-    const buttons = /* @__PURE__ */ new Map();
-    for (const key2 of KEYS) {
-      const button4 = own11("button", key2);
+    const buttons = /* @__PURE__ */ new Map(), labels = /* @__PURE__ */ new Map();
+    for (const key3 of KEYS) {
+      const button4 = own10("button", key3);
       button4.type = "button";
-      if (key2 !== "zones") {
-        const arrow = own11("span", "arrow", key2 === "prev" ? "‹" : "›");
-        arrow.setAttribute("aria-hidden", "true");
-        button4.append(arrow);
+      if (key3 !== "zones") {
+        const arrow = arrowIcon(key3);
+        const name = own10("span", "zone-label", "");
+        name.setAttribute("aria-hidden", "true");
+        button4.append(...key3 === "prev" ? [arrow, name] : [name, arrow]);
+        labels.set(key3, name);
       }
       button4.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
         guard2("skill-header:activate", () => {
           skillHeaderPass();
-          const native2 = sources2.get(key2);
+          const native2 = sources2.get(key3);
           if (native2?.isConnected && !disabled2(native2)) native2.click();
           skillHeaderPass();
         });
       });
-      buttons.set(key2, button4);
+      buttons.set(key3, button4);
       nav2.append(button4);
     }
     root.append(style, nav2);
-    return { host, buttons };
+    return { host, buttons, labels };
   }
   function syncMarks2(desired) {
     for (const [el2, attrs] of marked2) for (const attr of attrs) if (!desired.get(el2)?.has(attr)) mark6(el2, attr, null);
@@ -14919,14 +15424,33 @@ ${RUN_RULES}`);
     sources2 = source?.controls || /* @__PURE__ */ new Map();
     if (source) {
       tag(source.text, SURFACE);
+      const current = label5(source.text.querySelector('[data-iw-ui="zone-title"]')?.textContent).match(/^zone\s*(\d+)\b/i);
+      const destinations = new Map(["prev", "next"].map((key3) => {
+        const number2 = current ? Number(current[1]) + (key3 === "prev" ? -1 : 1) : null;
+        const name = number2 && zones[number2]?.name;
+        return [key3, name ? `Zone ${number2}: ${name}` : ""];
+      }));
+      const labelled = [...destinations.values()].some(Boolean);
+      if (labelled) tag(source.text, LABELLED);
       if (!view) view = buildView();
       if (view.host.parentElement !== source.text) source.text.append(view.host);
-      for (const [key2, button4] of view.buttons) {
-        const native2 = sources2.get(key2);
+      set4(view.host, LABELLED, labelled ? "1" : null);
+      for (const [key3, button4] of view.buttons) {
+        const native2 = sources2.get(key3);
         const text2 = label5(native2.textContent);
+        const destination = destinations.get(key3);
+        const name = view.labels.get(key3);
+        if (name) {
+          if (name.textContent !== destination) name.textContent = destination;
+          if (name.hidden !== !destination) name.hidden = !destination;
+        }
         set4(button4, "aria-label", native2.getAttribute("aria-label") || text2);
-        set4(button4, "aria-description", native2.getAttribute("aria-description") || (key2 === "zones" ? label5(source.text.querySelector('[data-iw-ui="zone-title"]')?.textContent) : null));
-        set4(button4, "title", native2.getAttribute("title") || (key2 === "zones" ? "Show zones" : null));
+        const nativeTitle = native2.getAttribute("title");
+        const description = [destination, native2.getAttribute("aria-description") || nativeTitle].filter(Boolean).join(". ");
+        set4(button4, "aria-description", description || (key3 === "zones" ? label5(source.text.querySelector('[data-iw-ui="zone-title"]')?.textContent) : null));
+        const tooltip = destination && nativeTitle && !nativeTitle.includes(destination) ? `${destination}
+${nativeTitle}` : nativeTitle || destination;
+        set4(button4, "title", tooltip || (key3 === "zones" ? "Show zones" : null));
         set4(button4, "aria-disabled", disabled2(native2) ? "true" : null);
         if (button4.disabled !== disabled2(native2)) button4.disabled = disabled2(native2);
       }
@@ -14951,7 +15475,7 @@ ${RUN_RULES}`);
   var POTION_TEXT_ATTR = "data-iw-fantasy-potion-text";
   var POTION_STATE_ATTR = "data-iw-fantasy-potion-state";
   var ATTRS7 = [POTION_ATTR, POTION_TEXT_ATTR, POTION_STATE_ATTR];
-  var SURFACES = '[data-iw-header="status-grid"], [data-iw-chrome], [data-iw-skill-boost], .iw-ss-zone, .iw-skill-tabs';
+  var SURFACES = '[data-iw-header="status-grid"], [data-iw-chrome], [data-iw-ui="nav-tab"], [data-iw-skill-boost], .iw-ss-zone, .iw-skill-tabs';
   var ICON = { atk: "⚔️", def: "🛡️" };
   function potionKind(text2) {
     const t = norm9(text2);
@@ -15452,17 +15976,17 @@ ${ICON.def} ${def || "No DEF potion"}`;
   };
 
   // src/skins/fantasy/core/RaidGear.js
-  var byId2 = /* @__PURE__ */ new Map();
-  var byName2 = /* @__PURE__ */ new Map();
+  var byId3 = /* @__PURE__ */ new Map();
+  var byName3 = /* @__PURE__ */ new Map();
   var nameKey2 = (value) => String(value || "").replace(/\+\s*\d+\s*$/, "").normalize("NFKD").toLowerCase().replace(/[^a-z0-9]/g, "");
   for (const item of raid_gear_default.items) {
     if (item.category !== "Equipment") continue;
     const gear = { boss: item.raid, id: item.item_id, name: item.name };
-    byId2.set(item.item_id, gear);
-    byName2.set(nameKey2(item.name), gear);
+    byId3.set(item.item_id, gear);
+    byName3.set(nameKey2(item.name), gear);
   }
   function findRaidGear({ id, name } = {}) {
-    return (id ? byId2.get(String(id)) : byName2.get(nameKey2(name))) || null;
+    return (id ? byId3.get(String(id)) : byName3.get(nameKey2(name))) || null;
   }
 
   // src/skins/fantasy/styles/raid-gear.css
@@ -15474,7 +15998,7 @@ ${ICON.def} ${def || "No DEF potion"}`;
   var GEAR = "data-iw-fantasy-raid-gear";
   var SHELL2 = "data-iw-fantasy-raid-shell";
   var BADGE = "data-iw-fantasy-raid-badge";
-  var own12 = ownerOf(BADGE);
+  var own11 = ownerOf(BADGE);
   var decorated2 = /* @__PURE__ */ new Map();
   function clear2(row, host) {
     mark6(row, GEAR, null);
@@ -15502,7 +16026,7 @@ ${ICON.def} ${def || "No DEF potion"}`;
     mark6(host, SHELL2, gear.boss);
     decorated2.set(row, host);
     if (!row.querySelector(`[${BADGE}]`) && name) {
-      const badge3 = own12("span", "iwf-raid-gear-badge", "RAID");
+      const badge3 = own11("span", "iwf-raid-gear-badge", "RAID");
       badge3.setAttribute("aria-label", "Raid equipment");
       (row.querySelector(".fs-inv-stats") || name.parentElement).append(badge3);
     }
@@ -15547,7 +16071,7 @@ ${ICON.def} ${def || "No DEF potion"}`;
   var BOSSES4 = { ancient_treant: "Ancient Treant", abyssal_behemoth: "Abyssal Behemoth", world_eater: "World Eater" };
   var tracked = /* @__PURE__ */ new Map();
   var timerSignatures = /* @__PURE__ */ new WeakMap();
-  var own13 = ownerOf(OWNED11);
+  var own12 = ownerOf(OWNED11);
   function release2(node2) {
     for (const attr of ATTRS8) mark6(node2, attr, null);
   }
@@ -15576,17 +16100,17 @@ ${ICON.def} ${def || "No DEF potion"}`;
     nodes.add(status);
     mark6(status, SOURCE3, "1");
     if (!view2) {
-      view2 = own13("div", "iwf-wb-timers");
+      view2 = own12("div", "iwf-wb-timers");
       card.append(view2);
     }
     const signature5 = JSON.stringify(values);
     if (timerSignatures.get(view2) === signature5) return;
     const rows = values.map(([caption, value, active6], index) => {
-      const row = own13("div", "iwf-wb-timer");
+      const row = own12("div", "iwf-wb-timer");
       row.title = norm9(lines[index].textContent);
       row.append(
-        own13("span", "iwf-wb-timer-label", caption),
-        own13("span", `iwf-wb-timer-value${active6 ? " iwf-wb-timer-active" : ""}`, value)
+        own12("span", "iwf-wb-timer-label", caption),
+        own12("span", `iwf-wb-timer-value${active6 ? " iwf-wb-timer-active" : ""}`, value)
       );
       return row;
     });
@@ -15594,12 +16118,12 @@ ${ICON.def} ${def || "No DEF potion"}`;
     timerSignatures.set(view2, signature5);
   }
   function decorate2(card) {
-    const key2 = card.getAttribute("data-iw-encounter");
+    const key3 = card.getAttribute("data-iw-encounter");
     const header = card.querySelector(':scope > [data-iw-boss-role="header"]');
     const title = header?.querySelector('[data-iw-boss-role="title"]');
     const name = title?.parentElement;
     const action = header?.querySelector('[data-iw-boss-role="action"]');
-    if (!BOSSES4[key2] || label5(title?.textContent) !== BOSSES4[key2] || !action || name === header) {
+    if (!BOSSES4[key3] || label5(title?.textContent) !== BOSSES4[key3] || !action || name === header) {
       if (tracked.has(card)) clear3(card);
       return;
     }
@@ -15610,7 +16134,7 @@ ${ICON.def} ${def || "No DEF potion"}`;
       return;
     }
     const nodes = /* @__PURE__ */ new Set([card, name, wrap, action]);
-    mark6(card, CARD3, key2);
+    mark6(card, CARD3, key3);
     mark6(name, NAME, "1");
     mark6(wrap, WRAP3, "1");
     const text2 = norm9(action.textContent);
@@ -15618,7 +16142,7 @@ ${ICON.def} ${def || "No DEF potion"}`;
     mark6(action, STATE2, state3);
     mark6(action, LABEL, { join: "Join", prejoined: "Prejoined", fighting: "In Combat" }[state3] || null);
     if (!card.querySelector(`.iwf-wb-art[${OWNED11}]`)) {
-      const art2 = own13("div", "iwf-wb-art");
+      const art2 = own12("div", "iwf-wb-art");
       art2.setAttribute("aria-hidden", "true");
       card.append(art2);
     }
@@ -15656,6 +16180,53 @@ ${ICON.def} ${def || "No DEF potion"}`;
     remove("world-boss");
   }
 
+  // src/skins/fantasy/styles/tooltips.css
+  var tooltips_default = "#iw-tip .iw-tip-art[data-iw-fantasy-tooltip-art]{position:relative}#iw-tip .iw-tip-art[data-iw-fantasy-tooltip-art]>:not([data-iw-fantasy-tooltip-owned]){visibility:hidden!important}#iw-tip .iw-tip-art[data-iw-fantasy-tooltip-art]>.iwf-tooltip-icon{position:absolute;inset:0;margin:auto;background-size:contain;background-position:center;background-repeat:no-repeat;pointer-events:none}\n";
+
+  // src/skins/fantasy/tooltips/index.js
+  var ATTR2 = "data-iw-fantasy-tooltip-art";
+  var own13 = ownerOf("data-iw-fantasy-tooltip-owned");
+  var slots = /* @__PURE__ */ new Map();
+  function clearSlot(slot) {
+    slots.get(slot)?.host.remove();
+    slots.delete(slot);
+    mark6(slot, ATTR2, null);
+  }
+  function tooltipsPass() {
+    for (const slot of slots.keys()) if (!slot.isConnected) clearSlot(slot);
+    for (const slot of document.querySelectorAll("#iw-tip .iw-tip-art")) {
+      const name = slot.closest("#iw-tip").querySelector(".iw-tip-name")?.textContent;
+      const icon5 = findExpansionIcon({ name });
+      if (!icon5) {
+        clearSlot(slot);
+        continue;
+      }
+      const key3 = `${icon5.item_id}:${icon5.badge}`;
+      const previous = slots.get(slot);
+      if (previous?.key === key3 && previous.host.parentElement === slot) continue;
+      clearSlot(slot);
+      inject2("tooltips", tooltips_default);
+      const host = own13("span", "iw-tip-art-host iwf-tooltip-icon");
+      host.setAttribute("aria-hidden", "true");
+      host.style.backgroundImage = `url("${assetUrl2(icon5.path)}")`;
+      if (icon5.badge) {
+        const badge3 = own13("span", "iw-icon-badge", `+${icon5.badge}`);
+        badge3.setAttribute("data-iw-badge", String(icon5.badge));
+        host.append(badge3);
+      }
+      slot.append(host);
+      mark6(slot, ATTR2, icon5.item_id);
+      slots.set(slot, { key: key3, host });
+    }
+  }
+  function tooltipsText(parents) {
+    if (parents.some((parent) => parent.closest?.("#iw-tip"))) tooltipsPass();
+  }
+  function clearTooltips() {
+    for (const slot of slots.keys()) clearSlot(slot);
+    remove("tooltips");
+  }
+
   // src/skins/fantasy/styles/raid.css
   var raid_default = ':root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{--iw-res-hi: #fff2c8;--iw-res-mid: #e8b44c;--iw-res-lo: #87561a;--iw-res-ring: #d6a64a;--iw-res-ray: rgba(255, 204, 110, .15);--iw-res-glow: rgba(255, 186, 76, .42);--iw-res-band: rgba(13, 10, 6, .9);--iw-res-warm: rgba(255, 186, 76, .16);--iw-res-ink: #f1e4c2;isolation:isolate;overflow:visible!important;width:min(100%,540px);gap:12px;padding:54px 40px 24px!important;border:0!important;border-image:none!important;border-radius:0!important;background:linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center top / 100% 1px no-repeat,linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center bottom / 100% 1px no-repeat,radial-gradient(ellipse 60% 75% at 50% 28%,var(--iw-res-warm),transparent 70%),linear-gradient(90deg,transparent,var(--iw-res-band) 16%,var(--iw-res-band) 84%,transparent)!important;box-shadow:none!important;filter:none!important}@media(prefers-reduced-motion:no-preference){:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{animation:iw-res-in .7s cubic-bezier(.2,.9,.3,1.15) both}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{animation:iw-res-spin 80s linear infinite}}@keyframes iw-res-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}@keyframes iw-res-spin{to{transform:rotate(1turn)}}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=wipe]{--iw-res-hi: #f4c7b8;--iw-res-mid: #c44430;--iw-res-lo: #4c0e09;--iw-res-ring: #9e3d2d;--iw-res-ray: rgba(205, 64, 44, .12);--iw-res-glow: rgba(220, 72, 50, .38);--iw-res-band: rgba(14, 7, 6, .9);--iw-res-warm: rgba(196, 58, 40, .14);--iw-res-ink: #e9d0c7}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=other]{--iw-res-hi: #f4f0e6;--iw-res-mid: #b9b2a2;--iw-res-lo: #4d4a42;--iw-res-ring: #8f8877;--iw-res-ray: rgba(230, 224, 210, .08);--iw-res-glow: rgba(230, 224, 210, .25);--iw-res-warm: rgba(230, 224, 210, .08);--iw-res-ink: #ece6d8}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{content:"";position:absolute;z-index:-1;left:50%;top:0;width:380px;height:380px;margin:-190px 0 0 -190px;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from 0deg,var(--iw-res-ray) 0deg 5deg,transparent 5deg 15deg);-webkit-mask:radial-gradient(circle,#000 14%,transparent 66%);mask:radial-gradient(circle,#000 14%,transparent 66%)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{content:attr(data-iw-raid-result-glyph);position:absolute;z-index:1;left:50%;top:0;transform:translate(-50%,-50%);display:grid;place-items:center;width:68px;height:68px;border-radius:50%;pointer-events:none;font-size:31px;line-height:1;background:radial-gradient(circle at 50% 32%,color-mix(in srgb,var(--iw-res-lo) 55%,#2a1d0c),#0d0905 72%);border:2px solid var(--iw-res-ring);box-shadow:0 0 0 4px rgba(0,0,0,.6),0 0 0 5px var(--iw-res-lo),0 0 26px var(--iw-res-glow),inset 0 2px 7px color-mix(in srgb,var(--iw-res-hi) 30%,transparent)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type{display:flex!important;flex-direction:column;align-items:center;gap:10px;font-size:0!important;line-height:0!important;text-shadow:none!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{content:attr(data-iw-raid-result-word);padding:0 .12em;font:700 clamp(36px,4.4vw,52px)/1 var(--iw-font-head);letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(180deg,var(--iw-res-hi) 8%,var(--iw-res-mid) 52%,var(--iw-res-lo) 96%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.85)) drop-shadow(0 0 16px var(--iw-res-glow))}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{content:attr(data-iw-raid-result-boss);padding:0 58px;font:700 12px/1.2 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-res-ink);text-shadow:0 1px 3px #000;background:linear-gradient(90deg,transparent,var(--iw-res-ring)) left center / 46px 1px no-repeat,linear-gradient(90deg,var(--iw-res-ring),transparent) right center / 46px 1px no-repeat}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{max-width:42ch;margin:2px 0 4px!important;font:italic 500 13px/1.5 var(--iw-font-ui)!important;letter-spacing:.01em;text-transform:none;color:var(--iw-res-ink)!important;opacity:.88;text-shadow:0 1px 2px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p::before{content:"";display:block;width:7px;height:7px;margin:0 auto 12px;transform:rotate(45deg);background:var(--iw-res-ring);box-shadow:0 0 8px var(--iw-res-glow)}@media(max-width:699px){:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{align-self:end;padding:44px 18px 18px!important;gap:10px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{width:280px;height:280px;margin:-140px 0 0 -140px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{width:56px;height:56px;font-size:26px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{font-size:clamp(28px,9vw,36px)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{padding:0 40px;font-size:10.5px;letter-spacing:.22em;background-size:30px 1px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{font-size:12px!important}}:root [data-iw-guild=root][data-iw-guild-layout=lobby]{display:grid!important;grid-template-columns:minmax(0,1fr);grid-auto-flow:row;gap:12px!important;align-items:start}:root [data-iw-guild-layout=lobby] [data-iw-guild-wrap]{display:contents!important}:root [data-iw-guild-layout=lobby]>*,:root [data-iw-guild-layout=lobby] [data-iw-guild-wrap]>*{grid-column:1 / -1;min-width:0;margin:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=leaderboard]{display:none!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=boss]{order:20}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=chat]{order:21}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=lend]{order:22}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]{order:23}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=loadout]{order:24}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]{order:25}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=members]{order:26}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=other]{order:50}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=start]{order:60}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=history]{order:70}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=footer]{order:80}@media(min-width:1024px){:root [data-iw-guild=root][data-iw-guild-layout=lobby]{grid-template-columns:repeat(2,minmax(0,1fr))}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=lend]{order:10;grid-column:1;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]{order:11;grid-column:2;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=boss]{order:20;grid-column:1}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=members]{order:21;grid-column:2;grid-row:span 4;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=chat]{order:30;grid-column:1}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]{order:40;grid-column:1;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=loadout]{order:41;grid-column:1}}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite],:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]:has(~[data-iw-guild-slot=loadout]){margin-bottom:-12px!important;border-bottom-color:transparent!important;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]~[data-iw-guild-slot=invite],:root [data-iw-guild-layout=lobby]:has([data-iw-guild-slot=invite]) [data-iw-guild-slot=members],:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]~[data-iw-guild-slot=loadout]{border-top-color:var(--iw-th-edge-faint)!important;border-top-left-radius:0!important;border-top-right-radius:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite] [data-iw-guild-role=note]{display:none!important}.iw-guild-records{display:flex;gap:6px;margin-top:2px}.iw-guild-record{flex:1 1 0;min-width:0;text-align:center;font:600 10.5px/1.3 var(--iw-font-ui);color:var(--iw-dim, #938a79);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root [data-iw-boss-card]{--iw-bc-r1: 2;--iw-bc-r2: 3;--iw-bc-r3: 4;--iw-bc-end: 5;--iw-bc-face: 78px;--iw-bc-indent: calc(var(--iw-bc-face) + 30px);display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start!important}:root [data-iw-boss-card]:not(:has(>[data-iw-guild-role=boss-tabs])){--iw-bc-r1: 1;--iw-bc-r2: 2;--iw-bc-r3: 3;--iw-bc-end: 4}:root [data-iw-boss-card]>[data-iw-guild-role=boss-tabs]{grid-row:1!important;grid-column:1!important}:root [data-iw-boss-card]>[data-iw-boss-card-src]{display:none!important}:root [data-iw-boss-card]>.iw-bc-art{grid-column:1;grid-row:var(--iw-bc-r1) / var(--iw-bc-end);position:relative;z-index:0;margin:0!important;min-height:132px;border:1px solid var(--iw-th-edge-soft, #3a3226);border-radius:2px;background:linear-gradient(90deg,rgba(9,8,7,.96) 0%,rgba(9,8,7,.9) 36%,rgba(9,8,7,.62) 54%,rgba(9,8,7,0) 74%),linear-gradient(0deg,rgba(9,8,7,.7),rgba(9,8,7,0) 42%),var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / 150% auto no-repeat,#0b0a08;box-shadow:inset 0 0 0 1px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,226,191,.06);pointer-events:none}:root [data-iw-boss-card] .iw-bc-portrait{position:absolute;left:14px;top:12px;width:var(--iw-bc-face);height:var(--iw-bc-face);background:var(--iw-bc-face-art, none) center / contain no-repeat;filter:drop-shadow(0 3px 6px rgba(0,0,0,.85))}.iw-bc-art[data-iw-bc-boss=ashmaw]{--iw-bc-banner: url(../assets/raids/lobby/ashmaw-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/ashmaw-portrait.webp);--iw-bc-focus: 38% 26%}.iw-bc-art[data-iw-bc-boss=thessaly]{--iw-bc-banner: url(../assets/raids/lobby/thessaly-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/thessaly-portrait.webp);--iw-bc-focus: 59% 0%}.iw-bc-art[data-iw-bc-boss=morwenna]{--iw-bc-banner: url(../assets/raids/lobby/morwenna-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/morwenna-portrait.webp);--iw-bc-focus: 56% 0%}.iw-bc-art[data-iw-bc-boss=grimjaw]{--iw-bc-banner: url(../assets/raids/lobby/grimjaw-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/grimjaw-portrait.webp);--iw-bc-focus: 53% 2%}.iw-bc-art[data-iw-bc-boss=skarth]{--iw-bc-banner: url(../assets/raids/lobby/skarth-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/skarth-portrait.webp);--iw-bc-focus: 74% 6%}:root [data-iw-boss-card]>:is([data-iw-guild-role=boss-name],[data-iw-guild-role=lore],.iw-bc-stats){grid-column:1;position:relative;z-index:1;margin:0!important;padding-left:var(--iw-bc-indent)!important;padding-right:16px!important}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=boss-name]{grid-row:var(--iw-bc-r1);padding-top:16px!important;font-size:19px!important;line-height:1.2!important;text-shadow:0 1px 0 #000,0 0 12px rgba(0,0,0,.9)!important}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=lore]{grid-row:var(--iw-bc-r2);max-width:620px;padding-top:3px!important;font-size:13.5px!important;color:#e4dac6!important;text-shadow:0 1px 1px #000,0 0 6px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.85)!important}:root [data-iw-boss-card]>.iw-bc-stats{grid-row:var(--iw-bc-r3);padding-top:10px!important;padding-bottom:14px!important;align-self:end}.iw-bc-stats{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.iw-bc-stat{display:inline-flex;align-items:baseline;gap:6px;padding:3px 9px;border:1px solid rgba(200,168,97,.30);border-radius:2px;background:rgba(8,7,6,.72);box-shadow:inset 0 1px 0 rgba(255,226,191,.05)}.iw-bc-stat-label{font:700 9.5px/1 var(--iw-font-ui);letter-spacing:.12em;color:var(--iw-th-accent-dim, #a88d5d)}.iw-bc-stat-value{font:700 13px/1.15 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6);font-variant-numeric:tabular-nums}.iw-bc-stat-value[data-iw-bc-tone=hard]{color:#fda4af}.iw-bc-stat-value[data-iw-bc-tone=easy]{color:#6ee7b7}.iw-bc-element{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:2px 7px;margin-left:4px;font:500 11.5px/1.3 var(--iw-font-ui);text-shadow:0 1px 2px #000}.iw-bc-element-name{font-weight:700;color:var(--iw-text-hi, #f0e8d6)}.iw-bc-element-list{color:#b9ad97}.iw-bc-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:6px}.iw-bc-tile{display:flex;align-items:center;gap:10px;min-width:0;padding:7px 10px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-guild-warn-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-guild-warn-rail) 9%,rgba(0,0,0,.3))}.iw-bc-tile[data-iw-bc-kind=advice]{border-left-color:var(--iw-guild-info-rail);background:color-mix(in srgb,var(--iw-guild-info-rail) 8%,rgba(0,0,0,.3));--iw-bc-tile-ink: var(--iw-guild-info)}.iw-bc-tile-body{display:flex;flex-direction:column;min-width:0}.iw-bc-tile-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--iw-bc-tile-ink, var(--iw-guild-warn)) 72%,#5a554c)}.iw-bc-tile-value{font:700 13.5px/1.25 var(--iw-font-ui);color:var(--iw-bc-tile-ink, var(--iw-guild-warn));font-variant-numeric:tabular-nums}.iw-bc-tile-sub{font:500 10.5px/1.3 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-icon{flex:0 0 auto;width:22px;height:22px;background:var(--iw-bc-skill-art, none) center / contain no-repeat;opacity:.9}.iw-bc-glyph{flex:0 0 auto;width:22px;text-align:center;font-size:17px;line-height:1}.iw-bc-icon[data-iw-bc-skill=alchemy]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-alchemy.png)}.iw-bc-icon[data-iw-bc-skill=combat]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-combat.png)}.iw-bc-icon[data-iw-bc-skill=construction]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-construction.png)}.iw-bc-icon[data-iw-bc-skill=gathering]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-gathering.png)}.iw-bc-icon[data-iw-bc-skill=jewelcrafting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-jewelcrafting.png)}.iw-bc-icon[data-iw-bc-skill=mining]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-mining.png)}.iw-bc-icon[data-iw-bc-skill=smithing]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-smithing.png)}.iw-bc-icon[data-iw-bc-skill=spellcrafting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-spellcrafting.png)}.iw-bc-icon[data-iw-bc-skill=tailoring]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-tailoring.png)}.iw-bc-icon[data-iw-bc-skill=woodcutting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-woodcutting.png)}.iw-bc-tactics{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:8px 10px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-guild-info-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-guild-info-rail) 8%,rgba(0,0,0,.3));font:500 11.5px/1.35 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-tactics-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--iw-guild-info) 72%,#3c5a6b)}.iw-bc-roles{display:flex;flex-wrap:wrap;gap:6px}.iw-bc-role{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 7px;border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 45%,transparent);border-radius:2px;background:rgba(8,7,6,.55);color:var(--iw-text, #d8cfbd);font-weight:600}.iw-bc-role-count{font:700 14px/1 var(--iw-font-ui);color:var(--iw-guild-info);font-variant-numeric:tabular-nums}.iw-bc-role>.iw-bc-icon{width:16px;height:16px}.iw-bc-role>.iw-bc-glyph{width:16px;font-size:13px;color:var(--iw-guild-info)}.iw-bc-tip{margin:0;color:var(--iw-text, #d8cfbd)}.iw-bc-tip>b{color:var(--iw-guild-info);font-weight:700}.iw-bc-tip>.iw-bc-tip-label{color:var(--iw-text-hi, #f0e8d6)}.iw-bc-loot{--iw-bc-rail: var(--iw-guild-warn-rail);--iw-bc-ink: var(--iw-guild-warn);display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:4px 14px;padding:8px 12px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-bc-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-bc-rail) 10%,rgba(0,0,0,.3));font:500 11.5px/1.35 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-loot[data-iw-bc-tone=good]{--iw-bc-rail: var(--iw-guild-good-rail);--iw-bc-ink: var(--iw-guild-good)}.iw-bc-loot[data-iw-bc-tone=bad]{--iw-bc-rail: var(--iw-guild-bad-rail);--iw-bc-ink: var(--iw-guild-bad)}.iw-bc-loot[data-iw-bc-tone=info]{--iw-bc-rail: var(--iw-guild-info-rail);--iw-bc-ink: var(--iw-guild-info)}.iw-bc-loot-state{font-weight:700;font-size:12.5px;color:var(--iw-bc-ink);white-space:nowrap}.iw-bc-loot-when{display:grid;grid-template-columns:auto auto;align-items:baseline;justify-content:end;gap:0 6px;text-align:right}.iw-bc-loot-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--iw-faint, #6f675a)}.iw-bc-loot-count{font:700 14px/1.2 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6);font-variant-numeric:tabular-nums}.iw-bc-loot-reset{grid-column:1 / -1;font-size:10px;color:var(--iw-faint, #6f675a)}@media(max-width:640px){.iw-bc-loot{grid-template-columns:minmax(0,1fr);gap:3px}.iw-bc-loot-when{justify-content:start;text-align:left}.iw-bc-tile{padding:5px 9px}}@media(max-width:640px){:root [data-iw-boss-card]{--iw-bc-face: 58px}:root [data-iw-boss-card]>.iw-bc-art{background:linear-gradient(180deg,rgba(9,8,7,.25) 0%,rgba(9,8,7,.82) 52%,rgba(9,8,7,.95) 100%),linear-gradient(90deg,rgba(9,8,7,.75),rgba(9,8,7,0) 70%),var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / cover no-repeat,#0b0a08}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=boss-name]{display:flex!important;align-items:center;min-height:calc(var(--iw-bc-face) + 22px);padding-top:10px!important;font-size:17px!important}:root [data-iw-boss-card]>:is([data-iw-guild-role=lore],.iw-bc-stats){padding-left:12px!important;padding-right:12px!important}:root [data-iw-boss-card] .iw-bc-portrait{left:10px;top:10px}.iw-bc-element{margin-left:0}}.iw-rc-popup{position:fixed;z-index:2147483000;top:16px;left:50%;transform:translateX(-50%);width:min(440px,calc(100vw - 24px));box-sizing:border-box;padding:20px 24px 18px;border:1px solid transparent;border-radius:var(--iw-r-panel, 3px);border-image:var(--iw-corner-filigree) 50% / 25px 23px / 0 stretch;background:linear-gradient(90deg,rgba(240,180,92,.14),transparent 60%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a, #1a1611),var(--iw-th-ground-b, #0d0c0a));background-blend-mode:normal,soft-light,normal;box-shadow:0 0 0 1px #c9963f,inset 0 0 0 1px rgba(0,0,0,.7),0 14px 40px rgba(0,0,0,.75),0 0 34px -10px rgba(240,180,92,.7);color:var(--iw-text-hi, #f0e8d6);font-family:var(--iw-font-ui)}@media(prefers-reduced-motion:no-preference){.iw-rc-popup{animation:iw-rc-in .28s cubic-bezier(.2,.9,.3,1.2) both}}@keyframes iw-rc-in{from{opacity:0;transform:translate(-50%,-14px)}to{opacity:1;transform:translate(-50%,0)}}.iw-rc-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.iw-rc-title{margin:0;font:700 15px/1.25 var(--iw-font-head);letter-spacing:.03em;color:#f5d58a;text-shadow:0 1px 0 #000}.iw-rc-timer{flex:none;font:800 15px/1 var(--iw-font-ui);color:#f0b45c;font-variant-numeric:tabular-nums}.iw-rc-note{margin:8px 0 14px;font:500 12px/1.45 var(--iw-font-ui);color:var(--iw-dim, #b7ad99)}.iw-rc-actions{display:flex;gap:8px}.iw-rc-actions>button{--iw-compact-cap: 12px;flex:1 1 0;height:36px;padding:0 14px;margin:0;border:0;background:none;cursor:pointer;font:700 12px/1 var(--iw-font-head);letter-spacing:.08em;text-transform:uppercase;color:var(--iw-text-hi, #f0e8d6)!important;text-shadow:0 1px 2px #000}.iw-rc-actions>.iw-rc-confirm{color:#ffd2ad!important;box-shadow:0 0 14px rgba(217,120,74,.3)!important}.iw-rc-actions>.iw-rc-confirm>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-cta-hi, #d9784a)!important}.iw-raid-lb-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}.iw-raid-lb-title{margin:0}.iw-raid-lb-sub{font:500 11px/1 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-raid-lb-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.iw-raid-lb-tab{--iw-compact-cap: 10px;height:28px;padding:0 12px;margin:0;border:0;background:none;cursor:pointer;font:700 11px/1 var(--iw-font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--iw-dim, #938a79)!important}.iw-raid-lb-tab[aria-pressed=true]{color:var(--iw-text-hi, #f0e8d6)!important}.iw-raid-lb-tab[aria-pressed=true]>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}.iw-raid-lb-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px}.iw-raid-lb-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 10px;border:1px solid var(--iw-th-edge-faint, #29251d);border-radius:2px;background:rgba(0,0,0,.22);font:500 12.5px/1.25 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6)}.iw-raid-lb-name{display:flex;align-items:baseline;gap:8px;min-width:0}.iw-raid-lb-rank{flex:none;width:2.2em;font-weight:800;color:var(--iw-dim, #938a79);font-variant-numeric:tabular-nums}.iw-raid-lb-row[data-iw-raid-lb-rank="1"] .iw-raid-lb-rank{color:#f1c35b}.iw-raid-lb-row[data-iw-raid-lb-rank="2"] .iw-raid-lb-rank{color:#c9ccd2}.iw-raid-lb-row[data-iw-raid-lb-rank="3"] .iw-raid-lb-rank{color:#d08a52}.iw-raid-lb-guild{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.iw-raid-lb-tag{flex:none;padding:1px 5px;border:1px solid rgba(125,190,230,.35);border-radius:2px;font:600 9.5px/1.2 var(--iw-font-ui);letter-spacing:.04em;text-transform:uppercase;color:#a9d4ef}.iw-raid-lb-time{flex:none;font-weight:700;font-variant-numeric:tabular-nums;color:var(--iw-text-hi, #f0e8d6)}.iw-raid-lb-note{margin:6px 0 2px;font:italic 500 12px/1.4 var(--iw-font-ui);color:var(--iw-dim, #938a79)}html:not([data-iw-compact-atlas]) .iw-rc-actions>button,html:not([data-iw-compact-atlas]) .iw-raid-lb-tab{border:1px solid var(--iw-th-edge-mid, #3a3127)!important;border-radius:var(--iw-r-control, 2px);background:linear-gradient(180deg,var(--iw-ink-700, #1e1b15),var(--iw-ink-900, #0b0c0a))!important}html:not([data-iw-compact-atlas]) .iw-rc-actions>button:hover,html:not([data-iw-compact-atlas]) .iw-raid-lb-tab:hover{border-color:var(--iw-th-hairline-hi, #b48edc)!important}html:not([data-iw-compact-atlas]) .iw-rc-actions>.iw-rc-confirm,html:not([data-iw-compact-atlas]) .iw-raid-lb-tab[aria-pressed=true]{border-color:var(--iw-th-cta-hi, #d9784a)!important}\n';
 
@@ -15666,6 +16237,7 @@ ${ICON.def} ${def || "No DEF potion"}`;
     chromePass();
     inventoryPass();
     worldBossPass();
+    tooltipsPass();
   }
   function text(parents) {
     raidText(parents);
@@ -15673,6 +16245,7 @@ ${ICON.def} ${def || "No DEF potion"}`;
     chromeText(parents);
     inventoryText(parents);
     worldBossText(parents);
+    tooltipsText(parents);
   }
   function start() {
     setRuntimeActive2(true);
@@ -15686,6 +16259,7 @@ ${ICON.def} ${def || "No DEF potion"}`;
     clearChrome();
     clearInventory();
     clearWorldBosses();
+    clearTooltips();
     removeAll2();
     resetNativeFeatures();
     setRuntimeActive2(false);

@@ -1,0 +1,16 @@
+/* Keep the native card, icon slot and React children intact. */
+#iw-tip .iw-tip-art[data-iw-fantasy-tooltip-art] {
+  position: relative;
+}
+#iw-tip .iw-tip-art[data-iw-fantasy-tooltip-art] > :not([data-iw-fantasy-tooltip-owned]) {
+  visibility: hidden !important;
+}
+#iw-tip .iw-tip-art[data-iw-fantasy-tooltip-art] > .iwf-tooltip-icon {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}

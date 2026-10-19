@@ -139,6 +139,51 @@ try {
       assert.notEqual(await page.locator('.iw-ss-icon').evaluate(el => getComputedStyle(el).backgroundPosition), iconBefore, 'native text-only skill switches update the medallion');
       await page.locator('.iw-ss-name>span:first-child').evaluate(el => { el.textContent = 'Gathering'; });
       await page.waitForFunction(() => document.querySelector('.iw-ss-head').getAttribute('data-iw-fantasy-skill') === 'gathering');
+      // The native Current Action title carries the remote zone. Keep its
+      // button and React text intact while showing the matching skill's status.
+      const location = page.locator('.iwf-skill-location');
+      assert.equal(await location.count(), 0, 'an idle skill has no remote-action status');
+      await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<div id="current-action-panel" class="panel"><button aria-label="Cancel current action">×</button><div><button title="Jump to Zone 19">🌿 Gather Eternal Orchid</button><p>4s</p></div></div>'));
+      await page.waitForFunction(() => document.querySelector('.iwf-skill-location')?.textContent === 'Currently Gathering in Zone 19');
+      assert.equal(await location.isVisible(), true, 'the remote action is visible beside the matching skill name');
+      assert.equal(await location.evaluate(el => el.previousElementSibling.textContent), 'Gathering', 'the status follows the skill name');
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${width}px: the remote-action status fits`);
+      await page.locator('#current-action-panel button[title]').evaluate(el => { el.title = 'Jump to Zone 18'; });
+      await page.waitForFunction(() => document.querySelector('.iwf-skill-location')?.textContent === 'Currently Gathering in Zone 18');
+      for (const [skill, action, want] of [
+        ['Mining', '⛏️ Mine Eternium Ore', 'Currently Mining in Zone 18'],
+        ['Spellcrafting', '✨ Harvest Astral Mana', 'Currently Harvesting Mana in Zone 18'],
+      ]) {
+        await page.evaluate(({skill,action}) => {
+          document.querySelector('.iw-ss-name>span:first-child').firstChild.data = skill;
+          document.querySelector('#current-action-panel button[title]').firstChild.data = action;
+        }, {skill,action});
+        await page.waitForFunction(want => document.querySelector('.iwf-skill-location')?.textContent === want, want);
+      }
+      await page.evaluate(() => document.querySelector('main').insertAdjacentHTML('afterbegin', '<div class="iw-skill-tabs"><button class="iw-skill-tab"><span class="iw-skill-tab-name">Tailoring</span><span class="iw-skill-tab-live" title="Running now"></span></button></div>'));
+      for (const [action, want] of [
+        ['Craft Eternal Robe', 'Currently Crafting in Zone 18'],
+        ['Upgrade Eternal Silk Silkbind Thread', 'Currently Upgrading in Zone 18'],
+      ]) {
+        await page.evaluate(action => {
+          document.querySelector('.iw-ss-name>span:first-child').firstChild.data = 'Tailoring';
+          document.querySelector('#current-action-panel button[title]').firstChild.data = action;
+        }, action);
+        await page.waitForFunction(want => document.querySelector('.iwf-skill-location')?.textContent === want, want);
+      }
+      await page.locator('.iw-skill-tabs').evaluate(el => el.remove());
+      await page.locator('.iw-ss-name>span:first-child').evaluate(el => { el.firstChild.data = 'Gathering'; });
+      await page.waitForFunction(() => !document.querySelector('.iwf-skill-location'));
+      await page.locator('#current-action-panel button[title]').evaluate(el => { el.firstChild.data = '🌿 Gather Eternal Orchid'; });
+      await page.waitForFunction(() => document.querySelector('.iwf-skill-location'));
+      await page.locator('#current-action-panel button[title]').evaluate(el => { el.removeAttribute('title'); });
+      await page.waitForFunction(() => !document.querySelector('.iwf-skill-location'));
+      await page.locator('#current-action-panel button:not([aria-label])').evaluate(el => { el.title = 'Jump to Zone 19'; });
+      await page.waitForFunction(() => document.querySelector('.iwf-skill-location'));
+      await page.locator('#current-action-panel button[aria-label]').evaluate(el => el.remove());
+      await page.waitForFunction(() => !document.querySelector('.iwf-skill-location'));
+      await page.locator('#current-action-panel').evaluate(el => el.insertAdjacentHTML('afterbegin', '<button aria-label="Cancel current action">×</button>'));
+      await page.waitForFunction(() => document.querySelector('.iwf-skill-location'));
       if (width === 1606) {
         await page.locator('.iw-xp-chip').blur();
         await mkdir(resolve(ROOT, 'tmp/skill-frame'), { recursive: true });
@@ -152,6 +197,7 @@ try {
         assert.equal(await frame.evaluate(el => getComputedStyle(el,'::before').borderImageSource), 'none', 'zone theme changes must not add subframe corner ornaments');
       }
       await page.evaluate(() => Fantasy.stop());
+      assert.equal(await location.count(), 0, 'stop removes a visible remote-action status');
       assert.equal(await page.locator('main').innerHTML(), await page.evaluate(() => originalFrame), 'stop restores the entire native frame');
       console.log(`PASS ${width}px ${native ? 'native' : 'extension'} sheet: artwork, controls, progress, tooltip, fit and teardown`);
     } finally { await context.close(); }

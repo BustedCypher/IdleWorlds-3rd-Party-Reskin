@@ -89,11 +89,10 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   unknown to the port (the `iw-` prefix there is the game dev's). It preserves
   gameplay nodes: it writes `data-iw-fantasy-skill` / `-icon` / `-lead` and
   `styles/skills.css` + `styles/quests.css` draw action-icon and atlas
-  sprites (`core/ItemAtlas.js`, item by id, gear by name). `reserved.js` adds
-  two disabled owned slots on phones (four columns); desktop keeps five
-  columns and hides those slots. The selected card art/layout lives in
-  `styles/skill-cards.css`, independently of native sheet handover; slots
-  are removed on stop and yield to real skills as the game grows past ten.
+  sprites (`core/ItemAtlas.js`, item by id, gear by name). The ten skill cards
+  use five columns and two rows at every width, without reserved slots.
+  The selected card art/layout lives in `styles/skill-cards.css`,
+  independently of native sheet handover.
   The reversible `data-iw-fantasy-cards="soft-iron"` strip marker scopes the
   card rules above old native styles, including the old generated hyphenated
   labels. Keep running-card fill selectors in the same scope. Medallion URL

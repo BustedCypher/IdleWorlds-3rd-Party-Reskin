@@ -15,6 +15,7 @@ const SHELL = 'data-iw-fantasy-nav-shell';
 const OWNED = 'data-iw-fantasy-navigation-owned';
 const own = ownerOf(OWNED);
 const PRIMARY = ['game', 'market', 'village', 'guild'];
+const DESKTOP_PRIMARY = ['game', 'market', 'village', 'dungeon', 'guild', 'leaderboards'];
 const NAMES = { game: 'Game', market: 'Market', village: 'Village', dungeon: 'Dungeon', guild: 'Guild', leaderboards: 'Leaderboards' };
 const PATHS = {
   game: ['m14 3 7 7', 'm3 14 7 7', 'm4 3 17 18', 'm3 4 4-1-1 4', 'm20 3 1 4-4-1', 'm21 4-7 7', 'm4 21 7-7'],
@@ -191,7 +192,9 @@ function buildHost(layout) {
   const more = own('button', 'destination more'); more.type = 'button';
   more.append(icon('more'), own('span', 'destination-label', 'More'));
   more.setAttribute('aria-haspopup', 'dialog'); more.setAttribute('aria-expanded', 'false'); more.setAttribute('aria-controls', `iwf-nav-menu-${layout}`);
-  bar.append(primary, more);
+  more.setAttribute('aria-label', 'More');
+  const trailing = own('div', 'trailing');
+  bar.append(primary, more, trailing);
   const dialog = own('dialog', 'menu'); dialog.id = `iwf-nav-menu-${layout}`; dialog.setAttribute('aria-labelledby', 'menu-heading');
   const head = own('div', 'menu-head');
   const title = own('h2', '', 'More'); title.id = 'menu-heading';
@@ -199,8 +202,17 @@ function buildHost(layout) {
   head.append(title, close);
   const secondary = own('nav', 'secondary'); secondary.setAttribute('aria-label', 'More destinations');
   const utilities = own('div', 'utilities');
-  dialog.append(head, secondary, utilities); root.append(style, bar, dialog);
-  const view = { host, root, more, primary, dialog, secondary, utilities };
+  let tools = null;
+  if (layout === 'desktop') {
+    tools = own('div'); tools.setAttribute('data-iw-fantasy-nav-tools', '1');
+    const toolsRoot = tools.attachShadow({ mode: 'open' });
+    utilities.classList.add('header-utilities');
+    utilities.setAttribute('role', 'group'); utilities.setAttribute('aria-label', 'Game utilities');
+    toolsRoot.append(style.cloneNode(true), utilities);
+    dialog.append(head, secondary);
+  } else dialog.append(head, secondary, utilities);
+  root.append(style, bar, dialog);
+  const view = { host, root, more, primary, trailing, dialog, secondary, utilities, tools };
   more.addEventListener('click', () => guard('navigation:open', () => openMenu(view)));
   close.addEventListener('click', () => releaseFocus(view));
   dialog.addEventListener('close', () => set(more, 'aria-expanded', 'false'));
@@ -235,21 +247,35 @@ export function navigationPass() {
   const [desktop, mobile] = hosts;
   if (desktop.host.nextElementSibling !== nav) nav.before(desktop.host);
   if (mobile.host.parentElement !== document.body) document.body.append(mobile.host);
-  const currentShell = nav.closest('[data-iw-chrome="shell"]');
+  const context = nav.closest('[data-iw-chrome="shell"]') || nav.parentElement;
+  const header = context.querySelector(':scope > header');
+  if (desktop.tools.parentElement !== (header || nav.parentElement)) {
+    if (header) header.append(desktop.tools);
+    else nav.before(desktop.tools);
+  }
+  // Secondary pages omit the zone bar, so the native port deliberately does
+  // not classify a merged shell there. Give the owned rail its own frame.
+  const currentShell = context.matches('[data-iw-chrome="shell"]') && context.querySelector('[data-iw-chrome="zone-text"]') ? context : null;
   if (shell !== currentShell) { if (shell) unmark([SHELL], shell); shell = currentShell; }
   if (shell) mark(shell, SHELL, '1');
-  const primary = PRIMARY.map(key => sources.get(key)).filter(Boolean);
-  const secondary = model.entries.filter(e => !PRIMARY.includes(e.key) && NAMES[e.key]);
-  const utilities = model.entries.filter(e => !PRIMARY.includes(e.key) && !NAMES[e.key]);
+  set(desktop.host, 'data-iw-fantasy-nav-framed', shell ? null : '1');
   for (const view of hosts) {
+    const keys = view === desktop ? DESKTOP_PRIMARY : PRIMARY;
+    const primary = keys.map(key => sources.get(key)).filter(Boolean);
+    const trailing = view === desktop ? model.entries.filter(e => e.key === 'toolkit') : [];
+    const secondary = model.entries.filter(e => !keys.includes(e.key) && NAMES[e.key]);
+    const utilities = model.entries.filter(e => !keys.includes(e.key) && !NAMES[e.key] && !trailing.includes(e) && !(view === desktop && e.key === 'settings'));
     if ((view === mobile) !== matchMedia('(max-width: 767px)').matches) releaseFocus(view);
     syncGroup(view.primary, primary, model.active);
+    syncGroup(view.trailing, trailing, model.active);
+    if (view.trailing.hidden !== !trailing.length) view.trailing.hidden = !trailing.length;
     syncGroup(view.secondary, secondary, model.active);
     syncGroup(view.utilities, utilities, model.active);
     set(view.more, 'aria-current', secondary.some(e => e.key === model.active) ? 'page' : null);
-    const moreHidden = !secondary.length && !utilities.length;
+    const moreHidden = view === desktop || (!secondary.length && !utilities.length);
     if (view.more.hidden !== moreHidden) view.more.hidden = moreHidden;
     if (view.utilities.hidden !== !utilities.length) view.utilities.hidden = !utilities.length;
+    if (view.tools && view.tools.hidden !== !utilities.length) view.tools.hidden = !utilities.length;
   }
   const desired = new Map([[nav, 'nav']]);
   if (model.presence) desired.set(model.presence, 'utility');
@@ -262,7 +288,7 @@ export function navigationText(parents) {
 }
 
 export function clearNavigation() {
-  for (const view of hosts) { releaseFocus(view); view.host.remove(); }
+  for (const view of hosts) { releaseFocus(view); view.host.remove(); view.tools?.remove(); }
   hosts = [];
   syncMarks(new Map());
   if (shell) unmark([SHELL], shell);

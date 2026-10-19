@@ -11,8 +11,18 @@
 **Current user-approved refinement:** Brass rail replaces the heavy metal tiles
 on mobile and desktop. Navigation and More inherit the active theme's accent,
 edges and ground colours. Primary destinations are Game, Market, Village and
-Guild; Dungeon remains in More. This supersedes the earlier fixed Ashen dock
-palette and primary-route selection below.
+Guild on mobile; desktop additionally exposes Dungeon and Leaderboards.
+Mobile keeps Dungeon and Toolkit in More. Desktop has no More button; Toolkit
+is the final link. Desktop utilities live in the player header. The desktop
+controls are 32px high (previously 64px), with a compact zone heading. Routes
+without a zone bar, including Guild, get the same frame on the owned nav host.
+Desktop zone travel shows the neighbouring zone numbers and names just inside
+new SVG arrows. Labels match the menu's 12px Cinzel typography and theme colour;
+arrow strokes match the menu icons. Mobile keeps arrow-only travel.
+Desktop zone travel and the rail
+share one outer frame, and green last-action reminders are hidden at every
+width. This supersedes the earlier fixed Ashen dock palette and primary-route
+selection below.
 
 **Spec:** Approved in-chat thumb-dock mockup, 2026-10-19; `thumb-dock-refined.html` in this chat's visualization directory. Main links: Game, Market, Village, Dungeon; More contains Guild, Leaderboards and available native utilities.
 

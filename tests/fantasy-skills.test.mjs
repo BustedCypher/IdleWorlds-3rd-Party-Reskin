@@ -467,42 +467,66 @@ const waitFrames = (n = 3) => frames(tab, n);
 const boost = await tab.evaluate(() => [...document.querySelectorAll('.iw-skill-tab')]
   .filter(t => t.getAttribute('data-iw-fantasy-boost') === 'daily').map(t => t.getAttribute('data-iw-fantasy-skill')).sort().join());
 check('boost: the three skills the boost line names are marked', boost === 'gathering,smithing,tailoring', boost);
-const halo = await tab.evaluate(() => {
+const outline = await tab.evaluate(() => {
   const on = getComputedStyle(document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="smithing"]'), '::after');
   const off = getComputedStyle(document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="mining"]'), '::after');
-  return { anim: on.animationName, z: on.zIndex, shadow: on.boxShadow, off: off.content };
+  return { anim: on.animationName, repeat: on.animationIterationCount, z: on.zIndex, shadow: on.boxShadow,
+    border: on.borderTopStyle, width: on.borderTopWidth, color: on.borderTopColor, events: on.pointerEvents, off: off.content };
 });
-check('boost: a marked tile has a still underglow, an unmarked one none', halo.anim === 'none' && halo.z === '-1' && /rgb|color\(/.test(halo.shadow) && !/inset/.test(halo.shadow) && halo.off === 'none', JSON.stringify(halo));
-// Painted, not just computed: the glow shows past the tile's foot and never
-// over the tile itself. Gathering is boosted and carries no ticking live dot.
-const glowShots = async () => {
+check('boost: only marked tiles have a crisp animated green outline without a glow', outline.anim !== 'none' && outline.repeat === 'infinite'
+  && +outline.z >= 0 && outline.shadow === 'none' && outline.border === 'solid' && parseFloat(outline.width) >= 1
+  && outline.color === 'rgb(134, 239, 172)' && outline.events === 'none' && outline.off === 'none', JSON.stringify(outline));
+const pulse = await tab.evaluate(() => {
+  const tile = document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="gathering"]');
+  const animation = tile.getAnimations({ subtree: true }).find(a => a.effect?.target === tile && a.effect.pseudoElement === '::after');
+  if (!animation) return null;
+  animation.pause(); animation.currentTime = 0;
+  const low = getComputedStyle(tile, '::after').opacity;
+  animation.currentTime = Number(animation.effect.getTiming().duration) / 2;
+  const high = getComputedStyle(tile, '::after').opacity;
+  return { low: +low, high: +high };
+});
+check('boost: the outline visibly pulses while remaining present', pulse && pulse.low > 0 && pulse.high > pulse.low, JSON.stringify(pulse));
+// Painted, not just computed: only the edge changes, with no spill below or
+// tint over the contents. Gathering has no ticking live dot.
+const outlineShots = async () => {
   const box = await tab.locator('.iw-skill-tab[data-iw-fantasy-skill="gathering"]').boundingBox();
   return {
+    edge: await tab.screenshot({ clip: { x: box.x + 1, y: box.y + 8, width: 2, height: box.height - 16 } }),
     inside: await tab.screenshot({ clip: { x: box.x + 4, y: box.y + 4, width: box.width - 8, height: box.height - 8 } }),
     below: await tab.screenshot({ clip: { x: box.x + 8, y: box.y + box.height + 1, width: box.width - 16, height: 6 } }),
   };
 };
-const glowOn = await glowShots();
+const outlineOn = await outlineShots();
 await tab.evaluate(() => document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="gathering"]').removeAttribute('data-iw-fantasy-boost'));
 await waitFrames();
-const glowOff = await glowShots();
+const outlineOff = await outlineShots();
 await tab.evaluate(() => document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="gathering"]').setAttribute('data-iw-fantasy-boost', 'daily'));
 await waitFrames();
-check('boost: the underglow paints below the tile (negative control: unmarked differs there)', !glowOn.below.equals(glowOff.below));
-check('boost: nothing is painted over the tile itself', glowOn.inside.equals(glowOff.inside));
+check('boost: the outline paints on the tile edge (negative control: unmarked differs there)', !outlineOn.edge.equals(outlineOff.edge));
+check('boost: there is no glow below the tile', outlineOn.below.equals(outlineOff.below));
+check('boost: nothing is painted over the tile contents', outlineOn.inside.equals(outlineOff.inside));
 await tab.addStyleTag({ content: '#iwf-neg, .iw-skill-tab[data-iw-fantasy-boost]::after { z-index: 4 !important; box-shadow: inset 0 0 20px #86efac !important; }' });
 await waitFrames();
-const glowOver = await glowShots();
+const glowOver = await outlineShots();
 await tab.evaluate(() => document.querySelectorAll('style:not([data-iw-fantasy-style])').forEach(s => s.textContent.includes('#iwf-neg') && s.remove()));
 await waitFrames();
-check('negative control: a glow raised over the tile is caught', !glowOver.inside.equals(glowOff.inside));
+check('negative control: a glow over the contents is caught', !glowOver.inside.equals(outlineOff.inside));
+await tab.emulateMedia({ reducedMotion: 'reduce' });
+const reducedOutline = await tab.evaluate(() => {
+  const style = getComputedStyle(document.querySelector('.iw-skill-tab[data-iw-fantasy-skill="gathering"]'), '::after');
+  return { anim: style.animationName, opacity: style.opacity, border: style.borderTopStyle, color: style.borderTopColor };
+});
+check('boost: reduced motion keeps a steady visible green outline', reducedOutline.anim === 'none' && reducedOutline.opacity === '1'
+  && reducedOutline.border === 'solid' && reducedOutline.color === 'rgb(134, 239, 172)', JSON.stringify(reducedOutline));
+await tab.emulateMedia({ reducedMotion: 'no-preference' });
 await tab.evaluate(() => {
   const line = document.querySelector('[data-iw-skill-boost]').firstChild;
   line.textContent = 'Daily XP Boost: Mining + 20 % XP';
 });
 await settle(tab);
 const boost2 = await tab.evaluate(() => [...document.querySelectorAll('[data-iw-fantasy-boost]')].map(t => t.getAttribute('data-iw-fantasy-skill')).join());
-check('boost: a text tick on the boost line moves the halo (negative control: the old three lose it)', boost2 === 'mining', boost2);
+check('boost: a text tick on the boost line moves the outline (negative control: the old three lose it)', boost2 === 'mining', boost2);
 
 const runState = () => tab.evaluate(() => {
   const panel = document.querySelector('.iw-skill-tabs').closest('.panel');
@@ -710,8 +734,8 @@ for (const [width, nativeSheet] of [[320,false], [390,false], [768,false], [1440
       art: getComputedStyle(strip.querySelector('.iw-skill-tab')).backgroundImage,
       marks: strip.querySelectorAll('.iw-skill-tab[data-iw-fantasy-skill][data-iw-fantasy-pct]').length,
     }));
-    check('native skill theme: custom card art, four columns, XP rings and Reserved slots remain active',
-      cards.columns === 4 && cards.slots === 2 && cards.marks === 10 && /soft-iron-card-v1/.test(cards.art), JSON.stringify(cards));
+    check('native skill theme: custom card art, five columns and XP rings remain active without Reserved slots',
+      cards.columns === 5 && cards.slots === 0 && cards.marks === 10 && /soft-iron-card-v1/.test(cards.art), JSON.stringify(cards));
   }
   const shortcuts = await tab.locator('.iw-ss-zone').evaluateAll(els => els.map(el => {
     const button = el.querySelector('button'); const css = getComputedStyle(button);
@@ -743,13 +767,13 @@ for (const width of [320, 390, 1606]) {
   const boot = await tab.locator('.iw-skill-tabs').evaluate(strip => ({
     columns: getComputedStyle(strip).gridTemplateColumns.split(' ').length,
     art: getComputedStyle(strip.querySelector('.iw-skill-tab')).backgroundImage,
-    slots: [...strip.querySelectorAll('.iwf-skill-reserved')].filter(el => el.getBoundingClientRect().width > 0).length,
+    slots: strip.querySelectorAll('.iwf-skill-reserved').length,
     hydrated: !document.documentElement.hasAttribute('data-iw-page-hydrated'),
     legacy: document.querySelectorAll('style[data-iw-style]').length,
     nativeSheet: !document.querySelector('style[data-iw-fantasy-style="skills"]'),
   }));
-  check(`${width}px: rebuilt entry point boots Fantasy cards over native sheet CSS`, boot.columns === (width <= 768 ? 4 : 5)
-    && boot.slots === (width <= 768 ? 2 : 0) && /soft-iron-card-v1/.test(boot.art) && boot.hydrated && boot.legacy === 0 && boot.nativeSheet, JSON.stringify(boot));
+  check(`${width}px: rebuilt entry point boots Fantasy cards over native sheet CSS`, boot.columns === 5
+    && boot.slots === 0 && /soft-iron-card-v1/.test(boot.art) && boot.hydrated && boot.legacy === 0 && boot.nativeSheet, JSON.stringify(boot));
   // Older native/inline card rules may remain on the live page and arrive
   // after our styles. Asset-load tests alone miss this cascade regression.
   await tab.addStyleTag({ content: previousCardsCss });
@@ -762,9 +786,9 @@ for (const width of [320, 390, 1606]) {
       oneLine: range.getClientRects().length === 1 && range.getBoundingClientRect().width <= name.getBoundingClientRect().width + .5 };
   }));
   check(`${width}px: every real card keeps Soft Iron after old card CSS loads late`, cascade.every(c => /soft-iron-card-v1/.test(c.art)), JSON.stringify(cascade.map(c => ({name:c.name,art:c.art}))));
-  check(`${width}px: old generated labels cannot replace or split the real names`, cascade.every(c => c.font >= (width <= 768 ? 6 : 9) && ['none','normal'].includes(c.generatedName) && c.oneLine), JSON.stringify(cascade));
+  check(`${width}px: old generated labels cannot replace or split the real names`, cascade.every(c => c.font >= (width <= 768 ? 5 : 9) && ['none','normal'].includes(c.generatedName) && c.oneLine), JSON.stringify(cascade));
   const paintedAssets = await tab.locator('.iw-skill-tabs').evaluate(async strip => {
-    const images = [...strip.querySelectorAll('.iw-skill-tab, .iwf-skill-reserved')].flatMap(card =>
+    const images = [...strip.querySelectorAll('.iw-skill-tab')].flatMap(card =>
       [card, card.querySelector('.iw-skill-tab-icon')].flatMap(el =>
         [...getComputedStyle(el).backgroundImage.matchAll(/url\("([^"]+)"\)/g)].map(m => m[1])));
     return Promise.all([...new Set(images)].map(async url => {
@@ -785,7 +809,7 @@ for (const width of [320, 390, 1606]) {
   await tab.close();
 }
 
-for (const width of [320, 360, 390, 430, 768, 1024, 1606]) {
+for (const width of [320, 360, 390, 430, 633, 768, 1024, 1606]) {
   tab = await open({ width });
   await tab.evaluate(helpers);
   const originalTabs = await tab.locator('.iw-skill-tabs').innerHTML();
@@ -796,7 +820,6 @@ for (const width of [320, 360, 390, 430, 768, 1024, 1606]) {
   });
   await start(tab);
   const skillLayout = await tab.locator('.iw-skill-tabs').evaluate(strip => {
-    const reserved = [...strip.querySelectorAll('.iwf-skill-reserved')];
     const visible = [...strip.children].filter(el => el.getBoundingClientRect().width > 0);
     const rows = new Map();
     for (const el of visible) {
@@ -817,30 +840,26 @@ for (const width of [320, 360, 390, 430, 768, 1024, 1606]) {
     return {
       rows: [...rows.values()], names,
       art: getComputedStyle(strip.querySelector('.iw-skill-tab')).backgroundImage,
-      reserved: reserved.map(el => ({ name: el.querySelector('.iw-skill-tab-name')?.textContent,
-        disabled: el.getAttribute('aria-disabled') === 'true', focusable: el.tabIndex >= 0,
-        dim: +getComputedStyle(el).opacity < .6, owned: el.hasAttribute('data-iw-fantasy-owned') })),
+      reserved: strip.querySelectorAll('.iwf-skill-reserved').length,
       originalsKept: gameSkillTabs.every((el, index) => el === strip.querySelectorAll('.iw-skill-tab')[index]),
     };
   });
-  check(`${width}px: skill cards use ${width <= 768 ? '4/4/4 with Reserved slots' : 'the original desktop 5/5'}`,
-    JSON.stringify(skillLayout.rows) === JSON.stringify(width <= 768 ? [4,4,4] : [5,5]), JSON.stringify(skillLayout.rows));
-  check(`${width}px: every full skill name fits on one line`, skillLayout.names.every(n => n.lines === 1 && n.fits && n.fontSize >= (width <= 768 ? 6 : 9) && ['none', 'normal'].includes(n.replacement)), JSON.stringify(skillLayout.names));
+  check(`${width}px: skill cards use two rows of five`,
+    JSON.stringify(skillLayout.rows) === JSON.stringify([5,5]), JSON.stringify(skillLayout.rows));
+  check(`${width}px: every full skill name fits on one line`, skillLayout.names.every(n => n.lines === 1 && n.fits && n.fontSize >= (width <= 768 ? 5 : 9) && ['none', 'normal'].includes(n.replacement)), JSON.stringify(skillLayout.names));
   check(`${width}px: uppercase skill names use desktop Cinzel without warping`, skillLayout.names.every(n => n.family.includes('Cinzel') && n.weight === '700' && n.caps === 'uppercase' && n.transform === 'none' && n.scale === 'none'), JSON.stringify(skillLayout.names));
-  check(`${width}px: both Reserved slots are dim, disabled, owned and outside keyboard navigation`,
-    skillLayout.reserved.length === 2 && skillLayout.reserved.every(s => s.name === 'Reserved' && s.disabled && !s.focusable && s.dim && s.owned), JSON.stringify(skillLayout.reserved));
+  check(`${width}px: Reserved slots are absent`, skillLayout.reserved === 0, JSON.stringify(skillLayout.reserved));
   check(`${width}px: skill cards load the approved Soft Iron art`, /soft-iron-card-v1\.webp/.test(skillLayout.art) && assetHits.has('/assets/skills-ui/soft-iron-card-v1.webp'), skillLayout.art);
   await tab.locator('.iw-skill-tab').first().click();
   check(`${width}px: gameplay skill nodes and click handlers stay intact`, skillLayout.originalsKept && await tab.evaluate(() => skillPresses === 1));
-  // A normal game rerender must neither duplicate the owned slots nor leave
-  // them in front of real skill cards React appended after them.
+  // A normal game rerender must not recreate removed placeholder cards.
   await tab.evaluate(() => {
     const strip = document.querySelector('.iw-skill-tabs');
     strip.append(gameSkillTabs.at(-1));
   });
   await settle(tab);
-  check(`${width}px: Reserved slots stay unique at the end after a rerender`, await tab.locator('.iw-skill-tabs').evaluate(strip =>
-    strip.querySelectorAll('.iwf-skill-reserved').length === 2 && [...strip.children].slice(-2).every(el => el.matches('.iwf-skill-reserved'))));
+  check(`${width}px: Reserved slots remain absent after a rerender`, await tab.locator('.iw-skill-tabs').evaluate(strip =>
+    strip.querySelectorAll('.iwf-skill-reserved').length === 0 && strip.querySelectorAll('.iw-skill-tab').length === 10));
   await mkdir(resolve(ROOT, 'tmp/skill-cards-soft-iron'), { recursive: true });
   await tab.locator('.iw-skill-tabs').screenshot({ path: resolve(ROOT, `tmp/skill-cards-soft-iron/skills-${width}.png`) });
   const layout = await tab.evaluate(() => ({

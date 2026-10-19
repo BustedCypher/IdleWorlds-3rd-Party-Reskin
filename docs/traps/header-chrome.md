@@ -11,9 +11,14 @@ stay in place. Ordinary proxy activation presses the latest original control;
 real proxy anchors preserve href/target/rel and modified/middle clicks. Missing
 or unfamiliar interactive markup falls back to the native navigation.
 
-Game, Market, Village and Guild are primary; Dungeon, remaining routes and native
-utilities (including Toolkit, presence, settings and Zone themes when present)
-live in More. Native active, disabled, accessible-name and tooltip state are
+Mobile keeps Game, Market, Village and Guild as primary destinations. Desktop
+also exposes Dungeon and Leaderboards directly, with Toolkit at the far right
+and no More button. Toolkit retains its native new-tab link and stays in More
+on mobile. Desktop utility proxies (presence, Zone themes and extra native
+controls when present) live in a separate owned shadow host in the player
+header; the native Settings control remains available there. Mobile More
+retains the other destinations and utilities. Native active, disabled,
+accessible-name and tooltip state are
 copied, not guessed from presentation. URL paths win over hashes; a root hash
 must not be overridden by Game. A checkbox change carries the user's requested
 value across reconciliation, rather than blindly toggling a native setting
@@ -23,11 +28,21 @@ that may already have changed in another tab.
 header is centred and reuses the native major-frame texture, theme variables,
 edge and corner filigree. Requirement text and team state remain visible.
 `chrome/SkillHeader.js` appends transparent travel controls over the zone frame:
-simple chevrons sit at either edge, and the central native title/requirements
+drawn arrow icons sit at either edge, and the central native title/requirements
 area opens the native Zones picker. Shadow buttons retain 44px targets,
 Ashen Iron colours and the latest native disabled/name/tooltip state. Original
 zone buttons and atlas layers stay mounted but hidden; activation resolves and
-presses the current native source. The dock uses the approved Brass rail:
+presses the current native source. On desktop, previous and next zone numbers
+and names sit inside their respective arrows. Labels match the menu buttons'
+12px Cinzel typeface, weight and muted theme colour. The 16px SVG arrows use
+the menu icons' line weight and dim theme accent, with a full shaft and arrowhead
+instead of a text chevron. The live rendered zone title supplies the current number;
+`assets/skills-ui/zone-theme-map.json` supplies neighbouring names. Names update
+on native title text changes and are omitted beyond the catalogue's bounds.
+The central picker retains 40% of the row; each side gets 30%, with ellipsis
+when space is tight. Full destinations appear in tooltips and accessible
+descriptions alongside the native travel help or requirements. Mobile keeps arrow-only
+travel. The dock uses the approved Brass rail:
 a continuous surface, quiet dividers and an underline on the active route.
 The rail and More menu inherit the active theme's `--iw-th-*` accent, edge
 and ground tokens through their shadow hosts, including changes while More
@@ -38,7 +53,18 @@ Shadow styles pass through Fantasy's shared
 Header travel stays available on mobile and desktop. The selected skill sheet
 also shows its travel controls up to 768px; above that, CSS hides the sheet's
 `.iw-ss-zonebar-btns`.
-Native presence and theme utilities appear in More as proxies. The native theme-state attribute is the ONE
+On desktop the shell's background and corner pseudo-elements span grid rows
+`2 / 4`, enclosing both zone travel and the navigation rail. The desktop host
+has no outer top margin; its shadow rail has only an internal top divider.
+Desktop route buttons are 32px high, down from 64px, and the zone title's
+vertical padding is reduced. Mobile keeps its original touch dimensions.
+Guild and the other secondary routes have no zone bar, so the native port
+does not mark a chrome shell there. A classified nav-tab independently keeps
+Fantasy chrome active, and an owned `data-iw-fantasy-nav-framed` marker gives
+the desktop host its own matching textured ground, border and corner filigree.
+Mobile retains its separate bottom dock and zone frame. Green emerald
+last-action notices are hidden at every width; non-green announcements stay.
+Native presence and theme utilities remain proxies. The native theme-state attribute is the ONE
 additional watched attribute in Fantasy's existing observer; Fantasy never
 writes it. This keeps an open menu in sync with cross-tab setting changes
 without another observer or polling. Shadow DOM writes cannot re-trigger the
@@ -91,6 +117,17 @@ keyboard order, shared frame paint, collapse, live state, daily placement,
 responsive duplicates, replacement, quiescence and exact teardown. Source
 visibility must climb `display:contents` parents to the nearest real box:
 testing only the visible outer shell can activate a hidden responsive copy.
+
+The running-action location beside the skill name needs the same care. Both
+responsive columns share that outer shell, so selecting its first Current
+Action copied the hidden column's zone. Resolve from the sheet's nearest
+ancestor containing an action first; when multiple sources remain, prefer a
+rendered action-panel parent. The panel itself may be hidden by the queue
+mirror, so visibility of its jump button cannot disqualify the source.
+Batch these visibility reads before writing notes. The regression in
+`tests/fantasy-action-location.test.mjs` crosses 1280px in both directions,
+with separate and shared sheets, queue-hidden sources and title-only updates.
+
 The header title uses inline flow so its team marker stays on the final title
 line on phones. Native marker tooltips sit above the transparent picker target;
 test their actual hit target, not just visibility. A rendered interactive

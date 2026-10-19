@@ -16,6 +16,7 @@
 
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { vendorItemExpansions } from './import-item-expansions.mjs';
 
 // 2026-09-04: bumped for the v5.4 Woodcutting & Construction art pack —
 // item_icons_atlas.png grows 1280x4864 -> 1280x6144 and item_icons_index.csv
@@ -246,6 +247,7 @@ async function main() {
   console.log('Vendoring extension assets…');
   await vendorSprites();
   await vendorRaidGear();
+  await vendorItemExpansions();
   await vendorFonts();
   await verify();
   console.log('\nDone. Assets are bundled — no runtime network access needed.');

@@ -116,14 +116,61 @@ try {
   await page.close();
 
   const clean = await open(1400);
+  assert.deepEqual(await mainNavigation(clean, 'desktop').locator('.primary .destination-label').allTextContents(),
+    ['Game', 'Market', 'Village', 'Dungeon', 'Guild', 'Leaderboards'], 'all six desktop destinations are directly visible');
+  const desktopToolkit = primary(clean, 'Toolkit', 'desktop');
+  assert.equal(await desktopToolkit.isVisible(), true, 'Toolkit is available directly on desktop');
+  assert.equal(await desktopToolkit.getAttribute('href'), 'https://idleworldstoolkit.com/');
+  assert.equal(await desktopToolkit.getAttribute('target'), '_blank');
+  assert.equal(await desktopToolkit.getAttribute('rel'), 'noopener noreferrer');
+  await desktopToolkit.click();
+  assert.equal(await clean.evaluate(() => calls.Toolkit), 1, 'desktop Toolkit presses its original control exactly once');
+  const merged = await clean.locator('[data-iw-fantasy-nav-shell]').evaluate(el => {
+    const background = getComputedStyle(el, '::before');
+    const corners = getComputedStyle(el, '::after');
+    const zone = el.querySelector('[data-iw-chrome="zone-text"]').getBoundingClientRect();
+    const bar = el.querySelector('[data-iw-fantasy-nav-host="desktop"]').getBoundingClientRect();
+    return { backgroundRows: [background.gridRowStart, background.gridRowEnd],
+      cornerRows: [corners.gridRowStart, corners.gridRowEnd], height: parseFloat(background.height),
+      neededHeight: bar.bottom - zone.top, gap: bar.top - zone.bottom };
+  });
+  assert.deepEqual(merged.backgroundRows, ['2', '4'], 'one shared background spans zone header and desktop navigation');
+  assert.deepEqual(merged.cornerRows, ['2', '4'], 'one set of outer corners encloses both rows');
+  assert.ok(Math.abs(merged.gap) < 1 && merged.height >= merged.neededHeight - 1,
+    `the navigation joins the zone frame without an external gap: ${JSON.stringify(merged)}`);
+  await primary(clean, 'Leaderboards', 'desktop').click();
+  assert.equal(await clean.evaluate(() => calls.Leaderboards), 1, 'desktop Leaderboards presses its original control');
+  await primary(clean, 'Dungeon', 'desktop').click();
+  assert.equal(await clean.evaluate(() => calls.dungeon), 1, 'desktop Dungeon presses its original control');
+  assert.equal(await primary(clean, 'More', 'desktop').isVisible(), false, 'desktop has no three-dot menu');
+  const desktopTools = clean.locator('[data-iw-fantasy-nav-tools]');
+  await desktopTools.getByRole('button', { name: /who.s here/i }).click();
+  assert.equal(await clean.evaluate(() => calls.presence), 1, 'desktop utilities remain accessible in the player header');
+  await desktopTools.getByRole('checkbox', { name: 'Zone themes', exact: true }).uncheck();
+  assert.equal(await clean.locator('#themes').isChecked(), false, 'the header utility retains native theme control');
   for (const button of await clean.locator('[data-iw-chrome="zone-actions"] button').all()) assert.equal(await button.isVisible(), false, 'travel is removed from the page header');
   assert.equal(await primary(clean,'Game','desktop').evaluate(el => getComputedStyle(el).color), 'rgb(212, 173, 99)', 'the active dock uses the default Ashen brass accent');
   for (const width of [320,390,767,768,1024,1400]) {
     await clean.setViewportSize({width,height:900}); await settle(clean);
     const layout = width < 768 ? 'mobile' : 'desktop';
+    assert.deepEqual(await mainNavigation(clean, layout).locator('.primary .destination-label').allTextContents(),
+      width < 768 ? ['Game', 'Market', 'Village', 'Guild'] : ['Game', 'Market', 'Village', 'Dungeon', 'Guild', 'Leaderboards'],
+      `${width}px keeps the intended desktop/mobile route layout`);
     const navBox = await mainNavigation(clean, layout).boundingBox();
     assert.ok(navBox.width <= width && navBox.x >= 0, `${width}px navigation fits`);
-    for (const b of await mainNavigation(clean, layout).locator('button,a').all()) { const r = await b.boundingBox(); assert.ok(r.width >= 44 && r.height >= 44, `${width}px controls are usable touch targets`); }
+    if (layout === 'desktop') {
+      const toolkitBox = await primary(clean, 'Toolkit', layout).boundingBox();
+      for (const button of await mainNavigation(clean, layout).locator('button:visible,a:visible').all()) {
+        const box = await button.boundingBox();
+        assert.ok(box.x <= toolkitBox.x, `${width}px Toolkit is the far-right control`);
+        assert.ok(Math.abs(box.x - toolkitBox.x) < 1 || box.x + box.width <= toolkitBox.x + 1, `${width}px route controls do not overlap Toolkit`);
+      }
+    } else assert.equal(await primary(clean, 'Toolkit').count(), 0, 'mobile keeps Toolkit in More');
+    for (const b of await mainNavigation(clean, layout).locator('button:visible,a:visible').all()) {
+      const r = await b.boundingBox();
+      assert.ok(r.width >= 44 && r.height >= (layout === 'mobile' ? 44 : 32), `${width}px controls fit the compact desktop or touch mobile layout`);
+      if (layout === 'desktop') assert.ok(r.height <= 36, `${width}px desktop controls retain a compact height with extra vertical space`);
+    }
     assert.equal(await clean.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${width}px has no horizontal overflow`);
     const travel=clean.locator('[data-iw-fantasy-zone-travel]');
     assert.equal(await travel.isVisible(),true,`${width}px header travel stays available`);
@@ -131,9 +178,11 @@ try {
     assert.equal(await travel.getByRole('button',{name:'Previous Zone',exact:true}).count(),1);
     assert.equal(await travel.getByRole('button',{name:'Next Zone',exact:true}).count(),1);
     assert.equal(await clean.locator('[data-iw-chrome="zone-text"]').evaluate(el=>getComputedStyle(el).textAlign),'center');
-    await more(clean, layout);
-    const box = await host(clean, layout).locator('dialog').boundingBox(); assert.ok(box.x >= 0 && box.x+box.width <= width+1 && box.y >= 0 && box.y+box.height <= 901, `${width}px More stays in the viewport`);
-    await clean.keyboard.press('Escape');
+    if (layout === 'mobile') {
+      await more(clean, layout);
+      const box = await host(clean, layout).locator('dialog').boundingBox(); assert.ok(box.x >= 0 && box.x+box.width <= width+1 && box.y >= 0 && box.y+box.height <= 901, `${width}px More stays in the viewport`);
+      await clean.keyboard.press('Escape');
+    }
   }
   await clean.setViewportSize({width:667,height:320}); await settle(clean); await more(clean);
   const short = await host(clean).locator('dialog').boundingBox(); assert.ok(short.y >= 0 && short.y+short.height <= 321, 'landscape More remains reachable');
@@ -150,9 +199,9 @@ try {
     assert.equal(await host(clean).locator('dialog').evaluate(el=>getComputedStyle(el).backgroundColor),toRgb(expected.ground),`${theme || 'default'} menu ground follows the current theme`);
   }
   await clean.keyboard.press('Escape');
-  await clean.setViewportSize({width:1024,height:320}); await settle(clean); await more(clean,'desktop');
-  const shortDesktop = await host(clean,'desktop').locator('dialog').boundingBox(); assert.ok(shortDesktop.y >= 0 && shortDesktop.y+shortDesktop.height <= 321, 'short desktop windows keep More inside the viewport');
-  await clean.keyboard.press('Escape');
+  await clean.setViewportSize({width:1024,height:320}); await settle(clean);
+  const shortDesktop = await mainNavigation(clean,'desktop').boundingBox();
+  assert.ok(shortDesktop.y >= 0 && shortDesktop.y+shortDesktop.height <= 321, 'short desktop windows keep the compact rail reachable');
   await mkdir(resolve(ROOT, 'tmp/thumb-dock'), {recursive:true});
   await clean.evaluate(() => Fantasy.stop());
   assert.equal(await clean.locator('[data-iw-fantasy-nav-host]').count(), 0);
@@ -163,8 +212,39 @@ try {
   await primary(clean, 'Market', 'desktop').click(); assert.equal(await clean.evaluate(() => calls.Market), 1, 'restart binds no duplicate handlers');
   // Screenshots temporarily change input caret styles; take them after the
   // exact-DOM teardown assertion, so Playwright's own edits do not taint it.
-  for (const width of [390,1400]) { await clean.setViewportSize({width,height:900}); await settle(clean); await clean.screenshot({path:resolve(ROOT,`tmp/thumb-dock/${width}.png`),fullPage:true}); await more(clean,width<768?'mobile':'desktop'); await clean.screenshot({path:resolve(ROOT,`tmp/thumb-dock/${width}-more.png`),fullPage:true}); await clean.keyboard.press('Escape'); }
+  for (const width of [390,1400]) {
+    await clean.setViewportSize({width,height:900}); await settle(clean);
+    await clean.screenshot({path:resolve(ROOT,`tmp/thumb-dock/${width}.png`),fullPage:true});
+    if (width < 768) {
+      await more(clean);
+      await clean.screenshot({path:resolve(ROOT,`tmp/thumb-dock/${width}-more.png`),fullPage:true});
+      await clean.keyboard.press('Escape');
+    }
+  }
   await clean.close();
+
+  // Guild, Market and the other secondary pages omit the native zone bar,
+  // so HeaderChrome supplies none of its shell/nav roles on those routes.
+  for (const route of ['/guild', '/market', '/housing', '/leaderboards', '/dungeon']) {
+    const standalone = await open(1400, `<div id="route-shell"><header><h1>Player</h1><button data-iw-header="utility-button" title="Settings">⚙</button></header>${nav().replace('data-iw-chrome="nav"', 'data-iw-ui="main-nav"')}<section class="panel"><h2>Route content</h2></section></div>`);
+    await standalone.evaluate(route => { history.replaceState({}, '', route); document.querySelector('#nav').classList.add('route-ready'); }, route);
+    await settle(standalone);
+    const bar = mainNavigation(standalone, 'desktop');
+    assert.equal(await bar.isVisible(), true, `${route} retains the custom navigation`);
+    assert.equal(await primary(standalone, route === '/housing' ? 'Village' : route.slice(1).replace(/^./, c => c.toUpperCase()), 'desktop').getAttribute('aria-current'), 'page');
+    const frame = await host(standalone, 'desktop').evaluate(el => {
+      const ground = getComputedStyle(el, '::before'), corners = getComputedStyle(el, '::after');
+      return { ground: ground.content, border: ground.borderTopWidth, image: ground.backgroundImage, corners: corners.borderImageSource };
+    });
+    assert.ok(frame.ground !== 'none' && frame.border === '1px' && frame.image.includes('skills_panel_texture') && frame.corners !== 'none', `${route} keeps the same textured Fantasy frame: ${JSON.stringify(frame)}`);
+    assert.equal(await primary(standalone, 'More', 'desktop').isVisible(), false);
+    await primary(standalone, 'Toolkit', 'desktop').click();
+    assert.equal(await standalone.evaluate(() => calls.Toolkit), 1);
+    if (route === '/guild') await standalone.screenshot({path:resolve(ROOT,'tmp/thumb-dock/guild-1400.png'),fullPage:true});
+    await standalone.evaluate(() => Fantasy.stop());
+    assert.equal(await standalone.locator('[data-iw-fantasy-nav-host],[data-iw-fantasy-nav-tools],[data-iw-fantasy-nav-framed]').count(), 0, 'standalone frame and header utilities clean up completely');
+    await standalone.close();
+  }
 
   const duplicates = await open(390, `<div class="wide">${shell('wide-shell',nav('wide-nav'))}</div><div class="narrow">${shell('narrow-shell',nav('narrow-nav'))}</div>`);
   await primary(duplicates, 'Market').click();

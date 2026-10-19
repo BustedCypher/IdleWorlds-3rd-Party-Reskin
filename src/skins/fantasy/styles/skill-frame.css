@@ -74,6 +74,13 @@
   color: #c9b88f;
   box-shadow: inset 0 1px 0 #e8cf8c0d;
 }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iwf-skill-location {
+  max-width: 100%;
+  color: #86d7a0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
 :is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-boost { color: #86d7a0; }
 :is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-xp-chip {
   border-color: #816a37;

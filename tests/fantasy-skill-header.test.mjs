@@ -52,12 +52,13 @@ try{
   await control(page,'Zones').focus();await page.keyboard.press('Enter');await page.keyboard.press('Space');
   assert.equal(await page.evaluate(()=>presses['native-zones']),3,'header supports Enter and Space');
   assert.equal(await page.evaluate(()=>nativeNodes.every(([el,parent])=>el.isConnected&&el.parentElement===parent)),true,'native gameplay nodes retain identity and parents');
-  await page.evaluate(()=>{document.querySelector('#native-prev').disabled=true;document.querySelector('#native-next').title='Travel to Zone 21';});await settle(page);
+  await page.evaluate(()=>{document.querySelector('#native-prev').disabled=true;document.querySelector('#native-prev').title='Requires ATK 325';document.querySelector('#native-next').title='Travel to Zone 21';});await settle(page);
   assert.equal(await control(page,'Previous Zone').isDisabled(),true);
-  assert.equal(await control(page,'Next Zone').getAttribute('title'),'Travel to Zone 21');
+  assert.equal(await control(page,'Next Zone').getAttribute('title'),'Zone 21: Gravite Maw\nTravel to Zone 21','destination tooltips retain the native help text');
+  assert.equal(await control(page,'Previous Zone').getAttribute('aria-description'),'Zone 19: Eternium Verge. Requires ATK 325','a destination description preserves title-only native travel requirements');
   await page.evaluate(()=>{document.querySelector('[data-iw-skill-boost]').textContent='Daily XP Boost: Mining + Smithing + 20 % XP';});await settle(page);
   assert.match(await page.locator('[data-iw-skill-boost]').textContent(),/Mining/,'daily info stays live in its new visual position');
-  for(const width of [320,390,540,768,769,1024,1400]){
+  for(const width of [320,390,540,768,769,1024,1400,2048]){
     await page.setViewportSize({width,height:1100});await settle(page);
     assert.equal(await travel(page).isVisible(),true,`${width}px header travel remains available`);
     const title=await page.locator('[data-iw-ui="zone-title"]').boundingBox();
@@ -69,6 +70,40 @@ try{
     const next=await control(page,'Next Zone').boundingBox();
     assert.ok(previous.x===group.x&&next.x+next.width<=group.x+group.width+.5&&picker.x>=previous.x+previous.width-.5&&picker.x+picker.width<=next.x+.5,`${width}px arrows flank the clickable header`);
     assert.ok(title.x>=picker.x-.5&&title.x+title.width<=picker.x+picker.width+.5,`${width}px title remains between the arrow targets`);
+    const previousLabel=travel(page).locator('.prev .zone-label');
+    const nextLabel=travel(page).locator('.next .zone-label');
+    assert.equal(await previousLabel.isVisible(),width>=768,`${width}px destination names are desktop-only`);
+    assert.equal(await nextLabel.isVisible(),width>=768,`${width}px next destination is desktop-only`);
+    if(width>=768){
+      assert.equal(await previousLabel.textContent(),'Zone 19: Eternium Verge');
+      assert.equal(await nextLabel.textContent(),'Zone 21: Gravite Maw');
+      const appearance=await travel(page).evaluate(el=>{
+        const root=el.shadowRoot;
+        const menu=document.querySelector('[data-iw-fantasy-nav-host="desktop"]').shadowRoot;
+        const canvas=document.createElement('canvas').getContext('2d');
+        const style=node=>{
+          const s=getComputedStyle(node);
+          canvas.font=`${s.fontStyle} ${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;
+          const ink=canvas.measureText(node.textContent);
+          return {face:[s.fontFamily,s.fontSize,s.fontWeight,s.fontStyle,s.color],height:ink.actualBoundingBoxAscent+ink.actualBoundingBoxDescent};
+        };
+        const arrow=root.querySelector('.prev .arrow');
+        return {menu:style(menu.querySelector('[data-destination="guild"] .destination-label')),
+          menuIconColor:getComputedStyle(menu.querySelector('[data-destination="guild"] svg')).color,
+          arrow:{tag:arrow.tagName.toLowerCase(),color:getComputedStyle(arrow).color,height:arrow.getBoundingClientRect().height},
+          previous:style(root.querySelector('.prev .zone-label')),next:style(root.querySelector('.next .zone-label'))};
+      });
+      assert.deepEqual(appearance.previous.face,appearance.menu.face,'previous destination matches the menu button font, size, weight and colour');
+      assert.deepEqual(appearance.next.face,appearance.menu.face,'next destination matches the menu button font, size, weight and colour');
+      assert.equal(appearance.arrow.tag,'svg','zone travel uses a drawn arrow icon instead of a text chevron');
+      assert.equal(appearance.arrow.color,appearance.menuIconColor,'travel arrows match the menu icon palette');
+      for(const name of ['previous','next'])assert.ok(appearance[name].height<=appearance.arrow.height+1,`${width}px ${name} text fits the arrow icon height: ${JSON.stringify(appearance)}`);
+      const prevArrow=await travel(page).locator('.prev .arrow').boundingBox();
+      const nextArrow=await travel(page).locator('.next .arrow').boundingBox();
+      const prevName=await previousLabel.boundingBox(),nextName=await nextLabel.boundingBox();
+      assert.ok(prevName.x>=prevArrow.x+prevArrow.width&&prevName.x+prevName.width<=picker.x+.5,'previous zone sits inside its chevron, clear of the current-zone picker');
+      assert.ok(nextName.x>=picker.x+picker.width-.5&&nextName.x+nextName.width<=nextArrow.x,'next zone sits inside its chevron, clear of the current-zone picker');
+    }
     await page.mouse.click(picker.x+picker.width/2,title.y+title.height/2);
     assert.ok(await page.evaluate(()=>presses['native-zones']>=4),'clicking the visible header text opens the native picker');
     const tabs=await page.locator('.iw-skill-tabs').boundingBox();
@@ -87,6 +122,17 @@ try{
     assert.equal(await page.locator('#zone-team').evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===el;}),true,'native team tooltip remains reachable above the picker target');
     const team=await page.locator('#zone-team').boundingBox();
     assert.ok(team.y+team.height<=title.y+title.height+4,`${width}px team marker stays with the title rather than on its own row`);
+  }
+  for(const [title,previous,next] of [
+    ['Zone 14: Moonsteel Basin','Zone 13: Bloodstone Scar','Zone 15: Sunforge Expanse'],
+    ['Zone 1: Greenwake Den','','Zone 2: Ironfang Trail'],
+    ['Zone 34: Primordial Spire','Zone 33: Glacial Abyss',''],
+    ['An unknown location','','']
+  ]){
+    await page.evaluate(title=>{document.querySelector('[data-iw-ui="zone-title"]').textContent=title;},title);await settle(page);
+    assert.equal(await travel(page).locator('.prev .zone-label').textContent(),previous,'previous destination follows the native zone text, including the first zone');
+    assert.equal(await travel(page).locator('.next .zone-label').textContent(),next,'next destination follows the native zone text, without invented destinations beyond the catalogue');
+    assert.equal(await control(page,'Previous Zone').isDisabled(),true,'destination names never override native travel restrictions');
   }
   await page.setViewportSize({width:390,height:1100});await settle(page);
   await page.getByRole('button',{name:'Collapse Skill Actions',exact:true}).click();await settle(page);
@@ -107,9 +153,11 @@ try{
   await clean.close();
 
   const twins=await open(390,`<div class="wide">${shell('wide-shell')}</div><div class="narrow">${shell('narrow-shell')}</div>`);
+  await twins.evaluate(()=>{document.querySelector('#wide-shell [data-iw-ui="zone-title"]').textContent='Zone 14: Moonsteel Basin';});await settle(twins);
   assert.equal(await travel(twins).evaluate(el=>el.closest('[data-iw-chrome="shell"]').id),'narrow-shell');
   await twins.setViewportSize({width:1400,height:1100});await settle(twins);
   assert.equal(await travel(twins).evaluate(el=>el.closest('[data-iw-chrome="shell"]').id),'wide-shell','the travel header follows the rendered column');
+  assert.equal(await travel(twins).locator('.prev .zone-label').textContent(),'Zone 13: Bloodstone Scar','destination names come from the rendered zone header');
   await control(twins,'Zones').click();
   await twins.evaluate(()=>{const old=document.querySelector('#wide-shell [data-iw-chrome="zone-actions"]');const fresh=old.cloneNode(true);fresh.querySelector('[data-iw-zone-action="zones"]').onclick=()=>window.replacementPressed=true;old.replaceWith(fresh);});await settle(twins);
   await control(twins,'Zones').click();assert.equal(await twins.evaluate(()=>replacementPressed),true,'replaced source controls are resolved before activation');

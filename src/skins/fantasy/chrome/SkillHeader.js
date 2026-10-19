@@ -3,10 +3,12 @@ import { ownerOf, mark, label } from '../core/dom.js';
 import { isRendered } from '../core/Viewport.js';
 import { isRuntimeActive, guard } from '../core/Runtime.js';
 import travelCss from '../styles/skill-travel.css';
+import { zones as zoneCatalogue } from '../../../../assets/skills-ui/zone-theme-map.json';
 
 const OWNED='data-iw-fantasy-skill-header-owned';
 const HOST='data-iw-fantasy-zone-travel';
 const SURFACE='data-iw-fantasy-zone-surface';
+const LABELLED='data-iw-fantasy-zone-labelled';
 const PANEL='data-iw-fantasy-skill-header';
 const HEAD='data-iw-fantasy-skill-heading-row';
 const SPINE='data-iw-fantasy-skill-heading-spine';
@@ -59,15 +61,30 @@ function visibleSource(group){
   return isRendered(parent);
 }
 
+function arrowIcon(direction){
+  const arrow=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  const path=document.createElementNS(arrow.namespaceURI,'path');
+  for(const node of [arrow,path]){
+    node.setAttribute(OWNED,'1');node.setAttribute('data-iw-fantasy-owned','1');
+  }
+  for(const [key,value] of Object.entries({class:'arrow',viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','stroke-width':'1.6','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'}))arrow.setAttribute(key,value);
+  path.setAttribute('d',direction==='prev'?'M21 12H3m8-8-8 8 8 8':'M3 12h18m-8-8 8 8-8 8');
+  arrow.append(path);return arrow;
+}
+
 function buildView(){
   const host=own('div');host.setAttribute(HOST,'1');
   const root=host.attachShadow({mode:'open'});
   const style=own('style');style.textContent=travelCss;
   const nav=own('nav','travel');nav.setAttribute('aria-label','Zone travel');
-  const buttons=new Map();
+  const buttons=new Map(),labels=new Map();
   for(const key of KEYS){
     const button=own('button',key);button.type='button';
-    if(key!=='zones'){const arrow=own('span','arrow',key==='prev'?'‹':'›');arrow.setAttribute('aria-hidden','true');button.append(arrow);}
+    if(key!=='zones'){
+      const arrow=arrowIcon(key);
+      const name=own('span','zone-label','');name.setAttribute('aria-hidden','true');
+      button.append(...(key==='prev'?[arrow,name]:[name,arrow]));labels.set(key,name);
+    }
     button.addEventListener('click',event=>{
       event.preventDefault();event.stopPropagation();
       guard('skill-header:activate',()=>{
@@ -79,7 +96,7 @@ function buildView(){
     });
     buttons.set(key,button);nav.append(button);
   }
-  root.append(style,nav);return {host,buttons};
+  root.append(style,nav);return {host,buttons,labels};
 }
 
 function syncMarks(desired){
@@ -106,13 +123,31 @@ export function skillHeaderPass(){
   sources=source?.controls||new Map();
   if(source){
     tag(source.text,SURFACE);
+    const current=label(source.text.querySelector('[data-iw-ui="zone-title"]')?.textContent).match(/^zone\s*(\d+)\b/i);
+    const destinations=new Map(['prev','next'].map(key=>{
+      const number=current?Number(current[1])+(key==='prev'?-1:1):null;
+      const name=number&&zoneCatalogue[number]?.name;
+      return [key,name?`Zone ${number}: ${name}`:''];
+    }));
+    const labelled=[...destinations.values()].some(Boolean);
+    if(labelled)tag(source.text,LABELLED);
     if(!view)view=buildView();
     if(view.host.parentElement!==source.text)source.text.append(view.host);
+    set(view.host,LABELLED,labelled?'1':null);
     for(const [key,button] of view.buttons){
       const native=sources.get(key);const text=label(native.textContent);
+      const destination=destinations.get(key);
+      const name=view.labels.get(key);
+      if(name){
+        if(name.textContent!==destination)name.textContent=destination;
+        if(name.hidden!==!destination)name.hidden=!destination;
+      }
       set(button,'aria-label',native.getAttribute('aria-label')||text);
-      set(button,'aria-description',native.getAttribute('aria-description')||(key==='zones'?label(source.text.querySelector('[data-iw-ui="zone-title"]')?.textContent):null));
-      set(button,'title',native.getAttribute('title')||(key==='zones'?'Show zones':null));
+      const nativeTitle=native.getAttribute('title');
+      const description=[destination,native.getAttribute('aria-description')||nativeTitle].filter(Boolean).join('. ');
+      set(button,'aria-description',description||(key==='zones'?label(source.text.querySelector('[data-iw-ui="zone-title"]')?.textContent):null));
+      const tooltip=destination&&nativeTitle&&!nativeTitle.includes(destination)?`${destination}\n${nativeTitle}`:nativeTitle||destination;
+      set(button,'title',tooltip||(key==='zones'?'Show zones':null));
       set(button,'aria-disabled',disabled(native)?'true':null);
       if(button.disabled!==disabled(native))button.disabled=disabled(native);
     }

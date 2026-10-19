@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "source": "BustedCypher/idleWorlds-game-sprites-BC@3ad7e2563e342098c535727f35d6827b7ee75cd4",
+  "source_generated_at": "2026-10-19T10:36:31.220Z",
+  "items": [
+    {
+      "item_id": "cinderforged_blade",
+      "name": "Cinderforged Blade",
+      "path": "assets/item-expansions/october-2026/cinderforged_blade.png"
+    },
+    {
+      "item_id": "cinderforged_bulwark",
+      "name": "Cinderforged Bulwark",
+      "path": "assets/item-expansions/october-2026/cinderforged_bulwark.png"
+    },
+    {
+      "item_id": "cinderforged_helm",
+      "name": "Cinderforged Helm",
+      "path": "assets/item-expansions/october-2026/cinderforged_helm.png"
+    },
+    {
+      "item_id": "cinderforged_breastplate",
+      "name": "Cinderforged Breastplate",
+      "path": "assets/item-expansions/october-2026/cinderforged_breastplate.png"
+    },
+    {
+      "item_id": "cinderforged_gauntlets",
+      "name": "Cinderforged Gauntlets",
+      "path": "assets/item-expansions/october-2026/cinderforged_gauntlets.png"
+    },
+    {
+      "item_id": "cinderforged_greaves",
+      "name": "Cinderforged Greaves",
+      "path": "assets/item-expansions/october-2026/cinderforged_greaves.png"
+    },
+    {
+      "item_id": "cinderforged_sabatons",
+      "name": "Cinderforged Sabatons",
+      "path": "assets/item-expansions/october-2026/cinderforged_sabatons.png"
+    },
+    {
+      "item_id": "stormforged_blade",
+      "name": "Stormforged Blade",
+      "path": "assets/item-expansions/october-2026/stormforged_blade.png"
+    },
+    {
+      "item_id": "stormforged_bulwark",
+      "name": "Stormforged Bulwark",
+      "path": "assets/item-expansions/october-2026/stormforged_bulwark.png"
+    },
+    {
+      "item_id": "stormforged_helm",
+      "name": "Stormforged Helm",
+      "path": "assets/item-expansions/october-2026/stormforged_helm.png"
+    },
+    {
+      "item_id": "stormforged_breastplate",
+      "name": "Stormforged Breastplate",
+      "path": "assets/item-expansions/october-2026/stormforged_breastplate.png"
+    },
+    {
+      "item_id": "stormforged_gauntlets",
+      "name": "Stormforged Gauntlets",
+      "path": "assets/item-expansions/october-2026/stormforged_gauntlets.png"
+    },
+    {
+      "item_id": "stormforged_greaves",
+      "name": "Stormforged Greaves",
+      "path": "assets/item-expansions/october-2026/stormforged_greaves.png"
+    },
+    {
+      "item_id": "stormforged_sabatons",
+      "name": "Stormforged Sabatons",
+      "path": "assets/item-expansions/october-2026/stormforged_sabatons.png"
+    },
+    {
+      "item_id": "hollowforged_blade",
+      "name": "Hollowforged Blade",
+      "path": "assets/item-expansions/october-2026/hollowforged_blade.png"
+    },
+    {
+      "item_id": "hollowforged_bulwark",
+      "name": "Hollowforged Bulwark",
+      "path": "assets/item-expansions/october-2026/hollowforged_bulwark.png"
+    },
+    {
+      "item_id": "hollowforged_helm",
+      "name": "Hollowforged Helm",
+      "path": "assets/item-expansions/october-2026/hollowforged_helm.png"
+    },
+    {
+      "item_id": "hollowforged_breastplate",
+      "name": "Hollowforged Breastplate",
+      "path": "assets/item-expansions/october-2026/hollowforged_breastplate.png"
+    },
+    {
+      "item_id": "hollowforged_gauntlets",
+      "name": "Hollowforged Gauntlets",
+      "path": "assets/item-expansions/october-2026/hollowforged_gauntlets.png"
+    },
+    {
+      "item_id": "hollowforged_greaves",
+      "name": "Hollowforged Greaves",
+      "path": "assets/item-expansions/october-2026/hollowforged_greaves.png"
+    },
+    {
+      "item_id": "hollowforged_sabatons",
+      "name": "Hollowforged Sabatons",
+      "path": "assets/item-expansions/october-2026/hollowforged_sabatons.png"
+    },
+    {
+      "item_id": "anchorforged_blade",
+      "name": "Anchorforged Blade",
+      "path": "assets/item-expansions/october-2026/anchorforged_blade.png"
+    },
+    {
+      "item_id": "anchorforged_bulwark",
+      "name": "Anchorforged Bulwark",
+      "path": "assets/item-expansions/october-2026/anchorforged_bulwark.png"
+    },
+    {
+      "item_id": "anchorforged_helm",
+      "name": "Anchorforged Helm",
+      "path": "assets/item-expansions/october-2026/anchorforged_helm.png"
+    },
+    {
+      "item_id": "anchorforged_breastplate",
+      "name": "Anchorforged Breastplate",
+      "path": "assets/item-expansions/october-2026/anchorforged_breastplate.png"
+    },
+    {
+      "item_id": "anchorforged_gauntlets",
+      "name": "Anchorforged Gauntlets",
+      "path": "assets/item-expansions/october-2026/anchorforged_gauntlets.png"
+    },
+    {
+      "item_id": "anchorforged_greaves",
+      "name": "Anchorforged Greaves",
+      "path": "assets/item-expansions/october-2026/anchorforged_greaves.png"
+    },
+    {
+      "item_id": "anchorforged_sabatons",
+      "name": "Anchorforged Sabatons",
+      "path": "assets/item-expansions/october-2026/anchorforged_sabatons.png"
+    },
+    {
+      "item_id": "welcome_back_xp_potion",
+      "name": "Welcome-Back XP Potion",
+      "path": "assets/item-expansions/october-2026/welcome_back_xp_potion.png"
+    },
+    {
+      "item_id": "premium_token",
+      "name": "Premium Membership Token",
+      "path": "assets/item-expansions/october-2026/premium_token.png"
+    },
+    {
+      "item_id": "hollow_candy",
+      "name": "Hollow Candy",
+      "path": "assets/item-expansions/october-2026/hollow_candy.png"
+    },
+    {
+      "item_id": "hollow_scroll",
+      "name": "Hollow Scroll",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "deepvein_lodestone",
+      "name": "Deepvein Lodestone",
+      "path": "assets/item-expansions/october-2026/deepvein_lodestone.png"
+    },
+    {
+      "item_id": "emberheart_anvilstone",
+      "name": "Emberheart Anvilstone",
+      "path": "assets/item-expansions/october-2026/emberheart_anvilstone.png"
+    },
+    {
+      "item_id": "rimebloom_satchel",
+      "name": "Rimebloom Satchel",
+      "path": "assets/item-expansions/october-2026/rimebloom_satchel.png"
+    },
+    {
+      "item_id": "stormwoven_grimoire",
+      "name": "Stormwoven Grimoire",
+      "path": "assets/item-expansions/october-2026/stormwoven_grimoire.png"
+    },
+    {
+      "item_id": "astral_loupe",
+      "name": "Astral Loupe",
+      "path": "assets/item-expansions/october-2026/astral_loupe.png"
+    },
+    {
+      "item_id": "cinderthread_spindle",
+      "name": "Cinderthread Spindle",
+      "path": "assets/item-expansions/october-2026/cinderthread_spindle.png"
+    },
+    {
+      "item_id": "rimebark_charm",
+      "name": "Rimebark Charm",
+      "path": "assets/item-expansions/october-2026/rimebark_charm.png"
+    },
+    {
+      "item_id": "stormset_plumb_line",
+      "name": "Stormset Plumb Line",
+      "path": "assets/item-expansions/october-2026/stormset_plumb_line.png"
+    },
+    {
+      "item_id": "hollow_lantern",
+      "name": "Hollow Lantern",
+      "path": "assets/item-expansions/october-2026/hollow_lantern.png"
+    },
+    {
+      "item_id": "hollow_skeleton_key",
+      "name": "Skeleton Key",
+      "path": "assets/item-expansions/october-2026/hollow_skeleton_key.png"
+    },
+    {
+      "item_id": "hollow_scroll_combat",
+      "name": "Hollow Scroll of Combat",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "hollow_scroll_mining",
+      "name": "Hollow Scroll of Mining",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "hollow_scroll_smithing",
+      "name": "Hollow Scroll of Smithing",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "hollow_scroll_herbing",
+      "name": "Hollow Scroll of Gathering",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "hollow_scroll_alchemy",
+      "name": "Hollow Scroll of Alchemy",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "hollow_scroll_jewelcrafting",
+      "name": "Hollow Scroll of Jewelcrafting",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "hollow_scroll_spellcrafting",
+      "name": "Hollow Scroll of Spellcrafting",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "hollow_scroll_tailoring",
+      "name": "Hollow Scroll of Tailoring",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "hollow_scroll_woodcutting",
+      "name": "Hollow Scroll of Woodcutting",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    },
+    {
+      "item_id": "hollow_scroll_construction",
+      "name": "Hollow Scroll of Construction",
+      "path": "assets/item-expansions/october-2026/hollow_scroll.png"
+    }
+  ]
+}

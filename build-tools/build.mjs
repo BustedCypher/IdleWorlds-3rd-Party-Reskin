@@ -8,8 +8,11 @@ const DIST = path.join(ROOT, 'dist');
 const ASSETS = path.join(ROOT, 'assets');
 const OUTFILE = path.join(DIST, 'content.bundle.js');
 const allowMissingAssets = process.argv.includes('--allow-missing-assets');
+const expansionIcons = JSON.parse(await readFile(path.join(ASSETS, 'item-expansions/index.json'), 'utf8'));
 
 const REQUIRED_ASSETS = [
+  'item-expansions/index.json',
+  ...new Set(expansionIcons.items.map(item => item.path.replace(/^assets\//, ''))),
   'world-bosses/cards-v1/ancient-treant.webp',
   'world-bosses/cards-v1/abyssal-behemoth.webp',
   'world-bosses/cards-v1/world-eater.webp',
