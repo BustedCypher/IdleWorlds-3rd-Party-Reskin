@@ -86,10 +86,34 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   GuildPanels minus the post-delivery changes.
   `skills/` reskins the game's OWN Skills sheet (`.iw-skill-tabs`,
   `.iw-ss-*`) and Work Orders board (`.iw-wo-*`), live since 2026-10-16 and
-  unknown to the port (the `iw-` prefix there is the game dev's). It creates
-  no nodes: it writes `data-iw-fantasy-skill` / `-icon` / `-lead` and
+  unknown to the port (the `iw-` prefix there is the game dev's). It preserves
+  gameplay nodes: it writes `data-iw-fantasy-skill` / `-icon` / `-lead` and
   `styles/skills.css` + `styles/quests.css` draw action-icon and atlas
-  sprites (`core/ItemAtlas.js`, item by id, gear by name). It also marks the
+  sprites (`core/ItemAtlas.js`, item by id, gear by name). `reserved.js` adds
+  two disabled owned slots on phones (four columns); desktop keeps five
+  columns and hides those slots. The selected card art/layout lives in
+  `styles/skill-cards.css`, independently of native sheet handover; slots
+  are removed on stop and yield to real skills as the game grows past ten.
+  The reversible `data-iw-fantasy-cards="soft-iron"` strip marker scopes the
+  card rules above old native styles, including the old generated hyphenated
+  labels. Keep running-card fill selectors in the same scope. Medallion URL
+  variables also need their consumer classes in the selectors: older native
+  variables can otherwise replace extension URLs with game-origin 404s.
+  Entry-point tests keep extension assets separate from the game's `/assets/`.
+  The selected-skill sheet's `styles/skill-frame.css` is also an independent
+  art layer: its reversible `data-iw-fantasy-skill-frame="guild-iron"` marker
+  draws the shared panel texture and compact button art. Subframes have no
+  corner ornaments; reserve those for major section frames.
+  The full `.iw-ss-zonebar` shares the skill-info surface and has 28px atlas
+  buttons on mobile (up to 768px). Above 768px those buttons hide. Header
+  travel stays available on both mobile and desktop. It reuses `.iw-ss-zone-go` from the quiet
+  recommendation shortcut, so button-art exclusions must explicitly opt the
+  full zone bar back in.
+  Header medallions stay decorated through native sheet handover; recipe/item
+  decoration, running fills and queue behavior still yield to native features.
+  Keep the frame overflow visible for the game's XP tooltip. Its browser
+  regression is `tests/fantasy-skill-frame.test.mjs`.
+  It also marks the
   tiles the port's `[data-iw-skill-boost]` line names (`-boost="daily"`,
   a pulsing halo) and copies the Current Action bar's inline width onto the
   Skill Actions panel (`-run`, half-percent steps, `-run-reset` for one
@@ -97,7 +121,11 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   when the sheet does not render that row (another skill open, its group
   folded) the `.iw-skill-tab-live` tile takes the fill, by `:has()` alone.
   The fill's transition is the measured gap between readings, written to a
-  generated sheet (`run-tick`), never inline. `skills/queue.js` is the one
+  generated sheet (`run-tick`), never inline. `skills/materials.js` paints
+  each `.iw-ss-detail` material entry green (owned >= required) or red
+  (`::highlight(iwf-material-met / -short)`, CSS Custom Highlight API), so
+  React's text is never wrapped; Legacy's ingredient highlight, forked, and
+  it yields with the sheet reskin. `skills/queue.js` is the one
   part that DOES create nodes: a copy of the Current Action panel's QUEUE
   (`.iwf-queue`, `data-iw-fantasy-queue-owned`) right after the sheet; the
   running action is not copied (the row/tile fill carries it), only its
@@ -121,6 +149,12 @@ Load in Chrome via `chrome://extensions` → Load unpacked → this folder.
   runs on `tests/fixtures/live-2026-10-16/` (markup regenerated from a live
   capture by `claude/fixture-from-capture.mjs`, plus that day's game CSS and
   port `fantasy.css`).
+- `src/skins/fantasy/inventory/` — the approved raid equipment art layer over
+  the native inventory rows: exact equipment ids/names from `core/RaidGear.js`,
+  a passive boss banner and shifting outline on the shell, animated name and
+  owned RAID badge. `styles/raid-gear.css` preserves equipped icon state and
+  native controls. See [inventory](docs/traps/inventory.md) for the native link
+  background reset and `tests/fantasy-raid-gear.test.mjs` for regression coverage.
 - `src/shared/HydrationGate.js` + `src/page/hydration-signal.js` — hold the
   FIRST boot until React has hydrated (appending skin nodes mid-hydration made
   React throw #418 and re-render the tree). The signal is a separate

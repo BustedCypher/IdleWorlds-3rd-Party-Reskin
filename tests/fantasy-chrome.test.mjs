@@ -7,8 +7,8 @@
  *   - the ATK + DEF potion chips read as ONE frame with a summary; the combat
  *     line is never taken for a potion; an active potion keeps its detail;
  *     a grid with only one potion chip is left alone (negative control);
- *   - phone: "Previous Zone" before "Zones", the emerald last-action notice
- *     hidden and any other notice kept; desktop keeps both as the port draws;
+ *   - header travel controls are hidden on phone and desktop; phone hides
+ *     the emerald last-action notice and keeps any other notice;
  *   - nav tabs gain padding without overflowing the row; the Daily XP Boost
  *     line is shorter than the port draws it;
  *   - stop() removes every attribute and the sheet.
@@ -100,6 +100,7 @@ const readState = tab => tab.evaluate(() => {
     ownFont: (m => m && getComputedStyle(m).fontSize)(document.querySelector('[data-iw-fantasy-potion="merged"]')),
     combat: cards.find(c => /ATK 250/.test(c.textContent)).hasAttribute('data-iw-fantasy-potion'),
     zoneX: Object.fromEntries(['zones', 'prev', 'next'].map(id => [id, document.getElementById(id).getBoundingClientRect().x])),
+    zoneHidden: ['zones','prev','next'].every(id=>!document.getElementById(id).checkVisibility()),
     notice: (n => n && getComputedStyle(n).display)(document.getElementById('notice')),
     boostH: document.getElementById('boost').getBoundingClientRect().height,
     navPad: parseFloat(getComputedStyle(document.querySelector('[data-iw-ui=nav-tab]')).paddingLeft),
@@ -124,7 +125,7 @@ const readState = tab => tab.evaluate(() => {
   check('the summary is what paints', s.after === '"⚔️🛡️ No potions active"' && s.ownFont === '0px', `${s.after} / ${s.ownFont}`);
   check('the game text is untouched', s.marks[0].own === '⚔️ No ATK potion active' && s.marks[1].own === '🛡️ No DEF potion active');
   check('the combat line is not a potion', !s.combat);
-  check('desktop: zone buttons keep the game order', s.zoneX.zones < s.zoneX.prev && s.zoneX.prev < s.zoneX.next, JSON.stringify(s.zoneX));
+  check('desktop: travel is removed from the page header', s.zoneHidden);
   check('desktop: the notice stays', s.notice !== 'none');
   check('nav tabs gain padding', s.navPad > before.navPad && s.navPad >= 18, `${before.navPad} -> ${s.navPad}`);
   check('Daily XP Boost line is slimmer', s.boostH < before.boostH, `${before.boostH} -> ${s.boostH}`);
@@ -166,7 +167,7 @@ for (const width of [360, 390]) {
   await start(tab);
   const s = await readState(tab);
   check(`${width}px control: the port draws Zones first`, before.zoneX.zones < before.zoneX.prev);
-  check(`${width}px: Previous Zone, then Zones, then Next Zone`, s.zoneX.prev < s.zoneX.zones && s.zoneX.zones < s.zoneX.next, JSON.stringify(s.zoneX));
+  check(`${width}px: travel is removed from the page header`, s.zoneHidden);
   check(`${width}px: the green last-action notice is hidden`, before.notice !== 'none' && s.notice === 'none');
   check(`${width}px: nav tabs fit the row`, s.navOverflow <= 0 && s.tabsClipped === 0, `${s.navOverflow} / ${s.tabsClipped}`);
   check(`${width}px: nav padding grows`, s.navPad > before.navPad, `${before.navPad} -> ${s.navPad}`);

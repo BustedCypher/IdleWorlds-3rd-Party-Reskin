@@ -2,6 +2,25 @@
 
 The inner list frame, the tool row, row colour by super-type, and the upgrade-roll line.
 
+**Fantasy raid equipment (2026-10-19).** The approved boss banner sits on the
+native row shell's passive `::before`, with the moving outline on `::after`.
+`fantasy/inventory` reads the port's exact item id (or exact name when no id
+exists) against `raid_gear/index.json`, filtering to Equipment: raid materials
+must keep their normal category treatment. Its own `data-iw-fantasy-raid-*`
+markers and RAID badge are completely reversible; item icons, enhancement
+badges, equipped state, tooltip triggers and action controls stay native.
+The shared Watcher watches the port's item identity attributes too, because
+React can recycle a row by changing only those attributes.
+
+Native `.iw-item-ref` sets `background: none !important`. Gradient lettering
+must override the image, size, clip and position longhands or the transparent
+glyphs disappear, leaving only their blurred glow. The shimmer animates a
+registered percentage custom property beneath the important position value.
+`tests/fantasy-raid-gear.test.mjs` loads captured native styles, verifies visible
+lettering and moving gradients, all five boss assets, ordinary/material negative
+controls, row reuse, native clicks/state, phone widths, reduced motion and exact
+teardown. Tooltip decoration is a separate follow-up.
+
 Moved verbatim from CLAUDE.md on 2026-09-15. "This file" in the text below
 means that original CLAUDE.md, and a "note below/above" may now live in another
 file under `docs/traps/`. The short rules in CLAUDE.md link here.

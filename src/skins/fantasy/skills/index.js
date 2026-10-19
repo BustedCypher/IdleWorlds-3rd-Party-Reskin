@@ -8,7 +8,7 @@
  * its stock CSS, with emoji for every icon. The `iw-` prefix is the game
  * developer's, not ours: these are game nodes, React's to render.
  *
- * So this module never creates a node. It reads the game's text and writes
+ * Gameplay nodes stay untouched. The module reads the game's text and writes
  * attributes in its own namespace, which styles/skills.css and
  * styles/quests.css draw from:
  *
@@ -24,12 +24,18 @@
  *                          bar, copied (the running fill); -run-reset for
  *                          the one frame a completion snaps back
  *
+ * Material counts are painted green (enough) or red (short) by materials.js
+ * through the Custom Highlight API: no attribute, no wrapper.
+ *
  * Nothing is hidden that is not replaced: no skill key, no sprite, no mark,
  * and the game's emoji stays. A material line naming several items keeps all
  * its emoji (one ::first-letter cannot reach the second).
  *
- * Each menu stands down once the port's Fantasy sheet styles it
- * (NativeFeatures `skillSheet` / `workOrders`), clearing what it wrote.
+ * The sheet and work-order reskins stand down once the port styles them.
+ * The user-selected skill-card art/layout and selected-skill frame stay active
+ * independently. The frame decorates the header medallion without taking
+ * ownership of the native recipe, progress or queue behavior.
+ * reserved.js adds only owned, disabled mobile placeholders after real tabs.
  */
 
 import { nativeFeatures } from '../core/NativeFeatures.js';
@@ -39,7 +45,11 @@ import { requestPass } from '../core/Watcher.js';
 import { label, mark, unmark, pruneWritten } from '../core/dom.js';
 import { loadItemAtlas, onItemAtlas, findItemSprite, nameKey } from '../core/ItemAtlas.js';
 import { queuePass, queueText, clearQueue } from './queue.js';
+import { reservedSlots, clearReserved } from './reserved.js';
+import { materialsPass, clearMaterials } from './materials.js';
 import skillsCss from '../styles/skills.css';
+import cardsCss from '../styles/skill-cards.css';
+import frameCss from '../styles/skill-frame.css';
 import queueCss from '../styles/queue.css';
 import questsCss from '../styles/quests.css';
 
@@ -50,7 +60,9 @@ export const PCT_ATTR = 'data-iw-fantasy-pct';
 export const BOOST_ATTR = 'data-iw-fantasy-boost';
 export const RUN_ATTR = 'data-iw-fantasy-run';
 export const RUN_RESET_ATTR = 'data-iw-fantasy-run-reset';
-const ATTRS = [SKILL_ATTR, ICON_ATTR, LEAD_ATTR, PCT_ATTR, BOOST_ATTR, RUN_ATTR, RUN_RESET_ATTR];
+export const CARDS_ATTR = 'data-iw-fantasy-cards';
+export const FRAME_ATTR = 'data-iw-fantasy-skill-frame';
+const ATTRS = [SKILL_ATTR, ICON_ATTR, LEAD_ATTR, PCT_ATTR, BOOST_ATTR, RUN_ATTR, RUN_RESET_ATTR, CARDS_ATTR, FRAME_ATTR];
 
 /*
  * The tab's XP ring. The game gives a tab's progress only as its bar's
@@ -167,18 +179,29 @@ function markSkill(el, text, { lead = false } = {}) {
 /** The panel that holds a tab strip: the tiles' and the sheet's common frame. */
 const panelOf = tabs => tabs.closest('.panel') || tabs.parentElement;
 
-function decorateSkillSheet() {
+function decorateSkillCards() {
   for (const tabs of document.querySelectorAll('.iw-skill-tabs')) {
+    mark(tabs, CARDS_ATTR, 'soft-iron');
     const boosted = boostedSkills(panelOf(tabs)?.querySelector(BOOST_LINE)?.textContent);
     for (const tab of tabs.querySelectorAll('.iw-skill-tab')) {
       markSkill(tab, tab.querySelector('.iw-skill-tab-name')?.textContent);
       mark(tab, PCT_ATTR, tabPercent(tab));
       mark(tab, BOOST_ATTR, boosted.has(tab.getAttribute(SKILL_ATTR)) ? 'daily' : null);
     }
+    reservedSlots(tabs);
   }
-  for (const head of document.querySelectorAll('.iw-ss-head')) {
-    markSkill(head, head.querySelector('.iw-ss-name > span:first-child')?.textContent);
+}
+
+function decorateSkillFrame() {
+  for (const sheet of document.querySelectorAll('.iw-skill-sheet')) {
+    mark(sheet, FRAME_ATTR, 'guild-iron');
+    for (const head of sheet.querySelectorAll('.iw-ss-head')) {
+      markSkill(head, head.querySelector('.iw-ss-name > span:first-child')?.textContent);
+    }
   }
+}
+
+function decorateSkillSheet() {
   for (const line of document.querySelectorAll('.iw-ss-detail')) {
     const name = materialName(line.textContent);
     if (name) markItem(line, { name });
@@ -253,7 +276,7 @@ function decorateWorkOrders() {
 
 /* ── lifecycle ────────────────────────────────────────────────────────── */
 
-let active = { skillSheet: false, workOrders: false };
+let active = { skillCards: false, skillSheet: false, workOrders: false };
 let unsubscribe = null;
 
 function resetRun() {
@@ -273,30 +296,43 @@ function clearUnder(selector) {
 function settle() {
   const native = nativeFeatures();
   const present = { skillSheet: !!document.querySelector(SHEET_ROOTS), workOrders: !!document.querySelector(BOARD_ROOTS) };
-  const next = { skillSheet: !native.has('skillSheet'), workOrders: !native.has('workOrders') };
-  if (next.skillSheet && present.skillSheet) inject('skills', `${skillsCss}\n${queueCss}\n${PCT_RULES}\n${RUN_RULES}`);
+  const next = { skillCards: present.skillSheet, skillSheet: !native.has('skillSheet'), workOrders: !native.has('workOrders') };
+  // Native sheet styling must not retire the explicitly selected card art,
+  // mobile grid, XP rings, or owned Reserved slots.
+  if (next.skillCards) inject('skill-cards', `${cardsCss}\n${PCT_RULES}`);
+  else remove('skill-cards');
+  if (next.skillSheet && present.skillSheet) inject('skills', `${skillsCss}\n${queueCss}\n${RUN_RULES}`);
   else { remove('skills'); resetRun(); }
   if (!next.skillSheet && active.skillSheet) {
-    clearUnder(SHEET_ROOTS);
+    clearUnder('.iw-skill-sheet');
     // The run tags sit on the panel, above both roots.
     unmark([RUN_ATTR, RUN_RESET_ATTR]);
   }
+  // The requested frame is an art layer, independent of native recipe,
+  // progress and queue behavior, just like the selected card design.
+  if (document.querySelector('.iw-skill-sheet')) inject('skill-frame', frameCss);
+  else remove('skill-frame');
   if (next.workOrders && present.workOrders) inject('quests', questsCss);
   else remove('quests');
   if (!next.workOrders && active.workOrders) clearUnder(BOARD_ROOTS);
   if (!next.skillSheet && !next.workOrders) { remove('item-icons'); sprites.clear(); }
   active = next;
-  return { skillSheet: next.skillSheet && present.skillSheet, workOrders: next.workOrders && present.workOrders };
+  return { skillCards: next.skillCards, skillSheet: next.skillSheet && present.skillSheet, workOrders: next.workOrders && present.workOrders };
 }
 
 export function skillsPass() {
   pruneWritten();
   const on = settle();
+  if (on.skillCards) guard('skills:cards', decorateSkillCards);
+  else clearReserved();
+  if (on.skillCards) guard('skills:frame', decorateSkillFrame);
   if ((on.skillSheet && document.querySelector('.iw-ss-detail')) || on.workOrders) {
     if (!unsubscribe) unsubscribe = onItemAtlas(requestPass);
     loadItemAtlas();
   }
   if (on.skillSheet) guard('skills:sheet', decorateSkillSheet);
+  if (on.skillSheet) guard('skills:materials', materialsPass);
+  else clearMaterials();
   if (on.skillSheet) guard('skills:run', decorateRun);
   if (on.skillSheet) guard('skills:queue', queuePass);
   else clearQueue();
@@ -305,7 +341,7 @@ export function skillsPass() {
 
 /** A tab switch can rewrite only text (React reuses the nodes). */
 export function skillsText(parents) {
-  if (!active.skillSheet && !active.workOrders) return;
+  if (!active.skillCards && !active.skillSheet && !active.workOrders) return;
   if (parents.some(p => p.closest?.(NAMED))) skillsPass();
   else if (active.skillSheet) queueText(parents);
 }
@@ -313,12 +349,16 @@ export function skillsText(parents) {
 export function clearSkills() {
   unmark(ATTRS);
   remove('skills');
+  remove('skill-cards');
+  remove('skill-frame');
   remove('quests');
   remove('item-icons');
   resetRun();
+  clearMaterials();
   clearQueue();
+  clearReserved();
   sprites.clear();
   unsubscribe?.();
   unsubscribe = null;
-  active = { skillSheet: false, workOrders: false };
+  active = { skillCards: false, skillSheet: false, workOrders: false };
 }

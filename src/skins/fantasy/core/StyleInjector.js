@@ -13,7 +13,7 @@ import { assetUrl } from './Runtime.js';
 
 export const STYLE_ATTR = 'data-iw-fantasy-style';
 
-function rewriteAssetUrls(css) {
+export function rewriteAssetUrls(css) {
   return String(css || '').replace(
     /url\(\s*(['"]?)\.\.\/assets\/([^)'"\s]+)\1\s*\)/g,
     (_match, _quote, path) => `url("${assetUrl(`assets/${path}`)}")`

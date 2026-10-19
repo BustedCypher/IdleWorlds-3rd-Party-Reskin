@@ -16,18 +16,21 @@ import { resetNativeFeatures } from './core/NativeFeatures.js';
 import { raidPass, raidText, clearRaid } from './raid/index.js';
 import { skillsPass, skillsText, clearSkills } from './skills/index.js';
 import { chromePass, chromeText, clearChrome } from './chrome/index.js';
+import { inventoryPass, inventoryText, clearInventory } from './inventory/index.js';
 import raidCss from './styles/raid.css';
 
 function flush() {
   raidPass();
   skillsPass();
   chromePass();
+  inventoryPass();
 }
 
 function text(parents) {
   raidText(parents);
   skillsText(parents);
   chromeText(parents);
+  inventoryText(parents);
 }
 
 export function start() {
@@ -41,6 +44,7 @@ export function stop() {
   clearRaid();
   clearSkills();
   clearChrome();
+  clearInventory();
   removeAll();
   resetNativeFeatures();
   setRuntimeActive(false);

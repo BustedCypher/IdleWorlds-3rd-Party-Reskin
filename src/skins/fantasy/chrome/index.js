@@ -26,13 +26,15 @@ import { guard } from '../core/Runtime.js';
 import { inject, remove } from '../core/StyleInjector.js';
 import { norm, label, mark, unmark, pruneWritten } from '../core/dom.js';
 import chromeCss from '../styles/chrome.css';
+import { navigationPass, navigationText, clearNavigation } from './ThumbDock.js';
+import { skillHeaderPass, skillHeaderText, clearSkillHeader } from './SkillHeader.js';
 
 export const POTION_ATTR = 'data-iw-fantasy-potion';
 export const POTION_TEXT_ATTR = 'data-iw-fantasy-potion-text';
 export const POTION_STATE_ATTR = 'data-iw-fantasy-potion-state';
 const ATTRS = [POTION_ATTR, POTION_TEXT_ATTR, POTION_STATE_ATTR];
 
-const SURFACES = '[data-iw-header="status-grid"], [data-iw-chrome], [data-iw-skill-boost]';
+const SURFACES = '[data-iw-header="status-grid"], [data-iw-chrome], [data-iw-skill-boost], .iw-ss-zone, .iw-skill-tabs';
 const ICON = { atk: '⚔️', def: '🛡️' };
 
 /** "atk" / "def" for a potion chip, null for any other status card. The
@@ -87,18 +89,24 @@ let active = false;
 export function chromePass() {
   pruneWritten();
   active = !!document.querySelector(SURFACES);
-  if (!active) { remove('chrome'); return; }
+  if (!active) { clearSkillHeader(); clearNavigation(); remove('chrome'); return; }
   inject('chrome', chromeCss);
   guard('chrome:potions', decoratePotions);
+  guard('chrome:navigation', navigationPass);
+  guard('chrome:skill-header', skillHeaderPass);
 }
 
 /** A potion timer ticks as text, and a chip's text is what the summary copies. */
 export function chromeText(parents) {
   if (!active) return;
+  guard('chrome:navigation-text', () => navigationText(parents));
+  guard('chrome:skill-header-text', () => skillHeaderText(parents));
   if (parents.some(p => p.closest?.('[data-iw-header="status-card"]'))) guard('chrome:potions', decoratePotions);
 }
 
 export function clearChrome() {
+  clearSkillHeader();
+  clearNavigation();
   unmark(ATTRS);
   remove('chrome');
   active = false;

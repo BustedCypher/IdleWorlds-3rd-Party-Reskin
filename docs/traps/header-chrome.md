@@ -1,5 +1,103 @@
 # Header chrome and main nav
 
+### Fantasy thumb dock (2026-10-19)
+
+Fantasy's `chrome/ThumbDock.js` reads the native port's classified navigation.
+The desktop strip is an owned sibling of the original nav; the mobile dock is
+an owned body child, fixed above the device safe area. Both use shadow roots:
+the port cannot mistake the proxy labels for another set of native tabs, and
+its generic button plates cannot repaint them. Game nodes, text and handlers
+stay in place. Ordinary proxy activation presses the latest original control;
+real proxy anchors preserve href/target/rel and modified/middle clicks. Missing
+or unfamiliar interactive markup falls back to the native navigation.
+
+Game, Market, Village and Guild are primary; Dungeon, remaining routes and native
+utilities (including Toolkit, presence, settings and Zone themes when present)
+live in More. Native active, disabled, accessible-name and tooltip state are
+copied, not guessed from presentation. URL paths win over hashes; a root hash
+must not be overridden by Game. A checkbox change carries the user's requested
+value across reconciliation, rather than blindly toggling a native setting
+that may already have changed in another tab.
+
+`styles/chrome.css` hides represented sources with owned attributes. The zone
+header is centred and reuses the native major-frame texture, theme variables,
+edge and corner filigree. Requirement text and team state remain visible.
+`chrome/SkillHeader.js` appends transparent travel controls over the zone frame:
+simple chevrons sit at either edge, and the central native title/requirements
+area opens the native Zones picker. Shadow buttons retain 44px targets,
+Ashen Iron colours and the latest native disabled/name/tooltip state. Original
+zone buttons and atlas layers stay mounted but hidden; activation resolves and
+presses the current native source. The dock uses the approved Brass rail:
+a continuous surface, quiet dividers and an underline on the active route.
+The rail and More menu inherit the active theme's `--iw-th-*` accent, edge
+and ground tokens through their shadow hosts, including changes while More
+is open. Removing the theme attribute restores default Ashen colours.
+Cinzel labels and the shared panel texture tie them to the rest of the app.
+Shadow styles pass through Fantasy's shared
+`rewriteAssetUrls` helper so artwork loads from the extension on every route.
+Header travel stays available on mobile and desktop. The selected skill sheet
+also shows its travel controls up to 768px; above that, CSS hides the sheet's
+`.iw-ss-zonebar-btns`.
+Native presence and theme utilities appear in More as proxies. The native theme-state attribute is the ONE
+additional watched attribute in Fantasy's existing observer; Fantasy never
+writes it. This keeps an open menu in sync with cross-tab setting changes
+without another observer or polling. Shadow DOM writes cannot re-trigger the
+document observer.
+
+More uses a native modal dialog (keyboard focus containment/Escape), closed
+before forwarding an action that may open a game modal. The dock sits below
+native modal layers. Source loss, responsive column swaps and profile stop
+close owned dialogs and release all owned markers. A native clone carrying
+the old hide marker must release it when falling back, too.
+
+`tests/fantasy-navigation.test.mjs` exercises original handlers, state/utility
+forwarding, unknown controls, hash routes, responsive duplicates, native modal
+layering, source replacement/removal, exact teardown, short viewports, 320px
+touch targets, all nine theme palettes, default fallback and quiescence. It writes fixture screenshots to
+`tmp/thumb-dock/`. This is Chromium fixture verification, not live-game or
+physical-device verification.
+
+The former native header travel layout had a mobile trap: the port makes the zone-action group a three-column grid
+with `width:100%` on the group and its buttons. Switching only `display` to
+flex leaves those widths and `flex-wrap:wrap` in force: the picker fills the
+row, each arrow wraps, and the group's margins push it beyond the frame.
+The dock override must replace those widths and use a nonwrapping row. The
+joined group is 280px, constrained to the frame width minus its margins.
+Keep `data-iw-header="zone-shell"`, the native classes, nested picker label
+and compact-atlas layers in the regression fixture; plain buttons omit the
+selectors that caused this failure. Hiding overflow would only conceal a
+travel control; fix the layout instead.
+
+The skill sheet's `.iw-ss-zone` is a native travel shortcut, styled in
+`styles/chrome.css` as a quiet strip with smaller type and flat 28px buttons
+(32px on phones). Its requirement/direction text, dismiss control, disabled
+state and handlers remain native. The native theme's important focus outline
+also needs an important override to keep these shortcuts' focus Ashen brass.
+`tests/fantasy-skills.test.mjs` exercises both directions, compact geometry,
+native handlers, focus and exact teardown at 320/390/768/1440px, including
+when the native theme takes over the rest of the skill sheet. Keep this
+explicit customisation outside the retiring `skills.css` sheet.
+
+The Skill Actions panel's known heading wrappers become `display:contents`;
+CSS grid places the daily boost/reset wrapper below the skill tiles and above
+the selected skill sheet. Native nodes never move. Skill Actions has no travel
+row; collapsing it folds daily information with the tiles. The owned travel
+host is appended to the native zone-text branch, independent of the skill panel.
+Keep these rules in `chrome.css` so
+native skill-sheet takeover does not disable the requested layout.
+
+`tests/fantasy-skill-header.test.mjs` covers 320–1400px, native activation,
+keyboard order, shared frame paint, collapse, live state, daily placement,
+responsive duplicates, replacement, quiescence and exact teardown. Source
+visibility must climb `display:contents` parents to the nearest real box:
+testing only the visible outer shell can activate a hidden responsive copy.
+The header title uses inline flow so its team marker stays on the final title
+line on phones. Native marker tooltips sit above the transparent picker target;
+test their actual hit target, not just visibility. A rendered interactive
+descendant in zone-text refuses the overlay and leaves travel native, protecting
+unfamiliar controls when main navigation falls back. Position the travel anchor
+independently of the dock's shell marker.
+
 The glass status plates, the nav rail and its classifier, the Toolkit link, zone-bar label matching, and the merged header-chrome frame.
 
 Moved verbatim from CLAUDE.md on 2026-09-15. "This file" in the text below

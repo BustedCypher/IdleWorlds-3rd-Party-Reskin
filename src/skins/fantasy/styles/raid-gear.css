@@ -1,0 +1,176 @@
+/* Approved raid inventory treatment: existing arena art, boss-coloured name
+   animation and a moving hairline. The shell's passive pseudo-elements leave
+   the port's item art, upgrade badges and real action controls intact. */
+/* Native item links reset background with !important. Keep the gradient's
+   longhands explicit and animate its registered position beneath that reset. */
+@property --iwf-rg-shimmer {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 100%;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-shell] {
+  --iwf-rg-colour: #ff9b4d;
+  --iwf-rg-light: #ffcf96;
+  --iwf-rg-dark: #a24631;
+  --iwf-rg-art: url('../assets/raids/lobby/ashmaw-banner.webp');
+  --iwf-rg-focus: 34%;
+  --iwf-rg-delay: 0s;
+  isolation: isolate;
+  position: relative !important;
+  min-height: 88px !important;
+  margin-block: 6px;
+  border: 0 !important;
+  border-radius: 4px !important;
+  background: #121210 !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--iwf-rg-dark) 55%, #35352e) !important;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-shell="thessaly"] {
+  --iwf-rg-colour: #65b9ff; --iwf-rg-light: #c1def5; --iwf-rg-dark: #4a697f;
+  --iwf-rg-art: url('../assets/raids/lobby/thessaly-banner.webp');
+  --iwf-rg-focus: 12%; --iwf-rg-delay: -1.4s;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-shell="morwenna"] {
+  --iwf-rg-colour: #aa70ee; --iwf-rg-light: #dec1ff; --iwf-rg-dark: #634381;
+  --iwf-rg-art: url('../assets/raids/lobby/morwenna-banner.webp');
+  --iwf-rg-focus: 16%; --iwf-rg-delay: -3.8s;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-shell="grimjaw"] {
+  --iwf-rg-colour: #73b7c6; --iwf-rg-light: #c2dde2; --iwf-rg-dark: #526a75;
+  --iwf-rg-art: url('../assets/raids/lobby/grimjaw-banner.webp');
+  --iwf-rg-focus: 9%; --iwf-rg-delay: -2.2s;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-shell="skarth"] {
+  --iwf-rg-colour: #8cafdf; --iwf-rg-light: #d8eafb; --iwf-rg-dark: #455e83;
+  --iwf-rg-art: url('../assets/raids/lobby/skarth-banner.webp');
+  --iwf-rg-focus: 15%; --iwf-rg-delay: -5.1s;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-shell]::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  width: auto; height: auto;
+  transform: none;
+  z-index: -1;
+  border: 0;
+  border-radius: 3px;
+  box-shadow: none;
+  background-image: linear-gradient(0deg, #10110f99, transparent 70%), var(--iwf-rg-art);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center, center var(--iwf-rg-focus);
+  opacity: .33;
+  mask-image: linear-gradient(to right, transparent 18%, #0002 35%, #0009 55%, #000 78%, #000c);
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-shell]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: auto; height: auto;
+  transform: none;
+  z-index: 3;
+  border: 0;
+  border-radius: inherit;
+  padding: 1px;
+  box-shadow: none;
+  background: linear-gradient(110deg,
+    color-mix(in srgb, var(--iwf-rg-dark) 60%, transparent),
+    color-mix(in srgb, var(--iwf-rg-colour) 28%, transparent) 25%,
+    color-mix(in srgb, var(--iwf-rg-light) 72%, transparent) 47%,
+    color-mix(in srgb, var(--iwf-rg-colour) 30%, transparent) 63%,
+    color-mix(in srgb, var(--iwf-rg-dark) 70%, transparent));
+  background-size: 280% 100%;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: .85;
+  pointer-events: none;
+  animation: iwf-raid-edge 8s ease-in-out infinite;
+  animation-delay: var(--iwf-rg-delay);
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-shell]:hover::before { opacity: .42; }
+:is(:root,#iwf) [data-iw-fantasy-raid-shell]:hover::after { filter: brightness(1.4); }
+:is(:root,#iwf) [data-iw-fantasy-raid-gear] {
+  --fs-tier: var(--iwf-rg-light);
+  --fs-frame: var(--iwf-rg-colour);
+  min-height: 86px;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-gear] .fs-inv-name {
+  color: var(--iwf-rg-light);
+  text-shadow: 0 1px 2px #000;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-gear] .fs-inv-name :is(.iw-item-ref,.fs-inv-name-plain) {
+  color: inherit !important;
+  animation: iwf-raid-fire 5.8s ease-in-out infinite;
+  animation-delay: var(--iwf-rg-delay);
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-gear="thessaly"] .fs-inv-name :is(.iw-item-ref,.fs-inv-name-plain) {
+  animation-name: iwf-raid-storm;
+  animation-duration: 7.4s;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-gear="morwenna"] .fs-inv-name :is(.iw-item-ref,.fs-inv-name-plain),
+:is(:root,#iwf) [data-iw-fantasy-raid-gear="skarth"] .fs-inv-name :is(.iw-item-ref,.fs-inv-name-plain) {
+  background-image: linear-gradient(110deg, var(--iwf-rg-light) 10%, #f7eaff 40%, var(--iwf-rg-colour) 58%, var(--iwf-rg-light) 78%) !important;
+  background-size: 260% 100% !important;
+  background-clip: text !important;
+  background-position: var(--iwf-rg-shimmer) 50% !important;
+  -webkit-text-fill-color: transparent;
+  animation: iwf-raid-spell 6.8s ease-in-out infinite;
+  animation-delay: var(--iwf-rg-delay);
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-gear="skarth"] .fs-inv-name :is(.iw-item-ref,.fs-inv-name-plain) {
+  background-image: linear-gradient(115deg, #b0cce9 20%, #f2faff 46%, #8eafd5 62%, #b0cce9 85%) !important;
+  animation-duration: 8s;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-gear="grimjaw"] .fs-inv-name :is(.iw-item-ref,.fs-inv-name-plain) {
+  animation-name: iwf-raid-ghost;
+  animation-duration: 5.2s;
+}
+:is(:root,#iwf) [data-iw-fantasy-raid-gear] .iwf-raid-gear-badge {
+  display: inline-block;
+  flex: 0 0 auto;
+  color: var(--iwf-rg-light);
+  font-family: var(--iw-font-ui, sans-serif);
+  font-size: 9px;
+  line-height: 1.3;
+  letter-spacing: .12em;
+  border: 1px solid color-mix(in srgb, var(--iwf-rg-colour) 30%, transparent);
+  background: color-mix(in srgb, var(--iwf-rg-dark) 12%, #121210);
+  padding: 2px 4px;
+  border-radius: 2px;
+  opacity: .9;
+}
+@keyframes iwf-raid-edge {
+  0%,100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes iwf-raid-fire {
+  0%,13%,23%,48%,66%,100% { text-shadow: 0 1px 2px #000, 0 0 5px #ea6e2140, 0 0 12px #ea541a19; }
+  15%,26%,50%,69%,74% { text-shadow: 0 1px 2px #000, 0 0 6px #ff9f3f8c, 0 0 16px #ee531853; }
+  18%,29%,53%,72%,78% { text-shadow: 0 1px 2px #000, 0 0 7px #ee65185b; }
+}
+@keyframes iwf-raid-storm {
+  0%,58%,64%,100% { text-shadow: 0 1px 2px #000, 0 0 6px #5ca5d932; }
+  59%,61% { text-shadow: 0 1px 2px #000, 0 0 6px #87cdffa6, 0 0 15px #3594ff5b; }
+  60%,62% { text-shadow: 0 1px 2px #000, 0 0 9px #5eb4ff6b; }
+}
+@keyframes iwf-raid-spell {
+  0%,100% { --iwf-rg-shimmer: 100%; text-shadow: 0 0 5px color-mix(in srgb, var(--iwf-rg-colour) 25%, transparent); }
+  50% { --iwf-rg-shimmer: 0%; text-shadow: 0 0 10px color-mix(in srgb, var(--iwf-rg-colour) 55%, transparent); }
+}
+@keyframes iwf-raid-ghost {
+  0%,100% { text-shadow: 0 1px 2px #000, 0 0 5px #6ec7d629; }
+  50% { text-shadow: 0 1px 2px #000, 0 0 8px #6ec7d674, 0 0 14px #53a6b931; }
+}
+@media (max-width: 480px) {
+  :is(:root,#iwf) [data-iw-fantasy-raid-shell]::before {
+    background-size: cover, auto 175%;
+    background-position: center, 80% 22%;
+    mask-image: linear-gradient(to right, transparent 25%, #0007 55%, #000 85%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(:root,#iwf) [data-iw-fantasy-raid-shell]::after,
+  :is(:root,#iwf) [data-iw-fantasy-raid-gear] .fs-inv-name :is(.iw-item-ref,.fs-inv-name-plain) { animation: none; }
+  :is(:root,#iwf) [data-iw-fantasy-raid-shell]::before { transition: none; }
+}

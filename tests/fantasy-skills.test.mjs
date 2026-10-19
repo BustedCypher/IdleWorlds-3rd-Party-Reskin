@@ -35,7 +35,7 @@
 
 import { chromium } from 'playwright';
 import { build } from 'esbuild';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdir } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -53,6 +53,7 @@ const fantasyJs = (await build({
 })).outputFiles[0].text;
 
 const body = await readFile(resolve(FIX, 'skills-quests.html'), 'utf8');
+const previousCardsCss = await readFile(resolve(FIX, 'previous-skill-cards.css'), 'utf8');
 const page = (extraHead = '') => `<!doctype html><html lang="en" data-skin="fantasy" data-iw-zone-theme="voidborn" data-iw-skill-card-design="new" data-iw-page-hydrated="1"><head><meta charset="utf-8">
 <link rel="stylesheet" href="/game.css"><link rel="stylesheet" href="/reskin-bc/theme/fantasy.css">${extraHead}</head>
 <body><main data-skin="fantasy" style="max-width:1400px;margin:0 auto;padding:12px">
@@ -74,7 +75,7 @@ const MIME = { '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xm
 const browser = await chromium.launch();
 const assetHits = new Map();
 
-async function open({ width = 1606, extraHead = '' } = {}) {
+async function open({ width = 1606, extraHead = '', bootEntry = false } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 1300 } });
   const tab = await context.newPage();
   tab.on('pageerror', err => check('no page error', false, err.message));
@@ -84,9 +85,13 @@ async function open({ width = 1606, extraHead = '' } = {}) {
       : path === '/reskin-bc/theme/fantasy.css' ? resolve(FIX, 'port-fantasy.css')
       : path.startsWith('/reskin-bc/theme/extra') ? null
       : path.startsWith('/reskin-bc/assets/') ? resolve(ROOT, 'assets', path.slice('/reskin-bc/assets/'.length))
+      : path.startsWith('/__extension__/assets/') ? resolve(ROOT, 'assets', path.slice('/__extension__/assets/'.length))
       : path.startsWith('/assets/') ? resolve(ROOT, path.slice(1))
       : null;
-    if (path.startsWith('/reskin-bc/theme/extra')) return route.fulfill({ contentType: 'text/css', body: '.iw-wo-tile{outline:0}' });
+    // The game does not host the extension's assets. Keep the namespaces
+    // separate so an unrewritten URL fails here exactly as it does live.
+    if (bootEntry && path.startsWith('/assets/')) return route.fulfill({ status: 404, body: '' });
+    if (path.startsWith('/reskin-bc/theme/extra')) return route.fulfill({ contentType: 'text/css', body: path.endsWith('extra-skills.css') ? '.iw-ss-zone{outline:0}' : '.iw-wo-tile{outline:0}' });
     if (!file) return route.fulfill({ contentType: 'text/html', body: page(extraHead) });
     try {
       const bytes = await readFile(file);
@@ -95,7 +100,19 @@ async function open({ width = 1606, extraHead = '' } = {}) {
     } catch { return route.fulfill({ status: 404, body: '' }); }
   });
   await tab.goto('http://iw.test/');
-  await tab.addScriptTag({ content: fantasyJs });
+  if (bootEntry) {
+    // Exercise the shipped entry point, profile storage and hydration gate,
+    // rather than calling the Fantasy feature export directly.
+    await tab.evaluate(() => {
+      window.beforeBootstrapTabs = document.querySelector('.iw-skill-tabs').innerHTML;
+      window.extensionSettingListeners = [];
+      window.chrome = { runtime: { id: 'skill-card-bootstrap', getURL: path => `${location.origin}/__extension__/${path}` }, storage: {
+        local: { get: async key => ({ [key]: key === 'iw-skin-theme' ? 'fantasy' : undefined }) },
+        onChanged: { addListener: fn => extensionSettingListeners.push(fn), removeListener: () => {} },
+      } };
+    });
+    await tab.addScriptTag({ content: await readFile(resolve(ROOT, 'dist/content.bundle.js'), 'utf8') });
+  } else await tab.addScriptTag({ content: fantasyJs });
   return tab;
 }
 const frames = (tab, n = 3) => tab.evaluate(n => new Promise(done => {
@@ -269,6 +286,43 @@ check('work orders: both atlases actually loaded', assetHits.get('/assets/item_i
 const material = await tab.evaluate(() => { const d = document.querySelector('.iw-ss-detail'); return { text: d.textContent, key: d.getAttribute('data-iw-fantasy-icon'), sprite: bg(d, '::before'), emoji: emojiWidth(d) }; });
 check('sheet: the material line paints Eternium Ore', material.key === 'item-eterniumore' && near(material.sprite.pos, itemPos(items.get('eternium_ore'))) && material.emoji === 0, JSON.stringify(material));
 
+/* ── 3b. material counts: green when held, red when short ─────────────── */
+
+/* Legacy's ingredient highlight, forked: ranges in the Custom Highlight
+   registry, nothing written into React's text. The verdict is the game's own
+   owned/required; the control flips one count and the entry must move. */
+const highlighted = () => tab.evaluate(() => {
+  const read = name => [...(CSS.highlights.get(name) || [])].map(r => r.toString());
+  return { met: read('iwf-material-met'), short: read('iwf-material-short') };
+});
+check('materials: the fixture line (121174/8) reads as held', JSON.stringify(await highlighted()) === JSON.stringify({ met: ['🪨 Eternium Ore 121174/8'], short: [] }), JSON.stringify(await highlighted()));
+const materialBefore = await tab.evaluate(() => document.querySelector('.iw-ss-detail').outerHTML);
+await tab.evaluate(() => { document.querySelector('.iw-ss-detail').firstChild.textContent = '📦 Astral Bough 0/40 • 🪨 Astralium Ore 98709/20 • 📦 Iron Building Parts 1.2k/80'; });
+await settle(tab);
+const mixed = await highlighted();
+check('materials: a mixed line splits per entry, short in red, held in green',
+  JSON.stringify(mixed) === JSON.stringify({ met: ['🪨 Astralium Ore 98709/20', '📦 Iron Building Parts 1.2k/80'], short: ['📦 Astral Bough 0/40'] }), JSON.stringify(mixed));
+await mkdir(resolve(ROOT, 'tmp/materials'), { recursive: true });
+await tab.locator('.iw-ss-row', { has: tab.locator('.iw-ss-detail') }).first().screenshot({ path: resolve(ROOT, 'tmp/materials/mixed-line.png') });
+// Entries in separate elements with no bullet between them (textContent joins them bare).
+await tab.evaluate(() => { const d = document.querySelector('.iw-ss-detail'); d.innerHTML = '<span>📦 Astral Bough 3/2</span><span>🪨 Astralium Ore 1/20</span>'; });
+await settle(tab);
+const split = await highlighted();
+check('materials: entries in sibling elements stay apart', JSON.stringify(split) === JSON.stringify({ met: ['📦 Astral Bough 3/2'], short: ['🪨 Astralium Ore 1/20'] }), JSON.stringify(split));
+await tab.evaluate(() => { const d = document.querySelector('.iw-ss-detail'); d.textContent = '📦 Astral Bough 0/40 • 🪨 Astralium Ore 98709/20'; });
+await settle(tab);
+await tab.evaluate(() => { document.querySelector('.iw-ss-detail').firstChild.textContent = '📦 Astral Bough 40/40 • 🪨 Astralium Ore 98709/20'; });
+await settle(tab);
+const flipped = await highlighted();
+check('materials control: a count tick re-reads the verdict (0/40 -> 40/40 turns green)', flipped.short.length === 0 && flipped.met.includes('📦 Astral Bough 40/40'), JSON.stringify(flipped));
+check('materials: the highlight colours ship in the skills sheet', await tab.evaluate(() => {
+  const sheet = document.querySelector('style[data-iw-fantasy-style="skills"]')?.sheet;
+  const sel = [...(sheet?.cssRules || [])].map(r => r.selectorText).filter(Boolean);
+  return sel.includes('::highlight(iwf-material-met)') && sel.includes('::highlight(iwf-material-short)');
+}));
+await tab.evaluate(html => { document.querySelector('.iw-ss-detail').outerHTML = html; }, materialBefore);
+await settle(tab);
+
 /* ── 4. nothing hidden without a replacement ──────────────────────────── */
 
 const leftovers = await tab.evaluate(async () => {
@@ -401,6 +455,7 @@ await tab.evaluate(() => window.Fantasy.stop());
 check('stop(): the page is restored byte for byte, no Fantasy sheets left', await tab.evaluate(p => document.body.innerHTML === p
   && !document.querySelector('style[data-iw-fantasy-style]'), pristine));
 check('stop(): emoji are back', await tab.evaluate(() => emojiWidth(document.querySelector('.iw-skill-tab-icon')) > 8));
+check('stop(): the material highlights are released', await tab.evaluate(() => !CSS.highlights.has('iwf-material-met') && !CSS.highlights.has('iwf-material-short')));
 await tab.close();
 
 /* ── 7b. daily boost + running fill ───────────────────────────────────── */
@@ -631,12 +686,163 @@ check('stand-down: a port sheet styling .iw-wo- retires the board reskin only', 
 await tab.evaluate(() => window.Fantasy.stop());
 await tab.close();
 
+/* Zone travel is a small native shortcut, visually secondary to the header.
+   Exercise both directions and the native dismiss/disabled controls using
+   the game's own iw-ss-zone markup and inline stylesheet from the capture. */
+for (const [width, nativeSheet] of [[320,false], [390,false], [768,false], [1440,false], [390,true]]) {
+  tab = await open({width, extraHead: nativeSheet ? '<link rel="stylesheet" href="/reskin-bc/theme/extra-skills.css">' : ''});
+  await tab.evaluate(() => {
+    const sheet = document.querySelector('.iw-skill-sheet');
+    sheet.insertAdjacentHTML('beforeend', `<div class="iw-ss-banner" id="zone-shortcut"><div class="iw-ss-zone"><span class="iw-ss-zone-icon" aria-hidden="true">🧭</span><div class="iw-ss-zone-text"><b>Ready for the next zone</b><small>Astral Crucible · ATK 325 / DEF 332</small></div><button class="iw-ss-zone-go" id="shortcut-go">Next Zone</button></div><button class="iw-ss-x" aria-label="Dismiss zone shortcut">×</button></div><div class="iw-ss-zone is-down"><span class="iw-ss-zone-icon" aria-hidden="true">🧭</span><div class="iw-ss-zone-text"><b>Try an earlier zone</b><small>Requires a lower level</small></div><button class="iw-ss-zone-go" disabled>Previous Zone</button></div>`);
+    window.shortcutNodes = [...sheet.querySelectorAll('.iw-ss-zone, .iw-ss-zone *')];
+    window.shortcutPresses = 0; window.shortcutDismisses = 0;
+    document.querySelector('#shortcut-go').onclick = () => shortcutPresses++;
+    document.querySelector('#zone-shortcut .iw-ss-x').onclick = () => shortcutDismisses++;
+  });
+  const before = await tab.locator('.iw-skill-sheet').innerHTML();
+  await start(tab);
+  if (nativeSheet) {
+    check('native skill theme: the full sheet reskin stands down', await tab.locator('style[data-iw-fantasy-style="skills"]').count()===0);
+    check('native skill theme: material highlights stand down with it', await tab.evaluate(() => !CSS.highlights.has('iwf-material-met') && !CSS.highlights.has('iwf-material-short')));
+    const cards = await tab.locator('.iw-skill-tabs').evaluate(strip => ({
+      columns: getComputedStyle(strip).gridTemplateColumns.split(' ').length,
+      slots: strip.querySelectorAll('.iwf-skill-reserved').length,
+      art: getComputedStyle(strip.querySelector('.iw-skill-tab')).backgroundImage,
+      marks: strip.querySelectorAll('.iw-skill-tab[data-iw-fantasy-skill][data-iw-fantasy-pct]').length,
+    }));
+    check('native skill theme: custom card art, four columns, XP rings and Reserved slots remain active',
+      cards.columns === 4 && cards.slots === 2 && cards.marks === 10 && /soft-iron-card-v1/.test(cards.art), JSON.stringify(cards));
+  }
+  const shortcuts = await tab.locator('.iw-ss-zone').evaluateAll(els => els.map(el => {
+    const button = el.querySelector('button'); const css = getComputedStyle(button);
+    const box = el.getBoundingClientRect(), btn = button.getBoundingClientRect();
+    return {height:box.height, buttonHeight:btn.height, buttonWidth:btn.width, font:parseFloat(css.fontSize), image:css.backgroundImage, shadow:css.boxShadow, spill:btn.right>box.right+.5||btn.left<box.left-.5};
+  }));
+  check(`${width}px${nativeSheet?' native theme':''}: zone shortcuts are compact, flat and inside the skill sheet`, shortcuts.every(s => s.height<=76 && s.buttonHeight>=28 && s.buttonHeight<=36 && s.buttonWidth<=110 && s.font<=12 && s.image==='none' && s.shadow==='none' && !s.spill), JSON.stringify(shortcuts));
+  await tab.locator('#shortcut-go').click();
+  await tab.getByRole('button',{name:'Dismiss zone shortcut',exact:true}).click();
+  check(`${width}px: shortcut travel/dismiss retain their original handlers and nodes`, await tab.evaluate(() => shortcutPresses===1 && shortcutDismisses===1 && shortcutNodes.every(el=>el.isConnected)));
+  check(`${width}px: unavailable shortcut stays disabled`, await tab.getByRole('button',{name:'Previous Zone',exact:true}).isDisabled());
+  await tab.keyboard.press('Tab');
+  await tab.locator('#shortcut-go').focus();
+  check(`${width}px: keyboard focus remains visible`, await tab.locator('#shortcut-go').evaluate(el => getComputedStyle(el).outlineStyle !== 'none'));
+  check(`${width}px: shortcut focus uses Ashen brass rather than the current zone tint`, await tab.locator('#shortcut-go').evaluate(el => getComputedStyle(el).outlineColor === 'rgb(212, 173, 99)'));
+  await tab.evaluate(() => Fantasy.stop());
+  check(`${width}px: shortcut markup restores exactly on stop`, await tab.locator('.iw-skill-sheet').innerHTML()===before);
+  await start(tab);
+  await mkdir(resolve(ROOT,'tmp/thumb-dock'),{recursive:true});
+  await tab.locator('.iw-skill-sheet').screenshot({path:resolve(ROOT,`tmp/thumb-dock/skill-shortcuts-${width}${nativeSheet?'-native':''}.png`)});
+  await tab.close();
+}
+
 /* ── 10. phone width ──────────────────────────────────────────────────── */
 
-for (const width of [390, 768]) {
+for (const width of [320, 390, 1606]) {
+  tab = await open({ width, bootEntry: true, extraHead: '<link rel="stylesheet" href="/reskin-bc/theme/extra-skills.css">' });
+  await settle(tab);
+  const boot = await tab.locator('.iw-skill-tabs').evaluate(strip => ({
+    columns: getComputedStyle(strip).gridTemplateColumns.split(' ').length,
+    art: getComputedStyle(strip.querySelector('.iw-skill-tab')).backgroundImage,
+    slots: [...strip.querySelectorAll('.iwf-skill-reserved')].filter(el => el.getBoundingClientRect().width > 0).length,
+    hydrated: !document.documentElement.hasAttribute('data-iw-page-hydrated'),
+    legacy: document.querySelectorAll('style[data-iw-style]').length,
+    nativeSheet: !document.querySelector('style[data-iw-fantasy-style="skills"]'),
+  }));
+  check(`${width}px: rebuilt entry point boots Fantasy cards over native sheet CSS`, boot.columns === (width <= 768 ? 4 : 5)
+    && boot.slots === (width <= 768 ? 2 : 0) && /soft-iron-card-v1/.test(boot.art) && boot.hydrated && boot.legacy === 0 && boot.nativeSheet, JSON.stringify(boot));
+  // Older native/inline card rules may remain on the live page and arrive
+  // after our styles. Asset-load tests alone miss this cascade regression.
+  await tab.addStyleTag({ content: previousCardsCss });
+  await settle(tab);
+  const cascade = await tab.locator('.iw-skill-tabs').evaluate(strip => [...strip.querySelectorAll('.iw-skill-tab')].map(card => {
+    const name = card.querySelector('.iw-skill-tab-name'), css = getComputedStyle(name);
+    const range = document.createRange(); range.selectNodeContents(name);
+    return { name: name.textContent, art: getComputedStyle(card).backgroundImage,
+      font: parseFloat(css.fontSize), generatedName: getComputedStyle(name, '::before').content,
+      oneLine: range.getClientRects().length === 1 && range.getBoundingClientRect().width <= name.getBoundingClientRect().width + .5 };
+  }));
+  check(`${width}px: every real card keeps Soft Iron after old card CSS loads late`, cascade.every(c => /soft-iron-card-v1/.test(c.art)), JSON.stringify(cascade.map(c => ({name:c.name,art:c.art}))));
+  check(`${width}px: old generated labels cannot replace or split the real names`, cascade.every(c => c.font >= (width <= 768 ? 6 : 9) && ['none','normal'].includes(c.generatedName) && c.oneLine), JSON.stringify(cascade));
+  const paintedAssets = await tab.locator('.iw-skill-tabs').evaluate(async strip => {
+    const images = [...strip.querySelectorAll('.iw-skill-tab, .iwf-skill-reserved')].flatMap(card =>
+      [card, card.querySelector('.iw-skill-tab-icon')].flatMap(el =>
+        [...getComputedStyle(el).backgroundImage.matchAll(/url\("([^"]+)"\)/g)].map(m => m[1])));
+    return Promise.all([...new Set(images)].map(async url => {
+      const image = new Image(); image.src = url;
+      try { await image.decode(); return { url, loaded: true }; }
+      catch { return { url, loaded: false }; }
+    }));
+  });
+  check(`${width}px: card art and every medallion load from the extension even after old CSS`,
+    paintedAssets.length === 4 && paintedAssets.every(a => a.loaded && a.url.startsWith('http://iw.test/__extension__/assets/')),
+    JSON.stringify(paintedAssets));
+  await mkdir(resolve(ROOT, 'tmp/skill-cards-soft-iron'), { recursive: true });
+  await tab.locator('.iw-skill-tabs').screenshot({path:resolve(ROOT, `tmp/skill-cards-soft-iron/native-cascade-${width}.png`)});
+  await tab.evaluate(() => extensionSettingListeners.forEach(fn => fn({ 'iw-skin-enabled': { newValue: false } }, 'local')));
+  await settle(tab);
+  check(`${width}px: rebuilt entry point disables cleanly after native handover`, await tab.locator('.iw-skill-tabs').evaluate(strip =>
+    strip.innerHTML === beforeBootstrapTabs && !document.querySelector('style[data-iw-fantasy-style]')));
+  await tab.close();
+}
+
+for (const width of [320, 360, 390, 430, 768, 1024, 1606]) {
   tab = await open({ width });
   await tab.evaluate(helpers);
+  const originalTabs = await tab.locator('.iw-skill-tabs').innerHTML();
+  await tab.evaluate(() => {
+    window.gameSkillTabs = [...document.querySelectorAll('.iw-skill-tab')];
+    window.skillPresses = 0;
+    gameSkillTabs[0].addEventListener('click', () => skillPresses++);
+  });
   await start(tab);
+  const skillLayout = await tab.locator('.iw-skill-tabs').evaluate(strip => {
+    const reserved = [...strip.querySelectorAll('.iwf-skill-reserved')];
+    const visible = [...strip.children].filter(el => el.getBoundingClientRect().width > 0);
+    const rows = new Map();
+    for (const el of visible) {
+      const y = Math.round(el.getBoundingClientRect().top);
+      rows.set(y, (rows.get(y) || 0) + 1);
+    }
+    const names = visible.map(el => {
+      const name = el.querySelector('.iw-skill-tab-name');
+      const range = document.createRange(); range.selectNodeContents(name);
+      const box = name.getBoundingClientRect(), text = range.getBoundingClientRect();
+      const css = getComputedStyle(name), fontSize = parseFloat(css.fontSize);
+      const replacement = getComputedStyle(name, '::before').content;
+      return { text: name.textContent, fontSize, replacement, lines: range.getClientRects().length,
+        family: css.fontFamily, weight: css.fontWeight, caps: css.textTransform,
+        transform: css.transform, scale: css.scale,
+        fits: text.width <= box.width + .5 && name.scrollWidth <= name.clientWidth + 1 && box.height <= fontSize * 1.3 };
+    });
+    return {
+      rows: [...rows.values()], names,
+      art: getComputedStyle(strip.querySelector('.iw-skill-tab')).backgroundImage,
+      reserved: reserved.map(el => ({ name: el.querySelector('.iw-skill-tab-name')?.textContent,
+        disabled: el.getAttribute('aria-disabled') === 'true', focusable: el.tabIndex >= 0,
+        dim: +getComputedStyle(el).opacity < .6, owned: el.hasAttribute('data-iw-fantasy-owned') })),
+      originalsKept: gameSkillTabs.every((el, index) => el === strip.querySelectorAll('.iw-skill-tab')[index]),
+    };
+  });
+  check(`${width}px: skill cards use ${width <= 768 ? '4/4/4 with Reserved slots' : 'the original desktop 5/5'}`,
+    JSON.stringify(skillLayout.rows) === JSON.stringify(width <= 768 ? [4,4,4] : [5,5]), JSON.stringify(skillLayout.rows));
+  check(`${width}px: every full skill name fits on one line`, skillLayout.names.every(n => n.lines === 1 && n.fits && n.fontSize >= (width <= 768 ? 6 : 9) && ['none', 'normal'].includes(n.replacement)), JSON.stringify(skillLayout.names));
+  check(`${width}px: uppercase skill names use desktop Cinzel without warping`, skillLayout.names.every(n => n.family.includes('Cinzel') && n.weight === '700' && n.caps === 'uppercase' && n.transform === 'none' && n.scale === 'none'), JSON.stringify(skillLayout.names));
+  check(`${width}px: both Reserved slots are dim, disabled, owned and outside keyboard navigation`,
+    skillLayout.reserved.length === 2 && skillLayout.reserved.every(s => s.name === 'Reserved' && s.disabled && !s.focusable && s.dim && s.owned), JSON.stringify(skillLayout.reserved));
+  check(`${width}px: skill cards load the approved Soft Iron art`, /soft-iron-card-v1\.webp/.test(skillLayout.art) && assetHits.has('/assets/skills-ui/soft-iron-card-v1.webp'), skillLayout.art);
+  await tab.locator('.iw-skill-tab').first().click();
+  check(`${width}px: gameplay skill nodes and click handlers stay intact`, skillLayout.originalsKept && await tab.evaluate(() => skillPresses === 1));
+  // A normal game rerender must neither duplicate the owned slots nor leave
+  // them in front of real skill cards React appended after them.
+  await tab.evaluate(() => {
+    const strip = document.querySelector('.iw-skill-tabs');
+    strip.append(gameSkillTabs.at(-1));
+  });
+  await settle(tab);
+  check(`${width}px: Reserved slots stay unique at the end after a rerender`, await tab.locator('.iw-skill-tabs').evaluate(strip =>
+    strip.querySelectorAll('.iwf-skill-reserved').length === 2 && [...strip.children].slice(-2).every(el => el.matches('.iwf-skill-reserved'))));
+  await mkdir(resolve(ROOT, 'tmp/skill-cards-soft-iron'), { recursive: true });
+  await tab.locator('.iw-skill-tabs').screenshot({ path: resolve(ROOT, `tmp/skill-cards-soft-iron/skills-${width}.png`) });
   const layout = await tab.evaluate(() => ({
     scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     spill: [...document.querySelectorAll('.iw-skill-tab, .iw-ss-head, .iw-ss-group-head, .iw-ss-row, .iw-wo-tile')]
@@ -645,6 +851,7 @@ for (const width of [390, 768]) {
   }));
   check(`${width}px: nothing spills its panel, no stray emoji`, layout.spill === 0 && layout.emoji === 0, JSON.stringify(layout));
   await tab.evaluate(() => window.Fantasy.stop());
+  check(`${width}px: skill strip restores exactly on stop`, await tab.locator('.iw-skill-tabs').innerHTML() === originalTabs);
   await tab.close();
 }
 

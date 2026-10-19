@@ -5,8 +5,9 @@
  * Legacy's DOMWatcher carries skill detection, inventory queues and name
  * scans Fantasy does not use, so this is a small rewrite with the same
  * contract, not a copy:
- *   - the same eight-entry attributeFilter (a `data-iw-*` write is invisible
- *     to it, so the skin's own attribute writes never re-trigger a pass);
+ *   - the usual eight state attributes plus the port's item identity and theme-toggle
+ *     state (Fantasy never writes that attribute). Other `data-iw-*` writes
+ *     remain invisible, so the skin cannot drive its own flush loop;
  *   - structural changes (childList, a watched attribute) schedule `onFlush`;
  *   - text ticks schedule `onText(parents)` ONLY, never a full pass
  *     (CLAUDE.md: "Text ticks never emit iw:dom-flush");
@@ -89,7 +90,7 @@ export function startWatcher({ onFlush, onText }) {
     subtree: true,
     characterData: true,
     attributes: true,
-    attributeFilter: ['class', 'style', 'disabled', 'aria-disabled', 'aria-pressed', 'aria-selected', 'aria-current', 'data-state'],
+    attributeFilter: ['class', 'style', 'disabled', 'aria-disabled', 'aria-pressed', 'aria-selected', 'aria-current', 'data-state', 'data-iw-theme-toggle', 'data-iw-item', 'data-iw-item-name'],
   });
   guard('layout-watch', () => startLayoutWatch(() => { structural = true; schedule(); }));
   structural = true;

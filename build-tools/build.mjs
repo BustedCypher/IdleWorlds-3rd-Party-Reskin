@@ -10,6 +10,7 @@ const OUTFILE = path.join(DIST, 'content.bundle.js');
 const allowMissingAssets = process.argv.includes('--allow-missing-assets');
 
 const REQUIRED_ASSETS = [
+  'skills-ui/soft-iron-card-v1.webp',
   'raids/lobby/ashmaw-banner.webp',
   'raids/lobby/ashmaw-portrait.webp',
   'raids/lobby/thessaly-banner.webp',

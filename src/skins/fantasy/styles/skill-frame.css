@@ -1,0 +1,200 @@
+/* Selected-skill art stays active over native sheet styles. Only Fantasy's
+   reversible marker opts a game sheet in; all game nodes/handlers survive.
+   Reuse the shared panel texture and compact button atlas. Corner ornaments
+   belong to major panels, never this selected-skill subframe. */
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] {
+  --iwf-sheet-r: 4px;
+  --iwf-pad-x: 16px;
+  --iwf-frame-edge: var(--iw-th-edge-mid, #65563c);
+  --iwf-frame-plate: var(--iw-compact-atlas, url('../assets/skills-ui/buttons/compact-ghost-v3/forged-metal.png'));
+  position: relative;
+  gap: 0;
+  border: 1px solid var(--iwf-frame-edge);
+  border-radius: var(--iwf-sheet-r);
+  background:
+    linear-gradient(180deg, #101512de, #0a0d0bed),
+    url('../assets/skills_panel_texture.webp') center / 256px 256px repeat;
+  box-shadow: inset 0 0 0 1px #000b, inset 0 1px 0 #d7bc7420, 0 6px 18px -8px #0009;
+  /* XP bonus tooltips extend above the head. Never clip this frame. */
+  overflow: visible;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"]::before {
+  content: none;
+  border-image: none;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"]::after {
+  content: "";
+  position: absolute;
+  inset: 4px 20px;
+  background:
+    linear-gradient(90deg, transparent, #b697564c 20%, #dcc48778 50%, #b697564c 80%, transparent) top / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent, #b6975633 20%, #b6975633 80%, transparent) bottom / 100% 1px no-repeat;
+  pointer-events: none;
+  z-index: 2;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] > * + * {
+  border-left: 0;
+  border-right: 0;
+  border-top: 1px solid #514832;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] > :not(.iw-ss-head):not(.iw-ss-rows) {
+  border-radius: 0;
+  background: linear-gradient(90deg, #a78b4510, transparent 75%);
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-head {
+  gap: 14px;
+  padding: 18px var(--iwf-pad-x) 16px;
+  border: 0;
+  border-radius: var(--iwf-sheet-r) var(--iwf-sheet-r) 0 0;
+  background: radial-gradient(ellipse at 0 0, color-mix(in srgb, var(--iwf-tint, #b8975a) 9%, transparent), transparent 75%);
+  box-shadow: none;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon {
+  flex: 0 0 auto;
+  width: 54px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  font-size: 0;
+  color: transparent;
+  background: var(--iwf-medal);
+  filter: drop-shadow(0 2px 3px #0009);
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-name { gap: 6px 10px; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-name > span:first-child {
+  font-family: var(--iw-font-head, Georgia, serif);
+  font-size: clamp(17px, 3.8vw, 23px);
+  letter-spacing: .035em;
+  color: #eee4c9;
+  text-shadow: 0 1px 1px #000;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-level {
+  border: 1px solid #88703e7a;
+  border-radius: 3px;
+  background: linear-gradient(#252015, #12130f);
+  color: #c9b88f;
+  box-shadow: inset 0 1px 0 #e8cf8c0d;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-boost { color: #86d7a0; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-xp-chip {
+  border-color: #816a37;
+  border-radius: 3px;
+  background: linear-gradient(#2c2515, #16150e);
+  color: #dfc16c;
+  box-shadow: inset 0 1px 0 #efcf7f12;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-xpbar {
+  height: 7px;
+  border-radius: 2px;
+  background: #080b09;
+  box-shadow: inset 0 0 0 1px #85713d54, inset 0 1px 2px #000;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-xpbar > span {
+  border-radius: inherit;
+  background: linear-gradient(180deg, #ffffff24, transparent 65%),
+    linear-gradient(90deg, color-mix(in srgb, var(--iwf-tint, #b8975a) 60%, #222b21), var(--iwf-tint, #b8975a));
+  box-shadow: none;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-sub { color: #a59e88; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-rows { gap: 0; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-row {
+  border-right: 0;
+  border-radius: 0;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-row:not(.is-running):not(.is-best):not(:hover) {
+  background: transparent;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-rowname { color: #e2d9c2; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-xp { color: #b9a575; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-lock { color: #c0a68d; }
+
+/* The full zone bar shares the skill-info surface. It is distinct from
+   the next/previous-zone recommendation shortcut, despite reusing its button
+   class. Keep the native nodes in order and merge their paint, not their DOM. */
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-head:has(+ .iw-ss-zonebar) { padding-bottom: 8px; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-zonebar {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 6px 8px;
+  min-height: 0;
+  padding: 0 var(--iwf-pad-x) 12px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-image: none !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-zonebar .iw-ss-zone-icon { font-size: 12px; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-zonebar .iw-ss-zone-text {
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 16px;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-zonebar-btns {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+  margin: 0 !important;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-zonebar .iw-ss-zone-go {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 28px !important;
+  height: 28px !important;
+  padding: 0 4px !important;
+  margin: 0 !important;
+  color: #ddcca4 !important;
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+/* Paint existing unplated controls with the same three-slice atlas used by
+   Work Orders. Native compact layers already own their art, so skip those;
+   group toggles, dismiss glyphs and the quiet travel shortcut keep theirs.
+   The full zone bar explicitly opts in using its captured native classes. */
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] :is(button:not(:is(.iw-ss-group-head, .iw-ss-x, .iw-ss-zone-go, [data-iw-compact-button])), .iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button]))) {
+  --iwf-frame-y: 2.9411764705882355%;
+  --iwf-frame-cap: 12px;
+  position: relative;
+  min-height: 36px;
+  padding: 6px 4px;
+  border: solid transparent !important;
+  border-width: 0 var(--iwf-frame-cap) !important;
+  border-radius: 0 !important;
+  background: var(--iwf-frame-plate) 21.428571428571427% var(--iwf-frame-y) / 150% 326.6666666666667% no-repeat padding-box padding-box !important;
+  box-shadow: none !important;
+  color: #ddcca4;
+  font-family: var(--iw-font-head, Georgia, serif);
+  text-shadow: 0 1px 0 #000;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] :is(button:not(:is(.iw-ss-group-head, .iw-ss-x, .iw-ss-zone-go, [data-iw-compact-button])), .iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::before,
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] :is(button:not(:is(.iw-ss-group-head, .iw-ss-x, .iw-ss-zone-go, [data-iw-compact-button])), .iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  width: var(--iwf-frame-cap);
+  background: var(--iwf-frame-plate) 1.2658227848101267% var(--iwf-frame-y) / 1680% 326.6666666666667% no-repeat;
+  pointer-events: none;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] :is(button:not(:is(.iw-ss-group-head, .iw-ss-x, .iw-ss-zone-go, [data-iw-compact-button])), .iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::before { left: calc(-1 * var(--iwf-frame-cap)); }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] :is(button:not(:is(.iw-ss-group-head, .iw-ss-x, .iw-ss-zone-go, [data-iw-compact-button])), .iw-ss-zonebar .iw-ss-zone-go:where(:not([data-iw-compact-button])))::after {
+  right: calc(-1 * var(--iwf-frame-cap));
+  background-position-x: 78.48101265822785%;
+}
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] button:not(:disabled):is(:hover,:focus-visible) { --iwf-frame-y: 50%; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] button:not(:disabled):active { --iwf-frame-y: 97.05882352941177%; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] button:focus-visible { outline: 2px solid #d4ad63; outline-offset: 2px; }
+:is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] button:disabled { opacity: .45; color: #8f8c7e; }
+
+/* Desktop uses header travel; retain the zone label in the skill sheet. */
+@media (min-width: 769px) {
+  :is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-zonebar-btns { display: none !important; }
+}
+
+@media (max-width: 540px) {
+  :is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] { --iwf-pad-x: 12px; }
+  :is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-head { gap: 10px; }
+  :is(:root,#iwf) .iw-skill-sheet[data-iw-fantasy-skill-frame="guild-iron"] .iw-ss-head[data-iw-fantasy-skill] .iw-ss-icon { width: 44px; }
+}

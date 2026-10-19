@@ -1,0 +1,333 @@
+/* ============================================================================
+   Fantasy — user-selected skill-card art and responsive grid.
+
+   These are GAME nodes. This presentation remains active even when the
+   port styles the full action sheet; it must not share that feature's
+   native handover. Shared skill tokens also serve styles/skills.css.
+
+   SPECIFICITY. Card rules include the owned strip's design marker so they
+   outrank the previous native card rules even when those load later. The
+   marker is reversible and invisible to the budgeted mutation watcher.
+   Every rule starts `:is(:root,#iwf)`, worth one ID. The port's
+   generic control rule (ui-system.css `button:not(…)` chain, ~(0,40,1)
+   !important) paints every game button it does not exclude, and its chain
+   cannot be extended from here, so one ID weight is the smallest step that
+   beats it. `!important` is used ONLY on the properties that rule sets
+   (border-color, background-image, box-shadow). `#iwf` never exists.
+
+   STATE (rule 5). The prefix also outranks the game's own state rules, so
+   every state the game paints is restated below and stays distinct:
+   active tab, running skill dot, running / best / locked row, open group,
+   boost, lock / gear / warn lines, disabled start.
+   ========================================================================= */
+
+:is(:root,#iwf) {
+  --iwf-item-atlas: url('../assets/item_icons_atlas.png');
+  --iwf-gear-atlas: url('../assets/gear_icons_atlas.png');
+  --iwf-edge: var(--iw-th-edge-soft, #3b3a33);
+  --iwf-edge-mid: var(--iw-th-edge-mid, #57513f);
+  --iwf-edge-faint: var(--iw-th-edge-faint, #2a2a25);
+  --iwf-accent: var(--iw-th-accent, #d8a64a);
+  --iwf-brass: var(--iw-th-brass, #b8975a);
+  --iwf-ground: linear-gradient(180deg,
+      color-mix(in srgb, var(--iw-th-ground-a, #15171a) 92%, transparent),
+      color-mix(in srgb, var(--iw-th-ground-b, #0b0c0d) 96%, transparent));
+  --iwf-text-hi: #f1e6cc;
+  --iwf-text: #d9cdb2;
+  --iwf-text-dim: #a59a83;
+  --iwf-running: #34d399;
+  /* The game's own boosted-level green (.iw-ss-boost), lighter than the
+     running green so a boosted tile never reads as the running one. */
+  --iwf-boost: #86efac;
+  /* Every item sprite is at least the inventory's: its icon box is
+     52 / 46 / 42px with a 1px border and the sprite fills it. */
+  --iwf-item: 50px;
+}
+@media (max-width: 1024px) { :is(:root,#iwf) { --iwf-item: 44px; } }
+@media (max-width: 768px) { :is(:root,#iwf) { --iwf-item: 40px; } }
+
+/* One discipline icon per key: Curtis's action-icon set, the same white
+   SVGs Legacy's V2 action buttons ship, painted as a background (no mask:
+   a mask image is fetched with CORS). */
+:is(:root,#iwf) [data-iw-fantasy-skill="combat"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/combat.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="mining"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/mining.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="smithing"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/smithing.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="gathering"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/gathering.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="alchemy"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/alchemy.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="jewelcrafting"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/jewelcrafting.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="spellcrafting"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/spellcrafting.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="tailoring"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/tailoring.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="woodcutting"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/woodcutting.svg'); }
+:is(:root,#iwf) [data-iw-fantasy-skill="construction"] { --iwf-skill-icon: url('../assets/skills-ui/action-icons/construction.svg'); }
+
+/* A leading emoji the module SAW and replaced (data-iw-fantasy-lead).
+   ::first-letter takes the whole emoji, variation selector included
+   (measured in Chromium 2026-10-16), and leaves the text node untouched.
+   Only block containers and flex items get a first letter. letter-spacing
+   is inherited as a LENGTH (an em of the parent), so it must be zeroed too
+   or an uppercase label keeps a 0.7px sliver of the emoji. */
+:is(:root,#iwf) [data-iw-fantasy-lead="icon"]::first-letter { font-size: 0; letter-spacing: 0; }
+
+/* ── tabs: Soft Iron medallion tiles ─────────────────────────────────── */
+
+/* The Toolkit's collapsed skill card (idleWorlds-game-sprites-BC index.html,
+   `.cp-skills.collapsed .cp-skill`), rebuilt over the game's tab: a square
+   tile, the discipline icon on a dark disc inside a conic XP ring, the
+   level plaque hung from the ring's foot, the name below. Tints are the
+   Toolkit's --sk-* colours, so the two read as one family.
+
+   The ring IS the game's bar: data-iw-fantasy-pct copies the bar's inline
+   width (skills/index.js), and the bar itself hides only while that copy
+   exists, so a tab the pass could not read keeps the game's bar.
+
+   Sizes scale with the tab strip (a size container), not the viewport.
+   Desktop keeps five columns; phones use four, with two disabled reserved
+   slots completing the final row. Both use the same quiet generated art. */
+:is(:root,#iwf) [data-iw-fantasy-skill="combat"] { --iwf-tint: #e4574f; }
+:is(:root,#iwf) [data-iw-fantasy-skill="mining"] { --iwf-tint: #8fa4c0; }
+:is(:root,#iwf) [data-iw-fantasy-skill="smithing"] { --iwf-tint: #f0793f; }
+:is(:root,#iwf) [data-iw-fantasy-skill="gathering"] { --iwf-tint: #6dd48a; }
+:is(:root,#iwf) [data-iw-fantasy-skill="alchemy"] { --iwf-tint: #57c6cf; }
+:is(:root,#iwf) [data-iw-fantasy-skill="jewelcrafting"] { --iwf-tint: #62d0e8; }
+:is(:root,#iwf) [data-iw-fantasy-skill="spellcrafting"] { --iwf-tint: #b492ea; }
+:is(:root,#iwf) [data-iw-fantasy-skill="tailoring"] { --iwf-tint: #e88fb8; }
+:is(:root,#iwf) [data-iw-fantasy-skill="woodcutting"] { --iwf-tint: #c99a63; }
+:is(:root,#iwf) [data-iw-fantasy-skill="construction"] { --iwf-tint: #9aa7b8; }
+
+/* The painted medallions: assets/skills_icons_atlas.webp, the Toolkit's own
+   atlas byte for byte (6 x 2 cells of 112px; skills_icons_index.json), so
+   the window is 600% 200% at col x 20%, row x 100%. Woodcutting and
+   Construction are not in that atlas: Curtis painted them on 2026-10-16
+   (assets/skills-medallions/<skill>-v1.png, 1254px sources, not shipped)
+   and they ship as 224px WebPs, a whole image each, sized to the atlas
+   cells' fill. The default below (line icon on a dark disc) is only for a
+   discipline that has no medallion at all. */
+:is(:root,#iwf) [data-iw-fantasy-skill] {
+  --iwf-medal: var(--iwf-skill-icon) center / 54% auto no-repeat, radial-gradient(circle at 50% 38%, #221e17, #0a0a08 72%);
+}
+/* Pin the rewritten extension URLs on their actual consumers. An older
+   native sheet can load later with the bare data-attribute selectors and
+   relative URLs; those resolve against the game and return 404s. */
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="combat"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 0% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="mining"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 20% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="smithing"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 40% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="gathering"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 60% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="alchemy"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 80% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="jewelcrafting"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 100% 0% / 600% 200% no-repeat; }
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="spellcrafting"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 0% 100% / 600% 200% no-repeat; }
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="tailoring"] { --iwf-medal: url('../assets/skills_icons_atlas.webp') 20% 100% / 600% 200% no-repeat; }
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="woodcutting"] { --iwf-medal: url('../assets/skills-medallions/woodcutting.webp') center / 100% 100% no-repeat; }
+:is(:root,#iwf) :is(.iw-skill-tab, .iw-ss-head, .iwf-q-row)[data-iw-fantasy-skill="construction"] { --iwf-medal: url('../assets/skills-medallions/construction.webp') center / 100% 100% no-repeat; }
+
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  container-type: inline-size;
+  gap: 8px;
+}
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] :is(.iw-skill-tab, .iwf-skill-reserved) {
+  --iwf-tint-on: var(--iwf-tint, var(--iwf-accent));
+  --iwf-med: clamp(32px, 7.4cqw, 64px);
+  --iwf-ring-gap: clamp(3px, 1cqw, 6px);
+  --iwf-ring-w: clamp(3px, .65cqw, 4px);
+  grid-template-columns: minmax(0, 1fr);
+  position: relative;
+  display: grid;
+  min-width: 0;
+  box-sizing: border-box;
+  /* Equal portraits, with the full single-line name above the medallion. */
+  grid-template-areas: "name" "icon" "lv" "bar";
+  grid-template-rows: auto auto auto auto;
+  justify-items: center;
+  align-content: center;
+  aspect-ratio: 5 / 6;
+  gap: 0;
+  padding: clamp(5px, 1.6cqw, 12px) clamp(2px, .9cqw, 6px) clamp(4px, 1.3cqw, 10px);
+  text-align: center;
+  border-radius: 5px;
+  border: 1px solid #343a33;
+  /* A token, so the running tile can lay its fill over the same ground. */
+  --iwf-tab-bg:
+    linear-gradient(#050a0826, #050a0826),
+    url('../assets/skills-ui/soft-iron-card-v1.webp') center / 100% 100% no-repeat,
+    linear-gradient(#101512, #101512);
+  background: var(--iwf-tab-bg);
+  box-shadow: 0 2px 5px #0004;
+}
+/* A one-column sheet (~180px tiles) would stand 220px tall at 5:6; past
+   that the tile keeps its cell's width and a fixed height instead. */
+@container (min-width: 760px) {
+  :is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab { aspect-ratio: auto; min-height: 188px; }
+}
+/* The generated art supplies the frame; no second decorative top rail. */
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab::before {
+  content: none;
+}
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab:hover {
+  border-color: color-mix(in srgb, var(--iwf-tint-on) 25%, #343a33);
+  box-shadow: inset 0 0 0 1px #d8c59612, 0 2px 5px #0004;
+}
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab:focus-visible { outline: 2px solid var(--iwf-accent); outline-offset: 2px; }
+/* Selection stays distinct through a quiet edge and a slight tinted fill. */
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab.is-active {
+  border-color: color-mix(in srgb, var(--iwf-tint-on) 48%, #343a33);
+  --iwf-tab-bg:
+    radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--iwf-tint-on) 8%, transparent), transparent 75%),
+    url('../assets/skills-ui/soft-iron-card-v1.webp') center / 100% 100% no-repeat,
+    linear-gradient(#101512, #101512);
+  background: var(--iwf-tab-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--iwf-tint-on) 16%, transparent), 0 2px 5px #0004;
+}
+
+/* The medallion and its ring. */
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] :is(.iw-skill-tab[data-iw-fantasy-skill], .iwf-skill-reserved) .iw-skill-tab-icon {
+  grid-area: icon;
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: var(--iwf-med);
+  height: var(--iwf-med);
+  margin: var(--iwf-ring-gap);
+  border-radius: 50%;
+  font-size: 0;
+  color: transparent;
+  background: var(--iwf-medal);
+  box-shadow: 0 3px 9px rgba(0,0,0,.55);
+  opacity: 1;
+  filter: none;
+}
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab[data-iw-fantasy-skill] .iw-skill-tab-icon::after {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--iwf-ring-gap));
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(color-mix(in srgb, var(--iwf-tint-on) 78%, #fff) 0 var(--iwf-pct, 0%), #2a241b var(--iwf-pct, 0%) 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--iwf-ring-w)), #000 calc(100% - var(--iwf-ring-w) + .5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--iwf-ring-w)), #000 calc(100% - var(--iwf-ring-w) + .5px));
+  filter: none;
+  opacity: .8;
+}
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon::after,
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab:hover[data-iw-fantasy-skill] .iw-skill-tab-icon::after { opacity: 1; }
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab.is-active[data-iw-fantasy-skill] .iw-skill-tab-icon { box-shadow: 0 3px 9px rgba(0,0,0,.55); }
+
+/* The level plaque, hung from the ring's foot. */
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] :is(.iw-skill-tab, .iwf-skill-reserved) .iw-skill-tab-lv {
+  grid-area: lv;
+  position: relative;
+  z-index: 2;
+  min-width: clamp(24px, 6cqw, 38px);
+  margin-top: calc(-1 * var(--iwf-ring-gap) - clamp(4px, 1.2cqw, 8px));
+  padding: 1px clamp(3px, 1cqw, 7px) 2px;
+  border: 1px solid color-mix(in srgb, var(--iwf-brass) 55%, #3a3226);
+  border-radius: 4px 4px 9px 9px;
+  background: linear-gradient(#1b1812, #0b0c0e);
+  box-shadow: inset 0 0 0 2px #1d1a14, 0 2px 4px rgba(0,0,0,.6);
+  font-size: clamp(9.5px, 1.95cqw, 12.5px);
+  line-height: 1.15;
+  color: var(--iwf-text-hi);
+}
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab.is-active .iw-skill-tab-lv { border-color: var(--iwf-accent); color: #fff; }
+
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] :is(.iw-skill-tab, .iwf-skill-reserved) .iw-skill-tab-name {
+  grid-area: name;
+  /* The game hides the name at <=420px; every tile keeps it here. */
+  display: block;
+  justify-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: clamp(3px, 1cqw, 7px);
+  font-family: var(--iw-font-head, serif);
+  font-size: clamp(7px, 1.72cqw, 11px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: clamp(0px, .12cqw, .04em);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--iwf-tint-on) 45%, var(--iwf-text-dim));
+  text-shadow: 0 1px 0 #000;
+}
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab.is-active .iw-skill-tab-name { color: color-mix(in srgb, var(--iwf-tint-on) 62%, var(--iwf-text-hi)); }
+
+/* The native theme may still generate "Jewel-\A crafting" while hiding
+   the real text. Keep the game's actual complete name as the only label. */
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] :is(.iw-skill-tab, .iwf-skill-reserved) .iw-skill-tab-name::before {
+  content: none;
+  display: none;
+}
+
+/* Locked decoration only: no gameplay key, handlers, or keyboard stop.
+   The lock is the existing atlas cell, desaturated with the entire tile. */
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iwf-skill-reserved {
+  --iwf-medal: url('../assets/skills_icons_atlas.webp') 80% 100% / 600% 200% no-repeat;
+  display: none;
+  opacity: .4;
+  filter: grayscale(1);
+  pointer-events: none;
+  user-select: none;
+}
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iwf-skill-reserved .iw-skill-tab-icon { outline: var(--iwf-ring-w) solid #4b4d46; }
+
+@media (max-width: 768px) {
+  :is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  :is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] :is(.iw-skill-tab, .iwf-skill-reserved) {
+    --iwf-med: clamp(32px, 13cqw, 64px);
+    --iwf-ring-gap: clamp(3px, .8cqw, 5px);
+    padding-inline: 2px;
+  }
+  :is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] :is(.iw-skill-tab, .iwf-skill-reserved) .iw-skill-tab-name {
+    /* Inherit desktop Cinzel and its weight. Fit the full uppercase names
+       with ordinary font sizing; never stretch or condense the glyphs. */
+    transform: none;
+    font-size: clamp(6px, calc(2.8cqw - 1.2px), 16px);
+    letter-spacing: 0;
+    color: var(--iwf-text);
+  }
+  :is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] :is(.iw-skill-tab, .iwf-skill-reserved) .iw-skill-tab-lv { font-size: clamp(11.5px, 2.5cqw, 16px); }
+  :is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iwf-skill-reserved { display: grid; }
+}
+
+/* The game's bar: the ring carries it while the pass has a reading. */
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab-bar {
+  grid-area: bar;
+  width: 80%;
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 1px;
+  background: #000a;
+}
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab-bar > span { background: linear-gradient(90deg, var(--iwf-brass), var(--iwf-accent)); }
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab[data-iw-fantasy-pct][data-iw-fantasy-skill] .iw-skill-tab-bar { display: none; }
+
+/* The live dot is state ("Running now"): it keeps the game's green. */
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab-live {
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+  background: var(--iwf-running);
+  box-shadow: 0 0 0 1px #000, 0 0 6px var(--iwf-running);
+}
+@media (max-width: 480px) {
+  /* Keep the running state away from the full single-line name. */
+  :is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab-live { top: auto; bottom: 4px; right: 4px; width: 5px; height: 5px; }
+}
+
+/* Daily XP Boost (skills/index.js reads the boost line): a still, quiet
+   green underglow BEHIND the tile (Curtis, 2026-10-17: no pulse, nothing
+   drawn over the tile). z-index -1 on a tile that is not itself a stacking
+   context puts the glow under the tile's own background, inside the tab
+   strip's context (its z-index: 1), so only the spill past the tile's
+   edges shows, heaviest at the foot. It never reads as the running fill,
+   which sits INSIDE the tile. */
+:is(:root,#iwf) .iw-skill-tabs[data-iw-fantasy-cards="soft-iron"] .iw-skill-tab[data-iw-fantasy-boost="daily"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 8px 18px -6px color-mix(in srgb, var(--iwf-boost) 55%, transparent),
+    0 0 14px -2px color-mix(in srgb, var(--iwf-boost) 30%, transparent);
+}
