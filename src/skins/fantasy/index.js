@@ -17,6 +17,7 @@ import { raidPass, raidText, clearRaid } from './raid/index.js';
 import { skillsPass, skillsText, clearSkills } from './skills/index.js';
 import { chromePass, chromeText, clearChrome } from './chrome/index.js';
 import { inventoryPass, inventoryText, clearInventory } from './inventory/index.js';
+import { worldBossPass, worldBossText, clearWorldBosses } from './world-boss/index.js';
 import raidCss from './styles/raid.css';
 
 function flush() {
@@ -24,6 +25,7 @@ function flush() {
   skillsPass();
   chromePass();
   inventoryPass();
+  worldBossPass();
 }
 
 function text(parents) {
@@ -31,6 +33,7 @@ function text(parents) {
   skillsText(parents);
   chromeText(parents);
   inventoryText(parents);
+  worldBossText(parents);
 }
 
 export function start() {
@@ -45,6 +48,7 @@ export function stop() {
   clearSkills();
   clearChrome();
   clearInventory();
+  clearWorldBosses();
   removeAll();
   resetNativeFeatures();
   setRuntimeActive(false);

@@ -25,6 +25,7 @@ export const FEATURE_TOKENS = {
   bossCard: ['data-iw-boss-card', 'iw-bc-'],
   leaderboard: ['iw-raid-lb'],
   result: ['data-iw-raid-result'],
+  worldBossCards: { sheet: /\/reskin-bc\//, tokens: ['data-iw-fantasy-world-boss', 'iwf-wb-'] },
   // The skill sheet and the work-order board are the GAME'S own markup (its
   // `.iw-ss-*` / `.iw-wo-*` classes, 2026-10-16), and the game's stock CSS
   // already names them. So these count only in the port's Fantasy theme

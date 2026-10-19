@@ -2227,30 +2227,30 @@
   // src/skins/legacy/modules/InlineStyleOwner.js
   function createInlineStyleOwner() {
     const states = /* @__PURE__ */ new WeakMap();
-    const tracked = /* @__PURE__ */ new Set();
+    const tracked2 = /* @__PURE__ */ new Set();
     const refByElement = /* @__PURE__ */ new WeakMap();
     const weakTracking = typeof WeakRef === "function" && typeof FinalizationRegistry === "function";
-    const finalizer = weakTracking ? new FinalizationRegistry((ref) => tracked.delete(ref)) : null;
+    const finalizer = weakTracking ? new FinalizationRegistry((ref) => tracked2.delete(ref)) : null;
     function track(el2) {
       if (refByElement.has(el2)) return;
       const ref = weakTracking ? new WeakRef(el2) : el2;
       refByElement.set(el2, ref);
-      tracked.add(ref);
+      tracked2.add(ref);
       finalizer?.register(el2, ref, ref);
     }
     function untrack(el2) {
       const ref = refByElement.get(el2);
       if (!ref) return;
-      tracked.delete(ref);
+      tracked2.delete(ref);
       finalizer?.unregister(ref);
       refByElement.delete(el2);
     }
     function trackedElements() {
       const live2 = [];
-      for (const ref of [...tracked]) {
+      for (const ref of [...tracked2]) {
         const el2 = weakTracking ? ref.deref() : ref;
         if (el2) live2.push(el2);
-        else tracked.delete(ref);
+        else tracked2.delete(ref);
       }
       return live2;
     }
@@ -4744,8 +4744,8 @@
   }
   function textLeaves(root) {
     return [...root.querySelectorAll("p,span,div,strong,em,h1,h2,h3,h4")].filter((el2) => !el2.closest('button,a,[role="button"],.fs-quest-sigil')).filter((el2) => {
-      const own13 = [...el2.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
-      return own13 && normText2(el2.textContent).length <= 220;
+      const own14 = [...el2.childNodes].some((n) => n.nodeType === 3 && normText2(n.textContent));
+      return own14 && normText2(el2.textContent).length <= 220;
     });
   }
   function questButtons(card) {
@@ -5822,32 +5822,32 @@
     if (row.button.getAttribute("title") !== label6) row.button.setAttribute("title", label6);
   }
   var ids = 0;
-  function icon(own13, file, fallback2) {
-    const box = own13("span", "iw-vs-entry-icon");
+  function icon(own14, file, fallback2) {
+    const box = own14("span", "iw-vs-entry-icon");
     box.setAttribute("aria-hidden", "true");
     if (!file) {
       box.textContent = fallback2;
       return box;
     }
-    const img = own13("img", "iw-vs-entry-sprite");
+    const img = own14("img", "iw-vs-entry-sprite");
     img.src = assetUrl(`assets/${file}`);
     img.alt = "";
     img.decoding = "async";
     box.append(img);
     return box;
   }
-  function statList(own13, rows) {
-    const list = own13("dl", "iw-vs-stats");
+  function statList(own14, rows) {
+    const list = own14("dl", "iw-vs-stats");
     for (const row of rows) {
-      const line = own13("div", "iw-vs-stat");
+      const line = own14("div", "iw-vs-stat");
       if (row.kind) line.dataset.iwVsStatKind = row.kind;
-      line.append(own13("dt", "", row.label), own13("dd", "", row.value));
+      line.append(own14("dt", "", row.label), own14("dd", "", row.value));
       list.append(line);
     }
     return list;
   }
-  function chevron(own13) {
-    const mark7 = own13("span", "iw-vs-chevron");
+  function chevron(own14) {
+    const mark7 = own14("span", "iw-vs-chevron");
     mark7.setAttribute("aria-hidden", "true");
     return mark7;
   }
@@ -5866,26 +5866,26 @@
     applyEntry(row);
     return row;
   }
-  function entry(own13, { key: key2, name, meta, file, fallback: fallback2, rows, notes, empty }) {
-    const box = own13("div", "iw-vs-entry");
+  function entry(own14, { key: key2, name, meta, file, fallback: fallback2, rows, notes, empty }) {
+    const box = own14("div", "iw-vs-entry");
     box.dataset.iwVsEntry = key2;
-    const button4 = own13("button", "iw-vs-entry-head");
+    const button4 = own14("button", "iw-vs-entry-head");
     button4.type = "button";
     button4.dataset.iwVsToggle = "1";
     const bodyId = `iw-vs-entry-${ids += 1}`;
     button4.setAttribute("aria-controls", bodyId);
     button4.setAttribute("aria-expanded", "true");
-    const label6 = own13("span", "iw-vs-entry-label");
-    label6.append(own13("span", "iw-vs-entry-name", name));
-    if (meta) label6.append(own13("span", "iw-vs-entry-meta", meta));
-    button4.append(icon(own13, file, fallback2), label6, chevron(own13));
-    const body = own13("div", "iw-vs-entry-body");
+    const label6 = own14("span", "iw-vs-entry-label");
+    label6.append(own14("span", "iw-vs-entry-name", name));
+    if (meta) label6.append(own14("span", "iw-vs-entry-meta", meta));
+    button4.append(icon(own14, file, fallback2), label6, chevron(own14));
+    const body = own14("div", "iw-vs-entry-body");
     body.id = bodyId;
     const lines = notes || [];
-    if (rows.length) body.append(statList(own13, rows));
-    for (const note of lines) body.append(own13("p", "iw-vs-entry-note", note));
+    if (rows.length) body.append(statList(own14, rows));
+    for (const note of lines) body.append(own14("p", "iw-vs-entry-note", note));
     if (!rows.length && !lines.length) {
-      body.append(own13("p", "iw-vs-entry-note", empty || "No recorded effects."));
+      body.append(own14("p", "iw-vs-entry-note", empty || "No recorded effects."));
     }
     box.append(button4, body);
     wire(key2, name, box, button4);
@@ -5945,25 +5945,25 @@
     }
     return rows;
   }
-  function buildVillageLedger({ snapshot: snapshot2, house, perks: perks2, own: own13 }) {
+  function buildVillageLedger({ snapshot: snapshot2, house, perks: perks2, own: own14 }) {
     void loadPreferences();
     live = [];
-    const ledger = own13("div", "iw-vs-ledger");
+    const ledger = own14("div", "iw-vs-ledger");
     ledger.dataset.iwVillageLedger = "1";
-    const head = own13("div", "iw-vs-ledger-head");
-    head.append(own13("div", "iw-vs-ledger-title", "Buildings"));
-    const sectionToggle = own13("button", "iw-vs-ledger-toggle");
+    const head = own14("div", "iw-vs-ledger-head");
+    head.append(own14("div", "iw-vs-ledger-title", "Buildings"));
+    const sectionToggle = own14("button", "iw-vs-ledger-toggle");
     sectionToggle.type = "button";
     sectionToggle.dataset.iwVsToggle = "section";
     sectionToggle.setAttribute("aria-expanded", "true");
-    sectionToggle.append(chevron(own13));
+    sectionToggle.append(chevron(own14));
     head.append(sectionToggle);
-    const list = own13("div", "iw-vs-ledger-list");
+    const list = own14("div", "iw-vs-ledger-list");
     list.id = `iw-vs-list-${ids += 1}`;
     sectionToggle.setAttribute("aria-controls", list.id);
     ledger.append(head, list);
     wire("ledger", "the building list", ledger, sectionToggle);
-    list.append(entry(own13, {
+    list.append(entry(own14, {
       key: "home",
       name: house?.name || "No House",
       meta: `Home · tier ${snapshot2.tier}`,
@@ -5976,11 +5976,11 @@
     const installed = [];
     for (const slot of snapshot2.slots) {
       if (slot.state !== "installed") {
-        const line = own13("div", "iw-vs-ledger-vacant");
+        const line = own14("div", "iw-vs-ledger-vacant");
         line.dataset.iwVsSlotState = slot.state;
         line.append(
-          own13("span", "", `Slot ${slot.slot}`),
-          own13("span", "", slot.state === "locked" ? "Locked · upgrade housing" : "Empty plot")
+          own14("span", "", `Slot ${slot.slot}`),
+          own14("span", "", slot.state === "locked" ? "Locked · upgrade housing" : "Empty plot")
         );
         list.append(line);
         continue;
@@ -5988,7 +5988,7 @@
       const item = buildingItem(slot);
       if (item) installed.push(item);
       const tier = Number(item?.tier);
-      list.append(entry(own13, {
+      list.append(entry(own14, {
         key: `building:${slot.name.toLowerCase()}`,
         name: slot.name,
         meta: `Slot ${slot.slot}${Number.isFinite(tier) ? ` · tier ${tier}` : ""}`,
@@ -5998,21 +5998,21 @@
         empty: ItemDatabase.isReady() ? "This building records no effects." : "Effects arrive with the item database."
       }));
     }
-    const totals = own13("section", "iw-vs-totals");
+    const totals = own14("section", "iw-vs-totals");
     totals.dataset.iwVillageTotals = "1";
-    const title = own13("div", "iw-vs-totals-title", "Overall stats");
+    const title = own14("div", "iw-vs-totals-title", "Overall stats");
     title.setAttribute("role", "heading");
     title.setAttribute("aria-level", "3");
     totals.append(title);
     const rows = totalBenefits(installed);
-    if (rows.length) totals.append(statList(own13, rows));
+    if (rows.length) totals.append(statList(own14, rows));
     let note;
     if (!ItemDatabase.isReady()) note = "Waiting on the item database before totalling your buildings.";
     else if (!installed.length) note = "No installed buildings yet, so nothing is counted here.";
     else {
       note = `Summed from ${installed.length} installed building${installed.length === 1 ? "" : "s"}. Housing is not counted.`;
     }
-    totals.append(own13("p", "iw-vs-totals-note", note));
+    totals.append(own14("p", "iw-vs-totals-note", note));
     ledger.append(totals);
     return ledger;
   }
@@ -8636,15 +8636,15 @@
     return { shared, tank, resist };
   }
   function readOwnEffects(raider) {
-    const own13 = [];
+    const own14 = [];
     for (const span of raider.querySelectorAll("[title]")) {
       if (span.closest(`[${OWNED}]`)) continue;
       const title = norm3(span.title);
       const art2 = artFor(title);
       const num = /^(\d[\d,]*)\s+/.exec(title);
-      own13.push({ art: art2?.art || null, name: art2?.name || title, glyph: norm3(span.textContent), value: art2?.art === "shield" && num ? num[1] : "", title });
+      own14.push({ art: art2?.art || null, name: art2?.name || title, glyph: norm3(span.textContent), value: art2?.art === "shield" && num ? num[1] : "", title });
     }
-    return own13;
+    return own14;
   }
   function chip(effect, withLabel) {
     const node2 = el("span", "iw-raid-chip");
@@ -10166,8 +10166,8 @@
     return normText3(el2?.textContent).replace(/^[^\p{L}\p{N}]+/u, "");
   }
   function nameText(el2) {
-    const own13 = [...el2?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
-    return labelText({ textContent: own13 }) || labelText(el2);
+    const own14 = [...el2?.childNodes || []].filter((n) => n.nodeType === 3).map((n) => n.data).join("");
+    return labelText({ textContent: own14 }) || labelText(el2);
   }
   function frameTitle(frame2, found = frameLandmarks(frame2)) {
     return found.sectionTitle || found.roleHeading || found.heading;
@@ -12969,6 +12969,7 @@
     bossCard: ["data-iw-boss-card", "iw-bc-"],
     leaderboard: ["iw-raid-lb"],
     result: ["data-iw-raid-result"],
+    worldBossCards: { sheet: /\/reskin-bc\//, tokens: ["data-iw-fantasy-world-boss", "iwf-wb-"] },
     // The skill sheet and the work-order board are the GAME'S own markup (its
     // `.iw-ss-*` / `.iw-wo-*` classes, 2026-10-16), and the game's stock CSS
     // already names them. So these count only in the port's Fantasy theme
@@ -13072,7 +13073,7 @@
     root.querySelectorAll(`[${attr}][${OWNED_ATTR}]`).forEach((node2) => node2.remove());
   }
   function ownerOf(attr) {
-    return function own13(tag, cls, text2) {
+    return function own14(tag, cls, text2) {
       const el2 = document.createElement(tag);
       if (cls) el2.className = cls;
       el2.setAttribute(attr, "1");
@@ -13081,10 +13082,10 @@
       return el2;
     };
   }
-  function plate(button4, own13) {
+  function plate(button4, own14) {
     button4.dataset.iwCompactButton = "text";
     for (const state3 of ["idle", "hover", "clicked"]) {
-      const layer = own13("span");
+      const layer = own14("span");
       layer.dataset.iwCompactLayer = state3;
       layer.setAttribute("aria-hidden", "true");
       button4.append(layer);
@@ -15531,6 +15532,130 @@ ${ICON.def} ${def || "No DEF potion"}`;
     remove("raid-gear");
   }
 
+  // src/skins/fantasy/styles/world-boss.css
+  var world_boss_default = ':is(:root,#iwf) [data-iw-fantasy-world-boss]{--iwf-wb-status-row: 2;--iwf-wb-action-row: 3;--iwf-wb-reward-row: 4;--iwf-wb-detail-row: 5;position:relative!important;isolation:isolate;display:grid!important;grid-template-columns:minmax(min(100%,300px),49fr) minmax(0,51fr)!important;grid-template-rows:auto!important;gap:12px 0!important;align-content:space-between!important;min-height:308px!important;padding:18px 22px!important;overflow:visible!important;border:3px solid #555249!important;border-radius:5px!important;background:#0c100d!important;box-shadow:inset 0 0 0 1px #c2b28c75,0 0 0 1px #121310,0 8px 18px #0003!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]::before,:is(:root,#iwf) [data-iw-fantasy-world-boss]::after{content:none!important}:is(:root,#iwf) [data-iw-collapsed="1"]>[data-iw-fantasy-world-boss]{display:none!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]>*{grid-column:1 / -1;min-width:0}:is(:root,#iwf) [data-iw-fantasy-world-boss]>.iw-boss-art{display:none!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]>.iwf-wb-art{position:absolute!important;inset:0!important;z-index:0!important;margin:0!important;border:0!important;border-radius:2px;pointer-events:none!important;background:linear-gradient(90deg,#0b0d0cf7 0%,#0b0d0ce8 29%,#0b0d0cc4 45%,#0b0d0c45 61%,#0b0d0c00 76%),linear-gradient(0deg,#070a08c2,transparent 36%,transparent 86%,#070a0833),var(--iwf-wb-art) right center / auto 100% no-repeat!important}:is(:root,#iwf) [data-iw-fantasy-world-boss=ancient_treant]{--iwf-wb-art: url(../assets/world-bosses/cards-v1/ancient-treant.webp);--iwf-wb-focus: 72%}:is(:root,#iwf) [data-iw-fantasy-world-boss=abyssal_behemoth]{--iwf-wb-art: url(../assets/world-bosses/cards-v1/abyssal-behemoth.webp);--iwf-wb-focus: 70%}:is(:root,#iwf) [data-iw-fantasy-world-boss=world_eater]{--iwf-wb-art: url(../assets/world-bosses/cards-v1/world-eater.webp);--iwf-wb-focus: 84%}:is(:root,#iwf) [data-iw-fantasy-world-boss]>[data-iw-boss-role=header]{display:contents!important;position:static!important;padding:0!important;margin:0!important}:is(:root,#iwf) [data-iw-fantasy-world-name]{display:block!important;position:relative!important;z-index:1!important;grid-column:1!important;grid-row:1!important;padding:0!important;margin:0!important;min-width:0!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-boss-role=title]{display:inline!important;margin:0 10px 0 0!important;padding:0!important;font:500 23px/1.2 var(--iw-font-head,Cinzel,Georgia,serif)!important;color:#eee2cc!important;text-shadow:0 2px 12px #000!important;overflow-wrap:anywhere}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-boss-role=difficulty]{display:inline-block!important;vertical-align:middle;margin:0!important;padding:4px 6px!important;font:600 9px/1 var(--iw-font-ui,Barlow,sans-serif)!important;letter-spacing:.16em!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-boss-role=buff]{display:block!important;margin:14px 0 0!important;padding:7px 9px!important;border-left:2px solid #90ab72!important;background:linear-gradient(90deg,#7e9b5927,transparent)!important;font:500 14px/1.3 var(--iw-font-ui,Barlow,sans-serif)!important;color:#b7d79a!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]>[data-iw-boss-role=status],:is(:root,#iwf) [data-iw-fantasy-world-boss]>.iwf-wb-timers{position:relative;z-index:1;grid-column:1!important;grid-row:var(--iwf-wb-status-row)!important;display:grid!important;gap:7px!important;margin:0!important;padding:0!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]>[data-iw-fantasy-world-status-source]{display:none!important}.iwf-wb-timer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:6px;border-bottom:1px solid #b6ab8221}.iwf-wb-timer-label{font:600 9px/1.4 var(--iw-font-ui,Barlow,sans-serif);letter-spacing:.13em;text-transform:uppercase;color:#c5ad78}.iwf-wb-timer-value{font:600 18px/1.1 var(--iw-font-ui,Barlow,sans-serif);font-variant-numeric:tabular-nums;color:#eee2cc;white-space:nowrap}.iwf-wb-timer-active{color:#b7d79a;font-size:14px}:is(:root,#iwf) [data-iw-fantasy-world-action-wrap]{position:relative!important;z-index:2!important;grid-column:1!important;grid-row:var(--iwf-wb-action-row)!important;display:flex!important;align-items:start!important;justify-content:start!important;margin:0!important;padding:0!important;pointer-events:none}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-fantasy-world-state]{position:relative!important;inset:auto!important;transform:none!important;pointer-events:auto!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:128px!important;min-width:128px!important;max-width:100%!important;height:36px!important;min-height:36px!important;max-height:none!important;margin:0!important;padding:8px 18px!important;gap:0!important;border:1px solid #a5a08b!important;border-radius:2px!important;background:linear-gradient(#41443a,#21271e)!important;box-shadow:inset 0 0 0 2px #11130ec9,inset 0 0 0 3px #b8a06a33,0 2px 7px #0008!important;color:#ecdfc4!important;-webkit-text-fill-color:currentColor!important;font:600 11px/1.2 var(--iw-font-ui,Barlow,sans-serif)!important;letter-spacing:.11em!important;text-transform:uppercase!important;text-shadow:none!important;filter:none!important;animation:none!important;opacity:1!important}:is(:root,#iwf) [data-iw-fantasy-world-state]>[data-iw-compact-layer]{display:none!important}:is(:root,#iwf) [data-iw-fantasy-world-state]::before,:is(:root,#iwf) [data-iw-fantasy-world-state]::after{content:none!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-fantasy-world-label]{font-size:0!important}:is(:root,#iwf) [data-iw-fantasy-world-label]>:not([data-iw-compact-layer]){font-size:0!important}:is(:root,#iwf) [data-iw-fantasy-world-label]::after{content:attr(data-iw-fantasy-world-label)!important;position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;background:none!important;transform:none!important;opacity:1!important;color:inherit!important;font:600 11px/1.2 var(--iw-font-ui,Barlow,sans-serif)!important;letter-spacing:.11em!important;text-shadow:none!important;pointer-events:none!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-fantasy-world-state=prejoined]{color:#d2edff!important;border-color:#6b9fc7!important;background:linear-gradient(#28567f,#142e4b)!important;box-shadow:inset 0 0 0 2px #0b1623cc,inset 0 0 0 3px #91c4e84d,0 2px 7px #0008!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-fantasy-world-state=fighting]{color:#ffe0dc!important;border-color:#bf6e6b!important;background:linear-gradient(#7c3233,#431a20)!important;box-shadow:inset 0 0 0 2px #250d11cc,inset 0 0 0 3px #e6a29a40,0 2px 7px #0008!important}:is(:root,#iwf) [data-iw-fantasy-world-state]:not(:disabled):hover{filter:brightness(1.12)!important}:is(:root,#iwf) [data-iw-fantasy-world-state]:focus-visible{outline:2px solid #c5ad78!important;outline-offset:3px!important}:is(:root,#iwf) [data-iw-fantasy-world-state=join]:disabled{opacity:.55!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]>[data-iw-boss-role=participation]{position:relative!important;z-index:3!important;grid-column:1!important;grid-row:var(--iwf-wb-action-row)!important;align-self:center!important;justify-self:end!important;width:max-content!important;min-width:0!important;max-width:calc(100% - 142px)!important;height:auto!important;min-height:0!important;margin:0!important;padding:5px 0!important;border:0!important;background:none!important;box-shadow:none!important;color:#c9c3b2!important;font:400 11px/1.25 var(--iw-font-ui,Barlow,sans-serif)!important;white-space:normal!important;text-decoration:underline dotted!important;text-underline-offset:3px}:is(:root,#iwf) [data-iw-fantasy-world-boss]>.iw-boss-rewards{position:relative;z-index:1;grid-column:1!important;grid-row:var(--iwf-wb-reward-row)!important;margin:0!important;padding-top:8px!important;border-top:1px solid #b6ab8233!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] .iw-boss-rewards-title{font-size:11px!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] .iw-boss-reward-list{display:flex!important;flex-wrap:wrap!important;gap:4px!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] .iw-boss-rewards:not([open])>.iw-boss-reward-list{display:none!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] .iw-boss-reward{flex:0 0 62px}:is(:root,#iwf) [data-iw-fantasy-world-boss]>[data-iw-boss-role=details]{position:relative;z-index:1;grid-column:1 / -1!important;grid-row:var(--iwf-wb-detail-row)!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]>[data-iw-boss-role=progress]{position:relative;z-index:1;grid-column:1!important;grid-row:2!important;margin:0!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]:has(>[data-iw-boss-role=progress]){--iwf-wb-status-row: 3;--iwf-wb-action-row: 4;--iwf-wb-reward-row: 5;--iwf-wb-detail-row: 6}@media(max-width:760px){:is(:root,#iwf) [data-iw-fantasy-world-boss]{grid-template-columns:minmax(min(100%,300px),55fr) minmax(0,45fr)!important;padding-left:18px!important;padding-right:18px!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-boss-role=title]{font-size:21px!important}}@media(max-width:590px){:is(:root,#iwf) [data-iw-fantasy-world-boss]{grid-template-columns:minmax(0,1fr)!important;min-height:338px!important;padding:18px 16px!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]>.iwf-wb-art{background:linear-gradient(90deg,#090e0bd9 0%,#090e0bb8 46%,#090e0b38 100%),linear-gradient(0deg,#090e0bf7 0%,#090e0bce 58%,#090e0b10 100%),var(--iwf-wb-art) var(--iwf-wb-focus) center / auto 100% no-repeat!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-boss-role=title]{font-size:22px!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-boss-role=buff]{font-size:13px!important}}@media(max-width:360px){:is(:root,#iwf) [data-iw-fantasy-world-boss]{padding-left:12px!important;padding-right:12px!important}:is(:root,#iwf) [data-iw-fantasy-world-boss] [data-iw-fantasy-world-state]{width:115px!important;min-width:115px!important;padding-left:10px!important;padding-right:10px!important}:is(:root,#iwf) [data-iw-fantasy-world-boss]>[data-iw-boss-role=participation]{max-width:calc(100% - 125px)!important;font-size:10px!important}}\n';
+
+  // src/skins/fantasy/world-boss/index.js
+  var CARD3 = "data-iw-fantasy-world-boss";
+  var NAME = "data-iw-fantasy-world-name";
+  var WRAP3 = "data-iw-fantasy-world-action-wrap";
+  var STATE2 = "data-iw-fantasy-world-state";
+  var LABEL = "data-iw-fantasy-world-label";
+  var SOURCE3 = "data-iw-fantasy-world-status-source";
+  var OWNED11 = "data-iw-fantasy-world-owned";
+  var ATTRS8 = [CARD3, NAME, WRAP3, STATE2, LABEL, SOURCE3];
+  var BOSSES4 = { ancient_treant: "Ancient Treant", abyssal_behemoth: "Abyssal Behemoth", world_eater: "World Eater" };
+  var tracked = /* @__PURE__ */ new Map();
+  var timerSignatures = /* @__PURE__ */ new WeakMap();
+  var own13 = ownerOf(OWNED11);
+  function release2(node2) {
+    for (const attr of ATTRS8) mark6(node2, attr, null);
+  }
+  function clear3(card) {
+    for (const node2 of tracked.get(card) || []) release2(node2);
+    removeOwned(OWNED11, card);
+    tracked.delete(card);
+  }
+  function timerLine(text2) {
+    let match = /^Respawns\s+(.+?)(?:\s+left)?$/i.exec(text2);
+    if (match) return ["Next appearance", match[1], false];
+    match = /^Buff active\s+(.+?)(?:\s+left)?$/i.exec(text2);
+    if (match) return ["Your active buff", match[1], true];
+    if (/^No world buff\b/i.test(text2)) return ["World buff", text2, false];
+    return null;
+  }
+  function timers(card, status, nodes) {
+    const lines = status ? [...status.querySelectorAll("p")] : [];
+    const values = lines.map((line) => timerLine(norm9(line.textContent)));
+    let view2 = card.querySelector(`.iwf-wb-timers[${OWNED11}]`);
+    if (!lines.length || values.some((value) => !value) || status.querySelector("button,a,input,select,details")) {
+      mark6(status, SOURCE3, null);
+      view2?.remove();
+      return;
+    }
+    nodes.add(status);
+    mark6(status, SOURCE3, "1");
+    if (!view2) {
+      view2 = own13("div", "iwf-wb-timers");
+      card.append(view2);
+    }
+    const signature5 = JSON.stringify(values);
+    if (timerSignatures.get(view2) === signature5) return;
+    const rows = values.map(([caption, value, active6], index) => {
+      const row = own13("div", "iwf-wb-timer");
+      row.title = norm9(lines[index].textContent);
+      row.append(
+        own13("span", "iwf-wb-timer-label", caption),
+        own13("span", `iwf-wb-timer-value${active6 ? " iwf-wb-timer-active" : ""}`, value)
+      );
+      return row;
+    });
+    view2.replaceChildren(...rows);
+    timerSignatures.set(view2, signature5);
+  }
+  function decorate2(card) {
+    const key2 = card.getAttribute("data-iw-encounter");
+    const header = card.querySelector(':scope > [data-iw-boss-role="header"]');
+    const title = header?.querySelector('[data-iw-boss-role="title"]');
+    const name = title?.parentElement;
+    const action = header?.querySelector('[data-iw-boss-role="action"]');
+    if (!BOSSES4[key2] || label5(title?.textContent) !== BOSSES4[key2] || !action || name === header) {
+      if (tracked.has(card)) clear3(card);
+      return;
+    }
+    let wrap = action;
+    while (wrap.parentElement && wrap.parentElement !== header) wrap = wrap.parentElement;
+    if (wrap === name) {
+      if (tracked.has(card)) clear3(card);
+      return;
+    }
+    const nodes = /* @__PURE__ */ new Set([card, name, wrap, action]);
+    mark6(card, CARD3, key2);
+    mark6(name, NAME, "1");
+    mark6(wrap, WRAP3, "1");
+    const text2 = norm9(action.textContent);
+    const state3 = /\bfighting\b|\bin combat\b|\battacking\b/i.test(text2) ? "fighting" : /\bprejoined\b/i.test(text2) ? "prejoined" : /\b(?:prejoin|join|fight)\b/i.test(text2) ? "join" : "idle";
+    mark6(action, STATE2, state3);
+    mark6(action, LABEL, { join: "Join", prejoined: "Prejoined", fighting: "In Combat" }[state3] || null);
+    if (!card.querySelector(`.iwf-wb-art[${OWNED11}]`)) {
+      const art2 = own13("div", "iwf-wb-art");
+      art2.setAttribute("aria-hidden", "true");
+      card.append(art2);
+    }
+    timers(card, card.querySelector(':scope > [data-iw-boss-role="status"]'), nodes);
+    for (const node2 of tracked.get(card) || []) if (!nodes.has(node2)) release2(node2);
+    tracked.set(card, nodes);
+  }
+  function stylesheet2() {
+    if (tracked.size) inject2("world-boss", world_boss_default);
+    else remove("world-boss");
+  }
+  function worldBossPass() {
+    if (nativeFeatures().has("worldBossCards")) {
+      clearWorldBosses();
+      return;
+    }
+    const present = new Set([...document.querySelectorAll("[data-iw-encounter]")].filter((card) => Object.hasOwn(BOSSES4, card.getAttribute("data-iw-encounter"))));
+    for (const card of tracked.keys()) if (!present.has(card)) clear3(card);
+    for (const card of present) decorate2(card);
+    stylesheet2();
+  }
+  function worldBossText(parents) {
+    if (nativeFeatures().has("worldBossCards")) {
+      clearWorldBosses();
+      return;
+    }
+    const cards = new Set(parents.map((parent) => parent.closest?.(`[${CARD3}]`)).filter(Boolean));
+    if (!cards.size) return;
+    for (const card of cards) decorate2(card);
+    stylesheet2();
+  }
+  function clearWorldBosses() {
+    for (const card of [...tracked.keys()]) clear3(card);
+    unmark2(ATTRS8);
+    remove("world-boss");
+  }
+
   // src/skins/fantasy/styles/raid.css
   var raid_default = ':root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{--iw-res-hi: #fff2c8;--iw-res-mid: #e8b44c;--iw-res-lo: #87561a;--iw-res-ring: #d6a64a;--iw-res-ray: rgba(255, 204, 110, .15);--iw-res-glow: rgba(255, 186, 76, .42);--iw-res-band: rgba(13, 10, 6, .9);--iw-res-warm: rgba(255, 186, 76, .16);--iw-res-ink: #f1e4c2;isolation:isolate;overflow:visible!important;width:min(100%,540px);gap:12px;padding:54px 40px 24px!important;border:0!important;border-image:none!important;border-radius:0!important;background:linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center top / 100% 1px no-repeat,linear-gradient(90deg,transparent,var(--iw-res-ring) 22%,var(--iw-res-hi) 50%,var(--iw-res-ring) 78%,transparent) center bottom / 100% 1px no-repeat,radial-gradient(ellipse 60% 75% at 50% 28%,var(--iw-res-warm),transparent 70%),linear-gradient(90deg,transparent,var(--iw-res-band) 16%,var(--iw-res-band) 84%,transparent)!important;box-shadow:none!important;filter:none!important}@media(prefers-reduced-motion:no-preference){:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{animation:iw-res-in .7s cubic-bezier(.2,.9,.3,1.15) both}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{animation:iw-res-spin 80s linear infinite}}@keyframes iw-res-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}@keyframes iw-res-spin{to{transform:rotate(1turn)}}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=wipe]{--iw-res-hi: #f4c7b8;--iw-res-mid: #c44430;--iw-res-lo: #4c0e09;--iw-res-ring: #9e3d2d;--iw-res-ray: rgba(205, 64, 44, .12);--iw-res-glow: rgba(220, 72, 50, .38);--iw-res-band: rgba(14, 7, 6, .9);--iw-res-warm: rgba(196, 58, 40, .14);--iw-res-ink: #e9d0c7}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result=other]{--iw-res-hi: #f4f0e6;--iw-res-mid: #b9b2a2;--iw-res-lo: #4d4a42;--iw-res-ring: #8f8877;--iw-res-ray: rgba(230, 224, 210, .08);--iw-res-glow: rgba(230, 224, 210, .25);--iw-res-warm: rgba(230, 224, 210, .08);--iw-res-ink: #ece6d8}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{content:"";position:absolute;z-index:-1;left:50%;top:0;width:380px;height:380px;margin:-190px 0 0 -190px;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from 0deg,var(--iw-res-ray) 0deg 5deg,transparent 5deg 15deg);-webkit-mask:radial-gradient(circle,#000 14%,transparent 66%);mask:radial-gradient(circle,#000 14%,transparent 66%)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{content:attr(data-iw-raid-result-glyph);position:absolute;z-index:1;left:50%;top:0;transform:translate(-50%,-50%);display:grid;place-items:center;width:68px;height:68px;border-radius:50%;pointer-events:none;font-size:31px;line-height:1;background:radial-gradient(circle at 50% 32%,color-mix(in srgb,var(--iw-res-lo) 55%,#2a1d0c),#0d0905 72%);border:2px solid var(--iw-res-ring);box-shadow:0 0 0 4px rgba(0,0,0,.6),0 0 0 5px var(--iw-res-lo),0 0 26px var(--iw-res-glow),inset 0 2px 7px color-mix(in srgb,var(--iw-res-hi) 30%,transparent)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type{display:flex!important;flex-direction:column;align-items:center;gap:10px;font-size:0!important;line-height:0!important;text-shadow:none!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{content:attr(data-iw-raid-result-word);padding:0 .12em;font:700 clamp(36px,4.4vw,52px)/1 var(--iw-font-head);letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(180deg,var(--iw-res-hi) 8%,var(--iw-res-mid) 52%,var(--iw-res-lo) 96%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.85)) drop-shadow(0 0 16px var(--iw-res-glow))}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{content:attr(data-iw-raid-result-boss);padding:0 58px;font:700 12px/1.2 var(--iw-font-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--iw-res-ink);text-shadow:0 1px 3px #000;background:linear-gradient(90deg,transparent,var(--iw-res-ring)) left center / 46px 1px no-repeat,linear-gradient(90deg,var(--iw-res-ring),transparent) right center / 46px 1px no-repeat}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{max-width:42ch;margin:2px 0 4px!important;font:italic 500 13px/1.5 var(--iw-font-ui)!important;letter-spacing:.01em;text-transform:none;color:var(--iw-res-ink)!important;opacity:.88;text-shadow:0 1px 2px #000!important}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p::before{content:"";display:block;width:7px;height:7px;margin:0 auto 12px;transform:rotate(45deg);background:var(--iw-res-ring);box-shadow:0 0 8px var(--iw-res-glow)}@media(max-width:699px){:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]{align-self:end;padding:44px 18px 18px!important;gap:10px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::before{width:280px;height:280px;margin:-140px 0 0 -140px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]::after{width:56px;height:56px;font-size:26px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::before{font-size:clamp(28px,9vw,36px)}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p:first-of-type::after{padding:0 40px;font-size:10.5px;letter-spacing:.22em;background-size:30px 1px}:root [data-iw-raid-hud]>[data-iw-guild-role=outcome][data-iw-raid-result]>p+p{font-size:12px!important}}:root [data-iw-guild=root][data-iw-guild-layout=lobby]{display:grid!important;grid-template-columns:minmax(0,1fr);grid-auto-flow:row;gap:12px!important;align-items:start}:root [data-iw-guild-layout=lobby] [data-iw-guild-wrap]{display:contents!important}:root [data-iw-guild-layout=lobby]>*,:root [data-iw-guild-layout=lobby] [data-iw-guild-wrap]>*{grid-column:1 / -1;min-width:0;margin:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=leaderboard]{display:none!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=boss]{order:20}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=chat]{order:21}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=lend]{order:22}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]{order:23}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=loadout]{order:24}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]{order:25}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=members]{order:26}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=other]{order:50}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=start]{order:60}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=history]{order:70}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=footer]{order:80}@media(min-width:1024px){:root [data-iw-guild=root][data-iw-guild-layout=lobby]{grid-template-columns:repeat(2,minmax(0,1fr))}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=lend]{order:10;grid-column:1;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]{order:11;grid-column:2;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=boss]{order:20;grid-column:1}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=members]{order:21;grid-column:2;grid-row:span 4;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=chat]{order:30;grid-column:1}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]{order:40;grid-column:1;align-self:stretch}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=loadout]{order:41;grid-column:1}}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite],:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]:has(~[data-iw-guild-slot=loadout]){margin-bottom:-12px!important;border-bottom-color:transparent!important;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite]~[data-iw-guild-slot=invite],:root [data-iw-guild-layout=lobby]:has([data-iw-guild-slot=invite]) [data-iw-guild-slot=members],:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=prep]~[data-iw-guild-slot=loadout]{border-top-color:var(--iw-th-edge-faint)!important;border-top-left-radius:0!important;border-top-right-radius:0!important}:root [data-iw-guild-layout=lobby] [data-iw-guild-slot=invite] [data-iw-guild-role=note]{display:none!important}.iw-guild-records{display:flex;gap:6px;margin-top:2px}.iw-guild-record{flex:1 1 0;min-width:0;text-align:center;font:600 10.5px/1.3 var(--iw-font-ui);color:var(--iw-dim, #938a79);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}:root [data-iw-boss-card]{--iw-bc-r1: 2;--iw-bc-r2: 3;--iw-bc-r3: 4;--iw-bc-end: 5;--iw-bc-face: 78px;--iw-bc-indent: calc(var(--iw-bc-face) + 30px);display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start!important}:root [data-iw-boss-card]:not(:has(>[data-iw-guild-role=boss-tabs])){--iw-bc-r1: 1;--iw-bc-r2: 2;--iw-bc-r3: 3;--iw-bc-end: 4}:root [data-iw-boss-card]>[data-iw-guild-role=boss-tabs]{grid-row:1!important;grid-column:1!important}:root [data-iw-boss-card]>[data-iw-boss-card-src]{display:none!important}:root [data-iw-boss-card]>.iw-bc-art{grid-column:1;grid-row:var(--iw-bc-r1) / var(--iw-bc-end);position:relative;z-index:0;margin:0!important;min-height:132px;border:1px solid var(--iw-th-edge-soft, #3a3226);border-radius:2px;background:linear-gradient(90deg,rgba(9,8,7,.96) 0%,rgba(9,8,7,.9) 36%,rgba(9,8,7,.62) 54%,rgba(9,8,7,0) 74%),linear-gradient(0deg,rgba(9,8,7,.7),rgba(9,8,7,0) 42%),var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / 150% auto no-repeat,#0b0a08;box-shadow:inset 0 0 0 1px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,226,191,.06);pointer-events:none}:root [data-iw-boss-card] .iw-bc-portrait{position:absolute;left:14px;top:12px;width:var(--iw-bc-face);height:var(--iw-bc-face);background:var(--iw-bc-face-art, none) center / contain no-repeat;filter:drop-shadow(0 3px 6px rgba(0,0,0,.85))}.iw-bc-art[data-iw-bc-boss=ashmaw]{--iw-bc-banner: url(../assets/raids/lobby/ashmaw-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/ashmaw-portrait.webp);--iw-bc-focus: 38% 26%}.iw-bc-art[data-iw-bc-boss=thessaly]{--iw-bc-banner: url(../assets/raids/lobby/thessaly-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/thessaly-portrait.webp);--iw-bc-focus: 59% 0%}.iw-bc-art[data-iw-bc-boss=morwenna]{--iw-bc-banner: url(../assets/raids/lobby/morwenna-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/morwenna-portrait.webp);--iw-bc-focus: 56% 0%}.iw-bc-art[data-iw-bc-boss=grimjaw]{--iw-bc-banner: url(../assets/raids/lobby/grimjaw-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/grimjaw-portrait.webp);--iw-bc-focus: 53% 2%}.iw-bc-art[data-iw-bc-boss=skarth]{--iw-bc-banner: url(../assets/raids/lobby/skarth-banner.webp);--iw-bc-face-art: url(../assets/raids/lobby/skarth-portrait.webp);--iw-bc-focus: 74% 6%}:root [data-iw-boss-card]>:is([data-iw-guild-role=boss-name],[data-iw-guild-role=lore],.iw-bc-stats){grid-column:1;position:relative;z-index:1;margin:0!important;padding-left:var(--iw-bc-indent)!important;padding-right:16px!important}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=boss-name]{grid-row:var(--iw-bc-r1);padding-top:16px!important;font-size:19px!important;line-height:1.2!important;text-shadow:0 1px 0 #000,0 0 12px rgba(0,0,0,.9)!important}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=lore]{grid-row:var(--iw-bc-r2);max-width:620px;padding-top:3px!important;font-size:13.5px!important;color:#e4dac6!important;text-shadow:0 1px 1px #000,0 0 6px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.85)!important}:root [data-iw-boss-card]>.iw-bc-stats{grid-row:var(--iw-bc-r3);padding-top:10px!important;padding-bottom:14px!important;align-self:end}.iw-bc-stats{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.iw-bc-stat{display:inline-flex;align-items:baseline;gap:6px;padding:3px 9px;border:1px solid rgba(200,168,97,.30);border-radius:2px;background:rgba(8,7,6,.72);box-shadow:inset 0 1px 0 rgba(255,226,191,.05)}.iw-bc-stat-label{font:700 9.5px/1 var(--iw-font-ui);letter-spacing:.12em;color:var(--iw-th-accent-dim, #a88d5d)}.iw-bc-stat-value{font:700 13px/1.15 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6);font-variant-numeric:tabular-nums}.iw-bc-stat-value[data-iw-bc-tone=hard]{color:#fda4af}.iw-bc-stat-value[data-iw-bc-tone=easy]{color:#6ee7b7}.iw-bc-element{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:2px 7px;margin-left:4px;font:500 11.5px/1.3 var(--iw-font-ui);text-shadow:0 1px 2px #000}.iw-bc-element-name{font-weight:700;color:var(--iw-text-hi, #f0e8d6)}.iw-bc-element-list{color:#b9ad97}.iw-bc-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:6px}.iw-bc-tile{display:flex;align-items:center;gap:10px;min-width:0;padding:7px 10px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-guild-warn-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-guild-warn-rail) 9%,rgba(0,0,0,.3))}.iw-bc-tile[data-iw-bc-kind=advice]{border-left-color:var(--iw-guild-info-rail);background:color-mix(in srgb,var(--iw-guild-info-rail) 8%,rgba(0,0,0,.3));--iw-bc-tile-ink: var(--iw-guild-info)}.iw-bc-tile-body{display:flex;flex-direction:column;min-width:0}.iw-bc-tile-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--iw-bc-tile-ink, var(--iw-guild-warn)) 72%,#5a554c)}.iw-bc-tile-value{font:700 13.5px/1.25 var(--iw-font-ui);color:var(--iw-bc-tile-ink, var(--iw-guild-warn));font-variant-numeric:tabular-nums}.iw-bc-tile-sub{font:500 10.5px/1.3 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-icon{flex:0 0 auto;width:22px;height:22px;background:var(--iw-bc-skill-art, none) center / contain no-repeat;opacity:.9}.iw-bc-glyph{flex:0 0 auto;width:22px;text-align:center;font-size:17px;line-height:1}.iw-bc-icon[data-iw-bc-skill=alchemy]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-alchemy.png)}.iw-bc-icon[data-iw-bc-skill=combat]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-combat.png)}.iw-bc-icon[data-iw-bc-skill=construction]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-construction.png)}.iw-bc-icon[data-iw-bc-skill=gathering]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-gathering.png)}.iw-bc-icon[data-iw-bc-skill=jewelcrafting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-jewelcrafting.png)}.iw-bc-icon[data-iw-bc-skill=mining]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-mining.png)}.iw-bc-icon[data-iw-bc-skill=smithing]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-smithing.png)}.iw-bc-icon[data-iw-bc-skill=spellcrafting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-spellcrafting.png)}.iw-bc-icon[data-iw-bc-skill=tailoring]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-tailoring.png)}.iw-bc-icon[data-iw-bc-skill=woodcutting]{--iw-bc-skill-art: url(../assets/raids/ui-kit-v1/sprites/skill-woodcutting.png)}.iw-bc-tactics{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:8px 10px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-guild-info-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-guild-info-rail) 8%,rgba(0,0,0,.3));font:500 11.5px/1.35 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-tactics-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,var(--iw-guild-info) 72%,#3c5a6b)}.iw-bc-roles{display:flex;flex-wrap:wrap;gap:6px}.iw-bc-role{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 7px;border:1px solid color-mix(in srgb,var(--iw-guild-info-rail) 45%,transparent);border-radius:2px;background:rgba(8,7,6,.55);color:var(--iw-text, #d8cfbd);font-weight:600}.iw-bc-role-count{font:700 14px/1 var(--iw-font-ui);color:var(--iw-guild-info);font-variant-numeric:tabular-nums}.iw-bc-role>.iw-bc-icon{width:16px;height:16px}.iw-bc-role>.iw-bc-glyph{width:16px;font-size:13px;color:var(--iw-guild-info)}.iw-bc-tip{margin:0;color:var(--iw-text, #d8cfbd)}.iw-bc-tip>b{color:var(--iw-guild-info);font-weight:700}.iw-bc-tip>.iw-bc-tip-label{color:var(--iw-text-hi, #f0e8d6)}.iw-bc-loot{--iw-bc-rail: var(--iw-guild-warn-rail);--iw-bc-ink: var(--iw-guild-warn);display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:4px 14px;padding:8px 12px;border:1px solid var(--iw-th-edge-faint, #2a251d);border-left:2px solid var(--iw-bc-rail);border-radius:2px;background:color-mix(in srgb,var(--iw-bc-rail) 10%,rgba(0,0,0,.3));font:500 11.5px/1.35 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-bc-loot[data-iw-bc-tone=good]{--iw-bc-rail: var(--iw-guild-good-rail);--iw-bc-ink: var(--iw-guild-good)}.iw-bc-loot[data-iw-bc-tone=bad]{--iw-bc-rail: var(--iw-guild-bad-rail);--iw-bc-ink: var(--iw-guild-bad)}.iw-bc-loot[data-iw-bc-tone=info]{--iw-bc-rail: var(--iw-guild-info-rail);--iw-bc-ink: var(--iw-guild-info)}.iw-bc-loot-state{font-weight:700;font-size:12.5px;color:var(--iw-bc-ink);white-space:nowrap}.iw-bc-loot-when{display:grid;grid-template-columns:auto auto;align-items:baseline;justify-content:end;gap:0 6px;text-align:right}.iw-bc-loot-label{font:700 9.5px/1.2 var(--iw-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--iw-faint, #6f675a)}.iw-bc-loot-count{font:700 14px/1.2 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6);font-variant-numeric:tabular-nums}.iw-bc-loot-reset{grid-column:1 / -1;font-size:10px;color:var(--iw-faint, #6f675a)}@media(max-width:640px){.iw-bc-loot{grid-template-columns:minmax(0,1fr);gap:3px}.iw-bc-loot-when{justify-content:start;text-align:left}.iw-bc-tile{padding:5px 9px}}@media(max-width:640px){:root [data-iw-boss-card]{--iw-bc-face: 58px}:root [data-iw-boss-card]>.iw-bc-art{background:linear-gradient(180deg,rgba(9,8,7,.25) 0%,rgba(9,8,7,.82) 52%,rgba(9,8,7,.95) 100%),linear-gradient(90deg,rgba(9,8,7,.75),rgba(9,8,7,0) 70%),var(--iw-bc-banner, none) var(--iw-bc-focus, 40% 30%) / cover no-repeat,#0b0a08}:root [data-iw-guild=root] [data-iw-boss-card]>[data-iw-guild-role=boss-name]{display:flex!important;align-items:center;min-height:calc(var(--iw-bc-face) + 22px);padding-top:10px!important;font-size:17px!important}:root [data-iw-boss-card]>:is([data-iw-guild-role=lore],.iw-bc-stats){padding-left:12px!important;padding-right:12px!important}:root [data-iw-boss-card] .iw-bc-portrait{left:10px;top:10px}.iw-bc-element{margin-left:0}}.iw-rc-popup{position:fixed;z-index:2147483000;top:16px;left:50%;transform:translateX(-50%);width:min(440px,calc(100vw - 24px));box-sizing:border-box;padding:20px 24px 18px;border:1px solid transparent;border-radius:var(--iw-r-panel, 3px);border-image:var(--iw-corner-filigree) 50% / 25px 23px / 0 stretch;background:linear-gradient(90deg,rgba(240,180,92,.14),transparent 60%),url(../assets/skills_panel_texture.webp),linear-gradient(180deg,var(--iw-th-ground-a, #1a1611),var(--iw-th-ground-b, #0d0c0a));background-blend-mode:normal,soft-light,normal;box-shadow:0 0 0 1px #c9963f,inset 0 0 0 1px rgba(0,0,0,.7),0 14px 40px rgba(0,0,0,.75),0 0 34px -10px rgba(240,180,92,.7);color:var(--iw-text-hi, #f0e8d6);font-family:var(--iw-font-ui)}@media(prefers-reduced-motion:no-preference){.iw-rc-popup{animation:iw-rc-in .28s cubic-bezier(.2,.9,.3,1.2) both}}@keyframes iw-rc-in{from{opacity:0;transform:translate(-50%,-14px)}to{opacity:1;transform:translate(-50%,0)}}.iw-rc-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.iw-rc-title{margin:0;font:700 15px/1.25 var(--iw-font-head);letter-spacing:.03em;color:#f5d58a;text-shadow:0 1px 0 #000}.iw-rc-timer{flex:none;font:800 15px/1 var(--iw-font-ui);color:#f0b45c;font-variant-numeric:tabular-nums}.iw-rc-note{margin:8px 0 14px;font:500 12px/1.45 var(--iw-font-ui);color:var(--iw-dim, #b7ad99)}.iw-rc-actions{display:flex;gap:8px}.iw-rc-actions>button{--iw-compact-cap: 12px;flex:1 1 0;height:36px;padding:0 14px;margin:0;border:0;background:none;cursor:pointer;font:700 12px/1 var(--iw-font-head);letter-spacing:.08em;text-transform:uppercase;color:var(--iw-text-hi, #f0e8d6)!important;text-shadow:0 1px 2px #000}.iw-rc-actions>.iw-rc-confirm{color:#ffd2ad!important;box-shadow:0 0 14px rgba(217,120,74,.3)!important}.iw-rc-actions>.iw-rc-confirm>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-cta-hi, #d9784a)!important}.iw-raid-lb-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}.iw-raid-lb-title{margin:0}.iw-raid-lb-sub{font:500 11px/1 var(--iw-font-ui);color:var(--iw-dim, #938a79)}.iw-raid-lb-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.iw-raid-lb-tab{--iw-compact-cap: 10px;height:28px;padding:0 12px;margin:0;border:0;background:none;cursor:pointer;font:700 11px/1 var(--iw-font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--iw-dim, #938a79)!important}.iw-raid-lb-tab[aria-pressed=true]{color:var(--iw-text-hi, #f0e8d6)!important}.iw-raid-lb-tab[aria-pressed=true]>[data-iw-compact-layer]{box-shadow:inset 0 -2px var(--iw-th-accent, #5dbbd0)!important}.iw-raid-lb-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px}.iw-raid-lb-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 10px;border:1px solid var(--iw-th-edge-faint, #29251d);border-radius:2px;background:rgba(0,0,0,.22);font:500 12.5px/1.25 var(--iw-font-ui);color:var(--iw-text-hi, #f0e8d6)}.iw-raid-lb-name{display:flex;align-items:baseline;gap:8px;min-width:0}.iw-raid-lb-rank{flex:none;width:2.2em;font-weight:800;color:var(--iw-dim, #938a79);font-variant-numeric:tabular-nums}.iw-raid-lb-row[data-iw-raid-lb-rank="1"] .iw-raid-lb-rank{color:#f1c35b}.iw-raid-lb-row[data-iw-raid-lb-rank="2"] .iw-raid-lb-rank{color:#c9ccd2}.iw-raid-lb-row[data-iw-raid-lb-rank="3"] .iw-raid-lb-rank{color:#d08a52}.iw-raid-lb-guild{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.iw-raid-lb-tag{flex:none;padding:1px 5px;border:1px solid rgba(125,190,230,.35);border-radius:2px;font:600 9.5px/1.2 var(--iw-font-ui);letter-spacing:.04em;text-transform:uppercase;color:#a9d4ef}.iw-raid-lb-time{flex:none;font-weight:700;font-variant-numeric:tabular-nums;color:var(--iw-text-hi, #f0e8d6)}.iw-raid-lb-note{margin:6px 0 2px;font:italic 500 12px/1.4 var(--iw-font-ui);color:var(--iw-dim, #938a79)}html:not([data-iw-compact-atlas]) .iw-rc-actions>button,html:not([data-iw-compact-atlas]) .iw-raid-lb-tab{border:1px solid var(--iw-th-edge-mid, #3a3127)!important;border-radius:var(--iw-r-control, 2px);background:linear-gradient(180deg,var(--iw-ink-700, #1e1b15),var(--iw-ink-900, #0b0c0a))!important}html:not([data-iw-compact-atlas]) .iw-rc-actions>button:hover,html:not([data-iw-compact-atlas]) .iw-raid-lb-tab:hover{border-color:var(--iw-th-hairline-hi, #b48edc)!important}html:not([data-iw-compact-atlas]) .iw-rc-actions>.iw-rc-confirm,html:not([data-iw-compact-atlas]) .iw-raid-lb-tab[aria-pressed=true]{border-color:var(--iw-th-cta-hi, #d9784a)!important}\n';
 
@@ -15540,12 +15665,14 @@ ${ICON.def} ${def || "No DEF potion"}`;
     skillsPass();
     chromePass();
     inventoryPass();
+    worldBossPass();
   }
   function text(parents) {
     raidText(parents);
     skillsText(parents);
     chromeText(parents);
     inventoryText(parents);
+    worldBossText(parents);
   }
   function start() {
     setRuntimeActive2(true);
@@ -15558,6 +15685,7 @@ ${ICON.def} ${def || "No DEF potion"}`;
     clearSkills();
     clearChrome();
     clearInventory();
+    clearWorldBosses();
     removeAll2();
     resetNativeFeatures();
     setRuntimeActive2(false);

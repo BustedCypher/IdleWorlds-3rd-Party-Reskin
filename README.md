@@ -35,6 +35,8 @@ Legacy keeps the current reskin and all its existing preferences. Fantasy layers
 
 ## Develop the Fantasy reskin
 
+Fantasy world bosses use the approved Ironbound frames with full-width boss paintings, left-aligned information and native reward disclosures. Prejoined controls are blue and in-combat controls are red. The game retains ownership of joining, participation, rewards and panel collapse. Card WebPs are rebuilt from the preserved PNG masters with `node build-tools/build-world-boss-card-art.mjs`; the normal build verifies all three are present.
+
 Start in `src/skins/fantasy/index.js`. Add Fantasy modules and CSS inside that compartment, reconcile them through its existing budgeted watcher, and reverse every change in `stop()`. Navigation lives in `chrome/ThumbDock.js`; its owned shadow roots preserve the game's original controls and isolate the dock from native button styling. Each skin must own its runtime guards and removable presentation; do not import Legacy modules or styles into Fantasy.
 
 All existing presentation code is under `src/skins/legacy/`. The neutral bootstrap, settings, and controller live outside both skins. The Legacy assets remain available in `assets/`; sharing an asset does not automatically activate its rules. Theme boundaries, startup races, teardown, and settings persistence are covered by the regression suite.

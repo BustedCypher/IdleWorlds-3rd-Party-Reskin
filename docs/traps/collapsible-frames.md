@@ -169,3 +169,13 @@ trap). `nameText` reads the title's own text nodes and falls back to
 (`panel:<slug>`, or `title:` + `labelText`), so no saved fold is orphaned;
 `tests/activity-panel-states.test.mjs` folds two panels and reads the saved
 keys back.
+
+**A Fantasy card layout must still yield to the port's collapsed parent
+(2026-10-19).** The Ironbound world-boss card uses a scoped `display: grid
+!important` to beat the native theme. That also beat the port's lower-specificity
+`[data-iw-collapsed="1"] > … { display: none !important }`, leaving all three
+cards visible below a folded World Bosses heading. The card sheet now repeats
+the parent's direct-child hide rule in its own scope, after its display rule.
+The Fantasy layer only reads the port's collapse marker; it never writes it.
+`tests/fantasy-world-boss.test.mjs` uses the real port CSS and verifies folding
+and expansion, alongside the existing native collapse tests.

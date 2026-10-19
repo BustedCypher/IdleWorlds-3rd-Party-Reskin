@@ -40,6 +40,9 @@ if (manifest.version !== pkg.version || manifest.version !== codeVersion) {
 /* Not shipped: documentation and design previews that sit beside the art, and
    the generator inputs .gitignore already keeps out of the repository. */
 const EXCLUDE = [
+  // World-boss PNG masters and rejected studies stay in the workspace; live cards use cards-v1 WebPs.
+  /^assets\/world-bosses\/(?:ancient-treant|abyssal-behemoth|world-eater)-v\d+\//i,
+  /^assets\/world-bosses\/card-art-prompts[^/]*\.json$/i,
   /\.md$/i,
   /\.html$/i,
   /(^|\/)prompts?(?:-[a-z0-9_-]+)?\.(txt|json)$/i,

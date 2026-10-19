@@ -4,6 +4,19 @@ Generated with the built-in ImageGen tool on 2026-09-07. `encounters.png` is a 2
 
 The active Zone Control art uses three transparent square assets: `zone-control-red-v3.png`, `zone-control-blue-v3.png`, and `zone-control-contested-v3.png`. Each was generated and checked separately so both weapon axes remain continuous at UI scale. The earlier combined atlases are retained as unused drafts.
 
+## Full-width card artwork (2026-10-19)
+
+The selected world-boss frame direction is **Ironbound** (concept 2).
+The companion paintings use Ancient Treant v4 as the style reference and retain dark space on the left for card information.
+
+- `ancient-treant-v4/ancient-treant-master.png`: the approved Treant creature direction with dense foliage.
+- `abyssal-behemoth-v1/abyssal-behemoth-master.png`: a blue armored sea leviathan in a storm-dark ocean.
+- `world-eater-v1/world-eater-master.png`: an obsidian cosmic serpent consuming a broken world.
+
+The two companion paintings received a separate background pass to reduce noisy cloud, water and debris detail.
+The live Fantasy cards use the optimized `cards-v1/*.webp` copies; generate them with `node build-tools/build-world-boss-card-art.mjs`. The PNG master directories stay out of release packages.
+`card-art-prompts-v1.json` records the exact generation and refinement prompts and reference roles. These PNG masters preserve the built-in ImageGen outputs unchanged. The card studies are in `output/world-boss-card-concepts-v1/`.
+
 ## Generation prompt
 
 Use case: stylized-concept. Create a production game UI artwork atlas, a precise 2 by 2 grid of four square paintings with no gutters, no text, no borders. Dark detailed painterly fantasy RPG art, dramatic readable silhouettes, aged gold highlights, near black backgrounds at edges. Top left: Ancient Treant, mighty gnarled living tree guardian with emerald eyes, moss and branching crown in misty forest. Top right: Abyssal Behemoth, colossal blue sea monster with armored scales, luminous cyan eyes and horns in stormy ocean. Bottom left: World Eater, terrifying obsidian dragon-like cosmic titan with molten violet mouth devouring a shattered world, purple embers. Bottom right: a heraldic PVP emblem of two beautifully forged crossed steel swords over a round dark iron shield, crimson cloth banner left and royal blue cloth banner right, a small tattered gold pennant above shield. Each subject centered within its own quadrant with safe margins, no elements crossing quadrant edges. High quality finished game art, square overall image.
